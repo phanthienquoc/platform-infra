@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: stock-backend, namespace: stock-prod}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: stock-backend}}
+  template:
+    metadata: {labels: {app: stock-backend}}
+    spec:
+      containers:
+      - name: backend
+        image: ghcr.io/phanthienquoc/stockdividend/backend:12d63b4
+        ports: [{name: http, containerPort: 8080}]
+        envFrom: [{secretRef: {name: stock-secrets}}]
+        env: [{name: SCRAPER_SERVICE_URL, value: http://stock-scraper:5000}]
+        readinessProbe: {tcpSocket: {port: http}, periodSeconds: 10}
+        livenessProbe: {tcpSocket: {port: http}, initialDelaySeconds: 15, periodSeconds: 20}
+        resources: {requests: {cpu: 100m, memory: 128Mi}, limits: {cpu: 500m, memory: 512Mi}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: stock-backend, namespace: stock-prod}
+spec:
+  selector: {app: stock-backend}
+  ports: [{name: http, port: 8080, targetPort: http}]

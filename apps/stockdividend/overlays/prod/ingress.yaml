@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: {name: stock, namespace: stock-prod, annotations: {cert-manager.io/cluster-issuer: letsencrypt-prod}}
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts: [mrcute.space, www.mrcute.space, admin.mrcute.space, api.mrcute.space]
+    secretName: stock-mrcute-tls
+  rules:
+  - host: mrcute.space
+    http: {paths: [{path: /, pathType: Prefix, backend: {service: {name: stock-admin, port: {number: 3000}}}}]}
+  - host: www.mrcute.space
+    http: {paths: [{path: /, pathType: Prefix, backend: {service: {name: stock-admin, port: {number: 3000}}}}]}
+  - host: admin.mrcute.space
+    http: {paths: [{path: /, pathType: Prefix, backend: {service: {name: stock-admin, port: {number: 3000}}}}]}
+  - host: api.mrcute.space
+    http: {paths: [{path: /, pathType: Prefix, backend: {service: {name: stock-backend, port: {number: 8080}}}}]}

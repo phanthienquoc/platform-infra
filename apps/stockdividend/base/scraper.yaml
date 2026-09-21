@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: stock-scraper, namespace: stock-prod}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: stock-scraper}}
+  template:
+    metadata: {labels: {app: stock-scraper}}
+    spec:
+      containers:
+      - name: scraper
+        image: ghcr.io/phanthienquoc/stockdividend/scraper:12d63b4
+        ports: [{name: http, containerPort: 5000}]
+        envFrom: [{secretRef: {name: stock-secrets}}]
+        readinessProbe: {httpGet: {path: /health, port: http}, periodSeconds: 15}
+        livenessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 30, periodSeconds: 30}
+        resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: stock-scraper, namespace: stock-prod}
+spec:
+  selector: {app: stock-scraper}
+  ports: [{name: http, port: 5000, targetPort: http}]
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata: {name: stock-scraper, namespace: stock-prod}
+spec:
+  schedule: "0 1 * * 0"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 7200
+      ttlSecondsAfterFinished: 86400
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: scraper
+            image: ghcr.io/phanthienquoc/stockdividend/scraper:12d63b4
+            command: [python, scraper.py]
+            envFrom: [{secretRef: {name: stock-secrets}}]
+            resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: 1500m, memory: 2Gi}}

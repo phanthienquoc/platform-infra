@@ -1,0 +1,89 @@
+name: GitOps image promotion
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        required: true
+        type: choice
+        options: [stockdividend, tce-dashboard]
+      component:
+        required: true
+        type: string
+      tag:
+        required: true
+        type: string
+  repository_dispatch:
+    types: [image-published]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Resolve event inputs
+        id: input
+        env:
+          EVENT_APP: ${{ github.event.client_payload.app }}
+          EVENT_COMPONENT: ${{ github.event.client_payload.component }}
+          EVENT_TAG: ${{ github.event.client_payload.tag }}
+          INPUT_APP: ${{ inputs.app }}
+          INPUT_COMPONENT: ${{ inputs.component }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          APP="${EVENT_APP:-$INPUT_APP}"
+          COMPONENT="${EVENT_COMPONENT:-$INPUT_COMPONENT}"
+          TAG="${EVENT_TAG:-$INPUT_TAG}"
+          case "$APP/$COMPONENT" in
+            stockdividend/backend|stockdividend/admin|stockdividend/scraper|tce-dashboard/web|tce-dashboard/service) ;;
+            *) echo "Unsupported image target"; exit 1;;
+          esac
+          [[ "$TAG" =~ ^[0-9a-f]{7,64}$ ]] || { echo "Tag must be an immutable Git SHA"; exit 1; }
+          echo "app=$APP" >> "$GITHUB_OUTPUT"
+          echo "component=$COMPONENT" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+      - name: Update Kustomize tag
+        env:
+          APP: ${{ steps.input.outputs.app }}
+          COMPONENT: ${{ steps.input.outputs.component }}
+          TAG: ${{ steps.input.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if [ "$APP" = stockdividend ]; then FILE=apps/stockdividend/overlays/prod/kustomization.yaml; else FILE=apps/tce-dashboard/overlays/prod/kustomization.yaml; fi
+          python3 - "$FILE" "$COMPONENT" "$TAG" <<'PY'
+import pathlib, re, sys
+p=pathlib.Path(sys.argv[1]); component=sys.argv[2]; tag=sys.argv[3]
+s=p.read_text()
+needle = f"  newTag: "
+lines=s.splitlines()
+base=None
+for i,line in enumerate(lines):
+    if line.strip()==f"newTag: {tag}": continue
+    if line.strip().startswith("newTag:") and i>0:
+        name=lines[i-1].strip()
+        if name.startswith("name:") and (name.endswith("/"+component) or name.endswith("/"+component.replace("web","web"))):
+            lines[i]=f"  newTag: {tag}"
+            base=True
+if base is None:
+    # Match exact component image name in the preceding name line.
+    for i,line in enumerate(lines):
+        if line.strip().endswith("/"+component):
+            if i+1 < len(lines) and lines[i+1].strip().startswith("newTag:"):
+                lines[i+1]=f"  newTag: {tag}"; base=True; break
+if base is None: raise SystemExit("image component not found")
+p.write_text("\n".join(lines)+"\n")
+PY
+          grep -A1 "name:.*$COMPONENT" "$FILE"
+      - name: Create promotion PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: automation/promote-${{ steps.input.outputs.app }}-${{ steps.input.outputs.component }}-${{ steps.input.outputs.tag }}
+          delete-branch: true
+          title: "chore: promote ${{ steps.input.outputs.app }}/${{ steps.input.outputs.component }} ${{ steps.input.outputs.tag }}"
+          commit-message: "chore: promote ${{ steps.input.outputs.app }}/${{ steps.input.outputs.component }} ${{ steps.input.outputs.tag }}"
+          body: "Automated immutable image promotion from application CI."
