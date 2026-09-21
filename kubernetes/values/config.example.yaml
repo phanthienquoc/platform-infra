@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: platform-config
+  namespace: stock-prod
+data:
+  APP_ENV: production
+  PUBLIC_BASE_URL: https://stock.example.com
+  EXTERNAL_API_URL: https://api.example.invalid
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: platform-config
+  namespace: tce-prod
+data:
+  APP_ENV: production
+  PUBLIC_BASE_URL: https://tce.example.com
+  EXTERNAL_API_URL: https://api.example.invalid

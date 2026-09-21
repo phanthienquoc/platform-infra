@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: scraper
+  namespace: stock-prod
+spec:
+  schedule: "*/15 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: scraper
+              image: ghcr.io/<OWNER>/stockdividend:<TAG>
+              envFrom:
+                - configMapRef: { name: platform-config }
+                - secretRef: { name: external-services }
+              resources: {}

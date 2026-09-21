@@ -1,0 +1,10 @@
+# Baseline policy documentation. Enable concrete deny-by-default policies after mapping traffic.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: network-policy-notes
+  namespace: platform-system
+data:
+  README: |
+    Add namespace-scoped NetworkPolicies for ingress, egress, DNS, databases, and observability.
+    Validate policies in staging before applying them to production.

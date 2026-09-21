@@ -1,0 +1,11 @@
+# Generic example only. Replace with the chosen K3s storage implementation.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: platform-example
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: example.invalid/platform-provisioner
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true

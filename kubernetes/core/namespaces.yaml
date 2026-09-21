@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: stock-prod
+  labels:
+    environment: production
+    platform.example.com/managed-by: platform-infra
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tce-prod
+  labels:
+    environment: production
+    platform.example.com/managed-by: platform-infra
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: platform-system
+  labels:
+    environment: platform
+    platform.example.com/managed-by: platform-infra

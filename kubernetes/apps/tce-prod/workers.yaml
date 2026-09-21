@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workers
+  namespace: tce-prod
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: workers } }
+  template:
+    metadata: { labels: { app: workers } }
+    spec:
+      containers:
+        - name: workers
+          image: ghcr.io/<OWNER>/tce-dashboard:<TAG>
+          envFrom:
+            - configMapRef: { name: platform-config }
+            - secretRef: { name: external-services }
+          resources: {}

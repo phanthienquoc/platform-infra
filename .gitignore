@@ -1,0 +1,14 @@
+# Local Kubernetes files
+.kube/
+*.kubeconfig
+
+# Secrets and generated manifests
+**/*secret*.yaml
+!kubernetes/values/secret.example.yaml
+*.sealedsecret.yaml
+
+# Tooling
+.terraform/
+*.tfstate
+*.tfstate.*
+.DS_Store
