@@ -1,9 +1,0 @@
-# TODO: install the approved metrics-server release or enable the K3s-compatible addon.
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: metrics-platform-notes
-  namespace: platform-system
-data:
-  README: |
-    Confirm kubelet TLS settings and verify kubectl top nodes/pods after installation.

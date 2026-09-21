@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: stock-prod
+resources:
+- ../../base
+- ingress.yaml
+images:
+- name: ghcr.io/phanthienquoc/stockdividend/backend
+  newTag: 12d63b4
+- name: ghcr.io/phanthienquoc/stockdividend/admin
+  newTag: 12d63b4
+- name: ghcr.io/phanthienquoc/stockdividend/scraper
+  newTag: 12d63b4
