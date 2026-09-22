@@ -68,4 +68,4 @@ if [[ "$fail" -ne 0 ]]; then
   exit 1
 fi
 
-echo "Validated network boundaries in $output: Services remain internal ClusterIP and only the two approved public hosts are routable."
+echo "Validated network boundaries in $output: Services remain internal ClusterIP and only the approved production hosts are routable."
