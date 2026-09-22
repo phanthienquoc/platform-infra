@@ -6,16 +6,11 @@ on:
       mode:
         description: "Reconciliation mode"
         required: true
-        default: plan
+        default: apply
         type: choice
         options:
           - plan
           - apply
-      confirm:
-        description: "Type APPLY to permit production mutation; ignored for plan"
-        required: false
-        default: ""
-        type: string
 
 permissions:
   contents: read
@@ -26,7 +21,7 @@ concurrency:
 
 jobs:
   reconcile:
-    if: github.ref == 'refs/heads/master' && (inputs.mode == 'plan' || inputs.confirm == 'APPLY')
+    if: github.ref == 'refs/heads/master'
     environment: production
     runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
     steps:
@@ -40,7 +35,7 @@ jobs:
           git status --short
           git rev-parse HEAD
           test -f environments/prod/kustomization.yaml
-          test -x scripts/reconcile-vps.sh || chmod +x scripts/reconcile-vps.sh
+          chmod +x scripts/reconcile-vps.sh
 
       - name: Preflight diff
         run: |
@@ -48,7 +43,7 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl diff -k environments/prod
 
       - name: Apply production manifests
-        if: inputs.mode == 'apply' && inputs.confirm == 'APPLY'
+        if: inputs.mode == 'apply'
         run: |
           set -euo pipefail
           ./scripts/reconcile-vps.sh apply
