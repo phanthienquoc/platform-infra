@@ -7,6 +7,9 @@ spec:
   template:
     metadata: {labels: {app: stock-admin}}
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile: {type: RuntimeDefault}
       containers:
       - name: admin
         image: ghcr.io/phanthienquoc/stockdividend/admin:12d63b4
@@ -14,6 +17,9 @@ spec:
         env: [{name: BACKEND_URL, value: http://stock-backend:8080}]
         readinessProbe: {httpGet: {path: /, port: http}, periodSeconds: 10}
         livenessProbe: {httpGet: {path: /, port: http}, initialDelaySeconds: 20, periodSeconds: 20}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {drop: [ALL]}
         resources: {requests: {cpu: 50m, memory: 128Mi}, limits: {cpu: 300m, memory: 512Mi}}
 ---
 apiVersion: v1
