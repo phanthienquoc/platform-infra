@@ -41,8 +41,14 @@ mkdir -p "$(dirname "$OUT")"
   sudo /usr/local/sbin/platform-kubectl get namespaces || true
   sudo /usr/local/sbin/platform-kubectl get pods -A -o wide || true
   sudo /usr/local/sbin/platform-kubectl get deployments -A || true
+  echo
+  echo "### Images"
+  sudo /usr/local/sbin/platform-kubectl get deployments -A -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,IMAGES:.spec.template.spec.containers[*].image' --no-headers 2>/dev/null || true
   sudo /usr/local/sbin/platform-kubectl get services -A || true
   sudo /usr/local/sbin/platform-kubectl get ingress -A || true
+  echo
+  echo "### Ingress hosts"
+  sudo /usr/local/sbin/platform-kubectl get ingress -A -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,HOSTS:.spec.rules[*].host' --no-headers 2>/dev/null || true
   echo
   echo "## K3s service"
   systemctl is-active k3s || true
