@@ -1,18 +1,35 @@
 name: validate-manifests
+
 on:
   pull_request:
   push:
     branches: [master]
+
 permissions:
   contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate YAML with kubectl
+      - name: Install kubectl
         uses: azure/setup-kubectl@v4
-      - run: |
-          for file in $(find kubernetes -type f -name '*.yaml'); do
-            kubectl apply --dry-run=client --validate=false -f "$file" >/dev/null
-          done
+      - name: Render production manifests
+        run: kubectl kustomize environments/prod > /tmp/platform-infra-rendered.yaml
+      - name: Validate rendered Kubernetes resources
+        run: kubectl apply --dry-run=client --validate=strict -f /tmp/platform-infra-rendered.yaml
+      - name: Enforce secret policy
+        run: |
+          set -euo pipefail
+          if grep -nE '^kind: Secret$|^[[:space:]]+data:' /tmp/platform-infra-rendered.yaml; then
+            echo 'Rendered manifests must not contain Secret objects or inline secret data.'
+            exit 1
+          fi
+      - name: Check immutable application image tags
+        run: |
+          set -euo pipefail
+          if grep -E '^[[:space:]]+image:' /tmp/platform-infra-rendered.yaml | grep -Ev ':[0-9a-f]{7,64}$'; then
+            echo 'Application images must use immutable Git-SHA tags.'
+            exit 1
+          fi
