@@ -9,5 +9,3 @@ images:
   newTag: 12d63b4
 - name: ghcr.io/phanthienquoc/stockdividend/admin
   newTag: 12d63b4
-- name: ghcr.io/phanthienquoc/stockdividend/scraper
-  newTag: 12d63b4
