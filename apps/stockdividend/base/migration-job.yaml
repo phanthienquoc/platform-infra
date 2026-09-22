@@ -12,3 +12,6 @@ spec:
         image: ghcr.io/phanthienquoc/stockdividend/backend:12d63b4
         command: [./migrate_src]
         envFrom: [{secretRef: {name: stock-secrets}}]
+        resources:
+          requests: {cpu: 100m, memory: 256Mi}
+          limits: {cpu: 500m, memory: 512Mi}
