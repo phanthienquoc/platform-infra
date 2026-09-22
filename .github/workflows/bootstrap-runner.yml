@@ -140,7 +140,7 @@ jobs:
           ssh -i ~/.ssh/vps_key -o BatchMode=yes "$VPS_USER@$VPS_HOST" '
             set -e
             test -f /opt/actions-runner/.runner
-            service="$(systemctl list-unit-files 'actions.runner.*.service' --no-legend | awk 'NR==1 {print $1}')"
+            service="$(systemctl list-unit-files 'actions.runner.*.service' --no-legend | head -n1 | cut -d' ' -f1)"
             test -n "$service"
             systemctl is-enabled "$service"
             systemctl is-active --quiet "$service"
