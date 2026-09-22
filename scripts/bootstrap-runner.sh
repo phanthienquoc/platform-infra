@@ -28,16 +28,38 @@ fi
 cat >/usr/local/sbin/platform-kubectl <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
+
+KUBECTL=(/usr/local/bin/k3s kubectl)
+
 case "${1:-}" in
-  version) exec /usr/local/bin/k3s kubectl version --client ;;
+  version)
+    [[ "$#" -eq 1 ]] || exit 2
+    exec "${KUBECTL[@]}" version --client
+    ;;
   get)
     shift
     case "${1:-}" in
       nodes|namespaces|ns|pods|po|deployments|deploy|services|svc|ingress|ingresses|jobs|cronjobs|pv|pvc)
-        exec /usr/local/bin/k3s kubectl get "$@" ;;
-    esac ;;
+        exec "${KUBECTL[@]}" get "$@"
+        ;;
+    esac
+    ;;
+  diff|apply)
+    [[ "${2:-}" == "-k" && "${3:-}" == "environments/prod" && "${4:-}" == "" ]] || {
+      echo "platform-kubectl: only -k environments/prod is allowed for $1" >&2
+      exit 2
+    }
+    exec "${KUBECTL[@]}" "$1" -k environments/prod
+    ;;
+  rollout)
+    [[ "${2:-}" == "status" && "${3:-}" == "deployment/stock-backend" && "${4:-}" == "-n" && "${5:-}" == "stock-prod" && "${6:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/stock-backend -n stock-prod --timeout=180s
+    [[ "${2:-}" == "status" && "${3:-}" == "deployment/stock-frontend" && "${4:-}" == "-n" && "${5:-}" == "stock-prod" && "${6:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/stock-frontend -n stock-prod --timeout=180s
+    [[ "${2:-}" == "status" && "${3:-}" == "deployment/tce-service" && "${4:-}" == "-n" && "${5:-}" == "tce-prod" && "${6:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/tce-service -n tce-prod --timeout=180s
+    [[ "${2:-}" == "status" && "${3:-}" == "deployment/tce-frontend" && "${4:-}" == "-n" && "${5:-}" == "tce-prod" && "${6:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/tce-frontend -n tce-prod --timeout=180s
+    ;;
 esac
-echo "platform-kubectl: read-only allowlisted command required" >&2
+
+echo "platform-kubectl: command is not allowlisted" >&2
 exit 2
 EOF
 chmod 0755 /usr/local/sbin/platform-kubectl
