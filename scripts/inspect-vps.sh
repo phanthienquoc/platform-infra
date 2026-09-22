@@ -42,6 +42,17 @@ mkdir -p "$(dirname "$OUT")"
   sudo /usr/local/sbin/platform-kubectl get pods -A -o wide || true
   sudo /usr/local/sbin/platform-kubectl get deployments -A || true
   echo
+  echo "### GitOps drift"
+  set +e
+  sudo /usr/local/sbin/platform-kubectl diff -k environments/prod >/dev/null 2>&1
+  drift_rc=$?
+  set -e
+  case "$drift_rc" in
+    0) echo "status: clean" ;;
+    1) echo "status: drift-detected" ;;
+    *) echo "status: diff-error" ; echo "exit_code: $drift_rc" ;;
+  esac
+  echo
   echo "### Images"
   sudo /usr/local/sbin/platform-kubectl get deployments -A -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,IMAGES:.spec.template.spec.containers[*].image' --no-headers 2>/dev/null || true
   sudo /usr/local/sbin/platform-kubectl get services -A || true
