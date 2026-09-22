@@ -46,7 +46,7 @@ fi
 # The production boundary is intentionally limited to the two known public hosts.
 allowed_hosts='^(tce\.mrcute\.space|mrcute\.space|www\.mrcute\.space|admin\.mrcute\.space|api\.mrcute\.space)
 while IFS= read -r host; do
-  if [[ -n "$host" && ! "$host" =~ $allowed_hosts ]]; then
+  host="${host//[[:space:]]/}"\n  if [[ -n "$host" && ! "$host" =~ $allowed_hosts ]]; then
     echo "Unexpected externally routable host: $host" >&2
     fail=1
   fi
