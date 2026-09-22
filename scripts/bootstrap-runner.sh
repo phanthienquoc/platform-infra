@@ -42,7 +42,7 @@ exit 2
 EOF
 chmod 0755 /usr/local/sbin/platform-kubectl
 cat >/etc/sudoers.d/platform-infra-runner <<EOF
-$RUNNER_USER ALL=(root) NOPASSWD: /usr/local/sbin/platform-kubectl
+$RUNNER_USER ALL=(root) NOPASSWD: /usr/local/sbin/platform-kubectl *
 EOF
 chmod 0440 /etc/sudoers.d/platform-infra-runner
 visudo -cf /etc/sudoers.d/platform-infra-runner
