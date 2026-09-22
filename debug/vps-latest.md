@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-09-22T15:09:32+00:00
+Generated: 2026-09-22T15:10:07+00:00
 
 ## Host
 uname: Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -15,12 +15,12 @@ Mem:            23Gi       3.4Gi       2.6Gi        52Mi        17Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   35G   11G  78% /
- 15:09:32 up 144 days, 59 min,  1 user,  load average: 0.08, 0.16, 0.19
+ 15:10:07 up 144 days,  1:00,  1 user,  load average: 0.21, 0.19, 0.20
 
 ## Runner
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
-github-+ 1309509  0.7  0.5       10:17 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-github-+ 1320460 68.3  0.4       00:03 /opt/actions-runner/bin/Runner.Worker spawnclient 143 155
+github-+ 1309509  0.7  0.5       10:52 /opt/actions-runner/bin/Runner.Listener run --startuptype service
+github-+ 1321365 49.7  0.4       00:04 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
 runner_service_enabled: enabled
