@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-09-22T15:08:07+00:00
+Generated: 2026-09-22T15:09:32+00:00
 
 ## Host
 uname: Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,21 +11,58 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.4Gi       2.6Gi        53Mi        17Gi        19Gi
+Mem:            23Gi       3.4Gi       2.6Gi        52Mi        17Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   35G   11G  78% /
- 15:08:07 up 144 days, 58 min,  1 user,  load average: 0.35, 0.22, 0.22
+ 15:09:32 up 144 days, 59 min,  1 user,  load average: 0.08, 0.16, 0.19
 
 ## Runner
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
-github-+ 1309509  0.8  0.5 273204964 125996 ?    Sl   14:59   0:04 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-github-+ 1318994 63.5  0.4 273211244 114984 ?    Sl   15:08   0:02 /opt/actions-runner/bin/Runner.Worker spawnclient 143 155
-  actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service loaded active running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
+github-+ 1309509  0.7  0.5       10:17 /opt/actions-runner/bin/Runner.Listener run --startuptype service
+github-+ 1320460 68.3  0.4       00:03 /opt/actions-runner/bin/Runner.Worker spawnclient 143 155
+  actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
+runner_service: active
+runner_service_enabled: enabled
 
 ## Docker
 Docker version 29.1.3, build f52814d
 Server=29.1.3 RootDir=/var/lib/docker
+
+## Updates
+Listing...
+apparmor/jammy-updates 3.0.4-2ubuntu2.5 arm64 [upgradable from: 3.0.4-2ubuntu2.4]
+cloud-init/jammy-updates 26.1-0ubuntu1~22.04.1 all [upgradable from: 25.2-0ubuntu1~22.04.1]
+containerd.io/jammy 2.3.5-1~ubuntu.22.04~jammy arm64 [upgradable from: 2.2.1-1~ubuntu.22.04~jammy]
+docker-buildx-plugin/jammy 0.37.1-1~ubuntu.22.04~jammy arm64 [upgradable from: 0.30.1-1~ubuntu.22.04~jammy]
+docker-ce-cli/jammy 5:29.8.1-1~ubuntu.22.04~jammy arm64 [upgradable from: 5:29.1.3-1~ubuntu.22.04~jammy]
+docker-ce-rootless-extras/jammy 5:29.8.1-1~ubuntu.22.04~jammy arm64 [upgradable from: 5:29.1.3-1~ubuntu.22.04~jammy]
+docker-ce/jammy 5:29.8.1-1~ubuntu.22.04~jammy arm64 [upgradable from: 5:29.1.3-1~ubuntu.22.04~jammy]
+docker-compose-plugin/jammy 5.5.1-1~ubuntu.22.04~jammy arm64 [upgradable from: 5.0.1-1~ubuntu.22.04~jammy]
+fwupd/jammy-updates 2.0.20-1ubuntu2~22.04.2 arm64 [upgradable from: 1.7.9-1~22.04.3]
+iproute2/jammy-updates 5.15.0-1ubuntu2.2 arm64 [upgradable from: 5.15.0-1ubuntu2]
+landscape-common/jammy-updates 23.02-0ubuntu1~22.04.7 arm64 [upgradable from: 23.02-0ubuntu1~22.04.6]
+libapparmor1/jammy-updates 3.0.4-2ubuntu2.5 arm64 [upgradable from: 3.0.4-2ubuntu2.4]
+libjcat1/jammy-updates 0.2.3-1~ubuntu0.22.04.1 arm64 [upgradable from: 0.1.9-1]
+libk5crypto3/jammy-updates 1.19.2-2ubuntu0.10 arm64 [upgradable from: 1.19.2-2ubuntu0.8]
+libldap-2.5-0/jammy-updates 2.5.20+dfsg-0ubuntu0.22.04.1 arm64 [upgradable from: 2.5.19+dfsg-0ubuntu0.22.04.1]
+libldap-common/jammy-updates 2.5.20+dfsg-0ubuntu0.22.04.1 all [upgradable from: 2.5.19+dfsg-0ubuntu0.22.04.1]
+libnetplan0/jammy-updates 0.107.1-3ubuntu0.22.04.5 arm64 [upgradable from: 0.106.1-7ubuntu0.22.04.4]
+libnftables1/jammy-updates 1.0.2-1ubuntu3.1 arm64 [upgradable from: 1.0.2-1ubuntu3]
+libxmlb2/jammy-updates 0.3.24-1~ubuntu0.22.04.1 arm64 [upgradable from: 0.3.6-2build1]
+lshw/jammy-updates 02.19.git.2021.06.19.996aaad9c7-2ubuntu0.22.04.1 arm64 [upgradable from: 02.19.git.2021.06.19.996aaad9c7-2build1]
+netplan.io/jammy-updates 0.107.1-3ubuntu0.22.04.5 arm64 [upgradable from: 0.106.1-7ubuntu0.22.04.4]
+nftables/jammy-updates 1.0.2-1ubuntu3.1 arm64 [upgradable from: 1.0.2-1ubuntu3]
+python3-attr/jammy-updates 21.2.0-1ubuntu1 all [upgradable from: 21.2.0-1]
+python3-distupgrade/jammy-updates 1:22.04.21 all [upgradable from: 1:22.04.20]
+snapd/jammy-updates 2.76.3+ubuntu22.04 arm64 [upgradable from: 2.76+ubuntu22.04.1]
+sosreport/jammy-updates 4.10.2-0ubuntu0~22.04.1 arm64 [upgradable from: 4.9.2-0ubuntu0~22.04.1]
+ubuntu-minimal/jammy-updates 1.481.5 arm64 [upgradable from: 1.481.4]
+ubuntu-release-upgrader-core/jammy-updates 1:22.04.21 all [upgradable from: 1:22.04.20]
+ubuntu-server/jammy-updates 1.481.5 arm64 [upgradable from: 1.481.4]
+ubuntu-standard/jammy-updates 1.481.5 arm64 [upgradable from: 1.481.4]
+
+restart_required: yes
 
 ## K3s
 Client Version: v1.36.3+k3s1
