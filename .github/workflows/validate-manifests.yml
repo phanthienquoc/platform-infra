@@ -34,4 +34,6 @@ jobs:
             exit 1
           fi
       - name: Validate network boundaries
-        run: ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
