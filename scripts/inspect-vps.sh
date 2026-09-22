@@ -21,12 +21,19 @@ mkdir -p "$(dirname "$OUT")"
   echo
   echo "## Runner"
   id github-runner 2>/dev/null || true
-  ps aux | grep -E "[R]unner.Listener|[R]unner.Worker" || true
-  systemctl list-units --type=service --state=running | grep -Ei "actions.runner|github" || true
+  ps -eo user,pid,pcpu,pmem,etime,cmd | grep -E "[R]unner.Listener|[R]unner.Worker" | head -20 || true
+  systemctl list-units --type=service --all | grep -Ei "actions.runner|github" || true
+  echo "runner_service: $(systemctl is-active actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service 2>/dev/null || true)"
+  echo "runner_service_enabled: $(systemctl is-enabled actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service 2>/dev/null || true)"
   echo
   echo "## Docker"
   docker --version 2>/dev/null || true
   docker info --format "Server={{.ServerVersion}} RootDir={{.DockerRootDir}}" 2>/dev/null || true
+  echo
+  echo "## Updates"
+  apt list --upgradable 2>/dev/null | sed -n "1,80p" || true
+  echo
+  echo "restart_required: $(test -f /var/run/reboot-required && echo yes || echo no)"
   echo
   echo "## K3s"
   sudo /usr/local/sbin/platform-kubectl version || true
