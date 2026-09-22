@@ -128,7 +128,7 @@ jobs:
           printf '%s' "$RUNNER_TOKEN" | ssh -i ~/.ssh/vps_key -o BatchMode=yes "$VPS_USER@$VPS_HOST" \
             'sudo -E env RUNNER_TOKEN="$(cat)" bash /tmp/bootstrap-runner.sh'
 
-      - name: Verify runner service
+      - name: Verify runner service and reconciliation capability
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
@@ -142,10 +142,23 @@ jobs:
           ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
 
           ssh -i ~/.ssh/vps_key -o BatchMode=yes "$VPS_USER@$VPS_HOST" '
-            set -e
+            set -euo pipefail
             test -f /opt/actions-runner/.runner
             service="actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service"
             systemctl is-enabled "$service"
             systemctl is-active --quiet "$service"
-            echo "Runner service is active: $service"
+            test -x /usr/local/sbin/platform-kubectl
+            sudo /usr/local/sbin/platform-kubectl version >/dev/null
+
+            set +e
+            sudo /usr/local/sbin/platform-kubectl diff -k /opt/actions-runner/_work/platform-infra/platform-infra/environments/prod >/tmp/platform-kubectl-diff-check 2>/tmp/platform-kubectl-diff-error
+            rc=$?
+            set -e
+            if [[ "$rc" -gt 1 ]]; then
+              echo "platform-kubectl diff capability check failed with exit $rc" >&2
+              cat /tmp/platform-kubectl-diff-error >&2 || true
+              exit "$rc"
+            fi
+            rm -f /tmp/platform-kubectl-diff-check /tmp/platform-kubectl-diff-error
+            echo "Runner service and allowlisted reconciliation capability verified."
           '
