@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-09-22T15:20:56+00:00
+Generated: 2026-09-22T15:22:21+00:00
 
 ## Host
 uname: Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,16 +11,16 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.4Gi       5.7Gi        51Mi        14Gi        19Gi
+Mem:            23Gi       3.4Gi       5.7Gi        53Mi        14Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   20G   26G  43% /
- 15:20:56 up 144 days,  1:11,  1 user,  load average: 0.25, 0.26, 0.26
+ 15:22:21 up 144 days,  1:12,  1 user,  load average: 0.19, 0.24, 0.25
 
 ## Runner
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
-github-+ 1309509  0.4  0.5       21:41 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-github-+ 1330411 50.7  0.4       00:04 /opt/actions-runner/bin/Runner.Worker spawnclient 143 155
+github-+ 1309509  0.4  0.5       23:06 /opt/actions-runner/bin/Runner.Listener run --startuptype service
+github-+ 1331909 49.2  0.4       00:04 /opt/actions-runner/bin/Runner.Worker spawnclient 143 155
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
 runner_service_enabled: enabled
@@ -75,7 +75,7 @@ default           Active   31d
 kube-node-lease   Active   31d
 kube-public       Active   31d
 kube-system       Active   31d
-stock-prod        Active   3d8h
+stock-prod        Active   3d9h
 tce-prod          Active   31d
 NAMESPACE      NAME                                      READY   STATUS      RESTARTS      AGE    IP            NODE         NOMINATED NODE   READINESS GATES
 cert-manager   cert-manager-75b96c9588-lgn7d             1/1     Running     0             28d    10.42.0.98    tce-k3s-01   <none>           <none>
@@ -104,6 +104,19 @@ stock-prod     stock-backend             1/1     1            1           3d8h
 stock-prod     stock-frontend            1/1     1            1           3d8h
 tce-prod       tce-frontend              1/1     1            1           28d
 tce-prod       tce-service               1/1     1            1           28d
+
+### Images
+cert-manager   cert-manager              quay.io/jetstack/cert-manager-controller:v1.21.1
+cert-manager   cert-manager-cainjector   quay.io/jetstack/cert-manager-cainjector:v1.21.1
+cert-manager   cert-manager-webhook      quay.io/jetstack/cert-manager-webhook:v1.21.1
+kube-system    coredns                   rancher/mirrored-coredns-coredns:1.14.6
+kube-system    local-path-provisioner    rancher/local-path-provisioner:v0.0.36
+kube-system    metrics-server            rancher/mirrored-metrics-server:v0.9.0
+kube-system    traefik                   rancher/mirrored-library-traefik:3.7.8
+stock-prod     stock-backend             ghcr.io/phanthienquoc/stockdividend/backend:23b2878
+stock-prod     stock-frontend            ghcr.io/phanthienquoc/stockdividend/user:23b2878
+tce-prod       tce-frontend              docker.io/library/tce-frontend:prod-v0.1.0-147cc73
+tce-prod       tce-service               docker.io/library/tce-service:prod-v0.1.0-147cc73
 NAMESPACE      NAME                      TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
 cert-manager   cert-manager              ClusterIP      10.43.138.27    <none>        9402/TCP                     28d
 cert-manager   cert-manager-cainjector   ClusterIP      10.43.135.132   <none>        9402/TCP                     28d
@@ -120,6 +133,10 @@ tce-prod       tce-service               ClusterIP      10.43.189.227   <none>  
 NAMESPACE    NAME            CLASS     HOSTS                                                          ADDRESS      PORTS     AGE
 stock-prod   stock-ingress   traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   3d8h
 tce-prod     tce             traefik   tce.mrcute.space                                               10.0.0.120   80, 443   28d
+
+### Ingress hosts
+stock-prod   stock-ingress   mrcute.space,www.mrcute.space,admin.mrcute.space,api.mrcute.space
+tce-prod     tce             tce.mrcute.space
 
 ## K3s service
 active
