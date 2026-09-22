@@ -50,7 +50,14 @@ chown -R "$RUNNER_USER:$RUNNER_USER" "$RUNNER_DIR"
 
 # svc.sh expects to be invoked from the runner root.
 cd "$RUNNER_DIR"
-./svc.sh install "$RUNNER_USER"
+
+# Keep bootstrap idempotent: a registered runner may already have a service.
+if find /etc/systemd/system -maxdepth 1 -type f -name 'actions.runner.*.service' -print -quit | grep -q .; then
+  echo "Runner service already installed; reusing existing service."
+else
+  ./svc.sh install "$RUNNER_USER"
+fi
+
 ./svc.sh start
 
 echo "Runner bootstrap complete: $RUNNER_NAME"
