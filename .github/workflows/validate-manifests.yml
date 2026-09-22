@@ -33,3 +33,5 @@ jobs:
             echo 'Application images must use immutable Git-SHA tags.'
             exit 1
           fi
+      - name: Validate network boundaries
+        run: ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
