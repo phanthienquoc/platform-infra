@@ -1,0 +1,30 @@
+name: reconcile-vps
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platform-vps-reconcile
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    if: github.ref == 'refs/heads/master'
+    environment: production
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Verify repository state
+        run: |
+          git status --short
+          git rev-parse HEAD
+          test -f environments/prod/kustomization.yaml
+      - name: Mutation guard
+        run: |
+          echo "Reconcile is intentionally read-only in the runner bootstrap phase."
+          echo "Future phases will call fixed allowlisted reconciliation scripts."
