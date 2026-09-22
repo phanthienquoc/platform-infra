@@ -1,0 +1,34 @@
+name: inspect-vps
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: platform-vps-inspect
+  cancel-in-progress: false
+
+jobs:
+  inspect:
+    if: github.ref == 'refs/heads/master'
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Inspect VPS
+        run: |
+          chmod +x scripts/inspect-vps.sh
+          scripts/inspect-vps.sh debug/vps-latest.md
+      - name: Commit inspection state
+        run: |
+          git config user.name "platform-infra-runner"
+          git config user.email "actions@users.noreply.github.com"
+          git add debug/vps-latest.md
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: update VPS inspection state"
+          git push origin HEAD:master
