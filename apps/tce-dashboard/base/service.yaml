@@ -7,6 +7,9 @@ spec:
   template:
     metadata: {labels: {app: tce-service}}
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile: {type: RuntimeDefault}
       containers:
       - name: service
         image: ghcr.io/phanthienquoc/tce-dashboard/service:2f0cc20
@@ -24,6 +27,9 @@ spec:
         envFrom: [{secretRef: {name: tce-app-secrets}}, {secretRef: {name: tce-auth}}]
         readinessProbe: {httpGet: {path: /api/health, port: http}, initialDelaySeconds: 10, timeoutSeconds: 3, periodSeconds: 10}
         livenessProbe: {httpGet: {path: /api/health, port: http}, initialDelaySeconds: 30, timeoutSeconds: 3, periodSeconds: 20}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {drop: [ALL]}
         resources: {requests: {cpu: 200m, memory: 512Mi}, limits: {cpu: 1000m, memory: 2Gi}}
 ---
 apiVersion: v1

@@ -7,6 +7,9 @@ spec:
   template:
     metadata: {labels: {app: tce-frontend}}
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile: {type: RuntimeDefault}
       containers:
       - name: frontend
         image: ghcr.io/phanthienquoc/tce-dashboard/web:2f0cc20
@@ -14,6 +17,9 @@ spec:
         env: [{name: TCE_API_INTERNAL_URL, value: http://tce-service:8210}]
         readinessProbe: {httpGet: {path: /, port: http}, periodSeconds: 10}
         livenessProbe: {httpGet: {path: /, port: http}, initialDelaySeconds: 15, periodSeconds: 20}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {drop: [ALL]}
         resources: {requests: {cpu: 50m, memory: 128Mi}, limits: {cpu: 300m, memory: 512Mi}}
 ---
 apiVersion: v1
