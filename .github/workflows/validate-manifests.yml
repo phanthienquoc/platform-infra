@@ -16,6 +16,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+      - name: Install YAML parser
+        run: python -m pip install --disable-pip-version-check --no-cache-dir PyYAML==6.0.2
       - name: Install kubectl
         uses: azure/setup-kubectl@v4
       - name: Render production manifests
