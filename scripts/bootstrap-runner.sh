@@ -47,6 +47,10 @@ EOF
 chmod 0440 /etc/sudoers.d/platform-infra-runner
 visudo -cf /etc/sudoers.d/platform-infra-runner
 chown -R "$RUNNER_USER:$RUNNER_USER" "$RUNNER_DIR"
-"$RUNNER_DIR/svc.sh" install "$RUNNER_USER" >/dev/null 2>&1 || true
-"$RUNNER_DIR/svc.sh" start || true
+
+# svc.sh expects to be invoked from the runner root.
+cd "$RUNNER_DIR"
+./svc.sh install "$RUNNER_USER"
+./svc.sh start
+
 echo "Runner bootstrap complete: $RUNNER_NAME"
