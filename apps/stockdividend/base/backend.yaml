@@ -18,7 +18,6 @@ spec:
         image: ghcr.io/phanthienquoc/stockdividend/backend:12d63b4
         ports: [{name: http, containerPort: 8080}]
         envFrom: [{secretRef: {name: stock-secrets}}]
-        env: [{name: SCRAPER_SERVICE_URL, value: http://stock-scraper:5000}]
         startupProbe: {tcpSocket: {port: http}, periodSeconds: 5, failureThreshold: 30}
         readinessProbe: {tcpSocket: {port: http}, periodSeconds: 10}
         livenessProbe: {tcpSocket: {port: http}, initialDelaySeconds: 15, periodSeconds: 20}
