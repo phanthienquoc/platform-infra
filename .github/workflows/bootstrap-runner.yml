@@ -2,12 +2,6 @@ name: Bootstrap self-hosted runner
 
 on:
   workflow_dispatch:
-    inputs:
-      force:
-        description: "Re-run runner bootstrap even if the runner service already exists"
-        required: false
-        default: false
-        type: boolean
 
 permissions:
   contents: read
