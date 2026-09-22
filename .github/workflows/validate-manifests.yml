@@ -52,8 +52,8 @@ jobs:
       - name: Check immutable application image tags
         run: |
           set -euo pipefail
-          if grep -E '^[[:space:]]+image:' /tmp/platform-infra-rendered.yaml | grep -Ev ':[0-9a-f]{7,64}$'; then
-            echo 'Application images must use immutable Git-SHA tags.'
+          if grep -E '^[[:space:]]+image: ghcr\.io/phanthienquoc/' /tmp/platform-infra-rendered.yaml | grep -Ev ':[0-9a-f]{7,64}$'; then
+            echo 'First-party application images must use immutable Git-SHA tags.'
             exit 1
           fi
       - name: Validate network boundaries
