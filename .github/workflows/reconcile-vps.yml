@@ -2,6 +2,20 @@ name: reconcile-vps
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "Reconciliation mode"
+        required: true
+        default: plan
+        type: choice
+        options:
+          - plan
+          - apply
+      confirm:
+        description: "Type APPLY to permit production mutation; ignored for plan"
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: read
@@ -12,19 +26,36 @@ concurrency:
 
 jobs:
   reconcile:
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master' && (inputs.mode == 'plan' || inputs.confirm == 'APPLY')
     environment: production
     runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
+
       - name: Verify repository state
         run: |
+          set -euo pipefail
           git status --short
           git rev-parse HEAD
           test -f environments/prod/kustomization.yaml
-      - name: Mutation guard
+          test -x scripts/reconcile-vps.sh || chmod +x scripts/reconcile-vps.sh
+
+      - name: Preflight diff
         run: |
-          echo "Reconcile is intentionally read-only in the runner bootstrap phase."
-          echo "Future phases will call fixed allowlisted reconciliation scripts."
+          set -euo pipefail
+          sudo /usr/local/sbin/platform-kubectl diff -k environments/prod
+
+      - name: Apply production manifests
+        if: inputs.mode == 'apply' && inputs.confirm == 'APPLY'
+        run: |
+          set -euo pipefail
+          ./scripts/reconcile-vps.sh apply
+
+      - name: Verify cluster after reconciliation
+        if: inputs.mode == 'apply' && inputs.confirm == 'APPLY'
+        run: |
+          set -euo pipefail
+          sudo /usr/local/sbin/platform-kubectl get nodes -o wide
+          sudo /usr/local/sbin/platform-kubectl get pods -A -o wide
