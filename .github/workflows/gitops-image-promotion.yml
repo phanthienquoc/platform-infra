@@ -40,7 +40,7 @@ jobs:
           COMPONENT="${EVENT_COMPONENT:-$INPUT_COMPONENT}"
           TAG="${EVENT_TAG:-$INPUT_TAG}"
           case "$APP/$COMPONENT" in
-            stockdividend/backend|stockdividend/admin|stockdividend/scraper|tce-dashboard/web|tce-dashboard/service) ;;
+            stockdividend/backend|stockdividend/admin|tce-dashboard/web|tce-dashboard/service) ;;
             *) echo "Unsupported image target"; exit 1;;
           esac
           [[ "$TAG" =~ ^[0-9a-f]{7,64}$ ]] || { echo "Tag must be an immutable Git SHA"; exit 1; }
@@ -56,27 +56,17 @@ jobs:
           set -euo pipefail
           if [ "$APP" = stockdividend ]; then FILE=apps/stockdividend/overlays/prod/kustomization.yaml; else FILE=apps/tce-dashboard/overlays/prod/kustomization.yaml; fi
           python3 - "$FILE" "$COMPONENT" "$TAG" <<'PY'
-import pathlib, re, sys
+import pathlib, sys
 p=pathlib.Path(sys.argv[1]); component=sys.argv[2]; tag=sys.argv[3]
-s=p.read_text()
-needle = f"  newTag: "
-lines=s.splitlines()
-base=None
+lines=p.read_text().splitlines()
 for i,line in enumerate(lines):
-    if line.strip()==f"newTag: {tag}": continue
-    if line.strip().startswith("newTag:") and i>0:
-        name=lines[i-1].strip()
-        if name.startswith("name:") and (name.endswith("/"+component) or name.endswith("/"+component.replace("web","web"))):
-            lines[i]=f"  newTag: {tag}"
-            base=True
-if base is None:
-    # Match exact component image name in the preceding name line.
-    for i,line in enumerate(lines):
-        if line.strip().endswith("/"+component):
-            if i+1 < len(lines) and lines[i+1].strip().startswith("newTag:"):
-                lines[i+1]=f"  newTag: {tag}"; base=True; break
-if base is None: raise SystemExit("image component not found")
-p.write_text("\n".join(lines)+"\n")
+    if line.strip()==f"name: ghcr.io/phanthienquoc/stockdividend/{component}" or line.strip()==f"name: ghcr.io/phanthienquoc/tce-dashboard/{component}":
+        if i+1 < len(lines) and lines[i+1].strip().startswith("newTag:"):
+            lines[i+1]=f"  newTag: {tag}"
+            p.write_text("\n".join(lines)+"\n")
+            break
+else:
+    raise SystemExit(f"image component not found: {component}")
 PY
           grep -A1 "name:.*$COMPONENT" "$FILE"
       - name: Create promotion PR
