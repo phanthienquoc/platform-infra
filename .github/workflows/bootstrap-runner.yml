@@ -103,10 +103,6 @@ jobs:
           chmod 600 ~/.ssh/vps_key
           ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
 
-          cat > /tmp/bootstrap-runner.sh <<'SCRIPT'
-          ${{ github.server_url }}/${{ github.repository }}
-          SCRIPT
-
           curl -fsSL \
             -H 'Accept: application/vnd.github.raw+json' \
             -H "Authorization: Bearer ${{ github.token }}" \
@@ -123,7 +119,6 @@ jobs:
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
           RUNNER_TOKEN: ${{ steps.registration.outputs.token }}
-          FORCE_BOOTSTRAP: ${{ inputs.force }}
         run: |
           set -euo pipefail
 
@@ -132,7 +127,8 @@ jobs:
           chmod 600 ~/.ssh/vps_key
           ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
 
-          ssh -i ~/.ssh/vps_key -o BatchMode=yes "$VPS_USER@$VPS_HOST"             "RUNNER_TOKEN='$RUNNER_TOKEN' FORCE_BOOTSTRAP='$FORCE_BOOTSTRAP' sudo -E bash /tmp/bootstrap-runner.sh"
+          ssh -i ~/.ssh/vps_key -o BatchMode=yes "$VPS_USER@$VPS_HOST" \
+            "RUNNER_TOKEN='$RUNNER_TOKEN' sudo -E bash /tmp/bootstrap-runner.sh"
 
       - name: Verify runner service
         env:
