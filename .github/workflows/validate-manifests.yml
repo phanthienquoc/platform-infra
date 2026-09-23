@@ -22,6 +22,15 @@ jobs:
         run: python -m pip install --disable-pip-version-check --no-cache-dir PyYAML==6.0.2
       - name: Install kubectl
         uses: azure/setup-kubectl@c0c8b32d33a5244f1e5947304550403b63930415 # v4
+      - name: Validate shell scripts
+        run: |
+          set -euo pipefail
+          mapfile -t scripts < <(find scripts -type f -name '*.sh' -print | sort)
+          test "${#scripts[@]}" -gt 0
+          for script in "${scripts[@]}"; do
+            bash -n "$script"
+            echo "Validated shell syntax: $script"
+          done
       - name: Render production manifests
         run: kubectl kustomize environments/prod > /tmp/platform-infra-rendered.yaml
       - name: Validate rendered YAML structure (offline)
