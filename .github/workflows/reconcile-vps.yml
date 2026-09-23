@@ -85,6 +85,13 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl get nodes -o wide
           sudo /usr/local/sbin/platform-kubectl get pods -A -o wide
 
+      - name: Verify TCE GitOps images
+        if: env.RECONCILE_MODE == 'apply'
+        run: |
+          set -euo pipefail
+          chmod +x scripts/verify-tce-gitops-images.sh
+          ./scripts/verify-tce-gitops-images.sh
+
       - name: Verify drift cleared
         if: env.RECONCILE_MODE == 'apply'
         run: |
