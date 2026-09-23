@@ -4,3 +4,4 @@ resources:
 - ../../platform/cert-manager
 - ../../apps/stockdividend/overlays/prod
 - ../../apps/tce-dashboard/overlays/prod
+# reconcile trigger: current TCE production release
