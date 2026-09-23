@@ -4,70 +4,51 @@ set -euo pipefail
 output="${1:-/tmp/platform-infra-network.yaml}"
 kubectl kustomize environments/prod > "$output"
 
-fail=0
-service_docs=0
-service_bad=0
-ingress_docs=0
-in_service=0
+python3 - "$output" <<'PY'
+import sys
+from pathlib import Path
+import yaml
 
-while IFS= read -r line; do
-  case "$line" in
-    "kind: Service")
-      service_docs=$((service_docs + 1))
-      in_service=1
-      ;;
-    "kind: Ingress")
-      ingress_docs=$((ingress_docs + 1))
-      in_service=0
-      ;;
-    "kind: "*)
-      in_service=0
-      ;;
-  esac
+path = Path(sys.argv[1])
+docs = list(yaml.safe_load_all(path.read_text()))
+services = [d for d in docs if isinstance(d, dict) and d.get("kind") == "Service"]
+ingresses = [d for d in docs if isinstance(d, dict) and d.get("kind") == "Ingress"]
 
-  if [[ "$in_service" -eq 1 && "$line" =~ ^[[:space:]]*type:[[:space:]]*(.*)$ ]]; then
-    service_type="${BASH_REMATCH[1]}"
-    if [[ "$service_type" != "ClusterIP" ]]; then
-      echo "Non-ClusterIP Service found: $service_type" >&2
-      service_bad=$((service_bad + 1))
-    fi
-  fi
-done < "$output"
+if not services:
+    raise SystemExit("Expected application Services were not rendered.")
 
-if [[ "$service_docs" -eq 0 ]]; then
-  echo 'Expected application Services were not rendered.' >&2
-  fail=1
-fi
+bad_services = [
+    f"{d.get('metadata', {}).get('namespace', '-')}/{d.get('metadata', {}).get('name', '-')}"
+    for d in services
+    if d.get("spec", {}).get("type", "ClusterIP") != "ClusterIP"
+]
+if bad_services:
+    raise SystemExit("Non-ClusterIP Services found: " + ", ".join(bad_services))
 
-if [[ "$service_bad" -ne 0 ]]; then
-  fail=1
-fi
+allowed_hosts = {
+    "tce.mrcute.space",
+    "mrcute.space",
+    "www.mrcute.space",
+    "admin.mrcute.space",
+    "api.mrcute.space",
+}
+hosts = []
+for ingress in ingresses:
+    for rule in ingress.get("spec", {}).get("rules", []) or []:
+        host = rule.get("host")
+        if host:
+            hosts.append(host)
 
-# Production ingress is limited to the explicitly approved public hosts.
-allowed_hosts='^(tce\.mrcute\.space|mrcute\.space|www\.mrcute\.space|admin\.mrcute\.space|api\.mrcute\.space)$'
+unexpected = sorted(set(hosts) - allowed_hosts)
+if unexpected:
+    raise SystemExit("Unexpected externally routable hosts: " + ", ".join(unexpected))
 
-while IFS= read -r host; do
-  host="${host//[[:space:]]/}"
-  if [[ -n "$host" && ! "$host" =~ $allowed_hosts ]]; then
-    echo "Unexpected externally routable host: $host" >&2
-    fail=1
-  fi
-done < <(
-  grep -E '(^|[[:space:]-])host:[[:space:]]*[A-Za-z0-9.-]+' "$output" \
-    | sed -E 's/.*host:[[:space:]]*([A-Za-z0-9.-]+).*/\1/'
-  grep -E 'hosts:[[:space:]]*\[[^]]*\]' "$output" \
-    | sed -E 's/.*hosts:[[:space:]]*\[([^]]*)\].*/\1/' \
-    | tr ',' '\n' \
-    | tr -d '[]\"'
+if len(ingresses) != 2:
+    raise SystemExit(f"Expected exactly 2 production Ingress resources, found {len(ingresses)}.")
+
+print(
+    f"Validated network boundaries in {output}: "
+    f"{len(services)} Services are internal ClusterIP, "
+    f"{len(ingresses)} Ingress resources expose only approved hosts."
 )
-
-if [[ "$ingress_docs" -ne 2 ]]; then
-  echo "Expected exactly 2 production Ingress resources, found $ingress_docs." >&2
-  fail=1
-fi
-
-if [[ "$fail" -ne 0 ]]; then
-  exit 1
-fi
-
-echo "Validated network boundaries in $output: Services remain internal ClusterIP and only approved production hosts are routable."
+PY
