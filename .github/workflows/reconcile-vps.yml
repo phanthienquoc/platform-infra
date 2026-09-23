@@ -11,6 +11,11 @@ on:
         options:
           - plan
           - apply
+      allow_image_changes:
+        description: "Allow deliberate workload image replacement during apply"
+        required: false
+        default: false
+        type: boolean
   schedule:
     - cron: "0 * * * *"
 
@@ -71,6 +76,13 @@ jobs:
           else
             echo "Kubernetes state matches the repository."
           fi
+
+      - name: Guard workload image changes
+        if: env.RECONCILE_MODE == 'apply' && inputs.allow_image_changes != true
+        run: |
+          set -euo pipefail
+          chmod +x scripts/guard-reconcile-images.sh
+          ./scripts/guard-reconcile-images.sh check
 
       - name: Apply production manifests
         if: env.RECONCILE_MODE == 'apply'
