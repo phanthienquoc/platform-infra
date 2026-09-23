@@ -14,6 +14,10 @@ docs = list(yaml.safe_load_all(path.read_text()))
 services = [d for d in docs if isinstance(d, dict) and d.get("kind") == "Service"]
 ingresses = [d for d in docs if isinstance(d, dict) and d.get("kind") == "Ingress"]
 
+print("Network validation resources:")
+print("Services:", [(d.get("metadata", {}).get("namespace"), d.get("metadata", {}).get("name"), d.get("spec", {}).get("type", "ClusterIP")) for d in services])
+print("Ingresses:", [(d.get("metadata", {}).get("namespace"), d.get("metadata", {}).get("name"), [r.get("host") for r in d.get("spec", {}).get("rules", []) or []]) for d in ingresses])
+
 if not services:
     raise SystemExit("Expected application Services were not rendered.")
 
