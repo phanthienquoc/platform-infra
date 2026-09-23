@@ -191,37 +191,32 @@ jobs:
           exit "$rc"
 
       - name: Notify Telegram — production rollout summary
-        if: env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true'
+        if: ${{ !cancelled() && env.RECONCILE_MODE == 'apply' }}
         continue-on-error: true
         env:
           TCE_STATUS: ${{ steps.verify_tce.outcome }}
           TCE_IMAGES_STATUS: ${{ steps.verify_tce_images.outcome }}
           STOCK_STATUS: ${{ steps.verify_stock.outcome }}
+          APPLY_STATUS: ${{ steps.apply.outcome }}
         run: |
           set -euo pipefail
           test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub secret: TELEGRAM_BOT_TOKEN"; exit 1; }
           test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub secret: TELEGRAM_CHAT_ID"; exit 1; }
-          success=()
-          failed=()
-          skipped=()
-          if [ "$TCE_STATUS" = "success" ] && [ "$TCE_IMAGES_STATUS" = "success" ]; then success+=("TCE"); else case "$TCE_STATUS" in skipped|cancelled) skipped+=("TCE") ;; *) failed+=("TCE") ;; esac; fi
-          case "$STOCK_STATUS" in success) success+=("StockDividend") ;; skipped|cancelled) skipped+=("StockDividend") ;; *) failed+=("StockDividend") ;; esac
-          join() { local IFS=", "; echo "$*"; }
-          success_text="$(join "${success[@]}")"
-          failed_text="$(join "${failed[@]}")"
-          skipped_text="$(join "${skipped[@]}")"
-          [ -n "$success_text" ] || success_text="—"
-          [ -n "$failed_text" ] || failed_text="—"
-          [ -n "$skipped_text" ] || skipped_text="—"
-          if [ "${#failed[@]}" -gt 0 ]; then status="PARTIAL"; else status="ALL DEPLOYED"; fi
-          MESSAGE="$(printf '%s\n%s\n%s\n%s\n%s' \
-            "🎉 <b>PRODUCTION • ROLLOUT</b>" \
-            "🟢 SUCCESS  •  $success_text" \
-            "🔴 FAILED   •  $failed_text" \
-            "⚪ SKIPPED  •  $skipped_text" \
-            "🎯 Status: $status")"
-          curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=HTML"
-
+          TAG="$RELEASE_TAG"
+          if [ -z "$TAG" ]; then TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"; fi
+          [ -n "$TAG" ] || TAG="GitOps sync"
+          tce="NOT TARGETED"
+          stock="NOT TARGETED"
+          if [ "$TARGET_APP" = "all" ] || [ "$TARGET_APP" = "tce-dashboard" ]; then
+            if [ "$TCE_STATUS" = "success" ] && [ "$TCE_IMAGES_STATUS" = "success" ]; then tce="SUCCESS"; else tce="FAILED"; fi
+          fi
+          if [ "$TARGET_APP" = "all" ] || [ "$TARGET_APP" = "stockdividend" ]; then
+            if [ "$STOCK_STATUS" = "success" ]; then stock="SUCCESS"; else stock="FAILED"; fi
+          fi
+          status="SUCCESS"
+          if [ "$APPLY_STATUS" != "success" ]; then status="RECONCILIATION FAILED"; elif [[ "$tce" == "FAILED" && "$stock" == "FAILED" ]]; then status="FAILED"; elif [[ "$tce" == "FAILED" || "$stock" == "FAILED" ]]; then status="PARTIAL"; fi
+          MESSAGE="🎉 <b>PRODUCTION • ROLLOUT</b>\n🏷️ Release  <code>$TAG</code>\n🎯 Scope    <code>$TARGET_APP</code>\n🟢 TCE           • $tce\n🟢 StockDividend • $stock\n🎯 Status: $status\n🔒 Failure isolation: enabled"
+          curl --fail-with-body -sS -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" -d "chat_id=$TELEGRAM_CHAT_ID" --data-urlencode "text=$MESSAGE" -d "parse_mode=HTML"
       - name: Verify drift cleared
         if: env.RECONCILE_MODE == 'apply'
         run: |
