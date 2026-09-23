@@ -89,7 +89,7 @@ jobs:
           fi
 
       - name: Guard workload image changes
-        if: env.RECONCILE_MODE == 'apply' && inputs.allow_image_changes != true
+        if: env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && inputs.allow_image_changes != true
         run: |
           set -euo pipefail
           chmod +x scripts/guard-reconcile-images.sh
@@ -97,7 +97,7 @@ jobs:
 
       - name: Apply production manifests
         id: apply
-        if: env.RECONCILE_MODE == 'apply'
+        if: env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true'
         continue-on-error: true
         run: |
           set -euo pipefail
@@ -146,7 +146,7 @@ jobs:
           set -euo pipefail
           test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
           test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
-          MESSAGE="✅ *stockdividend — PRODUCTION DEPLOYED*\n\n📦 Environment: production\n✅ stock-backend rollout verified\n✅ stock-frontend rollout verified\n🕐 Time: $(TZ=Asia/Ho_Chi_Minh date \'\''+%Y-%m-%d %H:%M:%S ICT'\'')\n🔗 Infra run: \${GITHUB_SERVER_URL}/\${GITHUB_REPOSITORY}/actions/runs/\${GITHUB_RUN_ID}"
+          MESSAGE="✅ *stockdividend — PRODUCTION DEPLOYED*\n\n📦 Environment: production\n✅ stock-backend rollout verified\n✅ stock-frontend rollout verified\n🕐 Time: $(TZ=Asia/Ho_Chi_Minh date '+%Y-%m-%d %H:%M:%S ICT')\n🔗 Infra run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=Markdown"
 
       - name: Notify Telegram — TCE rollout deployed
@@ -157,7 +157,7 @@ jobs:
           test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
           TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
           test -n "$TAG" || { echo "Unable to resolve TCE image tag"; exit 1; }
-          MESSAGE="✅ *tce-dashboard — PRODUCTION DEPLOYED*\n\n📦 Environment: production\n🏷️ Image tag: \${TAG}\n✅ tce-frontend rollout verified\n✅ tce-service rollout verified\n🕐 Time: $(TZ=Asia/Ho_Chi_Minh date \'\''+%Y-%m-%d %H:%M:%S ICT'\'')\n🔗 Infra run: \${GITHUB_SERVER_URL}/\${GITHUB_REPOSITORY}/actions/runs/\${GITHUB_RUN_ID}"
+          MESSAGE="✅ *tce-dashboard — PRODUCTION DEPLOYED*\n\n📦 Environment: production\n🏷️ Image tag: ${TAG}\n✅ tce-frontend rollout verified\n✅ tce-service rollout verified\n🕐 Time: $(TZ=Asia/Ho_Chi_Minh date '+%Y-%m-%d %H:%M:%S ICT')\n🔗 Infra run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=Markdown"
 
       - name: Notify Telegram — all production rollouts deployed
@@ -166,7 +166,7 @@ jobs:
           set -euo pipefail
           test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
           test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
-          MESSAGE="🎉 *ALL PRODUCTION ROLLOUTS SUCCESS*\n\n📦 Successful repositories:\n• stockdividend\n• tce-dashboard\n\n✅ All application rollouts verified\n🕐 Time: $(TZ=Asia/Ho_Chi_Minh date \'\''+%Y-%m-%d %H:%M:%S ICT'\'')\n🔗 Infra run: \${GITHUB_SERVER_URL}/\${GITHUB_REPOSITORY}/actions/runs/\${GITHUB_RUN_ID}"
+          MESSAGE="🎉 *ALL PRODUCTION ROLLOUTS SUCCESS*\n\n📦 Successful repositories:\n• stockdividend\n• tce-dashboard\n\n✅ All application rollouts verified\n🕐 Time: $(TZ=Asia/Ho_Chi_Minh date '+%Y-%m-%d %H:%M:%S ICT')\n🔗 Infra run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=Markdown"
 
       - name: Verify drift cleared
@@ -193,10 +193,10 @@ jobs:
               ;;
           esac
           exit "$rc"
+
       - name: Fail if reconciliation apply failed
-        if: env.RECONCILE_MODE == 'apply' && steps.apply.outcome != 'success'
+        if: env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && steps.apply.outcome != 'success'
         run: |
           echo "Reconciliation apply reported one or more rollout failures." >&2
           echo "Per-repository rollout notifications above report which repositories completed successfully." >&2
           exit 1
-
