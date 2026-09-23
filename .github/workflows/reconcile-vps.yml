@@ -140,8 +140,8 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
-          test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub secret: TELEGRAM_BOT_TOKEN"; exit 1; }
-          test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub secret: TELEGRAM_CHAT_ID"; exit 1; }
+          test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
+          test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
           TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
           test -n "$TAG" || TAG="unknown"
           MESSAGE="$(printf '%s\n%s\n%s\n%s\n%s' \
