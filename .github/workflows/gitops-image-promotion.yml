@@ -22,6 +22,7 @@ on:
   repository_dispatch:
     types:
       - image-published
+      - tce-release-requested
 
 permissions:
   contents: write
@@ -49,6 +50,7 @@ jobs:
           EVENT_APP: ${{ github.event.client_payload.app }}
           EVENT_COMPONENT: ${{ github.event.client_payload.component }}
           EVENT_TAG: ${{ github.event.client_payload.tag }}
+          EVENT_RELEASE: ${{ github.event.client_payload.release }}
           INPUT_APP: ${{ inputs.app }}
           INPUT_COMPONENT: ${{ inputs.component }}
           INPUT_TAG: ${{ inputs.tag }}
@@ -58,8 +60,13 @@ jobs:
           APP="${EVENT_APP:-$INPUT_APP}"
           COMPONENT="${EVENT_COMPONENT:-$INPUT_COMPONENT}"
           TAG="${EVENT_TAG:-$INPUT_TAG}"
+          if [ "${{ github.event_name }}" = "repository_dispatch" ] && [ "${{ github.event.action }}" = "tce-release-requested" ] && [ "$APP" = "tce-dashboard" ]; then
+            TAG="$EVENT_RELEASE"
+            COMPONENT="release"
+          fi
 
           case "$APP/$COMPONENT" in
+            tce-dashboard/release) ;;
             stockdividend/backend|stockdividend/admin|tce-dashboard/web|tce-dashboard/service) ;;
             *)
               echo "::error::Unsupported image target: $APP/$COMPONENT"
