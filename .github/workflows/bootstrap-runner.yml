@@ -123,10 +123,10 @@ jobs:
           chmod 600 ~/.ssh/vps_key
           ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
 
-          # Pass the short-lived registration token through stdin so it is not embedded
-          # in the SSH command line or shell process arguments.
-          printf '%s' "$RUNNER_TOKEN" | ssh -i ~/.ssh/vps_key -o BatchMode=yes "$VPS_USER@$VPS_HOST" \
-            'sudo -E env RUNNER_TOKEN="$(cat)" bash /tmp/bootstrap-runner.sh'
+          # Pass the short-lived registration token over SSH stdin. The remote
+          # command reads it into the environment instead of placing it in argv.
+          printf '%s\n' "$RUNNER_TOKEN" | ssh -i ~/.ssh/vps_key -o BatchMode=yes "$VPS_USER@$VPS_HOST" \
+            'read -r RUNNER_TOKEN && export RUNNER_TOKEN && sudo -E bash /tmp/bootstrap-runner.sh'
 
       - name: Verify runner service and reconciliation capability
         env:
