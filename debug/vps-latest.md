@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-09-23T04:03:08+00:00
+Generated: 2026-09-23T04:17:59+00:00
 
 ## Host
 uname: Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,16 +11,16 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.4Gi       815Mi        55Mi        19Gi        19Gi
+Mem:            23Gi       3.4Gi       755Mi        56Mi        19Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   27G   19G  60% /
- 04:03:08 up 144 days, 13:53,  0 users,  load average: 0.32, 0.24, 0.15
+ 04:18:00 up 144 days, 14:08,  2 users,  load average: 0.11, 0.14, 0.15
 
 ## Runner
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
-github-+ 1309509  0.0  0.5    13:03:53 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-github-+ 1923286 62.6  0.4       00:03 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+github-+ 1309509  0.0  0.5    13:18:44 /opt/actions-runner/bin/Runner.Listener run --startuptype service
+github-+ 1937092 64.3  0.4       00:03 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
 runner_service_enabled: enabled
@@ -81,21 +81,23 @@ kube-public       Active   32d
 kube-system       Active   32d
 stock-prod        Active   3d21h
 tce-prod          Active   32d
-NAMESPACE      NAME                                      READY   STATUS      RESTARTS      AGE     IP            NODE         NOMINATED NODE   READINESS GATES
-cert-manager   cert-manager-75b96c9588-lgn7d             1/1     Running     0             28d     10.42.0.98    tce-k3s-01   <none>           <none>
-cert-manager   cert-manager-cainjector-b644b66f7-l8jdq   1/1     Running     1 (28d ago)   28d     10.42.0.100   tce-k3s-01   <none>           <none>
-cert-manager   cert-manager-webhook-76d97df888-wwq49     1/1     Running     0             28d     10.42.0.99    tce-k3s-01   <none>           <none>
-kube-system    coredns-54996dc9b4-d68pf                  1/1     Running     0             32d     10.42.0.6     tce-k3s-01   <none>           <none>
-kube-system    helm-install-traefik-crd-mq7w8            0/1     Completed   0             32d     10.42.0.3     tce-k3s-01   <none>           <none>
-kube-system    helm-install-traefik-s2twj                0/1     Completed   1 (32d ago)   32d     10.42.0.2     tce-k3s-01   <none>           <none>
-kube-system    local-path-provisioner-58d557dc48-jbhhp   1/1     Running     1 (32d ago)   32d     10.42.0.5     tce-k3s-01   <none>           <none>
-kube-system    metrics-server-6dc596dfb8-s2bzm           1/1     Running     0             32d     10.42.0.4     tce-k3s-01   <none>           <none>
-kube-system    svclb-traefik-859779c1-7bwx2              2/2     Running     0             32d     10.42.0.7     tce-k3s-01   <none>           <none>
-kube-system    traefik-59b7647586-gml84                  1/1     Running     0             32d     10.42.0.8     tce-k3s-01   <none>           <none>
-stock-prod     stock-backend-57ccb8ff6-d25jq             1/1     Running     0             3d21h   10.42.0.55    tce-k3s-01   <none>           <none>
-stock-prod     stock-frontend-79c57845df-z747s           1/1     Running     0             3d21h   10.42.0.56    tce-k3s-01   <none>           <none>
-tce-prod       tce-frontend-68c4c965df-m8d6p             1/1     Running     0             112m    10.42.0.73    tce-k3s-01   <none>           <none>
-tce-prod       tce-service-6c9dbb969c-wmld8              1/1     Running     0             113m    10.42.0.72    tce-k3s-01   <none>           <none>
+NAMESPACE      NAME                                      READY   STATUS             RESTARTS      AGE     IP            NODE         NOMINATED NODE   READINESS GATES
+cert-manager   cert-manager-75b96c9588-lgn7d             1/1     Running            0             28d     10.42.0.98    tce-k3s-01   <none>           <none>
+cert-manager   cert-manager-cainjector-b644b66f7-l8jdq   1/1     Running            1 (28d ago)   28d     10.42.0.100   tce-k3s-01   <none>           <none>
+cert-manager   cert-manager-webhook-76d97df888-wwq49     1/1     Running            0             28d     10.42.0.99    tce-k3s-01   <none>           <none>
+kube-system    coredns-54996dc9b4-d68pf                  1/1     Running            0             32d     10.42.0.6     tce-k3s-01   <none>           <none>
+kube-system    helm-install-traefik-crd-mq7w8            0/1     Completed          0             32d     10.42.0.3     tce-k3s-01   <none>           <none>
+kube-system    helm-install-traefik-s2twj                0/1     Completed          1 (32d ago)   32d     10.42.0.2     tce-k3s-01   <none>           <none>
+kube-system    local-path-provisioner-58d557dc48-jbhhp   1/1     Running            1 (32d ago)   32d     10.42.0.5     tce-k3s-01   <none>           <none>
+kube-system    metrics-server-6dc596dfb8-s2bzm           1/1     Running            0             32d     10.42.0.4     tce-k3s-01   <none>           <none>
+kube-system    svclb-traefik-859779c1-7bwx2              2/2     Running            0             32d     10.42.0.7     tce-k3s-01   <none>           <none>
+kube-system    traefik-59b7647586-gml84                  1/1     Running            0             32d     10.42.0.8     tce-k3s-01   <none>           <none>
+stock-prod     stock-admin-649bd5b58b-5sqr4              0/1     ImagePullBackOff   0             4m51s   10.42.0.74    tce-k3s-01   <none>           <none>
+stock-prod     stock-backend-57ccb8ff6-d25jq             1/1     Running            0             3d21h   10.42.0.55    tce-k3s-01   <none>           <none>
+stock-prod     stock-backend-789dcd9498-rh2jn            0/1     ImagePullBackOff   0             4m51s   10.42.0.75    tce-k3s-01   <none>           <none>
+stock-prod     stock-frontend-79c57845df-z747s           1/1     Running            0             3d21h   10.42.0.56    tce-k3s-01   <none>           <none>
+tce-prod       tce-frontend-6f8cc9db9c-xrlk9             1/1     Running            0             4m51s   10.42.0.76    tce-k3s-01   <none>           <none>
+tce-prod       tce-service-6c9dbb969c-wmld8              1/1     Running            0             128m    10.42.0.72    tce-k3s-01   <none>           <none>
 NAMESPACE      NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
 cert-manager   cert-manager              1/1     1            1           28d
 cert-manager   cert-manager-cainjector   1/1     1            1           28d
@@ -104,13 +106,14 @@ kube-system    coredns                   1/1     1            1           32d
 kube-system    local-path-provisioner    1/1     1            1           32d
 kube-system    metrics-server            1/1     1            1           32d
 kube-system    traefik                   1/1     1            1           32d
+stock-prod     stock-admin               0/1     1            0           4m51s
 stock-prod     stock-backend             1/1     1            1           3d21h
 stock-prod     stock-frontend            1/1     1            1           3d21h
 tce-prod       tce-frontend              1/1     1            1           28d
-tce-prod       tce-service               1/1     1            1           28d
+tce-prod       tce-service               1/1     0            1           28d
 
 ### GitOps drift
-status: drift-detected
+status: clean
 
 ### Images
 cert-manager   cert-manager              quay.io/jetstack/cert-manager-controller:v1.21.1
@@ -120,10 +123,11 @@ kube-system    coredns                   rancher/mirrored-coredns-coredns:1.14.6
 kube-system    local-path-provisioner    rancher/local-path-provisioner:v0.0.36
 kube-system    metrics-server            rancher/mirrored-metrics-server:v0.9.0
 kube-system    traefik                   rancher/mirrored-library-traefik:3.7.8
-stock-prod     stock-backend             ghcr.io/phanthienquoc/stockdividend/backend:23b2878
+stock-prod     stock-admin               ghcr.io/phanthienquoc/stockdividend/admin:12d63b4
+stock-prod     stock-backend             ghcr.io/phanthienquoc/stockdividend/backend:12d63b4
 stock-prod     stock-frontend            ghcr.io/phanthienquoc/stockdividend/user:23b2878
-tce-prod       tce-frontend              docker.io/library/tce-frontend:prod-v0.1.0-b96e37f
-tce-prod       tce-service               docker.io/library/tce-service:prod-v0.1.0-b96e37f
+tce-prod       tce-frontend              ghcr.io/phanthienquoc/tce-dashboard/web:prod-v0.1.0-4ee22ab
+tce-prod       tce-service               ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-4ee22ab
 NAMESPACE      NAME                      TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
 cert-manager   cert-manager              ClusterIP      10.43.138.27    <none>        9402/TCP                     28d
 cert-manager   cert-manager-cainjector   ClusterIP      10.43.135.132   <none>        9402/TCP                     28d
@@ -133,15 +137,18 @@ kube-system    kube-dns                  ClusterIP      10.43.0.10      <none>  
 kube-system    metrics-server            ClusterIP      10.43.120.41    <none>        443/TCP                      32d
 kube-system    traefik                   LoadBalancer   10.43.213.239   10.0.0.120    80:30225/TCP,443:30415/TCP   32d
 stock-prod     backend                   ClusterIP      10.43.46.139    <none>        8080/TCP                     3d21h
+stock-prod     stock-admin               ClusterIP      10.43.97.150    <none>        3000/TCP                     4m56s
 stock-prod     stock-backend             ClusterIP      10.43.247.219   <none>        8080/TCP                     3d21h
 stock-prod     stock-frontend            ClusterIP      10.43.53.102    <none>        3000/TCP                     3d21h
 tce-prod       tce-frontend              ClusterIP      10.43.99.130    <none>        80/TCP                       28d
 tce-prod       tce-service               ClusterIP      10.43.189.227   <none>        8210/TCP                     28d
 NAMESPACE    NAME            CLASS     HOSTS                                                          ADDRESS      PORTS     AGE
+stock-prod   stock           traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   4m55s
 stock-prod   stock-ingress   traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   3d21h
 tce-prod     tce             traefik   tce.mrcute.space                                               10.0.0.120   80, 443   28d
 
 ### Ingress hosts
+stock-prod   stock           mrcute.space,www.mrcute.space,admin.mrcute.space,api.mrcute.space
 stock-prod   stock-ingress   mrcute.space,www.mrcute.space,admin.mrcute.space,api.mrcute.space
 tce-prod     tce             tce.mrcute.space
 
