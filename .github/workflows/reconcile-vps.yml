@@ -24,6 +24,9 @@ on:
     paths:
       - "apps/**"
       - "environments/**"
+  repository_dispatch:
+    types:
+      - gitops-promoted
 
 permissions:
   contents: read
@@ -33,7 +36,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  RECONCILE_MODE: ${{ (github.event_name == 'schedule' || github.event_name == 'push') && 'apply' || inputs.mode }}
+  RECONCILE_MODE: ${{ (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'repository_dispatch') && 'apply' || inputs.mode }}
   TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN }}
   TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
 
@@ -96,7 +99,7 @@ jobs:
           fi
 
       - name: Guard workload image changes
-        if: env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && inputs.allow_image_changes != true && github.event_name != 'push'
+        if: env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && inputs.allow_image_changes != true && github.event_name == 'workflow_dispatch'
         run: |
           set -euo pipefail
           chmod +x scripts/guard-reconcile-images.sh
