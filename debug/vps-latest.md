@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-09-23T05:30:07+00:00
+Generated: 2026-09-23T05:38:43+00:00
 
 ## Host
 uname: Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,17 +11,17 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.4Gi       1.0Gi        56Mi        18Gi        19Gi
+Mem:            23Gi       3.4Gi       1.0Gi        55Mi        19Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   28G   18G  62% /
- 05:30:07 up 144 days, 15:20,  0 users,  load average: 0.03, 0.12, 0.16
+ 05:38:43 up 144 days, 15:29,  0 users,  load average: 0.16, 0.16, 0.17
 
 ## Runner
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
-github-+ 1309509  0.0  0.5    14:30:52 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-github-+ 2000380 51.7  0.4       00:04 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
-  actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
+github-+ 1309509  0.0  0.5    14:39:28 /opt/actions-runner/bin/Runner.Listener run --startuptype service
+github-+ 2007903 59.3  0.4       00:03 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+  actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service loaded    active     running       GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
 runner_service_enabled: enabled
 
@@ -92,12 +92,12 @@ kube-system    local-path-provisioner-58d557dc48-jbhhp   1/1     Running        
 kube-system    metrics-server-6dc596dfb8-s2bzm           1/1     Running            0             32d     10.42.0.4     tce-k3s-01   <none>           <none>
 kube-system    svclb-traefik-859779c1-7bwx2              2/2     Running            0             32d     10.42.0.7     tce-k3s-01   <none>           <none>
 kube-system    traefik-59b7647586-gml84                  1/1     Running            0             32d     10.42.0.8     tce-k3s-01   <none>           <none>
-stock-prod     stock-admin-649bd5b58b-5sqr4              0/1     ImagePullBackOff   0             76m     10.42.0.74    tce-k3s-01   <none>           <none>
+stock-prod     stock-admin-649bd5b58b-5sqr4              0/1     ImagePullBackOff   0             85m     10.42.0.74    tce-k3s-01   <none>           <none>
 stock-prod     stock-backend-57ccb8ff6-d25jq             1/1     Running            0             3d23h   10.42.0.55    tce-k3s-01   <none>           <none>
-stock-prod     stock-backend-789dcd9498-rh2jn            0/1     ImagePullBackOff   0             76m     10.42.0.75    tce-k3s-01   <none>           <none>
+stock-prod     stock-backend-789dcd9498-rh2jn            0/1     ImagePullBackOff   0             85m     10.42.0.75    tce-k3s-01   <none>           <none>
 stock-prod     stock-frontend-79c57845df-z747s           1/1     Running            0             3d23h   10.42.0.56    tce-k3s-01   <none>           <none>
-tce-prod       tce-frontend-6f8cc9db9c-xrlk9             1/1     Running            0             76m     10.42.0.76    tce-k3s-01   <none>           <none>
-tce-prod       tce-service-7f89dbd6c-wsj77               1/1     Running            0             66m     10.42.0.77    tce-k3s-01   <none>           <none>
+tce-prod       tce-frontend-6f8cc9db9c-xrlk9             1/1     Running            0             85m     10.42.0.76    tce-k3s-01   <none>           <none>
+tce-prod       tce-service-7f89dbd6c-wsj77               1/1     Running            0             74m     10.42.0.77    tce-k3s-01   <none>           <none>
 NAMESPACE      NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
 cert-manager   cert-manager              1/1     1            1           28d
 cert-manager   cert-manager-cainjector   1/1     1            1           28d
@@ -106,7 +106,7 @@ kube-system    coredns                   1/1     1            1           32d
 kube-system    local-path-provisioner    1/1     1            1           32d
 kube-system    metrics-server            1/1     1            1           32d
 kube-system    traefik                   1/1     1            1           32d
-stock-prod     stock-admin               0/1     1            0           76m
+stock-prod     stock-admin               0/1     1            0           85m
 stock-prod     stock-backend             1/1     1            1           3d23h
 stock-prod     stock-frontend            1/1     1            1           3d23h
 tce-prod       tce-frontend              1/1     1            1           28d
@@ -137,13 +137,13 @@ kube-system    kube-dns                  ClusterIP      10.43.0.10      <none>  
 kube-system    metrics-server            ClusterIP      10.43.120.41    <none>        443/TCP                      32d
 kube-system    traefik                   LoadBalancer   10.43.213.239   10.0.0.120    80:30225/TCP,443:30415/TCP   32d
 stock-prod     backend                   ClusterIP      10.43.46.139    <none>        8080/TCP                     3d23h
-stock-prod     stock-admin               ClusterIP      10.43.97.150    <none>        3000/TCP                     77m
+stock-prod     stock-admin               ClusterIP      10.43.97.150    <none>        3000/TCP                     85m
 stock-prod     stock-backend             ClusterIP      10.43.247.219   <none>        8080/TCP                     3d23h
 stock-prod     stock-frontend            ClusterIP      10.43.53.102    <none>        3000/TCP                     3d23h
 tce-prod       tce-frontend              ClusterIP      10.43.99.130    <none>        80/TCP                       28d
 tce-prod       tce-service               ClusterIP      10.43.189.227   <none>        8210/TCP                     28d
 NAMESPACE    NAME            CLASS     HOSTS                                                          ADDRESS      PORTS     AGE
-stock-prod   stock           traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   77m
+stock-prod   stock           traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   85m
 stock-prod   stock-ingress   traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   3d23h
 tce-prod     tce             traefik   tce.mrcute.space                                               10.0.0.120   80, 443   28d
 
