@@ -10,4 +10,4 @@ spec:
     limits.cpu: "2"
     limits.memory: 4Gi
     pods: "6"
-    jobs.batch: "6"
+    count/jobs.batch: "6"
