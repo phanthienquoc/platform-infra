@@ -124,7 +124,7 @@ jobs:
           test -n "$TAG" || TAG="unknown"
           MESSAGE="$(printf '%s\n%s\n%s\n%s\n%s' \
             "🔄 <b>PRODUCTION • PROCESSING</b>" \
-            "🏷️ Release  <code>"$TAG"</code>" \
+            "🏷️ Release  <code>$TAG</code>" \
             "✓ GitOps synced" \
             "✓ VPS reconciliation" \
             "⏳ Rollout in progress")"
