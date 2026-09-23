@@ -18,6 +18,12 @@ on:
         type: boolean
   schedule:
     - cron: "0 * * * *"
+  push:
+    branches:
+      - master
+    paths:
+      - "apps/**"
+      - "environments/**"
 
 permissions:
   contents: read
@@ -27,7 +33,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  RECONCILE_MODE: ${{ github.event_name == 'schedule' && 'apply' || inputs.mode }}
+  RECONCILE_MODE: ${{ (github.event_name == 'schedule' || github.event_name == 'push') && 'apply' || inputs.mode }}
   TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN }}
   TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
 
