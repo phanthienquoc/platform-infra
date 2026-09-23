@@ -1,4 +1,5 @@
-name: GitOps image promotion
+name: GitOps Image Promotion
+run-name: GitOps Image Promotion — ${{ inputs.app || github.event.client_payload.app }} / ${{ inputs.component || github.event.client_payload.component }}
 
 on:
   workflow_dispatch:
