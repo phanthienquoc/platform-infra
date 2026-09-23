@@ -91,7 +91,9 @@ jobs:
           ./scripts/guard-reconcile-images.sh check
 
       - name: Apply production manifests
+        id: apply
         if: env.RECONCILE_MODE == 'apply'
+        continue-on-error: true
         run: |
           set -euo pipefail
           ./scripts/reconcile-vps.sh apply
@@ -109,6 +111,13 @@ jobs:
           set -euo pipefail
           chmod +x scripts/verify-tce-gitops-images.sh
           ./scripts/verify-tce-gitops-images.sh
+
+      - name: Fail if reconciliation apply failed
+        if: env.RECONCILE_MODE == 'apply' && steps.apply.outcome != 'success'
+        run: |
+          echo "Reconciliation apply reported one or more rollout failures." >&2
+          echo "Cluster/TCE verification above was still executed so unrelated workloads cannot hide TCE state." >&2
+          exit 1
 
       - name: Verify drift cleared
         if: env.RECONCILE_MODE == 'apply'
