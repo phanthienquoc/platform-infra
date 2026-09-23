@@ -7,8 +7,12 @@ ROOT="${GITHUB_WORKSPACE:-$(pwd)}"
 cd "$ROOT"
 
 run_diff() {
-  sudo /usr/local/sbin/platform-kubectl diff -k environments/prod
-  local rc=$?
+  local rc
+  if sudo /usr/local/sbin/platform-kubectl diff -k environments/prod; then
+    rc=0
+  else
+    rc=$?
+  fi
   if [[ "$rc" -gt 1 ]]; then
     echo "Kubernetes diff failed with exit code $rc" >&2
     return "$rc"
