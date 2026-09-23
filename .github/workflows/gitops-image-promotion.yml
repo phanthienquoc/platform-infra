@@ -168,6 +168,27 @@ jobs:
             - component: ${{ steps.input.outputs.component }}
             - image tag: ${{ steps.input.outputs.tag }}
 
+      - name: Validate promotion PR checks
+        if: steps.promotion.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.promotion.outputs.pull-request-number }}
+        run: |
+          set -euo pipefail
+          REPO="${GITHUB_REPOSITORY}"
+          echo "Waiting for required validation checks on PR #$PR_NUMBER."
+          for attempt in $(seq 1 30); do
+            state="$(gh pr checks "$PR_NUMBER" --repo "$REPO" --required --json state --jq 'if length == 0 then "PENDING" elif any(.[]; .state == "FAILURE" or .state == "ERROR") then "FAILURE" elif all(.[]; .state == "SUCCESS") then "SUCCESS" else "PENDING" end' 2>/dev/null || echo PENDING)"
+            echo "Promotion PR check state: $state (attempt $attempt/30)"
+            case "$state" in
+              SUCCESS) exit 0 ;;
+              FAILURE) echo "::error::Required promotion PR checks failed."; exit 1 ;;
+            esac
+            sleep 10
+          done
+          echo "::error::Required promotion PR checks did not complete within the validation window."
+          exit 1
+
       - name: Merge promotion PR
         if: steps.promotion.outputs.pull-request-number != ''
         env:
