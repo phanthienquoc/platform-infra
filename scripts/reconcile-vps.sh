@@ -58,10 +58,29 @@ case "$MODE" in
     sudo /usr/local/sbin/platform-kubectl apply -k environments/prod
 
     echo "== Waiting for application rollouts =="
-    wait_rollout stock-backend stock-prod
-    wait_rollout stock-frontend stock-prod
-    wait_rollout tce-service tce-prod
-    wait_rollout tce-frontend tce-prod
+
+    rollout_rc=0
+
+    if ! wait_rollout stock-backend stock-prod; then
+      rollout_rc=1
+    fi
+
+    if ! wait_rollout stock-frontend stock-prod; then
+      rollout_rc=1
+    fi
+
+    if ! wait_rollout tce-service tce-prod; then
+      rollout_rc=1
+    fi
+
+    if ! wait_rollout tce-frontend tce-prod; then
+      rollout_rc=1
+    fi
+
+    if [[ "$rollout_rc" -ne 0 ]]; then
+      echo "One or more application rollouts failed; all rollout checks were attempted." >&2
+      return "$rollout_rc"
+    fi
     ;;
   *)
     echo "Usage: $0 {plan|apply}" >&2
