@@ -51,7 +51,7 @@ if len(ingresses) != 2:
     raise SystemExit(f"Expected exactly 2 production Ingress resources, found {len(ingresses)}.")
 
 print(
-    f"Validated network boundaries in {output}: "
+    f"Validated network boundaries in {path}: "
     f"{len(services)} Services are internal ClusterIP, "
     f"{len(ingresses)} Ingress resources expose only approved hosts."
 )
