@@ -150,8 +150,9 @@ jobs:
             test -x /usr/local/sbin/platform-kubectl
             sudo /usr/local/sbin/platform-kubectl version >/dev/null
 
+            cd /opt/actions-runner/_work/platform-infra/platform-infra
             set +e
-            sudo /usr/local/sbin/platform-kubectl diff -k /opt/actions-runner/_work/platform-infra/platform-infra/environments/prod >/tmp/platform-kubectl-diff-check 2>/tmp/platform-kubectl-diff-error
+            sudo /usr/local/sbin/platform-kubectl diff -k environments/prod >/tmp/platform-kubectl-diff-check 2>/tmp/platform-kubectl-diff-error
             rc=$?
             set -e
             if [[ "$rc" -gt 1 ]]; then
