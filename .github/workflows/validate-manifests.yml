@@ -76,19 +76,11 @@ jobs:
           if not images:
               raise SystemExit('No first-party application images were rendered.')
 
-          stock_sha = re.compile(r'^ghcr\.io/phanthienquoc/stockdividend/(backend|admin):[0-9a-f]{7,64}
-      - name: Validate network boundaries
-        run: |
-          chmod +x scripts/validate-network-boundaries.sh
-          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
-)
+          stock_sha = re.compile(
+              r'^ghcr\.io/phanthienquoc/stockdividend/(backend|admin):[0-9a-f]{7,64}$'
+          )
           tce_versioned = re.compile(
-              r'^ghcr\.io/phanthienquoc/tce-dashboard/(web|service):prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}
-      - name: Validate network boundaries
-        run: |
-          chmod +x scripts/validate-network-boundaries.sh
-          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
-
+              r'^ghcr\.io/phanthienquoc/tce-dashboard/(web|service):prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}$'
           )
 
           invalid = [
