@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-09-23T01:34:02+00:00
+Generated: 2026-09-23T01:42:48+00:00
 
 ## Host
 uname: Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,16 +11,16 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.4Gi       5.6Gi        54Mi        14Gi        19Gi
+Mem:            23Gi       3.4Gi       3.8Gi        54Mi        16Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/sda1        45G   20G   26G  43% /
- 01:34:02 up 144 days, 11:24,  2 users,  load average: 0.28, 0.26, 0.24
+/dev/sda1        45G   21G   24G  47% /
+ 01:42:48 up 144 days, 11:33,  0 users,  load average: 0.53, 0.69, 0.45
 
 ## Runner
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
-github-+ 1309509  0.0  0.6    10:34:47 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-github-+ 1796182 57.6  0.4       00:03 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+github-+ 1309509  0.0  0.5    10:43:33 /opt/actions-runner/bin/Runner.Listener run --startuptype service
+github-+ 1805061 59.0  0.4       00:03 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
 runner_service_enabled: enabled
@@ -94,8 +94,8 @@ kube-system    svclb-traefik-859779c1-7bwx2              2/2     Running     0  
 kube-system    traefik-59b7647586-gml84                  1/1     Running     0             32d     10.42.0.8     tce-k3s-01   <none>           <none>
 stock-prod     stock-backend-57ccb8ff6-d25jq             1/1     Running     0             3d19h   10.42.0.55    tce-k3s-01   <none>           <none>
 stock-prod     stock-frontend-79c57845df-z747s           1/1     Running     0             3d19h   10.42.0.56    tce-k3s-01   <none>           <none>
-tce-prod       tce-frontend-64f468f759-zn7g5             1/1     Running     0             25h     10.42.0.65    tce-k3s-01   <none>           <none>
-tce-prod       tce-service-749db66ff5-ks4m4              1/1     Running     0             25h     10.42.0.64    tce-k3s-01   <none>           <none>
+tce-prod       tce-frontend-65f748b54f-z5lmj             1/1     Running     0             3m15s   10.42.0.67    tce-k3s-01   <none>           <none>
+tce-prod       tce-service-8dcbcb86f-bhtbh               1/1     Running     0             3m31s   10.42.0.66    tce-k3s-01   <none>           <none>
 NAMESPACE      NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
 cert-manager   cert-manager              1/1     1            1           28d
 cert-manager   cert-manager-cainjector   1/1     1            1           28d
@@ -122,8 +122,8 @@ kube-system    metrics-server            rancher/mirrored-metrics-server:v0.9.0
 kube-system    traefik                   rancher/mirrored-library-traefik:3.7.8
 stock-prod     stock-backend             ghcr.io/phanthienquoc/stockdividend/backend:23b2878
 stock-prod     stock-frontend            ghcr.io/phanthienquoc/stockdividend/user:23b2878
-tce-prod       tce-frontend              docker.io/library/tce-frontend:prod-v0.1.0-147cc73
-tce-prod       tce-service               docker.io/library/tce-service:prod-v0.1.0-147cc73
+tce-prod       tce-frontend              docker.io/library/tce-frontend:prod-v0.1.0-31da757
+tce-prod       tce-service               docker.io/library/tce-service:prod-v0.1.0-31da757
 NAMESPACE      NAME                      TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
 cert-manager   cert-manager              ClusterIP      10.43.138.27    <none>        9402/TCP                     28d
 cert-manager   cert-manager-cainjector   ClusterIP      10.43.135.132   <none>        9402/TCP                     28d
