@@ -133,16 +133,17 @@ jobs:
           tag = sys.argv[4]
 
           lines = path.read_text().splitlines()
-          expected = f"name: ghcr.io/phanthienquoc/{app}/{component}"
+          expected = f"ghcr.io/phanthienquoc/{app}/{component}"
 
           for index, line in enumerate(lines):
-              if line.strip() != expected:
+              if line.strip() not in {f"- name: {expected}", f"name: {expected}"}:
                   continue
 
               if index + 1 >= len(lines) or not lines[index + 1].strip().startswith("newTag:"):
                   raise SystemExit(f"newTag missing after {expected}")
 
-              lines[index + 1] = f"  newTag: {tag}"
+              indent = lines[index + 1][:len(lines[index + 1]) - len(lines[index + 1].lstrip())]
+              lines[index + 1] = f"{indent}newTag: {tag}"
               path.write_text("\n".join(lines) + "\n")
               break
           else:
