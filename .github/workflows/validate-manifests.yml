@@ -52,10 +52,60 @@ jobs:
       - name: Check immutable application image tags
         run: |
           set -euo pipefail
-          if grep -E '^[[:space:]]+image: ghcr\.io/phanthienquoc/' /tmp/platform-infra-rendered.yaml | grep -Ev ':[0-9a-f]{7,64}$'; then
-            echo 'First-party application images must use immutable Git-SHA tags.'
-            exit 1
-          fi
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          import yaml
+
+          docs = list(yaml.safe_load_all(Path('/tmp/platform-infra-rendered.yaml').read_text()))
+          images = []
+
+          def walk(value):
+              if isinstance(value, dict):
+                  for key, child in value.items():
+                      if key == 'image' and isinstance(child, str) and child.startswith('ghcr.io/phanthienquoc/'):
+                          images.append(child)
+                      walk(child)
+              elif isinstance(value, list):
+                  for child in value:
+                      walk(child)
+
+          for doc in docs:
+              walk(doc)
+
+          if not images:
+              raise SystemExit('No first-party application images were rendered.')
+
+          stock_sha = re.compile(r'^ghcr\.io/phanthienquoc/stockdividend/(backend|admin):[0-9a-f]{7,64}
+      - name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+)
+          tce_versioned = re.compile(
+              r'^ghcr\.io/phanthienquoc/tce-dashboard/(web|service):prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}
+      - name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+
+          )
+
+          invalid = [
+              image for image in images
+              if not (stock_sha.fullmatch(image) or tce_versioned.fullmatch(image))
+          ]
+          if invalid:
+              print('Invalid first-party image tags:')
+              for image in invalid:
+                  print(f'  {image}')
+              raise SystemExit(
+                  'First-party application images must use immutable Git-SHA tags; '
+                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
+              )
+
+          print(f'Validated {len(images)} immutable first-party application images.')
+          PY
       - name: Validate network boundaries
         run: |
           chmod +x scripts/validate-network-boundaries.sh
