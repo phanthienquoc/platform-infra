@@ -43,6 +43,7 @@ permissions:
 concurrency:
   group: platform-vps-reconcile
   cancel-in-progress: false
+  queue: max
 
 env:
   RECONCILE_MODE: ${{ (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'repository_dispatch') && 'apply' || inputs.mode }}
@@ -141,14 +142,10 @@ jobs:
           set -euo pipefail
           test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub secret: TELEGRAM_BOT_TOKEN"; exit 1; }
           test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub secret: TELEGRAM_CHAT_ID"; exit 1; }
-          TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
+          TAG="$RELEASE_TAG"
+          if [ -z "$TAG" ]; then TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"; fi
           test -n "$TAG" || TAG="unknown"
-          MESSAGE="$(printf '%s\n%s\n%s\n%s\n%s' \
-            "🔄 <b>PRODUCTION • PROCESSING</b>" \
-            "🏷️ Release  <code>$TAG</code>" \
-            "✓ GitOps synced" \
-            "✓ VPS reconciliation" \
-            "⏳ Rollout in progress")"
+          MESSAGE="🔄 <b>PRODUCTION • PROCESSING</b>\n🎯 Scope    <code>$TARGET_APP</code>\n🏷️ Release  <code>$TAG</code>\n✓ GitOps manifests applied\n⏳ Targeted rollout verification in progress"
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=HTML"
 
       - name: Verify cluster after reconciliation
