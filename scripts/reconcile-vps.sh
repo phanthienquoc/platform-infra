@@ -57,30 +57,8 @@ case "$MODE" in
     echo "== Applying environments/prod =="
     sudo /usr/local/sbin/platform-kubectl apply -k environments/prod
 
-    echo "== Waiting for application rollouts =="
-
-    rollout_rc=0
-
-    if ! wait_rollout stock-backend stock-prod; then
-      rollout_rc=1
-    fi
-
-    if ! wait_rollout stock-frontend stock-prod; then
-      rollout_rc=1
-    fi
-
-    if ! wait_rollout tce-service tce-prod; then
-      rollout_rc=1
-    fi
-
-    if ! wait_rollout tce-frontend tce-prod; then
-      rollout_rc=1
-    fi
-
-    if [[ "$rollout_rc" -ne 0 ]]; then
-      echo "One or more application rollouts failed; all rollout checks were attempted." >&2
-      exit "$rollout_rc"
-    fi
+    echo "Manifest reconciliation completed successfully."
+    echo "Application rollout verification is intentionally handled by the workflow per target application."
     ;;
   *)
     echo "Usage: $0 {plan|apply}" >&2
