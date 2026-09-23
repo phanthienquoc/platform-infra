@@ -164,6 +164,16 @@ jobs:
           MESSAGE="🔴 *tce-dashboard — DEPLOY FAILED*\n\n📦 Environment: production\n🏷️ Image tag: ${TAG}\n❌ VPS rollout verification failed\n⚠️ Do not treat this release as live\n🕐 Time: $(TZ=Asia/Ho_Chi_Minh date '+%Y-%m-%d %H:%M:%S ICT')\n🔗 Infra run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=Markdown"
 
+      - name: Notify Telegram — stockdividend rollout failed
+        if: env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && steps.verify_stock.outcome != 'success'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
+          test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
+          MESSAGE="🔴 *stockdividend — DEPLOY FAILED*\n\n📦 Environment: production\n❌ stock-backend/stock-frontend rollout verification failed\n⚠️ Do not treat this release as live\n🕐 Time: $(TZ=Asia/Ho_Chi_Minh date '+%Y-%m-%d %H:%M:%S ICT')\n🔗 Infra run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=Markdown"
+
       - name: Notify Telegram — stockdividend rollout deployed
         if: env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && steps.verify_stock.outcome == 'success'
         run: |
