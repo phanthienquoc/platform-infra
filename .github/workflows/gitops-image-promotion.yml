@@ -43,7 +43,14 @@ jobs:
             stockdividend/backend|stockdividend/admin|tce-dashboard/web|tce-dashboard/service) ;;
             *) echo "Unsupported image target"; exit 1;;
           esac
-          [[ "$TAG" =~ ^[0-9a-f]{7,64}$ ]] || { echo "Tag must be an immutable Git SHA"; exit 1; }
+          case "$APP" in
+            tce-dashboard)
+              [[ "$TAG" =~ ^prod-v[0-9]+\\.[0-9]+\\.[0-9]+-[0-9a-f]{7,64}$ ]] || { echo "TCE tag must be prod-v<semver>-<git-sha>"; exit 1; }
+              ;;
+            stockdividend)
+              [[ "$TAG" =~ ^[0-9a-f]{7,64}$ ]] || { echo "StockDividend tag must be an immutable Git SHA"; exit 1; }
+              ;;
+          esac
           echo "app=$APP" >> "$GITHUB_OUTPUT"
           echo "component=$COMPONENT" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
