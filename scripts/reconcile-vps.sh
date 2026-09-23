@@ -17,9 +17,10 @@ run_diff() {
   fi
   if [[ "$rc" -eq 1 ]]; then
     echo "Kubernetes drift detected."
-  else
-    echo "Kubernetes state matches the repository."
+    return 1
   fi
+  echo "Kubernetes state matches the repository."
+  return 0
 }
 
 case "$MODE" in
@@ -29,7 +30,24 @@ case "$MODE" in
     ;;
   apply)
     echo "== Preflight Kubernetes diff =="
+    set +e
     run_diff
+    diff_rc=$?
+    set -e
+
+    case "$diff_rc" in
+      0)
+        echo "No Kubernetes drift detected; skipping production apply."
+        exit 0
+        ;;
+      1)
+        echo "Drift detected; applying environments/prod."
+        ;;
+      *)
+        echo "Kubernetes preflight diff failed; refusing production apply." >&2
+        exit "$diff_rc"
+        ;;
+    esac
 
     echo "== Applying environments/prod =="
     sudo /usr/local/sbin/platform-kubectl apply -k environments/prod
