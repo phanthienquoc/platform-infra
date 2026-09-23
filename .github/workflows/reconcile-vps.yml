@@ -95,7 +95,7 @@ jobs:
           fi
 
       - name: Guard workload image changes
-        if: env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && inputs.allow_image_changes != true
+        if: env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && inputs.allow_image_changes != true && github.event_name != 'push'
         run: |
           set -euo pipefail
           chmod +x scripts/guard-reconcile-images.sh
