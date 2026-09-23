@@ -218,7 +218,9 @@ jobs:
           MESSAGE="🎉 <b>PRODUCTION • ROLLOUT</b>\n🏷️ Release  <code>$TAG</code>\n🎯 Scope    <code>$TARGET_APP</code>\n🟢 TCE           • $tce\n🟢 StockDividend • $stock\n🎯 Status: $status\n🔒 Failure isolation: enabled"
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" -d "chat_id=$TELEGRAM_CHAT_ID" --data-urlencode "text=$MESSAGE" -d "parse_mode=HTML"
       - name: Verify drift cleared
-        if: env.RECONCILE_MODE == 'apply'
+        id: verify_drift
+        if: ${{ !cancelled() && env.RECONCILE_MODE == 'apply' }}
+        continue-on-error: true
         run: |
           set -euo pipefail
           diff_stderr="$(mktemp)"
@@ -242,9 +244,22 @@ jobs:
           esac
           exit "$rc"
 
-      - name: Fail if reconciliation apply failed
-        if: env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && steps.apply.outcome != 'success'
+      - name: Fail if targeted deployment failed
+        if: ${{ !cancelled() && env.RECONCILE_MODE == 'apply' }}
+        env:
+          APPLY_STATUS: ${{ steps.apply.outcome }}
+          TCE_STATUS: ${{ steps.verify_tce.outcome }}
+          TCE_IMAGES_STATUS: ${{ steps.verify_tce_images.outcome }}
+          STOCK_STATUS: ${{ steps.verify_stock.outcome }}
+          DRIFT_STATUS: ${{ steps.verify_drift.outcome }}
         run: |
-          echo "Reconciliation apply reported one or more rollout failures." >&2
-          echo "Per-repository rollout notifications above report which repositories completed successfully." >&2
-          exit 1
+          set -euo pipefail
+          [ "$APPLY_STATUS" = "success" ] || { echo "Production manifest reconciliation failed." >&2; exit 1; }
+          [ "$DRIFT_STATUS" != "failure" ] || { echo "Post-reconcile GitOps drift verification failed." >&2; exit 1; }
+          if [ "$TARGET_APP" = "all" ] || [ "$TARGET_APP" = "tce-dashboard" ]; then
+            if [ "$TCE_STATUS" != "success" ] || [ "$TCE_IMAGES_STATUS" != "success" ]; then echo "TCE deployment verification failed." >&2; exit 1; fi
+          fi
+          if [ "$TARGET_APP" = "all" ] || [ "$TARGET_APP" = "stockdividend" ]; then
+            if [ "$STOCK_STATUS" != "success" ]; then echo "StockDividend deployment verification failed." >&2; exit 1; fi
+          fi
+          echo "Targeted production deployment verification passed."
