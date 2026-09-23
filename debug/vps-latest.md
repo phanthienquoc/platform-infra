@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-09-22T21:15:37+00:00
+Generated: 2026-09-23T00:02:58+00:00
 
 ## Host
 uname: Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,16 +11,16 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.4Gi       5.6Gi        54Mi        14Gi        19Gi
+Mem:            23Gi       3.5Gi       5.6Gi        54Mi        14Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   20G   26G  43% /
- 21:15:37 up 144 days,  7:06,  1 user,  load average: 0.06, 0.12, 0.17
+ 00:02:58 up 144 days,  9:53,  0 users,  load average: 0.17, 0.17, 0.17
 
 ## Runner
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
-github-+ 1309509  0.0  0.5    06:16:21 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-github-+ 1593666 66.6  0.4       00:03 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+github-+ 1309509  0.0  0.5    09:03:43 /opt/actions-runner/bin/Runner.Listener run --startuptype service
+github-+ 1717360 62.3  0.4       00:03 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
 runner_service_enabled: enabled
@@ -50,6 +50,10 @@ libldap-common/jammy-updates 2.5.20+dfsg-0ubuntu0.22.04.1 all [upgradable from: 
 libnetplan0/jammy-updates 0.107.1-3ubuntu0.22.04.5 arm64 [upgradable from: 0.106.1-7ubuntu0.22.04.4]
 libnftables1/jammy-updates 1.0.2-1ubuntu3.1 arm64 [upgradable from: 1.0.2-1ubuntu3]
 libxmlb2/jammy-updates 0.3.24-1~ubuntu0.22.04.1 arm64 [upgradable from: 0.3.6-2build1]
+linux-headers-oracle/jammy-updates 6.8.0-1062.65~22.04.1 arm64 [upgradable from: 6.8.0-1061.64~22.04.1]
+linux-image-oracle/jammy-updates 6.8.0-1062.65~22.04.1 arm64 [upgradable from: 6.8.0-1061.64~22.04.1]
+linux-oracle/jammy-updates 6.8.0-1062.65~22.04.1 arm64 [upgradable from: 6.8.0-1061.64~22.04.1]
+linux-tools-common/jammy-updates 5.15.0-194.204 all [upgradable from: 5.15.0-191.201]
 lshw/jammy-updates 02.19.git.2021.06.19.996aaad9c7-2ubuntu0.22.04.1 arm64 [upgradable from: 02.19.git.2021.06.19.996aaad9c7-2build1]
 netplan.io/jammy-updates 0.107.1-3ubuntu0.22.04.5 arm64 [upgradable from: 0.106.1-7ubuntu0.22.04.4]
 nftables/jammy-updates 1.0.2-1ubuntu3.1 arm64 [upgradable from: 1.0.2-1ubuntu3]
@@ -75,7 +79,7 @@ default           Active   31d
 kube-node-lease   Active   31d
 kube-public       Active   31d
 kube-system       Active   31d
-stock-prod        Active   3d14h
+stock-prod        Active   3d17h
 tce-prod          Active   31d
 NAMESPACE      NAME                                      READY   STATUS      RESTARTS      AGE     IP            NODE         NOMINATED NODE   READINESS GATES
 cert-manager   cert-manager-75b96c9588-lgn7d             1/1     Running     0             28d     10.42.0.98    tce-k3s-01   <none>           <none>
@@ -88,10 +92,10 @@ kube-system    local-path-provisioner-58d557dc48-jbhhp   1/1     Running     1 (
 kube-system    metrics-server-6dc596dfb8-s2bzm           1/1     Running     0             31d     10.42.0.4     tce-k3s-01   <none>           <none>
 kube-system    svclb-traefik-859779c1-7bwx2              2/2     Running     0             31d     10.42.0.7     tce-k3s-01   <none>           <none>
 kube-system    traefik-59b7647586-gml84                  1/1     Running     0             31d     10.42.0.8     tce-k3s-01   <none>           <none>
-stock-prod     stock-backend-57ccb8ff6-d25jq             1/1     Running     0             3d14h   10.42.0.55    tce-k3s-01   <none>           <none>
-stock-prod     stock-frontend-79c57845df-z747s           1/1     Running     0             3d14h   10.42.0.56    tce-k3s-01   <none>           <none>
-tce-prod       tce-frontend-64f468f759-zn7g5             1/1     Running     0             21h     10.42.0.65    tce-k3s-01   <none>           <none>
-tce-prod       tce-service-749db66ff5-ks4m4              1/1     Running     0             21h     10.42.0.64    tce-k3s-01   <none>           <none>
+stock-prod     stock-backend-57ccb8ff6-d25jq             1/1     Running     0             3d17h   10.42.0.55    tce-k3s-01   <none>           <none>
+stock-prod     stock-frontend-79c57845df-z747s           1/1     Running     0             3d17h   10.42.0.56    tce-k3s-01   <none>           <none>
+tce-prod       tce-frontend-64f468f759-zn7g5             1/1     Running     0             24h     10.42.0.65    tce-k3s-01   <none>           <none>
+tce-prod       tce-service-749db66ff5-ks4m4              1/1     Running     0             24h     10.42.0.64    tce-k3s-01   <none>           <none>
 NAMESPACE      NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
 cert-manager   cert-manager              1/1     1            1           28d
 cert-manager   cert-manager-cainjector   1/1     1            1           28d
@@ -100,8 +104,8 @@ kube-system    coredns                   1/1     1            1           31d
 kube-system    local-path-provisioner    1/1     1            1           31d
 kube-system    metrics-server            1/1     1            1           31d
 kube-system    traefik                   1/1     1            1           31d
-stock-prod     stock-backend             1/1     1            1           3d14h
-stock-prod     stock-frontend            1/1     1            1           3d14h
+stock-prod     stock-backend             1/1     1            1           3d17h
+stock-prod     stock-frontend            1/1     1            1           3d17h
 tce-prod       tce-frontend              1/1     1            1           28d
 tce-prod       tce-service               1/1     1            1           28d
 
@@ -129,13 +133,13 @@ default        kubernetes                ClusterIP      10.43.0.1       <none>  
 kube-system    kube-dns                  ClusterIP      10.43.0.10      <none>        53/UDP,53/TCP,9153/TCP       31d
 kube-system    metrics-server            ClusterIP      10.43.120.41    <none>        443/TCP                      31d
 kube-system    traefik                   LoadBalancer   10.43.213.239   10.0.0.120    80:30225/TCP,443:30415/TCP   31d
-stock-prod     backend                   ClusterIP      10.43.46.139    <none>        8080/TCP                     3d14h
-stock-prod     stock-backend             ClusterIP      10.43.247.219   <none>        8080/TCP                     3d14h
-stock-prod     stock-frontend            ClusterIP      10.43.53.102    <none>        3000/TCP                     3d14h
+stock-prod     backend                   ClusterIP      10.43.46.139    <none>        8080/TCP                     3d17h
+stock-prod     stock-backend             ClusterIP      10.43.247.219   <none>        8080/TCP                     3d17h
+stock-prod     stock-frontend            ClusterIP      10.43.53.102    <none>        3000/TCP                     3d17h
 tce-prod       tce-frontend              ClusterIP      10.43.99.130    <none>        80/TCP                       28d
 tce-prod       tce-service               ClusterIP      10.43.189.227   <none>        8210/TCP                     28d
 NAMESPACE    NAME            CLASS     HOSTS                                                          ADDRESS      PORTS     AGE
-stock-prod   stock-ingress   traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   3d14h
+stock-prod   stock-ingress   traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   3d17h
 tce-prod     tce             traefik   tce.mrcute.space                                               10.0.0.120   80, 443   28d
 
 ### Ingress hosts
