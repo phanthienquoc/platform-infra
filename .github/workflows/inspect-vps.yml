@@ -2,11 +2,12 @@ name: inspect-vps
 
 on:
   workflow_dispatch:
-  push:
-    branches: [master]
+  schedule:
+    - cron: "15 * * * *"
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: platform-vps-inspect
@@ -17,18 +18,58 @@ jobs:
     if: github.ref == 'refs/heads/master'
     runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 1
+          persist-credentials: false
+
       - name: Inspect VPS
         run: |
+          set -euo pipefail
           chmod +x scripts/inspect-vps.sh
           scripts/inspect-vps.sh debug/vps-latest.md
-      - name: Commit inspection state
+
+      - name: Detect meaningful inspection changes
+        id: changes
         run: |
-          git config user.name "platform-infra-runner"
-          git config user.email "actions@users.noreply.github.com"
-          git add debug/vps-latest.md
-          git diff --cached --quiet && exit 0
-          git commit -m "chore: update VPS inspection state"
-          git push origin HEAD:master
+          set -euo pipefail
+          if [ ! -f debug/vps-latest.md ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git show HEAD:debug/vps-latest.md 2>/dev/null | sed '/^Generated: /d' > /tmp/previous-inspection.md || true
+          sed '/^Generated: /d' debug/vps-latest.md > /tmp/current-inspection.md
+
+          if diff -u /tmp/previous-inspection.md /tmp/current-inspection.md >/dev/null; then
+            git checkout -- debug/vps-latest.md
+            echo "No meaningful VPS/K3s inspection change detected."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Meaningful VPS/K3s inspection change detected."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create inspection PR
+        id: inspection_pr
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676
+        with:
+          token: ${{ github.token }}
+          branch: automation/vps-inspection
+          delete-branch: true
+          title: "chore: update VPS inspection state"
+          commit-message: "chore: update VPS inspection state"
+          body: |
+            Automated VPS/K3s inspection snapshot.
+
+            This PR contains inspection state only; no production manifests are changed.
+
+      - name: Merge inspection PR
+        if: steps.inspection_pr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.inspection_pr.outputs.pull-request-number }}
+        run: |
+          set -euo pipefail
+          gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --squash --delete-branch
