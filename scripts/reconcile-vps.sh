@@ -22,29 +22,6 @@ run_diff() {
   fi
 }
 
-wait_rollout() {
-  local deployment="$1"
-  local namespace="$2"
-
-  set +e
-  sudo /usr/local/sbin/platform-kubectl rollout status "deployment/${deployment}" -n "$namespace"
-  local rc=$?
-  set -e
-
-  if [[ "$rc" -eq 0 ]]; then
-    return 0
-  fi
-
-  echo "Rollout failed or timed out for ${namespace}/${deployment}; collecting safe diagnostics." >&2
-  echo "== Deployment state: ${namespace}/${deployment} ==" >&2
-  sudo /usr/local/sbin/platform-kubectl get deployments -n "$namespace" -o wide >&2 || true
-  echo "== Pod state: ${namespace} ==" >&2
-  sudo /usr/local/sbin/platform-kubectl get pods -n "$namespace" -o wide >&2 || true
-  echo "Rollout diagnostics complete; no secret-bearing resources are queried." >&2
-
-  return "$rc"
-}
-
 case "$MODE" in
   plan)
     echo "== Kubernetes diff =="
