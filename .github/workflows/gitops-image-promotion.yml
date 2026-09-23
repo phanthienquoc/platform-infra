@@ -22,7 +22,6 @@ on:
   repository_dispatch:
     types:
       - image-published
-      - gitops-promoted
 
 permissions:
   contents: write
@@ -205,20 +204,49 @@ jobs:
               esac
             done
           done
+      - name: Determine release readiness
+        id: release
+        if: success()
+        env:
+          APP: ${{ steps.input.outputs.app }}
+          TAG: ${{ steps.input.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if [ "$APP" = "stockdividend" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "release=$TAG" >> "$GITHUB_OUTPUT"
+            echo "StockDividend promotion is independently deployable."
+            exit 0
+          fi
+          FILE="apps/tce-dashboard/overlays/prod/kustomization.yaml"
+          WEB_TAG="$(awk '/name: ghcr.io\/phanthienquoc\/tce-dashboard\/web$/ {found=1; next} found && /newTag:/ {print $2; exit}' "$FILE")"
+          SERVICE_TAG="$(awk '/name: ghcr.io\/phanthienquoc\/tce-dashboard\/service$/ {found=1; next} found && /newTag:/ {print $2; exit}' "$FILE")"
+          echo "TCE GitOps web tag: $WEB_TAG"
+          echo "TCE GitOps service tag: $SERVICE_TAG"
+          if [ -n "$WEB_TAG" ] && [ "$WEB_TAG" = "$SERVICE_TAG" ] && [ "$WEB_TAG" = "$TAG" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "release=$TAG" >> "$GITHUB_OUTPUT"
+            echo "TCE release is complete: both components point to $TAG."
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "release=$TAG" >> "$GITHUB_OUTPUT"
+            echo "TCE release is not complete yet; waiting for the paired component."
+          fi
+
       - name: Trigger VPS reconciliation
-        if: success() && steps.promotion.outputs.pull-request-number != ''
+        if: steps.release.outputs.ready == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           APP: ${{ steps.input.outputs.app }}
           COMPONENT: ${{ steps.input.outputs.component }}
-          TAG: ${{ steps.input.outputs.tag }}
+          RELEASE: ${{ steps.release.outputs.release }}
         run: |
           set -euo pipefail
           gh api --method POST \
             -H "Accept: application/vnd.github+json" \
             "/repos/${GITHUB_REPOSITORY}/dispatches" \
-            -f event_type="gitops-promoted" \
+            -f event_type="gitops-release-ready" \
             -f client_payload[app]="$APP" \
             -f client_payload[component]="$COMPONENT" \
-            -f client_payload[tag]="$TAG"
-          echo "Triggered VPS reconciliation for $APP/$COMPONENT:$TAG"
+            -f client_payload[release]="$RELEASE"
+          echo "Triggered one VPS reconciliation for $APP release $RELEASE."
