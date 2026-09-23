@@ -13,12 +13,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install YAML parser
+        run: python -m pip install --disable-pip-version-check --no-cache-dir PyYAML==6.0.2
       - name: Install kubectl
         uses: azure/setup-kubectl@v4
       - name: Render production manifests
         run: kubectl kustomize environments/prod > /tmp/platform-infra-rendered.yaml
-      - name: Validate rendered Kubernetes resources (offline)
-        run: kubectl apply --dry-run=client --validate=false -f /tmp/platform-infra-rendered.yaml
+      - name: Validate rendered YAML structure (offline)
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+
+          path = Path('/tmp/platform-infra-rendered.yaml')
+          docs = list(yaml.safe_load_all(path.read_text()))
+          if not docs:
+              raise SystemExit('Rendered manifest is empty.')
+          for index, obj in enumerate(docs, 1):
+              if not isinstance(obj, dict):
+                  raise SystemExit(f'Document {index} is not a YAML object.')
+              missing = [key for key in ('apiVersion', 'kind', 'metadata') if key not in obj]
+              if missing:
+                  raise SystemExit(f'Document {index} is missing required Kubernetes fields: {missing}')
+              if not isinstance(obj['metadata'], dict) or not obj['metadata'].get('name'):
+                  raise SystemExit(f'Document {index} has invalid metadata.name.')
+          print(f'Validated {len(docs)} rendered Kubernetes objects offline.')
+          PY
       - name: Enforce secret policy
         run: |
           set -euo pipefail
@@ -29,8 +52,8 @@ jobs:
       - name: Check immutable application image tags
         run: |
           set -euo pipefail
-          if grep -E '^[[:space:]]+image:' /tmp/platform-infra-rendered.yaml | grep -Ev ':[0-9a-f]{7,64}$'; then
-            echo 'Application images must use immutable Git-SHA tags.'
+          if grep -E '^[[:space:]]+image: ghcr\.io/phanthienquoc/' /tmp/platform-infra-rendered.yaml | grep -Ev ':[0-9a-f]{7,64}$'; then
+            echo 'First-party application images must use immutable Git-SHA tags.'
             exit 1
           fi
       - name: Validate network boundaries

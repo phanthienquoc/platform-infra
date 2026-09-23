@@ -43,9 +43,11 @@ if [[ "$service_bad" -ne 0 ]]; then
   fail=1
 fi
 
-# The production boundary is intentionally limited to the two known public hosts.
-allowed_hosts='^(tce\.mrcute\.space|stockdividend\.mrcute\.space)$'
+# Production ingress is limited to the explicitly approved public hosts.
+allowed_hosts='^(tce\.mrcute\.space|mrcute\.space|www\.mrcute\.space|admin\.mrcute\.space|api\.mrcute\.space)$'
+
 while IFS= read -r host; do
+  host="${host//[[:space:]]/}"
   if [[ -n "$host" && ! "$host" =~ $allowed_hosts ]]; then
     echo "Unexpected externally routable host: $host" >&2
     fail=1
@@ -56,7 +58,7 @@ done < <(
   grep -E 'hosts:[[:space:]]*\[[^]]*\]' "$output" \
     | sed -E 's/.*hosts:[[:space:]]*\[([^]]*)\].*/\1/' \
     | tr ',' '\n' \
-    | tr -d '[]"'
+    | tr -d '[]\"'
 )
 
 if [[ "$ingress_docs" -ne 2 ]]; then
@@ -68,4 +70,4 @@ if [[ "$fail" -ne 0 ]]; then
   exit 1
 fi
 
-echo "Validated network boundaries in $output: Services remain internal ClusterIP and only the approved production hosts are routable."
+echo "Validated network boundaries in $output: Services remain internal ClusterIP and only approved production hosts are routable."
