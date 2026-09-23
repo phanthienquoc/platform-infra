@@ -16,6 +16,15 @@ on:
         required: false
         default: false
         type: boolean
+      target_app:
+        description: "Application scope for rollout verification"
+        required: false
+        default: all
+        type: choice
+        options:
+          - all
+          - tce-dashboard
+          - stockdividend
   schedule:
     - cron: "0 * * * *"
   push:
@@ -26,7 +35,7 @@ on:
       - "environments/**"
   repository_dispatch:
     types:
-      - gitops-promoted
+      - gitops-release-ready
 
 permissions:
   contents: read
@@ -34,9 +43,12 @@ permissions:
 concurrency:
   group: platform-vps-reconcile
   cancel-in-progress: false
+  queue: max
 
 env:
   RECONCILE_MODE: ${{ (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'repository_dispatch') && 'apply' || inputs.mode }}
+  TARGET_APP: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.app || inputs.target_app || 'all' }}
+  RELEASE_TAG: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.release || '' }}
   TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
   TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
@@ -60,6 +72,15 @@ jobs:
           test -f environments/prod/kustomization.yaml
           chmod +x scripts/reconcile-vps.sh
 
+      - name: Resolve deployment scope
+        run: |
+          set -euo pipefail
+          case "$TARGET_APP" in
+            all|tce-dashboard|stockdividend) ;;
+            *) echo "::error::Unsupported deployment scope: $TARGET_APP"; exit 1 ;;
+          esac
+          echo "Deployment scope: $TARGET_APP"
+          [ -z "$RELEASE_TAG" ] || echo "Release: $RELEASE_TAG"
       - name: Inspect diff prerequisites
         run: |
           set -euo pipefail
@@ -68,6 +89,7 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl version
 
       - name: Validate TCE release pairing
+        if: env.TARGET_APP == 'all' || env.TARGET_APP == 'tce-dashboard'
         run: |
           set -euo pipefail
           chmod +x scripts/verify-tce-gitops-release.sh
@@ -139,7 +161,8 @@ jobs:
 
       - name: Verify TCE GitOps images
         id: verify_tce_images
-        if: env.RECONCILE_MODE == 'apply'
+        if: env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'tce-dashboard')
+        continue-on-error: true
         run: |
           set -euo pipefail
           chmod +x scripts/verify-tce-gitops-images.sh
@@ -147,7 +170,7 @@ jobs:
 
       - name: Verify stockdividend rollout
         id: verify_stock
-        if: env.RECONCILE_MODE == 'apply'
+        if: env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'stockdividend')
         continue-on-error: true
         run: |
           set -u
@@ -158,7 +181,7 @@ jobs:
 
       - name: Verify TCE rollout
         id: verify_tce
-        if: env.RECONCILE_MODE == 'apply'
+        if: env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'tce-dashboard')
         continue-on-error: true
         run: |
           set -u
