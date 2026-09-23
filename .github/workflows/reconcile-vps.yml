@@ -28,6 +28,8 @@ concurrency:
 
 env:
   RECONCILE_MODE: ${{ github.event_name == 'schedule' && 'apply' || inputs.mode }}
+  TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN }}
+  TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
 
 jobs:
   reconcile:
@@ -118,6 +120,24 @@ jobs:
           echo "Reconciliation apply reported one or more rollout failures." >&2
           echo "Cluster/TCE verification above was still executed so unrelated workloads cannot hide TCE state." >&2
           exit 1
+
+      - name: Notify Telegram — TCE production deployed
+        if: env.RECONCILE_MODE == 'apply' && steps.apply.outcome == 'success'
+        run: |
+          set -euo pipefail
+          test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
+          test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
+
+          TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
+          test -n "$TAG" || { echo "Unable to resolve TCE image tag"; exit 1; }
+
+          MESSAGE="✅ *TCE — PRODUCTION DEPLOYED*\n\n📦 Environment: production\n🏷️ Image tag: ${TAG}\n✅ tce-frontend rollout verified\n✅ tce-service rollout verified\n✅ GitOps state clean\n🕐 Time: $(TZ=Asia/Ho_Chi_Minh date '+%Y-%m-%d %H:%M:%S ICT')\n🔗 Infra run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+          curl --fail-with-body -sS -X POST \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=${MESSAGE}" \
+            -d "parse_mode=Markdown"
 
       - name: Verify drift cleared
         if: env.RECONCILE_MODE == 'apply'
