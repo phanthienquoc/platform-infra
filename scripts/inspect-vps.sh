@@ -17,6 +17,19 @@ mkdir -p "$(dirname "$OUT")"
   nproc
   free -h
   df -h /
+  disk_usage_pct="$(df --output=pcent / | tail -n 1 | tr -dc '0-9')"
+  case "$disk_usage_pct" in
+    ''|*[!0-9]*) echo "disk_pressure: unknown" ;;
+    *)
+      if [ "$disk_usage_pct" -ge 90 ]; then
+        echo "disk_pressure: critical (${disk_usage_pct}%)"
+      elif [ "$disk_usage_pct" -ge 80 ]; then
+        echo "disk_pressure: warning (${disk_usage_pct}%)"
+      else
+        echo "disk_pressure: normal (${disk_usage_pct}%)"
+      fi
+      ;;
+  esac
   uptime
   echo
   echo "## Runner"
