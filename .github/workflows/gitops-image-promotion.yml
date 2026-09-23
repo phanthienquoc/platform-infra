@@ -20,6 +20,10 @@ permissions:
   contents: write
   pull-requests: write
 
+concurrency:
+  group: gitops-image-promotion-${{ github.event.client_payload.app || inputs.app }}
+  cancel-in-progress: false
+
 jobs:
   promote:
     runs-on: ubuntu-latest
@@ -79,6 +83,7 @@ else:
 PY
           grep -A1 "name:.*$COMPONENT" "$FILE"
       - name: Create promotion PR
+        id: promotion
         uses: peter-evans/create-pull-request@v7
         with:
           branch: automation/promote-${{ steps.input.outputs.app }}-${{ steps.input.outputs.component }}-${{ steps.input.outputs.tag }}
@@ -86,3 +91,12 @@ PY
           title: "chore: promote ${{ steps.input.outputs.app }}/${{ steps.input.outputs.component }} ${{ steps.input.outputs.tag }}"
           commit-message: "chore: promote ${{ steps.input.outputs.app }}/${{ steps.input.outputs.component }} ${{ steps.input.outputs.tag }}"
           body: "Automated immutable image promotion from application CI."
+
+      - name: Merge promotion PR
+        if: steps.promotion.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.promotion.outputs.pull-request-number }}
+        run: |
+          set -euo pipefail
+          gh pr merge "$PR_NUMBER" --repo "${GITHUB_REPOSITORY}" --squash --delete-branch
