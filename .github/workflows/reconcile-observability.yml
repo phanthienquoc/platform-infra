@@ -1,0 +1,53 @@
+name: reconcile-observability
+
+on:
+  workflow_run:
+    workflows:
+      - reconcile-vps
+    types:
+      - completed
+
+permissions:
+  actions: read
+
+jobs:
+  summarize:
+    if: github.event.workflow_run.head_branch == 'master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Publish reconciliation summary
+        env:
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_NUMBER: ${{ github.event.workflow_run.run_number }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          EVENT_NAME: ${{ github.event.workflow_run.event }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          set -euo pipefail
+          {
+            echo "## Platform VPS reconciliation"
+            echo
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| Run | [$RUN_NUMBER]($RUN_URL) |"
+            echo "| Conclusion | \`$CONCLUSION\` |"
+            echo "| Trigger | \`$EVENT_NAME\` |"
+            echo "| Commit | \`$HEAD_SHA\` |"
+            echo
+            case "$CONCLUSION" in
+              success)
+                echo "✅ Reconciliation workflow completed successfully."
+                ;;
+              failure)
+                echo "❌ Reconciliation workflow failed; inspect the linked run before considering production state healthy."
+                ;;
+              cancelled|timed_out)
+                echo "⚠️ Reconciliation workflow did not complete; production state requires inspection."
+                ;;
+              *)
+                echo "ℹ️ Reconciliation completed with conclusion \`$CONCLUSION\`."
+                ;;
+            esac
+          } >> "$GITHUB_STEP_SUMMARY"
