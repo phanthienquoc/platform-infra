@@ -1,0 +1,177 @@
+name: GitOps Image Promotion
+run-name: GitOps Image Promotion — ${{ inputs.app || github.event.client_payload.app }} / ${{ inputs.component || github.event.client_payload.component }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: Application to promote
+        required: true
+        type: choice
+        options:
+          - stockdividend
+          - tce-dashboard
+      component:
+        description: Image component
+        required: true
+        type: string
+      tag:
+        description: Immutable image tag
+        required: true
+        type: string
+  repository_dispatch:
+    types:
+      - image-published
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: read
+
+concurrency:
+  group: gitops-image-promotion-${{ github.event.client_payload.app || inputs.app }}-${{ github.event.client_payload.component || inputs.component }}
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Promote ${{ github.event.client_payload.app || inputs.app }}/${{ github.event.client_payload.component || inputs.component }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout infrastructure
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Resolve event inputs
+        id: input
+        env:
+          EVENT_APP: ${{ github.event.client_payload.app }}
+          EVENT_COMPONENT: ${{ github.event.client_payload.component }}
+          EVENT_TAG: ${{ github.event.client_payload.tag }}
+          INPUT_APP: ${{ inputs.app }}
+          INPUT_COMPONENT: ${{ inputs.component }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+
+          APP="${EVENT_APP:-$INPUT_APP}"
+          COMPONENT="${EVENT_COMPONENT:-$INPUT_COMPONENT}"
+          TAG="${EVENT_TAG:-$INPUT_TAG}"
+
+          case "$APP/$COMPONENT" in
+            stockdividend/backend|stockdividend/admin|tce-dashboard/web|tce-dashboard/service) ;;
+            *)
+              echo "::error::Unsupported image target: $APP/$COMPONENT"
+              exit 1
+              ;;
+          esac
+
+          case "$APP" in
+            tce-dashboard)
+              [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}$ ]] || {
+                echo "::error::TCE tag must be prod-v<semver>-<git-sha>"
+                exit 1
+              }
+              ;;
+            stockdividend)
+              [[ "$TAG" =~ ^[0-9a-f]{7,64}$ ]] || {
+                echo "::error::StockDividend tag must be an immutable Git SHA"
+                exit 1
+              }
+              ;;
+          esac
+
+          {
+            echo "app=$APP"
+            echo "component=$COMPONENT"
+            echo "tag=$TAG"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Validate promoted image in GHCR
+        env:
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_TOKEN: ${{ github.token }}
+          APP: ${{ steps.input.outputs.app }}
+          COMPONENT: ${{ steps.input.outputs.component }}
+          TAG: ${{ steps.input.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          IMAGE="ghcr.io/phanthienquoc/${APP}/${COMPONENT}:${TAG}"
+          echo "Validating $IMAGE"
+
+          printf '%s' "$GHCR_TOKEN" |
+            docker login ghcr.io --username "$GHCR_USERNAME" --password-stdin
+
+          docker manifest inspect "$IMAGE" >/dev/null
+          echo "Validated GHCR image manifest: $IMAGE"
+
+          docker logout ghcr.io >/dev/null 2>&1 || true
+
+      - name: Update Kustomize image tag
+        env:
+          APP: ${{ steps.input.outputs.app }}
+          COMPONENT: ${{ steps.input.outputs.component }}
+          TAG: ${{ steps.input.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          if [ "$APP" = "stockdividend" ]; then
+            FILE="apps/stockdividend/overlays/prod/kustomization.yaml"
+          else
+            FILE="apps/tce-dashboard/overlays/prod/kustomization.yaml"
+          fi
+
+          python3 - "$FILE" "$APP" "$COMPONENT" "$TAG" <<'PY'
+          import pathlib
+          import sys
+
+          path = pathlib.Path(sys.argv[1])
+          app = sys.argv[2]
+          component = sys.argv[3]
+          tag = sys.argv[4]
+
+          lines = path.read_text().splitlines()
+          expected = f"name: ghcr.io/phanthienquoc/{app}/{component}"
+
+          for index, line in enumerate(lines):
+              if line.strip() != expected:
+                  continue
+
+              if index + 1 >= len(lines) or not lines[index + 1].strip().startswith("newTag:"):
+                  raise SystemExit(f"newTag missing after {expected}")
+
+              lines[index + 1] = f"  newTag: {tag}"
+              path.write_text("\n".join(lines) + "\n")
+              break
+          else:
+              raise SystemExit(f"image component not found: {expected}")
+          PY
+
+          grep -A1 "name: ghcr.io/phanthienquoc/${APP}/${COMPONENT}" "$FILE"
+
+      - name: Create promotion PR
+        id: promotion
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: automation/promote-${{ steps.input.outputs.app }}-${{ steps.input.outputs.component }}-${{ steps.input.outputs.tag }}
+          delete-branch: true
+          title: "chore: promote ${{ steps.input.outputs.app }}/${{ steps.input.outputs.component }} ${{ steps.input.outputs.tag }}"
+          commit-message: "chore: promote ${{ steps.input.outputs.app }}/${{ steps.input.outputs.component }} ${{ steps.input.outputs.tag }}"
+          body: |
+            Automated immutable image promotion from application CI.
+
+            Source:
+            - application: ${{ steps.input.outputs.app }}
+            - component: ${{ steps.input.outputs.component }}
+            - image tag: ${{ steps.input.outputs.tag }}
+
+      - name: Merge promotion PR
+        if: steps.promotion.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.promotion.outputs.pull-request-number }}
+        run: |
+          set -euo pipefail
+          gh pr merge "$PR_NUMBER"             --repo "${GITHUB_REPOSITORY}"             --squash             --delete-branch
