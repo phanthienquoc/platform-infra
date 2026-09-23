@@ -19,6 +19,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  packages: read
 
 concurrency:
   group: gitops-image-promotion-${{ github.event.client_payload.app || inputs.app }}
@@ -51,7 +52,7 @@ jobs:
           esac
           case "$APP" in
             tce-dashboard)
-              [[ "$TAG" =~ ^prod-v[0-9]+\\.[0-9]+\\.[0-9]+-[0-9a-f]{7,64}$ ]] || { echo "TCE tag must be prod-v<semver>-<git-sha>"; exit 1; }
+              [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}$ ]] || { echo "TCE tag must be prod-v<semver>-<git-sha>"; exit 1; }
               ;;
             stockdividend)
               [[ "$TAG" =~ ^[0-9a-f]{7,64}$ ]] || { echo "StockDividend tag must be an immutable Git SHA"; exit 1; }
@@ -60,6 +61,22 @@ jobs:
           echo "app=$APP" >> "$GITHUB_OUTPUT"
           echo "component=$COMPONENT" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Validate promoted image exists in GHCR
+        env:
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_TOKEN: ${{ github.token }}
+          APP: ${{ steps.input.outputs.app }}
+          COMPONENT: ${{ steps.input.outputs.component }}
+          TAG: ${{ steps.input.outputs.tag }}
+        run: |
+          set -euo pipefail
+          IMAGE="ghcr.io/phanthienquoc/${APP}/${COMPONENT}:${TAG}"
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GHCR_USERNAME" --password-stdin
+          docker manifest inspect "$IMAGE" >/dev/null
+          echo "Validated GHCR image manifest: $IMAGE"
+          docker logout ghcr.io >/dev/null 2>&1 || true
+
       - name: Update Kustomize tag
         env:
           APP: ${{ steps.input.outputs.app }}
@@ -82,6 +99,7 @@ else:
     raise SystemExit(f"image component not found: {component}")
 PY
           grep -A1 "name:.*$COMPONENT" "$FILE"
+
       - name: Create promotion PR
         id: promotion
         uses: peter-evans/create-pull-request@v7
