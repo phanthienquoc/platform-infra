@@ -52,12 +52,16 @@ jobs:
       - name: Preflight diff
         run: |
           set -euo pipefail
+          diff_stderr="$(mktemp)"
+          trap 'rm -f "$diff_stderr"' EXIT
           set +e
-          sudo /usr/local/sbin/platform-kubectl diff -k environments/prod
+          sudo /usr/local/sbin/platform-kubectl diff -k environments/prod 2>"$diff_stderr"
           rc=$?
           set -e
           if [ "$rc" -gt 1 ]; then
             echo "Kubernetes diff failed with exit code $rc" >&2
+            echo "Diff stderr (diagnostic, no manifest diff is persisted):" >&2
+            sed -n '1,120p' "$diff_stderr" >&2 || true
             echo "Diff prerequisites were verified immediately before this check." >&2
             exit "$rc"
           fi
