@@ -42,6 +42,13 @@ jobs:
           test -f environments/prod/kustomization.yaml
           chmod +x scripts/reconcile-vps.sh
 
+      - name: Inspect diff prerequisites
+        run: |
+          set -euo pipefail
+          command -v diff
+          diff --version | head -n 1
+          sudo /usr/local/sbin/platform-kubectl version
+
       - name: Preflight diff
         run: |
           set -euo pipefail
@@ -51,6 +58,7 @@ jobs:
           set -e
           if [ "$rc" -gt 1 ]; then
             echo "Kubernetes diff failed with exit code $rc" >&2
+            echo "Diff prerequisites were verified immediately before this check." >&2
             exit "$rc"
           fi
           if [ "$rc" -eq 1 ]; then
