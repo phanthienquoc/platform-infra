@@ -27,7 +27,7 @@ wait_rollout() {
   local namespace="$2"
 
   set +e
-  sudo /usr/local/sbin/platform-kubectl rollout status "deployment/${deployment}" -n "$namespace"
+  sudo /usr/local/sbin/platform-kubectl rollout status "deployment/${deployment}" -n "$namespace" --timeout=180s
   local rc=$?
   set -e
 
