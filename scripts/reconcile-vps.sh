@@ -22,6 +22,29 @@ run_diff() {
   fi
 }
 
+wait_rollout() {
+  local deployment="$1"
+  local namespace="$2"
+
+  set +e
+  sudo /usr/local/sbin/platform-kubectl rollout status "deployment/${deployment}" -n "$namespace"
+  local rc=$?
+  set -e
+
+  if [[ "$rc" -eq 0 ]]; then
+    return 0
+  fi
+
+  echo "Rollout failed or timed out for ${namespace}/${deployment}; collecting safe diagnostics." >&2
+  echo "== Deployment state: ${namespace}/${deployment} ==" >&2
+  sudo /usr/local/sbin/platform-kubectl get deployments -n "$namespace" -o wide >&2 || true
+  echo "== Pod state: ${namespace} ==" >&2
+  sudo /usr/local/sbin/platform-kubectl get pods -n "$namespace" -o wide >&2 || true
+  echo "Rollout diagnostics complete; no secret-bearing resources are queried." >&2
+
+  return "$rc"
+}
+
 case "$MODE" in
   plan)
     echo "== Kubernetes diff =="
@@ -35,10 +58,10 @@ case "$MODE" in
     sudo /usr/local/sbin/platform-kubectl apply -k environments/prod
 
     echo "== Waiting for application rollouts =="
-    sudo /usr/local/sbin/platform-kubectl rollout status deployment/stock-backend -n stock-prod
-    sudo /usr/local/sbin/platform-kubectl rollout status deployment/stock-frontend -n stock-prod
-    sudo /usr/local/sbin/platform-kubectl rollout status deployment/tce-service -n tce-prod
-    sudo /usr/local/sbin/platform-kubectl rollout status deployment/tce-frontend -n tce-prod
+    wait_rollout stock-backend stock-prod
+    wait_rollout stock-frontend stock-prod
+    wait_rollout tce-service tce-prod
+    wait_rollout tce-frontend tce-prod
     ;;
   *)
     echo "Usage: $0 {plan|apply}" >&2
