@@ -8,6 +8,6 @@ images:
 # Release identity follows TCE WF-03: prod-v<package-version>-<7-char-git-sha>.
 # Keep the image tag immutable and update both components together per release.
 - name: ghcr.io/phanthienquoc/tce-dashboard/web
-  newTag: prod-v0.1.0-38d327f
+  newTag: prod-v0.1.0-b703cdf
 - name: ghcr.io/phanthienquoc/tce-dashboard/service
   newTag: prod-v0.1.0-b703cdf
