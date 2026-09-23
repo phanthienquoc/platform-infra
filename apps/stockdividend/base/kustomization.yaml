@@ -6,4 +6,3 @@ resources:
 - limit-range.yaml
 - backend.yaml
 - admin.yaml
-- migration-job.yaml
