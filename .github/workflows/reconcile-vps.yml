@@ -42,6 +42,7 @@ jobs:
     if: github.ref == 'refs/heads/master'
     environment: production
     runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -147,8 +148,8 @@ jobs:
         run: |
           set -u
           rc=0
-          sudo /usr/local/sbin/platform-kubectl rollout status deployment/stock-backend -n stock-prod || rc=1
-          sudo /usr/local/sbin/platform-kubectl rollout status deployment/stock-frontend -n stock-prod || rc=1
+          sudo /usr/local/sbin/platform-kubectl rollout status deployment/stock-backend -n stock-prod --timeout=180s || rc=1
+          sudo /usr/local/sbin/platform-kubectl rollout status deployment/stock-frontend -n stock-prod --timeout=180s || rc=1
           exit "$rc"
 
       - name: Verify TCE rollout
@@ -158,8 +159,8 @@ jobs:
         run: |
           set -u
           rc=0
-          sudo /usr/local/sbin/platform-kubectl rollout status deployment/tce-service -n tce-prod || rc=1
-          sudo /usr/local/sbin/platform-kubectl rollout status deployment/tce-frontend -n tce-prod || rc=1
+          sudo /usr/local/sbin/platform-kubectl rollout status deployment/tce-service -n tce-prod --timeout=180s || rc=1
+          sudo /usr/local/sbin/platform-kubectl rollout status deployment/tce-frontend -n tce-prod --timeout=180s || rc=1
           exit "$rc"
 
       - name: Notify Telegram — TCE rollout failed
