@@ -79,7 +79,7 @@ case "$MODE" in
 
     if [[ "$rollout_rc" -ne 0 ]]; then
       echo "One or more application rollouts failed; all rollout checks were attempted." >&2
-      return "$rollout_rc"
+      exit "$rollout_rc"
     fi
     ;;
   *)
