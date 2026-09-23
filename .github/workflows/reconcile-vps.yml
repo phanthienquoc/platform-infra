@@ -55,6 +55,12 @@ jobs:
           diff --version | head -n 1
           sudo /usr/local/sbin/platform-kubectl version
 
+      - name: Validate TCE release pairing
+        run: |
+          set -euo pipefail
+          chmod +x scripts/verify-tce-gitops-release.sh
+          ./scripts/verify-tce-gitops-release.sh
+
       - name: Preflight diff
         run: |
           set -euo pipefail
