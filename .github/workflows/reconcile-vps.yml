@@ -83,3 +83,28 @@ jobs:
           set -euo pipefail
           sudo /usr/local/sbin/platform-kubectl get nodes -o wide
           sudo /usr/local/sbin/platform-kubectl get pods -A -o wide
+
+      - name: Verify drift cleared
+        if: env.RECONCILE_MODE == 'apply'
+        run: |
+          set -euo pipefail
+          diff_stderr="$(mktemp)"
+          trap 'rm -f "$diff_stderr"' EXIT
+          set +e
+          sudo /usr/local/sbin/platform-kubectl diff -k environments/prod 2>"$diff_stderr"
+          rc=$?
+          set -e
+          case "$rc" in
+            0)
+              echo "Post-reconcile GitOps state is clean."
+              ;;
+            1)
+              echo "Post-reconcile drift remains; refusing to report reconciliation as healthy." >&2
+              ;;
+            *)
+              echo "Post-reconcile drift verification failed with exit code $rc." >&2
+              echo "Diff stderr (diagnostic, no manifest diff is persisted):" >&2
+              sed -n '1,120p' "$diff_stderr" >&2 || true
+              ;;
+          esac
+          exit "$rc"
