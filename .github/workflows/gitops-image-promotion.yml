@@ -69,7 +69,7 @@ jobs:
 
           case "$APP" in
             tce-dashboard)
-              [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}$ ]] || {
+              [[ "$TAG" =~ ^prod-v[0-9]+.[0-9]+.[0-9]+-[0-9a-f]{7,64}$ ]] || {
                 echo "::error::TCE tag must be prod-v<semver>-<git-sha>"
                 exit 1
               }
@@ -175,4 +175,32 @@ jobs:
           PR_NUMBER: ${{ steps.promotion.outputs.pull-request-number }}
         run: |
           set -euo pipefail
-          gh pr merge "$PR_NUMBER"             --repo "${GITHUB_REPOSITORY}"             --squash             --delete-branch
+
+          REPO="${GITHUB_REPOSITORY}"
+          MAX_ATTEMPTS=4
+
+          for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+            echo "Merge attempt $attempt/$MAX_ATTEMPTS for PR #$PR_NUMBER"
+
+            if gh pr merge "$PR_NUMBER" --repo "$REPO" --squash --delete-branch; then
+              echo "Promotion PR #$PR_NUMBER merged successfully."
+              exit 0
+            fi
+
+            if [ "$attempt" -eq "$MAX_ATTEMPTS" ]; then
+              echo "::error::Promotion PR #$PR_NUMBER could not be merged after $MAX_ATTEMPTS attempts."
+              exit 1
+            fi
+
+            echo "Base branch changed or merge was temporarily unavailable; updating PR branch before retry."
+            gh pr update-branch "$PR_NUMBER" --repo "$REPO" --rebase
+
+            for wait in 1 2 3 4 5; do
+              sleep 2
+              state="$(gh pr view "$PR_NUMBER" --repo "$REPO" --json mergeStateStatus --jq '.mergeStateStatus')"
+              echo "PR merge state after branch update: $state"
+              case "$state" in
+                CLEAN|BEHIND|UNSTABLE) break ;;
+              esac
+            done
+          done
