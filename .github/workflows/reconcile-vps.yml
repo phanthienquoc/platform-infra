@@ -110,7 +110,7 @@ jobs:
           set -euo pipefail
           ./scripts/reconcile-vps.sh apply
 
-      - name: Notify Telegram — TCE rollout pending
+      - name: Notify Telegram — production processing
         if: env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true'
         continue-on-error: true
         run: |
@@ -118,12 +118,13 @@ jobs:
           test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
           test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
           TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
-          test -n "$TAG" || { echo "Unable to resolve TCE image tag"; exit 1; }
-          MESSAGE="$(printf '%s\n%s\n%s\n%s' \
-            "🟡 <b>TCE • DEPLOYING</b>" \
-            "🏷️ <code>${TAG}</code>" \
+          test -n "$TAG" || TAG="unknown"
+          MESSAGE="$(printf '%s\n%s\n%s\n%s\n%s' \
+            "🔄 <b>PRODUCTION • PROCESSING</b>" \
+            "🏷️ Release  <code>"$TAG"</code>" \
             "✓ GitOps synced" \
-            "⏳ VPS rollout pending")"
+            "✓ VPS reconciliation" \
+            "⏳ Rollout in progress")"
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=HTML"
 
       - name: Verify cluster after reconciliation
@@ -163,69 +164,36 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl rollout status deployment/tce-frontend -n tce-prod --timeout=180s || rc=1
           exit "$rc"
 
-      - name: Notify Telegram — TCE rollout failed
-        if: env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && steps.verify_tce.outcome != 'success'
+      - name: Notify Telegram — production rollout summary
+        if: env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true'
         continue-on-error: true
+        env:
+          TCE_STATUS: ${{ steps.verify_tce.outcome }}
+          TCE_IMAGES_STATUS: ${{ steps.verify_tce_images.outcome }}
+          STOCK_STATUS: ${{ steps.verify_stock.outcome }}
         run: |
           set -euo pipefail
           test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
           test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
-          TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
-          test -n "$TAG" || TAG="unknown"
-          MESSAGE="$(printf '%s\n%s\n%s' \
-            "🔴 <b>TCE • DEPLOY FAILED</b>" \
-            "🏷️ <code>${TAG}</code>" \
-            "✗ VPS rollout verification failed")"
-          curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=HTML"
-
-      - name: Notify Telegram — stockdividend rollout failed
-        if: env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && steps.verify_stock.outcome != 'success'
-        continue-on-error: true
-        run: |
-          set -euo pipefail
-          test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
-          test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
-          MESSAGE="$(printf '%s\n%s' \
-            "🔴 <b>STOCKDIVIDEND • DEPLOY FAILED</b>" \
-            "✗ backend / frontend rollout verification failed")"
-          curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=HTML"
-
-      - name: Notify Telegram — stockdividend rollout deployed
-        if: env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && steps.verify_stock.outcome == 'success'
-        run: |
-          set -euo pipefail
-          test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
-          test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
-          MESSAGE="$(printf '%s\n%s\n%s' \
-            "🟢 <b>STOCKDIVIDEND • DEPLOYED</b>" \
-            "✓ backend rollout" \
-            "✓ frontend rollout")"
-          curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=HTML"
-
-      - name: Notify Telegram — TCE rollout deployed
-        if: env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && steps.verify_tce.outcome == 'success' && steps.verify_tce_images.outcome == 'success'
-        run: |
-          set -euo pipefail
-          test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
-          test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
-          TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
-          test -n "$TAG" || { echo "Unable to resolve TCE image tag"; exit 1; }
-          MESSAGE="$(printf '%s\n%s\n%s' \
-            "🟢 <b>TCE • DEPLOYED</b>" \
-            "🏷️ <code>${TAG}</code>" \
-            "✓ frontend • ✓ service • ✓ GitOps verified")"
-          curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=HTML"
-
-      - name: Notify Telegram — all production rollouts deployed
-        if: env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && steps.verify_stock.outcome == 'success' && steps.verify_tce.outcome == 'success' && steps.verify_tce_images.outcome == 'success'
-        run: |
-          set -euo pipefail
-          test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
-          test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
-          MESSAGE="$(printf '%s\n%s\n%s' \
-            "🎉 <b>PRODUCTION • ALL DEPLOYED</b>" \
-            "✓ TCE" \
-            "✓ StockDividend")"
+          success=()
+          failed=()
+          skipped=()
+          if [ "$TCE_STATUS" = "success" ] && [ "$TCE_IMAGES_STATUS" = "success" ]; then success+=("TCE"); else case "$TCE_STATUS" in skipped|cancelled) skipped+=("TCE") ;; *) failed+=("TCE") ;; esac; fi
+          case "$STOCK_STATUS" in success) success+=("StockDividend") ;; skipped|cancelled) skipped+=("StockDividend") ;; *) failed+=("StockDividend") ;; esac
+          join() { local IFS=", "; echo "$*"; }
+          success_text="$(join "${success[@]}")"
+          failed_text="$(join "${failed[@]}")"
+          skipped_text="$(join "${skipped[@]}")"
+          [ -n "$success_text" ] || success_text="—"
+          [ -n "$failed_text" ] || failed_text="—"
+          [ -n "$skipped_text" ] || skipped_text="—"
+          if [ "${#failed[@]}" -gt 0 ]; then status="PARTIAL"; else status="ALL DEPLOYED"; fi
+          MESSAGE="$(printf '%s\n%s\n%s\n%s\n%s' \
+            "🎉 <b>PRODUCTION • ROLLOUT</b>" \
+            "🟢 SUCCESS  •  $success_text" \
+            "🔴 FAILED   •  $failed_text" \
+            "⚪ SKIPPED  •  $skipped_text" \
+            "🎯 Status: $status")"
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=HTML"
 
       - name: Verify drift cleared
