@@ -10,4 +10,4 @@ images:
 - name: ghcr.io/phanthienquoc/tce-dashboard/web
   newTag: prod-v0.1.0-31317a1
 - name: ghcr.io/phanthienquoc/tce-dashboard/service
-  newTag: prod-v0.1.0-2bb9836
+  newTag: prod-v0.1.0-31317a1
