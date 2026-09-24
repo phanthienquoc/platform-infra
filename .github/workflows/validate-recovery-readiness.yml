@@ -1,0 +1,48 @@
+name: validate-recovery-readiness
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platform-recovery-validation
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.ref == 'refs/heads/master'
+    environment: production
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify read-only recovery prerequisites
+        run: |
+          set -euo pipefail
+          test -f scripts/validate-recovery-readiness.sh
+          test -x /usr/local/sbin/platform-kubectl
+          sudo /usr/local/sbin/platform-kubectl version
+
+      - name: Validate recovery readiness
+        run: |
+          set -euo pipefail
+          chmod +x scripts/validate-recovery-readiness.sh
+          ./scripts/validate-recovery-readiness.sh
+
+      - name: Publish recovery validation summary
+        run: |
+          {
+            echo "## Recovery readiness validation"
+            echo
+            echo "- Ref: \`$GITHUB_REF_NAME\`"
+            echo "- Commit: \`${GITHUB_SHA::12}\`"
+            echo "- Manifest reconstruction: server-side dry-run"
+            echo "- Rollback history: inspected"
+            echo "- Production mutation: none"
+          } >> "$GITHUB_STEP_SUMMARY"
