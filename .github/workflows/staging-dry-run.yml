@@ -1,0 +1,90 @@
+name: staging-dry-run
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platform-staging-dry-run
+  cancel-in-progress: false
+
+jobs:
+  dry-run:
+    if: github.ref == 'refs/heads/master'
+    environment: production
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify read-only dry-run prerequisites
+        run: |
+          set -euo pipefail
+          test -f environments/prod/kustomization.yaml
+          command -v kubectl
+          command -v diff
+          test -x /usr/local/sbin/platform-kubectl
+          sudo /usr/local/sbin/platform-kubectl version
+
+      - name: Render production manifests locally
+        run: |
+          set -euo pipefail
+          kubectl kustomize environments/prod > /tmp/platform-infra-rendered.yaml
+          test -s /tmp/platform-infra-rendered.yaml
+          kubectl apply --dry-run=client --validate=strict -f /tmp/platform-infra-rendered.yaml >/dev/null
+
+      - name: Enforce rendered secret policy
+        run: |
+          set -euo pipefail
+          if grep -nE '^kind: Secret$|^[[:space:]]+data:' /tmp/platform-infra-rendered.yaml; then
+            echo 'Rendered manifests must not contain Secret objects or inline secret data.' >&2
+            exit 1
+          fi
+
+      - name: Diff rendered GitOps state against live cluster
+        id: live_diff
+        run: |
+          set -euo pipefail
+          diff_stderr="$(mktemp)"
+          trap 'rm -f "$diff_stderr"' EXIT
+          set +e
+          sudo /usr/local/sbin/platform-kubectl diff -k environments/prod 2>"$diff_stderr"
+          rc=$?
+          set -e
+          case "$rc" in
+            0)
+              echo "Live cluster matches environments/prod."
+              echo "result=clean" >> "$GITHUB_OUTPUT"
+              ;;
+            1)
+              echo "Live cluster drift detected; dry-run completed without mutation."
+              echo "result=drift" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Live cluster diff failed with exit code $rc." >&2
+              sed -n '1,120p' "$diff_stderr" >&2 || true
+              echo "result=error" >> "$GITHUB_OUTPUT"
+              exit "$rc"
+              ;;
+          esac
+
+      - name: Publish dry-run summary
+        env:
+          DIFF_RESULT: ${{ steps.live_diff.outputs.result }}
+        run: |
+          set -euo pipefail
+          {
+            echo "## Platform staging/dry-run"
+            echo
+            echo "- Ref: \`$GITHUB_REF_NAME\`"
+            echo "- Commit: \`${GITHUB_SHA::12}\`"
+            echo "- Render validation: passed"
+            echo "- Secret policy: passed"
+            echo "- Live diff: \`$DIFF_RESULT\`"
+            echo "- Production mutation: none"
+          } >> "$GITHUB_STEP_SUMMARY"
