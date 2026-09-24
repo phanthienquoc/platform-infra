@@ -231,7 +231,7 @@ jobs:
             case "$1" in
               SUCCESS) echo "🟢" ;;
               FAILED) echo "🔴" ;;
-              NOT VERIFIED|NOT TARGETED) echo "⚪" ;;
+              "NOT VERIFIED"|"NOT TARGETED") echo "⚪" ;;
               BLOCKED) echo "🟠" ;;
               *) echo "⚪" ;;
             esac
