@@ -50,8 +50,8 @@ env:
   TARGET_APP: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.app || inputs.target_app || 'all' }}
   RELEASE_TAG: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.release || '' }}
   ALLOW_IMAGE_CHANGES: ${{ github.event_name == 'workflow_dispatch' && inputs.allow_image_changes == true && 'true' || 'false' }}
-  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+  TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN }}
+  TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
 
 jobs:
   reconcile:
@@ -141,8 +141,8 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
-          test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub secret: TELEGRAM_BOT_TOKEN"; exit 1; }
-          test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub secret: TELEGRAM_CHAT_ID"; exit 1; }
+          test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
+          test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
           TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
           test -n "$TAG" || TAG="unknown"
           MESSAGE="$(printf '%s\n%s\n%s\n%s\n%s' \
@@ -202,8 +202,8 @@ jobs:
           DRIFT: ${{ steps.preflight.outputs.drift }}
         run: |
           set -euo pipefail
-          test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub secret: TELEGRAM_BOT_TOKEN"; exit 1; }
-          test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub secret: TELEGRAM_CHAT_ID"; exit 1; }
+          test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
+          test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
           TAG="$RELEASE_TAG"
           if [ -z "$TAG" ]; then TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"; fi
           [ -n "$TAG" ] || TAG="GitOps sync"
