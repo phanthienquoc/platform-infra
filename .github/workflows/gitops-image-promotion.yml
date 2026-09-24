@@ -212,16 +212,40 @@ jobs:
         run: |
           set -euo pipefail
           REPO="${GITHUB_REPOSITORY}"
-          echo "Waiting for required validation checks on PR #$PR_NUMBER."
+          echo "Validating promotion PR #$PR_NUMBER before merge."
+
+          # Empty required-check sets are valid when no branch-protection
+          # checks are configured. gh pr merge remains the final merge gate.
+          required="$(gh pr checks "$PR_NUMBER" --repo "$REPO" --required --json state 2>/dev/null || printf '[]')"
+          required_count="$(printf '%s' "$required" | jq 'length')"
+
+          if [ "$required_count" -eq 0 ]; then
+            echo "No required PR checks are configured; continuing to merge gate."
+            exit 0
+          fi
+
+          echo "Waiting for $required_count required PR check(s)."
           for attempt in $(seq 1 30); do
-            state="$(gh pr checks "$PR_NUMBER" --repo "$REPO" --required --json state --jq 'if length == 0 then "PENDING" elif any(.[]; .state == "FAILURE" or .state == "ERROR") then "FAILURE" elif all(.[]; .state == "SUCCESS") then "SUCCESS" else "PENDING" end' 2>/dev/null || echo PENDING)"
+            state="$(printf '%s' "$required" | jq -r '
+              if any(.[]; .state == "FAILURE" or .state == "ERROR") then "FAILURE"
+              elif all(.[]; .state == "SUCCESS") then "SUCCESS"
+              else "PENDING"
+              end
+            ')"
             echo "Promotion PR check state: $state (attempt $attempt/30)"
+
             case "$state" in
               SUCCESS) exit 0 ;;
-              FAILURE) echo "::error::Required promotion PR checks failed."; exit 1 ;;
+              FAILURE)
+                echo "::error::Required promotion PR checks failed."
+                exit 1
+                ;;
             esac
+
             sleep 10
+            required="$(gh pr checks "$PR_NUMBER" --repo "$REPO" --required --json state 2>/dev/null || printf '[]')"
           done
+
           echo "::error::Required promotion PR checks did not complete within the validation window."
           exit 1
 
