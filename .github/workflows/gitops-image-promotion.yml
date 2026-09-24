@@ -23,7 +23,6 @@ on:
     types:
       - image-published
       - tce-release-requested
-      - gitops-release-ready
 
 permissions:
   contents: write
@@ -36,7 +35,7 @@ concurrency:
 
 jobs:
   fanout-tce-release:
-    if: github.event_name == 'repository_dispatch' && (github.event.action == 'tce-release-requested' || github.event.action == 'gitops-release-ready')
+    if: github.event_name == 'repository_dispatch' && github.event.action == 'tce-release-requested'
     name: Fan out TCE release
     runs-on: ubuntu-latest
     steps:
@@ -71,7 +70,7 @@ jobs:
 
   promote:
     if: github.event_name != 'repository_dispatch' || github.event.action != 'tce-release-requested'
-    name: Promote ${{ github.event.client_payload.app || inputs.app }}/${{ github.event.client_payload.component || inputs.component }}
+    name: Promote ${{ github.event.client_payload.app || inputs.app }} / ${{ github.event.client_payload.component || inputs.component }}
     runs-on: ubuntu-latest
 
     steps:
