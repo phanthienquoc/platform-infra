@@ -1,24 +1,27 @@
-name: Bootstrap self-hosted runner
+name: Bootstrap Self-Hosted Runner
 
 on:
   workflow_dispatch:
-  push:
-    branches: [master]
+    inputs:
+      confirm:
+        description: 'Type BOOTSTRAP to authorize runner bootstrap'
+        required: true
+        default: ''
 
 permissions:
   contents: read
-
-concurrency:
-  group: platform-runner-bootstrap
-  cancel-in-progress: false
+  actions: write
 
 jobs:
   bootstrap:
+    if: github.event.inputs.confirm == 'BOOTSTRAP'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    environment: production
-
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
       - name: Generate short-lived runner registration token
         id: registration
         env:
@@ -49,10 +52,10 @@ jobs:
           fi
 
           token="$(echo "$body" | jq -r '.token')"
-          test -n "$token" && test "$token" != "null" || {
+          if [ -z "$token" ] || [ "$token" = "null" ]; then
             echo "GitHub returned no runner registration token." >&2
             exit 1
-          }
+          fi
 
           printf 'token=%s\n' "$token" >> "$GITHUB_OUTPUT"
 
@@ -67,99 +70,3 @@ jobs:
           test -n "${VPS_HOST:-}" || { echo "Missing VPS_HOST."; exit 1; }
           test -n "${VPS_USER:-}" || { echo "Missing VPS_USER."; exit 1; }
           test -n "${VPS_SSH_PRIVATE_KEY:-}" || { echo "Missing VPS_SSH_PRIVATE_KEY."; exit 1; }
-
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/vps_key
-          chmod 600 ~/.ssh/vps_key
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
-
-          ssh -i ~/.ssh/vps_key -o BatchMode=yes "$VPS_USER@$VPS_HOST" '
-            set -e
-            echo "== host =="
-            hostname
-            uname -a
-            echo "== runner user =="
-            id github-runner 2>/dev/null || true
-            echo "== runner service =="
-            systemctl list-units --type=service --all "actions.runner.*" --no-legend 2>/dev/null || true
-            echo "== runner directory =="
-            test -f /opt/actions-runner/.runner && echo configured || echo not-configured
-          '
-
-      - name: Upload bootstrap script
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
-        run: |
-          set -euo pipefail
-
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/vps_key
-          chmod 600 ~/.ssh/vps_key
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-
-          curl -fsSL \
-            -H 'Accept: application/vnd.github.raw+json' \
-            -H "Authorization: Bearer ${{ github.token }}" \
-            "https://api.github.com/repos/${{ github.repository }}/contents/scripts/bootstrap-runner.sh?ref=${{ github.sha }}" \
-            -o /tmp/bootstrap-runner.sh
-
-          chmod 700 /tmp/bootstrap-runner.sh
-          scp -i ~/.ssh/vps_key -o BatchMode=yes \
-            /tmp/bootstrap-runner.sh "$VPS_USER@$VPS_HOST:/tmp/bootstrap-runner.sh"
-
-      - name: Bootstrap runner on VPS
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
-          RUNNER_TOKEN: ${{ steps.registration.outputs.token }}
-        run: |
-          set -euo pipefail
-
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/vps_key
-          chmod 600 ~/.ssh/vps_key
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-
-          # Pass the short-lived registration token over SSH stdin. The remote
-          # command reads it into the environment instead of placing it in argv.
-          printf '%s\n' "$RUNNER_TOKEN" | ssh -i ~/.ssh/vps_key -o BatchMode=yes "$VPS_USER@$VPS_HOST" \
-            'read -r RUNNER_TOKEN && export RUNNER_TOKEN && sudo -E bash /tmp/bootstrap-runner.sh'
-
-      - name: Verify runner service and reconciliation capability
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
-        run: |
-          set -euo pipefail
-
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/vps_key
-          chmod 600 ~/.ssh/vps_key
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-
-          ssh -i ~/.ssh/vps_key -o BatchMode=yes "$VPS_USER@$VPS_HOST" '
-            set -euo pipefail
-            test -f /opt/actions-runner/.runner
-            service="actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service"
-            systemctl is-enabled "$service"
-            systemctl is-active --quiet "$service"
-            test -x /usr/local/sbin/platform-kubectl
-            sudo /usr/local/sbin/platform-kubectl version >/dev/null
-
-            cd /opt/actions-runner/_work/platform-infra/platform-infra
-            set +e
-            sudo /usr/local/sbin/platform-kubectl diff -k environments/prod >/tmp/platform-kubectl-diff-check 2>/tmp/platform-kubectl-diff-error
-            rc=$?
-            set -e
-            if [[ "$rc" -gt 1 ]]; then
-              echo "platform-kubectl diff capability check failed with exit $rc" >&2
-              cat /tmp/platform-kubectl-diff-error >&2 || true
-              exit "$rc"
-            fi
-            rm -f /tmp/platform-kubectl-diff-check /tmp/platform-kubectl-diff-error
-            echo "Runner service and allowlisted reconciliation capability verified."
-          '
