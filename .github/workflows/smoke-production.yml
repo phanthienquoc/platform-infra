@@ -1,0 +1,53 @@
+name: smoke-production
+
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: Production smoke scope
+        required: true
+        default: tce-dashboard
+        type: choice
+        options:
+          - tce-dashboard
+          - stockdividend
+          - all
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platform-production-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Run allowlisted production smoke checks
+        env:
+          SMOKE_SCOPE: ${{ inputs.scope }}
+        run: |
+          set -euo pipefail
+          test -x ops/scripts/smoke.sh || chmod +x ops/scripts/smoke.sh
+          ./ops/scripts/smoke.sh "$SMOKE_SCOPE"
+
+      - name: Publish smoke summary
+        env:
+          SMOKE_SCOPE: ${{ inputs.scope }}
+        run: |
+          {
+            echo "## Production smoke validation"
+            echo
+            echo "- Scope: \`$SMOKE_SCOPE\`"
+            echo "- Mode: read-only HTTP checks"
+            echo "- Production mutation: none"
+            echo "- Endpoints: repository-allowlisted production URLs only"
+          } >> "$GITHUB_STEP_SUMMARY"
