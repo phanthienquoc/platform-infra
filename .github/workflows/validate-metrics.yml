@@ -1,0 +1,48 @@
+name: validate-metrics
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platform-metrics-validation
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.ref == 'refs/heads/master'
+    environment: production
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify read-only validation prerequisites
+        run: |
+          set -euo pipefail
+          test -f scripts/validate-metrics.sh
+          test -x /usr/local/sbin/platform-kubectl
+          sudo /usr/local/sbin/platform-kubectl version
+
+      - name: Validate metrics-server and HPA prerequisites
+        run: |
+          set -euo pipefail
+          chmod +x scripts/validate-metrics.sh
+          ./scripts/validate-metrics.sh
+
+      - name: Publish metrics validation summary
+        run: |
+          {
+            echo "## Metrics/HPA validation"
+            echo
+            echo "- Ref: \\`$GITHUB_REF_NAME\\`"
+            echo "- Commit: \\`${GITHUB_SHA::12}\\`"
+            echo "- metrics.k8s.io API: reachable"
+            echo "- HPA resource prerequisites: validated"
+            echo "- Production mutation: none"
+          } >> "$GITHUB_STEP_SUMMARY"
