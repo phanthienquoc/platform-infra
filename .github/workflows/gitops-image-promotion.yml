@@ -301,19 +301,34 @@ jobs:
             exit 0
           fi
           FILE="apps/tce-dashboard/overlays/prod/kustomization.yaml"
-          WEB_TAG="$(awk '/name: ghcr.io\/phanthienquoc\/tce-dashboard\/web$/ {found=1; next} found && /newTag:/ {print $2; exit}' "$FILE")"
-          SERVICE_TAG="$(awk '/name: ghcr.io\/phanthienquoc\/tce-dashboard\/service$/ {found=1; next} found && /newTag:/ {print $2; exit}' "$FILE")"
-          echo "TCE GitOps web tag: $WEB_TAG"
-          echo "TCE GitOps service tag: $SERVICE_TAG"
-          if [ -n "$WEB_TAG" ] && [ "$WEB_TAG" = "$SERVICE_TAG" ] && [ "$WEB_TAG" = "$TAG" ]; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-            echo "release=$TAG" >> "$GITHUB_OUTPUT"
-            echo "TCE release is complete: both components point to $TAG."
-          else
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "release=$TAG" >> "$GITHUB_OUTPUT"
-            echo "TCE release is not complete yet; waiting for the paired component."
-          fi
+          MAX_ATTEMPTS=30
+
+          for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+            git fetch --no-tags origin master
+
+            WEB_TAG="$(git show "origin/master:$FILE" | awk '/name: ghcr.io\/phanthienquoc\/tce-dashboard\/web$/ {found=1; next} found && /newTag:/ {print $2; exit}')"
+            SERVICE_TAG="$(git show "origin/master:$FILE" | awk '/name: ghcr.io\/phanthienquoc\/tce-dashboard\/service$/ {found=1; next} found && /newTag:/ {print $2; exit}')"
+
+            echo "TCE GitOps web tag: $WEB_TAG"
+            echo "TCE GitOps service tag: $SERVICE_TAG"
+            echo "Pair readiness attempt $attempt/$MAX_ATTEMPTS"
+
+            if [ -n "$WEB_TAG" ] && [ "$WEB_TAG" = "$SERVICE_TAG" ] && [ "$WEB_TAG" = "$TAG" ]; then
+              echo "ready=true" >> "$GITHUB_OUTPUT"
+              echo "release=$TAG" >> "$GITHUB_OUTPUT"
+              echo "TCE release is complete: both components point to $TAG."
+              exit 0
+            fi
+
+            if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
+              sleep 2
+            fi
+          done
+
+          echo "::error::TCE GitOps release did not converge to $TAG on master within the readiness window."
+          echo "ready=false" >> "$GITHUB_OUTPUT"
+          echo "release=$TAG" >> "$GITHUB_OUTPUT"
+          exit 1
 
       - name: Trigger VPS reconciliation
         if: steps.release.outputs.ready == 'true'
