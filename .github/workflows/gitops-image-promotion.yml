@@ -68,6 +68,48 @@ jobs:
             echo "Dispatched TCE $component promotion for $RELEASE"
           done
 
+  coordinate-tce-release:
+    if: github.event_name == 'repository_dispatch' && github.event.action == 'tce-release-requested'
+    name: Coordinate TCE release
+    needs: fanout-tce-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout infrastructure
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: true
+
+      - name: Wait for paired GitOps release
+        env:
+          RELEASE: ${{ github.event.client_payload.release }}
+        run: |
+          set -euo pipefail
+          FILE="apps/tce-dashboard/overlays/prod/kustomization.yaml"
+          MAX_ATTEMPTS=60
+          for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+            git fetch --no-tags origin master
+            WEB_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/tce-dashboard\/web$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
+            SERVICE_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/tce-dashboard\/service$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
+            echo "Coordinator attempt $attempt/$MAX_ATTEMPTS"
+            echo "TCE GitOps web tag: $WEB_TAG"
+            echo "TCE GitOps service tag: $SERVICE_TAG"
+            if [ "$WEB_TAG" = "$RELEASE" ] && [ "$SERVICE_TAG" = "$RELEASE" ]; then
+              echo "TCE release $RELEASE converged on GitOps master."
+              gh api --method POST -H "Accept: application/vnd.github+json" \
+                "/repos/${GITHUB_REPOSITORY}/dispatches" \
+                -f event_type="gitops-promoted-ready" \
+                -f client_payload[app]="tce-dashboard" \
+                -f client_payload[component]="release" \
+                -f client_payload[release]="$RELEASE"
+              echo "Triggered VPS reconciliation for TCE release $RELEASE."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::TCE release $RELEASE did not converge on GitOps master within the readiness window."
+          exit 1
+
+
   promote:
     if: github.event_name != 'repository_dispatch' || github.event.action != 'tce-release-requested'
     name: Promote ${{ github.event.client_payload.app || inputs.app }} / ${{ github.event.client_payload.component || inputs.component }}
@@ -287,57 +329,13 @@ jobs:
             done
           done
 
-      - name: Determine release readiness
-        id: release
-        if: success()
-        env:
-          APP: ${{ steps.input.outputs.app }}
-          TAG: ${{ steps.input.outputs.tag }}
-        run: |
-          set -euo pipefail
-          if [ "$APP" = "stockdividend" ]; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-            echo "release=$TAG" >> "$GITHUB_OUTPUT"
-            echo "StockDividend promotion is independently deployable."
-            exit 0
-          fi
-          FILE="apps/tce-dashboard/overlays/prod/kustomization.yaml"
-          MAX_ATTEMPTS=30
-
-          for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
-            git fetch --no-tags origin master
-
-            WEB_TAG="$(git show "origin/master:$FILE" | awk '/name: ghcr.io\\/phanthienquoc\\/tce-dashboard\\/web$/ {found=1; next} found && /newTag:/ {print $2; exit}')"
-            SERVICE_TAG="$(git show "origin/master:$FILE" | awk '/name: ghcr.io\\/phanthienquoc\\/tce-dashboard\\/service$/ {found=1; next} found && /newTag:/ {print $2; exit}')"
-
-            echo "TCE GitOps web tag: $WEB_TAG"
-            echo "TCE GitOps service tag: $SERVICE_TAG"
-            echo "Pair readiness attempt $attempt/30"
-
-            if [ -n "$WEB_TAG" ] && [ "$WEB_TAG" = "$SERVICE_TAG" ] && [ "$WEB_TAG" = "$TAG" ]; then
-              echo "ready=true" >> "$GITHUB_OUTPUT"
-              echo "release=$TAG" >> "$GITHUB_OUTPUT"
-              echo "TCE release is complete: both components point to $TAG."
-              exit 0
-            fi
-
-            if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
-              sleep 2
-            fi
-          done
-
-          echo "::error::TCE GitOps release did not converge to $TAG on master within the readiness window."
-          echo "ready=false" >> "$GITHUB_OUTPUT"
-          echo "release=$TAG" >> "$GITHUB_OUTPUT"
-          exit 1
-
       - name: Trigger VPS reconciliation
-        if: steps.release.outputs.ready == 'true'
+        if: steps.input.outputs.app == 'stockdividend'
         env:
           GH_TOKEN: ${{ github.token }}
           APP: ${{ steps.input.outputs.app }}
           COMPONENT: ${{ steps.input.outputs.component }}
-          RELEASE: ${{ steps.release.outputs.release }}
+          RELEASE: ${{ steps.input.outputs.tag }}
         run: |
           set -euo pipefail
           gh api --method POST \
@@ -347,4 +345,4 @@ jobs:
             -f client_payload[app]="$APP" \
             -f client_payload[component]="$COMPONENT" \
             -f client_payload[release]="$RELEASE"
-          echo "Triggered one VPS reconciliation for $APP release $RELEASE."
+          echo "Triggered VPS reconciliation for $APP release $RELEASE."
