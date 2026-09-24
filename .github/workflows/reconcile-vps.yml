@@ -48,7 +48,7 @@ env:
   RECONCILE_MODE: ${{ (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'repository_dispatch') && 'apply' || inputs.mode }}
   TARGET_APP: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.app || inputs.target_app || 'all' }}
   RELEASE_TAG: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.release || '' }}
-  ALLOW_IMAGE_CHANGES: ${{ github.event_name == 'workflow_dispatch' && inputs.allow_image_changes == true && 'true' || 'false' }}
+  ALLOW_IMAGE_CHANGES: ${{ (github.event_name == 'repository_dispatch' && github.event.action == 'gitops-promoted-ready') || (github.event_name == 'workflow_dispatch' && inputs.allow_image_changes == true) }}
   TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN }}
   TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
 
@@ -231,7 +231,7 @@ jobs:
             case "$1" in
               SUCCESS) echo "🟢" ;;
               FAILED) echo "🔴" ;;
-              NOT VERIFIED|NOT TARGETED) echo "⚪" ;;
+              "NOT VERIFIED"|"NOT TARGETED") echo "⚪" ;;
               BLOCKED) echo "🟠" ;;
               *) echo "⚪" ;;
             esac
