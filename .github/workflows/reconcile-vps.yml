@@ -49,8 +49,8 @@ env:
   TARGET_APP: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.app || inputs.target_app || 'all' }}
   RELEASE_TAG: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.release || '' }}
   ALLOW_IMAGE_CHANGES: ${{ (github.event_name == 'repository_dispatch' && github.event.action == 'gitops-promoted-ready') || (github.event_name == 'workflow_dispatch' && inputs.allow_image_changes == true) }}
-  TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN }}
-  TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
 jobs:
   reconcile:
@@ -160,13 +160,6 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl get nodes -o wide
           sudo /usr/local/sbin/platform-kubectl get pods -A -o wide
 
-      - name: Verify targeted workload health
-        if: env.RECONCILE_MODE == 'apply'
-        run: |
-          set -euo pipefail
-          chmod +x scripts/verify-workload-health.sh
-          ./scripts/verify-workload-health.sh
-
       - name: Verify TCE GitOps images
         id: verify_tce_images
         if: env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'tce-dashboard')
@@ -197,6 +190,13 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl rollout status deployment/tce-service -n tce-prod --timeout=180s || rc=1
           sudo /usr/local/sbin/platform-kubectl rollout status deployment/tce-frontend -n tce-prod --timeout=180s || rc=1
           exit "$rc"
+
+      - name: Verify targeted workload health
+        if: env.RECONCILE_MODE == 'apply'
+        run: |
+          set -euo pipefail
+          chmod +x scripts/verify-workload-health.sh
+          ./scripts/verify-workload-health.sh
 
       - name: Notify Telegram — production rollout summary
         if: ${{ !cancelled() && env.RECONCILE_MODE == 'apply' }}
@@ -255,6 +255,8 @@ jobs:
             status="FAILED"
           elif [[ "$tce" == "FAILED" || "$stock" == "FAILED" ]]; then
             status="PARTIAL"
+          elif [[ "$tce" == "NOT VERIFIED" || "$stock" == "NOT VERIFIED" ]]; then
+            status="RECONCILIATION FAILED"
           else
             status="SUCCESS"
           fi
