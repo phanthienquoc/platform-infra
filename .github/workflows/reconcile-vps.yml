@@ -263,7 +263,14 @@ jobs:
 
           TCE_ICON="$(icon_for_status "$tce")"
           STOCK_ICON="$(icon_for_status "$stock")"
-          MESSAGE="🚀 <b>PRODUCTION • ROLLOUT</b>\n🏷️ Release  <code>$TAG</code>\n🎯 Scope    <code>$TARGET_APP</code>\n${TCE_ICON} TCE           • $tce\n${STOCK_ICON} StockDividend • $stock\n🎯 Status: <b>$status</b>\n🔒 Failure isolation: enabled"
+          MESSAGE="$(printf '%s\\n%s\\n%s\\n%s\\n%s\\n%s\\n%s' \
+            "🚀 <b>PRODUCTION • ROLLOUT</b>" \
+            "🏷️ Release  <code>$TAG</code>" \
+            "🎯 Scope    <code>$TARGET_APP</code>" \
+            "${TCE_ICON} TCE           • <b>$tce</b>" \
+            "${STOCK_ICON} StockDividend • <b>$stock</b>" \
+            "🎯 Status    <b>$status</b>" \
+            "🔒 Failure isolation: enabled")"
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" -d "chat_id=$TELEGRAM_CHAT_ID" --data-urlencode "text=$MESSAGE" -d "parse_mode=HTML"
 
       - name: Verify drift cleared
