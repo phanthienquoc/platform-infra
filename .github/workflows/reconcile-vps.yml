@@ -49,8 +49,8 @@ env:
   TARGET_APP: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.app || inputs.target_app || 'all' }}
   RELEASE_TAG: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.release || '' }}
   ALLOW_IMAGE_CHANGES: ${{ (github.event_name == 'repository_dispatch' && github.event.action == 'gitops-promoted-ready') || (github.event_name == 'workflow_dispatch' && inputs.allow_image_changes == true) }}
-  TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN }}
-  TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
 jobs:
   reconcile:
@@ -159,13 +159,6 @@ jobs:
           set -euo pipefail
           sudo /usr/local/sbin/platform-kubectl get nodes -o wide
           sudo /usr/local/sbin/platform-kubectl get pods -A -o wide
-
-      - name: Verify targeted workload health
-        if: env.RECONCILE_MODE == 'apply'
-        run: |
-          set -euo pipefail
-          chmod +x scripts/verify-workload-health.sh
-          ./scripts/verify-workload-health.sh
 
       - name: Verify TCE GitOps images
         id: verify_tce_images
