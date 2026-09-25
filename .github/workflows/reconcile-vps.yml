@@ -198,6 +198,13 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl rollout status deployment/tce-frontend -n tce-prod --timeout=180s || rc=1
           exit "$rc"
 
+      - name: Verify targeted workload health
+        if: env.RECONCILE_MODE == 'apply'
+        run: |
+          set -euo pipefail
+          chmod +x scripts/verify-workload-health.sh
+          ./scripts/verify-workload-health.sh
+
       - name: Notify Telegram — production rollout summary
         if: ${{ !cancelled() && env.RECONCILE_MODE == 'apply' }}
         continue-on-error: true
@@ -255,6 +262,8 @@ jobs:
             status="FAILED"
           elif [[ "$tce" == "FAILED" || "$stock" == "FAILED" ]]; then
             status="PARTIAL"
+          elif [[ "$tce" == "NOT VERIFIED" || "$stock" == "NOT VERIFIED" ]]; then
+            status="RECONCILIATION FAILED"
           else
             status="SUCCESS"
           fi
