@@ -263,7 +263,7 @@ jobs:
 
           TCE_ICON="$(icon_for_status "$tce")"
           STOCK_ICON="$(icon_for_status "$stock")"
-          MESSAGE="$(printf '%s\\n' \
+          MESSAGE="$(printf '%s\n' \
             '<pre>🚀 PRODUCTION • ROLLOUT' \
             '' \
             "🏷️ Release         $TAG" \
