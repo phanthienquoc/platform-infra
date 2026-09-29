@@ -1,0 +1,81 @@
+name: vps-image-cleanup
+
+on:
+  workflow_dispatch:
+    inputs:
+      keep_count:
+        description: "Minimum number of retained unreferenced tags"
+        required: true
+        default: "3"
+        type: string
+      dry_run:
+        description: "List candidates without deleting"
+        required: true
+        default: true
+        type: boolean
+  schedule:
+    - cron: "30 3 * * 0"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platform-vps-image-cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    environment: production
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify tools
+        run: |
+          set -euo pipefail
+          command -v docker
+          command -v jq
+          sudo docker version
+          sudo /usr/local/sbin/platform-kubectl version
+
+      - name: Cleanup safe unreferenced images
+        env:
+          KEEP_COUNT: "${{ inputs.keep_count || '3' }}"
+          DRY_RUN: "${{ inputs.dry_run || 'false' }}"
+        run: |
+          set -euo pipefail
+          case "$KEEP_COUNT" in ''|*[!0-9]*) echo "keep_count must be numeric" >&2; exit 1;; esac
+          [ "$KEEP_COUNT" -ge 1 ] || { echo "keep_count must be >= 1" >&2; exit 1; }
+
+          sudo /usr/local/sbin/platform-kubectl get pods -A -o json |
+            jq -r '.items[].spec.containers[].image' | sort -u > /tmp/live-images.txt
+
+          echo "Live images:"
+          cat /tmp/live-images.txt
+
+          echo "Local image candidates not referenced by live pods:"
+          sudo docker image ls --format '{{.Repository}}:{{.Tag}} {{.ID}} {{.CreatedAt}}' |
+            awk '$1 !~ /<none>/ {print}' |
+            while read -r image id created; do
+              grep -Fxq "$image" /tmp/live-images.txt && continue
+              echo "$image $id $created"
+            done | sort -k3,3r | tee /tmp/image-candidates.txt
+
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run enabled; no images deleted."
+            exit 0
+          fi
+
+          # Only remove dangling Docker images. Never use docker system prune -a:
+          # cached images may be required for recovery.
+          mapfile -t dangling < <(sudo docker image ls --filter dangling=true -q | sort -u)
+          if [ "${#dangling[@]}" -gt 0 ]; then
+            printf '%s\n' "${dangling[@]}" | xargs -r sudo docker image rm
+          fi
+
+          # K3s/containerd images are intentionally not pruned here.
+          echo "Safe cleanup completed; K3s/containerd cache was not pruned."
