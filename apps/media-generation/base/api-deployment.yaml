@@ -19,18 +19,19 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
       - name: api
-        image: ghcr.io/phanthienquoc/fe-algorithm-video/api:REPLACE_WITH_GIT_SHA
+        image: ghcr.io/phanthienquoc/media-generation:REPLACE_WITH_GIT_SHA
         ports:
         - name: http
           containerPort: 3000
+        env:
+        - {name: WORKER_ENABLED, value: "false"}
         envFrom:
-        - secretRef:
-            name: media-generation-runtime
+        - secretRef: {name: media-generation-runtime}
         readinessProbe:
-          httpGet: {path: /ready, port: http}
+          httpGet: {path: /v1/ready, port: http}
           periodSeconds: 10
         livenessProbe:
-          httpGet: {path: /health, port: http}
+          httpGet: {path: /v1/health, port: http}
           initialDelaySeconds: 15
           periodSeconds: 20
         securityContext:
