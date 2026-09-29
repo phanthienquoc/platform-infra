@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: media-prod
+resources:
+- ../../base
+images:
+- name: ghcr.io/phanthienquoc/fe-algorithm-video/api
+  newTag: REPLACE_WITH_GIT_SHA
+- name: ghcr.io/phanthienquoc/fe-algorithm-video/worker
+  newTag: REPLACE_WITH_GIT_SHA

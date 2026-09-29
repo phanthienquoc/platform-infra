@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: media-generation-worker
+  namespace: media-prod
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: {maxUnavailable: 0, maxSurge: 1}
+  selector:
+    matchLabels: {app: media-generation-worker}
+  template:
+    metadata:
+      labels: {app: media-generation-worker}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+      - name: worker
+        image: ghcr.io/phanthienquoc/fe-algorithm-video/worker:REPLACE_WITH_GIT_SHA
+        envFrom:
+        - secretRef:
+            name: media-generation-runtime
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {drop: [ALL]}
+        resources:
+          requests: {cpu: 100m, memory: 256Mi}
+          limits: {cpu: 1000m, memory: 1Gi}
