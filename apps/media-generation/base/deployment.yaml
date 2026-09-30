@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: media-generation
+  namespace: media-prod
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: {maxUnavailable: 0, maxSurge: 1}
+  selector:
+    matchLabels: {app: media-generation}
+  template:
+    metadata:
+      labels: {app: media-generation}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+      - name: media-generation
+        image: ghcr.io/phanthienquoc/media-generation:df7c74e940b192399ca0186ecc9338eac71247ea
+        ports:
+        - name: http
+          containerPort: 3000
+        env:
+        - {name: NODE_ENV, value: production}
+        - {name: PORT, value: "3000"}
+        - {name: WORKER_ENABLED, value: "true"}
+        - {name: WORKER_POLL_MS, value: "3000"}
+        - {name: MEDIA_STORAGE_BUCKET, value: media-generation}
+        envFrom:
+        - secretRef: {name: media-generation-secrets}
+        startupProbe:
+          httpGet: {path: /v1/health, port: http}
+          periodSeconds: 5
+          failureThreshold: 30
+        readinessProbe:
+          httpGet: {path: /v1/ready, port: http}
+          initialDelaySeconds: 10
+          timeoutSeconds: 3
+          periodSeconds: 10
+        livenessProbe:
+          httpGet: {path: /v1/health, port: http}
+          initialDelaySeconds: 30
+          timeoutSeconds: 3
+          periodSeconds: 20
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {drop: [ALL]}
+        resources:
+          requests: {cpu: 500m, memory: 512Mi}
+          limits: {cpu: 2000m, memory: 1Gi}
