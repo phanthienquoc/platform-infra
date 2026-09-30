@@ -45,10 +45,13 @@ case "${1:-}" in
     esac
     ;;
   logs)
-    [[ "${2:-}" == "deployment/media-generation" && "${3:-}" == "-n" && "${4:-}" == "media-prod" && "${5:-}" == "--tail=200" && "${6:-}" == "" ]] || {
+    [[ "${2:-}" == "deployment/media-generation" && "${3:-}" == "-n" && "${4:-}" == "media-prod" && ( "${5:-}" == "--tail=200" || "${5:-}" == "--previous" ) ]] || {
       echo "platform-kubectl: only media-generation logs in media-prod are allowed" >&2
       exit 2
     }
+    if [[ "${5:-}" == "--previous" ]]; then
+      exec "${KUBECTL[@]}" logs deployment/media-generation -n media-prod --previous --tail=200
+    fi
     exec "${KUBECTL[@]}" logs deployment/media-generation -n media-prod --tail=200
     ;;
   diff|apply)
