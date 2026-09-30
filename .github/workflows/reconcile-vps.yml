@@ -286,7 +286,7 @@ jobs:
             status="RECONCILIATION FAILED"
             [ "$tce" = "FAILED" ] || [ "$tce" = "SUCCESS" ] || tce="BLOCKED"
             [ "$stock" = "FAILED" ] || [ "$stock" = "SUCCESS" ] || stock="BLOCKED"
-          elif [[ "$tce" == "FAILED" && "$stock" == "FAILED" ]]; then
+          elif [[ "$tce" == "FAILED" && "$stock" == "FAILED" && "$media" == "FAILED" ]]; then
             status="FAILED"
           elif [[ "$tce" == "FAILED" || "$stock" == "FAILED" || "$media" == "FAILED" ]]; then
             status="PARTIAL"
