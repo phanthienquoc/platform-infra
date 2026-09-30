@@ -28,10 +28,15 @@ failed=0
 for namespace in "${namespaces[@]}"; do
   echo "Checking workload health in namespace: $namespace"
 
-  rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.phase}{"\t"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{" "}{end}{"\n"}{end}')"
+  rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.metadata.deletionTimestamp}{"\t"}{.status.phase}{"\t"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{" "}{end}{"\n"}{end}')"
 
-  while IFS=$'\t' read -r pod phase containers; do
+  while IFS=$'\t' read -r pod deletion_timestamp phase containers; do
     [ -n "$pod" ] || continue
+
+    if [ -n "$deletion_timestamp" ]; then
+      echo "Skipping terminating pod $namespace/$pod."
+      continue
+    fi
 
     if [ "$phase" = "Succeeded" ]; then
       continue
