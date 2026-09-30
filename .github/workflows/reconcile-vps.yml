@@ -64,8 +64,6 @@ jobs:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       MEDIA_STORAGE_BUCKET: media-generation
-      MEDIA_ADMIN_USERNAME: ${{ secrets.MEDIA_ADMIN_USERNAME }}
-      MEDIA_ADMIN_PASSWORD: ${{ secrets.MEDIA_ADMIN_PASSWORD }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:

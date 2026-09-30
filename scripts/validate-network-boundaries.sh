@@ -35,6 +35,7 @@ allowed_hosts = {
     "www.mrcute.space",
     "admin.mrcute.space",
     "api.mrcute.space",
+    "media.mrcute.space",
 }
 hosts = []
 for ingress in ingresses:
@@ -47,8 +48,8 @@ unexpected = sorted(set(hosts) - allowed_hosts)
 if unexpected:
     raise SystemExit("Unexpected externally routable hosts: " + ", ".join(unexpected))
 
-if len(ingresses) != 2:
-    raise SystemExit(f"Expected exactly 2 production Ingress resources, found {len(ingresses)}.")
+if len(ingresses) != 3:
+    raise SystemExit(f"Expected exactly 3 production Ingress resources, found {len(ingresses)}.")
 
 print(
     f"Validated network boundaries in {path}: "
