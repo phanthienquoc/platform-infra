@@ -228,7 +228,7 @@ jobs:
 
           lines = path.read_text().splitlines()
           expected = (
-              "ghcr.io/phanthienquoc/media-generation"
+              f"ghcr.io/phanthienquoc/media-generation-{component}"
               if app == "media-generation"
               else f"ghcr.io/phanthienquoc/{app}/{component}"
           )
@@ -249,7 +249,7 @@ jobs:
           PY
 
           if [ "$APP" = "media-generation" ]; then
-            grep -A1 "name: ghcr.io/phanthienquoc/media-generation" "$FILE"
+            grep -A1 "name: ghcr.io/phanthienquoc/media-generation-${COMPONENT}" "$FILE"
           else
             grep -A1 "name: ghcr.io/phanthienquoc/${APP}/${COMPONENT}" "$FILE"
           fi
