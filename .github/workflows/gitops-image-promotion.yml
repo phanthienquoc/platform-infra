@@ -143,7 +143,7 @@ jobs:
           TAG="${EVENT_TAG:-$INPUT_TAG}"
 
           case "$APP/$COMPONENT" in
-            stockdividend/backend|stockdividend/admin|tce-dashboard/web|tce-dashboard/service|media-generation/app) ;;
+            stockdividend/backend|stockdividend/admin|tce-dashboard/web|tce-dashboard/service|media-generation/backend|media-generation/frontend) ;;
             *)
               echo "::error::Unsupported image target: $APP/$COMPONENT"
               exit 1
@@ -188,7 +188,7 @@ jobs:
           set -euo pipefail
 
           if [ "$APP" = "media-generation" ]; then
-            IMAGE="ghcr.io/phanthienquoc/media-generation:${TAG}"
+            IMAGE="ghcr.io/phanthienquoc/media-generation-${COMPONENT}:${TAG}"
           else
             IMAGE="ghcr.io/phanthienquoc/${APP}/${COMPONENT}:${TAG}"
           fi
