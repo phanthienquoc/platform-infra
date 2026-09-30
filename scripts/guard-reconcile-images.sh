@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Media migration guard: preserve immutable image replacement protection.
 set -euo pipefail
 
 MODE="${1:-check}"
