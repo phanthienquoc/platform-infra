@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Reconcile trigger: health-gate policy is production-critical.
 set -euo pipefail
 
 TARGET_APP="${TARGET_APP:-all}"
