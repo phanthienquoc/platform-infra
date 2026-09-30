@@ -214,8 +214,11 @@ jobs:
         continue-on-error: true
         run: |
           set -u
-          sudo /usr/local/sbin/platform-kubectl rollout status deployment/media-generation -n media-prod --timeout=180s || exit 1
-          sudo /usr/local/sbin/platform-kubectl get deployments -n media-prod -l app=media-generation -o wide
+          rc=0
+          sudo /usr/local/sbin/platform-kubectl rollout status deployment/media-generation -n media-prod --timeout=180s || rc=1
+          sudo /usr/local/sbin/platform-kubectl rollout status deployment/media-generation-frontend -n media-prod --timeout=180s || rc=1
+          sudo /usr/local/sbin/platform-kubectl get deployments -n media-prod -o wide
+          exit "$rc"
 
       - name: Verify targeted workload health
         if: env.RECONCILE_MODE == 'apply'
