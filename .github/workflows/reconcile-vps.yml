@@ -215,7 +215,7 @@ jobs:
         run: |
           set -u
           sudo /usr/local/sbin/platform-kubectl rollout status deployment/media-generation -n media-prod --timeout=180s || exit 1
-          sudo /usr/local/sbin/platform-kubectl get deployment/media-generation -n media-prod -o wide
+          sudo /usr/local/sbin/platform-kubectl get deployments -n media-prod -l app=media-generation -o wide
 
       - name: Verify targeted workload health
         if: env.RECONCILE_MODE == 'apply'
