@@ -145,3 +145,54 @@ jobs:
         run: |
           chmod +x scripts/validate-network-boundaries.sh
           ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+
+
+          invalid = [
+              image for image in images
+              if not (
+                  stock_sha.fullmatch(image)
+                  or tce_versioned.fullmatch(image)
+                  or media_sha.fullmatch(image)
+              )
+          ]
+          if invalid:
+              print('Invalid first-party image tags:')
+              for image in invalid:
+                  print(f'  {image}')
+              raise SystemExit(
+                  'First-party application images must use immutable Git-SHA tags; '
+                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
+              )
+
+          print(f'Validated {len(images)} immutable first-party application images.')
+          PY
+      - name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+
+          )
+
+          invalid = [
+              image for image in images
+              if not (
+                  stock_sha.fullmatch(image)
+                  or tce_versioned.fullmatch(image)
+                  or media_sha.fullmatch(image)
+              )
+          ]
+          if invalid:
+              print('Invalid first-party image tags:')
+              for image in invalid:
+                  print(f'  {image}')
+              raise SystemExit(
+                  'First-party application images must use immutable Git-SHA tags; '
+                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
+              )
+
+          print(f'Validated {len(images)} immutable first-party application images.')
+          PY
+      - name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
