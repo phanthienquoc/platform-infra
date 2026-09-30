@@ -5,13 +5,16 @@ TARGET_APP="${TARGET_APP:-all}"
 
 case "$TARGET_APP" in
   all)
-    namespaces=(tce-prod stock-prod)
+    namespaces=(tce-prod stock-prod media-prod)
     ;;
   tce-dashboard)
     namespaces=(tce-prod)
     ;;
   stockdividend)
     namespaces=(stock-prod)
+    ;;
+  media-generation)
+    namespaces=(media-prod)
     ;;
   *)
     echo "::error::Unsupported deployment scope: $TARGET_APP" >&2
