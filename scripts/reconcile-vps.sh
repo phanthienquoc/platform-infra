@@ -8,6 +8,18 @@ cd "$ROOT"
 
 run_diff() {
   local rc
+
+  # kubectl diff performs server-side dry-run requests against namespaced
+  # resources, so a first reconciliation cannot diff them until their
+  # declaratively-managed Namespace objects exist.
+  for namespace_manifest in \
+    apps/stockdividend/base/namespace.yaml \
+    apps/tce-dashboard/base/namespace.yaml \
+    apps/media-generation/base/namespace.yaml; do
+    echo "== Ensuring namespace from $namespace_manifest =="
+    sudo /usr/local/sbin/platform-kubectl apply -f "$namespace_manifest"
+  done
+
   if sudo /usr/local/sbin/platform-kubectl diff -k environments/prod; then
     rc=0
   else
