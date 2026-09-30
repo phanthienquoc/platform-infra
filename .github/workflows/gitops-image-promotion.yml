@@ -11,6 +11,7 @@ on:
         options:
           - stockdividend
           - tce-dashboard
+          - media-generation
       component:
         description: Image component
         required: true
@@ -142,7 +143,7 @@ jobs:
           TAG="${EVENT_TAG:-$INPUT_TAG}"
 
           case "$APP/$COMPONENT" in
-            stockdividend/backend|stockdividend/admin|tce-dashboard/web|tce-dashboard/service) ;;
+            stockdividend/backend|stockdividend/admin|tce-dashboard/web|tce-dashboard/service|media-generation/api) ;;
             *)
               echo "::error::Unsupported image target: $APP/$COMPONENT"
               exit 1
@@ -150,6 +151,12 @@ jobs:
           esac
 
           case "$APP" in
+            media-generation)
+              [[ "$TAG" =~ ^[0-9a-f]{7,64}$ ]] || {
+                echo "::error::media-generation tag must be an immutable Git SHA"
+                exit 1
+              }
+              ;;
             tce-dashboard)
               [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}$ ]] || {
                 echo "::error::TCE tag must be prod-v<semver>-<git-sha>"
@@ -199,11 +206,12 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [ "$APP" = "stockdividend" ]; then
-            FILE="apps/stockdividend/overlays/prod/kustomization.yaml"
-          else
-            FILE="apps/tce-dashboard/overlays/prod/kustomization.yaml"
-          fi
+          case "$APP" in
+            stockdividend) FILE="apps/stockdividend/overlays/prod/kustomization.yaml" ;;
+            tce-dashboard) FILE="apps/tce-dashboard/overlays/prod/kustomization.yaml" ;;
+            media-generation) FILE="apps/media-generation/overlays/prod/kustomization.yaml" ;;
+            *) echo "::error::Unsupported application: $APP"; exit 1 ;;
+          esac
 
           python3 - "$FILE" "$APP" "$COMPONENT" "$TAG" <<'PY'
           import pathlib
@@ -331,7 +339,7 @@ jobs:
           done
 
       - name: Trigger VPS reconciliation
-        if: steps.input.outputs.app == 'stockdividend'
+        if: steps.input.outputs.app == 'stockdividend' || steps.input.outputs.app == 'media-generation'
         env:
           GH_TOKEN: ${{ github.token }}
           APP: ${{ steps.input.outputs.app }}
