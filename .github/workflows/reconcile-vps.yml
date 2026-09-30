@@ -35,6 +35,7 @@ on:
       - "apps/**"
       - "environments/**"
       - "scripts/reconcile-vps.sh"
+      - "scripts/verify-workload-health.sh"
   repository_dispatch:
     types:
       - gitops-promoted-ready
