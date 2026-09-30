@@ -55,6 +55,11 @@ for namespace in "${namespaces[@]}"; do
   done <<< "$rows"
 done
 
+if [ "$failed" -ne 0 ] && [ "$TARGET_APP" = "media-generation" ]; then
+  echo "Media workload diagnostic (read-only):"
+  sudo /usr/local/sbin/platform-kubectl describe-media || true
+fi
+
 if [ "$failed" -ne 0 ]; then
   echo "Workload health gate failed; refusing to report reconciliation as healthy." >&2
   exit 1
