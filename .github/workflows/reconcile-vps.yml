@@ -51,7 +51,6 @@ env:
   TARGET_APP: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.app || inputs.target_app || 'all' }}
   RELEASE_TAG: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.release || '' }}
   ALLOW_IMAGE_CHANGES: ${{ (github.event_name == 'repository_dispatch' && github.event.action == 'gitops-promoted-ready') || (github.event_name == 'workflow_dispatch' && inputs.allow_image_changes == true) }}
-  TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN }}
   TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
 
 jobs:
@@ -161,6 +160,8 @@ jobs:
           ./scripts/reconcile-vps.sh apply
 
       - name: Notify Telegram — production processing
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         if: env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true'
         continue-on-error: true
         run: |
@@ -240,6 +241,7 @@ jobs:
         if: ${{ !cancelled() && env.RECONCILE_MODE == 'apply' }}
         continue-on-error: true
         env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TCE_STATUS: ${{ steps.verify_tce.outcome }}
           TCE_IMAGES_STATUS: ${{ steps.verify_tce_images.outcome }}
           STOCK_STATUS: ${{ steps.verify_stock.outcome }}
