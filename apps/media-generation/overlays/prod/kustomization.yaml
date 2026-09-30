@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: media-prod
 resources:
 - ../../base
+- ingress.yaml
 images:
 - name: ghcr.io/phanthienquoc/media-generation
   newTag: df7c74e940b192399ca0186ecc9338eac71247ea

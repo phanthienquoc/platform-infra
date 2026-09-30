@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: media
+  namespace: media-prod
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts: [media.mrcute.space]
+    secretName: media-mrcute-tls
+  rules:
+  - host: media.mrcute.space
+    http:
+      paths:
+      - {path: /, pathType: Prefix, backend: {service: {name: media-generation, port: {number: 3000}}}}
