@@ -55,7 +55,7 @@ for namespace in "${namespaces[@]}"; do
   done <<< "$rows"
 done
 
-if [ "$failed" -ne 0 ] && [ "$TARGET_APP" = "media-generation" ]; then
+if [ "$failed" -ne 0 ] && { [ "$TARGET_APP" = "media-generation" ] || [ "$TARGET_APP" = "all" ]; }; then
   echo "Media workload diagnostic (read-only):"
   sudo /usr/local/sbin/platform-kubectl describe-media || true
 fi
