@@ -39,10 +39,17 @@ case "${1:-}" in
   get)
     shift
     case "${1:-}" in
-      nodes|namespaces|ns|pods|po|deployments|deploy|services|svc|ingress|ingresses|jobs|cronjobs|pv|pvc)
+      nodes|namespaces|ns|pods|po|deployments|deployment|deploy|services|svc|ingress|ingresses|jobs|cronjobs|pv|pvc)
         exec "${KUBECTL[@]}" get "$@"
         ;;
     esac
+    ;;
+  logs)
+    [[ "${2:-}" == "deployment/media-generation" && "${3:-}" == "-n" && "${4:-}" == "media-prod" && "${5:-}" == "--tail=200" && "${6:-}" == "" ]] || {
+      echo "platform-kubectl: only media-generation logs in media-prod are allowed" >&2
+      exit 2
+    }
+    exec "${KUBECTL[@]}" logs deployment/media-generation -n media-prod --tail=200
     ;;
   diff|apply)
     [[ "${2:-}" == "-k" && "${3:-}" == "environments/prod" && "${4:-}" == "" ]] || {
