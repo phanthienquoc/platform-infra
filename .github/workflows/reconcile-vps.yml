@@ -101,7 +101,7 @@ jobs:
         if: env.TARGET_APP == 'media-generation' || env.TARGET_APP == 'all'
         run: |
           set -euo pipefail
-          MEDIA_TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/media-generation' apps/media-generation/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
+          MEDIA_TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/media-generation-backend' apps/media-generation/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
           test -n "$MEDIA_TAG" || { echo "Unable to resolve media-generation image tag"; exit 1; }
           echo "MEDIA_TAG=$MEDIA_TAG" >> "$GITHUB_ENV"
 
