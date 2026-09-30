@@ -248,7 +248,11 @@ jobs:
               raise SystemExit(f"image component not found: {expected}")
           PY
 
-          grep -A1 "name: ghcr.io/phanthienquoc/${APP}/${COMPONENT}" "$FILE"
+          if [ "$APP" = "media-generation" ]; then
+            grep -A1 "name: ghcr.io/phanthienquoc/media-generation" "$FILE"
+          else
+            grep -A1 "name: ghcr.io/phanthienquoc/${APP}/${COMPONENT}" "$FILE"
+          fi
 
       - name: Create promotion PR
         id: promotion
