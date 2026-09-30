@@ -28,6 +28,10 @@ case "$scope" in
     ;;
   'stockdividend')
     check_url 'stock-admin' 'https://admin.mrcute.space/' '2*'
+    check_url 'media-generation' 'https://media.mrcute.space/' '2*'
+    ;;
+  'media-generation')
+    check_url 'media-generation' 'https://media.mrcute.space/' '2*'
     ;;
   'all')
     check_url 'tce-api-health' 'https://tce.mrcute.space/api/health' '2*'
