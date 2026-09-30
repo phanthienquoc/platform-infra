@@ -143,7 +143,7 @@ jobs:
           TAG="${EVENT_TAG:-$INPUT_TAG}"
 
           case "$APP/$COMPONENT" in
-            stockdividend/backend|stockdividend/admin|tce-dashboard/web|tce-dashboard/service|media-generation/api) ;;
+            stockdividend/backend|stockdividend/admin|tce-dashboard/web|tce-dashboard/service|media-generation/app) ;;
             *)
               echo "::error::Unsupported image target: $APP/$COMPONENT"
               exit 1
@@ -187,7 +187,11 @@ jobs:
         run: |
           set -euo pipefail
 
-          IMAGE="ghcr.io/phanthienquoc/${APP}/${COMPONENT}:${TAG}"
+          if [ "$APP" = "media-generation" ]; then
+            IMAGE="ghcr.io/phanthienquoc/media-generation:${TAG}"
+          else
+            IMAGE="ghcr.io/phanthienquoc/${APP}/${COMPONENT}:${TAG}"
+          fi
           echo "Validating $IMAGE"
 
           printf '%s' "$GHCR_TOKEN" |
@@ -223,7 +227,11 @@ jobs:
           tag = sys.argv[4]
 
           lines = path.read_text().splitlines()
-          expected = f"ghcr.io/phanthienquoc/{app}/{component}"
+          expected = (
+              "ghcr.io/phanthienquoc/media-generation"
+              if app == "media-generation"
+              else f"ghcr.io/phanthienquoc/{app}/{component}"
+          )
 
           for index, line in enumerate(lines):
               if line.strip() not in {f"- name: {expected}", f"name: {expected}"}:

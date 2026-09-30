@@ -25,6 +25,7 @@ on:
           - all
           - tce-dashboard
           - stockdividend
+          - media-generation
   schedule:
     - cron: "0 * * * *"
   push:
@@ -76,7 +77,7 @@ jobs:
         run: |
           set -euo pipefail
           case "$TARGET_APP" in
-            all|tce-dashboard|stockdividend) ;;
+            all|tce-dashboard|stockdividend|media-generation) ;;
             *) echo "::error::Unsupported deployment scope: $TARGET_APP"; exit 1 ;;
           esac
           echo "Deployment scope: $TARGET_APP"
@@ -95,6 +96,14 @@ jobs:
           set -euo pipefail
           chmod +x scripts/verify-tce-gitops-release.sh
           ./scripts/verify-tce-gitops-release.sh
+      - name: Resolve media release tag
+        if: env.TARGET_APP == 'media-generation' || env.TARGET_APP == 'all'
+        run: |
+          set -euo pipefail
+          MEDIA_TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/media-generation' apps/media-generation/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
+          test -n "$MEDIA_TAG" || { echo "Unable to resolve media-generation image tag"; exit 1; }
+          echo "MEDIA_TAG=$MEDIA_TAG" >> "$GITHUB_ENV"
+
 
       - name: Preflight diff
         id: preflight
@@ -143,10 +152,15 @@ jobs:
           set -euo pipefail
           test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
           test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
-          TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
+          if [ "$TARGET_APP" = "media-generation" ]; then
+            TAG="${RELEASE_TAG:-${MEDIA_TAG:-unknown}}"
+          else
+            TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
+          fi
           test -n "$TAG" || TAG="unknown"
           MESSAGE="$(printf '%s\n%s\n%s\n%s\n%s' \
             "🔄 <b>PRODUCTION • PROCESSING</b>" \
+            "📦 App      <code>$TARGET_APP</code>" \
             "🏷️ Release  <code>$TAG</code>" \
             "✓ GitOps synced" \
             "✓ VPS reconciliation" \
@@ -191,6 +205,15 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl rollout status deployment/tce-frontend -n tce-prod --timeout=180s || rc=1
           exit "$rc"
 
+      - name: Verify media-generation rollout
+        id: verify_media
+        if: env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'media-generation')
+        continue-on-error: true
+        run: |
+          set -u
+          sudo /usr/local/sbin/platform-kubectl rollout status deployment/media-generation -n media-prod --timeout=180s || exit 1
+          sudo /usr/local/sbin/platform-kubectl get deployment/media-generation -n media-prod -o wide
+
       - name: Verify targeted workload health
         if: env.RECONCILE_MODE == 'apply'
         run: |
@@ -205,6 +228,7 @@ jobs:
           TCE_STATUS: ${{ steps.verify_tce.outcome }}
           TCE_IMAGES_STATUS: ${{ steps.verify_tce_images.outcome }}
           STOCK_STATUS: ${{ steps.verify_stock.outcome }}
+          MEDIA_STATUS: ${{ steps.verify_media.outcome }}
           APPLY_STATUS: ${{ steps.apply.outcome }}
           DRIFT: ${{ steps.preflight.outputs.drift }}
         run: |
@@ -212,10 +236,12 @@ jobs:
           test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
           test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
           TAG="$RELEASE_TAG"
+          if [ -z "$TAG" ] && [ "$TARGET_APP" = "media-generation" ]; then TAG="${MEDIA_TAG:-}"; fi
           if [ -z "$TAG" ]; then TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"; fi
           [ -n "$TAG" ] || TAG="GitOps sync"
           tce="NOT TARGETED"
           stock="NOT TARGETED"
+          media="NOT TARGETED"
           if [ "$TARGET_APP" = "all" ] || [ "$TARGET_APP" = "tce-dashboard" ]; then
             if [ "$TCE_STATUS" = "success" ] && [ "$TCE_IMAGES_STATUS" = "success" ]; then
               tce="SUCCESS"
@@ -232,6 +258,15 @@ jobs:
               stock="FAILED"
             else
               stock="NOT VERIFIED"
+            fi
+          fi
+          if [ "$TARGET_APP" = "all" ] || [ "$TARGET_APP" = "media-generation" ]; then
+            if [ "$MEDIA_STATUS" = "success" ]; then
+              media="SUCCESS"
+            elif [ "$MEDIA_STATUS" = "failure" ]; then
+              media="FAILED"
+            else
+              media="NOT VERIFIED"
             fi
           fi
 
@@ -253,9 +288,9 @@ jobs:
             [ "$stock" = "FAILED" ] || [ "$stock" = "SUCCESS" ] || stock="BLOCKED"
           elif [[ "$tce" == "FAILED" && "$stock" == "FAILED" ]]; then
             status="FAILED"
-          elif [[ "$tce" == "FAILED" || "$stock" == "FAILED" ]]; then
+          elif [[ "$tce" == "FAILED" || "$stock" == "FAILED" || "$media" == "FAILED" ]]; then
             status="PARTIAL"
-          elif [[ "$tce" == "NOT VERIFIED" || "$stock" == "NOT VERIFIED" ]]; then
+          elif [[ "$tce" == "NOT VERIFIED" || "$stock" == "NOT VERIFIED" || "$media" == "NOT VERIFIED" ]]; then
             status="RECONCILIATION FAILED"
           else
             status="SUCCESS"
@@ -263,6 +298,7 @@ jobs:
 
           TCE_ICON="$(icon_for_status "$tce")"
           STOCK_ICON="$(icon_for_status "$stock")"
+          MEDIA_ICON="$(icon_for_status "$media")"
           MESSAGE="$(printf '%s\n' \
             '<pre>🚀 PRODUCTION • ROLLOUT' \
             '' \
@@ -271,6 +307,7 @@ jobs:
             '' \
             "${TCE_ICON} TCE             $tce" \
             "${STOCK_ICON} StockDividend   $stock" \
+            "${MEDIA_ICON} Media           $media" \
             '' \
             "🎯 Status          $status" \
             '🔒 Isolation       ENABLED</pre>')"
@@ -310,6 +347,7 @@ jobs:
           TCE_STATUS: ${{ steps.verify_tce.outcome }}
           TCE_IMAGES_STATUS: ${{ steps.verify_tce_images.outcome }}
           STOCK_STATUS: ${{ steps.verify_stock.outcome }}
+          MEDIA_STATUS: ${{ steps.verify_media.outcome }}
           DRIFT_STATUS: ${{ steps.verify_drift.outcome }}
           DRIFT: ${{ steps.preflight.outputs.drift }}
         run: |
@@ -325,5 +363,8 @@ jobs:
           fi
           if [ "$TARGET_APP" = "all" ] || [ "$TARGET_APP" = "stockdividend" ]; then
             if [ "$STOCK_STATUS" != "success" ]; then echo "StockDividend deployment verification failed." >&2; exit 1; fi
+          fi
+          if [ "$TARGET_APP" = "all" ] || [ "$TARGET_APP" = "media-generation" ]; then
+            if [ "$MEDIA_STATUS" != "success" ]; then echo "Media generation deployment verification failed." >&2; exit 1; fi
           fi
           echo "Targeted production deployment verification passed."
