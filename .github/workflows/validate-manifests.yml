@@ -11,7 +11,11 @@ permissions:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    # platform-infra already provisions a dedicated ARM64 runner for
+    # infrastructure workflows. GitHub-hosted runner allocation is currently
+    # failing before job initialization (runner_id=0, no steps/logs), so keep
+    # validation on the repository's managed runner.
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
     steps:
       - id: checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
