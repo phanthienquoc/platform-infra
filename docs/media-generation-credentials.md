@@ -6,7 +6,7 @@ Runtime secrets must never be committed to Git or stored as plaintext in Supabas
 - Gemini API credential for Gemini/Veo generation.
 - Supabase URL.
 - Supabase service-role credential for backend-only DB/storage operations.
-- Supabase storage bucket configuration.
+- Supabase storage bucket configuration. The production runtime uses `media-generation`.
 
 ## YouTube Shorts
 - Google Cloud OAuth client ID.
@@ -16,12 +16,16 @@ Runtime secrets must never be committed to Git or stored as plaintext in Supabas
 
 Suggested environment variables:
 
+```text
 GEMINI_API_KEY=
 SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
-MEDIA_STORAGE_BUCKET=media-assets
+MEDIA_STORAGE_BUCKET=media-generation
 YOUTUBE_CLIENT_ID=
 YOUTUBE_CLIENT_SECRET=
 YOUTUBE_REFRESH_TOKEN_SECRET_REF=
+```
+
+The current media-generation runtime only requires the Generation credentials above. YouTube credentials are optional until the Shorts publishing integration is enabled.
 
 GitHub Actions/GHCR and GitOps promotion credentials must remain in GitHub secrets/variables or the existing platform mechanism, never source.
