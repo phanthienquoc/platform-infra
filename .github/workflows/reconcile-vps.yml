@@ -160,6 +160,7 @@ jobs:
           test -n "$TAG" || TAG="unknown"
           MESSAGE="$(printf '%s\n%s\n%s\n%s\n%s' \
             "🔄 <b>PRODUCTION • PROCESSING</b>" \
+            "📦 App      <code>$TARGET_APP</code>" \
             "🏷️ Release  <code>$TAG</code>" \
             "✓ GitOps synced" \
             "✓ VPS reconciliation" \
@@ -235,6 +236,7 @@ jobs:
           test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
           test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
           TAG="$RELEASE_TAG"
+          if [ -z "$TAG" ] && [ "$TARGET_APP" = "media-generation" ]; then TAG="${MEDIA_TAG:-}"; fi
           if [ -z "$TAG" ]; then TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"; fi
           [ -n "$TAG" ] || TAG="GitOps sync"
           tce="NOT TARGETED"
@@ -286,7 +288,7 @@ jobs:
             [ "$stock" = "FAILED" ] || [ "$stock" = "SUCCESS" ] || stock="BLOCKED"
           elif [[ "$tce" == "FAILED" && "$stock" == "FAILED" ]]; then
             status="FAILED"
-          elif [[ "$tce" == "FAILED" || "$stock" == "FAILED" ]]; then
+          elif [[ "$tce" == "FAILED" || "$stock" == "FAILED" || "$media" == "FAILED" ]]; then
             status="PARTIAL"
           elif [[ "$tce" == "NOT VERIFIED" || "$stock" == "NOT VERIFIED" || "$media" == "NOT VERIFIED" ]]; then
             status="RECONCILIATION FAILED"
@@ -305,6 +307,7 @@ jobs:
             '' \
             "${TCE_ICON} TCE             $tce" \
             "${STOCK_ICON} StockDividend   $stock" \
+            "${MEDIA_ICON} Media           $media" \
             '' \
             "🎯 Status          $status" \
             '🔒 Isolation       ENABLED</pre>')"
@@ -344,6 +347,7 @@ jobs:
           TCE_STATUS: ${{ steps.verify_tce.outcome }}
           TCE_IMAGES_STATUS: ${{ steps.verify_tce_images.outcome }}
           STOCK_STATUS: ${{ steps.verify_stock.outcome }}
+          MEDIA_STATUS: ${{ steps.verify_media.outcome }}
           DRIFT_STATUS: ${{ steps.verify_drift.outcome }}
           DRIFT: ${{ steps.preflight.outputs.drift }}
         run: |
