@@ -14,7 +14,7 @@ Runtime secrets must never be committed to Git or stored as plaintext in Supabas
 - YouTube channel authorization with the required YouTube Data API scope.
 - OAuth refresh token stored only in the runtime secret mechanism; DB stores a secret reference.
 
-Suggested environment variables:
+Suggested runtime environment variables:
 
 ```text
 GEMINI_API_KEY=
@@ -28,4 +28,12 @@ YOUTUBE_REFRESH_TOKEN_SECRET_REF=
 
 The current media-generation runtime only requires the Generation credentials above. YouTube credentials are optional until the Shorts publishing integration is enabled.
 
-GitHub Actions/GHCR and GitOps promotion credentials must remain in GitHub secrets/variables or the existing platform mechanism, never source.
+## GitHub Actions / GitOps
+
+The media-generation repository's production image workflow dispatches `image-published` to `phanthienquoc/platform-infra`.
+
+Configure this **GitHub Actions repository secret in `phanthienquoc/media-generation`**:
+
+- `PLATFORM_INFRA_DISPATCH_TOKEN`: least-privilege credential authorized to dispatch repository events to `phanthienquoc/platform-infra`.
+
+Do not place this token in Kubernetes, Supabase, source files, or workflow literals. GitHub Actions/GHCR and GitOps promotion credentials must remain in GitHub secrets/variables or the existing platform mechanism.
