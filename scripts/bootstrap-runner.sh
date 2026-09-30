@@ -51,6 +51,10 @@ case "${1:-}" in
     }
     exec "${KUBECTL[@]}" "$1" -k environments/prod
     ;;
+  logs-media)
+    [[ "$#" -eq 1 ]] || exit 2
+    exec "${KUBECTL[@]}" logs deployment/media-generation -n media-prod --tail=100 --all-containers=true
+    ;;
   rollout)
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/stock-backend" && "${4:-}" == "-n" && "${5:-}" == "stock-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/stock-backend -n stock-prod --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/stock-frontend" && "${4:-}" == "-n" && "${5:-}" == "stock-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/stock-frontend -n stock-prod --timeout=180s
