@@ -14,4 +14,5 @@ spec:
   - host: media.mrcute.space
     http:
       paths:
-      - {path: /, pathType: Prefix, backend: {service: {name: media-generation, port: {number: 3000}}}}
+      - {path: /v1, pathType: Prefix, backend: {service: {name: media-generation, port: {number: 3000}}}}
+      - {path: /, pathType: Prefix, backend: {service: {name: media-generation-frontend, port: {number: 80}}}}

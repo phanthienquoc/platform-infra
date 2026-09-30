@@ -101,9 +101,14 @@ jobs:
         if: env.TARGET_APP == 'media-generation' || env.TARGET_APP == 'all'
         run: |
           set -euo pipefail
-          MEDIA_TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/media-generation' apps/media-generation/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
-          test -n "$MEDIA_TAG" || { echo "Unable to resolve media-generation image tag"; exit 1; }
-          echo "MEDIA_TAG=$MEDIA_TAG" >> "$GITHUB_ENV"
+          MEDIA_BACKEND_TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/media-generation-backend' apps/media-generation/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
+          MEDIA_FRONTEND_TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/media-generation-frontend' apps/media-generation/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
+          test -n "$MEDIA_BACKEND_TAG" || { echo "Unable to resolve media-generation backend image tag"; exit 1; }
+          test -n "$MEDIA_FRONTEND_TAG" || { echo "Unable to resolve media-generation frontend image tag"; exit 1; }
+          test "$MEDIA_BACKEND_TAG" = "$MEDIA_FRONTEND_TAG" || { echo "Media backend/frontend tags must be paired"; exit 1; }
+          echo "MEDIA_BACKEND_TAG=$MEDIA_BACKEND_TAG" >> "$GITHUB_ENV"
+          echo "MEDIA_FRONTEND_TAG=$MEDIA_FRONTEND_TAG" >> "$GITHUB_ENV"
+          echo "MEDIA_TAG=$MEDIA_BACKEND_TAG" >> "$GITHUB_ENV"
 
 
       - name: Preflight diff
@@ -214,8 +219,11 @@ jobs:
         continue-on-error: true
         run: |
           set -u
-          sudo /usr/local/sbin/platform-kubectl rollout status deployment/media-generation -n media-prod --timeout=180s || exit 1
-          sudo /usr/local/sbin/platform-kubectl get deployments -n media-prod -l app=media-generation -o wide
+          rc=0
+          sudo /usr/local/sbin/platform-kubectl rollout status deployment/media-generation -n media-prod --timeout=180s || rc=1
+          sudo /usr/local/sbin/platform-kubectl rollout status deployment/media-generation-frontend -n media-prod --timeout=180s || rc=1
+          sudo /usr/local/sbin/platform-kubectl get deployments -n media-prod -o wide
+          exit "$rc"
 
       - name: Verify targeted workload health
         if: env.RECONCILE_MODE == 'apply'
