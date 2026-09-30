@@ -34,6 +34,7 @@ on:
     paths:
       - "apps/**"
       - "environments/**"
+      - "scripts/reconcile-vps.sh"
   repository_dispatch:
     types:
       - gitops-promoted-ready
