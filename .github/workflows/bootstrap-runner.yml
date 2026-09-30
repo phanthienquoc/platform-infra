@@ -128,6 +128,81 @@ jobs:
           printf '%s\n' "$RUNNER_TOKEN" | ssh -i ~/.ssh/vps_key -o BatchMode=yes "$VPS_USER@$VPS_HOST" \
             'read -r RUNNER_TOKEN && export RUNNER_TOKEN && sudo -E bash /tmp/bootstrap-runner.sh'
 
+      - name: Generate media-generation runner registration token
+        id: media_registration
+        env:
+          GITHUB_PAT: ${{ secrets.RUNNER_REGISTRATION_PAT }}
+        run: |
+          set -euo pipefail
+          response="$(curl -sS -w '\n%{http_code}' \
+            -X POST \
+            -H 'Accept: application/vnd.github+json' \
+            -H "Authorization: Bearer ${GITHUB_PAT}" \
+            -H 'X-GitHub-Api-Version: 2026-03-10' \
+            "https://api.github.com/repos/phanthienquoc/media-generation/actions/runners/registration-token")"
+          body="$(printf '%s\n' "$response" | sed '$d')"
+          code="$(printf '%s\n' "$response" | tail -n1)"
+          echo "GitHub media runner registration-token API: HTTP $code"
+          [[ "$code" == "201" ]] || { echo "$body" | jq '{message, documentation_url}'; exit 1; }
+          token="$(echo "$body" | jq -r '.token')"
+          test -n "$token" && test "$token" != "null"
+          printf 'token=%s\n' "$token" >> "$GITHUB_OUTPUT"
+
+      - name: Upload media runner bootstrap script
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/vps_key
+          chmod 600 ~/.ssh/vps_key
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          curl -fsSL \
+            -H 'Accept: application/vnd.github.raw+json' \
+            -H "Authorization: Bearer ${{ github.token }}" \
+            "https://api.github.com/repos/${{ github.repository }}/contents/scripts/bootstrap-media-runner.sh?ref=${{ github.sha }}" \
+            -o /tmp/bootstrap-media-runner.sh
+          chmod 700 /tmp/bootstrap-media-runner.sh
+          scp -i ~/.ssh/vps_key -o BatchMode=yes \
+            /tmp/bootstrap-media-runner.sh "$VPS_USER@$VPS_HOST:/tmp/bootstrap-media-runner.sh"
+
+      - name: Bootstrap media runner on VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          RUNNER_TOKEN: ${{ steps.media_registration.outputs.token }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/vps_key
+          chmod 600 ~/.ssh/vps_key
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          printf '%s\n' "$RUNNER_TOKEN" |
+            ssh -i ~/.ssh/vps_key -o BatchMode=yes "$VPS_USER@$VPS_HOST" \
+              'read -r RUNNER_TOKEN && export RUNNER_TOKEN && sudo -E bash /tmp/bootstrap-media-runner.sh'
+
+      - name: Verify media runner service
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/vps_key
+          chmod 600 ~/.ssh/vps_key
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          ssh -i ~/.ssh/vps_key -o BatchMode=yes "$VPS_USER@$VPS_HOST" '
+            set -euo pipefail
+            test -x /usr/local/sbin/media-kubectl
+            sudo /usr/local/sbin/media-kubectl ensure-namespace
+            systemctl list-units --type=service --all "actions.runner.*media-generation-k3s-01.service" --no-legend
+            systemctl list-units --type=service --all "actions.runner.*media-generation-k3s-01.service" --no-legend | grep -q "running"
+          '
+
       - name: Verify runner service and reconciliation capability
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
