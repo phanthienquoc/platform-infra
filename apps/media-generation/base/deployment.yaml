@@ -12,6 +12,8 @@ spec:
     matchLabels: {app: media-generation}
   template:
     metadata:
+      annotations:
+        platform-infra/reconcile-at: "2026-09-30T18:03:00+07:00"
       labels: {app: media-generation}
     spec:
       automountServiceAccountToken: false
