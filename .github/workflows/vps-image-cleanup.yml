@@ -68,7 +68,48 @@ jobs:
             sort -t '\t' -k3,3r > /tmp/all-tagged-images.txt
 
           : > /tmp/image-candidates.txt
+          while IFS=
+          done < /tmp/all-tagged-images.txt |
+            tee /tmp/unreferenced-tagged-images.txt
+
+          candidate_count="$(wc -l < /tmp/unreferenced-tagged-images.txt | tr -d ' ')"
+          if [ "$candidate_count" -le "$KEEP_COUNT" ]; then
+            : > /tmp/image-candidates.txt
+          else
+            tail -n +$((KEEP_COUNT + 1)) /tmp/unreferenced-tagged-images.txt > /tmp/image-candidates.txt
+          fi
+
+          echo
+          echo "Retaining newest $KEEP_COUNT unreferenced tagged image(s)."
+          echo "Tagged images selected for removal:"
+          if [ -s /tmp/image-candidates.txt ]; then
+            cat /tmp/image-candidates.txt
+          else
+            echo "none"
+          fi
+
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run enabled; no images deleted."
+            exit 0
+          fi
+
+          # Remove only explicitly selected tags. --no-prune prevents Docker
+          # from cascading into unselected parent layers.
           while IFS=$'\t' read -r image id created; do
+            [ -n "$image" ] || continue
+            echo "Removing unreferenced image tag: $image"
+            sudo docker image rm --no-prune "$image"
+          done < /tmp/image-candidates.txt
+
+          # Remove dangling images left behind by tag cleanup. This remains
+          # separate from K3s/containerd, which is intentionally not pruned.
+          mapfile -t dangling < <(sudo docker image ls --filter dangling=true -q | sort -u)
+          if [ "${#dangling[@]}" -gt 0 ]; then
+            printf '%s\n' "${dangling[@]}" | xargs -r sudo docker image rm --no-prune
+          fi
+
+          echo "Safe cleanup completed; K3s/containerd cache was not pruned."
+\t' read -r created image id; do
             [ -n "$image" ] || continue
             grep -Fxq "$image" /tmp/live-images.txt && continue
             grep -Fxq "$id" /tmp/live-image-ids.txt && continue
