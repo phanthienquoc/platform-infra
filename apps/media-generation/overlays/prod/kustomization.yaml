@@ -9,4 +9,4 @@ images:
 - name: ghcr.io/phanthienquoc/media-generation-backend
   newTag: 790f30d7c285463548cfe00041c30173a32dafd0
 - name: ghcr.io/phanthienquoc/media-generation-frontend
-  newTag: c12d0c86f02a4df82f4a4e7bb46b0bd2c86185e1
+  newTag: 790f30d7c285463548cfe00041c30173a32dafd0
