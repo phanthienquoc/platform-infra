@@ -21,7 +21,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
       - name: media-generation
-        image: ghcr.io/phanthienquoc/media-generation-backend:bea4c25ea7c551452cd059a4397f4066388b41fa
+        image: ghcr.io/phanthienquoc/media-generation/backend:bea4c25ea7c551452cd059a4397f4066388b41fa
         ports:
         - name: http
           containerPort: 3000
