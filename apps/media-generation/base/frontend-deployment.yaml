@@ -22,7 +22,7 @@ spec:
         image: ghcr.io/phanthienquoc/media-generation-frontend:bea4c25ea7c551452cd059a4397f4066388b41fa
         ports:
         - name: http
-          containerPort: 8080
+          containerPort: 3000
         startupProbe:
           httpGet: {path: /, port: http}
           periodSeconds: 5
