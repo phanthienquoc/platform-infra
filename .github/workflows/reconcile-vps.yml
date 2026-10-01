@@ -170,15 +170,17 @@ jobs:
 
           # Keep this template identical in structure to the rollout summary.
           # Do not replace, collapse, or rewrite template fields dynamically.
-          MESSAGE="$(printf '%s\n' \
-            "<pre>🔄 PRODUCTION • PROCESSING" \
-            '' \
-            "📦 App             $TARGET_APP" \
-            "🏷️ Release         $TAG" \
-            '' \
-            "✓ GitOps synced" \
-            "✓ VPS reconciliation" \
-            "⏳ Rollout in progress</pre>")"
+          MESSAGE="$(cat <<EOF
+<pre>🔄 PRODUCTION • PROCESSING
+
+📦 App             $TARGET_APP
+🏷️ Release         $TAG
+
+✓ GitOps synced
+✓ VPS reconciliation
+⏳ Rollout in progress</pre>
+EOF
+)"
 
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=HTML"
 
@@ -321,18 +323,20 @@ jobs:
           STOCK_ICON="$(icon_for_status "$stock")"
           MEDIA_ICON="$(icon_for_status "$media")"
           STATUS_ICON="$(icon_for_status "$status")"
-          MESSAGE="$(printf '%s\n' \
-            "<pre>${STATUS_ICON} PRODUCTION • ROLLOUT" \
-            '' \
-            "🏷️ Release         $TAG" \
-            "🎯 Scope           $TARGET_APP" \
-            '' \
-            "${TCE_ICON} TCE             $tce" \
-            "${STOCK_ICON} StockDividend   $stock" \
-            "${MEDIA_ICON} Media           $media" \
-            '' \
-            "🎯 Status          $status" \
-            '🔒 Isolation       ENABLED</pre>')"
+          MESSAGE="$(cat <<EOF
+<pre>${STATUS_ICON} PRODUCTION • ROLLOUT
+
+🏷️ Release         $TAG
+🎯 Scope           $TARGET_APP
+
+${TCE_ICON} TCE             $tce
+${STOCK_ICON} StockDividend   $stock
+${MEDIA_ICON} Media           $media
+
+🎯 Status          $status
+🔒 Isolation       ENABLED</pre>
+EOF
+)"
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" -d "chat_id=$TELEGRAM_CHAT_ID" --data-urlencode "text=$MESSAGE" -d "parse_mode=HTML"
 
       - name: Verify drift cleared
