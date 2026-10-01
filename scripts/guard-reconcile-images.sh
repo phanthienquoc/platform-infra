@@ -37,7 +37,7 @@ removed_images="$(grep -E '^-([[:space:]]+)image:' "$diff_output" || true)"
 
 if [[ -n "$removed_images" ]]; then
   legacy_media_image="$(printf '%s\n' "$removed_images" | grep -E '^-[[:space:]]+image:[[:space:]]+ghcr\.io/phanthienquoc/media-generation:[0-9a-f]{7,64}$' || true)"
-  desired_media_images="$(kubectl kustomize environments/prod 2>/dev/null | grep -E '^[[:space:]]+image:[[:space:]]+ghcr\.io/phanthienquoc/media-generation-(backend|frontend):[0-9a-f]{7,64}$' || true)"
+  desired_media_images="$(kubectl kustomize environments/prod 2>/dev/null | grep -E '^[[:space:]]+image:[[:space:]]+ghcr\.io/phanthienquoc/media-generation/(backend|frontend):[0-9a-f]{7,64}$' || true)"
 
   if [[ -n "$legacy_media_image" ]] &&
      grep -q 'ghcr\.io/phanthienquoc/media-generation-backend:' <<<"$desired_media_images" &&
