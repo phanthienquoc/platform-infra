@@ -170,7 +170,7 @@ jobs:
 
           # Keep this template identical in structure to the rollout summary.
           # Do not replace, collapse, or rewrite template fields dynamically.
-          MESSAGE="$(printf '%s\\n' \
+          MESSAGE="$(printf '%s\n' \
             "<pre>🔄 PRODUCTION • PROCESSING" \
             '' \
             "📦 App             $TARGET_APP" \
@@ -321,7 +321,7 @@ jobs:
           STOCK_ICON="$(icon_for_status "$stock")"
           MEDIA_ICON="$(icon_for_status "$media")"
           STATUS_ICON="$(icon_for_status "$status")"
-          MESSAGE="$(printf '%s\\n' \
+          MESSAGE="$(printf '%s\n' \
             "<pre>${STATUS_ICON} PRODUCTION • ROLLOUT" \
             '' \
             "🏷️ Release         $TAG" \
