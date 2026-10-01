@@ -165,8 +165,8 @@ jobs:
           FILE="apps/media-generation/overlays/prod/kustomization.yaml"
           for attempt in $(seq 1 60); do
             git fetch --no-tags origin master
-            FRONTEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation-frontend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
-            BACKEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation-backend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
+            FRONTEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation\/frontend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
+            BACKEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation\/backend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
             echo "Media frontend: $FRONTEND_TAG"
             echo "Media backend: $BACKEND_TAG"
             if [ "$FRONTEND_TAG" = "$RELEASE" ] && [ "$BACKEND_TAG" = "$RELEASE" ]; then
@@ -439,8 +439,8 @@ jobs:
 
           FILE="apps/media-generation/overlays/prod/kustomization.yaml"
           git fetch --no-tags origin master
-          BACKEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation-backend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
-          FRONTEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation-frontend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
+          BACKEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation\/backend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
+          FRONTEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation\/frontend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
 
           echo "Media backend GitOps tag: $BACKEND_TAG"
           echo "Media frontend GitOps tag: $FRONTEND_TAG"
