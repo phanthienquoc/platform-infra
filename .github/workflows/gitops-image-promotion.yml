@@ -300,7 +300,7 @@ jobs:
 
           lines = path.read_text().splitlines()
           expected = (
-              f"ghcr.io/phanthienquoc/media-generation-{component}"
+              f"ghcr.io/phanthienquoc/media-generation/{component}"
               if app == "media-generation"
               else f"ghcr.io/phanthienquoc/{app}/{component}"
           )
