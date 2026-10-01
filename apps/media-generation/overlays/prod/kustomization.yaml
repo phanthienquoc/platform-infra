@@ -7,6 +7,6 @@ resources:
 - ingress.yaml
 images:
 - name: ghcr.io/phanthienquoc/media-generation-backend
-  newTag: bea4c25ea7c551452cd059a4397f4066388b41fa
+  newTag: 1f96583eac3e989e541c36254dfec782f0389b0d
 - name: ghcr.io/phanthienquoc/media-generation-frontend
   newTag: bea4c25ea7c551452cd059a4397f4066388b41fa
