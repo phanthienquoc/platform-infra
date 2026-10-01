@@ -260,7 +260,7 @@ jobs:
           set -euo pipefail
 
           if [ "$APP" = "media-generation" ]; then
-            IMAGE="ghcr.io/phanthienquoc/media-generation-${COMPONENT}:${TAG}"
+            IMAGE="ghcr.io/phanthienquoc/media-generation/${COMPONENT}:${TAG}"
           else
             IMAGE="ghcr.io/phanthienquoc/${APP}/${COMPONENT}:${TAG}"
           fi
@@ -321,7 +321,7 @@ jobs:
           PY
 
           if [ "$APP" = "media-generation" ]; then
-            grep -A1 "name: ghcr.io/phanthienquoc/media-generation-${COMPONENT}" "$FILE"
+            grep -A1 "name: ghcr.io/phanthienquoc/media-generation/${COMPONENT}" "$FILE"
           else
             grep -A1 "name: ghcr.io/phanthienquoc/${APP}/${COMPONENT}" "$FILE"
           fi
