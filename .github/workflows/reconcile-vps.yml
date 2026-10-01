@@ -102,8 +102,8 @@ jobs:
         if: ${{ env.TARGET_APP == 'media-generation' || env.TARGET_APP == 'all' }}
         run: |
           set -euo pipefail
-          MEDIA_BACKEND_TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/media-generation-backend' apps/media-generation/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
-          MEDIA_FRONTEND_TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/media-generation-frontend' apps/media-generation/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
+          MEDIA_BACKEND_TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/media-generation/backend' apps/media-generation/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
+          MEDIA_FRONTEND_TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/media-generation/frontend' apps/media-generation/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
           test -n "$MEDIA_BACKEND_TAG" || { echo "Unable to resolve media-generation backend image tag"; exit 1; }
           test -n "$MEDIA_FRONTEND_TAG" || { echo "Unable to resolve media-generation frontend image tag"; exit 1; }
           test "$MEDIA_BACKEND_TAG" = "$MEDIA_FRONTEND_TAG" || { echo "Media backend/frontend tags must be paired"; exit 1; }
