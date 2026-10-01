@@ -9,4 +9,4 @@ images:
 - name: ghcr.io/phanthienquoc/media-generation-backend
   newTag: prod-v0.3.0-85a354f
 - name: ghcr.io/phanthienquoc/media-generation-frontend
-  newTag: prod-v0.3.0-85a354f
+  newTag: prod-v0.3.0-ad3e7bb
