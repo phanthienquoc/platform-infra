@@ -350,8 +350,40 @@ jobs:
             done
           done
 
-      - name: Trigger VPS reconciliation
+      - name: Determine release readiness
         if: steps.input.outputs.app == 'stockdividend' || steps.input.outputs.app == 'media-generation'
+        id: readiness
+        env:
+          APP: ${{ steps.input.outputs.app }}
+          COMPONENT: ${{ steps.input.outputs.component }}
+          RELEASE: ${{ steps.input.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          if [ "$APP" = "stockdividend" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          FILE="apps/media-generation/overlays/prod/kustomization.yaml"
+          git fetch --no-tags origin master
+          BACKEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation-backend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
+          FRONTEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation-frontend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
+
+          echo "Media backend GitOps tag: $BACKEND_TAG"
+          echo "Media frontend GitOps tag: $FRONTEND_TAG"
+          echo "Incoming $COMPONENT tag: $RELEASE"
+
+          if [ "$BACKEND_TAG" = "$RELEASE" ] && [ "$FRONTEND_TAG" = "$RELEASE" ]; then
+            echo "Media FE/BE pair converged on $RELEASE."
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Media FE/BE pair is not converged yet; waiting for the other component promotion."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Trigger VPS reconciliation
+        if: (steps.input.outputs.app == 'stockdividend' || steps.input.outputs.app == 'media-generation') && steps.readiness.outputs.ready == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           APP: ${{ steps.input.outputs.app }}
