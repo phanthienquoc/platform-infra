@@ -45,14 +45,16 @@ case "${1:-}" in
     esac
     ;;
   logs)
-    [[ "${2:-}" == "deployment/media-generation" && "${3:-}" == "-n" && "${4:-}" == "media-prod" && ( "${5:-}" == "--tail=200" || "${5:-}" == "--previous" ) ]] || {
-      echo "platform-kubectl: only media-generation logs in media-prod are allowed" >&2
-      exit 2
-    }
-    if [[ "${5:-}" == "--previous" ]]; then
-      exec "${KUBECTL[@]}" logs deployment/media-generation -n media-prod --previous --tail=200
+    if [[ "${2:-}" == "deployment/media-generation" && "${3:-}" == "-n" && "${4:-}" == "media-prod" && ( "${5:-}" == "--tail=200" || "${5:-}" == "--previous" ) ]]; then
+      if [[ "${5:-}" == "--previous" ]]; then exec "${KUBECTL[@]}" logs deployment/media-generation -n media-prod --previous --tail=200; fi
+      exec "${KUBECTL[@]}" logs deployment/media-generation -n media-prod --tail=200
     fi
-    exec "${KUBECTL[@]}" logs deployment/media-generation -n media-prod --tail=200
+    if [[ "${2:-}" == "deployment/media-generation-frontend" && "${3:-}" == "-n" && "${4:-}" == "media-prod" && ( "${5:-}" == "--tail=200" || "${5:-}" == "--previous" ) ]]; then
+      if [[ "${5:-}" == "--previous" ]]; then exec "${KUBECTL[@]}" logs deployment/media-generation-frontend -n media-prod --previous --tail=200; fi
+      exec "${KUBECTL[@]}" logs deployment/media-generation-frontend -n media-prod --tail=200
+    fi
+    echo "platform-kubectl: only media-generation logs in media-prod are allowed" >&2
+    exit 2
     ;;
   diff|apply)
     [[ "${2:-}" == "-k" && "${3:-}" == "environments/prod" && "${4:-}" == "" ]] || {
@@ -71,6 +73,7 @@ case "${1:-}" in
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/tce-service" && "${4:-}" == "-n" && "${5:-}" == "tce-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/tce-service -n tce-prod --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/tce-frontend" && "${4:-}" == "-n" && "${5:-}" == "tce-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/tce-frontend -n tce-prod --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/media-generation" && "${4:-}" == "-n" && "${5:-}" == "media-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/media-generation -n media-prod --timeout=180s
+    [[ "${2:-}" == "status" && "${3:-}" == "deployment/media-generation-frontend" && "${4:-}" == "-n" && "${5:-}" == "media-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/media-generation-frontend -n media-prod --timeout=180s
     ;;
 esac
 
