@@ -167,7 +167,7 @@ jobs:
           fi
           test -n "$TAG" || TAG="unknown"
           MESSAGE="$(printf '%s\n%s\n%s\n%s\n%s' \
-            "🔄 <b>PRODUCTION • PROCESSING</b>" \
+            "🟣 <b>PRODUCTION • PROCESSING</b>" \
             "📦 App      <code>$TARGET_APP</code>" \
             "🏷️ Release  <code>$TAG</code>" \
             "✓ GitOps synced" \
@@ -285,10 +285,12 @@ jobs:
           icon_for_status() {
             case "$1" in
               SUCCESS) echo "🟢" ;;
-              FAILED) echo "🔴" ;;
-              "NOT VERIFIED"|"NOT TARGETED") echo "⚪" ;;
-              BLOCKED) echo "🟠" ;;
-              *) echo "⚪" ;;
+              FAILED|"RECONCILIATION FAILED") echo "🔴" ;;
+              PARTIAL|BLOCKED|"NOT VERIFIED") echo "🟡" ;;
+              PROCESSING) echo "🟣" ;;
+              "NOT TARGETED") echo "⚪" ;;
+              "NO CHANGES") echo "🟢" ;;
+              *) echo "🟡" ;;
             esac
           }
 
@@ -311,8 +313,9 @@ jobs:
           TCE_ICON="$(icon_for_status "$tce")"
           STOCK_ICON="$(icon_for_status "$stock")"
           MEDIA_ICON="$(icon_for_status "$media")"
+          STATUS_ICON="$(icon_for_status "$status")"
           MESSAGE="$(printf '%s\n' \
-            '<pre>🚀 PRODUCTION • ROLLOUT' \
+            "<pre>${STATUS_ICON} PRODUCTION • ROLLOUT" \
             '' \
             "🏷️ Release         $TAG" \
             "🎯 Scope           $TARGET_APP" \
