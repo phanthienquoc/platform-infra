@@ -97,6 +97,7 @@ jobs:
           set -euo pipefail
           chmod +x scripts/verify-tce-gitops-release.sh
           ./scripts/verify-tce-gitops-release.sh
+
       - name: Resolve media release tag
         if: env.TARGET_APP == 'media-generation' || env.TARGET_APP == 'all'
         run: |
@@ -109,7 +110,6 @@ jobs:
           echo "MEDIA_BACKEND_TAG=$MEDIA_BACKEND_TAG" >> "$GITHUB_ENV"
           echo "MEDIA_FRONTEND_TAG=$MEDIA_FRONTEND_TAG" >> "$GITHUB_ENV"
           echo "MEDIA_TAG=$MEDIA_BACKEND_TAG" >> "$GITHUB_ENV"
-
 
       - name: Preflight diff
         id: preflight
@@ -160,19 +160,26 @@ jobs:
           set -euo pipefail
           test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
           test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
+
           if [ "$TARGET_APP" = "media-generation" ]; then
             TAG="${RELEASE_TAG:-${MEDIA_TAG:-unknown}}"
           else
             TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
           fi
           test -n "$TAG" || TAG="unknown"
-          MESSAGE="$(printf '%s\n%s\n%s\n%s\n%s' \
-            "🟣 <b>PRODUCTION • PROCESSING</b>" \
-            "📦 App      <code>$TARGET_APP</code>" \
-            "🏷️ Release  <code>$TAG</code>" \
+
+          # Keep this template identical in structure to the rollout summary.
+          # Do not replace, collapse, or rewrite template fields dynamically.
+          MESSAGE="$(printf '%s\\n' \
+            "<pre>🔄 PRODUCTION • PROCESSING" \
+            '' \
+            "📦 App             $TARGET_APP" \
+            "🏷️ Release         $TAG" \
+            '' \
             "✓ GitOps synced" \
             "✓ VPS reconciliation" \
-            "⏳ Rollout in progress")"
+            "⏳ Rollout in progress</pre>")"
+
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=HTML"
 
       - name: Verify cluster after reconciliation
@@ -314,7 +321,7 @@ jobs:
           STOCK_ICON="$(icon_for_status "$stock")"
           MEDIA_ICON="$(icon_for_status "$media")"
           STATUS_ICON="$(icon_for_status "$status")"
-          MESSAGE="$(printf '%s\n' \
+          MESSAGE="$(printf '%s\\n' \
             "<pre>${STATUS_ICON} PRODUCTION • ROLLOUT" \
             '' \
             "🏷️ Release         $TAG" \
