@@ -13,6 +13,7 @@ run_diff() {
   # resources, so a first reconciliation cannot diff them until their
   # declaratively-managed Namespace objects exist.
   for namespace_manifest in \
+    platform/microfe/namespace.yaml \
     apps/stockdividend/base/namespace.yaml \
     apps/tce-dashboard/base/namespace.yaml \
     apps/media-generation/base/namespace.yaml; do
