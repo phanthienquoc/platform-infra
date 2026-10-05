@@ -31,6 +31,8 @@ spec:
         - {name: WORKER_ENABLED, value: "true"}
         - {name: WORKER_POLL_MS, value: "3000"}
         - {name: MEDIA_STORAGE_BUCKET, value: media-generation}
+        - {name: AUTH_SERVICE_URL, value: http://microfe-auth.microfe-platform.svc.cluster.local}
+        - {name: MICROFE_ORIGINS, value: https://media.mrcute.space}
         envFrom:
         - secretRef: {name: media-generation-secrets}
         startupProbe:
