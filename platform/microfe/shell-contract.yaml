@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: microfe-shell-contract
+  namespace: microfe-platform
+  labels:
+    app.kubernetes.io/part-of: microfe-platform
+data:
+  contract-version: "v1"
+  app-host: "app.mrcute.space"
+  auth-host: "auth.mrcute.space"
+  api-host: "api.mrcute.space"
+  ws-host: "ws.mrcute.space"
+  routes.json: |
+    {
+      "version": 1,
+      "apps": {
+        "tce": { "route": "/tce", "host": "app.mrcute.space" },
+        "stockdividend": { "route": "/stock", "host": "app.mrcute.space" },
+        "media": { "route": "/media", "host": "app.mrcute.space" }
+      },
+      "platform": {
+        "auth": "https://auth.mrcute.space",
+        "api": "https://api.mrcute.space",
+        "ws": "wss://ws.mrcute.space"
+      }
+    }
+  auth-policy: "session-cookie"
+  token-storage: "forbidden"
+  websocket-auth: "session-cookie"
+  websocket-token-query-param: "forbidden"
