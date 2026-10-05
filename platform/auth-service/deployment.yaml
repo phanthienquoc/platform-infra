@@ -13,6 +13,9 @@ spec:
       labels:
         app: microfe-auth
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile: {type: RuntimeDefault}
       containers:
         - name: auth
           image: ghcr.io/phanthienquoc/microfe-auth:0.1.0
@@ -24,6 +27,21 @@ spec:
               value: production
             - name: PORT
               value: "3000"
+            - name: AUTH_COOKIE_NAME
+              value: "__Secure-microfe_session"
+            - name: AUTH_CSRF_COOKIE_NAME
+              value: "__Secure-microfe_csrf"
+            - name: AUTH_COOKIE_DOMAIN
+              value: ".mrcute.space"
+            - name: AUTH_SESSION_TTL_SECONDS
+              value: "2592000"
+            - name: DB_POOL_MAX
+              value: "5"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: microfe-auth-secrets
+                  key: DATABASE_URL
           readinessProbe:
             httpGet:
               path: /health
