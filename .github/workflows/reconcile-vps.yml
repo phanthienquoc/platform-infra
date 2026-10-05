@@ -26,8 +26,6 @@ name: reconcile-vps
           - tce-dashboard
           - stockdividend
           - media-generation
-  schedule:
-    - cron: "0 * * * *"
   push:
     branches:
       - master
