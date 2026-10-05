@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microfe-shell
+  namespace: microfe-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: microfe-shell
+  template:
+    metadata:
+      labels:
+        app: microfe-shell
+    spec:
+      containers:
+        - name: shell
+          image: ghcr.io/phanthienquoc/microfe-shell:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: microfe-shell
+  namespace: microfe-platform
+spec:
+  selector:
+    app: microfe-shell
+  ports:
+    - port: 80
+      targetPort: 80
