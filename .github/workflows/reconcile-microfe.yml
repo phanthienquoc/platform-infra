@@ -1,0 +1,73 @@
+name: reconcile-microfe
+
+"on":
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Reconciliation mode"
+        required: true
+        default: apply
+        type: choice
+        options:
+          - plan
+          - apply
+      allow_image_changes:
+        description: "Allow deliberate MicroFE image replacement"
+        required: false
+        default: true
+        type: boolean
+  repository_dispatch:
+    types:
+      - microfe-images-published
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platform-microfe-reconcile
+  cancel-in-progress: false
+
+env:
+  RECONCILE_MODE: ${{ github.event_name == 'repository_dispatch' && 'apply' || github.event.inputs.mode || 'apply' }}
+  ALLOW_IMAGE_CHANGES: ${{ github.event_name == 'repository_dispatch' || github.event.inputs.allow_image_changes == 'true' }}
+
+jobs:
+  reconcile:
+    if: ${{ github.ref == 'refs/heads/master' }}
+    environment: production
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Reconcile MicroFE
+        run: |
+          set -euo pipefail
+          chmod +x scripts/reconcile-vps.sh
+          ./scripts/reconcile-vps.sh "$RECONCILE_MODE"
+
+      - name: Verify MicroFE workloads
+        if: ${{ env.RECONCILE_MODE == 'apply' }}
+        run: |
+          set -euo pipefail
+          sudo /usr/local/sbin/platform-kubectl rollout status deployment/microfe-auth -n microfe-platform --timeout=180s
+          sudo /usr/local/sbin/platform-kubectl rollout status deployment/microfe-shell -n microfe-platform --timeout=180s
+          sudo /usr/local/sbin/platform-kubectl get ingress microfe-public -n microfe-platform
+
+      - name: Verify auth HTTPS
+        if: ${{ env.RECONCILE_MODE == 'apply' }}
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --max-time 20 https://auth.mrcute.space/health >/dev/null
+          code="$(curl --silent --show-error --location --max-time 20 --output /dev/null --write-out '%{http_code}' https://auth.mrcute.space/auth/me)"
+          test "$code" = "401"
+
+      - name: Verify shell HTTPS
+        if: ${{ env.RECONCILE_MODE == 'apply' }}
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --max-time 20 https://app.mrcute.space/ >/dev/null
