@@ -15,7 +15,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: ws
-          image: ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA
+          image: ghcr.io/phanthienquoc/microfe-ws:0.1.0
           imagePullPolicy: IfNotPresent
           ports:
             - {name: http, containerPort: 8080}

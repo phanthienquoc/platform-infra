@@ -180,6 +180,18 @@ jobs:
 
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=HTML"
 
+      - name: Publish TCE deployment started event
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'tce-dashboard') }}
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          chmod +x scripts/publish-microfe-deployment-event.sh
+          TAG="$RELEASE_TAG"
+          if [ -z "$TAG" ]; then
+            TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
+          fi
+          ./scripts/publish-microfe-deployment-event.sh deploying tce-dashboard "$TAG" deploying
+
       - name: Verify cluster after reconciliation
         if: ${{ env.RECONCILE_MODE == 'apply' }}
         run: |
@@ -332,6 +344,28 @@ jobs:
             "🎯 Status          $status" \
             "🔒 Isolation       ENABLED</pre>"
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" -d "chat_id=$TELEGRAM_CHAT_ID" --data-urlencode "text=$MESSAGE" -d "parse_mode=HTML"
+
+      - name: Publish TCE deployment result event
+        if: ${{ !cancelled() && env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'tce-dashboard') }}
+        continue-on-error: true
+        env:
+          TCE_STATUS: ${{ steps.verify_tce.outcome }}
+          TCE_IMAGES_STATUS: ${{ steps.verify_tce_images.outcome }}
+        run: |
+          set -euo pipefail
+          chmod +x scripts/publish-microfe-deployment-event.sh
+          TAG="$RELEASE_TAG"
+          if [ -z "$TAG" ]; then
+            TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
+          fi
+          if [ "$TCE_STATUS" = "success" ] && [ "$TCE_IMAGES_STATUS" = "success" ]; then
+            EVENT=deployed
+            STATUS=success
+          else
+            EVENT=failed
+            STATUS=failed
+          fi
+          ./scripts/publish-microfe-deployment-event.sh "$EVENT" tce-dashboard "$TAG" "$STATUS"
 
       - name: Verify drift cleared
         id: verify_drift
