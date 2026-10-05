@@ -27,6 +27,7 @@ spec:
         - {name: MONGO_DB_NAME, value: vietstock}
         - {name: MONGO_EVENTS_COLLECTION, value: events}
         - {name: JWT_REFRESH_TTL_SECONDS, value: "2592000"}
+        - {name: AUTH_SERVICE_URL, value: http://microfe-auth.microfe-platform.svc.cluster.local}
         envFrom: [{secretRef: {name: tce-app-secrets}}, {secretRef: {name: tce-auth}}]
         startupProbe: {httpGet: {path: /api/health, port: http}, periodSeconds: 5, failureThreshold: 30}
         readinessProbe: {httpGet: {path: /api/health, port: http}, initialDelaySeconds: 10, timeoutSeconds: 3, periodSeconds: 10}
