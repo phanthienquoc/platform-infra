@@ -17,6 +17,8 @@ spec:
       - name: backend
         image: ghcr.io/phanthienquoc/stockdividend/backend:12d63b4
         ports: [{name: http, containerPort: 8080}]
+        env:
+        - {name: AUTH_SERVICE_URL, value: http://microfe-auth.microfe-platform.svc.cluster.local}
         envFrom: [{secretRef: {name: stock-secrets}}]
         startupProbe: {tcpSocket: {port: http}, periodSeconds: 5, failureThreshold: 30}
         readinessProbe: {tcpSocket: {port: http}, periodSeconds: 10}
