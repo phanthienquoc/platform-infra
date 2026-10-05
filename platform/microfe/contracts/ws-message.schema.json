@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mrcute.space/schemas/ws-message.v1.json",
+  "title": "MicroFE WebSocket Message",
+  "type": "object",
+  "required": ["id", "type", "channel", "event", "timestamp"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "type": {"type": "string", "enum": ["event", "ack", "error"]},
+    "channel": {"type": "string", "minLength": 1},
+    "event": {"type": "string", "minLength": 1},
+    "timestamp": {"type": "integer", "minimum": 0},
+    "sequence": {"type": "integer", "minimum": 0},
+    "payload": {}
+  },
+  "additionalProperties": false
+}
