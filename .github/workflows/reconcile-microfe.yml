@@ -50,11 +50,12 @@ jobs:
           set -euo pipefail
           auth_image="$(sudo /usr/local/sbin/platform-kubectl -n microfe-platform get deployment microfe-auth -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
           shell_image="$(sudo /usr/local/sbin/platform-kubectl -n microfe-platform get deployment microfe-shell -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
+          ws_image="$(sudo /usr/local/sbin/platform-kubectl -n microfe-platform get deployment microfe-ws -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
 
-          for image in "$auth_image" "$shell_image"; do
+          for image in "$auth_image" "$shell_image" "$ws_image"; do
             [ -n "$image" ] || continue
             case "$image" in
-              ghcr.io/phanthienquoc/microfe-auth:[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*|ghcr.io/phanthienquoc/microfe-shell:[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*)
+              ghcr.io/phanthienquoc/microfe-auth:[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*|ghcr.io/phanthienquoc/microfe-shell:[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*|ghcr.io/phanthienquoc/microfe-ws:[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*)
                 ;;
               *)
                 echo "::error::Mutable or unexpected MicroFE image: $image"
@@ -81,15 +82,22 @@ jobs:
           set -euo pipefail
           sudo /usr/local/sbin/platform-kubectl rollout status deployment/microfe-auth -n microfe-platform --timeout=180s
           sudo /usr/local/sbin/platform-kubectl rollout status deployment/microfe-shell -n microfe-platform --timeout=180s
+          sudo /usr/local/sbin/platform-kubectl rollout status deployment/microfe-ws -n microfe-platform --timeout=180s
           sudo /usr/local/sbin/platform-kubectl get ingress microfe-public -n microfe-platform
 
-      - name: Verify auth HTTPS
+      - name: Verify WS HTTPS
         if: ${{ env.RECONCILE_MODE == 'apply' }}
         run: |
           set -euo pipefail
           curl --fail --silent --show-error --location --max-time 20 https://auth.mrcute.space/health >/dev/null
           code="$(curl --silent --show-error --location --max-time 20 --output /dev/null --write-out '%{http_code}' https://auth.mrcute.space/auth/me)"
           test "$code" = "401"
+
+      - name: Verify WS health
+        if: ${{ env.RECONCILE_MODE == 'apply' }}
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --max-time 20 https://ws.mrcute.space/health >/dev/null
 
       - name: Verify shell HTTPS
         if: ${{ env.RECONCILE_MODE == 'apply' }}
