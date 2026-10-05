@@ -13,8 +13,8 @@ name: reconcile-microfe
           - apply
       allow_image_changes:
         description: "Allow deliberate MicroFE image replacement"
-        required: false
-        default: true
+        required: true
+        default: false
         type: boolean
   repository_dispatch:
     types:
@@ -44,9 +44,34 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
+      - name: Validate MicroFE immutable image policy
+        if: ${{ env.RECONCILE_MODE == 'apply' }}
+        run: |
+          set -euo pipefail
+          auth_image="$(sudo /usr/local/sbin/platform-kubectl -n microfe-platform get deployment microfe-auth -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
+          shell_image="$(sudo /usr/local/sbin/platform-kubectl -n microfe-platform get deployment microfe-shell -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
+
+          for image in "$auth_image" "$shell_image"; do
+            [ -n "$image" ] || continue
+            case "$image" in
+              ghcr.io/phanthienquoc/microfe-auth:[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*|ghcr.io/phanthienquoc/microfe-shell:[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*)
+                ;;
+              *)
+                echo "::error::Mutable or unexpected MicroFE image: $image"
+                echo "::error::Promote an immutable Git-SHA image before reconcile."
+                exit 1
+                ;;
+            esac
+          done
+
       - name: Reconcile MicroFE
         run: |
           set -euo pipefail
+          if [ "$RECONCILE_MODE" = "apply" ] && [ "$ALLOW_IMAGE_CHANGES" != "true" ]; then
+            echo "::error::Apply blocked: ALLOW_IMAGE_CHANGES is false."
+            echo "::error::Use the image-promotion path or explicitly authorize a deliberate image change."
+            exit 1
+          fi
           chmod +x scripts/reconcile-vps.sh
           ./scripts/reconcile-vps.sh "$RECONCILE_MODE"
 

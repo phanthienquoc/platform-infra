@@ -25,6 +25,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+          fetch-depth: 1
 
       - name: Setup Node
         uses: actions/setup-node@a26af69be951a213d495a4c3e4e4022e16d87065 # v4
@@ -34,6 +35,7 @@ jobs:
       - name: Auth syntax and unit tests
         working-directory: platform/auth-service
         run: |
+          set -euo pipefail
           npm install --omit=dev
           npm run check
           npm test
@@ -55,22 +57,65 @@ jobs:
           echo "shell=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/microfe-shell:$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Build and push auth
-        uses: docker/build-push-action@cb8adf9a6f9f0c39c1e6f5a7d4f3b1d6c4e3a2b1 # v6
+        id: auth
+        uses: docker/build-push-action@10e90e3b2d0de9f6f6d34c6f3a7c6dd74f7c9f9d # v6
         with:
           context: .
           file: platform/auth-service/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.auth }}
+          provenance: mode=max
+          sbom: true
 
       - name: Build and push shell
-        uses: docker/build-push-action@cb8adf9a6f9f0c39c1e6f5a7d4f3b1d6c4e3a2b1 # v6
+        id: shell
+        uses: docker/build-push-action@10e90e3b2d0de9f6f6d34c6f3a7c6dd74f7c9f9d # v6
         with:
           context: .
           file: platform/microfe/shell/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.shell }}
+          provenance: mode=max
+          sbom: true
 
-      - name: Report immutable image references
+      - name: Verify published image manifests
+        env:
+          AUTH_IMAGE: ${{ steps.meta.outputs.auth }}
+          SHELL_IMAGE: ${{ steps.meta.outputs.shell }}
         run: |
-          echo "Auth image: ${{ steps.meta.outputs.auth }}"
-          echo "Shell image: ${{ steps.meta.outputs.shell }}"
+          set -euo pipefail
+          docker manifest inspect "$AUTH_IMAGE" >/tmp/auth-manifest.json
+          docker manifest inspect "$SHELL_IMAGE" >/tmp/shell-manifest.json
+
+      - name: Write release artifact
+        env:
+          TAG: ${{ steps.meta.outputs.tag }}
+          AUTH_IMAGE: ${{ steps.meta.outputs.auth }}
+          SHELL_IMAGE: ${{ steps.meta.outputs.shell }}
+          AUTH_DIGEST: ${{ steps.auth.outputs.digest }}
+          SHELL_DIGEST: ${{ steps.shell.outputs.digest }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          cat > artifacts/microfe-release.json <<EOF
+          {
+            "commit": "$TAG",
+            "auth": {
+              "image": "$AUTH_IMAGE",
+              "digest": "$AUTH_DIGEST"
+            },
+            "shell": {
+              "image": "$SHELL_IMAGE",
+              "digest": "$SHELL_DIGEST"
+            }
+          }
+          EOF
+          cat artifacts/microfe-release.json
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: microfe-release
+          path: artifacts/microfe-release.json
+          if-no-files-found: error
+          retention-days: 14
