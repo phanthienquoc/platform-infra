@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microfe-auth
+  namespace: microfe-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: microfe-auth
+  template:
+    metadata:
+      labels:
+        app: microfe-auth
+    spec:
+      containers:
+        - name: auth
+          image: ghcr.io/phanthienquoc/microfe-auth:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "3000"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+          resources:
+            requests:
+              cpu: 50m
+              memory: 96Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: microfe-auth
+  namespace: microfe-platform
+spec:
+  selector:
+    app: microfe-auth
+  ports:
+    - port: 80
+      targetPort: 3000
