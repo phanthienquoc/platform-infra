@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mrcute.space/schemas/ws-client.v1.json",
+  "title": "MicroFE WebSocket Client Message",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["type", "id", "channel"],
+      "properties": {
+        "type": {"const": "subscribe"},
+        "id": {"type": "string"},
+        "channel": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["type", "id", "channel"],
+      "properties": {
+        "type": {"const": "unsubscribe"},
+        "id": {"type": "string"},
+        "channel": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["type", "id"],
+      "properties": {
+        "type": {"const": "resync"},
+        "id": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["type", "id"],
+      "properties": {
+        "type": {"const": "ping"},
+        "id": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  ]
+}
