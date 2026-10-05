@@ -12,6 +12,7 @@ on:
           - stockdividend
           - tce-dashboard
           - media-generation
+          - microfe
       component:
         description: Image component
         required: true
@@ -215,7 +216,7 @@ jobs:
           TAG="${EVENT_TAG:-$INPUT_TAG}"
 
           case "$APP/$COMPONENT" in
-            stockdividend/backend|stockdividend/admin|tce-dashboard/web|tce-dashboard/service|media-generation/backend|media-generation/frontend) ;;
+            stockdividend/backend|stockdividend/admin|tce-dashboard/web|tce-dashboard/service|media-generation/backend|media-generation/frontend|microfe/ws) ;;
             *)
               echo "::error::Unsupported image target: $APP/$COMPONENT"
               exit 1
@@ -241,6 +242,12 @@ jobs:
                 exit 1
               }
               ;;
+            microfe)
+              [[ "$TAG" =~ ^[0-9a-f]{7,64}$ ]] || {
+                echo "::error::MicroFE tag must be an immutable Git SHA"
+                exit 1
+              }
+              ;;
           esac
 
           {
@@ -261,6 +268,9 @@ jobs:
 
           if [ "$APP" = "media-generation" ]; then
             IMAGE="ghcr.io/phanthienquoc/media-generation/${COMPONENT}:${TAG}"
+          elif [ "$APP" = "microfe" ]; then
+            test "$COMPONENT" = "ws"
+            IMAGE="ghcr.io/phanthienquoc/microfe-ws:${TAG}"
           else
             IMAGE="ghcr.io/phanthienquoc/${APP}/${COMPONENT}:${TAG}"
           fi
@@ -286,6 +296,7 @@ jobs:
             stockdividend) FILE="apps/stockdividend/overlays/prod/kustomization.yaml" ;;
             tce-dashboard) FILE="apps/tce-dashboard/overlays/prod/kustomization.yaml" ;;
             media-generation) FILE="apps/media-generation/overlays/prod/kustomization.yaml" ;;
+            microfe) FILE="platform/microfe/ws-gateway/deployment.yaml" ;;
             *) echo "::error::Unsupported application: $APP"; exit 1 ;;
           esac
 
@@ -297,6 +308,18 @@ jobs:
           app = sys.argv[2]
           component = sys.argv[3]
           tag = sys.argv[4]
+
+          if app == "microfe":
+              lines = path.read_text().splitlines()
+              for index, line in enumerate(lines):
+                  if "ghcr.io/phanthienquoc/microfe-ws:" in line:
+                      prefix = line.split("ghcr.io/phanthienquoc/microfe-ws:", 1)[0]
+                      lines[index] = f"{prefix}ghcr.io/phanthienquoc/microfe-ws:{tag}"
+                      path.write_text("\n".join(lines) + "\n")
+                      break
+              else:
+                  raise SystemExit("image component not found: microfe-ws")
+              raise SystemExit(0)
 
           lines = path.read_text().splitlines()
           expected = (
@@ -322,6 +345,8 @@ jobs:
 
           if [ "$APP" = "media-generation" ]; then
             grep -A1 "name: ghcr.io/phanthienquoc/media-generation/${COMPONENT}" "$FILE"
+          elif [ "$APP" = "microfe" ]; then
+            grep "ghcr.io/phanthienquoc/microfe-ws:" "$FILE"
           else
             grep -A1 "name: ghcr.io/phanthienquoc/${APP}/${COMPONENT}" "$FILE"
           fi
@@ -421,6 +446,22 @@ jobs:
               esac
             done
           done
+
+      - name: Trigger MicroFE reconciliation
+        if: steps.input.outputs.app == 'microfe'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE: ${{ steps.input.outputs.tag }}
+        run: |
+          set -euo pipefail
+          gh api --method POST \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${GITHUB_REPOSITORY}/dispatches" \
+            -f event_type="microfe-images-published" \
+            -f client_payload[app]="microfe" \
+            -f client_payload[component]="ws" \
+            -f client_payload[tag]="$RELEASE"
+          echo "Triggered MicroFE reconciliation for microfe-ws $RELEASE."
 
       - name: Determine release readiness
         if: steps.input.outputs.app == 'stockdividend' || steps.input.outputs.app == 'media-generation'
