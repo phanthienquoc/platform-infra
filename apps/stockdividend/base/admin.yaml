@@ -17,7 +17,9 @@ spec:
       - name: admin
         image: ghcr.io/phanthienquoc/stockdividend/admin:12d63b4
         ports: [{name: http, containerPort: 3000}]
-        env: [{name: BACKEND_URL, value: http://stock-backend:8080}]
+        env:
+        - {name: BACKEND_URL, value: http://stock-backend:8080}
+        - {name: AUTH_BASE_URL, value: https://auth.mrcute.space}
         startupProbe: {httpGet: {path: /, port: http}, periodSeconds: 5, failureThreshold: 30}
         readinessProbe: {httpGet: {path: /, port: http}, periodSeconds: 10}
         livenessProbe: {httpGet: {path: /, port: http}, initialDelaySeconds: 20, periodSeconds: 20}
