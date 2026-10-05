@@ -23,6 +23,8 @@ spec:
         ports:
         - name: http
           containerPort: 3000
+        env:
+        - {name: NEXT_PUBLIC_MEDIA_API_BASE_URL, value: /v1}
         startupProbe:
           httpGet: {path: /, port: http}
           periodSeconds: 5
