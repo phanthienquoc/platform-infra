@@ -1,0 +1,84 @@
+name: MicroFE Promote
+
+"on":
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Immutable Git SHA tag already published to GHCR"
+        required: true
+        type: string
+  repository_dispatch:
+    types:
+      - microfe-images-published
+
+permissions:
+  contents: write
+  packages: read
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: true
+
+      - name: Resolve image tag
+        id: input
+        env:
+          EVENT_TAG: ${{ github.event.client_payload.image_tag }}
+          INPUT_TAG: ${{ inputs.image_tag }}
+        run: |
+          set -euo pipefail
+          TAG="${EVENT_TAG:-$INPUT_TAG}"
+          [[ "$TAG" =~ ^[0-9a-f]{7,64}$ ]] || { echo "::error::MicroFE image tag must be an immutable Git SHA"; exit 1; }
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Validate both GHCR images
+        env:
+          TAG: ${{ steps.input.outputs.tag }}
+          GHCR_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "${GITHUB_ACTOR}" --password-stdin
+          docker manifest inspect "ghcr.io/phanthienquoc/microfe-auth:$TAG" >/dev/null
+          docker manifest inspect "ghcr.io/phanthienquoc/microfe-shell:$TAG" >/dev/null
+          docker logout ghcr.io >/dev/null 2>&1 || true
+
+      - name: Promote both image tags in GitOps
+        env:
+          TAG: ${{ steps.input.outputs.tag }}
+        run: |
+          set -euo pipefail
+          python3 - "$TAG" <<'PY'
+          from pathlib import Path
+          import sys
+
+          tag = sys.argv[1]
+          files = {
+              Path("platform/auth-service/deployment.yaml"): "ghcr.io/phanthienquoc/microfe-auth",
+              Path("platform/microfe/shell/deployment.yaml"): "ghcr.io/phanthienquoc/microfe-shell",
+          }
+          for path, image in files.items():
+              lines = path.read_text().splitlines()
+              for i, line in enumerate(lines):
+                  if line.strip().startswith("image: " + image + ":"):
+                      lines[i] = "          image: " + image + ":" + tag
+                      break
+              else:
+                  raise SystemExit(f"image not found in {path}")
+              path.write_text("\n".join(lines) + "\n")
+          PY
+
+      - name: Commit and push promotion
+        env:
+          TAG: ${{ steps.input.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add platform/auth-service/deployment.yaml platform/microfe/shell/deployment.yaml
+          git diff --cached --quiet && { echo "No image promotion changes."; exit 0; }
+          git commit -m "chore(microfe): promote images $TAG"
+          git push
