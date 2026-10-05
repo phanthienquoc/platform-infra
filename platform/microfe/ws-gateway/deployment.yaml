@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microfe-ws
+  namespace: microfe-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: microfe-ws}
+  template:
+    metadata: {labels: {app: microfe-ws}}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: ws
+          image: ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA
+          imagePullPolicy: IfNotPresent
+          ports:
+            - {name: http, containerPort: 8080}
+          env:
+            - {name: PORT, value: "8080"}
+            - {name: AUTH_SERVICE_URL, value: http://microfe-auth.microfe-platform.svc.cluster.local}
+            - {name: NATS_URL, value: nats://nats.microfe-platform.svc.cluster.local:4222}
+          readinessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 3, periodSeconds: 5}
+          livenessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 10, periodSeconds: 10}
+          resources:
+            requests: {cpu: 50m, memory: 96Mi}
+            limits: {cpu: 300m, memory: 256Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: microfe-ws
+  namespace: microfe-platform
+spec:
+  selector: {app: microfe-ws}
+  ports:
+    - {name: http, port: 8080, targetPort: http}

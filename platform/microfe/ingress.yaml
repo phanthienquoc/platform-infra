@@ -11,6 +11,7 @@ spec:
     - hosts:
         - app.mrcute.space
         - auth.mrcute.space
+        - ws.mrcute.space
       secretName: microfe-public-tls
   rules:
     - host: app.mrcute.space
@@ -33,3 +34,13 @@ spec:
                 name: microfe-auth
                 port:
                   number: 80
+    - host: ws.mrcute.space
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: microfe-ws
+                port:
+                  number: 8080

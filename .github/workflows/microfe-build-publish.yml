@@ -6,6 +6,7 @@ name: MicroFE Build & Publish
     paths:
       - "platform/auth-service/**"
       - "platform/microfe/shell/**"
+      - "platform/microfe/ws-gateway/**"
       - ".github/workflows/microfe-build-publish.yml"
   workflow_dispatch:
 
@@ -32,6 +33,14 @@ jobs:
         with:
           node-version: "22"
 
+      - name: WS gateway syntax and unit tests
+        working-directory: platform/microfe/ws-gateway
+        run: |
+          set -euo pipefail
+          npm install --omit=dev
+          npm run check
+          npm test
+
       - name: Auth syntax and unit tests
         working-directory: platform/auth-service
         run: |
@@ -55,6 +64,7 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "auth=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/microfe-auth:$TAG" >> "$GITHUB_OUTPUT"
           echo "shell=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/microfe-shell:$TAG" >> "$GITHUB_OUTPUT"
+          echo "ws=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/microfe-ws:$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Build and push auth
         id: auth
@@ -64,6 +74,17 @@ jobs:
           file: platform/auth-service/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.auth }}
+          provenance: mode=max
+          sbom: true
+
+      - name: Build and push WS gateway
+        id: ws
+        uses: docker/build-push-action@10e90e3b2d0de9f6f6d34c6f3a7c6dd74f7c9f9d # v6
+        with:
+          context: platform/microfe/ws-gateway
+          file: platform/microfe/ws-gateway/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.ws }}
           provenance: mode=max
           sbom: true
 
@@ -82,10 +103,12 @@ jobs:
         env:
           AUTH_IMAGE: ${{ steps.meta.outputs.auth }}
           SHELL_IMAGE: ${{ steps.meta.outputs.shell }}
+          WS_IMAGE: ${{ steps.meta.outputs.ws }}
         run: |
           set -euo pipefail
           docker manifest inspect "$AUTH_IMAGE" >/tmp/auth-manifest.json
           docker manifest inspect "$SHELL_IMAGE" >/tmp/shell-manifest.json
+          docker manifest inspect "$WS_IMAGE" >/tmp/ws-manifest.json
 
       - name: Write release artifact
         env:
@@ -94,6 +117,7 @@ jobs:
           SHELL_IMAGE: ${{ steps.meta.outputs.shell }}
           AUTH_DIGEST: ${{ steps.auth.outputs.digest }}
           SHELL_DIGEST: ${{ steps.shell.outputs.digest }}
+          WS_DIGEST: ${{ steps.ws.outputs.digest }}
         run: |
           set -euo pipefail
           mkdir -p artifacts
@@ -107,6 +131,10 @@ jobs:
             "shell": {
               "image": "$SHELL_IMAGE",
               "digest": "$SHELL_DIGEST"
+            },
+            "ws": {
+              "image": "$WS_IMAGE",
+              "digest": "$WS_DIGEST"
             }
           }
           EOF

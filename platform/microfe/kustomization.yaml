@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
 - ../auth-service/deployment.yaml
 - shell
+- ws-gateway/deployment.yaml
