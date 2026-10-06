@@ -43,6 +43,7 @@ name: reconcile-vps
 
 permissions:
   contents: read
+  packages: write
 
 concurrency:
   group: platform-vps-reconcile
@@ -67,6 +68,78 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
+      - name: Build and promote MicroFE images on VPS runner
+        id: publish_microfe
+        if: ${{ github.event_name == 'push' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          changed="$(git diff --name-only "$GITHUB_EVENT_BEFORE" "$GITHUB_SHA" || true)"
+          if ! printf '%s\n' "$changed" | grep -q '^platform/microfe/'; then
+            echo "No MicroFE source change in this push; skipping image build."
+            exit 0
+          fi
+
+          node --version
+          npm --version
+          (
+            cd platform/auth-service
+            npm install --omit=dev
+            npm run check
+            npm test
+          )
+          (
+            cd platform/microfe/ws-gateway
+            npm install --omit=dev
+            npm run check
+            npm test
+          )
+
+          printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          mkdir -p /tmp/microfe-build-meta
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          tag="$GITHUB_SHA"
+
+          build_image() {
+            local image="$1"
+            local dockerfile="$2"
+            local context="$3"
+            local meta="$4"
+            docker buildx build --platform linux/arm64 --provenance=true --sbom=true --metadata-file "$meta" --push --tag "$image:$tag" --file "$dockerfile" "$context"
+            python3 - "$meta" "$image" <<'PY'
+import json, pathlib, sys
+meta, image = sys.argv[1:]
+digest = json.loads(pathlib.Path(meta).read_text()).get("containerimage.digest")
+if not isinstance(digest, str) or not digest.startswith("sha256:"):
+    raise SystemExit(f"Missing digest for {image}")
+print(digest)
+PY
+          }
+
+          auth_digest="$(build_image ghcr.io/$owner/microfe-auth platform/auth-service/Dockerfile . /tmp/microfe-build-meta/auth.json | tail -n1)"
+          shell_digest="$(build_image ghcr.io/$owner/microfe-shell platform/microfe/shell/Dockerfile . /tmp/microfe-build-meta/shell.json | tail -n1)"
+          ws_digest="$(build_image ghcr.io/$owner/microfe-ws platform/microfe/ws-gateway/Dockerfile platform/microfe/ws-gateway /tmp/microfe-build-meta/ws.json | tail -n1)"
+
+          for digest in "$auth_digest" "$shell_digest" "$ws_digest"; do
+            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || exit 1
+          done
+
+          cat >> environments/prod/kustomization.yaml <<EOF
+
+          images:
+          - name: ghcr.io/phanthienquoc/microfe-auth
+            newName: ghcr.io/phanthienquoc/microfe-auth
+            digest: $auth_digest
+          - name: ghcr.io/phanthienquoc/microfe-shell
+            newName: ghcr.io/phanthienquoc/microfe-shell
+            digest: $shell_digest
+          - name: ghcr.io/phanthienquoc/microfe-ws
+            newName: ghcr.io/phanthienquoc/microfe-ws
+            digest: $ws_digest
+          EOF
+
+          echo "MicroFE immutable image promotion prepared for this reconciliation."
       - name: Verify repository state
         run: |
           set -euo pipefail
@@ -135,7 +208,7 @@ jobs:
           fi
 
       - name: Guard workload image changes
-        if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && env.ALLOW_IMAGE_CHANGES != 'true' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && env.ALLOW_IMAGE_CHANGES != 'true' && steps.publish_microfe.outcome != 'success' }}
         run: |
           set -euo pipefail
           chmod +x scripts/guard-reconcile-images.sh
