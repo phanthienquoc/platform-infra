@@ -2,13 +2,6 @@ name: MicroFE Build & Publish
 # managed-runner trigger after bootstrap lifecycle fix
 
 "on":
-  push:
-    branches: [master]
-    paths:
-      - "platform/auth-service/**"
-      - "platform/microfe/shell/**"
-      - "platform/microfe/ws-gateway/**"
-      - ".github/workflows/microfe-build-publish.yml"
   workflow_dispatch:
 
 permissions:
