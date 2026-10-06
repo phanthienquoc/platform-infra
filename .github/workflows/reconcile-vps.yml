@@ -32,6 +32,8 @@ name: reconcile-vps
     paths:
       - "apps/**"
       - "environments/**"
+      - "platform/microfe/**"
+      - "platform/cert-manager/**"
       - "scripts/reconcile-vps.sh"
       - "scripts/verify-workload-health.sh"
   repository_dispatch:
