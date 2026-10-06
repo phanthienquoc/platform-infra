@@ -230,7 +230,7 @@ jobs:
             echo "Live TLS certificate served by auth.mrcute.space:"
             echo | openssl s_client -connect auth.mrcute.space:443 -servername auth.mrcute.space 2>/dev/null | openssl x509 -noout -subject -issuer -dates -ext subjectAltName
             echo "Live microfe-public Ingress TLS config:"
-            sudo /usr/local/sbin/platform-kubectl get ingress microfe-public -n microfe-platform -o yaml | sed -n '/^spec:/,$p' | sed -n '1,140p'
+            sudo /usr/local/sbin/platform-kubectl get ingress microfe-public -n microfe-platform -o yaml | awk '/^spec:/{show=1} show{print}' | sed -n '1,140p'
             cd /opt/actions-runner/_work/platform-infra/platform-infra
             sudo /usr/local/sbin/platform-kubectl apply -f platform/microfe/namespace.yaml >/tmp/platform-microfe-namespace-bootstrap
             set +e
