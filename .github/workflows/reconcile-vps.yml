@@ -199,6 +199,15 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl get nodes -o wide
           sudo /usr/local/sbin/platform-kubectl get pods -A -o wide
 
+      - name: Verify Auth HTTPS
+        if: ${{ env.RECONCILE_MODE == 'apply' }}
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --max-time 20 https://auth.mrcute.space/health >/dev/null
+          code="$(curl --fail --silent --show-error --location --max-time 20 --output /dev/null --write-out '%{http_code}' https://auth.mrcute.space/auth/me)"
+          test "$code" = "401"
+          echo "Auth HTTPS and unauthenticated session boundary verified."
+
       - name: Verify TCE GitOps images
         id: verify_tce_images
         if: ${{ env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'tce-dashboard') }}
