@@ -29,6 +29,7 @@ jobs:
         run: |
           set -euo pipefail
           git init .
+          git remote add origin "https://github.com/$GITHUB_REPOSITORY.git"
           git -c http.extraheader="AUTHORIZATION: bearer $GITHUB_TOKEN"             fetch --depth=1 origin "https://github.com/$GITHUB_REPOSITORY.git" "$GITHUB_SHA"
           git checkout --detach "$GITHUB_SHA"
 
@@ -95,7 +96,6 @@ PY
       - name: Dispatch immutable image promotion
         env:
           PLATFORM_INFRA_TOKEN: ${{ secrets.PLATFORM_INFRA_TOKEN }}
-          AUTH_DIGEST: ${{ steps.unused.outputs.auth_digest }}
         run: |
           set -euo pipefail
           test -n "${PLATFORM_INFRA_TOKEN:-}"
