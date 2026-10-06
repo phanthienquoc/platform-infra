@@ -108,7 +108,810 @@ jobs:
               r'^ghcr\.io/phanthienquoc/tce-dashboard/(web|service):prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}$'
           )
           media_sha = re.compile(
-              r'^ghcr\.io/phanthienquoc/media-generation/(backend|frontend):[0-9a-f]{7,64}
+              r'^ghcr\.io/phanthienquoc/media-generation/(backend|frontend):[0-9a-f]{7,64}              image for image in images
+              if not (
+                  stock_sha.fullmatch(image)
+                  or tce_versioned.fullmatch(image)
+                  or media_sha.fullmatch(image)
+                  or microfe_placeholder.fullmatch(image)
+                  or microfe_release_placeholder.fullmatch(image)
+                  or microfe_digest.fullmatch(image)
+              )
+          ]
+          if invalid:
+              print('Invalid first-party image tags:')
+              for image in invalid:
+                  print(f'  {image}')
+              raise SystemExit(
+                  'First-party application images must use immutable Git-SHA tags; '
+                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
+              )
+
+          print(f'Validated {len(images)} immutable first-party application images.')
+          PY
+      - id: network_policy
+        name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+
+      - name: Report validation failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
+          CI validation failed. Step outcomes:
+          - checkout: ${{ steps.checkout.outcome }}
+          - setup_python: ${{ steps.setup_python.outcome }}
+          - install_yaml: ${{ steps.install_yaml.outcome }}
+          - install_kubectl: ${{ steps.install_kubectl.outcome }}
+          - shell_validation: ${{ steps.shell_validation.outcome }}
+          - render: ${{ steps.render.outcome }}
+          - yaml_validation: ${{ steps.yaml_validation.outcome }}
+          - secret_policy: ${{ steps.secret_policy.outcome }}
+          - image_policy: ${{ steps.image_policy.outcome }}
+          - network_policy: ${{ steps.network_policy.outcome }}
+          EOF
+          )"
+
+          )
+          microfe_placeholder = re.compile(
+              r'^ghcr\.io/phanthienquoc/microfe-(auth|shell):0\.1\.0$|^ghcr\.io/phanthienquoc/microfe-ws:RELEASE_SHA
+
+          invalid = [
+              image for image in images
+              if not (
+                  stock_sha.fullmatch(image)
+                  or tce_versioned.fullmatch(image)
+                  or media_sha.fullmatch(image)
+              )
+          ]
+          if invalid:
+              print('Invalid first-party image tags:')
+              for image in invalid:
+                  print(f'  {image}')
+              raise SystemExit(
+                  'First-party application images must use immutable Git-SHA tags; '
+                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
+              )
+
+          print(f'Validated {len(images)} immutable first-party application images.')
+          PY
+      - id: network_policy
+        name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+
+      - name: Report validation failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
+          CI validation failed. Step outcomes:
+          - checkout: ${{ steps.checkout.outcome }}
+          - setup_python: ${{ steps.setup_python.outcome }}
+          - install_yaml: ${{ steps.install_yaml.outcome }}
+          - install_kubectl: ${{ steps.install_kubectl.outcome }}
+          - shell_validation: ${{ steps.shell_validation.outcome }}
+          - render: ${{ steps.render.outcome }}
+          - yaml_validation: ${{ steps.yaml_validation.outcome }}
+          - secret_policy: ${{ steps.secret_policy.outcome }}
+          - image_policy: ${{ steps.image_policy.outcome }}
+          - network_policy: ${{ steps.network_policy.outcome }}
+          EOF
+          )"
+
+          )
+          microfe_digest = re.compile(
+              r'^ghcr\.io/phanthienquoc/microfe-(auth|shell|ws)@sha256:[0-9a-f]{64}
+
+          invalid = [
+              image for image in images
+              if not (
+                  stock_sha.fullmatch(image)
+                  or tce_versioned.fullmatch(image)
+                  or media_sha.fullmatch(image)
+              )
+          ]
+          if invalid:
+              print('Invalid first-party image tags:')
+              for image in invalid:
+                  print(f'  {image}')
+              raise SystemExit(
+                  'First-party application images must use immutable Git-SHA tags; '
+                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
+              )
+
+          print(f'Validated {len(images)} immutable first-party application images.')
+          PY
+      - id: network_policy
+        name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+
+      - name: Report validation failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
+          CI validation failed. Step outcomes:
+          - checkout: ${{ steps.checkout.outcome }}
+          - setup_python: ${{ steps.setup_python.outcome }}
+          - install_yaml: ${{ steps.install_yaml.outcome }}
+          - install_kubectl: ${{ steps.install_kubectl.outcome }}
+          - shell_validation: ${{ steps.shell_validation.outcome }}
+          - render: ${{ steps.render.outcome }}
+          - yaml_validation: ${{ steps.yaml_validation.outcome }}
+          - secret_policy: ${{ steps.secret_policy.outcome }}
+          - image_policy: ${{ steps.image_policy.outcome }}
+          - network_policy: ${{ steps.network_policy.outcome }}
+          EOF
+          )"
+
+          )
+
+          invalid = [
+              image for image in images
+              if not (
+                  stock_sha.fullmatch(image)
+                  or tce_versioned.fullmatch(image)
+                  or media_sha.fullmatch(image)
+              )
+          ]
+          if invalid:
+              print('Invalid first-party image tags:')
+              for image in invalid:
+                  print(f'  {image}')
+              raise SystemExit(
+                  'First-party application images must use immutable Git-SHA tags; '
+                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
+              )
+
+          print(f'Validated {len(images)} immutable first-party application images.')
+          PY
+      - id: network_policy
+        name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+
+      - name: Report validation failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
+          CI validation failed. Step outcomes:
+          - checkout: ${{ steps.checkout.outcome }}
+          - setup_python: ${{ steps.setup_python.outcome }}
+          - install_yaml: ${{ steps.install_yaml.outcome }}
+          - install_kubectl: ${{ steps.install_kubectl.outcome }}
+          - shell_validation: ${{ steps.shell_validation.outcome }}
+          - render: ${{ steps.render.outcome }}
+          - yaml_validation: ${{ steps.yaml_validation.outcome }}
+          - secret_policy: ${{ steps.secret_policy.outcome }}
+          - image_policy: ${{ steps.image_policy.outcome }}
+          - network_policy: ${{ steps.network_policy.outcome }}
+          EOF
+          )"
+
+          )
+          microfe_placeholder = re.compile(
+              r'^ghcr\.io/phanthienquoc/microfe-(auth|shell):0\.1\.0              image for image in images
+              if not (
+                  stock_sha.fullmatch(image)
+                  or tce_versioned.fullmatch(image)
+                  or media_sha.fullmatch(image)
+                  or microfe_placeholder.fullmatch(image)
+                  or microfe_digest.fullmatch(image)
+              )
+          ]
+          if invalid:
+              print('Invalid first-party image tags:')
+              for image in invalid:
+                  print(f'  {image}')
+              raise SystemExit(
+                  'First-party application images must use immutable Git-SHA tags; '
+                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
+              )
+
+          print(f'Validated {len(images)} immutable first-party application images.')
+          PY
+      - id: network_policy
+        name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+
+      - name: Report validation failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
+          CI validation failed. Step outcomes:
+          - checkout: ${{ steps.checkout.outcome }}
+          - setup_python: ${{ steps.setup_python.outcome }}
+          - install_yaml: ${{ steps.install_yaml.outcome }}
+          - install_kubectl: ${{ steps.install_kubectl.outcome }}
+          - shell_validation: ${{ steps.shell_validation.outcome }}
+          - render: ${{ steps.render.outcome }}
+          - yaml_validation: ${{ steps.yaml_validation.outcome }}
+          - secret_policy: ${{ steps.secret_policy.outcome }}
+          - image_policy: ${{ steps.image_policy.outcome }}
+          - network_policy: ${{ steps.network_policy.outcome }}
+          EOF
+          )"
+
+          )
+          microfe_placeholder = re.compile(
+              r'^ghcr\.io/phanthienquoc/microfe-(auth|shell):0\.1\.0$|^ghcr\.io/phanthienquoc/microfe-ws:RELEASE_SHA
+
+          invalid = [
+              image for image in images
+              if not (
+                  stock_sha.fullmatch(image)
+                  or tce_versioned.fullmatch(image)
+                  or media_sha.fullmatch(image)
+              )
+          ]
+          if invalid:
+              print('Invalid first-party image tags:')
+              for image in invalid:
+                  print(f'  {image}')
+              raise SystemExit(
+                  'First-party application images must use immutable Git-SHA tags; '
+                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
+              )
+
+          print(f'Validated {len(images)} immutable first-party application images.')
+          PY
+      - id: network_policy
+        name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+
+      - name: Report validation failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
+          CI validation failed. Step outcomes:
+          - checkout: ${{ steps.checkout.outcome }}
+          - setup_python: ${{ steps.setup_python.outcome }}
+          - install_yaml: ${{ steps.install_yaml.outcome }}
+          - install_kubectl: ${{ steps.install_kubectl.outcome }}
+          - shell_validation: ${{ steps.shell_validation.outcome }}
+          - render: ${{ steps.render.outcome }}
+          - yaml_validation: ${{ steps.yaml_validation.outcome }}
+          - secret_policy: ${{ steps.secret_policy.outcome }}
+          - image_policy: ${{ steps.image_policy.outcome }}
+          - network_policy: ${{ steps.network_policy.outcome }}
+          EOF
+          )"
+
+          )
+          microfe_digest = re.compile(
+              r'^ghcr\.io/phanthienquoc/microfe-(auth|shell|ws)@sha256:[0-9a-f]{64}
+
+          invalid = [
+              image for image in images
+              if not (
+                  stock_sha.fullmatch(image)
+                  or tce_versioned.fullmatch(image)
+                  or media_sha.fullmatch(image)
+              )
+          ]
+          if invalid:
+              print('Invalid first-party image tags:')
+              for image in invalid:
+                  print(f'  {image}')
+              raise SystemExit(
+                  'First-party application images must use immutable Git-SHA tags; '
+                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
+              )
+
+          print(f'Validated {len(images)} immutable first-party application images.')
+          PY
+      - id: network_policy
+        name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+
+      - name: Report validation failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
+          CI validation failed. Step outcomes:
+          - checkout: ${{ steps.checkout.outcome }}
+          - setup_python: ${{ steps.setup_python.outcome }}
+          - install_yaml: ${{ steps.install_yaml.outcome }}
+          - install_kubectl: ${{ steps.install_kubectl.outcome }}
+          - shell_validation: ${{ steps.shell_validation.outcome }}
+          - render: ${{ steps.render.outcome }}
+          - yaml_validation: ${{ steps.yaml_validation.outcome }}
+          - secret_policy: ${{ steps.secret_policy.outcome }}
+          - image_policy: ${{ steps.image_policy.outcome }}
+          - network_policy: ${{ steps.network_policy.outcome }}
+          EOF
+          )"
+
+          )
+
+          invalid = [
+              image for image in images
+              if not (
+                  stock_sha.fullmatch(image)
+                  or tce_versioned.fullmatch(image)
+                  or media_sha.fullmatch(image)
+              )
+          ]
+          if invalid:
+              print('Invalid first-party image tags:')
+              for image in invalid:
+                  print(f'  {image}')
+              raise SystemExit(
+                  'First-party application images must use immutable Git-SHA tags; '
+                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
+              )
+
+          print(f'Validated {len(images)} immutable first-party application images.')
+          PY
+      - id: network_policy
+        name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+
+      - name: Report validation failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
+          CI validation failed. Step outcomes:
+          - checkout: ${{ steps.checkout.outcome }}
+          - setup_python: ${{ steps.setup_python.outcome }}
+          - install_yaml: ${{ steps.install_yaml.outcome }}
+          - install_kubectl: ${{ steps.install_kubectl.outcome }}
+          - shell_validation: ${{ steps.shell_validation.outcome }}
+          - render: ${{ steps.render.outcome }}
+          - yaml_validation: ${{ steps.yaml_validation.outcome }}
+          - secret_policy: ${{ steps.secret_policy.outcome }}
+          - image_policy: ${{ steps.image_policy.outcome }}
+          - network_policy: ${{ steps.network_policy.outcome }}
+          EOF
+          )"
+
+          )
+          microfe_release_placeholder = re.compile(
+              r'^ghcr\.io/phanthienquoc/microfe-ws:RELEASE_SHA              image for image in images
+              if not (
+                  stock_sha.fullmatch(image)
+                  or tce_versioned.fullmatch(image)
+                  or media_sha.fullmatch(image)
+                  or microfe_placeholder.fullmatch(image)
+                  or microfe_digest.fullmatch(image)
+              )
+          ]
+          if invalid:
+              print('Invalid first-party image tags:')
+              for image in invalid:
+                  print(f'  {image}')
+              raise SystemExit(
+                  'First-party application images must use immutable Git-SHA tags; '
+                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
+              )
+
+          print(f'Validated {len(images)} immutable first-party application images.')
+          PY
+      - id: network_policy
+        name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+
+      - name: Report validation failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
+          CI validation failed. Step outcomes:
+          - checkout: ${{ steps.checkout.outcome }}
+          - setup_python: ${{ steps.setup_python.outcome }}
+          - install_yaml: ${{ steps.install_yaml.outcome }}
+          - install_kubectl: ${{ steps.install_kubectl.outcome }}
+          - shell_validation: ${{ steps.shell_validation.outcome }}
+          - render: ${{ steps.render.outcome }}
+          - yaml_validation: ${{ steps.yaml_validation.outcome }}
+          - secret_policy: ${{ steps.secret_policy.outcome }}
+          - image_policy: ${{ steps.image_policy.outcome }}
+          - network_policy: ${{ steps.network_policy.outcome }}
+          EOF
+          )"
+
+          )
+          microfe_placeholder = re.compile(
+              r'^ghcr\.io/phanthienquoc/microfe-(auth|shell):0\.1\.0$|^ghcr\.io/phanthienquoc/microfe-ws:RELEASE_SHA
+
+          invalid = [
+              image for image in images
+              if not (
+                  stock_sha.fullmatch(image)
+                  or tce_versioned.fullmatch(image)
+                  or media_sha.fullmatch(image)
+              )
+          ]
+          if invalid:
+              print('Invalid first-party image tags:')
+              for image in invalid:
+                  print(f'  {image}')
+              raise SystemExit(
+                  'First-party application images must use immutable Git-SHA tags; '
+                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
+              )
+
+          print(f'Validated {len(images)} immutable first-party application images.')
+          PY
+      - id: network_policy
+        name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+
+      - name: Report validation failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
+          CI validation failed. Step outcomes:
+          - checkout: ${{ steps.checkout.outcome }}
+          - setup_python: ${{ steps.setup_python.outcome }}
+          - install_yaml: ${{ steps.install_yaml.outcome }}
+          - install_kubectl: ${{ steps.install_kubectl.outcome }}
+          - shell_validation: ${{ steps.shell_validation.outcome }}
+          - render: ${{ steps.render.outcome }}
+          - yaml_validation: ${{ steps.yaml_validation.outcome }}
+          - secret_policy: ${{ steps.secret_policy.outcome }}
+          - image_policy: ${{ steps.image_policy.outcome }}
+          - network_policy: ${{ steps.network_policy.outcome }}
+          EOF
+          )"
+
+          )
+          microfe_digest = re.compile(
+              r'^ghcr\.io/phanthienquoc/microfe-(auth|shell|ws)@sha256:[0-9a-f]{64}
+
+          invalid = [
+              image for image in images
+              if not (
+                  stock_sha.fullmatch(image)
+                  or tce_versioned.fullmatch(image)
+                  or media_sha.fullmatch(image)
+              )
+          ]
+          if invalid:
+              print('Invalid first-party image tags:')
+              for image in invalid:
+                  print(f'  {image}')
+              raise SystemExit(
+                  'First-party application images must use immutable Git-SHA tags; '
+                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
+              )
+
+          print(f'Validated {len(images)} immutable first-party application images.')
+          PY
+      - id: network_policy
+        name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+
+      - name: Report validation failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
+          CI validation failed. Step outcomes:
+          - checkout: ${{ steps.checkout.outcome }}
+          - setup_python: ${{ steps.setup_python.outcome }}
+          - install_yaml: ${{ steps.install_yaml.outcome }}
+          - install_kubectl: ${{ steps.install_kubectl.outcome }}
+          - shell_validation: ${{ steps.shell_validation.outcome }}
+          - render: ${{ steps.render.outcome }}
+          - yaml_validation: ${{ steps.yaml_validation.outcome }}
+          - secret_policy: ${{ steps.secret_policy.outcome }}
+          - image_policy: ${{ steps.image_policy.outcome }}
+          - network_policy: ${{ steps.network_policy.outcome }}
+          EOF
+          )"
+
+          )
+
+          invalid = [
+              image for image in images
+              if not (
+                  stock_sha.fullmatch(image)
+                  or tce_versioned.fullmatch(image)
+                  or media_sha.fullmatch(image)
+              )
+          ]
+          if invalid:
+              print('Invalid first-party image tags:')
+              for image in invalid:
+                  print(f'  {image}')
+              raise SystemExit(
+                  'First-party application images must use immutable Git-SHA tags; '
+                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
+              )
+
+          print(f'Validated {len(images)} immutable first-party application images.')
+          PY
+      - id: network_policy
+        name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+
+      - name: Report validation failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
+          CI validation failed. Step outcomes:
+          - checkout: ${{ steps.checkout.outcome }}
+          - setup_python: ${{ steps.setup_python.outcome }}
+          - install_yaml: ${{ steps.install_yaml.outcome }}
+          - install_kubectl: ${{ steps.install_kubectl.outcome }}
+          - shell_validation: ${{ steps.shell_validation.outcome }}
+          - render: ${{ steps.render.outcome }}
+          - yaml_validation: ${{ steps.yaml_validation.outcome }}
+          - secret_policy: ${{ steps.secret_policy.outcome }}
+          - image_policy: ${{ steps.image_policy.outcome }}
+          - network_policy: ${{ steps.network_policy.outcome }}
+          EOF
+          )"
+
+          )
+          microfe_digest = re.compile(
+              r'^ghcr\.io/phanthienquoc/microfe-(auth|shell|ws)@sha256:[0-9a-f]{64}              image for image in images
+              if not (
+                  stock_sha.fullmatch(image)
+                  or tce_versioned.fullmatch(image)
+                  or media_sha.fullmatch(image)
+                  or microfe_placeholder.fullmatch(image)
+                  or microfe_digest.fullmatch(image)
+              )
+          ]
+          if invalid:
+              print('Invalid first-party image tags:')
+              for image in invalid:
+                  print(f'  {image}')
+              raise SystemExit(
+                  'First-party application images must use immutable Git-SHA tags; '
+                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
+              )
+
+          print(f'Validated {len(images)} immutable first-party application images.')
+          PY
+      - id: network_policy
+        name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+
+      - name: Report validation failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
+          CI validation failed. Step outcomes:
+          - checkout: ${{ steps.checkout.outcome }}
+          - setup_python: ${{ steps.setup_python.outcome }}
+          - install_yaml: ${{ steps.install_yaml.outcome }}
+          - install_kubectl: ${{ steps.install_kubectl.outcome }}
+          - shell_validation: ${{ steps.shell_validation.outcome }}
+          - render: ${{ steps.render.outcome }}
+          - yaml_validation: ${{ steps.yaml_validation.outcome }}
+          - secret_policy: ${{ steps.secret_policy.outcome }}
+          - image_policy: ${{ steps.image_policy.outcome }}
+          - network_policy: ${{ steps.network_policy.outcome }}
+          EOF
+          )"
+
+          )
+          microfe_placeholder = re.compile(
+              r'^ghcr\.io/phanthienquoc/microfe-(auth|shell):0\.1\.0$|^ghcr\.io/phanthienquoc/microfe-ws:RELEASE_SHA
+
+          invalid = [
+              image for image in images
+              if not (
+                  stock_sha.fullmatch(image)
+                  or tce_versioned.fullmatch(image)
+                  or media_sha.fullmatch(image)
+              )
+          ]
+          if invalid:
+              print('Invalid first-party image tags:')
+              for image in invalid:
+                  print(f'  {image}')
+              raise SystemExit(
+                  'First-party application images must use immutable Git-SHA tags; '
+                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
+              )
+
+          print(f'Validated {len(images)} immutable first-party application images.')
+          PY
+      - id: network_policy
+        name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+
+      - name: Report validation failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
+          CI validation failed. Step outcomes:
+          - checkout: ${{ steps.checkout.outcome }}
+          - setup_python: ${{ steps.setup_python.outcome }}
+          - install_yaml: ${{ steps.install_yaml.outcome }}
+          - install_kubectl: ${{ steps.install_kubectl.outcome }}
+          - shell_validation: ${{ steps.shell_validation.outcome }}
+          - render: ${{ steps.render.outcome }}
+          - yaml_validation: ${{ steps.yaml_validation.outcome }}
+          - secret_policy: ${{ steps.secret_policy.outcome }}
+          - image_policy: ${{ steps.image_policy.outcome }}
+          - network_policy: ${{ steps.network_policy.outcome }}
+          EOF
+          )"
+
+          )
+          microfe_digest = re.compile(
+              r'^ghcr\.io/phanthienquoc/microfe-(auth|shell|ws)@sha256:[0-9a-f]{64}
+
+          invalid = [
+              image for image in images
+              if not (
+                  stock_sha.fullmatch(image)
+                  or tce_versioned.fullmatch(image)
+                  or media_sha.fullmatch(image)
+              )
+          ]
+          if invalid:
+              print('Invalid first-party image tags:')
+              for image in invalid:
+                  print(f'  {image}')
+              raise SystemExit(
+                  'First-party application images must use immutable Git-SHA tags; '
+                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
+              )
+
+          print(f'Validated {len(images)} immutable first-party application images.')
+          PY
+      - id: network_policy
+        name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+
+      - name: Report validation failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
+          CI validation failed. Step outcomes:
+          - checkout: ${{ steps.checkout.outcome }}
+          - setup_python: ${{ steps.setup_python.outcome }}
+          - install_yaml: ${{ steps.install_yaml.outcome }}
+          - install_kubectl: ${{ steps.install_kubectl.outcome }}
+          - shell_validation: ${{ steps.shell_validation.outcome }}
+          - render: ${{ steps.render.outcome }}
+          - yaml_validation: ${{ steps.yaml_validation.outcome }}
+          - secret_policy: ${{ steps.secret_policy.outcome }}
+          - image_policy: ${{ steps.image_policy.outcome }}
+          - network_policy: ${{ steps.network_policy.outcome }}
+          EOF
+          )"
+
+          )
+
+          invalid = [
+              image for image in images
+              if not (
+                  stock_sha.fullmatch(image)
+                  or tce_versioned.fullmatch(image)
+                  or media_sha.fullmatch(image)
+              )
+          ]
+          if invalid:
+              print('Invalid first-party image tags:')
+              for image in invalid:
+                  print(f'  {image}')
+              raise SystemExit(
+                  'First-party application images must use immutable Git-SHA tags; '
+                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
+              )
+
+          print(f'Validated {len(images)} immutable first-party application images.')
+          PY
+      - id: network_policy
+        name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+
+      - name: Report validation failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
+          CI validation failed. Step outcomes:
+          - checkout: ${{ steps.checkout.outcome }}
+          - setup_python: ${{ steps.setup_python.outcome }}
+          - install_yaml: ${{ steps.install_yaml.outcome }}
+          - install_kubectl: ${{ steps.install_kubectl.outcome }}
+          - shell_validation: ${{ steps.shell_validation.outcome }}
+          - render: ${{ steps.render.outcome }}
+          - yaml_validation: ${{ steps.yaml_validation.outcome }}
+          - secret_policy: ${{ steps.secret_policy.outcome }}
+          - image_policy: ${{ steps.image_policy.outcome }}
+          - network_policy: ${{ steps.network_policy.outcome }}
+          EOF
+          )"
+
+          )
 
           invalid = [
               image for image in images
