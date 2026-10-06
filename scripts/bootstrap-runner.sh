@@ -42,6 +42,22 @@ case "${1:-}" in
       nodes|namespaces|ns|pods|po|deployments|deployment|deploy|services|svc|ingress|ingresses|jobs|cronjobs|pv|pvc)
         exec "${KUBECTL[@]}" get "$@"
         ;;
+      certificate)
+        [[ "${2:-}" == "auth-mrcute-tls" && "${3:-}" == "-n" && "${4:-}" == "microfe-platform" && "${5:-}" == "-o" && "${6:-}" == "yaml" && "${7:-}" == "" ]] || exit 2
+        exec "${KUBECTL[@]}" get certificate auth-mrcute-tls -n microfe-platform -o yaml
+        ;;
+      certificaterequest)
+        [[ "${2:-}" == "-n" && "${3:-}" == "microfe-platform" && "${4:-}" == "-o" && "${5:-}" == "yaml" && "${6:-}" == "" ]] || exit 2
+        exec "${KUBECTL[@]}" get certificaterequest -n microfe-platform -o yaml
+        ;;
+      challenge)
+        [[ "${2:-}" == "-n" && "${3:-}" == "microfe-platform" && "${4:-}" == "-o" && "${5:-}" == "yaml" && "${6:-}" == "" ]] || exit 2
+        exec "${KUBECTL[@]}" get challenge -n microfe-platform -o yaml
+        ;;
+      order)
+        [[ "${2:-}" == "-n" && "${3:-}" == "microfe-platform" && "${4:-}" == "-o" && "${5:-}" == "yaml" && "${6:-}" == "" ]] || exit 2
+        exec "${KUBECTL[@]}" get order -n microfe-platform -o yaml
+        ;;
     esac
     ;;
   logs)
