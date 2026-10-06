@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: microfe-public-tls
+  namespace: microfe-platform
+spec:
+  secretName: microfe-public-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - app.mrcute.space
+    - ws.mrcute.space
