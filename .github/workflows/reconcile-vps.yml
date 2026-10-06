@@ -71,14 +71,18 @@ jobs:
 
       - name: Build and promote MicroFE images on VPS runner
         id: publish_microfe
-        if: ${{ github.event_name == 'push' }}
+        if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.allow_image_changes) }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          changed="$(git diff --name-only "$GITHUB_EVENT_BEFORE" "$GITHUB_SHA" || true)"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            changed="platform/auth-service/manual-dispatch"
+          else
+            changed="$(git diff --name-only "$GITHUB_EVENT_BEFORE" "$GITHUB_SHA" || true)"
+          fi
           if ! printf '%s\n' "$changed" | grep -Eq '^platform/(microfe|auth-service)/'; then
-            echo "No MicroFE source change in this push; skipping image build."
+            echo "No MicroFE source change in this pipeline; skipping image build."
             exit 0
           fi
 
