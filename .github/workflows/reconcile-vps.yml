@@ -33,6 +33,7 @@ name: reconcile-vps
       - "apps/**"
       - "environments/**"
       - "platform/microfe/**"
+      - "platform/auth-service/**"
       - "platform/cert-manager/**"
       - ".github/workflows/reconcile-vps.yml"
       - "scripts/reconcile-vps.sh"
@@ -76,7 +77,7 @@ jobs:
         run: |
           set -euo pipefail
           changed="$(git diff --name-only "$GITHUB_EVENT_BEFORE" "$GITHUB_SHA" || true)"
-          if ! printf '%s\n' "$changed" | grep -q '^platform/microfe/'; then
+          if ! printf '%s\n' "$changed" | grep -Eq '^platform/(microfe|auth-service)/'; then
             echo "No MicroFE source change in this push; skipping image build."
             exit 0
           fi
