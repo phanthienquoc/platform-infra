@@ -229,9 +229,6 @@ jobs:
             printf '%s\n' "$cert_yaml" | sed -n '/^status:/,$\\p' | sed -n '1,80p'
             echo "Live TLS certificate served by auth.mrcute.space:"
             echo | openssl s_client -connect auth.mrcute.space:443 -servername auth.mrcute.space 2>/dev/null | openssl x509 -noout -subject -issuer -dates -ext subjectAltName
-            echo "Live microfe-public Ingress:"
-            sudo /usr/local/sbin/platform-kubectl get ingress microfe-public -n microfe-platform -o yaml | sed -n '1,180p'
-
             cd /opt/actions-runner/_work/platform-infra/platform-infra
             sudo /usr/local/sbin/platform-kubectl apply -f platform/microfe/namespace.yaml >/tmp/platform-microfe-namespace-bootstrap
             set +e
