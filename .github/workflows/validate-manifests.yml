@@ -11,301 +11,95 @@ permissions:
 
 jobs:
   validate:
-    # platform-infra already provisions a dedicated ARM64 runner for
-    # infrastructure workflows. GitHub-hosted runner allocation is currently
-    # failing before job initialization (runner_id=0, no steps/logs), so keep
-    # validation on the repository's managed runner.
     runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
     steps:
-      - id: checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-      - id: setup_python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
-        with:
-          python-version: '3.x'
-      - id: install_yaml
-        name: Install YAML parser
-        run: python -m pip install --disable-pip-version-check --no-cache-dir PyYAML==6.0.2
-      - id: install_kubectl
-        name: Install kubectl
-        uses: azure/setup-kubectl@c0c8b32d33a5244f1e5947304550403b63930415 # v4
-      - id: shell_validation
-        name: Validate shell scripts
+
+      - name: Install validation dependencies
+        run: python3 -m pip install --disable-pip-version-check --no-cache-dir PyYAML==6.0.2
+
+      - name: Validate shell scripts
         run: |
           set -euo pipefail
-          mapfile -t scripts < <(find scripts -type f -name '*.sh' -print | sort)
-          test "${#scripts[@]}" -gt 0
-          for script in "${scripts[@]}"; do
+          while IFS= read -r script; do
             bash -n "$script"
-            echo "Validated shell syntax: $script"
-          done
-      - id: render
-        name: Render production manifests
+          done < <(find scripts -type f -name '*.sh' -print | sort)
+
+      - name: Render production manifests
         run: kubectl kustomize environments/prod > /tmp/platform-infra-rendered.yaml
-      - id: yaml_validation
-        name: Validate rendered YAML structure (offline)
+
+      - name: Validate rendered YAML
         run: |
-          python - <<'PY'
+          python3 - <<'PY'
           from pathlib import Path
           import yaml
-
-          path = Path('/tmp/platform-infra-rendered.yaml')
-          docs = list(yaml.safe_load_all(path.read_text()))
+          docs = list(yaml.safe_load_all(Path('/tmp/platform-infra-rendered.yaml').read_text()))
           if not docs:
               raise SystemExit('Rendered manifest is empty.')
-          for index, obj in enumerate(docs, 1):
+          for i, obj in enumerate(docs, 1):
               if not isinstance(obj, dict):
-                  raise SystemExit(f'Document {index} is not a YAML object.')
-              missing = [key for key in ('apiVersion', 'kind', 'metadata') if key not in obj]
-              if missing:
-                  raise SystemExit(f'Document {index} is missing required Kubernetes fields: {missing}')
+                  raise SystemExit(f'Document {i} is not a YAML object.')
+              if not all(k in obj for k in ('apiVersion', 'kind', 'metadata')):
+                  raise SystemExit(f'Document {i} is missing required Kubernetes fields.')
               if not isinstance(obj['metadata'], dict) or not obj['metadata'].get('name'):
-                  raise SystemExit(f'Document {index} has invalid metadata.name.')
-          print(f'Validated {len(docs)} rendered Kubernetes objects offline.')
-          PY
-      - id: secret_policy
-        name: Enforce secret policy
+                  raise SystemExit(f'Document {i} has invalid metadata.name.')
+          print(f'Validated {len(docs)} rendered Kubernetes objects.')
+
+      - name: Enforce secret policy
         run: |
           set -euo pipefail
           if grep -nE '^kind: Secret$|^[[:space:]]+data:' /tmp/platform-infra-rendered.yaml; then
             echo 'Rendered manifests must not contain Secret objects or inline secret data.'
             exit 1
           fi
-      - id: image_policy
-        name: Check immutable application image tags
+
+      - name: Validate immutable image policy
         run: |
-          set -euo pipefail
-          python - <<'PY'
+          python3 - <<'PY'
           from pathlib import Path
           import re
           import yaml
 
           docs = list(yaml.safe_load_all(Path('/tmp/platform-infra-rendered.yaml').read_text()))
           images = []
-
-          def walk(value):
-              if isinstance(value, dict):
-                  for key, child in value.items():
-                      if key == 'image' and isinstance(child, str) and child.startswith('ghcr.io/phanthienquoc/'):
+          def walk(v):
+              if isinstance(v, dict):
+                  for k, child in v.items():
+                      if k == 'image' and isinstance(child, str) and child.startswith('ghcr.io/phanthienquoc/'):
                           images.append(child)
                       walk(child)
-              elif isinstance(value, list):
-                  for child in value:
+              elif isinstance(v, list):
+                  for child in v:
                       walk(child)
-
           for doc in docs:
               walk(doc)
 
           if not images:
               raise SystemExit('No first-party application images were rendered.')
 
-          stock_sha = re.compile(
-              r'^ghcr\.io/phanthienquoc/stockdividend/(backend|admin):[0-9a-f]{7,64}$'
-          )
-          tce_versioned = re.compile(
-              r'^ghcr\.io/phanthienquoc/tce-dashboard/(web|service):prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}$'
-          )
-          media_sha = re.compile(
-              r'^ghcr\.io/phanthienquoc/media-generation/(backend|frontend):[0-9a-f]{7,64}
-
-          invalid = [
-              image for image in images
-              if not (
-                  stock_sha.fullmatch(image)
-                  or tce_versioned.fullmatch(image)
-                  or media_sha.fullmatch(image)
-                  or microfe_placeholder.fullmatch(image)
-                  or microfe_digest.fullmatch(image)
-              )
+          patterns = [
+              re.compile(r'^ghcr\.io/phanthienquoc/stockdividend/(backend|admin):[0-9a-f]{7,64}$'),
+              re.compile(r'^ghcr\.io/phanthienquoc/tce-dashboard/(web|service):prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}$'),
+              re.compile(r'^ghcr\.io/phanthienquoc/media-generation/(backend|frontend):[0-9a-f]{7,64}$'),
+              re.compile(r'^ghcr\.io/phanthienquoc/microfe-(auth|shell):0\.1\.0$'),
+              re.compile(r'^ghcr\.io/phanthienquoc/microfe-ws:RELEASE_SHA$'),
+              re.compile(r'^ghcr\.io/phanthienquoc/microfe-(auth|shell|ws)@sha256:[0-9a-f]{64}$'),
           ]
+          invalid = [image for image in images if not any(p.fullmatch(image) for p in patterns)]
           if invalid:
-              print('Invalid first-party image tags:')
-              for image in invalid:
-                  print(f'  {image}')
-              raise SystemExit(
-                  'First-party application images must use immutable Git-SHA tags; '
-                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
-              )
+              raise SystemExit('Invalid first-party image tags:\n' + '\n'.join(f'  {x}' for x in invalid))
+          print(f'Validated {len(images)} first-party image references.')
 
-          print(f'Validated {len(images)} immutable first-party application images.')
-          PY
-      - id: network_policy
-        name: Validate network boundaries
-        run: |
-          chmod +x scripts/validate-network-boundaries.sh
-          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+      - name: Validate network boundaries
+        run: ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
 
       - name: Report validation failure
-        if: failure()
+        if: failure() && github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          set -euo pipefail
-          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
-          CI validation failed. Step outcomes:
-          - checkout: ${{ steps.checkout.outcome }}
-          - setup_python: ${{ steps.setup_python.outcome }}
-          - install_yaml: ${{ steps.install_yaml.outcome }}
-          - install_kubectl: ${{ steps.install_kubectl.outcome }}
-          - shell_validation: ${{ steps.shell_validation.outcome }}
-          - render: ${{ steps.render.outcome }}
-          - yaml_validation: ${{ steps.yaml_validation.outcome }}
-          - secret_policy: ${{ steps.secret_policy.outcome }}
-          - image_policy: ${{ steps.image_policy.outcome }}
-          - network_policy: ${{ steps.network_policy.outcome }}
-          EOF
-          )"
-
-          )
-          microfe_placeholder = re.compile(
-              r'^ghcr\.io/phanthienquoc/microfe-(auth|shell):0\.1\.0$|^ghcr\.io/phanthienquoc/microfe-ws:RELEASE_SHA
-
-          invalid = [
-              image for image in images
-              if not (
-                  stock_sha.fullmatch(image)
-                  or tce_versioned.fullmatch(image)
-                  or media_sha.fullmatch(image)
-              )
-          ]
-          if invalid:
-              print('Invalid first-party image tags:')
-              for image in invalid:
-                  print(f'  {image}')
-              raise SystemExit(
-                  'First-party application images must use immutable Git-SHA tags; '
-                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
-              )
-
-          print(f'Validated {len(images)} immutable first-party application images.')
-          PY
-      - id: network_policy
-        name: Validate network boundaries
-        run: |
-          chmod +x scripts/validate-network-boundaries.sh
-          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
-
-      - name: Report validation failure
-        if: failure()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          set -euo pipefail
-          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
-          CI validation failed. Step outcomes:
-          - checkout: ${{ steps.checkout.outcome }}
-          - setup_python: ${{ steps.setup_python.outcome }}
-          - install_yaml: ${{ steps.install_yaml.outcome }}
-          - install_kubectl: ${{ steps.install_kubectl.outcome }}
-          - shell_validation: ${{ steps.shell_validation.outcome }}
-          - render: ${{ steps.render.outcome }}
-          - yaml_validation: ${{ steps.yaml_validation.outcome }}
-          - secret_policy: ${{ steps.secret_policy.outcome }}
-          - image_policy: ${{ steps.image_policy.outcome }}
-          - network_policy: ${{ steps.network_policy.outcome }}
-          EOF
-          )"
-
-          )
-          microfe_digest = re.compile(
-              r'^ghcr\.io/phanthienquoc/microfe-(auth|shell|ws)@sha256:[0-9a-f]{64}
-
-          invalid = [
-              image for image in images
-              if not (
-                  stock_sha.fullmatch(image)
-                  or tce_versioned.fullmatch(image)
-                  or media_sha.fullmatch(image)
-              )
-          ]
-          if invalid:
-              print('Invalid first-party image tags:')
-              for image in invalid:
-                  print(f'  {image}')
-              raise SystemExit(
-                  'First-party application images must use immutable Git-SHA tags; '
-                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
-              )
-
-          print(f'Validated {len(images)} immutable first-party application images.')
-          PY
-      - id: network_policy
-        name: Validate network boundaries
-        run: |
-          chmod +x scripts/validate-network-boundaries.sh
-          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
-
-      - name: Report validation failure
-        if: failure()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          set -euo pipefail
-          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
-          CI validation failed. Step outcomes:
-          - checkout: ${{ steps.checkout.outcome }}
-          - setup_python: ${{ steps.setup_python.outcome }}
-          - install_yaml: ${{ steps.install_yaml.outcome }}
-          - install_kubectl: ${{ steps.install_kubectl.outcome }}
-          - shell_validation: ${{ steps.shell_validation.outcome }}
-          - render: ${{ steps.render.outcome }}
-          - yaml_validation: ${{ steps.yaml_validation.outcome }}
-          - secret_policy: ${{ steps.secret_policy.outcome }}
-          - image_policy: ${{ steps.image_policy.outcome }}
-          - network_policy: ${{ steps.network_policy.outcome }}
-          EOF
-          )"
-
-          )
-
-          invalid = [
-              image for image in images
-              if not (
-                  stock_sha.fullmatch(image)
-                  or tce_versioned.fullmatch(image)
-                  or media_sha.fullmatch(image)
-              )
-          ]
-          if invalid:
-              print('Invalid first-party image tags:')
-              for image in invalid:
-                  print(f'  {image}')
-              raise SystemExit(
-                  'First-party application images must use immutable Git-SHA tags; '
-                  'TCE versioned tags must be prod-v<semver>-<git-sha>.'
-              )
-
-          print(f'Validated {len(images)} immutable first-party application images.')
-          PY
-      - id: network_policy
-        name: Validate network boundaries
-        run: |
-          chmod +x scripts/validate-network-boundaries.sh
-          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
-
-      - name: Report validation failure
-        if: failure()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          set -euo pipefail
-          gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
-          CI validation failed. Step outcomes:
-          - checkout: ${{ steps.checkout.outcome }}
-          - setup_python: ${{ steps.setup_python.outcome }}
-          - install_yaml: ${{ steps.install_yaml.outcome }}
-          - install_kubectl: ${{ steps.install_kubectl.outcome }}
-          - shell_validation: ${{ steps.shell_validation.outcome }}
-          - render: ${{ steps.render.outcome }}
-          - yaml_validation: ${{ steps.yaml_validation.outcome }}
-          - secret_policy: ${{ steps.secret_policy.outcome }}
-          - image_policy: ${{ steps.image_policy.outcome }}
-          - network_policy: ${{ steps.network_policy.outcome }}
-          EOF
-          )"
+          gh pr comment "$PR_NUMBER" --body "Manifest validation failed. Check the failed step(s) above."
