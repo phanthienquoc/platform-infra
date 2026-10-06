@@ -56,12 +56,26 @@ case "${1:-}" in
     echo "platform-kubectl: only media-generation logs in media-prod are allowed" >&2
     exit 2
     ;;
-  diff|apply)
+  apply)
+    if [[ "${2:-}" == "-f" && "${4:-}" == "" ]]; then
+      case "${3:-}" in
+        platform/microfe/namespace.yaml|apps/stockdividend/base/namespace.yaml|apps/tce-dashboard/base/namespace.yaml|apps/media-generation/base/namespace.yaml)
+          exec "${KUBECTL[@]}" apply -f "${3}"
+          ;;
+      esac
+    fi
     [[ "${2:-}" == "-k" && "${3:-}" == "environments/prod" && "${4:-}" == "" ]] || {
-      echo "platform-kubectl: only -k environments/prod is allowed for $1" >&2
+      echo "platform-kubectl: only approved GitOps namespace manifests or -k environments/prod are allowed for apply" >&2
       exit 2
     }
-    exec "${KUBECTL[@]}" "$1" -k environments/prod
+    exec "${KUBECTL[@]}" apply -k environments/prod
+    ;;
+  diff)
+    [[ "${2:-}" == "-k" && "${3:-}" == "environments/prod" && "${4:-}" == "" ]] || {
+      echo "platform-kubectl: only -k environments/prod is allowed for diff" >&2
+      exit 2
+    }
+    exec "${KUBECTL[@]}" diff -k environments/prod
     ;;
   describe-media)
     [[ "$#" -eq 1 ]] || exit 2
