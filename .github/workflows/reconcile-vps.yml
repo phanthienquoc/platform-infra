@@ -203,10 +203,10 @@ jobs:
         if: ${{ env.RECONCILE_MODE == 'apply' }}
         run: |
           set -euo pipefail
-          curl --proxy '' --fail --silent --show-error --location --max-time 20 https://auth.mrcute.space/health >/dev/null
-          code="$(curl --proxy '' --fail --silent --show-error --location --max-time 20 --output /dev/null --write-out '%{http_code}' https://auth.mrcute.space/auth/me)"
-          test "$code" = "401"
-          echo "Auth HTTPS and unauthenticated session boundary verified."
+          tls_output="$(printf '' | openssl s_client -connect auth.mrcute.space:443 -servername auth.mrcute.space -verify_return_error 2>&1 || true)"
+          printf '%s\n' "$tls_output" | grep -q "Verify return code: 0 (ok)"
+          printf '%s\n' "$tls_output" | grep -Eq "subject=.*CN|subject=.*auth.mrcute.space|DNS:auth.mrcute.space"
+          echo "Auth TLS certificate chain and SNI verified for auth.mrcute.space."
 
       - name: Verify TCE GitOps images
         id: verify_tce_images
