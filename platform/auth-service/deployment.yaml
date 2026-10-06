@@ -42,14 +42,24 @@ spec:
                 secretKeyRef:
                   name: microfe-auth-secrets
                   key: DATABASE_URL
+          startupProbe:
+            httpGet:
+              path: /health/live
+              port: 3000
+            periodSeconds: 5
+            failureThreshold: 30
           readinessProbe:
             httpGet:
-              path: /health
+              path: /health/ready
               port: 3000
+            periodSeconds: 5
+            timeoutSeconds: 3
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 3000
+            periodSeconds: 10
+            timeoutSeconds: 3
           resources:
             requests:
               cpu: 50m
