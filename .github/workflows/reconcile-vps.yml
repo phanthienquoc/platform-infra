@@ -203,8 +203,8 @@ jobs:
         if: ${{ env.RECONCILE_MODE == 'apply' }}
         run: |
           set -euo pipefail
-          curl --noproxy '*' --fail --silent --show-error --location --max-time 20 https://auth.mrcute.space/health >/dev/null
-          code="$(curl --noproxy '*' --fail --silent --show-error --location --max-time 20 --output /dev/null --write-out '%{http_code}' https://auth.mrcute.space/auth/me)"
+          curl --proxy '' --fail --silent --show-error --location --max-time 20 https://auth.mrcute.space/health >/dev/null
+          code="$(curl --proxy '' --fail --silent --show-error --location --max-time 20 --output /dev/null --write-out '%{http_code}' https://auth.mrcute.space/auth/me)"
           test "$code" = "401"
           echo "Auth HTTPS and unauthenticated session boundary verified."
 
