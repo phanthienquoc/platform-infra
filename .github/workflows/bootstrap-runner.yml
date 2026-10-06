@@ -226,6 +226,7 @@ jobs:
             sudo /usr/local/sbin/platform-kubectl version >/dev/null
 
             cd /opt/actions-runner/_work/platform-infra/platform-infra
+            sudo /usr/local/sbin/platform-kubectl apply -f platform/microfe/namespace.yaml >/tmp/platform-microfe-namespace-bootstrap
             set +e
             sudo /usr/local/sbin/platform-kubectl diff -k environments/prod >/tmp/platform-kubectl-diff-check 2>/tmp/platform-kubectl-diff-error
             rc=$?
