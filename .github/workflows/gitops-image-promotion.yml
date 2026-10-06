@@ -326,6 +326,25 @@ jobs:
             grep -A1 "name: ghcr.io/phanthienquoc/${APP}/${COMPONENT}" "$FILE"
           fi
 
+      - name: Scope promotion changes
+        env:
+          APP: ${{ steps.input.outputs.app }}
+        run: |
+          set -euo pipefail
+          case "$APP" in
+            stockdividend) TARGET_FILE="apps/stockdividend/overlays/prod/kustomization.yaml" ;;
+            tce-dashboard) TARGET_FILE="apps/tce-dashboard/overlays/prod/kustomization.yaml" ;;
+            media-generation) TARGET_FILE="apps/media-generation/overlays/prod/kustomization.yaml" ;;
+            *) echo "::error::Unsupported promotion app"; exit 1 ;;
+          esac
+          test -n "$(git diff --name-only -- "$TARGET_FILE")" || { echo "::error::Expected promotion diff missing for $TARGET_FILE"; git diff --name-only; exit 1; }
+          git diff --name-only | while IFS= read -r file; do
+            [ "$file" = "$TARGET_FILE" ] || git restore --source=HEAD --worktree --staged -- "$file"
+          done
+          changed_count="$(git diff --name-only | wc -l | tr -d ' ')"
+          test "$changed_count" -eq 1 || { echo "::error::Promotion must modify exactly one manifest file"; git diff --name-only; exit 1; }
+          test "$(git diff --name-only)" = "$TARGET_FILE"
+
       - name: Create promotion PR
         id: promotion
         uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
