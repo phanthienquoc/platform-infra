@@ -1,4 +1,5 @@
 name: MicroFE Build & Publish
+# managed-runner trigger after bootstrap lifecycle fix
 
 "on":
   push:
