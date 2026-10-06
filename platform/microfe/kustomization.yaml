@@ -7,3 +7,5 @@ resources:
 - ingress.yaml
 - shell
 - ws-gateway/deployment.yaml
+
+# trigger immutable MicroFE publish through the VPS reconciler
