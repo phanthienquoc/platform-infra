@@ -34,6 +34,7 @@ name: reconcile-vps
       - "environments/**"
       - "platform/microfe/**"
       - "platform/cert-manager/**"
+      - ".github/workflows/reconcile-vps.yml"
       - "scripts/reconcile-vps.sh"
       - "scripts/verify-workload-health.sh"
   repository_dispatch:
