@@ -88,6 +88,12 @@ case "${1:-}" in
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/tce-frontend" && "${4:-}" == "-n" && "${5:-}" == "tce-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/tce-frontend -n tce-prod --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/media-generation" && "${4:-}" == "-n" && "${5:-}" == "media-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/media-generation -n media-prod --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/media-generation-frontend" && "${4:-}" == "-n" && "${5:-}" == "media-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/media-generation-frontend -n media-prod --timeout=180s
+    [[ "${2:-}" == "status" && "${3:-}" == "deployment/microfe-auth" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/microfe-auth -n microfe-platform --timeout=180s
+    [[ "${2:-}" == "status" && "${3:-}" == "deployment/microfe-shell" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/microfe-shell -n microfe-platform --timeout=180s
+    [[ "${2:-}" == "status" && "${3:-}" == "deployment/microfe-ws" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/microfe-ws -n microfe-platform --timeout=180s
+    ;;
+  get)
+    [[ "${2:-}" == "ingress" && "${3:-}" == "microfe-public" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "" ]] && exec "${KUBECTL[@]}" get ingress microfe-public -n microfe-platform
     ;;
 esac
 
