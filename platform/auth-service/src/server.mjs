@@ -128,6 +128,20 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get("/health/live", (_req, res) => {
+  return res.json({ ok: true, service: "microfe-auth" });
+});
+
+app.get("/health/ready", async (_req, res) => {
+  try {
+    if (!pool) return res.status(503).json({ ok: false, service: "microfe-auth", database: "not_configured" });
+    await pool.query("select 1");
+    return res.json({ ok: true, service: "microfe-auth", database: "connected" });
+  } catch {
+    return res.status(503).json({ ok: false, service: "microfe-auth", database: "unavailable" });
+  }
+});
+
 app.get("/health", async (_req, res) => {
   try {
     if (pool) await pool.query("select 1");
@@ -242,10 +256,20 @@ export { app, ensureSchema };
 
 if (process.env.NODE_ENV !== "test") {
   const port = Number(process.env.PORT || 3000);
-  ensureSchema()
-    .then(() => app.listen(port, "0.0.0.0", () => console.log("microfe-auth listening on :" + port)))
-    .catch(error => {
-      console.error("[AUTH_BOOTSTRAP]", error);
-      process.exit(1);
-    });
+
+  // Keep the HTTP process alive even when the database is temporarily unavailable.
+  // Kubernetes readiness will gate traffic until the database becomes reachable.
+  app.listen(port, "0.0.0.0", () => console.log("microfe-auth listening on :" + port));
+
+  const bootstrapDb = async () => {
+    try {
+      await ensureSchema();
+      console.log("[AUTH_BOOTSTRAP] database ready");
+    } catch (error) {
+      console.error("[AUTH_BOOTSTRAP] database unavailable; retrying", error);
+      setTimeout(bootstrapDb, 5000);
+    }
+  };
+
+  void bootstrapDb();
 }
