@@ -4,6 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches: [master]
+    paths:
+      - ".github/workflows/bootstrap-runner.yml"
+      - "scripts/bootstrap-runner.sh"
 
 permissions:
   contents: read
