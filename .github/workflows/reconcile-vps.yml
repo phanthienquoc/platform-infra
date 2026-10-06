@@ -26,18 +26,6 @@ name: reconcile-vps
           - tce-dashboard
           - stockdividend
           - media-generation
-  push:
-    branches:
-      - master
-    paths:
-      - "apps/**"
-      - "environments/**"
-      - "platform/microfe/**"
-      - "platform/auth-service/**"
-      - "platform/cert-manager/**"
-      - ".github/workflows/reconcile-vps.yml"
-      - "scripts/reconcile-vps.sh"
-      - "scripts/verify-workload-health.sh"
   repository_dispatch:
     types:
       - gitops-promoted-ready
