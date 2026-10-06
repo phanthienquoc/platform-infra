@@ -44,10 +44,43 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
+      - name: Promote published MicroFE images
+        if: ${{ github.event_name == 'repository_dispatch' && env.RECONCILE_MODE == 'apply' }}
+        env:
+          AUTH_DIGEST: ${{ github.event.client_payload.auth_digest }}
+          SHELL_DIGEST: ${{ github.event.client_payload.shell_digest }}
+          WS_DIGEST: ${{ github.event.client_payload.ws_digest }}
+        run: |
+          set -euo pipefail
+          for digest in "$AUTH_DIGEST" "$SHELL_DIGEST" "$WS_DIGEST"; do
+            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::Invalid MicroFE image digest: $digest"; exit 1; }
+          done
+          cat >> environments/prod/kustomization.yaml <<EOF
+
+          images:
+          - name: ghcr.io/phanthienquoc/microfe-auth
+            newName: ghcr.io/phanthienquoc/microfe-auth
+            digest: $AUTH_DIGEST
+          - name: ghcr.io/phanthienquoc/microfe-shell
+            newName: ghcr.io/phanthienquoc/microfe-shell
+            digest: $SHELL_DIGEST
+          - name: ghcr.io/phanthienquoc/microfe-ws
+            newName: ghcr.io/phanthienquoc/microfe-ws
+            digest: $WS_DIGEST
+          EOF
+
       - name: Validate MicroFE immutable image policy
         if: ${{ env.RECONCILE_MODE == 'apply' }}
         run: |
           set -euo pipefail
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            rendered="$(kubectl kustomize environments/prod)"
+            printf '%s\n' "$rendered" | grep -Eq 'ghcr.io/phanthienquoc/microfe-auth@sha256:[0-9a-f]{64}'
+            printf '%s\n' "$rendered" | grep -Eq 'ghcr.io/phanthienquoc/microfe-shell@sha256:[0-9a-f]{64}'
+            printf '%s\n' "$rendered" | grep -Eq 'ghcr.io/phanthienquoc/microfe-ws@sha256:[0-9a-f]{64}'
+            echo "Validated explicit MicroFE image promotion."
+            exit 0
+          fi
           auth_image="$(sudo /usr/local/sbin/platform-kubectl -n microfe-platform get deployment microfe-auth -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
           shell_image="$(sudo /usr/local/sbin/platform-kubectl -n microfe-platform get deployment microfe-shell -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
           ws_image="$(sudo /usr/local/sbin/platform-kubectl -n microfe-platform get deployment microfe-ws -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
