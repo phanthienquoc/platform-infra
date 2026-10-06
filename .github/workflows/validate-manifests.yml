@@ -28,6 +28,26 @@ jobs:
       - name: Render production manifests
         run: kubectl kustomize environments/prod > /tmp/platform-infra-rendered.yaml
 
+      - name: Validate rendered YAML structure
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import yaml
+          docs = list(yaml.safe_load_all(Path("/tmp/platform-infra-rendered.yaml").read_text()))
+          if not docs:
+              raise SystemExit("Rendered manifest is empty.")
+          for index, obj in enumerate(docs, 1):
+              if not isinstance(obj, dict):
+                  raise SystemExit(f"Document {index} is not a YAML object.")
+              missing = [k for k in ("apiVersion", "kind", "metadata") if k not in obj]
+              if missing:
+                  raise SystemExit(f"Document {index} missing required fields: {missing}")
+              if not isinstance(obj["metadata"], dict) or not obj["metadata"].get("name"):
+                  raise SystemExit(f"Document {index} has invalid metadata.name.")
+          print(f"Validated {len(docs)} rendered Kubernetes objects offline.")
+          PY
+
       - name: Enforce secret policy
         run: |
           set -euo pipefail
