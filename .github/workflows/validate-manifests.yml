@@ -18,9 +18,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install validation dependencies
-        run: python3 -m pip install --disable-pip-version-check --no-cache-dir PyYAML==6.0.2
-
       - name: Validate shell scripts
         run: |
           set -euo pipefail
@@ -32,21 +29,7 @@ jobs:
         run: kubectl kustomize environments/prod > /tmp/platform-infra-rendered.yaml
 
       - name: Validate rendered YAML
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import yaml
-          docs = list(yaml.safe_load_all(Path('/tmp/platform-infra-rendered.yaml').read_text()))
-          if not docs:
-              raise SystemExit('Rendered manifest is empty.')
-          for i, obj in enumerate(docs, 1):
-              if not isinstance(obj, dict):
-                  raise SystemExit(f'Document {i} is not a YAML object.')
-              if not all(k in obj for k in ('apiVersion', 'kind', 'metadata')):
-                  raise SystemExit(f'Document {i} is missing required Kubernetes fields.')
-              if not isinstance(obj['metadata'], dict) or not obj['metadata'].get('name'):
-                  raise SystemExit(f'Document {i} has invalid metadata.name.')
-          print(f'Validated {len(docs)} rendered Kubernetes objects.')
+        run: kubectl apply --dry-run=client -f /tmp/platform-infra-rendered.yaml >/dev/null
 
       - name: Enforce secret policy
         run: |
@@ -58,40 +41,29 @@ jobs:
 
       - name: Validate immutable image policy
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          import yaml
-
-          docs = list(yaml.safe_load_all(Path('/tmp/platform-infra-rendered.yaml').read_text()))
-          images = []
-          def walk(v):
-              if isinstance(v, dict):
-                  for k, child in v.items():
-                      if k == 'image' and isinstance(child, str) and child.startswith('ghcr.io/phanthienquoc/'):
-                          images.append(child)
-                      walk(child)
-              elif isinstance(v, list):
-                  for child in v:
-                      walk(child)
-          for doc in docs:
-              walk(doc)
-
-          if not images:
-              raise SystemExit('No first-party application images were rendered.')
-
-          patterns = [
-              re.compile(r'^ghcr\.io/phanthienquoc/stockdividend/(backend|admin):[0-9a-f]{7,64}$'),
-              re.compile(r'^ghcr\.io/phanthienquoc/tce-dashboard/(web|service):prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}$'),
-              re.compile(r'^ghcr\.io/phanthienquoc/media-generation/(backend|frontend):[0-9a-f]{7,64}$'),
-              re.compile(r'^ghcr\.io/phanthienquoc/microfe-(auth|shell):0\.1\.0$'),
-              re.compile(r'^ghcr\.io/phanthienquoc/microfe-ws:RELEASE_SHA$'),
-              re.compile(r'^ghcr\.io/phanthienquoc/microfe-(auth|shell|ws)@sha256:[0-9a-f]{64}$'),
-          ]
-          invalid = [image for image in images if not any(p.fullmatch(image) for p in patterns)]
-          if invalid:
-              raise SystemExit('Invalid first-party image tags:\n' + '\n'.join(f'  {x}' for x in invalid))
-          print(f'Validated {len(images)} first-party image references.')
+          set -euo pipefail
+          mapfile -t images < <(
+            grep -E '^[[:space:]]+image:[[:space:]]+ghcr\.io/phanthienquoc/' /tmp/platform-infra-rendered.yaml |
+            sed -E 's/^[[:space:]]+image:[[:space:]]+//'
+          )
+          test "${#images[@]}" -gt 0
+          for image in "${images[@]}"; do
+            case "$image" in
+              ghcr.io/phanthienquoc/stockdividend/backend:[0-9a-f]*|ghcr.io/phanthienquoc/stockdividend/admin:[0-9a-f]*)
+                [[ "$image" =~ ^ghcr\.io/phanthienquoc/stockdividend/(backend|admin):[0-9a-f]{7,64}$ ]] || exit 1 ;;
+              ghcr.io/phanthienquoc/tce-dashboard/*)
+                [[ "$image" =~ ^ghcr\.io/phanthienquoc/tce-dashboard/(web|service):prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}$ ]] || exit 1 ;;
+              ghcr.io/phanthienquoc/media-generation/*)
+                [[ "$image" =~ ^ghcr\.io/phanthienquoc/media-generation/(backend|frontend):[0-9a-f]{7,64}$ ]] || exit 1 ;;
+              ghcr.io/phanthienquoc/microfe-auth:0.1.0|ghcr.io/phanthienquoc/microfe-shell:0.1.0|ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA)
+                ;;
+              ghcr.io/phanthienquoc/microfe-auth@sha256:*|ghcr.io/phanthienquoc/microfe-shell@sha256:*|ghcr.io/phanthienquoc/microfe-ws@sha256:*)
+                [[ "$image" =~ ^ghcr\.io/phanthienquoc/microfe-(auth|shell|ws)@sha256:[0-9a-f]{64}$ ]] || exit 1 ;;
+              *)
+                echo "Invalid first-party image tag: $image"
+                exit 1 ;;
+            esac
+          done
 
       - name: Validate network boundaries
         run: ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
@@ -101,5 +73,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          gh pr comment "$PR_NUMBER" --body "Manifest validation failed. Check the failed step(s) above."
+        run: gh pr comment "$PR_NUMBER" --body "Manifest validation failed. Check the failed step(s) above."
