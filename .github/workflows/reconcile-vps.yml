@@ -342,6 +342,35 @@ jobs:
             "🔒 Isolation       ENABLED</pre>"
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" -d "chat_id=$TELEGRAM_CHAT_ID" --data-urlencode "text=$MESSAGE" -d "parse_mode=HTML"
 
+      - name: Notify Telegram — reconciliation resolved
+        if: ${{ !cancelled() && env.RECONCILE_MODE == 'apply' && steps.apply.outcome == 'success' && (steps.verify_media.outcome == 'success' || steps.verify_tce.outcome == 'success' || steps.verify_stock.outcome == 'success') }}
+        continue-on-error: true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
+          test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
+          TAG="$RELEASE_TAG"
+          if [ -z "$TAG" ] && [ "$TARGET_APP" = "media-generation" ]; then TAG="${MEDIA_TAG:-}"; fi
+          if [ -z "$TAG" ]; then TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"; fi
+          [ -n "$TAG" ] || TAG="unknown"
+          NOW="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          printf -v MESSAGE '%s\n' \
+            "<pre>🟢 PRODUCTION • RESOLVED" \
+            "" \
+            "📦 App             $TARGET_APP" \
+            "🏷️ Release         $TAG" \
+            "🔁 Run             #${GITHUB_RUN_NUMBER} (${GITHUB_RUN_ID})" \
+            "🕐 Time            $NOW" \
+            "" \
+            "✓ Reconciliation succeeded" \
+            "✓ Rollout verified" \
+            "✓ Health verified" \
+            "" \
+            "↩️ This result supersedes prior failed attempts for this release." \
+            "🔒 Isolation       ENABLED</pre>"
+          curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=HTML"
       - name: Publish TCE deployment result event
         if: ${{ !cancelled() && env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'tce-dashboard') }}
         continue-on-error: true
