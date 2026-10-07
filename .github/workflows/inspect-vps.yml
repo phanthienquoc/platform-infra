@@ -51,6 +51,16 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Validate inspection output
+        run: |
+          set -euo pipefail
+          test -s debug/vps-latest.md
+          grep -q "^### Pod failure evidence$" debug/vps-latest.md
+          grep -q "^### Recent failure events$" debug/vps-latest.md
+          grep -q "^### GitOps drift$" debug/vps-latest.md
+          ! grep -q "^echo  echo" debug/vps-latest.md
+          echo "Inspection output structure validated."
+
       - name: Create inspection PR
         id: inspection_pr
         if: steps.changes.outputs.changed == 'true'
