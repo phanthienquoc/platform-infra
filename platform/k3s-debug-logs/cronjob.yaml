@@ -1,0 +1,86 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: k3s-debug-snapshot
+  namespace: k3s-debug
+spec:
+  schedule: "*/15 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  startingDeadlineSeconds: 300
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 300
+      ttlSecondsAfterFinished: 900
+      template:
+        spec:
+          serviceAccountName: k3s-debug-collector
+          restartPolicy: Never
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: collector
+              image: rancher/kubectl:v1.36.3
+              imagePullPolicy: IfNotPresent
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+                runAsUser: 0
+              env:
+                - name: TZ
+                  value: Asia/Ho_Chi_Minh
+              command: ["/bin/sh", "-ec"]
+              args:
+                - |
+                  set -eu
+                  ts="$ts"
+                  out="/debug/k3s-${ts}.log"
+                  tmp="${out}.tmp"
+                  {
+                    echo "===== K3S DEBUG SNAPSHOT ${ts} ====="
+                    echo "===== NODES ====="
+                    kubectl get nodes -o wide
+                    echo "===== PODS ====="
+                    kubectl get pods -A -o wide
+                    echo "===== DEPLOYMENTS ====="
+                    kubectl get deployments -A -o wide
+                    echo "===== STATEFULSETS ====="
+                    kubectl get statefulsets -A -o wide
+                    echo "===== DAEMONSETS ====="
+                    kubectl get daemonsets -A -o wide
+                    echo "===== SERVICES ====="
+                    kubectl get services -A -o wide
+                    echo "===== INGRESSES ====="
+                    kubectl get ingress -A -o wide
+                    echo "===== PV/PVC ====="
+                    kubectl get pv,pvc -A -o wide
+                    echo "===== JOBS/CRONJOBS ====="
+                    kubectl get jobs,cronjobs -A -o wide
+                    echo "===== EVENTS (LATEST 500) ====="
+                    kubectl get events -A --sort-by='.lastTimestamp' | tail -n 500
+                    echo "===== CERT-MANAGER ====="
+                    kubectl get certificates,issuers,clusterissuers -A 2>&1 || true
+                    echo "===== NON-RUNNING PODS ====="
+                    kubectl get pods -A --field-selector=status.phase!=Running -o wide 2>&1 || true
+                    echo "===== RECENT CONTAINER LOGS (LAST 100 LINES/POD) ====="
+                    for ns in $(kubectl get namespaces -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'); do
+                      for pod in $(kubectl get pods -n "$ns" -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null || true); do
+                        echo "--- ${ns}/${pod} ---"
+                        kubectl logs -n "$ns" "$pod" --all-containers --tail=100 --prefix 2>&1 || true
+                      done
+                    done
+                    echo "===== SNAPSHOT COMPLETE ====="
+                  } > "$tmp"
+                  mv "$tmp" "$out"
+                  echo "Wrote $out"
+              volumeMounts:
+                - name: debug
+                  mountPath: /debug
+          volumes:
+            - name: debug
+              hostPath:
+                path: /var/log/k3s-debug
+                type: DirectoryOrCreate
