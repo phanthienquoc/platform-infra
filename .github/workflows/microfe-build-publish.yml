@@ -3,6 +3,12 @@ name: MicroFE Build & Publish
 
 "on":
   workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - platform/auth-service/**
+      - platform/microfe/**
+      - .github/workflows/microfe-build-publish.yml
 
 permissions:
   contents: read
