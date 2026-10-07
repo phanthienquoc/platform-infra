@@ -63,7 +63,8 @@ mkdir -p "$(dirname "$OUT")"
   sudo /usr/local/sbin/platform-kubectl get events -A --sort-by='.lastTimestamp' 2>/dev/null |
     grep -Ei 'Failed|BackOff|Unhealthy|Pull|Probe|OOM|Forbidden|Unauthorized' |
     tail -n 120 || true
-  echo  echo "### GitOps drift"
+  echo
+  echo "### GitOps drift"
   set +e
   sudo /usr/local/sbin/platform-kubectl diff -k environments/prod >/dev/null 2>&1
   drift_rc=$?
