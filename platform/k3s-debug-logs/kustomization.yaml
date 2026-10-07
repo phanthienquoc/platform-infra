@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: k3s-debug
 resources:
   - namespace.yaml
+  - pvc.yaml
   - rbac.yaml
   - cronjob.yaml
   - cleanup-cronjob.yaml
