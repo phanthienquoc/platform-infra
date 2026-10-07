@@ -11,7 +11,7 @@ spec:
   startingDeadlineSeconds: 300
   jobTemplate:
     spec:
-      activeDeadlineSeconds: 300
+      activeDeadlineSeconds: 600
       ttlSecondsAfterFinished: 900
       template:
         spec:
