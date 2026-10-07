@@ -18,6 +18,9 @@ spec:
           serviceAccountName: k3s-debug-collector
           restartPolicy: Never
           securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
             seccompProfile:
               type: RuntimeDefault
           containers:
@@ -28,7 +31,7 @@ spec:
                 allowPrivilegeEscalation: false
                 capabilities:
                   drop: ["ALL"]
-                runAsUser: 0
+                runAsUser: 1000
               env:
                 - name: TZ
                   value: Asia/Ho_Chi_Minh
@@ -81,6 +84,5 @@ spec:
                   mountPath: /debug
           volumes:
             - name: debug
-              hostPath:
-                path: /var/log/k3s-debug
-                type: DirectoryOrCreate
+              persistentVolumeClaim:
+                claimName: k3s-debug-logs
