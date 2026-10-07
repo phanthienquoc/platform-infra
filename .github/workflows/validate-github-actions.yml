@@ -1,0 +1,64 @@
+name: validate-github-actions
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+      - "scripts/**"
+      - "actionlint.yaml"
+      - ".yamllint.yml"
+      - ".github/workflows/validate-github-actions.yml"
+  push:
+    branches: [master]
+    paths:
+      - ".github/workflows/**"
+      - "scripts/**"
+      - "actionlint.yaml"
+      - ".yamllint.yml"
+      - ".github/workflows/validate-github-actions.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install actionlint
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash | bash
+          echo "$PWD" >> "$GITHUB_PATH"
+
+      - name: Install yamllint
+        run: |
+          python -m pip install --disable-pip-version-check --no-input yamllint
+
+      - name: Install shellcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+      - name: Run actionlint
+        run: actionlint -config-file actionlint.yaml
+
+      - name: Run yamllint
+        run: yamllint --strict .github/workflows
+
+      - name: Run shellcheck on standalone scripts
+        run: |
+          set -euo pipefail
+          mapfile -t scripts < <(find scripts -type f -name '*.sh' -print)
+          if [ "${#scripts[@]}" -eq 0 ]; then
+            echo "No shell scripts found."
+            exit 0
+          fi
+          shellcheck "${scripts[@]}"
+
+      - name: Run workflow contract checks
+        run: python3 scripts/validate-workflow-contracts.py
