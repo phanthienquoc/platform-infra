@@ -22,6 +22,7 @@ name: reconcile-microfe
 
 permissions:
   contents: read
+  packages: read
 
 concurrency:
   group: platform-microfe-reconcile
