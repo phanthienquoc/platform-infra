@@ -170,8 +170,8 @@ PY
       - name: Bootstrap GHCR pull credentials
         if: ${{ env.RECONCILE_MODE == 'apply' }}
         env:
-          GHCR_USERNAME: \${{ github.actor }}
-          GHCR_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           test -n "$GHCR_TOKEN"
