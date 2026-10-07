@@ -40,7 +40,7 @@ jobs:
   reconcile:
     if: ${{ github.ref == 'refs/heads/master' }}
     environment: production
-    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -48,6 +48,21 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
+
+      - name: Configure SSH and K3s tunnel
+        env:
+          KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          printf '%s\n' "$KEY" | tr -d '\r' > ~/.ssh/tce_vps_key
+          chmod 600 ~/.ssh/tce_vps_key
+          ssh -i ~/.ssh/tce_vps_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10 ubuntu@132.226.175.206 'sudo test -r /etc/rancher/k3s/k3s.yaml'
+          ssh -i ~/.ssh/tce_vps_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no ubuntu@132.226.175.206 'sudo cat /etc/rancher/k3s/k3s.yaml' > /tmp/k3s.yaml
+          sed -i 's#https://127.0.0.1:6443#https://127.0.0.1:6443#' /tmp/k3s.yaml
+          chmod 600 /tmp/k3s.yaml
+          ssh -fNT -i ~/.ssh/tce_vps_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -L 6443:127.0.0.1:6443 ubuntu@132.226.175.206
+          echo "KUBECONFIG=/tmp/k3s.yaml" >> "$GITHUB_ENV"
 
       - name: Promote published MicroFE images
         if: ${{ github.event_name == 'repository_dispatch' && env.RECONCILE_MODE == 'apply' }}
@@ -153,3 +168,8 @@ jobs:
         run: |
           set -euo pipefail
           curl --fail --silent --show-error --location --max-time 20 https://app.mrcute.space/ >/dev/null
+
+      - name: Cleanup SSH
+        if: always()
+        run: |
+          rm -f ~/.ssh/tce_vps_key /tmp/k3s.yaml
