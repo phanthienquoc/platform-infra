@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: k3s-debug-cleanup
+  namespace: k3s-debug
+spec:
+  schedule: "15 0 * * *"
+  timeZone: "Asia/Ho_Chi_Minh"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  startingDeadlineSeconds: 1800
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 120
+      ttlSecondsAfterFinished: 600
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: cleanup
+              image: busybox:1.36
+              imagePullPolicy: IfNotPresent
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+                runAsUser: 1000
+              command: ["/bin/sh", "-ec"]
+              args:
+                - |
+                  set -eu
+                  find /debug -type f -name 'k3s-*.log' -mtime +1 -print -delete
+                  echo "Cleanup complete: removed debug logs older than 24h."
+              volumeMounts:
+                - name: debug
+                  mountPath: /debug
+          volumes:
+            - name: debug
+              persistentVolumeClaim:
+                claimName: k3s-debug-logs
