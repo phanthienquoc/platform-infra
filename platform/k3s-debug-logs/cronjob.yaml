@@ -38,41 +38,92 @@ spec:
               command: ["/bin/sh", "-ec"]
               args:
                 - |
-                  set -eu
+                  set -u
                   ts="$(date '+%Y%m%d-%H%M%S')"
                   out="/debug/k3s-${ts}.log"
                   tmp="${out}.tmp"
+
+                  run() {
+                    echo "\$ kubectl \$*"
+                    kubectl "$@" 2>&1 || true
+                    echo
+                  }
+
                   {
                     echo "===== K3S DEBUG SNAPSHOT ${ts} ====="
-                    echo "===== NODES ====="
-                    kubectl get nodes -o wide
-                    echo "===== PODS ====="
-                    kubectl get pods -A -o wide
+                    echo "===== COLLECTION CONTEXT ====="
+                    date -Iseconds 2>&1 || true
+                    run version --short
+                    run cluster-info
+                    run get nodes -o wide
+                    echo "===== NODE CONDITIONS / CAPACITY ====="
+                    for node in $(kubectl get nodes -o name 2>/dev/null | sed 's#node/##'); do
+                      echo "--- node/${node} ---"
+                      run describe node "$node"
+                    done
+                    echo "===== NODE RESOURCE USAGE ====="
+                    run top nodes
+                    echo "===== POD INVENTORY / RESTARTS / IMAGES ====="
+                    run get pods -A -o wide
+                    run get pods -A -o jsonpath='{range .items[*]}{.metadata.namespace}{"\t"}{.metadata.name}{"\t"}{.status.phase}{"\t"}{range .status.containerStatuses[*]}{.name}{"="}{.restartCount}{" "}{end}{"\t"}{range .spec.containers[*]}{.name}{"="}{.image}{" "}{end}{"\n"}{end}'
                     echo "===== DEPLOYMENTS ====="
-                    kubectl get deployments -A -o wide
+                    run get deployments -A -o wide
+                    run get deployments -A -o yaml
                     echo "===== STATEFULSETS ====="
-                    kubectl get statefulsets -A -o wide
+                    run get statefulsets -A -o wide
                     echo "===== DAEMONSETS ====="
-                    kubectl get daemonsets -A -o wide
-                    echo "===== SERVICES ====="
-                    kubectl get services -A -o wide
+                    run get daemonsets -A -o wide
+                    echo "===== SERVICES / ENDPOINTS ====="
+                    run get services -A -o wide
+                    run get endpoints,endpointslices -A -o wide
                     echo "===== INGRESSES ====="
-                    kubectl get ingress -A -o wide
+                    run get ingress -A -o wide
+                    run get ingress -A -o yaml
                     echo "===== PV/PVC ====="
-                    kubectl get pv,pvc -A -o wide
+                    run get pv,pvc -A -o wide
+                    run get pvc -A -o yaml
                     echo "===== JOBS/CRONJOBS ====="
-                    kubectl get jobs,cronjobs -A -o wide
+                    run get jobs,cronjobs -A -o wide
+                    run get jobs,cronjobs -A -o yaml
                     echo "===== EVENTS (LATEST 500) ====="
-                    kubectl get events -A --sort-by='.lastTimestamp' | tail -n 500
+                    run get events -A --sort-by='.lastTimestamp'
                     echo "===== CERT-MANAGER ====="
-                    kubectl get certificates,issuers,clusterissuers -A 2>&1 || true
-                    echo "===== NON-RUNNING PODS ====="
-                    kubectl get pods -A --field-selector=status.phase!=Running -o wide 2>&1 || true
-                    echo "===== RECENT CONTAINER LOGS (LAST 100 LINES/POD) ====="
-                    for ns in $(kubectl get namespaces -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'); do
+                    run get certificates,certificaterequests,issuers,clusterissuers -A -o wide
+                    run get certificates,certificaterequests,issuers,clusterissuers -A -o yaml
+                    echo "===== RESOURCE USAGE ====="
+                    run top pods -A
+                    echo "===== NON-HEALTHY PODS: DESCRIBE ====="
+                    for ns in $(kubectl get namespaces -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null); do
+                      for pod in $(kubectl get pods -n "$ns" -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null || true); do
+                        phase="$(kubectl get pod -n "$ns" "$pod" -o jsonpath='{.status.phase}' 2>/dev/null || true)"
+                        restarts="$(kubectl get pod -n "$ns" "$pod" -o jsonpath='{range .status.containerStatuses[*]}{.restartCount}{" "}{end}' 2>/dev/null || true)"
+                        if [ "$phase" != "Running" ] || echo "$restarts" | grep -Eq '[1-9]'; then
+                          echo "--- ${ns}/${pod} ---"
+                          run describe pod -n "$ns" "$pod"
+                        fi
+                      done
+                    done
+                    echo "===== NON-HEALTHY WORKLOADS: ROLLOUT STATUS ====="
+                    for ns in $(kubectl get namespaces -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null); do
+                      for deploy in $(kubectl get deploy -n "$ns" -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null || true); do
+                        run rollout status deployment/"$deploy" -n "$ns" --timeout=2s
+                      done
+                    done
+                    echo "===== CONTAINER LOGS (CURRENT, LAST 100) ====="
+                    for ns in $(kubectl get namespaces -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null); do
                       for pod in $(kubectl get pods -n "$ns" -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null || true); do
                         echo "--- ${ns}/${pod} ---"
-                        kubectl logs -n "$ns" "$pod" --all-containers --tail=100 --prefix 2>&1 || true
+                        run logs -n "$ns" "$pod" --all-containers --tail=100 --prefix
+                      done
+                    done
+                    echo "===== CONTAINER LOGS (PREVIOUS, RESTARTED CONTAINERS) ====="
+                    for ns in $(kubectl get namespaces -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null); do
+                      for pod in $(kubectl get pods -n "$ns" -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null); do
+                        restarts="$(kubectl get pod -n "$ns" "$pod" -o jsonpath='{range .status.containerStatuses[*]}{.restartCount}{" "}{end}' 2>/dev/null || true)"
+                        if echo "$restarts" | grep -Eq '[1-9]'; then
+                          echo "--- ${ns}/${pod} ---"
+                          run logs -n "$ns" "$pod" --all-containers --previous --tail=100 --prefix
+                        fi
                       done
                     done
                     echo "===== SNAPSHOT COMPLETE ====="
