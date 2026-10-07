@@ -57,8 +57,13 @@ mkdir -p "$(dirname "$OUT")"
   echo
   echo "### Pod failure evidence"
   sudo /usr/local/sbin/platform-kubectl get pods -A -o jsonpath='{range .items[*]}{.metadata.namespace}{"\t"}{.metadata.name}{"\t"}{range .status.containerStatuses[*]}{.state.waiting.reason}{"\t"}{.state.waiting.message}{"\n"}{end}{end}' 2>/dev/null |
-    grep -E   echo
-  echo "### GitOps drift"
+    grep -E $'\t(ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError|CreateContainerError|RunContainerError)\t' || true
+  echo
+  echo "### Recent failure events"
+  sudo /usr/local/sbin/platform-kubectl get events -A --sort-by='.lastTimestamp' 2>/dev/null |
+    grep -Ei 'Failed|BackOff|Unhealthy|Pull|Probe|OOM|Forbidden|Unauthorized' |
+    tail -n 120 || true
+  echo  echo "### GitOps drift"
   set +e
   sudo /usr/local/sbin/platform-kubectl diff -k environments/prod >/dev/null 2>&1
   drift_rc=$?
