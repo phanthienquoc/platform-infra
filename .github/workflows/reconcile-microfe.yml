@@ -2,10 +2,6 @@ name: reconcile-microfe
 
 "on":
   workflow_dispatch:
-  push:
-    branches: [master]
-    paths:
-      - .github/workflows/reconcile-microfe.yml
     inputs:
       mode:
         description: "Reconciliation mode"
@@ -20,6 +16,10 @@ name: reconcile-microfe
         required: true
         default: false
         type: boolean
+  push:
+    branches: [master]
+    paths:
+      - .github/workflows/reconcile-microfe.yml
   repository_dispatch:
     types:
       - microfe-images-published
