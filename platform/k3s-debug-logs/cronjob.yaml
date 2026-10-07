@@ -68,7 +68,6 @@ spec:
                     run get pods -A -o jsonpath='{range .items[*]}{.metadata.namespace}{"\t"}{.metadata.name}{"\t"}{.status.phase}{"\t"}{range .status.containerStatuses[*]}{.name}{"="}{.restartCount}{" "}{end}{"\t"}{range .spec.containers[*]}{.name}{"="}{.image}{" "}{end}{"\n"}{end}'
                     echo "===== DEPLOYMENTS ====="
                     run get deployments -A -o wide
-                    run get deployments -A -o yaml
                     echo "===== STATEFULSETS ====="
                     run get statefulsets -A -o wide
                     echo "===== DAEMONSETS ====="
@@ -81,12 +80,12 @@ spec:
                     run get ingress -A -o yaml
                     echo "===== PV/PVC ====="
                     run get pv,pvc -A -o wide
-                    run get pvc -A -o yaml
                     echo "===== JOBS/CRONJOBS ====="
                     run get jobs,cronjobs -A -o wide
-                    run get jobs,cronjobs -A -o yaml
                     echo "===== EVENTS (LATEST 500) ====="
-                    run get events -A --sort-by='.lastTimestamp'
+                    echo "\$ kubectl get events -A --sort-by=.lastTimestamp | tail -n 500"
+                    kubectl get events -A --sort-by='.lastTimestamp' 2>&1 | tail -n 500 || true
+                    echo
                     echo "===== CERT-MANAGER ====="
                     run get certificates,certificaterequests,issuers,clusterissuers -A -o wide
                     run get certificates,certificaterequests,issuers,clusterissuers -A -o yaml
