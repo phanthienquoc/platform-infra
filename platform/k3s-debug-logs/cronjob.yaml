@@ -39,7 +39,7 @@ spec:
               args:
                 - |
                   set -eu
-                  ts="$ts"
+                  ts="$(date '+%Y%m%d-%H%M%S')"
                   out="/debug/k3s-${ts}.log"
                   tmp="${out}.tmp"
                   {
