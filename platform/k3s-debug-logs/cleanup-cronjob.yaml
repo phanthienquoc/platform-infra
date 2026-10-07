@@ -5,6 +5,7 @@ metadata:
   namespace: k3s-debug
 spec:
   schedule: "15 0 * * *"
+  timeZone: "Asia/Ho_Chi_Minh"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 2
@@ -24,7 +25,7 @@ spec:
                 allowPrivilegeEscalation: false
                 capabilities:
                   drop: ["ALL"]
-                runAsUser: 0
+                runAsUser: 1000
               command: ["/bin/sh", "-ec"]
               args:
                 - |
@@ -36,6 +37,5 @@ spec:
                   mountPath: /debug
           volumes:
             - name: debug
-              hostPath:
-                path: /var/log/k3s-debug
-                type: DirectoryOrCreate
+              persistentVolumeClaim:
+                claimName: k3s-debug-logs
