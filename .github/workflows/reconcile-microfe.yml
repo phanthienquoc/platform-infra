@@ -132,6 +132,14 @@ jobs:
       - name: Reconcile MicroFE
         run: |
           set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" = "push" ] && [ "$RECONCILE_MODE" = "apply" ] && [ "$ALLOW_IMAGE_CHANGES" != "true" ]; then
+            echo "Bootstrap path: GHCR credentials changed; restart workloads without changing images."
+            kubectl -n microfe-platform rollout restart deployment/microfe-auth deployment/microfe-shell deployment/microfe-ws
+            kubectl -n microfe-platform rollout status deployment/microfe-auth --timeout=180s
+            kubectl -n microfe-platform rollout status deployment/microfe-shell --timeout=180s
+            kubectl -n microfe-platform rollout status deployment/microfe-ws --timeout=180s
+            exit 0
+          fi
           if [ "$RECONCILE_MODE" = "apply" ] && [ "$ALLOW_IMAGE_CHANGES" != "true" ]; then
             echo "::error::Apply blocked: ALLOW_IMAGE_CHANGES is false."
             echo "::error::Use the image-promotion path or explicitly authorize a deliberate image change."
