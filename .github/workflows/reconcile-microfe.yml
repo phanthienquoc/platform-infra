@@ -2,6 +2,10 @@ name: reconcile-microfe
 
 "on":
   workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - .github/workflows/reconcile-microfe.yml
     inputs:
       mode:
         description: "Reconciliation mode"
