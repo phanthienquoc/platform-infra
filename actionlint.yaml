@@ -1,0 +1,11 @@
+# actionlint configuration
+# Keep GitHub Actions validation strict; runner-local commands are allowed to call
+# platform-specific binaries because they are validated separately by shellcheck.
+self-hosted-runner:
+  labels:
+    - self-hosted
+    - linux
+    - arm64
+    - platform-infra
+    - k3s
+    - vps

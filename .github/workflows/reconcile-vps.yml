@@ -29,6 +29,9 @@ name: reconcile-vps
   repository_dispatch:
     types:
       - gitops-promoted-ready
+      - microfe-images-published
+  schedule:
+    - cron: "*/15 * * * *"
   push:
     branches: [master]
     paths:
