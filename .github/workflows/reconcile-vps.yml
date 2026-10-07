@@ -168,7 +168,7 @@ PY
           sudo /usr/local/sbin/platform-kubectl version
 
       - name: Bootstrap GHCR pull credentials
-        if: \${{ env.RECONCILE_MODE == 'apply' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' }}
         env:
           GHCR_USERNAME: \${{ github.actor }}
           GHCR_TOKEN: \${{ secrets.GITHUB_TOKEN }}
@@ -189,14 +189,23 @@ PY
           echo "GHCR pull credentials reconciled for private-image namespaces."
 
       - name: Restart workloads blocked on image pulls
-        if: \${{ env.RECONCILE_MODE == 'apply' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' }}
         run: |
           set -euo pipefail
           restart_if_blocked() {
             local namespace="$1"
             shift
             local blocked
-            blocked="$(sudo /usr/local/sbin/platform-kubectl -n "$namespace" get pods -o jsonpath='{range .items[*]}{range .status.containerStatuses[*]}{.state.waiting.reason}{"\n"}{end}{end}' 2>/dev/null | grep -E '^(ImagePullBackOff|ErrImagePull)
+            blocked="$(sudo /usr/local/sbin/platform-kubectl -n "$namespace" get pods -o jsonpath='{range .items[*]}{range .status.containerStatuses[*]}{.state.waiting.reason}{"\\n"}{end}{end}' 2>/dev/null | grep -E '^(ImagePullBackOff|ErrImagePull)$' || true)"
+            if [ -n "$blocked" ]; then
+              echo "Image pull failures detected in $namespace; restarting: $*"
+              sudo /usr/local/sbin/platform-kubectl -n "$namespace" rollout restart "$@"
+            else
+              echo "No image-pull failures in $namespace."
+            fi
+          }
+          restart_if_blocked microfe-platform deployment/microfe-auth deployment/microfe-shell deployment/microfe-ws
+          restart_if_blocked stock-prod deployment/stock-admin deployment/stock-backend
       - name: Validate TCE release pairing
         if: ${{ env.TARGET_APP == 'all' || env.TARGET_APP == 'tce-dashboard' }}
         run: |
