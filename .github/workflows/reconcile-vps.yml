@@ -40,6 +40,7 @@ name: reconcile-vps
       - environments/prod/kustomization.yaml
       - platform/microfe/**
       - scripts/reconcile-vps.sh
+      - scripts/bootstrap-runner.sh
 
 permissions:
   contents: read
