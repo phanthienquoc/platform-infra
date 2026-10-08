@@ -21,7 +21,7 @@ test -n "$desired_service"
 live_json="$(mktemp)"
 trap 'rm -f "$live_json"' EXIT
 
-sudo /usr/local/sbin/platform-kubectl get deployments -n tce-prod -o json > "$live_json"
+sudo /usr/local/sbin/platform-kubectl get deployments -n tce-prod -o json | tee "$live_json" >/dev/null
 
 live_web="$(jq -r '.items[] | select(.metadata.name=="tce-frontend") | .spec.template.spec.containers[] | select(.name=="frontend") | .image' "$live_json")"
 live_service="$(jq -r '.items[] | select(.metadata.name=="tce-service") | .spec.template.spec.containers[] | select(.name=="service") | .image' "$live_json")"
