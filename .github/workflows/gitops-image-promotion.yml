@@ -164,6 +164,7 @@ jobs:
           set -euo pipefail
           FILE="apps/media-generation/overlays/prod/kustomization.yaml"
           for attempt in $(seq 1 60); do
+            echo "Waiting for paired GitOps release: attempt $attempt/60"
             git fetch --no-tags origin master
             FRONTEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation\/frontend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
             BACKEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation\/backend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
@@ -486,7 +487,7 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             "/repos/${GITHUB_REPOSITORY}/dispatches" \
             -f event_type="gitops-promoted-ready" \
-            -f client_payload[app]="$APP" \
-            -f client_payload[component]="$COMPONENT" \
-            -f client_payload[release]="$RELEASE"
+            -f "client_payload[app]=$APP" \
+            -f "client_payload[component]=$COMPONENT" \
+            -f "client_payload[release]=$RELEASE"
           echo "Triggered VPS reconciliation for $APP release $RELEASE."
