@@ -71,6 +71,23 @@ case "${1:-}" in
         -p '{"imagePullSecrets":[{"name":"ghcr-pull"}]}'
     done
     ;;
+  restart-blocked-image-pulls)
+    [[ "$#" -eq 1 ]] || exit 2
+    restart_if_blocked() {
+      local namespace="$1"
+      shift
+      local blocked
+      blocked="$("${KUBECTL[@]}" -n "$namespace" get pods -o jsonpath='{range .items[*]}{range .status.containerStatuses[*]}{.state.waiting.reason}{"\\n"}{end}{end}' 2>/dev/null | grep -E '^(ImagePullBackOff|ErrImagePull)$' || true)"
+      if [[ -n "$blocked" ]]; then
+        echo "Image pull failures detected in $namespace; restarting fixed production workloads."
+        "${KUBECTL[@]}" -n "$namespace" rollout restart "$@"
+      else
+        echo "No image-pull failures in $namespace."
+      fi
+    }
+    restart_if_blocked microfe-platform deployment/microfe-auth deployment/microfe-shell deployment/microfe-ws
+    restart_if_blocked stock-prod deployment/stock-admin deployment/stock-backend
+    ;;
   logs)
     if [[ "${2:-}" == "deployment/media-generation" && "${3:-}" == "-n" && "${4:-}" == "media-prod" && ( "${5:-}" == "--tail=200" || "${5:-}" == "--previous" ) ]]; then
       if [[ "${5:-}" == "--previous" ]]; then exec "${KUBECTL[@]}" logs deployment/media-generation -n media-prod --previous --tail=200; fi
