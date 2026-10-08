@@ -18,24 +18,17 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 reconcile = read("reconcile-vps.yml")
-microfe = read("microfe-build-publish.yml")
+microfe_reconcile = read("reconcile-microfe.yml")
 
-# MicroFE publisher emits this repository_dispatch event, and reconcile must consume it.
-publisher_event = re.search(r'["\']?event_type["\']?\s*:\s*["\']([^"\']+)["\']', microfe)
-if not publisher_event:
-    fail("microfe-build-publish.yml does not declare a repository_dispatch event_type")
+# MicroFE is published by TCE-dashboard and consumed here through repository_dispatch.
+if "microfe-images-published" not in microfe_reconcile:
+    fail("reconcile-microfe.yml must consume microfe-images-published.")
+for field in ("auth_digest", "shell_digest", "ws_digest"):
+    if field not in microfe_reconcile:
+        fail(f"MicroFE reconciler is missing expected payload field: {field}")
 
-published_event = publisher_event.group(1)
-if published_event not in reconcile:
-    fail(
-        "Workflow contract mismatch: microfe-build-publish.yml emits "
-        f"{published_event!r}, but reconcile-vps.yml does not listen for it."
-    )
-
-# The repository_dispatch consumer must use the payload fields the producer promises.
-for field in ("commit", "auth_digest", "shell_digest", "ws_digest"):
-    if field not in microfe:
-        fail(f"MicroFE publisher payload is missing expected field: {field}")
+if "microfe-images-published" in reconcile:
+    fail("reconcile-vps.yml must not consume microfe-images-published; reconcile-microfe.yml owns that event.")
 
 # Scheduled reconciliation logic must have a matching schedule trigger.
 if "github.event_name == 'schedule'" in reconcile and not re.search(
