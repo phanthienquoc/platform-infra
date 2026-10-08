@@ -50,32 +50,26 @@ case "${1:-}" in
     exit 0
     ;;
   reconcile-ghcr-pull)
-    [[ "$#" -eq 3 && "${2:-}" == "-n" ]] || {
-      echo "platform-kubectl: reconcile-ghcr-pull requires exactly -n <approved-namespace>" >&2
+    [[ "$#" -eq 1 ]] || {
+      echo "platform-kubectl: reconcile-ghcr-pull takes no arguments" >&2
       exit 2
     }
-    namespace="$3"
-    case "$namespace" in
-      microfe-platform|stock-prod) ;;
-      *)
-        echo "platform-kubectl: GHCR reconciliation is not allowed for namespace $namespace" >&2
-        exit 2
-        ;;
-    esac
     IFS= read -r ghcr_username || true
     IFS= read -r ghcr_token || true
     [[ -n "$ghcr_username" && -n "$ghcr_token" ]] || {
       echo "platform-kubectl: GHCR credentials must be provided on stdin" >&2
       exit 2
     }
-    "${KUBECTL[@]}" -n "$namespace" create secret docker-registry ghcr-pull \
-      --docker-server=ghcr.io \
-      --docker-username="$ghcr_username" \
-      --docker-password="$ghcr_token" \
-      --dry-run=client -o yaml | "${KUBECTL[@]}" apply -f -
-    "${KUBECTL[@]}" -n "$namespace" patch serviceaccount default \
-      --type="merge" \
-      -p '{"imagePullSecrets":[{"name":"ghcr-pull"}]}'
+    for namespace in microfe-platform stock-prod; do
+      "${KUBECTL[@]}" -n "$namespace" create secret docker-registry ghcr-pull \
+        --docker-server=ghcr.io \
+        --docker-username="$ghcr_username" \
+        --docker-password="$ghcr_token" \
+        --dry-run=client -o yaml | "${KUBECTL[@]}" apply -f -
+      "${KUBECTL[@]}" -n "$namespace" patch serviceaccount default \
+        --type="merge" \
+        -p '{"imagePullSecrets":[{"name":"ghcr-pull"}]}'
+    done
     ;;
   logs)
     if [[ "${2:-}" == "deployment/media-generation" && "${3:-}" == "-n" && "${4:-}" == "media-prod" && ( "${5:-}" == "--tail=200" || "${5:-}" == "--previous" ) ]]; then

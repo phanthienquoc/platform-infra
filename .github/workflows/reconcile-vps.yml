@@ -116,10 +116,8 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$GHCR_TOKEN"
-          for namespace in microfe-platform stock-prod; do
-            printf "%s\n%s\n" "$GHCR_USERNAME" "$GHCR_TOKEN" |
-              sudo /usr/local/sbin/platform-kubectl reconcile-ghcr-pull -n "$namespace"
-          done
+          printf "%s\n%s\n" "$GHCR_USERNAME" "$GHCR_TOKEN" |
+            sudo /usr/local/sbin/platform-kubectl reconcile-ghcr-pull
           echo "GHCR pull credentials reconciled for private-image namespaces."
       - name: Restart workloads blocked on image pulls
         if: ${{ env.RECONCILE_MODE == 'apply' }}
