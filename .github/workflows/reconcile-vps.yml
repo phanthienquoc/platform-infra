@@ -29,8 +29,7 @@ name: reconcile-vps
   repository_dispatch:
     types:
       - gitops-promoted-ready
-      - microfe-images-published
-  push:
+      - microfe-images-published  push:
     branches: [master]
     paths:
       - .github/workflows/reconcile-vps.yml
@@ -111,23 +110,14 @@ jobs:
             local meta="$4"
             docker buildx build --platform linux/arm64 --provenance=true --sbom=true --metadata-file "$meta" --push --tag "$image:$tag" --file "$dockerfile" "$context"
             python3 - "$meta" "$image" <<'PY'
-          
-
           import json, pathlib, sys
-
           meta, image = sys.argv[1:]
-
           digest = json.loads(pathlib.Path(meta).read_text()).get("containerimage.digest")
-
           if not isinstance(digest, str) or not digest.startswith("sha256:"):
-
-              raise SystemExit(f"Missing digest for {image}")
-
+          raise SystemExit(f"Missing digest for {image}")
           print(digest)
-
           PY
-
-                    }
+          }
 
           auth_digest="$(build_image ghcr.io/$owner/microfe-auth platform/auth-service/Dockerfile . /tmp/microfe-build-meta/auth.json | tail -n1)"
           shell_digest="$(build_image ghcr.io/$owner/microfe-shell platform/microfe/shell/Dockerfile . /tmp/microfe-build-meta/shell.json | tail -n1)"
@@ -138,17 +128,17 @@ jobs:
           done
 
           cat >> environments/prod/kustomization.yaml <<EOF
-
+          
           images:
           - name: ghcr.io/phanthienquoc/microfe-auth
-            newName: ghcr.io/phanthienquoc/microfe-auth
-            digest: $auth_digest
+          newName: ghcr.io/phanthienquoc/microfe-auth
+          digest: $auth_digest
           - name: ghcr.io/phanthienquoc/microfe-shell
-            newName: ghcr.io/phanthienquoc/microfe-shell
-            digest: $shell_digest
+          newName: ghcr.io/phanthienquoc/microfe-shell
+          digest: $shell_digest
           - name: ghcr.io/phanthienquoc/microfe-ws
-            newName: ghcr.io/phanthienquoc/microfe-ws
-            digest: $ws_digest
+          newName: ghcr.io/phanthienquoc/microfe-ws
+          digest: $ws_digest
           EOF
 
           echo "MicroFE immutable image promotion prepared for this reconciliation."
