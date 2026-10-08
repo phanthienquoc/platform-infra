@@ -128,6 +128,7 @@ case "${1:-}" in
     exec "${KUBECTL[@]}" describe deployment/media-generation -n media-prod
     ;;
   rollout)
+    [[ "${2:-}" == "status" && "${3:-}" == "deployment/stock-admin" && "${4:-}" == "-n" && "${5:-}" == "stock-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/stock-admin -n stock-prod --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/stock-backend" && "${4:-}" == "-n" && "${5:-}" == "stock-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/stock-backend -n stock-prod --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/stock-frontend" && "${4:-}" == "-n" && "${5:-}" == "stock-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/stock-frontend -n stock-prod --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/tce-service" && "${4:-}" == "-n" && "${5:-}" == "tce-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/tce-service -n tce-prod --timeout=180s
@@ -147,7 +148,7 @@ echo "platform-kubectl: command is not allowlisted" >&2
 exit 2
 EOF
 chmod 0755 /usr/local/sbin/platform-kubectl
-echo "platform-kubectl policy: rollout-status-v2-ghcr-reconcile"
+echo "platform-kubectl policy: rollout-status-v3-ghcr-reconcile"
 cat >/etc/sudoers.d/platform-infra-runner <<EOF
 $RUNNER_USER ALL=(root) NOPASSWD: /usr/local/sbin/platform-kubectl *
 EOF
