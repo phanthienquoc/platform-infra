@@ -1,3 +1,4 @@
+# yamllint disable rule:line-length
 name: Bootstrap self-hosted runner
 
 on:
@@ -52,10 +53,10 @@ jobs:
           fi
 
           token="$(echo "$body" | jq -r '.token')"
-          test -n "$token" && test "$token" != "null" || {
+          if [[ -z "$token" || "$token" == "null" ]]; then
             echo "GitHub returned no runner registration token." >&2
             exit 1
-          }
+          fi
 
           printf 'token=%s\n' "$token" >> "$GITHUB_OUTPUT"
 
@@ -242,3 +243,4 @@ jobs:
             rm -f /tmp/platform-kubectl-diff-check /tmp/platform-kubectl-diff-error
             echo "Runner service and allowlisted reconciliation capability verified."
           '
+# yamllint enable rule:line-length

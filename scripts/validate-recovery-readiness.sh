@@ -32,9 +32,7 @@ for target in \
   "deployment/stock-admin stock-prod" \
   "deployment/tce-service tce-prod" \
   "deployment/tce-frontend tce-prod"; do
-  set -- $target
-  resource="$1"
-  namespace="$2"
+  read -r resource namespace <<< "$target"
   echo "-- $namespace/$resource --"
   run_kubectl rollout history "$resource" -n "$namespace" >/dev/null
   run_kubectl get "$resource" -n "$namespace" -o jsonpath='{.metadata.generation}{"\t"}{.status.observedGeneration}{"\n"}'

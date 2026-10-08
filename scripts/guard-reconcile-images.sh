@@ -19,7 +19,7 @@ diff_output="$(mktemp)"
 trap 'rm -f "$diff_output"' EXIT
 
 set +e
-sudo /usr/local/sbin/platform-kubectl diff -k environments/prod >"$diff_output"
+sudo /usr/local/sbin/platform-kubectl diff -k environments/prod | tee "$diff_output" >/dev/null
 rc=$?
 set -e
 

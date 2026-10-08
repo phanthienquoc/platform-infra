@@ -5,9 +5,9 @@ APP=${2:?app}
 VERSION=${3:-unknown}
 STATUS=${4:-}
 PORT=18080
-cleanup(){ [[ -n "${PF_PID:-}" ]] && kill "$PF_PID" >/dev/null 2>&1 || true; }
+cleanup(){ if [[ -n "${PF_PID:-}" ]]; then kill "$PF_PID" >/dev/null 2>&1 || true; fi; }
 trap cleanup EXIT
-sudo /usr/local/sbin/platform-kubectl -n microfe-platform port-forward svc/microfe-ws "$PORT:8080" >/tmp/microfe-ws-port-forward.log 2>&1 &
+sudo sh -c "/usr/local/sbin/platform-kubectl -n microfe-platform port-forward svc/microfe-ws ${PORT}:8080 >/tmp/microfe-ws-port-forward.log 2>&1" &
 PF_PID=$!
 for _ in {1..20}; do
   curl -fsS "http://127.0.0.1:$PORT/health" >/dev/null 2>&1 && break

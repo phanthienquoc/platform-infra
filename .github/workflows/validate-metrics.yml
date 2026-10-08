@@ -17,7 +17,7 @@ jobs:
     runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -40,8 +40,8 @@ jobs:
           {
             echo "## Metrics/HPA validation"
             echo
-            echo "- Ref: \\`$GITHUB_REF_NAME\\`"
-            echo "- Commit: \\`${GITHUB_SHA::12}\\`"
+            echo "- Ref: \`$GITHUB_REF_NAME\`"
+            echo "- Commit: \`${GITHUB_SHA::12}\`"
             echo "- metrics.k8s.io API: reachable"
             echo "- HPA resource prerequisites: validated"
             echo "- Production mutation: none"

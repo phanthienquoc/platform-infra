@@ -10,6 +10,7 @@ mkdir -p "$(dirname "$OUT")"
   echo "## Host"
   echo "uname: $(uname -a)"
   echo "arch: $(uname -m)"
+  # shellcheck disable=SC1091
   . /etc/os-release && echo "os: $PRETTY_NAME"
   echo "hostname: $(hostname)"
   echo
@@ -34,7 +35,7 @@ mkdir -p "$(dirname "$OUT")"
   echo
   echo "## Runner"
   id github-runner 2>/dev/null || true
-  ps -eo user,pid,pcpu,pmem,etime,cmd | grep -E "[R]unner.Listener|[R]unner.Worker" | head -20 || true
+  pgrep -af "Runner.Listener|Runner.Worker" | head -20 || true
   systemctl list-units --type=service --all | grep -Ei "actions.runner|github" || true
   echo "runner_service: $(systemctl is-active actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service 2>/dev/null || true)"
   echo "runner_service_enabled: $(systemctl is-enabled actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service 2>/dev/null || true)"

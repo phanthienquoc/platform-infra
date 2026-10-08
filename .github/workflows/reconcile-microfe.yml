@@ -1,3 +1,4 @@
+# yamllint disable rule:line-length
 name: reconcile-microfe
 
 "on":
@@ -44,7 +45,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -187,3 +188,4 @@ jobs:
         if: always()
         run: |
           rm -f ~/.ssh/tce_vps_key /tmp/k3s.yaml
+# yamllint enable rule:line-length
