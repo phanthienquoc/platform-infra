@@ -23,7 +23,7 @@ DOWNLOAD_URL="$(curl -fsSL https://api.github.com/repos/actions/runner/releases/
 [[ -n "$DOWNLOAD_URL" ]] || { echo "Unable to resolve ARM64 runner download URL."; exit 1; }
 
 if [[ ! -f "$RUNNER_DIR/.runner" ]]; then
-  rm -rf "$RUNNER_DIR"/*
+  rm -rf "${RUNNER_DIR:?}"/*
   tmp="$(mktemp)"
   trap 'rm -f "$tmp"' EXIT
   curl -fsSL "$DOWNLOAD_URL" -o "$tmp"
