@@ -129,7 +129,7 @@ jobs:
           done
 
           cat >> environments/prod/kustomization.yaml <<EOF
-          
+
           images:
           - name: ghcr.io/phanthienquoc/microfe-auth
             newName: ghcr.io/phanthienquoc/microfe-auth
