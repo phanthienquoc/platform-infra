@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Media migration guard: preserve immutable image replacement protection.
+# Only match actual container image fields; ignore image strings inside annotations such as last-applied-configuration.
 set -euo pipefail
 
 MODE="${1:-check}"
@@ -33,7 +34,7 @@ if [[ "$rc" -eq 0 ]]; then
   exit 0
 fi
 
-removed_images="$(grep -E '^-([[:space:]]+)image:' "$diff_output" || true)"
+removed_images="$(grep -E '^-[[:space:]]{10,}image:' "$diff_output" || true)"
 
 if [[ -n "$removed_images" ]]; then
   legacy_media_image="$(printf '%s\n' "$removed_images" | grep -E '^-[[:space:]]+image:[[:space:]]+ghcr\.io/phanthienquoc/media-generation:[0-9a-f]{7,64}$' || true)"
