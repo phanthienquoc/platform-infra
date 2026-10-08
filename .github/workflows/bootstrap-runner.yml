@@ -1,3 +1,4 @@
+# yamllint disable rule:line-length
 name: Bootstrap self-hosted runner
 
 on:
@@ -231,9 +232,7 @@ jobs:
             cd /opt/actions-runner/_work/platform-infra/platform-infra
             sudo /usr/local/sbin/platform-kubectl apply -f platform/microfe/namespace.yaml >/tmp/platform-microfe-namespace-bootstrap
             set +e
-            sudo /usr/local/sbin/platform-kubectl diff -k environments/prod >/tmp/platform-kubectl-diff-check \
-                                                                                                              \
-                                                                                                             2>/tmp/platform-kubectl-diff-error
+            sudo /usr/local/sbin/platform-kubectl diff -k environments/prod >/tmp/platform-kubectl-diff-check 2>/tmp/platform-kubectl-diff-error
             rc=$?
             set -e
             if [[ "$rc" -gt 1 ]]; then
@@ -244,3 +243,4 @@ jobs:
             rm -f /tmp/platform-kubectl-diff-check /tmp/platform-kubectl-diff-error
             echo "Runner service and allowlisted reconciliation capability verified."
           '
+# yamllint enable rule:line-length
