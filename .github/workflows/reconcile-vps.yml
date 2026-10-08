@@ -41,6 +41,7 @@ name: reconcile-vps
       - platform/microfe/**
       - scripts/reconcile-vps.sh
       - scripts/bootstrap-runner.sh
+      - scripts/guard-reconcile-images.sh
 
 permissions:
   contents: read
