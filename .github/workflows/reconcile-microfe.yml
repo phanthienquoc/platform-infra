@@ -126,8 +126,14 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$GHCR_TOKEN"
-          kubectl -n microfe-platform create secret docker-registry ghcr-pull             --docker-server=ghcr.io             --docker-username="$GHCR_USERNAME"             --docker-password="$GHCR_TOKEN"             --dry-run=client -o yaml | kubectl apply -f -
-          kubectl -n microfe-platform patch serviceaccount default             --type='merge'             -p '{"imagePullSecrets":[{"name":"ghcr-pull"}]}'
+          kubectl -n microfe-platform create secret docker-registry ghcr-pull \
+            --docker-server=ghcr.io \
+            --docker-username="$GHCR_USERNAME" \
+            --docker-password="$GHCR_TOKEN" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          kubectl -n microfe-platform patch serviceaccount default \
+            --type='merge' \
+            -p '{"imagePullSecrets":[{"name":"ghcr-pull"}]}'
 
       - name: Reconcile MicroFE
         run: |
