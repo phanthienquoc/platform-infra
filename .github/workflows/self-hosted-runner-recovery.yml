@@ -1,0 +1,86 @@
+name: self-hosted-runner-recovery
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - .github/workflows/self-hosted-runner-recovery.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platform-self-hosted-runner-recovery
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - name: Recover platform self-hosted runner
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "${VPS_HOST:-}"
+          test -n "${VPS_USER:-}"
+          test -n "${VPS_SSH_PRIVATE_KEY:-}"
+
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > "$HOME/.ssh/platform_vps"
+          chmod 600 "$HOME/.ssh/platform_vps"
+          ssh-keyscan -H "$VPS_HOST" >> "$HOME/.ssh/known_hosts"
+
+          ssh -i "$HOME/.ssh/platform_vps" -o BatchMode=yes "$VPS_USER@$VPS_HOST" 'bash -se' <<'REMOTE'
+          set -euo pipefail
+
+          mapfile -t runner_units < <(
+            sudo systemctl list-units --type=service --all 'actions.runner.*' --no-legend --plain |
+              awk '{print $1}' |
+              sed '/^$/d'
+          )
+
+          if [ "${#runner_units[@]}" -eq 0 ]; then
+            echo "::error::No actions.runner.* systemd service found on VPS"
+            exit 1
+          fi
+
+          for unit in "${runner_units[@]}"; do
+            echo "Restarting $unit"
+            sudo systemctl restart "$unit"
+          done
+
+          sleep 5
+
+          failed=0
+          for unit in "${runner_units[@]}"; do
+            if sudo systemctl is-active --quiet "$unit"; then
+              echo "active: $unit"
+            else
+              echo "::error::inactive: $unit"
+              failed=1
+            fi
+          done
+
+          if [ "$failed" -ne 0 ]; then
+            sudo systemctl --no-pager --full status "${runner_units[@]}" || true
+            exit 1
+          fi
+
+          echo "Self-hosted runner service recovery completed."
+          REMOTE
+
+      - name: Publish recovery summary
+        run: |
+          {
+            echo "## Self-hosted runner recovery"
+            echo
+            echo "- VPS runner services were restarted through the production SSH path."
+            echo "- Deployment workflows remain pipeline-triggered."
+            echo "- No application or database mutation was performed by this recovery job."
+          } >> "$GITHUB_STEP_SUMMARY"

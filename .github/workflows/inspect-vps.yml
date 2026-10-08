@@ -59,7 +59,10 @@ jobs:
           grep -q "^### Pod failure evidence$" debug/vps-latest.md
           grep -q "^### Recent failure events$" debug/vps-latest.md
           grep -q "^### GitOps drift$" debug/vps-latest.md
-          ! grep -q "^echo  echo" debug/vps-latest.md
+          if grep -q "^echo  echo" debug/vps-latest.md; then
+            echo "::error::Inspection output contains duplicated echo prefix."
+            exit 1
+          fi
           echo "Inspection output structure validated."
 
       - name: Create inspection PR
