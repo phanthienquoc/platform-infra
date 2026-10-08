@@ -64,9 +64,9 @@ jobs:
               -H "Accept: application/vnd.github+json" \
               "/repos/${GITHUB_REPOSITORY}/dispatches" \
               -f event_type="image-published" \
-              -f client_payload[app]="tce-dashboard" \
-              -f client_payload[component]="$component" \
-              -f client_payload[tag]="$RELEASE"
+              -f "client_payload[app]=tce-dashboard" \
+              -f "client_payload[component]=$component" \
+              -f "client_payload[tag]=$RELEASE"
             echo "Dispatched TCE $component promotion for $RELEASE"
           done
 
@@ -101,9 +101,9 @@ jobs:
               gh api --method POST -H "Accept: application/vnd.github+json" \
                 "/repos/${GITHUB_REPOSITORY}/dispatches" \
                 -f event_type="gitops-promoted-ready" \
-                -f client_payload[app]="tce-dashboard" \
-                -f client_payload[component]="release" \
-                -f client_payload[release]="$RELEASE"
+                -f "client_payload[app]=tce-dashboard" \
+                -f "client_payload[component]=release" \
+                -f "client_payload[release]=$RELEASE"
               echo "Triggered VPS reconciliation for TCE release $RELEASE."
               exit 0
             fi
@@ -142,9 +142,9 @@ jobs:
               -H "Accept: application/vnd.github+json" \
               "/repos/${GITHUB_REPOSITORY}/dispatches" \
               -f event_type="image-published" \
-              -f client_payload[app]="media-generation" \
-              -f client_payload[component]="$component" \
-              -f client_payload[tag]="$RELEASE"
+              -f "client_payload[app]=media-generation" \
+              -f "client_payload[component]=$component" \
+              -f "client_payload[tag]=$RELEASE"
           done
 
   coordinate-media-release:
@@ -173,9 +173,9 @@ jobs:
               gh api --method POST -H "Accept: application/vnd.github+json" \
                 "/repos/${GITHUB_REPOSITORY}/dispatches" \
                 -f event_type="gitops-promoted-ready" \
-                -f client_payload[app]="media-generation" \
-                -f client_payload[component]="release" \
-                -f client_payload[release]="$RELEASE"
+                -f "client_payload[app]=media-generation" \
+                -f "client_payload[component]=release" \
+                -f "client_payload[release]=$RELEASE"
               echo "Media release converged and VPS reconciliation triggered."
               exit 0
             fi
