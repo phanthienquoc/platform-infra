@@ -79,8 +79,10 @@ jobs:
           set -euo pipefail
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
             changed="platform/auth-service/manual-dispatch"
-          else
+          elif [ -n "${GITHUB_EVENT_BEFORE:-}" ]; then
             changed="$(git diff --name-only "$GITHUB_EVENT_BEFORE" "$GITHUB_SHA" || true)"
+          else
+            changed="$(git show --format= --name-only "$GITHUB_SHA" || true)"
           fi
           if ! printf '%s\n' "$changed" | grep -Eq '^platform/(microfe|auth-service)/'; then
             echo "No MicroFE source change in this pipeline; skipping image build."

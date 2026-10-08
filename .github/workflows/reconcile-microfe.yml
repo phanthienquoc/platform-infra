@@ -140,11 +140,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$GITHUB_EVENT_NAME" = "push" ] && [ "$RECONCILE_MODE" = "apply" ] && [ "$ALLOW_IMAGE_CHANGES" != "true" ]; then
-            echo "Bootstrap path: GHCR credentials changed; restart workloads without changing images."
-            kubectl -n microfe-platform rollout restart deployment/microfe-auth deployment/microfe-shell deployment/microfe-ws
-            kubectl -n microfe-platform rollout status deployment/microfe-auth --timeout=180s
-            kubectl -n microfe-platform rollout status deployment/microfe-shell --timeout=180s
-            kubectl -n microfe-platform rollout status deployment/microfe-ws --timeout=180s
+            echo "Workflow-only push: GHCR credentials are already reconciled; skip workload mutation."
             exit 0
           fi
           if [ "$RECONCILE_MODE" = "apply" ] && [ "$ALLOW_IMAGE_CHANGES" != "true" ]; then

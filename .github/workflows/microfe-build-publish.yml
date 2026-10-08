@@ -25,14 +25,11 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout repository
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          git init .
-          git remote add origin "https://github.com/$GITHUB_REPOSITORY.git"
-          git -c http.extraheader="AUTHORIZATION: bearer $GITHUB_TOKEN"             fetch --depth=1 origin "https://github.com/$GITHUB_REPOSITORY.git" "$GITHUB_SHA"
-          git checkout --detach "$GITHUB_SHA"
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          fetch-depth: 1
+          clean: true
+          persist-credentials: false
 
       - name: Test MicroFE services
         run: |

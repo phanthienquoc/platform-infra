@@ -231,6 +231,8 @@ jobs:
 
             cd /opt/actions-runner/_work/platform-infra/platform-infra
             sudo /usr/local/sbin/platform-kubectl apply -f platform/microfe/namespace.yaml >/tmp/platform-microfe-namespace-bootstrap
+            sudo /usr/local/sbin/platform-kubectl create namespace k3s-debug --dry-run=client -o yaml |
+              sudo /usr/local/sbin/platform-kubectl apply -f -
             set +e
             sudo /usr/local/sbin/platform-kubectl diff -k environments/prod >/tmp/platform-kubectl-diff-check 2>/tmp/platform-kubectl-diff-error
             rc=$?
