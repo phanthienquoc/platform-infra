@@ -148,8 +148,37 @@ jobs:
             echo "::error::Use the image-promotion path or explicitly authorize a deliberate image change."
             exit 1
           fi
-          chmod +x scripts/reconcile-vps.sh
-          ./scripts/reconcile-vps.sh "$RECONCILE_MODE"
+          for namespace_manifest in \
+            platform/microfe/namespace.yaml \
+            apps/stockdividend/base/namespace.yaml \
+            apps/tce-dashboard/base/namespace.yaml \
+            apps/media-generation/base/namespace.yaml; do
+            echo "== Ensuring namespace from $namespace_manifest =="
+            kubectl apply -f "$namespace_manifest"
+          done
+
+          set +e
+          kubectl diff -k environments/prod
+          diff_rc=$?
+          set -e
+
+          case "$RECONCILE_MODE:$diff_rc" in
+            plan:0|apply:0)
+              echo "Kubernetes state matches the repository."
+              ;;
+            plan:1)
+              echo "Kubernetes drift detected."
+              exit 1
+              ;;
+            apply:1)
+              echo "Drift detected; applying environments/prod."
+              kubectl apply -k environments/prod
+              ;;
+            *)
+              echo "Kubernetes reconciliation failed with exit code $diff_rc." >&2
+              exit "$diff_rc"
+              ;;
+          esac
 
       - name: Verify MicroFE workloads
         if: ${{ env.RECONCILE_MODE == 'apply' }}
