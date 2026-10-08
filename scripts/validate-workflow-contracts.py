@@ -21,11 +21,14 @@ reconcile = read("reconcile-vps.yml")
 microfe = read("microfe-build-publish.yml")
 
 # MicroFE publisher emits this repository_dispatch event, and reconcile must consume it.
-publisher_event = re.search(r'event_type:\s*"([^"]+)"', microfe)
+publisher_event = re.search(
+    r'event_type:\s*"([^"]+)"|"event_type"\s*:\s*"([^"]+)"|event_type="([^"]+)"',
+    microfe,
+)
 if not publisher_event:
     fail("microfe-build-publish.yml does not declare a repository_dispatch event_type")
 
-published_event = publisher_event.group(1)
+published_event = next(group for group in publisher_event.groups() if group)
 if published_event not in reconcile:
     fail(
         "Workflow contract mismatch: microfe-build-publish.yml emits "
