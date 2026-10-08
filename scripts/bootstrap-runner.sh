@@ -70,6 +70,7 @@ case "${1:-}" in
         --type="merge" \
         -p '{"imagePullSecrets":[{"name":"ghcr-pull"}]}'
     done
+    exit 0
     ;;
   restart-blocked-image-pulls)
     [[ "$#" -eq 1 ]] || exit 2
@@ -87,6 +88,7 @@ case "${1:-}" in
     }
     restart_if_blocked microfe-platform deployment/microfe-auth deployment/microfe-shell deployment/microfe-ws
     restart_if_blocked stock-prod deployment/stock-admin deployment/stock-backend
+    exit 0
     ;;
   logs)
     if [[ "${2:-}" == "deployment/media-generation" && "${3:-}" == "-n" && "${4:-}" == "media-prod" && ( "${5:-}" == "--tail=200" || "${5:-}" == "--previous" ) ]]; then
