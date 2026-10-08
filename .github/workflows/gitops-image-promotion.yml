@@ -432,7 +432,8 @@ jobs:
             echo "Base branch changed or merge was temporarily unavailable; updating PR branch before retry."
             gh pr update-branch "$PR_NUMBER" --repo "$REPO" --rebase
 
-            for wait in 1 2 3 4 5; do
+            for wait_attempt in 1 2 3 4 5; do
+              echo "Merge-state poll $wait_attempt/5"
               sleep 2
               state="$(gh pr view "$PR_NUMBER" --repo "$REPO" --json mergeStateStatus --jq '.mergeStateStatus')"
               echo "PR merge state after branch update: $state"
