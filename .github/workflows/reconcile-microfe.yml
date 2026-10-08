@@ -155,10 +155,10 @@ jobs:
         if: ${{ env.RECONCILE_MODE == 'apply' }}
         run: |
           set -euo pipefail
-          sudo /usr/local/sbin/platform-kubectl rollout status deployment/microfe-auth -n microfe-platform --timeout=180s
-          sudo /usr/local/sbin/platform-kubectl rollout status deployment/microfe-shell -n microfe-platform --timeout=180s
-          sudo /usr/local/sbin/platform-kubectl rollout status deployment/microfe-ws -n microfe-platform --timeout=180s
-          sudo /usr/local/sbin/platform-kubectl get ingress microfe-public -n microfe-platform
+          kubectl rollout status deployment/microfe-auth -n microfe-platform --timeout=180s
+          kubectl rollout status deployment/microfe-shell -n microfe-platform --timeout=180s
+          kubectl rollout status deployment/microfe-ws -n microfe-platform --timeout=180s
+          kubectl get ingress microfe-public -n microfe-platform
 
       - name: Verify WS HTTPS
         if: ${{ env.RECONCILE_MODE == 'apply' }}
