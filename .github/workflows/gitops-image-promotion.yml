@@ -114,7 +114,6 @@ jobs:
           exit 1
 
 
-
   fanout-media-release:
     if: github.event_name == 'repository_dispatch' && github.event.action == 'media-release-requested'
     name: Fan out Media release
