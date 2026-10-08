@@ -93,6 +93,21 @@ jobs:
           diff --version | head -n 1
           sudo /usr/local/sbin/platform-kubectl version
 
+      - name: Wait for runner reconciliation policy
+        if: ${{ env.RECONCILE_MODE == 'apply' }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 24); do
+            if policy="$(sudo /usr/local/sbin/platform-kubectl policy-version 2>/dev/null)" &&
+              [ "$policy" = "platform-kubectl policy: rollout-status-v2-ghcr-reconcile" ]; then
+              echo "Runner reconciliation policy is ready."
+              exit 0
+            fi
+            echo "Waiting for runner bootstrap policy (attempt $attempt/24)..."
+            sleep 5
+          done
+          echo "Runner reconciliation policy did not become ready within 120s." >&2
+          exit 1
       - name: Bootstrap GHCR pull credentials
         if: ${{ env.RECONCILE_MODE == 'apply' }}
         env:
