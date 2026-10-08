@@ -29,10 +29,7 @@ name: reconcile-vps
   repository_dispatch:
     types:
       - gitops-promoted-ready
-      - microfe-images-published
-  schedule:
-    - cron: "*/15 * * * *"
-  push:
+      - microfe-images-published  push:
     branches: [master]
     paths:
       - .github/workflows/reconcile-vps.yml
@@ -51,7 +48,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  RECONCILE_MODE: ${{ (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'repository_dispatch') && 'apply' || github.event.inputs.mode }}
+  RECONCILE_MODE: ${{ (github.event_name == 'push' || github.event_name == 'repository_dispatch') && 'apply' || github.event.inputs.mode }}
   TARGET_APP: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.app || github.event.inputs.target_app || 'all' }}
   RELEASE_TAG: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.release || '' }}
   ALLOW_IMAGE_CHANGES: ${{ (github.event_name == 'repository_dispatch' && github.event.action == 'gitops-promoted-ready') || (github.event_name == 'workflow_dispatch' && github.event.inputs.allow_image_changes == 'true') }}
