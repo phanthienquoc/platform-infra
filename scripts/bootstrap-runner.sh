@@ -44,6 +44,11 @@ case "${1:-}" in
         ;;
     esac
     ;;
+  policy-version)
+    [[ "$#" -eq 1 ]] || exit 2
+    echo "platform-kubectl policy: rollout-status-v2-ghcr-reconcile"
+    exit 0
+    ;;
   reconcile-ghcr-pull)
     [[ "$#" -eq 3 && "${2:-}" == "-n" ]] || {
       echo "platform-kubectl: reconcile-ghcr-pull requires exactly -n <approved-namespace>" >&2
