@@ -12,7 +12,7 @@ name: MicroFE Build & Publish
       - .github/workflows/microfe-build-publish.yml
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 concurrency:
@@ -98,7 +98,7 @@ jobs:
 
       - name: Dispatch immutable image promotion
         env:
-          PLATFORM_INFRA_TOKEN: ${{ secrets.PLATFORM_INFRA_TOKEN }}
+          PLATFORM_INFRA_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           test -n "${PLATFORM_INFRA_TOKEN:-}"
