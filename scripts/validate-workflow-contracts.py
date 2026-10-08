@@ -21,7 +21,7 @@ reconcile = read("reconcile-vps.yml")
 microfe = read("microfe-build-publish.yml")
 
 # MicroFE publisher emits this repository_dispatch event, and reconcile must consume it.
-publisher_event = re.search(r'event_type:\s*"([^"]+)"', microfe)
+publisher_event = re.search(r'["\']?event_type["\']?\s*:\s*["\']([^"\']+)["\']', microfe)
 if not publisher_event:
     fail("microfe-build-publish.yml does not declare a repository_dispatch event_type")
 
