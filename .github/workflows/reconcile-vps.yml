@@ -115,14 +115,14 @@ jobs:
           meta, image = sys.argv[1:]
           digest = json.loads(pathlib.Path(meta).read_text()).get("containerimage.digest")
           if not isinstance(digest, str) or not digest.startswith("sha256:"):
-          raise SystemExit(f"Missing digest for {image}")
+              raise SystemExit(f"Missing digest for {image}")
           print(digest)
           PY
           }
 
-          auth_digest="$(build_image ghcr.io/$owner/microfe-auth platform/auth-service/Dockerfile . /tmp/microfe-build-meta/auth.json | tail -n1)"
-          shell_digest="$(build_image ghcr.io/$owner/microfe-shell platform/microfe/shell/Dockerfile . /tmp/microfe-build-meta/shell.json | tail -n1)"
-          ws_digest="$(build_image ghcr.io/$owner/microfe-ws platform/microfe/ws-gateway/Dockerfile platform/microfe/ws-gateway /tmp/microfe-build-meta/ws.json | tail -n1)"
+          auth_digest="$(build_image "ghcr.io/$owner/microfe-auth" "platform/auth-service/Dockerfile" "." "/tmp/microfe-build-meta/auth.json" | tail -n1)"
+          shell_digest="$(build_image "ghcr.io/$owner/microfe-shell" "platform/microfe/shell/Dockerfile" "." "/tmp/microfe-build-meta/shell.json" | tail -n1)"
+          ws_digest="$(build_image "ghcr.io/$owner/microfe-ws" "platform/microfe/ws-gateway/Dockerfile" "platform/microfe/ws-gateway" "/tmp/microfe-build-meta/ws.json" | tail -n1)"
 
           for digest in "$auth_digest" "$shell_digest" "$ws_digest"; do
             [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || exit 1
