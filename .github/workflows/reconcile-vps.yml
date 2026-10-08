@@ -51,12 +51,12 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  RECONCILE_MODE: ${{ (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name ==
+  RECONCILE_MODE: ${{ (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'repository_dispatch') && 'apply' || github.event.inputs.mode }}  # yamllint disable-line rule:line-length
   'repository_dispatch') && 'apply' || github.event.inputs.mode }}
-  TARGET_APP: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.app ||
+  TARGET_APP: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.app || github.event.inputs.target_app || 'all' }}  # yamllint disable-line rule:line-length
   github.event.inputs.target_app || 'all' }}
   RELEASE_TAG: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.release || '' }}
-  ALLOW_IMAGE_CHANGES: ${{ (github.event_name == 'repository_dispatch' && github.event.action ==
+  ALLOW_IMAGE_CHANGES: ${{ (github.event_name == 'repository_dispatch' && github.event.action == 'gitops-promoted-ready') || (github.event_name == 'workflow_dispatch' && github.event.inputs.allow_image_changes == 'true') }}  # yamllint disable-line rule:line-length
   'gitops-promoted-ready') || (github.event_name == 'workflow_dispatch' && github.event.inputs.allow_image_changes == 'true') }}
   TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
 
