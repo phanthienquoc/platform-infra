@@ -5,4 +5,5 @@ rules:
   truthy:
     allowed-values: ["true", "false", "on", "off"]
   document-start: disable
+  comments: disable
   comments-indentation: disable
