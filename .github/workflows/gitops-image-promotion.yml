@@ -1,5 +1,5 @@
 name: GitOps Image Promotion
-run-name: GitOps Image Promotion — ${{ inputs.app || github.event.client_payload.app }} / ${{ inputs.component || github.event.client_payload.component }}  # yamllint disable-line rule:line-length
+run-name: GitOps Image Promotion — ${{ inputs.app || github.event.client_payload.app }} / ${{ inputs.component || github.event.client_payload.component }}
 
 on:
   workflow_dispatch:
@@ -33,7 +33,8 @@ permissions:
 
 concurrency:
   group: >-
-    gitops-image-promotion-${{ github.event.client_payload.app || inputs.app }}-${{ github.event.client_payload.component || inputs.component }}  # yamllint disable-line rule:line-length
+    gitops-image-promotion-${{ github.event.client_payload.app || inputs.app }}-${{
+    github.event.client_payload.component || inputs.component }}
   cancel-in-progress: false
 
 jobs:
