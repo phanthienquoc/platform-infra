@@ -82,7 +82,7 @@ jobs:
           data = json.loads(pathlib.Path(meta).read_text())
           digest = data.get("containerimage.digest")
           if not isinstance(digest, str) or not digest.startswith("sha256:"):
-          raise SystemExit(f"Missing image digest for {image}:{tag}")
+              raise SystemExit(f"Missing image digest for {image}:{tag}")
           print(f"{image}={digest}")
           PY
           }
@@ -109,13 +109,13 @@ jobs:
           python3 - <<'PY' >/tmp/microfe-dispatch.json
           import json, os
           payload = {
-          "event_type": "microfe-images-published",
-          "client_payload": {
-          "commit": os.environ["GITHUB_SHA"],
-          "auth_digest": open("/tmp/microfe-auth.txt").read().strip().split("=", 1)[1],
-          "shell_digest": open("/tmp/microfe-shell.txt").read().strip().split("=", 1)[1],
-          "ws_digest": open("/tmp/microfe-ws.txt").read().strip().split("=", 1)[1],
-          },
+              "event_type": "microfe-images-published",
+              "client_payload": {
+                  "commit": os.environ["GITHUB_SHA"],
+                  "auth_digest": open("/tmp/microfe-auth.txt").read().strip().split("=", 1)[1],
+                  "shell_digest": open("/tmp/microfe-shell.txt").read().strip().split("=", 1)[1],
+                  "ws_digest": open("/tmp/microfe-ws.txt").read().strip().split("=", 1)[1],
+              },
           }
           print(json.dumps(payload))
           PY
