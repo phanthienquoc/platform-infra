@@ -1,5 +1,7 @@
 name: GitOps Image Promotion
-run-name: GitOps Image Promotion — ${{ inputs.app || github.event.client_payload.app }} / ${{ inputs.component || github.event.client_payload.component }}
+run-name: >-
+  GitOps Image Promotion — ${{ inputs.app || github.event.client_payload.app }} / ${{ inputs.component || \
+                                                                                                         github.event.client_payload.component }}
 
 on:
   workflow_dispatch:
@@ -94,9 +96,11 @@ jobs:
           for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
             git fetch --no-tags origin master
             \
-            WEB_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/tce-dashboard\/web$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"  # yamllint disable-line rule:line-length
             \
-            SERVICE_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/tce-dashboard\/service$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"  # yamllint disable-line rule:line-length
+           WEB_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/tce-dashboard\/web$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
+            \
+            \
+           SERVICE_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/tce-dashboard\/service$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
             echo "Coordinator attempt $attempt/$MAX_ATTEMPTS"
             echo "TCE GitOps web tag: $WEB_TAG"
             echo "TCE GitOps service tag: $SERVICE_TAG"
@@ -168,9 +172,11 @@ jobs:
           for _ in $(seq 1 60); do
             git fetch --no-tags origin master
             \
-            FRONTEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation\/frontend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"  # yamllint disable-line rule:line-length
             \
-            BACKEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation\/backend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"  # yamllint disable-line rule:line-length
+           FRONTEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation\/frontend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
+            \
+            \
+           BACKEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation\/backend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
             echo "Media frontend: $FRONTEND_TAG"
             echo "Media backend: $BACKEND_TAG"
             if [ "$FRONTEND_TAG" = "$RELEASE" ] && [ "$BACKEND_TAG" = "$RELEASE" ]; then
@@ -190,7 +196,8 @@ jobs:
 
   promote:
     if: >-
-      github.event_name != 'repository_dispatch' || (github.event.action != 'tce-release-requested' && github.event.action != 'media-release-requested')
+      github.event_name != 'repository_dispatch' || (github.event.action != 'tce-release-requested' && \
+                                                                                                      github.event.action != 'media-release-requested')
     name: Promote ${{ github.event.client_payload.app || inputs.app }} / ${{ github.event.client_payload.component || inputs.component }}
     runs-on: ubuntu-latest
 
@@ -221,7 +228,8 @@ jobs:
 
           case "$APP/$COMPONENT" in
             \
-            stockdividend/backend|stockdividend/admin|tce-dashboard/web|tce-dashboard/service|media-generation/backend|media-generation/frontend) ;;  # yamllint disable-line rule:line-length
+            \
+           stockdividend/backend|stockdividend/admin|tce-dashboard/web|tce-dashboard/service|media-generation/backend|media-generation/frontend) ;;
             *)
               echo "::error::Unsupported image target: $APP/$COMPONENT"
               exit 1
@@ -344,7 +352,8 @@ jobs:
             *) echo "::error::Unsupported promotion app"; exit 1 ;;
           esac
           test -n "$(git diff --name-only -- "$TARGET_FILE")" || { echo \
-                                                                        "::error::Expected promotion diff missing for $TARGET_FILE"; git diff --name-only; exit 1; }  # yamllint disable-line rule:line-length
+                                                                        \
+                                                                       "::error::Expected promotion diff missing for $TARGET_FILE"; git diff --name-only; exit 1; }
           git diff --name-only | while IFS= read -r file; do
             [ "$file" = "$TARGET_FILE" ] || git restore --source=HEAD --worktree --staged -- "$file"
           done
@@ -467,9 +476,11 @@ jobs:
           FILE="apps/media-generation/overlays/prod/kustomization.yaml"
           git fetch --no-tags origin master
           \
-          BACKEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation\/backend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"  # yamllint disable-line rule:line-length
           \
-          FRONTEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation\/frontend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"  # yamllint disable-line rule:line-length
+         BACKEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation\/backend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
+          \
+          \
+         FRONTEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation\/frontend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
 
           echo "Media backend GitOps tag: $BACKEND_TAG"
           echo "Media frontend GitOps tag: $FRONTEND_TAG"
@@ -485,7 +496,8 @@ jobs:
 
       - name: Trigger VPS reconciliation
         if: >-
-          (steps.input.outputs.app == 'stockdividend' || steps.input.outputs.app == 'media-generation') && steps.readiness.outputs.ready == 'true'
+          (steps.input.outputs.app == 'stockdividend' || steps.input.outputs.app == 'media-generation') && \
+                                                                                                          steps.readiness.outputs.ready == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           APP: ${{ steps.input.outputs.app }}
