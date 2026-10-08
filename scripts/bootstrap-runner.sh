@@ -78,7 +78,7 @@ case "${1:-}" in
       local namespace="$1"
       shift
       local blocked
-      blocked="$("${KUBECTL[@]}" -n "$namespace" get pods -o jsonpath='{range .items[*]}{range .status.containerStatuses[*]}{.state.waiting.reason}{"\\n"}{end}{end}' 2>/dev/null | grep -E '^(ImagePullBackOff|ErrImagePull)$' || true)"
+      blocked="$("${KUBECTL[@]}" -n "$namespace" get pods -o jsonpath='{range .items[*]}{.status.containerStatuses[*].state.waiting.reason}{"\\n"}{end}' 2>/dev/null | grep -E '(ImagePullBackOff|ErrImagePull)' || true)"
       if [[ -n "$blocked" ]]; then
         echo "Image pull failures detected in $namespace; restarting fixed production workloads."
         "${KUBECTL[@]}" -n "$namespace" rollout restart "$@"
