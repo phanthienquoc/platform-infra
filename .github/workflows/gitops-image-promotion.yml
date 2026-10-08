@@ -485,7 +485,7 @@ jobs:
 
       - name: Trigger VPS reconciliation
         if: >-
-          (steps.input.outputs.app == 'stockdividend' || steps.input.outputs.app == 'media-generation') && steps.readiness.outputs.ready == 'true'  # yamllint disable-line rule:line-length
+          (steps.input.outputs.app == 'stockdividend' || steps.input.outputs.app == 'media-generation') && steps.readiness.outputs.ready == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           APP: ${{ steps.input.outputs.app }}
@@ -501,3 +501,4 @@ jobs:
             -f client_payload\[component\]="$COMPONENT" \
             -f client_payload\[release\]="$RELEASE"
           echo "Triggered VPS reconciliation for $APP release $RELEASE."
+
