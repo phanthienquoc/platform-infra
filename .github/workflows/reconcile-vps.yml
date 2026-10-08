@@ -51,10 +51,13 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  RECONCILE_MODE: ${{ (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'repository_dispatch') && 'apply' || github.event.inputs.mode }}  # yamllint disable-line rule:line-length
-  TARGET_APP: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.app || github.event.inputs.target_app || 'all' }}  # yamllint disable-line rule:line-length
+  RECONCILE_MODE: ${{ (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name ==
+  'repository_dispatch') && 'apply' || github.event.inputs.mode }}
+  TARGET_APP: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.app ||
+  github.event.inputs.target_app || 'all' }}
   RELEASE_TAG: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.release || '' }}
-  ALLOW_IMAGE_CHANGES: ${{ (github.event_name == 'repository_dispatch' && github.event.action == 'gitops-promoted-ready') || (github.event_name == 'workflow_dispatch' && github.event.inputs.allow_image_changes == 'true') }}  # yamllint disable-line rule:line-length
+  ALLOW_IMAGE_CHANGES: ${{ (github.event_name == 'repository_dispatch' && github.event.action ==
+  'gitops-promoted-ready') || (github.event_name == 'workflow_dispatch' && github.event.inputs.allow_image_changes == 'true') }}
   TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
 
 jobs:
@@ -262,7 +265,8 @@ jobs:
 
       - name: Guard workload image changes
         if: >-
-          ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && env.ALLOW_IMAGE_CHANGES != 'true' && steps.publish_microfe.outcome != 'success' }}  # yamllint disable-line rule:line-length
+          ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && env.ALLOW_IMAGE_CHANGES !=
+          'true' && steps.publish_microfe.outcome != 'success' }}
         run: |
           set -euo pipefail
           chmod +x scripts/guard-reconcile-images.sh
@@ -311,7 +315,8 @@ jobs:
 
       - name: Publish TCE deployment started event
         if: >-
-          ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'tce-dashboard') }}  # yamllint disable-line rule:line-length
+          ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && (env.TARGET_APP == 'all' ||
+          env.TARGET_APP == 'tce-dashboard') }}
         continue-on-error: true
         run: |
           set -euo pipefail
@@ -503,7 +508,8 @@ jobs:
 
       - name: Notify Telegram — reconciliation resolved
         if: >-
-          ${{ !cancelled() && env.RECONCILE_MODE == 'apply' && steps.apply.outcome == 'success' && (steps.verify_media.outcome == 'success' || steps.verify_tce.outcome == 'success' || steps.verify_stock.outcome == 'success') }}  # yamllint disable-line rule:line-length
+          ${{ !cancelled() && env.RECONCILE_MODE == 'apply' && steps.apply.outcome == 'success' &&
+          (steps.verify_media.outcome == 'success' || steps.verify_tce.outcome == 'success' || steps.verify_stock.outcome == 'success') }}
         continue-on-error: true
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
