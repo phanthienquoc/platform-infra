@@ -10,7 +10,7 @@ mkdir -p "$(dirname "$OUT")"
   echo "## Host"
   echo "uname: $(uname -a)"
   echo "arch: $(uname -m)"
-# shellcheck source=/etc/os-release
+  # shellcheck source=/etc/os-release
   . /etc/os-release && echo "os: $PRETTY_NAME"
   echo "hostname: $(hostname)"
   echo
