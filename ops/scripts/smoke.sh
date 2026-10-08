@@ -23,6 +23,8 @@ check_url() {
 
 case "$scope" in
   'tce-dashboard')
+    check_url 'auth-health' 'https://auth.mrcute.space/health' '2*'
+    check_url 'auth-me-unauthenticated' 'https://auth.mrcute.space/auth/me' '401'
     check_url 'tce-api-health' 'https://tce.mrcute.space/api/health' '2*'
     check_url 'tce-frontend' 'https://tce.mrcute.space/' '2*'
     ;;
@@ -30,6 +32,8 @@ case "$scope" in
     check_url 'stock-admin' 'https://admin.mrcute.space/' '2*'
     ;;
   'all')
+    check_url 'auth-health' 'https://auth.mrcute.space/health' '2*'
+    check_url 'auth-me-unauthenticated' 'https://auth.mrcute.space/auth/me' '401'
     check_url 'tce-api-health' 'https://tce.mrcute.space/api/health' '2*'
     check_url 'tce-frontend' 'https://tce.mrcute.space/' '2*'
     check_url 'stock-admin' 'https://admin.mrcute.space/' '2*'
