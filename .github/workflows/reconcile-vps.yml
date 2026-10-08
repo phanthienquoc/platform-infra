@@ -591,14 +591,4 @@ jobs:
             if [ "$MEDIA_STATUS" != "success" ]; then echo "Media generation deployment verification failed." >&2; exit 1; fi
           fi
           echo "Targeted production deployment verification passed."
- || true)"
-            if [ -n "$blocked" ]; then
-              echo "Image pull failures detected in $namespace; restarting: $*"
-              sudo /usr/local/sbin/platform-kubectl -n "$namespace" rollout restart "$@"
-            else
-              echo "No image-pull failures in $namespace."
-            fi
-          }
-          restart_if_blocked microfe-platform deployment/microfe-auth deployment/microfe-shell deployment/microfe-ws
-          restart_if_blocked stock-prod deployment/stock-admin deployment/stock-backend
 # yamllint enable rule:line-length
