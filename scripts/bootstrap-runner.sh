@@ -46,7 +46,7 @@ case "${1:-}" in
     ;;
   policy-version)
     [[ "$#" -eq 1 ]] || exit 2
-    echo "platform-kubectl policy: rollout-status-v2-ghcr-reconcile"
+    echo "platform-kubectl policy: rollout-status-v3-ghcr-reconcile"
     exit 0
     ;;
   reconcile-ghcr-pull)
