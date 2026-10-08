@@ -102,18 +102,10 @@ jobs:
           set -euo pipefail
           test -n "$GHCR_TOKEN"
           for namespace in microfe-platform stock-prod; do
-            sudo /usr/local/sbin/platform-kubectl -n "$namespace" create secret docker-registry ghcr-pull \
-              --docker-server=ghcr.io \
-              --docker-username="$GHCR_USERNAME" \
-              --docker-password="$GHCR_TOKEN" \
-              --dry-run=client -o yaml |
-              sudo /usr/local/sbin/platform-kubectl apply -f -
-            sudo /usr/local/sbin/platform-kubectl -n "$namespace" patch serviceaccount default \
-              --type='merge' \
-              -p '{"imagePullSecrets":[{"name":"ghcr-pull"}]}'
+            printf "%s\n%s\n" "$GHCR_USERNAME" "$GHCR_TOKEN" |
+              sudo /usr/local/sbin/platform-kubectl reconcile-ghcr-pull -n "$namespace"
           done
           echo "GHCR pull credentials reconciled for private-image namespaces."
-
       - name: Restart workloads blocked on image pulls
         if: ${{ env.RECONCILE_MODE == 'apply' }}
         run: |
