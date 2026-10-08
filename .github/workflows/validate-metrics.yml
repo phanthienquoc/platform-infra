@@ -40,8 +40,8 @@ jobs:
           {
             echo "## Metrics/HPA validation"
             echo
-            echo "- Ref: \\`$GITHUB_REF_NAME\\`"
-            echo "- Commit: \\`${GITHUB_SHA::12}\\`"
+            echo "- Ref: \`$GITHUB_REF_NAME\`"
+            echo "- Commit: \`${GITHUB_SHA::12}\`"
             echo "- metrics.k8s.io API: reachable"
             echo "- HPA resource prerequisites: validated"
             echo "- Production mutation: none"

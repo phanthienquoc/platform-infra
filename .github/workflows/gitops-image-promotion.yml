@@ -163,7 +163,7 @@ jobs:
         run: |
           set -euo pipefail
           FILE="apps/media-generation/overlays/prod/kustomization.yaml"
-          for attempt in $(seq 1 60); do
+          for _ in $(seq 1 60); do
             git fetch --no-tags origin master
             FRONTEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation\/frontend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
             BACKEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation\/backend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
@@ -431,7 +431,7 @@ jobs:
             echo "Base branch changed or merge was temporarily unavailable; updating PR branch before retry."
             gh pr update-branch "$PR_NUMBER" --repo "$REPO" --rebase
 
-            for wait in 1 2 3 4 5; do
+            for _ in 1 2 3 4 5; do
               sleep 2
               state="$(gh pr view "$PR_NUMBER" --repo "$REPO" --json mergeStateStatus --jq '.mergeStateStatus')"
               echo "PR merge state after branch update: $state"
@@ -486,7 +486,7 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             "/repos/${GITHUB_REPOSITORY}/dispatches" \
             -f event_type="gitops-promoted-ready" \
-            -f client_payload[app]="$APP" \
-            -f client_payload[component]="$COMPONENT" \
-            -f client_payload[release]="$RELEASE"
+            -f client_payload\[app\]="$APP" \
+            -f client_payload\[component\]="$COMPONENT" \
+            -f client_payload\[release\]="$RELEASE"
           echo "Triggered VPS reconciliation for $APP release $RELEASE."

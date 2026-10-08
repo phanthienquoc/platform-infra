@@ -52,10 +52,10 @@ jobs:
           fi
 
           token="$(echo "$body" | jq -r '.token')"
-          test -n "$token" && test "$token" != "null" || {
+          if [[ -z "$token" || "$token" == "null" ]]; then
             echo "GitHub returned no runner registration token." >&2
             exit 1
-          }
+          fi
 
           printf 'token=%s\n' "$token" >> "$GITHUB_OUTPUT"
 
