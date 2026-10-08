@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Media migration guard: preserve immutable image replacement protection.
 # Only match actual container image fields; ignore image strings inside annotations such as last-applied-configuration.
+# Only match actual container image fields; ignore image strings inside annotations such as last-applied-configuration.
 set -euo pipefail
 
 MODE="${1:-check}"
@@ -38,6 +39,10 @@ removed_images="$(grep -E '^-[[:space:]]{10,}image:' "$diff_output" || true)"
 
 if [[ -n "$removed_images" ]]; then
   legacy_media_image="$(printf '%s\n' "$removed_images" | grep -E '^-[[:space:]]+image:[[:space:]]+ghcr\.io/phanthienquoc/media-generation:[0-9a-f]{7,64}
+     grep -q 'ghcr\.io/phanthienquoc/media-generation-backend:' <<<"$desired_media_images" &&
+     grep -q 'ghcr\.io/phanthienquoc/media-generation-frontend:' <<<"$desired_media_images"; then
+    echo "Allowing the intentional media-generation monolith -> backend/frontend image migration."
+  else
     echo "ERROR: reconciliation would replace an existing workload image." >&2
     echo "The scheduled reconciler refuses image changes to prevent an unintended rollback." >&2
     echo "Removed image references:" >&2
@@ -50,6 +55,10 @@ fi
 echo "Kubernetes drift detected, but no existing workload image replacement was found."
  || true)"
   desired_media_images="$(kubectl kustomize environments/prod 2>/dev/null | grep -E '^[[:space:]]+image:[[:space:]]+ghcr\.io/phanthienquoc/media-generation/(backend|frontend):[0-9a-f]{7,64}
+     grep -q 'ghcr\.io/phanthienquoc/media-generation-backend:' <<<"$desired_media_images" &&
+     grep -q 'ghcr\.io/phanthienquoc/media-generation-frontend:' <<<"$desired_media_images"; then
+    echo "Allowing the intentional media-generation monolith -> backend/frontend image migration."
+  else
     echo "ERROR: reconciliation would replace an existing workload image." >&2
     echo "The scheduled reconciler refuses image changes to prevent an unintended rollback." >&2
     echo "Removed image references:" >&2
