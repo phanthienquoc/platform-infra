@@ -1,3 +1,4 @@
+# yamllint disable rule:line-length
 name: reconcile-microfe
 
 "on":
@@ -44,7 +45,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -57,12 +58,8 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$KEY" | tr -d '\r' > ~/.ssh/tce_vps_key
           chmod 600 ~/.ssh/tce_vps_key
-          ssh -i ~/.ssh/tce_vps_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
-                                                                                                           \
-                                                                                                          ubuntu@132.226.175.206 'sudo test -r /etc/rancher/k3s/k3s.yaml'
-          ssh -i ~/.ssh/tce_vps_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no ubuntu@132.226.175.206 \
-                                                                                                             \
-                                                                                                            'sudo cat /etc/rancher/k3s/k3s.yaml' > /tmp/k3s.yaml
+          ssh -i ~/.ssh/tce_vps_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10 ubuntu@132.226.175.206 'sudo test -r /etc/rancher/k3s/k3s.yaml'
+          ssh -i ~/.ssh/tce_vps_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no ubuntu@132.226.175.206 'sudo cat /etc/rancher/k3s/k3s.yaml' > /tmp/k3s.yaml
           sed -i 's#https://127.0.0.1:6443#https://127.0.0.1:6443#' /tmp/k3s.yaml
           chmod 600 /tmp/k3s.yaml
           ssh -fNT -i ~/.ssh/tce_vps_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -L 6443:127.0.0.1:6443 ubuntu@132.226.175.206
@@ -105,22 +102,14 @@ jobs:
             echo "Validated explicit MicroFE image promotion."
             exit 0
           fi
-          \
-          \
-         auth_image="$(sudo /usr/local/sbin/platform-kubectl -n microfe-platform get deployment microfe-auth -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
-          \
-          \
-         shell_image="$(sudo /usr/local/sbin/platform-kubectl -n microfe-platform get deployment microfe-shell -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
-          \
-          \
-         ws_image="$(sudo /usr/local/sbin/platform-kubectl -n microfe-platform get deployment microfe-ws -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
+          auth_image="$(sudo /usr/local/sbin/platform-kubectl -n microfe-platform get deployment microfe-auth -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
+          shell_image="$(sudo /usr/local/sbin/platform-kubectl -n microfe-platform get deployment microfe-shell -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
+          ws_image="$(sudo /usr/local/sbin/platform-kubectl -n microfe-platform get deployment microfe-ws -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
 
           for image in "$auth_image" "$shell_image" "$ws_image"; do
             [ -n "$image" ] || continue
             case "$image" in
-              \
-              \
-             ghcr.io/phanthienquoc/microfe-auth:[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*|ghcr.io/phanthienquoc/microfe-shell:[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*|ghcr.io/phanthienquoc/microfe-ws:[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*)
+              ghcr.io/phanthienquoc/microfe-auth:[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*|ghcr.io/phanthienquoc/microfe-shell:[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*|ghcr.io/phanthienquoc/microfe-ws:[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*)
                 ;;
               *)
                 echo "::error::Mutable or unexpected MicroFE image: $image"
@@ -180,9 +169,7 @@ jobs:
         run: |
           set -euo pipefail
           curl --fail --silent --show-error --location --max-time 20 https://auth.mrcute.space/health >/dev/null
-          \
-          \
-         code="$(curl --silent --show-error --location --max-time 20 --output /dev/null --write-out '%{http_code}' https://auth.mrcute.space/auth/me)"
+          code="$(curl --silent --show-error --location --max-time 20 --output /dev/null --write-out '%{http_code}' https://auth.mrcute.space/auth/me)"
           test "$code" = "401"
 
       - name: Verify WS health
@@ -201,3 +188,4 @@ jobs:
         if: always()
         run: |
           rm -f ~/.ssh/tce_vps_key /tmp/k3s.yaml
+# yamllint enable rule:line-length
