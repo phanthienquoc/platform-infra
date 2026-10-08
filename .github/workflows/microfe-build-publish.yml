@@ -77,14 +77,14 @@ jobs:
             docker buildx build               --platform linux/arm64               --provenance=true               --sbom=true               --metadata-file "$meta"               --push               --tag "$image:$tag"               --file "$dockerfile"               "$context"
 
             python3 - "$meta" "$image" "$tag" <<'PY'
-import json, pathlib, sys
-meta, image, tag = sys.argv[1:]
-data = json.loads(pathlib.Path(meta).read_text())
-digest = data.get("containerimage.digest")
-if not isinstance(digest, str) or not digest.startswith("sha256:"):
-    raise SystemExit(f"Missing image digest for {image}:{tag}")
-print(f"{image}={digest}")
-PY
+            import json, pathlib, sys
+            meta, image, tag = sys.argv[1:]
+            data = json.loads(pathlib.Path(meta).read_text())
+            digest = data.get("containerimage.digest")
+            if not isinstance(digest, str) or not digest.startswith("sha256:"):
+            raise SystemExit(f"Missing image digest for {image}:{tag}")
+            print(f"{image}={digest}")
+            PY
           }
 
           build_image             "ghcr.io/$owner/microfe-auth"             "platform/auth-service/Dockerfile"             "."             "/tmp/microfe-build-meta/auth.json" | tee /tmp/microfe-auth.txt
