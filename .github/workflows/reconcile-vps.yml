@@ -51,10 +51,15 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  RECONCILE_MODE: ${{ (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'repository_dispatch') && 'apply' || github.event.inputs.mode }}
-  TARGET_APP: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.app || github.event.inputs.target_app || 'all' }}
+  RECONCILE_MODE: >-
+    ${{ (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'repository_dispatch') \
+                                                                                                                      && 'apply' || github.event.inputs.mode }}
+  TARGET_APP: >-
+    ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.app || github.event.inputs.target_app || 'all' }}
   RELEASE_TAG: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.release || '' }}
-  ALLOW_IMAGE_CHANGES: ${{ (github.event_name == 'repository_dispatch' && github.event.action == 'gitops-promoted-ready') || (github.event_name == 'workflow_dispatch' && github.event.inputs.allow_image_changes == 'true') }}
+  ALLOW_IMAGE_CHANGES: >-
+    ${{ (github.event_name == 'repository_dispatch' && github.event.action == 'gitops-promoted-ready') || \
+                                                                                                         (github.event_name == 'workflow_dispatch' && github.event.inputs.allow_image_changes == 'true') }}
   TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
 
 jobs:
@@ -112,7 +117,8 @@ jobs:
             local context="$3"
             local meta="$4"
             docker buildx build --platform linux/arm64 --provenance=true --sbom=true --metadata-file "$meta" --push \
-                                                                                                                    --tag "$image:$tag" --file "$dockerfile" "$context"  # yamllint disable-line rule:line-length
+                                                                                                                    \
+                                                                                                                   --tag "$image:$tag" --file "$dockerfile" "$context"
             python3 - "$meta" "$image" <<'PY'
           import json, pathlib, sys
           meta, image = sys.argv[1:]
@@ -124,11 +130,14 @@ jobs:
           }
 
           \
-          auth_digest="$(build_image "ghcr.io/$owner/microfe-auth" "platform/auth-service/Dockerfile" "." "/tmp/microfe-build-meta/auth.json" | tail -n1)"  # yamllint disable-line rule:line-length
           \
-          shell_digest="$(build_image "ghcr.io/$owner/microfe-shell" "platform/microfe/shell/Dockerfile" "." "/tmp/microfe-build-meta/shell.json" | tail -n1)"  # yamllint disable-line rule:line-length
+         auth_digest="$(build_image "ghcr.io/$owner/microfe-auth" "platform/auth-service/Dockerfile" "." "/tmp/microfe-build-meta/auth.json" | tail -n1)"
           \
-          ws_digest="$(build_image "ghcr.io/$owner/microfe-ws" "platform/microfe/ws-gateway/Dockerfile" "platform/microfe/ws-gateway" "/tmp/microfe-build-meta/ws.json" | tail -n1)"  # yamllint disable-line rule:line-length
+          \
+         shell_digest="$(build_image "ghcr.io/$owner/microfe-shell" "platform/microfe/shell/Dockerfile" "." "/tmp/microfe-build-meta/shell.json" | tail -n1)"
+          \
+          \
+         ws_digest="$(build_image "ghcr.io/$owner/microfe-ws" "platform/microfe/ws-gateway/Dockerfile" "platform/microfe/ws-gateway" "/tmp/microfe-build-meta/ws.json" | tail -n1)"
 
           for digest in "$auth_digest" "$shell_digest" "$ws_digest"; do
             [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || exit 1
@@ -204,7 +213,8 @@ jobs:
             shift
             local blocked
             \
-            blocked="$(sudo /usr/local/sbin/platform-kubectl -n "$namespace" get pods -o jsonpath='{range .items[*]}{range .status.containerStatuses[*]}{.state.waiting.reason}{"\n"}{end}{end}' 2>/dev/null | grep -E '^(ImagePullBackOff|ErrImagePull)$' || true)"  # yamllint disable-line rule:line-length
+            \
+           blocked="$(sudo /usr/local/sbin/platform-kubectl -n "$namespace" get pods -o jsonpath='{range .items[*]}{range .status.containerStatuses[*]}{.state.waiting.reason}{"\n"}{end}{end}' 2>/dev/null | grep -E '^(ImagePullBackOff|ErrImagePull)$' || true)"
             if [ -n "$blocked" ]; then
               echo "Image pull failures detected in $namespace; restarting: $*"
               sudo /usr/local/sbin/platform-kubectl -n "$namespace" rollout restart "$@"
@@ -226,9 +236,11 @@ jobs:
         run: |
           set -euo pipefail
           \
-          MEDIA_BACKEND_TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/media-generation/backend' apps/media-generation/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"  # yamllint disable-line rule:line-length
           \
-          MEDIA_FRONTEND_TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/media-generation/frontend' apps/media-generation/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"  # yamllint disable-line rule:line-length
+         MEDIA_BACKEND_TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/media-generation/backend' apps/media-generation/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
+          \
+          \
+         MEDIA_FRONTEND_TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/media-generation/frontend' apps/media-generation/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
           test -n "$MEDIA_BACKEND_TAG" || { echo "Unable to resolve media-generation backend image tag"; exit 1; }
           test -n "$MEDIA_FRONTEND_TAG" || { echo "Unable to resolve media-generation frontend image tag"; exit 1; }
           test "$MEDIA_BACKEND_TAG" = "$MEDIA_FRONTEND_TAG" || { echo "Media backend/frontend tags must be paired"; exit 1; }
@@ -291,7 +303,8 @@ jobs:
             TAG="${RELEASE_TAG:-${MEDIA_TAG:-unknown}}"
           else
             \
-            TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"  # yamllint disable-line rule:line-length
+            \
+           TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
           fi
           test -n "$TAG" || TAG="unknown"
 
@@ -308,7 +321,8 @@ jobs:
             "⏳ Rollout in progress</pre>"
 
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d \
-                                                                                                               "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=HTML"  # yamllint disable-line rule:line-length
+                                                                                                               \
+                                                                                                              "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=HTML"
 
       - name: Publish TCE deployment started event
         if: >-
@@ -321,7 +335,8 @@ jobs:
           TAG="$RELEASE_TAG"
           if [ -z "$TAG" ]; then
             \
-            TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"  # yamllint disable-line rule:line-length
+            \
+           TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
           fi
           ./scripts/publish-microfe-deployment-event.sh deploying tce-dashboard "$TAG" deploying
 
@@ -337,7 +352,8 @@ jobs:
         run: |
           set -euo pipefail
           \
-          tls_output="$(printf '' | openssl s_client -connect auth.mrcute.space:443 -servername auth.mrcute.space -verify_return_error 2>&1 || true)"  # yamllint disable-line rule:line-length
+          \
+         tls_output="$(printf '' | openssl s_client -connect auth.mrcute.space:443 -servername auth.mrcute.space -verify_return_error 2>&1 || true)"
           printf '%s\n' "$tls_output" | grep -q "Verify return code: 0 (ok)"
           printf '%s\n' "$tls_output" | grep -Eq "subject=.*CN|subject=.*auth.mrcute.space|DNS:auth.mrcute.space"
           echo "Auth TLS certificate chain and SNI verified for auth.mrcute.space."
@@ -423,7 +439,8 @@ jobs:
           TAG="$RELEASE_TAG"
           if [ -z "$TAG" ] && [ "$TARGET_APP" = "media-generation" ]; then TAG="${MEDIA_TAG:-}"; fi
           if [ -z "$TAG" ]; then \
-                                 TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"; fi  # yamllint disable-line rule:line-length
+                                 \
+                                TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"; fi
           [ -n "$TAG" ] || TAG="GitOps sync"
           tce="NOT TARGETED"
           stock="NOT TARGETED"
@@ -501,7 +518,8 @@ jobs:
             "🎯 Status          $status" \
             "🔒 Isolation       ENABLED</pre>"
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" -d \
-                                                                                                             "chat_id=$TELEGRAM_CHAT_ID" --data-urlencode "text=$MESSAGE" -d "parse_mode=HTML"  # yamllint disable-line rule:line-length
+                                                                                                             \
+                                                                                                            "chat_id=$TELEGRAM_CHAT_ID" --data-urlencode "text=$MESSAGE" -d "parse_mode=HTML"
 
       - name: Notify Telegram — reconciliation resolved
         if: >-
@@ -517,7 +535,8 @@ jobs:
           TAG="$RELEASE_TAG"
           if [ -z "$TAG" ] && [ "$TARGET_APP" = "media-generation" ]; then TAG="${MEDIA_TAG:-}"; fi
           if [ -z "$TAG" ]; then \
-                                 TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"; fi  # yamllint disable-line rule:line-length
+                                 \
+                                TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"; fi
           [ -n "$TAG" ] || TAG="unknown"
           NOW="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
           printf -v MESSAGE '%s\n' \
@@ -535,7 +554,8 @@ jobs:
             "↩️ This result supersedes prior failed attempts for this release." \
             "🔒 Isolation       ENABLED</pre>"
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d \
-                                                                                                               "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=HTML"  # yamllint disable-line rule:line-length
+                                                                                                               \
+                                                                                                              "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=HTML"
       - name: Publish TCE deployment result event
         if: ${{ !cancelled() && env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'tce-dashboard') }}
         continue-on-error: true
@@ -548,7 +568,8 @@ jobs:
           TAG="$RELEASE_TAG"
           if [ -z "$TAG" ]; then
             \
-            TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"  # yamllint disable-line rule:line-length
+            \
+           TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
           fi
           if [ "$TCE_STATUS" = "success" ] && [ "$TCE_IMAGES_STATUS" = "success" ]; then
             EVENT=deployed
@@ -606,7 +627,8 @@ jobs:
           fi
           if [ "$TARGET_APP" = "all" ] || [ "$TARGET_APP" = "tce-dashboard" ]; then
             if [ "$TCE_STATUS" != "success" ] || [ "$TCE_IMAGES_STATUS" != "success" ]; then echo \
-                                                                                                  "TCE deployment verification failed." >&2; exit 1; fi  # yamllint disable-line rule:line-length
+                                                                                                  \
+                                                                                                 "TCE deployment verification failed." >&2; exit 1; fi
           fi
           if [ "$TARGET_APP" = "all" ] || [ "$TARGET_APP" = "stockdividend" ]; then
             if [ "$STOCK_STATUS" != "success" ]; then echo "StockDividend deployment verification failed." >&2; exit 1; fi
