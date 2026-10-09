@@ -1,19 +1,22 @@
 # MicroFE NestJS rollout contract
 
-MicroFE backend services use NestJS + TypeScript. Do not deploy the Express `server.mjs` Auth implementation.
+MicroFE Auth must be a standalone NestJS + TypeScript service. **No Supabase SDK, Data API, Supabase Auth, RPC-based auth logic, or Supabase service-role key in the auth runtime.**
 
 ## Auth runtime
-- Keep Auth self-hosted in the existing K3s namespace and retain the externally visible API/cookie contract while the NestJS replacement is developed.
-- Reuse the existing Supabase project and `public.users`, `public.refresh_sessions`, MFA and passkey tables.
-- Store only credential references in Kubernetes Secret manifests; never commit secret values.
-- Do not assume `tce-prod/tce-app-secrets` is the source until the live namespace and required keys are verified without printing values.
+- NestJS owns authentication/authorization business logic: password verification, MFA/recovery policy, session lifecycle, refresh rotation/reuse detection, CSRF, passkey challenge and credential-counter logic, role checks.
+- PostgreSQL is the data store. Connect using the standard `pg` driver with `DATABASE_URL` and bounded `DB_POOL_MAX`; use parameterized SQL and transactions for atomic operations.
+- Reuse the existing `public.users`, `public.refresh_sessions`, `public.mfa_recovery_codes`, `public.auth_passkey_challenges`, and `public.auth_passkey_credentials` tables. Preserve API paths, cookie names/domain and existing password hash compatibility.
+- Do not create duplicate user/session tables or mutate production schema unless a reviewed migration proves it necessary.
+- Store only secret references in Kubernetes manifests; never print or commit secret values. The runtime Secret must provide `DATABASE_URL`, `JWT_SECRET`, and `MFA_ENCRYPTION_KEY` (plus passkey RP/origin config as non-secret values).
+- Never copy Supabase service-role credentials into this service. Confirm existing DB URL secret source and network/SSL connectivity using key names only, without exposing credentials.
 - Preserve immutable SHA/digest image promotion.
 
 ## Gates before applying production
 1. NestJS build, lint, unit and end-to-end tests pass.
-2. The implementation uses the existing password format and fully supports enabled MFA/passkeys.
-3. Verify `rotate_refresh_token` arguments, return fields, reuse detection and function grants against the live schema.
-4. Kustomize validation succeeds and secret keys are verified by names only.
-5. Rollout probes pass, all three MicroFE deployments reach desired replicas, and HTTPS health checks pass.
+2. Confirm existing password hash formats and passkey schema compatibility.
+3. Test refresh rotation/reuse, recovery-code single use and passkey challenge single use under concurrent requests.
+4. Confirm Kubernetes secret source has `DATABASE_URL`, `JWT_SECRET` and `MFA_ENCRYPTION_KEY`; do not display values.
+5. Kustomize validation succeeds and immutable image digest is available.
+6. Rollout probes pass and HTTPS health checks return expected results.
 
-No production schema mutation should occur for this migration without a reviewed migration and explicit evidence it is required.
+No production deploy or schema mutation before all gates pass.
