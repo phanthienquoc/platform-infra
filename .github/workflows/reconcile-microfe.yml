@@ -65,6 +65,37 @@ jobs:
           ssh -fNT -i ~/.ssh/tce_vps_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -L 6443:127.0.0.1:6443 ubuntu@132.226.175.206
           echo "KUBECONFIG=/tmp/k3s.yaml" >> "$GITHUB_ENV"
 
+      - name: Provision MicroFE Auth Supabase credentials
+        if: ${{ env.RECONCILE_MODE == 'apply' }}
+        run: |
+          set -euo pipefail
+          kubectl apply -f platform/microfe/namespace.yaml
+          # The DB/API credentials are sourced from TCE's existing runtime Secret;
+          # the MFA encryption key remains sourced from the existing tce-auth Secret.
+          kubectl -n tce-prod get secret tce-app-secrets -o json |
+            jq -e '{
+              apiVersion: "v1",
+              kind: "Secret",
+              metadata: {name: "microfe-auth-secrets", namespace: "microfe-platform"},
+              type: "Opaque",
+              data: {
+                SUPABASE_URL: .data.SUPABASE_URL,
+                SUPABASE_SERVICE_ROLE_KEY: .data.SUPABASE_SERVICE_ROLE_KEY,
+                JWT_SECRET: .data.JWT_SECRET
+              }
+            } | select(.data.SUPABASE_URL != null and .data.SUPABASE_SERVICE_ROLE_KEY != null and .data.JWT_SECRET != null)' |
+            kubectl apply -f -
+          kubectl -n tce-prod get secret tce-auth -o json |
+            jq -e '{
+              apiVersion: "v1",
+              kind: "Secret",
+              metadata: {name: "microfe-auth-secrets", namespace: "microfe-platform"},
+              type: "Opaque",
+              data: {MFA_ENCRYPTION_KEY: .data.MFA_ENCRYPTION_KEY}
+            } | select(.data.MFA_ENCRYPTION_KEY != null)' |
+            kubectl apply --server-side --force-conflicts -f -
+          echo "MicroFE Auth runtime secret keys reconciled from existing TCE Kubernetes Secrets."
+      
       - name: Promote published MicroFE images
         if: ${{ github.event_name == 'repository_dispatch' && env.RECONCILE_MODE == 'apply' }}
         env:
