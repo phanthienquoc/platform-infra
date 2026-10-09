@@ -70,26 +70,32 @@ jobs:
         run: |
           set -euo pipefail
           kubectl apply -f platform/microfe/namespace.yaml
+          db_secret_file="$(mktemp)"
           app_secret_file="$(mktemp)"
           mfa_secret_file="$(mktemp)"
-          trap 'rm -f "$app_secret_file" "$mfa_secret_file"' EXIT
+          trap 'rm -f "$db_secret_file" "$app_secret_file" "$mfa_secret_file"' EXIT
+
+          # Discover key names only; never print secret contents.
+          kubectl -n tce-prod get secret --no-headers -o custom-columns=NAME:.metadata.name | grep -Fx 'tce-app-secrets' >/dev/null
           kubectl -n tce-prod get secret tce-app-secrets -o json > "$app_secret_file"
           kubectl -n tce-prod get secret tce-auth -o json > "$mfa_secret_file"
-          jq -e '.data | has("SUPABASE_URL") and has("SUPABASE_SERVICE_ROLE_KEY") and has("JWT_SECRET")' "$app_secret_file" >/dev/null
+          kubectl -n microfe-platform get secret microfe-db-secrets -o json > "$db_secret_file"
+
+          jq -e '.data | has("JWT_SECRET")' "$app_secret_file" >/dev/null
           jq -e '.data | has("MFA_ENCRYPTION_KEY")' "$mfa_secret_file" >/dev/null
-          jq -n --slurpfile app "$app_secret_file" --slurpfile mfa "$mfa_secret_file" '{
+          jq -e '.data | has("DATABASE_URL")' "$db_secret_file" >/dev/null
+          jq -n --slurpfile db "$db_secret_file" --slurpfile app "$app_secret_file" --slurpfile mfa "$mfa_secret_file" '{
             apiVersion: "v1",
             kind: "Secret",
             metadata: {name: "microfe-auth-secrets", namespace: "microfe-platform"},
             type: "Opaque",
             data: {
-              SUPABASE_URL: $app[0].data.SUPABASE_URL,
-              SUPABASE_SERVICE_ROLE_KEY: $app[0].data.SUPABASE_SERVICE_ROLE_KEY,
+              DATABASE_URL: $db[0].data.DATABASE_URL,
               JWT_SECRET: $app[0].data.JWT_SECRET,
               MFA_ENCRYPTION_KEY: $mfa[0].data.MFA_ENCRYPTION_KEY
             }
           }' | kubectl apply -f -
-          echo "MicroFE Auth credentials reconciled from existing TCE runtime Secrets; values are not printed."
+          echo "MicroFE Auth runtime secret keys verified and reconciled; values are not printed."
 
       - name: Promote published MicroFE images
         if: ${{ github.event_name == 'repository_dispatch' && env.RECONCILE_MODE == 'apply' }}
