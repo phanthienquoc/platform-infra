@@ -90,7 +90,7 @@ jobs:
             }
           }' | kubectl apply -f -
           echo "MicroFE Auth credentials reconciled from existing TCE runtime Secrets; values are not printed."
-      
+
       - name: Promote published MicroFE images
         if: ${{ github.event_name == 'repository_dispatch' && env.RECONCILE_MODE == 'apply' }}
         env:
