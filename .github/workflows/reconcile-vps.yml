@@ -316,6 +316,7 @@ jobs:
           TCE_IMAGES_STATUS: ${{ steps.verify_tce_images.outcome }}
           STOCK_STATUS: ${{ steps.verify_stock.outcome }}
           MEDIA_STATUS: ${{ steps.verify_media.outcome }}
+          MICROFE_STATUS: ${{ steps.verify_microfe.outcome }}
           APPLY_STATUS: ${{ steps.apply.outcome }}
           DRIFT: ${{ steps.preflight.outputs.drift }}
         run: |
@@ -329,6 +330,7 @@ jobs:
           tce="NOT TARGETED"
           stock="NOT TARGETED"
           media="NOT TARGETED"
+          microfe="NOT VERIFIED"
           if [ "$TARGET_APP" = "all" ] || [ "$TARGET_APP" = "tce-dashboard" ]; then
             if [ "$TCE_STATUS" = "success" ] && [ "$TCE_IMAGES_STATUS" = "success" ]; then
               tce="SUCCESS"
@@ -355,6 +357,11 @@ jobs:
             else
               media="NOT VERIFIED"
             fi
+          fi
+          if [ "$MICROFE_STATUS" = "success" ]; then
+            microfe="SUCCESS"
+          elif [ "$MICROFE_STATUS" = "failure" ]; then
+            microfe="FAILED"
           fi
 
           icon_for_status() {
@@ -388,6 +395,7 @@ jobs:
           TCE_ICON="$(icon_for_status "$tce")"
           STOCK_ICON="$(icon_for_status "$stock")"
           MEDIA_ICON="$(icon_for_status "$media")"
+          MICROFE_ICON="$(icon_for_status "$microfe")"
           STATUS_ICON="$(icon_for_status "$status")"
           printf -v MESSAGE '%s\n' \
             "<pre>${STATUS_ICON} PRODUCTION • ROLLOUT" \
@@ -398,6 +406,7 @@ jobs:
             "${TCE_ICON} TCE             $tce" \
             "${STOCK_ICON} StockDividend   $stock" \
             "${MEDIA_ICON} Media           $media" \
+            "${MICROFE_ICON} MicroFE         $microfe" \
             "" \
             "🎯 Status          $status" \
             "🔒 Isolation       ENABLED</pre>"
@@ -489,6 +498,7 @@ jobs:
           TCE_IMAGES_STATUS: ${{ steps.verify_tce_images.outcome }}
           STOCK_STATUS: ${{ steps.verify_stock.outcome }}
           MEDIA_STATUS: ${{ steps.verify_media.outcome }}
+          MICROFE_STATUS: ${{ steps.verify_microfe.outcome }}
           DRIFT_STATUS: ${{ steps.verify_drift.outcome }}
           DRIFT: ${{ steps.preflight.outputs.drift }}
         run: |
@@ -508,5 +518,6 @@ jobs:
           if [ "$TARGET_APP" = "all" ] || [ "$TARGET_APP" = "media-generation" ]; then
             if [ "$MEDIA_STATUS" != "success" ]; then echo "Media generation deployment verification failed." >&2; exit 1; fi
           fi
+          if [ "$MICROFE_STATUS" != "success" ]; then echo "MicroFE deployment verification failed." >&2; exit 1; fi
           echo "Targeted production deployment verification passed."
 # yamllint enable rule:line-length
