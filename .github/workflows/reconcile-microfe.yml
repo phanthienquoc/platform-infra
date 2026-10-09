@@ -70,27 +70,29 @@ jobs:
         run: |
           set -euo pipefail
           kubectl apply -f platform/microfe/namespace.yaml
-          db_secret_file="$(mktemp)"
           app_secret_file="$(mktemp)"
           mfa_secret_file="$(mktemp)"
-          trap 'rm -f "$db_secret_file" "$app_secret_file" "$mfa_secret_file"' EXIT
+          trap 'rm -f "$app_secret_file" "$mfa_secret_file"' EXIT
 
-          # Discover key names only; never print secret contents.
-          kubectl -n tce-prod get secret --no-headers -o custom-columns=NAME:.metadata.name | grep -Fx 'tce-app-secrets' >/dev/null
+          # The existing TCE app Secret is the source of DATABASE_URL and JWT_SECRET.
+          # Verify key names only; do not decode or print credential values.
           kubectl -n tce-prod get secret tce-app-secrets -o json > "$app_secret_file"
           kubectl -n tce-prod get secret tce-auth -o json > "$mfa_secret_file"
-          kubectl -n microfe-platform get secret microfe-db-secrets -o json > "$db_secret_file"
-
-          jq -e '.data | has("JWT_SECRET")' "$app_secret_file" >/dev/null
-          jq -e '.data | has("MFA_ENCRYPTION_KEY")' "$mfa_secret_file" >/dev/null
-          jq -e '.data | has("DATABASE_URL")' "$db_secret_file" >/dev/null
-          jq -n --slurpfile db "$db_secret_file" --slurpfile app "$app_secret_file" --slurpfile mfa "$mfa_secret_file" '{
+          jq -e '.data | has("DATABASE_URL") and has("JWT_SECRET")' "$app_secret_file" >/dev/null || {
+            echo "::error::tce-prod/tce-app-secrets must contain DATABASE_URL and JWT_SECRET keys. Add the PostgreSQL connection secret there; do not print its value."
+            exit 1
+          }
+          jq -e '.data | has("MFA_ENCRYPTION_KEY")' "$mfa_secret_file" >/dev/null || {
+            echo "::error::tce-prod/tce-auth must contain MFA_ENCRYPTION_KEY."
+            exit 1
+          }
+          jq -n --slurpfile app "$app_secret_file" --slurpfile mfa "$mfa_secret_file" '{
             apiVersion: "v1",
             kind: "Secret",
             metadata: {name: "microfe-auth-secrets", namespace: "microfe-platform"},
             type: "Opaque",
             data: {
-              DATABASE_URL: $db[0].data.DATABASE_URL,
+              DATABASE_URL: $app[0].data.DATABASE_URL,
               JWT_SECRET: $app[0].data.JWT_SECRET,
               MFA_ENCRYPTION_KEY: $mfa[0].data.MFA_ENCRYPTION_KEY
             }
