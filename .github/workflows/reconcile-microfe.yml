@@ -65,6 +65,26 @@ jobs:
           ssh -fNT -i ~/.ssh/tce_vps_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -L 6443:127.0.0.1:6443 ubuntu@132.226.175.206
           echo "KUBECONFIG=/tmp/k3s.yaml" >> "$GITHUB_ENV"
 
+      - name: Provision MicroFE Auth Supabase credentials
+        if: ${{ env.RECONCILE_MODE == 'apply' }}
+        run: |
+          set -euo pipefail
+          kubectl apply -f platform/microfe/namespace.yaml
+          kubectl -n tce-prod get secret tce-app-secrets -o json |
+            jq -e '{
+              apiVersion: "v1",
+              kind: "Secret",
+              metadata: {name: "microfe-auth-secrets", namespace: "microfe-platform"},
+              type: "Opaque",
+              data: {
+                SUPABASE_URL: .data.SUPABASE_URL,
+                SUPABASE_SERVICE_ROLE_KEY: .data.SUPABASE_SERVICE_ROLE_KEY,
+                JWT_SECRET: .data.JWT_SECRET
+              }
+            } | select(.data.SUPABASE_URL != null and .data.SUPABASE_SERVICE_ROLE_KEY != null and .data.JWT_SECRET != null)' |
+            kubectl apply -f -
+          echo "MicroFE Auth Supabase credentials reconciled from the existing TCE runtime secret."
+
       - name: Promote published MicroFE images
         if: ${{ github.event_name == 'repository_dispatch' && env.RECONCILE_MODE == 'apply' }}
         env:
@@ -208,6 +228,17 @@ jobs:
         run: |
           set -euo pipefail
           curl --fail --silent --show-error --location --max-time 20 https://app.mrcute.space/ >/dev/null
+
+      - name: Diagnose MicroFE rollout failures
+        if: ${{ failure() }}
+        run: |
+          set +e
+          echo "MicroFE pods (status only):"
+          kubectl -n microfe-platform get pods -o wide
+          echo "Recent MicroFE events (diagnostics only):"
+          kubectl -n microfe-platform get events --sort-by=.lastTimestamp | tail -n 60
+          echo "MicroFE deployments:"
+          kubectl -n microfe-platform get deployments -o wide
 
       - name: Cleanup SSH
         if: always()
