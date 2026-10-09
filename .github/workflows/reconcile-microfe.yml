@@ -122,8 +122,8 @@ jobs:
       - name: Configure GHCR pull credentials
         if: ${{ env.RECONCILE_MODE == 'apply' }}
         env:
-          GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.actor }}
-          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN || secrets.GITHUB_TOKEN }}
+          GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}
+          GHCR_TOKEN: ${{ secrets['Platform-infra-token'] || secrets.GHCR_READ_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           test -n "$GHCR_TOKEN"
