@@ -113,12 +113,12 @@ jobs:
       - name: Bootstrap GHCR pull credentials
         if: ${{ env.RECONCILE_MODE == 'apply' }}
         env:
-          GHCR_USERNAME: ${{ github.actor }}
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.actor }}
+          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           test -n "$GHCR_TOKEN"
-          printf "%s\n%s\n" "$GHCR_USERNAME" "$GHCR_TOKEN" |
+          printf "%s\\n%s\\n" "$GHCR_USERNAME" "$GHCR_TOKEN" |
             sudo /usr/local/sbin/platform-kubectl reconcile-ghcr-pull
           echo "GHCR pull credentials reconciled for private-image namespaces."
       - name: Restart workloads blocked on image pulls
