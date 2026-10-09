@@ -90,6 +90,13 @@ case "${1:-}" in
     restart_if_blocked stock-prod deployment/stock-admin deployment/stock-backend
     exit 0
     ;;
+  port-forward)
+    [[ "${2:-}" == "svc/microfe-ws" && "${3:-}" =~ ^[0-9]+:8080$ && "${4:-}" == "" ]] || {
+      echo "platform-kubectl: only MicroFE websocket port-forward to container port 8080 is allowed" >&2
+      exit 2
+    }
+    exec "${KUBECTL[@]}" -n microfe-platform port-forward svc/microfe-ws "${3}"
+    ;;
   logs)
     if [[ "${2:-}" == "deployment/media-generation" && "${3:-}" == "-n" && "${4:-}" == "media-prod" && ( "${5:-}" == "--tail=200" || "${5:-}" == "--previous" ) ]]; then
       if [[ "${5:-}" == "--previous" ]]; then exec "${KUBECTL[@]}" logs deployment/media-generation -n media-prod --previous --tail=200; fi
