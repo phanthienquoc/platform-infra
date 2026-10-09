@@ -35,13 +35,16 @@ spec:
               value: ".mrcute.space"
             - name: AUTH_SESSION_TTL_SECONDS
               value: "2592000"
-            - name: DB_POOL_MAX
-              value: "5"
-            - name: DATABASE_URL
+            - name: SUPABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: microfe-auth-secrets
-                  key: DATABASE_URL
+                  key: SUPABASE_URL
+            - name: SUPABASE_SERVICE_ROLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: microfe-auth-secrets
+                  key: SUPABASE_SERVICE_ROLE_KEY
           startupProbe:
             httpGet:
               path: /health/live
