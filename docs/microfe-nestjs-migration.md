@@ -16,7 +16,7 @@ MicroFE Auth must be a standalone NestJS + TypeScript service. **No Supabase SDK
 2. Review and apply `microfe/auth/migrations/0001_allow_mfa_challenges.sql` to the existing database before deploying MFA challenge persistence.
 3. Confirm existing password hash formats and passkey schema compatibility.
 4. Test refresh rotation/reuse, recovery-code single use, MFA challenge single use and passkey challenge single use under concurrent requests.
-4. Confirm Kubernetes secret source has `DATABASE_URL`, `JWT_SECRET` and `MFA_ENCRYPTION_KEY`; do not display values.
+5. Confirm Kubernetes secret source has `DATABASE_URL`, `JWT_SECRET` and `MFA_ENCRYPTION_KEY`; do not display values.
 6. Kustomize validation succeeds and immutable image digest is available.
 7. Rollout probes pass and HTTPS health checks return expected results.
 
