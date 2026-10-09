@@ -35,16 +35,13 @@ spec:
               value: ".mrcute.space"
             - name: AUTH_SESSION_TTL_SECONDS
               value: "2592000"
-            - name: SUPABASE_URL
+            - name: DB_POOL_MAX
+              value: "5"
+            - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: microfe-auth-secrets
-                  key: SUPABASE_URL
-            - name: SUPABASE_SERVICE_ROLE_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: microfe-auth-secrets
-                  key: SUPABASE_SERVICE_ROLE_KEY
+                  key: DATABASE_URL
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
