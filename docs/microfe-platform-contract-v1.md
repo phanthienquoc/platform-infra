@@ -9,7 +9,8 @@
 ## Auth
 - Self-hosted authentication.
 - Browser uses an HttpOnly session boundary.
-- Supabase Auth is not used.
+- Supabase Auth is not used; the self-hosted Auth service uses the existing Supabase Data API and canonical `public.users` / `public.refresh_sessions` tables.
+- The browser never receives `SUPABASE_SERVICE_ROLE_KEY`; production injects it only into the Auth server from the existing TCE runtime secret.
 - Auth owns identity, sessions, rotation, revocation, RBAC, logout, CSRF, rate limits, audit events, and request IDs.
 - Browser API: GET /auth/me, POST /auth/login, POST /auth/refresh, POST /auth/logout, POST /auth/logout-all.
 - Auth errors use stable code/message/requestId fields.
