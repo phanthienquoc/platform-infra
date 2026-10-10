@@ -42,6 +42,22 @@ spec:
                 secretKeyRef:
                   name: microfe-auth-secrets
                   key: DATABASE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: microfe-auth-secrets
+                  key: JWT_SECRET
+            - name: MFA_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: microfe-auth-secrets
+                  key: MFA_ENCRYPTION_KEY
+            - name: PASSKEY_RP_ID
+              value: "mrcute.space"
+            - name: PASSKEY_RP_NAME
+              value: "MRCute"
+            - name: PASSKEY_ORIGIN
+              value: "https://app.mrcute.space"
           startupProbe:
             httpGet:
               path: /health/live

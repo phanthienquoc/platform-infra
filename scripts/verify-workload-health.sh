@@ -6,7 +6,7 @@ TARGET_APP="${TARGET_APP:-all}"
 
 case "$TARGET_APP" in
   all)
-    namespaces=(tce-prod stock-prod media-prod)
+    namespaces=(tce-prod stock-prod media-prod microfe-platform)
     ;;
   tce-dashboard)
     namespaces=(tce-prod)
@@ -16,6 +16,9 @@ case "$TARGET_APP" in
     ;;
   media-generation)
     namespaces=(media-prod)
+    ;;
+  microfe)
+    namespaces=(microfe-platform)
     ;;
   *)
     echo "::error::Unsupported deployment scope: $TARGET_APP" >&2

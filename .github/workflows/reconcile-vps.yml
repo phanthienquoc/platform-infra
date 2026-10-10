@@ -27,6 +27,7 @@ name: reconcile-vps
           - tce-dashboard
           - stockdividend
           - media-generation
+          - microfe
   repository_dispatch:
     types:
       - gitops-promoted-ready
@@ -82,7 +83,7 @@ jobs:
         run: |
           set -euo pipefail
           case "$TARGET_APP" in
-            all|tce-dashboard|stockdividend|media-generation) ;;
+            all|tce-dashboard|stockdividend|media-generation|microfe) ;;
             *) echo "::error::Unsupported deployment scope: $TARGET_APP"; exit 1 ;;
           esac
           echo "Deployment scope: $TARGET_APP"
@@ -267,7 +268,7 @@ jobs:
 
       - name: Verify MicroFE rollout
         id: verify_microfe
-        if: ${{ env.RECONCILE_MODE == 'apply' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'microfe') }}
         continue-on-error: true
         run: |
           set -u
@@ -382,9 +383,9 @@ jobs:
             status="RECONCILIATION FAILED"
             [ "$tce" = "FAILED" ] || [ "$tce" = "SUCCESS" ] || tce="BLOCKED"
             [ "$stock" = "FAILED" ] || [ "$stock" = "SUCCESS" ] || stock="BLOCKED"
-          elif [[ "$tce" == "FAILED" && "$stock" == "FAILED" && "$media" == "FAILED" ]]; then
+          elif [[ "$tce" == "FAILED" && "$stock" == "FAILED" && "$media" == "FAILED" && ( "$TARGET_APP" != "all" || "$microfe" == "FAILED" ) ]]; then
             status="FAILED"
-          elif [[ "$tce" == "FAILED" || "$stock" == "FAILED" || "$media" == "FAILED" ]]; then
+          elif [[ "$tce" == "FAILED" || "$stock" == "FAILED" || "$media" == "FAILED" || ( ( "$TARGET_APP" == "all" || "$TARGET_APP" == "microfe" ) && "$microfe" == "FAILED" ) ]]; then
             status="PARTIAL"
           elif [[ "$tce" == "NOT VERIFIED" || "$stock" == "NOT VERIFIED" || "$media" == "NOT VERIFIED" ]]; then
             status="RECONCILIATION FAILED"
@@ -413,7 +414,7 @@ jobs:
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" -d "chat_id=$TELEGRAM_CHAT_ID" --data-urlencode "text=$MESSAGE" -d "parse_mode=HTML"
 
       - name: Notify Telegram — reconciliation resolved
-        if: ${{ !cancelled() && env.RECONCILE_MODE == 'apply' && steps.apply.outcome == 'success' && (steps.verify_media.outcome == 'success' || steps.verify_tce.outcome == 'success' || steps.verify_stock.outcome == 'success') }}
+        if: ${{ !cancelled() && env.RECONCILE_MODE == 'apply' && steps.apply.outcome == 'success' && (steps.verify_media.outcome == 'success' || steps.verify_tce.outcome == 'success' || steps.verify_stock.outcome == 'success' || steps.verify_microfe.outcome == 'success') }}
         continue-on-error: true
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -518,6 +519,8 @@ jobs:
           if [ "$TARGET_APP" = "all" ] || [ "$TARGET_APP" = "media-generation" ]; then
             if [ "$MEDIA_STATUS" != "success" ]; then echo "Media generation deployment verification failed." >&2; exit 1; fi
           fi
-          if [ "$MICROFE_STATUS" != "success" ]; then echo "MicroFE deployment verification failed." >&2; exit 1; fi
+          if [ "$TARGET_APP" = "all" ] || [ "$TARGET_APP" = "microfe" ]; then
+            if [ "$MICROFE_STATUS" != "success" ]; then echo "MicroFE deployment verification failed." >&2; exit 1; fi
+          fi
           echo "Targeted production deployment verification passed."
 # yamllint enable rule:line-length
