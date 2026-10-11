@@ -65,6 +65,40 @@ jobs:
           ssh -fNT -i ~/.ssh/tce_vps_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -L 6443:127.0.0.1:6443 ubuntu@132.226.175.206
           echo "KUBECONFIG=/tmp/k3s.yaml" >> "$GITHUB_ENV"
 
+      - name: Provision MicroFE Auth runtime credentials
+        if: ${{ env.RECONCILE_MODE == 'apply' && env.ALLOW_IMAGE_CHANGES == 'true' }}
+        run: |
+          set -euo pipefail
+          kubectl apply -f platform/microfe/namespace.yaml
+          app_secret_file="$(mktemp)"
+          mfa_secret_file="$(mktemp)"
+          trap 'rm -f "$app_secret_file" "$mfa_secret_file"' EXIT
+
+          # The existing TCE app Secret is the source of DATABASE_URL and JWT_SECRET.
+          # Verify key names only; do not decode or print credential values.
+          kubectl -n tce-prod get secret tce-app-secrets -o json > "$app_secret_file"
+          kubectl -n tce-prod get secret tce-auth -o json > "$mfa_secret_file"
+          jq -e '.data | has("DATABASE_URL") and has("JWT_SECRET")' "$app_secret_file" >/dev/null || {
+            echo "::error::tce-prod/tce-app-secrets must contain DATABASE_URL and JWT_SECRET keys. Add the PostgreSQL connection secret there; do not print its value."
+            exit 1
+          }
+          jq -e '.data | has("MFA_ENCRYPTION_KEY")' "$mfa_secret_file" >/dev/null || {
+            echo "::error::tce-prod/tce-auth must contain MFA_ENCRYPTION_KEY."
+            exit 1
+          }
+          jq -n --slurpfile app "$app_secret_file" --slurpfile mfa "$mfa_secret_file" '{
+            apiVersion: "v1",
+            kind: "Secret",
+            metadata: {name: "microfe-auth-secrets", namespace: "microfe-platform"},
+            type: "Opaque",
+            data: {
+              DATABASE_URL: $app[0].data.DATABASE_URL,
+              JWT_SECRET: $app[0].data.JWT_SECRET,
+              MFA_ENCRYPTION_KEY: $mfa[0].data.MFA_ENCRYPTION_KEY
+            }
+          }' | kubectl apply -f -
+          echo "MicroFE Auth runtime secret keys verified and reconciled; values are not printed."
+
       - name: Promote published MicroFE images
         if: ${{ github.event_name == 'repository_dispatch' && env.RECONCILE_MODE == 'apply' }}
         env:
