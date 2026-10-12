@@ -65,39 +65,94 @@ jobs:
           ssh -fNT -i ~/.ssh/tce_vps_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -L 6443:127.0.0.1:6443 ubuntu@132.226.175.206
           echo "KUBECONFIG=/tmp/k3s.yaml" >> "$GITHUB_ENV"
 
-      - name: Provision MicroFE Auth runtime credentials
+      - name: Provision MicroFE Auth runtime configuration and credentials
         if: ${{ env.RECONCILE_MODE == 'apply' && env.ALLOW_IMAGE_CHANGES == 'true' }}
+        env:
+          SUPABASE_URL_INPUT: ${{ vars.SUPABASE_URL || vars.MICROFE_SUPABASE_URL || secrets.SUPABASE_URL || '' }}
+          SUPABASE_SERVICE_ROLE_KEY_INPUT: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.MICROFE_SUPABASE_SERVICE_ROLE_KEY || '' }}
+          JWT_SECRET_INPUT: ${{ secrets.JWT_SECRET || secrets.MICROFE_JWT_SECRET || '' }}
+          MFA_ENCRYPTION_KEY_INPUT: ${{ secrets.MFA_ENCRYPTION_KEY || secrets.MICROFE_MFA_ENCRYPTION_KEY || '' }}
+          CORS_ORIGINS: ${{ vars.MICROFE_AUTH_CORS_ORIGINS || 'https://tce.mrcute.space,https://media.mrcute.space' }}
+          JWT_ISSUER: ${{ vars.MICROFE_AUTH_JWT_ISSUER || 'https://auth.mrcute.space' }}
+          JWT_AUDIENCE: ${{ vars.MICROFE_AUTH_JWT_AUDIENCE || 'tce-dashboard,media-generation' }}
+          JWT_ACCESS_TTL_SECONDS: ${{ vars.MICROFE_AUTH_JWT_ACCESS_TTL_SECONDS || '900' }}
+          JWT_REFRESH_TTL_SECONDS: ${{ vars.MICROFE_AUTH_JWT_REFRESH_TTL_SECONDS || '2592000' }}
+          PASSKEY_RP_ID: ${{ vars.MICROFE_AUTH_PASSKEY_RP_ID || 'mrcute.space' }}
+          PASSKEY_RP_NAME: ${{ vars.MICROFE_AUTH_PASSKEY_RP_NAME || 'MRCute' }}
+          PASSKEY_ORIGIN: ${{ vars.MICROFE_AUTH_PASSKEY_ORIGIN || 'https://auth.mrcute.space' }}
         run: |
           set -euo pipefail
           kubectl apply -f platform/microfe/namespace.yaml
+          existing_file="$(mktemp)"
           app_secret_file="$(mktemp)"
           mfa_secret_file="$(mktemp)"
-          trap 'rm -f "$app_secret_file" "$mfa_secret_file"' EXIT
+          trap 'rm -f "$existing_file" "$app_secret_file" "$mfa_secret_file"' EXIT
 
-          # The existing TCE app Secret is the source of DATABASE_URL and JWT_SECRET.
-          # Verify key names only; do not decode or print credential values.
-          kubectl -n tce-prod get secret tce-app-secrets -o json > "$app_secret_file"
-          kubectl -n tce-prod get secret tce-auth -o json > "$mfa_secret_file"
-          jq -e '.data | has("DATABASE_URL") and has("JWT_SECRET")' "$app_secret_file" >/dev/null || {
-            echo "::error::tce-prod/tce-app-secrets must contain DATABASE_URL and JWT_SECRET keys. Add the PostgreSQL connection secret there; do not print its value."
-            exit 1
+          # Read existing secret data for fallback without decoding or logging values.
+          kubectl -n microfe-platform get secret microfe-auth-secrets -o json > "$existing_file" 2>/dev/null || printf '{}\n' > "$existing_file"
+          kubectl -n tce-prod get secret tce-app-secrets -o json > "$app_secret_file" 2>/dev/null || printf '{}\n' > "$app_secret_file"
+          kubectl -n tce-prod get secret tce-auth -o json > "$mfa_secret_file" 2>/dev/null || printf '{}\n' > "$mfa_secret_file"
+
+          secret_b64() {
+            local key="$1"
+            local file="$2"
+            jq -r --arg key "$key" '.data[$key] // empty' "$file"
           }
-          jq -e '.data | has("MFA_ENCRYPTION_KEY")' "$mfa_secret_file" >/dev/null || {
-            echo "::error::tce-prod/tce-auth must contain MFA_ENCRYPTION_KEY."
-            exit 1
+          encode_if_set() {
+            if [ -n "$1" ]; then printf '%s' "$1" | base64 | tr -d '\n'; fi
           }
-          jq -n --slurpfile app "$app_secret_file" --slurpfile mfa "$mfa_secret_file" '{
-            apiVersion: "v1",
-            kind: "Secret",
-            metadata: {name: "microfe-auth-secrets", namespace: "microfe-platform"},
-            type: "Opaque",
-            data: {
-              DATABASE_URL: $app[0].data.DATABASE_URL,
-              JWT_SECRET: $app[0].data.JWT_SECRET,
-              MFA_ENCRYPTION_KEY: $mfa[0].data.MFA_ENCRYPTION_KEY
-            }
-          }' | kubectl apply -f -
-          echo "MicroFE Auth runtime secret keys verified and reconciled; values are not printed."
+
+          # Precedence: GitHub Actions secret/variable, existing MicroFE secret, then legacy TCE secret.
+          supabase_url_b64="$(encode_if_set "$SUPABASE_URL_INPUT")"
+          supabase_url_b64="${supabase_url_b64:-$(secret_b64 SUPABASE_URL "$existing_file")}"
+          supabase_url_b64="${supabase_url_b64:-$(secret_b64 SUPABASE_URL "$app_secret_file")}"
+
+          supabase_key_b64="$(encode_if_set "$SUPABASE_SERVICE_ROLE_KEY_INPUT")"
+          supabase_key_b64="${supabase_key_b64:-$(secret_b64 SUPABASE_SERVICE_ROLE_KEY "$existing_file")}"
+          supabase_key_b64="${supabase_key_b64:-$(secret_b64 SUPABASE_SERVICE_ROLE_KEY "$app_secret_file")}"
+
+          jwt_b64="$(encode_if_set "$JWT_SECRET_INPUT")"
+          jwt_b64="${jwt_b64:-$(secret_b64 JWT_SECRET "$existing_file")}"
+          jwt_b64="${jwt_b64:-$(secret_b64 JWT_SECRET "$app_secret_file")}"
+
+          mfa_b64="$(encode_if_set "$MFA_ENCRYPTION_KEY_INPUT")"
+          mfa_b64="${mfa_b64:-$(secret_b64 MFA_ENCRYPTION_KEY "$existing_file")}"
+          mfa_b64="${mfa_b64:-$(secret_b64 MFA_ENCRYPTION_KEY "$mfa_secret_file")}"
+
+          for item in SUPABASE_URL="$supabase_url_b64" SUPABASE_SERVICE_ROLE_KEY="$supabase_key_b64" JWT_SECRET="$jwt_b64" MFA_ENCRYPTION_KEY="$mfa_b64"; do
+            [ -n "${item#*=}" ] || { echo "::error::Missing required Auth runtime key ${item%%=*}. Add its GitHub secret/variable or provision it in the existing Kubernetes secret."; exit 1; }
+          done
+
+          jq -n \
+            --arg supabase_url "$supabase_url_b64" \
+            --arg supabase_key "$supabase_key_b64" \
+            --arg jwt "$jwt_b64" \
+            --arg mfa "$mfa_b64" '{
+              apiVersion: "v1",
+              kind: "Secret",
+              metadata: {name: "microfe-auth-secrets", namespace: "microfe-platform"},
+              type: "Opaque",
+              data: {
+                SUPABASE_URL: $supabase_url,
+                SUPABASE_SERVICE_ROLE_KEY: $supabase_key,
+                JWT_SECRET: $jwt,
+                MFA_ENCRYPTION_KEY: $mfa
+              }
+            }' | kubectl apply -f -
+
+          kubectl -n microfe-platform create configmap microfe-auth-config \
+            --from-literal=NODE_ENV=production \
+            --from-literal=PORT=4010 \
+            --from-literal=CORS_ORIGINS="$CORS_ORIGINS" \
+            --from-literal=JWT_ISSUER="$JWT_ISSUER" \
+            --from-literal=JWT_AUDIENCE="$JWT_AUDIENCE" \
+            --from-literal=JWT_ACCESS_TTL_SECONDS="$JWT_ACCESS_TTL_SECONDS" \
+            --from-literal=JWT_REFRESH_TTL_SECONDS="$JWT_REFRESH_TTL_SECONDS" \
+            --from-literal=PASSKEY_RP_ID="$PASSKEY_RP_ID" \
+            --from-literal=PASSKEY_RP_NAME="$PASSKEY_RP_NAME" \
+            --from-literal=PASSKEY_ORIGIN="$PASSKEY_ORIGIN" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          echo "MicroFE Auth runtime Secret and ConfigMap reconciled; credential values are not printed."
 
       - name: Promote published MicroFE images
         if: ${{ github.event_name == 'repository_dispatch' && env.RECONCILE_MODE == 'apply' }}
