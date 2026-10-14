@@ -11,8 +11,8 @@ if grep -nE '^  type: (LoadBalancer|NodePort)$' "$output"; then
 fi
 
 ingress_count="$(grep -c '^kind: Ingress$' "$output" || true)"
-if [ "$ingress_count" -ne 4 ]; then
-  echo "Expected exactly 4 production Ingress resources, found $ingress_count."
+if [ "$ingress_count" -ne 4 ] && [ "$ingress_count" -ne 5 ]; then
+  echo "Expected 4 existing production Ingress resources (or 5 when SSO is activated), found $ingress_count."
   exit 1
 fi
 
@@ -27,6 +27,7 @@ media.mrcute.space
 auth.mrcute.space
 app.mrcute.space
 ws.mrcute.space
+sso.mrcute.space
 '
 for host in "${hosts[@]}"; do
   grep -qx "$host" <<< "$allowed" || { echo "Unexpected externally routable host: $host"; exit 1; }
