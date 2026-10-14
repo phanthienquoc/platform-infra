@@ -72,6 +72,52 @@ case "${1:-}" in
     done
     exit 0
     ;;
+  provision-auth-secret)
+    [[ "$#" -eq 1 ]] || {
+      echo "platform-kubectl: provision-auth-secret takes no arguments" >&2
+      exit 2
+    }
+
+    # Copy the established production credentials into the Auth namespace.
+    # Values are never written to workflow logs or command-line arguments.
+    tmp="$(mktemp)"
+    trap 'rm -f "$tmp"' EXIT
+    umask 077
+
+    read_secret() {
+      local secret_name="$1"
+      local key="$2"
+      "${KUBECTL[@]}" get secret "$secret_name" -n tce-prod \
+        -o "jsonpath={.data.${key}}" | base64 -d
+    }
+
+    supabase_url="$(read_secret tce-app-secrets SUPABASE_URL)"
+    supabase_role_key="$(read_secret tce-app-secrets SUPABASE_SERVICE_ROLE_KEY)"
+    jwt_secret="$(read_secret tce-app-secrets JWT_SECRET)"
+    mfa_encryption_key="$(read_secret tce-auth MFA_ENCRYPTION_KEY)"
+
+    [[ -n "$supabase_url" && -n "$supabase_role_key" && -n "$jwt_secret" && -n "$mfa_encryption_key" ]] || {
+      echo "platform-kubectl: required source Auth credentials are missing" >&2
+      exit 1
+    }
+
+    mfa_bytes="$(printf '%s' "$mfa_encryption_key" | base64 -d | wc -c)"
+    [[ "$mfa_bytes" -eq 32 ]] || {
+      echo "platform-kubectl: source MFA_ENCRYPTION_KEY is not a base64-encoded 32-byte key" >&2
+      exit 1
+    }
+
+    printf 'SUPABASE_URL=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\nJWT_SECRET=%s\nMFA_ENCRYPTION_KEY=%s\n' \
+      "$supabase_url" "$supabase_role_key" "$jwt_secret" "$mfa_encryption_key" > "$tmp"
+
+    "${KUBECTL[@]}" create secret generic microfe-auth-secrets \
+      -n microfe-platform --from-env-file="$tmp" --dry-run=client -o yaml \
+      | "${KUBECTL[@]}" apply -f -
+
+    unset supabase_url supabase_role_key jwt_secret mfa_encryption_key
+    echo "Auth runtime Secret provisioned from existing production credentials (values suppressed)."
+    exit 0
+    ;;
   restart-blocked-image-pulls)
     [[ "$#" -eq 1 ]] || exit 2
     restart_if_blocked() {
