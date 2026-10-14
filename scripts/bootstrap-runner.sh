@@ -46,7 +46,7 @@ case "${1:-}" in
     ;;
   policy-version)
     [[ "$#" -eq 1 ]] || exit 2
-    echo "platform-kubectl policy: rollout-status-v6-auth-secret-provision"
+    echo "platform-kubectl policy: rollout-status-v7-auth-secret-provision"
     exit 0
     ;;
   reconcile-ghcr-pull)
@@ -210,7 +210,7 @@ echo "platform-kubectl: command is not allowlisted" >&2
 exit 2
 EOF
 chmod 0755 /usr/local/sbin/platform-kubectl
-echo "platform-kubectl policy: rollout-status-v5-auth-secret-verify"
+echo "platform-kubectl policy: rollout-status-v7-auth-secret-provision"
 cat >/etc/sudoers.d/platform-infra-runner <<EOF
 $RUNNER_USER ALL=(root) NOPASSWD: /usr/local/sbin/platform-kubectl *
 EOF
