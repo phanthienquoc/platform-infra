@@ -21,27 +21,21 @@ spec:
           image: ghcr.io/phanthienquoc/microfe-auth:0.1.0
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 3000
+            - containerPort: 4010
+          envFrom:
+            - configMapRef:
+                name: microfe-auth-config
           env:
-            - name: NODE_ENV
-              value: production
-            - name: PORT
-              value: "3000"
-            - name: AUTH_COOKIE_NAME
-              value: "__Secure-microfe_session"
-            - name: AUTH_CSRF_COOKIE_NAME
-              value: "__Secure-microfe_csrf"
-            - name: AUTH_COOKIE_DOMAIN
-              value: ".mrcute.space"
-            - name: AUTH_SESSION_TTL_SECONDS
-              value: "2592000"
-            - name: DB_POOL_MAX
-              value: "5"
-            - name: DATABASE_URL
+            - name: SUPABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: microfe-auth-secrets
-                  key: DATABASE_URL
+                  key: SUPABASE_URL
+            - name: SUPABASE_SERVICE_ROLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: microfe-auth-secrets
+                  key: SUPABASE_SERVICE_ROLE_KEY
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -52,28 +46,22 @@ spec:
                 secretKeyRef:
                   name: microfe-auth-secrets
                   key: MFA_ENCRYPTION_KEY
-            - name: PASSKEY_RP_ID
-              value: "mrcute.space"
-            - name: PASSKEY_RP_NAME
-              value: "MRCute"
-            - name: PASSKEY_ORIGIN
-              value: "https://app.mrcute.space"
           startupProbe:
             httpGet:
-              path: /health/live
-              port: 3000
+              path: /api/health
+              port: 4010
             periodSeconds: 5
             failureThreshold: 30
           readinessProbe:
             httpGet:
-              path: /health/ready
-              port: 3000
+              path: /api/ready
+              port: 4010
             periodSeconds: 5
             timeoutSeconds: 3
           livenessProbe:
             httpGet:
-              path: /health/live
-              port: 3000
+              path: /api/health
+              port: 4010
             periodSeconds: 10
             timeoutSeconds: 3
           resources:
@@ -94,4 +82,4 @@ spec:
     app: microfe-auth
   ports:
     - port: 80
-      targetPort: 3000
+      targetPort: 4010
