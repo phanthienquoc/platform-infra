@@ -46,7 +46,7 @@ case "${1:-}" in
     ;;
   policy-version)
     [[ "$#" -eq 1 ]] || exit 2
-    echo "platform-kubectl policy: rollout-status-v8-auth-secret-provision"
+    echo "platform-kubectl policy: rollout-status-v9-auth-secret-provision"
     exit 0
     ;;
   reconcile-ghcr-pull)
@@ -110,6 +110,7 @@ case "${1:-}" in
     fi
     unset supabase_url supabase_service_role_key jwt_secret mfa_encryption_key
     echo "Auth runtime Secret provisioned in microfe-platform; values suppressed."
+    exit 0
     ;;
   verify-auth-secret)
     [[ "$#" -eq 1 ]] || {
@@ -214,7 +215,7 @@ echo "platform-kubectl: command is not allowlisted" >&2
 exit 2
 EOF
 chmod 0755 /usr/local/sbin/platform-kubectl
-echo "platform-kubectl policy: rollout-status-v8-auth-secret-provision"
+echo "platform-kubectl policy: rollout-status-v9-auth-secret-provision"
 cat >/etc/sudoers.d/platform-infra-runner <<EOF
 $RUNNER_USER ALL=(root) NOPASSWD: /usr/local/sbin/platform-kubectl *
 EOF
