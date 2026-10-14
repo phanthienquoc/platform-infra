@@ -78,7 +78,7 @@ case "${1:-}" in
       exit 2
     }
 
-    secret_json="$("\${KUBECTL[@]}" -n microfe-platform get secret microfe-auth-secrets -o json 2>/dev/null)" || {
+    secret_json="$("${KUBECTL[@]}" -n microfe-platform get secret microfe-auth-secrets -o json 2>/dev/null)" || {
       echo "platform-kubectl: missing microfe-auth-secrets in namespace microfe-platform; provision it through the approved secret manager" >&2
       exit 1
     }
