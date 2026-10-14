@@ -46,7 +46,7 @@ case "${1:-}" in
     ;;
   policy-version)
     [[ "$#" -eq 1 ]] || exit 2
-    echo "platform-kubectl policy: rollout-status-v5-auth-secret-verify"
+    echo "platform-kubectl policy: rollout-status-v6-auth-secret-provision"
     exit 0
     ;;
   reconcile-ghcr-pull)
@@ -71,6 +71,42 @@ case "${1:-}" in
         -p '{"imagePullSecrets":[{"name":"ghcr-pull"}]}'
     done
     exit 0
+    ;;
+  provision-auth-secret)
+    [[ "$#" -eq 1 ]] || {
+      echo "platform-kubectl: provision-auth-secret takes no arguments; values must be provided on stdin" >&2
+      exit 2
+    }
+    # Read four newline-delimited values from stdin. Never echo them or enable shell tracing.
+    IFS= read -r supabase_url || true
+    IFS= read -r supabase_service_role_key || true
+    IFS= read -r jwt_secret || true
+    IFS= read -r mfa_encryption_key || true
+    [[ -n "$supabase_url" && -n "$supabase_service_role_key" && -n "$jwt_secret" && -n "$mfa_encryption_key" ]] || {
+      unset supabase_url supabase_service_role_key jwt_secret mfa_encryption_key
+      echo "platform-kubectl: all four Auth runtime values are required; values suppressed" >&2
+      exit 2
+    }
+    [[ "$supabase_url" == https://* ]] || {
+      unset supabase_url supabase_service_role_key jwt_secret mfa_encryption_key
+      echo "platform-kubectl: SUPABASE_URL must use HTTPS; values suppressed" >&2
+      exit 2
+    }
+    [[ "${#jwt_secret}" -ge 32 ]] || {
+      unset supabase_url supabase_service_role_key jwt_secret mfa_encryption_key
+      echo "platform-kubectl: JWT_SECRET must contain at least 32 characters; values suppressed" >&2
+      exit 2
+    }
+    # Values flow only through stdin and a pipe; no command-line args, temp files, output, or logs.
+    {
+      printf 'SUPABASE_URL=%s\\n' "$supabase_url"
+      printf 'SUPABASE_SERVICE_ROLE_KEY=%s\\n' "$supabase_service_role_key"
+      printf 'JWT_SECRET=%s\\n' "$jwt_secret"
+      printf 'MFA_ENCRYPTION_KEY=%s\\n' "$mfa_encryption_key"
+    } | "${KUBECTL[@]}" -n microfe-platform create secret generic microfe-auth-secrets \\
+      --from-env-file=/dev/stdin --dry-run=client -o yaml | "${KUBECTL[@]}" apply -f - >/dev/null
+    unset supabase_url supabase_service_role_key jwt_secret mfa_encryption_key
+    echo "Auth runtime Secret provisioned in microfe-platform; values suppressed."
     ;;
   verify-auth-secret)
     [[ "$#" -eq 1 ]] || {
