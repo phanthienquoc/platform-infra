@@ -405,7 +405,7 @@ jobs:
               exit 1
             fi
           done
-          [[ "$KEYCLOAK_DB_USERNAME" == "keycloak_runtime" ]] || { echo "::error::KEYCLOAK_DB_USERNAME must be keycloak_runtime; do not deploy with the project owner role."; exit 1; }
+          [[ "$KEYCLOAK_DB_USERNAME" == "keycloak_runtime.gtqovpusfyyvxpeezxlo" ]] || { echo "::error::KEYCLOAK_DB_USERNAME must be keycloak_runtime.gtqovpusfyyvxpeezxlo; do not deploy with the project owner role."; exit 1; }
           [[ "$KEYCLOAK_DB_URL" == "jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require" ]] || { echo "::error::Unexpected Keycloak JDBC target; refusing deploy."; exit 1; }
           [[ "${#KEYCLOAK_DB_PASSWORD}" -ge 32 && "${#KEYCLOAK_ADMIN_PASSWORD}" -ge 24 ]] || { echo "::error::Keycloak passwords do not meet minimum length requirements."; exit 1; }
           printf '%s\n%s\n%s\n%s\n%s\n' "$KEYCLOAK_DB_URL" "$KEYCLOAK_DB_USERNAME" "$KEYCLOAK_DB_PASSWORD" "$KEYCLOAK_ADMIN_USERNAME" "$KEYCLOAK_ADMIN_PASSWORD" |
