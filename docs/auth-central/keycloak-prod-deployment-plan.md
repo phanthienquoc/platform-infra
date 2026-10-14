@@ -27,7 +27,7 @@ Files added:
 
 ## Required GitHub Environment `production` secrets
 - `KEYCLOAK_DB_URL` = `jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require`
-- `KEYCLOAK_DB_USERNAME` = `keycloak_runtime`
+- `KEYCLOAK_DB_USERNAME` = `keycloak_runtime.gtqovpusfyyvxpeezxlo` (Supavisor username syntax)
 - `KEYCLOAK_DB_PASSWORD` = password set on `keycloak_runtime` using a protected database admin channel
 - `KEYCLOAK_ADMIN_USERNAME`
 - `KEYCLOAK_ADMIN_PASSWORD`
