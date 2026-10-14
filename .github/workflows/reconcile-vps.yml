@@ -186,6 +186,32 @@ jobs:
           chmod +x scripts/guard-reconcile-images.sh
           ./scripts/guard-reconcile-images.sh check
 
+      - name: Provision Auth runtime Secret from platform-infra Environment
+        if: ${{ env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'auth-service' || env.TARGET_APP == 'all') }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          MFA_ENCRYPTION_KEY: ${{ secrets.MFA_ENCRYPTION_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          for name in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY JWT_SECRET MFA_ENCRYPTION_KEY; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Missing required production Environment Secret: $name"
+              exit 1
+            fi
+          done
+          printf '%s\n%s\n%s\n%s\n' \
+            "$SUPABASE_URL" \
+            "$SUPABASE_SERVICE_ROLE_KEY" \
+            "$JWT_SECRET" \
+            "$MFA_ENCRYPTION_KEY" |
+            sudo /usr/local/sbin/platform-kubectl provision-auth-secret
+          unset SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY JWT_SECRET MFA_ENCRYPTION_KEY
+          sudo /usr/local/sbin/platform-kubectl verify-auth-secret
+
       - name: Apply production manifests
         id: apply
         if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' }}
