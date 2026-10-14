@@ -1,23 +1,30 @@
-# MicroFE NestJS rollout contract
+# MicroFE deployment contract
 
-MicroFE Auth must be a standalone NestJS + TypeScript service. **No Supabase SDK, Data API, Supabase Auth, RPC-based auth logic, or Supabase service-role key in the auth runtime.**
+## Repository ownership
 
-## Auth runtime
-- NestJS owns authentication/authorization business logic: password verification, MFA/recovery policy, session lifecycle, refresh rotation/reuse detection, CSRF, passkey challenge and credential-counter logic, role checks.
-- PostgreSQL is the data store. Connect using the standard `pg` driver with `DATABASE_URL` and bounded `DB_POOL_MAX`; use parameterized SQL and transactions for atomic operations.
-- Reuse the existing `public.users`, `public.refresh_sessions`, `public.mfa_recovery_codes`, `public.auth_passkey_challenges`, and `public.auth_passkey_credentials` tables. Preserve API paths, cookie names/domain and existing password hash compatibility.
-- Do not create duplicate user/session tables. The Auth branch includes the narrowly scoped migration `microfe/auth/migrations/0001_allow_mfa_challenges.sql` to allow the `mfa` purpose on the shared challenge table; review and apply it through the normal database migration process before deploying.
-- Store only secret references in Kubernetes manifests; never print or commit secret values. The runtime Secret must provide `DATABASE_URL`, `JWT_SECRET`, and `MFA_ENCRYPTION_KEY` (plus passkey RP/origin config as non-secret values).
-- Never copy Supabase service-role credentials into this service. Confirm existing DB URL secret source and network/SSL connectivity using key names only, without exposing credentials.
+- `platform-infra` owns Kubernetes manifests, Kustomize overlays, deployment/reconciliation workflows, immutable image promotion, and rollout/health verification only.
+- Application implementation belongs in its application repository: source code, package manifests, Dockerfiles, unit/integration tests, and application-owned database migrations must not live in `platform-infra`.
+- The Auth application repository is `phanthienquoc/phanthienquoc-authentication`. Its CI builds and publishes the Auth image; `platform-infra` consumes the published immutable image reference and deploys it.
+- Keep deployment manifests such as `platform/auth-service/deployment.yaml`, `platform/microfe/**/deployment.yaml`, certificates, ingress, namespace, and Kustomize configuration in this repository.
+
+## Auth runtime contract
+
+- NestJS owns authentication/authorization business logic: password verification, MFA/recovery policy, session lifecycle, refresh rotation/reuse detection, CSRF, passkey challenge and credential-counter logic, and role checks.
+- Auth uses the existing Supabase project server-side through `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; keep the service-role key backend-only and never expose it to browser/client code.
+- The Kubernetes Secret `microfe-auth-secrets` provides runtime credentials: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`, and `MFA_ENCRYPTION_KEY`. Non-secret Auth configuration belongs in `microfe-auth-config`.
+- `platform-infra` deploys the workload; it does not need Supabase credentials in GitHub Actions just to apply manifests or roll out an image. Add pipeline credentials only if a specific pipeline step actually performs a Supabase migration or integration test.
+- Store only Secret references in manifests. Never commit, print, or include secret values in workflow logs.
+- Preserve existing tables and API/cookie compatibility; do not create duplicate user/session tables. Keep database/RPC changes in the owning application/database migration source and apply them through the approved migration process.
 - Preserve immutable SHA/digest image promotion.
 
-## Gates before applying production
-1. NestJS build, lint, unit and end-to-end tests pass.
-2. Review and apply `microfe/auth/migrations/0001_allow_mfa_challenges.sql` to the existing database before deploying MFA challenge persistence.
-3. Confirm existing password hash formats and passkey schema compatibility.
-4. Test refresh rotation/reuse, recovery-code single use, MFA challenge single use and passkey challenge single use under concurrent requests.
-5. Confirm Kubernetes secret source has `DATABASE_URL`, `JWT_SECRET` and `MFA_ENCRYPTION_KEY`; do not display values.
-6. Kustomize validation succeeds and immutable image digest is available.
-7. Rollout probes pass and HTTPS health checks return expected results.
+## Gates before production rollout
 
-No production deploy or schema mutation before all gates pass.
+1. The Auth repository's build, lint, unit, and end-to-end tests pass.
+2. Required Supabase RPCs/schema are applied and verified by the owning migration process.
+3. Confirm password hash, session, MFA recovery, challenge, and passkey compatibility.
+4. Test refresh rotation/reuse, recovery-code single use, MFA challenge single use, and passkey challenge/counter behavior under concurrent requests.
+5. Confirm Kubernetes runtime Secret keys exist by key name only; never display values.
+6. Kustomize validation succeeds and an immutable image digest is available.
+7. Rollout probes and HTTPS health checks pass.
+
+No production rollout before the relevant gates pass.
