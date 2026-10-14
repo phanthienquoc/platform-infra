@@ -29,6 +29,7 @@ name: reconcile-vps
           - stockdividend
           - media-generation
           - microfe
+          - keycloak
   repository_dispatch:
     types:
       - gitops-promoted-ready
@@ -89,7 +90,7 @@ jobs:
         run: |
           set -euo pipefail
           case "$TARGET_APP" in
-            all|auth-service|tce-dashboard|stockdividend|media-generation|microfe) ;;
+            all|auth-service|tce-dashboard|stockdividend|media-generation|microfe|keycloak) ;;
             *) echo "::error::Unsupported deployment scope: $TARGET_APP"; exit 1 ;;
           esac
           echo "Deployment scope: $TARGET_APP"
@@ -110,7 +111,7 @@ jobs:
           set -euo pipefail
           for attempt in $(seq 1 24); do
             if policy="$(sudo /usr/local/sbin/platform-kubectl policy-version 2>/dev/null)" &&
-              [ "$policy" = "platform-kubectl policy: rollout-status-v9-auth-secret-provision" ]; then
+              { [ "$policy" = "platform-kubectl policy: rollout-status-v9-auth-secret-provision" ] || [ "$policy" = "platform-kubectl policy: rollout-status-v10-keycloak-secret-provision" ]; }; then
               echo "Runner reconciliation policy is ready."
               exit 0
             fi
@@ -146,7 +147,7 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl verify-auth-secret
 
       - name: Bootstrap GHCR pull credentials
-        if: ${{ env.RECONCILE_MODE == 'apply' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP != 'keycloak' }}
         env:
           GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}
           GHCR_TOKEN: ${{ secrets['Platform-infra-token'] || secrets.GHCR_READ_TOKEN || secrets.GITHUB_TOKEN }}
@@ -157,19 +158,19 @@ jobs:
             sudo /usr/local/sbin/platform-kubectl reconcile-ghcr-pull
           echo "GHCR pull credentials reconciled for private-image namespaces."
       - name: Restart workloads blocked on image pulls
-        if: ${{ env.RECONCILE_MODE == 'apply' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP != 'keycloak' }}
         run: |
           set -euo pipefail
           sudo /usr/local/sbin/platform-kubectl restart-blocked-image-pulls
       - name: Validate TCE release pairing
-        if: ${{ env.TARGET_APP == 'all' || env.TARGET_APP == 'tce-dashboard' }}
+        if: ${{ env.TARGET_APP != 'keycloak' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'tce-dashboard') }}
         run: |
           set -euo pipefail
           chmod +x scripts/verify-tce-gitops-release.sh
           ./scripts/verify-tce-gitops-release.sh
 
       - name: Resolve media release tag
-        if: ${{ env.TARGET_APP == 'media-generation' || env.TARGET_APP == 'all' }}
+        if: ${{ env.TARGET_APP != 'keycloak' && (env.TARGET_APP == 'media-generation' || env.TARGET_APP == 'all') }}
         run: |
           set -euo pipefail
           MEDIA_BACKEND_TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/media-generation/backend' apps/media-generation/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
@@ -187,6 +188,11 @@ jobs:
         id: preflight
         run: |
           set -euo pipefail
+          if [ "$TARGET_APP" = "keycloak" ]; then
+            echo "Keycloak has a separate allowlisted reconcile path; shared environments/prod manifests remain untouched."
+            echo "drift=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           chmod +x scripts/reconcile-vps.sh
           set +e
           ./scripts/reconcile-vps.sh plan
@@ -369,6 +375,86 @@ jobs:
           chmod +x scripts/verify-workload-health.sh
           ./scripts/verify-workload-health.sh
 
+  deploy-keycloak:
+    name: Deploy lane — Keycloak SSO
+    needs: reconcile
+    if: ${{ needs.reconcile.result == 'success' && needs.reconcile.outputs.mode == 'apply' && needs.reconcile.outputs.target_app == 'keycloak' }}
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    environment: production
+    concurrency:
+      group: deploy-keycloak
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          persist-credentials: false
+      - name: Provision Keycloak runtime Secret
+        env:
+          KEYCLOAK_DB_URL: ${{ secrets.KEYCLOAK_DB_URL }}
+          KEYCLOAK_DB_USERNAME: ${{ secrets.KEYCLOAK_DB_USERNAME }}
+          KEYCLOAK_DB_PASSWORD: ${{ secrets.KEYCLOAK_DB_PASSWORD }}
+          KEYCLOAK_ADMIN_USERNAME: ${{ secrets.KEYCLOAK_ADMIN_USERNAME }}
+          KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          for name in KEYCLOAK_DB_URL KEYCLOAK_DB_USERNAME KEYCLOAK_DB_PASSWORD KEYCLOAK_ADMIN_USERNAME KEYCLOAK_ADMIN_PASSWORD; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Missing required production Environment Secret: $name"
+              exit 1
+            fi
+          done
+          [[ "$KEYCLOAK_DB_USERNAME" == "keycloak_runtime" ]] || { echo "::error::KEYCLOAK_DB_USERNAME must be keycloak_runtime; do not deploy with the project owner role."; exit 1; }
+          [[ "$KEYCLOAK_DB_URL" == "jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require" ]] || { echo "::error::Unexpected Keycloak JDBC target; refusing deploy."; exit 1; }
+          [[ "${#KEYCLOAK_DB_PASSWORD}" -ge 32 && "${#KEYCLOAK_ADMIN_PASSWORD}" -ge 24 ]] || { echo "::error::Keycloak passwords do not meet minimum length requirements."; exit 1; }
+          printf '%s\n%s\n%s\n%s\n%s\n' "$KEYCLOAK_DB_URL" "$KEYCLOAK_DB_USERNAME" "$KEYCLOAK_DB_PASSWORD" "$KEYCLOAK_ADMIN_USERNAME" "$KEYCLOAK_ADMIN_PASSWORD" |
+            sudo /usr/local/sbin/platform-kubectl provision-keycloak-secret
+          unset KEYCLOAK_DB_URL KEYCLOAK_DB_USERNAME KEYCLOAK_DB_PASSWORD KEYCLOAK_ADMIN_USERNAME KEYCLOAK_ADMIN_PASSWORD
+          sudo /usr/local/sbin/platform-kubectl verify-keycloak-secret
+      - name: Validate SSO DNS before issuing TLS
+        run: |
+          set -euo pipefail
+          getent ahostsv4 sso.mrcute.space >/dev/null || { echo "::error::sso.mrcute.space does not currently resolve over IPv4."; exit 1; }
+      - name: Apply only Keycloak resources
+        run: sudo /usr/local/sbin/platform-kubectl apply -k platform/keycloak
+      - name: Verify Keycloak rollout
+        run: sudo /usr/local/sbin/platform-kubectl rollout status deployment/keycloak -n microfe-platform --timeout=300s
+      - name: Verify Keycloak workload health
+        env:
+          TARGET_APP: keycloak
+        run: |
+          set -euo pipefail
+          chmod +x scripts/verify-workload-health.sh
+          ./scripts/verify-workload-health.sh
+      - name: Verify public OIDC discovery
+        run: |
+          set -euo pipefail
+          response="$(mktemp)"
+          trap 'rm -f "$response"' EXIT
+          for attempt in $(seq 1 18); do
+            if curl --fail --silent --show-error --max-time 10 https://sso.mrcute.space/realms/master/.well-known/openid-configuration -o "$response"; then
+              python3 - "$response" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+          data = json.loads(Path(sys.argv[1]).read_text())
+          issuer = data.get("issuer", "")
+          if issuer != "https://sso.mrcute.space/realms/master":
+              raise SystemExit("OIDC discovery returned an unexpected issuer.")
+          required = ("authorization_endpoint", "token_endpoint", "jwks_uri")
+          if not all(data.get(key) for key in required):
+              raise SystemExit("OIDC discovery document is missing required endpoints.")
+          print("OIDC discovery passed; issuer and essential endpoints verified.")
+          PY
+              exit 0
+            fi
+            echo "Waiting for public OIDC discovery (attempt $attempt/18)..."
+            sleep 10
+          done
+          echo "::error::Public OIDC discovery did not become ready." >&2
+          exit 1
+
   deploy-tce-dashboard:
     name: Deploy lane — TCE Dashboard
     needs: reconcile
@@ -472,6 +558,7 @@ jobs:
       - deploy-tce-dashboard
       - deploy-stockdividend
       - deploy-media-generation
+      - deploy-keycloak
     if: ${{ always() && needs.reconcile.result == 'success' && needs.reconcile.outputs.mode == 'apply' }}
     runs-on: ubuntu-latest
     steps:
@@ -483,6 +570,7 @@ jobs:
           TCE_RESULT: ${{ needs.deploy-tce-dashboard.result }}
           STOCK_RESULT: ${{ needs.deploy-stockdividend.result }}
           MEDIA_RESULT: ${{ needs.deploy-media-generation.result }}
+          KEYCLOAK_RESULT: ${{ needs.deploy-keycloak.result }}
         run: |
           set -euo pipefail
           failed=0
@@ -502,6 +590,14 @@ jobs:
           check_lane tce-dashboard "$TCE_RESULT"
           check_lane stockdividend "$STOCK_RESULT"
           check_lane media-generation "$MEDIA_RESULT"
+          if [ "$TARGET_APP" = "keycloak" ]; then
+            if [ "$KEYCLOAK_RESULT" != "success" ]; then
+              echo "::error::Deployment lane keycloak finished with result: $KEYCLOAK_RESULT"
+              failed=1
+            else
+              echo "Deployment lane keycloak succeeded."
+            fi
+          fi
           [ "$failed" -eq 0 ] || exit 1
           echo "All targeted deployment lanes passed."
 # yamllint enable rule:line-length
