@@ -110,7 +110,7 @@ jobs:
           set -euo pipefail
           for attempt in $(seq 1 24); do
             if policy="$(sudo /usr/local/sbin/platform-kubectl policy-version 2>/dev/null)" &&
-              [ "$policy" = "platform-kubectl policy: rollout-status-v3-ghcr-reconcile" ]; then
+              [ "$policy" = "platform-kubectl policy: rollout-status-v4-auth-secret-provision" ]; then
               echo "Runner reconciliation policy is ready."
               exit 0
             fi
@@ -295,6 +295,8 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
         with:
           persist-credentials: false
+      - name: Provision Auth runtime Secret
+        run: sudo /usr/local/sbin/platform-kubectl provision-auth-secret
       - name: Verify Auth rollout
         if: ${{ needs.reconcile.outputs.drift == 'true' }}
         run: sudo /usr/local/sbin/platform-kubectl rollout status deployment/microfe-auth -n microfe-platform --timeout=180s
