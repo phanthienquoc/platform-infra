@@ -35,6 +35,7 @@ label_selector=""
 case "$TARGET_APP" in
   auth-service) label_selector="app=microfe-auth" ;;
   keycloak) label_selector="app.kubernetes.io/name=keycloak" ;;
+  keycloak) label_selector="app.kubernetes.io/name=keycloak" ;;
   microfe) label_selector='app in (microfe-shell,microfe-ws)' ;;
   *) ;;
 esac
