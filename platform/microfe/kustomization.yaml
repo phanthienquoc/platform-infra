@@ -8,5 +8,8 @@ resources:
 - ingress.yaml
 - shell
 - ws-gateway/deployment.yaml
+- ../keycloak/certificate.yaml
+- ../keycloak/ingress.yaml
+- ../keycloak
 
 # trigger immutable MicroFE publish through the VPS reconciler
