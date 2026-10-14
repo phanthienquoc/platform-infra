@@ -10,7 +10,7 @@ The Deployment pins Keycloak to 26.4.7 and uses the production `start` command (
 
 GitHub Environment `production` secrets required by the protected reconciliation workflow:
 - `KEYCLOAK_DB_URL`
-- `KEYCLOAK_DB_USERNAME`
+- `KEYCLOAK_DB_USERNAME` = `keycloak_runtime.gtqovpusfyyvxpeezxlo` (Supavisor requires `<role>.<project-ref>`; the PostgreSQL role itself is `keycloak_runtime`)
 - `KEYCLOAK_DB_PASSWORD`
 - `KEYCLOAK_ADMIN_USERNAME`
 - `KEYCLOAK_ADMIN_PASSWORD`
