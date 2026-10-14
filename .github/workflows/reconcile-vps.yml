@@ -110,10 +110,16 @@ jobs:
         run: |
           set -euo pipefail
           for attempt in $(seq 1 24); do
-            if policy="$(sudo /usr/local/sbin/platform-kubectl policy-version 2>/dev/null)" &&
-              { [ "$policy" = "platform-kubectl policy: rollout-status-v9-auth-secret-provision" ] || [ "$policy" = "platform-kubectl policy: rollout-status-v10-keycloak-secret-provision" ]; }; then
-              echo "Runner reconciliation policy is ready."
-              exit 0
+            if policy="$(sudo /usr/local/sbin/platform-kubectl policy-version 2>/dev/null)"; then
+              if [ "$TARGET_APP" = "keycloak" ]; then
+                [[ "$policy" == "platform-kubectl policy: rollout-status-v10-keycloak-secret-provision" ]] && {
+                  echo "Keycloak runner allowlist is ready."
+                  exit 0
+                }
+              elif [[ "$policy" == "platform-kubectl policy: rollout-status-v9-auth-secret-provision" || "$policy" == "platform-kubectl policy: rollout-status-v10-keycloak-secret-provision" ]]; then
+                echo "Runner reconciliation policy is ready."
+                exit 0
+              fi
             fi
             echo "Waiting for runner bootstrap policy (attempt $attempt/24)..."
             sleep 5
@@ -270,7 +276,7 @@ jobs:
           ./scripts/publish-microfe-deployment-event.sh deploying tce-dashboard "$TAG" deploying
 
       - name: Verify cluster after reconciliation
-        if: ${{ env.RECONCILE_MODE == 'apply' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP != 'keycloak' }}
         run: |
           set -euo pipefail
           sudo /usr/local/sbin/platform-kubectl get nodes -o wide
