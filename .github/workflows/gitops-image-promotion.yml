@@ -254,7 +254,7 @@ jobs:
       - name: Validate promoted image in GHCR
         env:
           GHCR_USERNAME: ${{ github.actor }}
-          GHCR_TOKEN: ${{ github.token }}
+          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN || github.token }}
           APP: ${{ steps.input.outputs.app }}
           COMPONENT: ${{ steps.input.outputs.component }}
           TAG: ${{ steps.input.outputs.tag }}
@@ -329,6 +329,8 @@ jobs:
 
           if [ "$APP" = "media-generation" ]; then
             grep -A1 "name: ghcr.io/phanthienquoc/media-generation/${COMPONENT}" "$FILE"
+          elif [ "$APP" = "auth-service" ]; then
+            grep -A1 "name: ghcr.io/phanthienquoc/microfe-auth" "$FILE"
           else
             grep -A1 "name: ghcr.io/phanthienquoc/${APP}/${COMPONENT}" "$FILE"
           fi
