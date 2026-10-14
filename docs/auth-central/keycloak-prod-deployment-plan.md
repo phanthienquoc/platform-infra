@@ -1,44 +1,50 @@
 # Keycloak production deployment plan
 
-## Decision
+## Architecture decision
 - Keycloak external URL: https://sso.mrcute.space
-- Existing NestJS Auth API remains https://auth.mrcute.space and must not be rerouted.
+- Existing NestJS Auth API remains https://auth.mrcute.space and is not rerouted.
 - Supabase PostgreSQL project `gtqovpusfyyvxpeezxlo`, Supavisor Session Pooler, database `postgres`, isolated schema `keycloak`.
-- Keycloak workload is separate from NestJS Auth. Existing TCE/Media integration remains unchanged.
+- Keycloak is a separate workload and is targeted explicitly through a dedicated deployment lane. TCE/Media integration is not migrated in this PR.
 
-## Current status from implementation
-- Supabase schema `keycloak` created; no tables existed in it at verification.
-- Supabase migration API could create the schema, but role creation failed with `must be able to SET ROLE "keycloak_runtime"`. No DB role password was included in any migration. The dedicated runtime role must be created through an approved DB administration path before any rollout.
-- GitHub deployment branch `feat/keycloak-prod-deployment` contains the initial Deployment, Service, Kustomize file, ingress, certificate, and README. This is not yet wired into production overlay or reconciliation because the existing self-hosted runner has a strict kubectl command allowlist.
-- Secret values are not accessible through GitHub connector APIs; do not infer their values or write them to repository files.
-- DNS for `sso.mrcute.space` has not been verified.
-- No production Keycloak workload has been applied.
+## Supabase implementation state
+- Schema `keycloak` was created and verified empty before workload implementation.
+- Login role `keycloak_runtime` was created as `LOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS`.
+- It has database CONNECT and schema USAGE/CREATE on `keycloak`; it has no membership in privileged application roles. Live privilege queries confirmed no SELECT/INSERT/UPDATE/DELETE rights on `public.users`, and no USAGE on `auth`, `storage`, or `extensions`.
+- The role **has no password yet**. The operator must set a unique secret through a protected database administration channel and use the identical value for GitHub Environment secret `KEYCLOAK_DB_PASSWORD`. This password must never be sent in chat, written in migration SQL, or committed to Git.
+- Keycloak role must not be the `postgres` owner connection. Inspect effective grants/extension PUBLIC access and verify TLS JDBC connectivity before production activation.
 
-## Required GitHub Environment secrets
-These must be in the `production` Environment because the workflow uses `environment: production`:
+## GitHub implementation branch
+Branch: `feat/keycloak-prod-deployment`
+
+Files added:
+- `platform/keycloak/deployment.yaml`: separate Keycloak Deployment and ClusterIP Service, image `quay.io/keycloak/keycloak:26.8.1`, production start mode, pinned hostname, separate DB schema, bounded pool and probes.
+- `platform/keycloak/kustomization.yaml`, `ingress.yaml`, `certificate.yaml`: isolated SSO route/certificate for `sso.mrcute.space`.
+- `platform/keycloak/README.md`: deployment contract and safety gates.
+- `scripts/bootstrap-runner.sh`: proposed v10 allowlist actions for stdin-only Secret provisioning, Secret verification and a Keycloak-only Kustomize apply/rollout/read path.
+- `.github/workflows/reconcile-vps.yml`: explicit `target_app=keycloak` deployment lane; skips regular environment apply and skips actions that restart/alter other app workloads.
+- `scripts/verify-workload-health.sh`, `scripts/validate-workflow-contracts.py`, `.github/workflows/validate-manifests.yml`: Keycloak health/manifest/workflow contract validation.
+- Existing shared ingress still routes `auth.mrcute.space` to `microfe-auth`; new SSO route is a separate resource inside `platform/keycloak`, not included in regular app reconciliation.
+
+## Required GitHub Environment `production` secrets
 - `KEYCLOAK_DB_URL` = `jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require`
-- `KEYCLOAK_DB_USERNAME` = `keycloak_runtime.gtqovpusfyyvxpeezxlo` (PostgreSQL role is `keycloak_runtime`; Supavisor Session Pooler requires `<role>.<project-ref>`)
-- `KEYCLOAK_DB_PASSWORD` = password of the dedicated `keycloak_runtime` DB role, not the Supabase owner password
+- `KEYCLOAK_DB_USERNAME` = `keycloak_runtime`
+- `KEYCLOAK_DB_PASSWORD` = password set on `keycloak_runtime` using a protected database admin channel
 - `KEYCLOAK_ADMIN_USERNAME`
 - `KEYCLOAK_ADMIN_PASSWORD`
 
-The previously shown secret screenshot proves only names exist, not values or scope. Do not paste passwords in chat.
+The earlier screenshot showed secret names only; it did not prove their values or that they are in the `production` Environment. The workflow does not read secret values through the GitHub connector. Never paste passwords in chat.
 
-## Release and runtime
-Keycloak image currently proposed: `quay.io/keycloak/keycloak:26.4.7`; verify release support and image availability before apply. Runtime config sets `KC_DB=postgres`, `KC_DB_SCHEMA=keycloak`, health/metrics, bounded pool (max 10), `start` (never `start-dev`), external hostname and forwarded headers. Public DNS/TLS requires DNS to resolve to the existing Traefik public address.
+## Production gates before first activation
+1. Set the database role password through a protected path, update the `KEYCLOAK_DB_PASSWORD` Environment secret, and verify the exact Environment scope.
+2. Verify effective grants, TLS connectivity from the Kubernetes VPS, database connection headroom, and backups/PITR restore path.
+3. Update the actual VPS-installed `platform-kubectl` wrapper by applying the reviewed runner bootstrap through the standard platform administration procedure. The repo change alone does not update the installed sudo allowlist; current live policy may still be v9. The Keycloak-only lane must not be dispatched until the VPS wrapper reports v10.
+4. Verify DNS for `sso.mrcute.space` points to the current Traefik public address.
+5. Merge after CI/review, then manually run `reconcile-vps` with `mode=apply` and `target_app=keycloak`. This target applies only `platform/keycloak`, not `environments/prod`.
+6. Verify rollout/readiness, TLS and `https://sso.mrcute.space/realms/master/.well-known/openid-configuration`; test restart persistence and rollback before integrating any app clients.
 
-## Production gates
-1. Create `keycloak_runtime` as a unique login role with no superuser/create-db/create-role/replication/bypass-RLS privileges and no membership in privileged roles. Set a unique password outside Git and make it owner of only schema `keycloak`. Do not use the `postgres` owner role long term.
-2. Query effective schema/table privileges to confirm it cannot read or write existing application schemas; inspect inherited PUBLIC grants / extensions such as `net` too.
-3. Add a protected reconciliation action that provisions `keycloak-runtime-secrets` from GitHub Environment secrets via stdin only; extend the self-hosted runner allowlist in `scripts/bootstrap-runner.sh` and its sudo policy version in sync. Secret values must never appear in process args, logs, Git, artifacts, output variables or dispatch payloads.
-4. Add the Keycloak resource to the prod Kustomize tree, but do not apply until secret provision + role checks and manifest validation pass.
-5. Add a separate `sso.mrcute.space` TLS ingress / cert only after DNS verification. Keep existing `auth.mrcute.space` ingress backend unchanged.
-6. Extend manifest validation/network allowlists and workflow contract test for a separate Keycloak deployment lane. Ensure unrelated Auth/TCE/Media lanes do not block each other.
-7. Verify rollout/readiness, `https://sso.mrcute.space/realms/master/.well-known/openid-configuration`, TLS, DB persistence after restart, and rollback before integrating client apps.
-
-## Not implemented yet
-- No Keycloak DB login role/password.
-- No Keycloak Kubernetes Secret.
-- No production overlay entry or runner allowlist change yet.
-- No DNS/Ingress activated.
-- No app client or user/session migration.
+## Not done yet
+- No DB password was set on `keycloak_runtime`.
+- No Keycloak Kubernetes Secret was provisioned.
+- No Keycloak workload/ingress/certificate has been applied to the live cluster.
+- DNS has not been verified.
+- No app client, user or session migration has been performed.
