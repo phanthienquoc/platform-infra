@@ -10,29 +10,35 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW_DIR = ROOT / ".github" / "workflows"
 
+
 def read(name: str) -> str:
     return (WORKFLOW_DIR / name).read_text(encoding="utf-8")
+
 
 def fail(message: str) -> None:
     print(f"::error::{message}")
     raise SystemExit(1)
 
+
 reconcile = read("reconcile-vps.yml")
-microfe_reconcile = read("reconcile-microfe.yml")
+promotion = read("gitops-image-promotion.yml")
 
-# MicroFE is published by TCE-dashboard and consumed here through repository_dispatch.
-if "microfe-images-published" not in microfe_reconcile:
-    fail("reconcile-microfe.yml must consume microfe-images-published.")
+# MicroFE digest promotions must use the shared GitOps promotion workflow.
+if "microfe-images-published" not in promotion:
+    fail("gitops-image-promotion.yml must consume microfe-images-published.")
 for field in ("auth_digest", "shell_digest", "ws_digest"):
-    if field not in microfe_reconcile:
-        fail(f"MicroFE reconciler is missing expected payload field: {field}")
-
-if "microfe-images-published" in reconcile:
-    fail("reconcile-vps.yml must not consume microfe-images-published; reconcile-microfe.yml owns that event.")
+    if field not in promotion:
+        fail(f"Shared MicroFE promoter is missing expected payload field: {field}")
+if (WORKFLOW_DIR / "reconcile-microfe.yml").exists():
+    fail("Dedicated reconcile-microfe.yml must be removed.")
+if "gitops-promoted-ready" not in reconcile:
+    fail("reconcile-vps.yml must consume the shared GitOps promotion event.")
+if "microfe" not in reconcile:
+    fail("reconcile-vps.yml must retain MicroFE deployment scope support.")
 
 # Scheduled reconciliation logic must have a matching schedule trigger.
 if "github.event_name == 'schedule'" in reconcile and not re.search(
-    r'(?m)^\s*schedule:\s*$', reconcile
+    r"(?m)^\s*schedule:\s*$", reconcile
 ):
     fail(
         "reconcile-vps.yml references github.event_name == 'schedule' "
