@@ -28,6 +28,7 @@ on:
       - tce-release-requested
       - media-release-requested
       - auth-image-published
+      - microfe-images-published
 
 permissions:
   contents: write
@@ -39,6 +40,152 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  promote-microfe-digests:
+    if: github.event_name == 'repository_dispatch' && github.event.action == 'microfe-images-published'
+    name: Promote MicroFE image digests as one GitOps change
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout infrastructure
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          persist-credentials: true
+
+      - name: Validate and resolve MicroFE digests
+        id: digests
+        env:
+          AUTH_DIGEST: ${{ github.event.client_payload.auth_digest }}
+          SHELL_DIGEST: ${{ github.event.client_payload.shell_digest }}
+          WS_DIGEST: ${{ github.event.client_payload.ws_digest }}
+          SOURCE_COMMIT: ${{ github.event.client_payload.commit }}
+        run: |
+          set -euo pipefail
+          # Auth is now released by phanthienquoc-authentication under the canonical
+          # auth-service/auth image. Validate the legacy digest for contract safety,
+          # but do not override the canonical Auth workload with microfe-auth.
+          for digest in "$AUTH_DIGEST" "$SHELL_DIGEST" "$WS_DIGEST"; do
+            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo '::error::Every MicroFE payload digest must be sha256:<64 hex>'; exit 1; }
+          done
+          [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo '::error::Missing or invalid source commit SHA'; exit 1; }
+          {
+            echo "shell_digest=$SHELL_DIGEST"
+            echo "ws_digest=$WS_DIGEST"
+            echo "source_commit=$SOURCE_COMMIT"
+            echo "release=microfe-${SOURCE_COMMIT:0:7}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Validate promoted MicroFE images in GHCR
+        env:
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN || github.token }}
+          SHELL_DIGEST: ${{ steps.digests.outputs.shell_digest }}
+          WS_DIGEST: ${{ steps.digests.outputs.ws_digest }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GHCR_USERNAME" --password-stdin
+          docker manifest inspect "ghcr.io/phanthienquoc/microfe-shell@$SHELL_DIGEST" >/dev/null
+          docker manifest inspect "ghcr.io/phanthienquoc/microfe-ws@$WS_DIGEST" >/dev/null
+          docker logout ghcr.io >/dev/null 2>&1 || true
+
+      - name: Update MicroFE Kustomize image digests
+        env:
+          SHELL_DIGEST: ${{ steps.digests.outputs.shell_digest }}
+          WS_DIGEST: ${{ steps.digests.outputs.ws_digest }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          path = Path('platform/microfe/kustomization.yaml')
+          text = path.read_text()
+          images = {
+              'ghcr.io/phanthienquoc/microfe-shell': os.environ['SHELL_DIGEST'],
+              'ghcr.io/phanthienquoc/microfe-ws': os.environ['WS_DIGEST'],
+          }
+          lines = text.splitlines()
+          if any(line.strip() == 'images:' for line in lines):
+              raise SystemExit('Unexpected existing images block; refusing ambiguous update')
+          text = text.rstrip() + '\n\nimages:\n'
+          for name, digest in images.items():
+              text += f'- name: {name}\n  newName: {name}\n  digest: {digest}\n'
+          path.write_text(text)
+          PY
+          kubectl kustomize platform/microfe > /tmp/microfe-rendered.yaml
+          grep -Eq 'image: ghcr.io/phanthienquoc/microfe-shell@sha256:[0-9a-f]{64}' /tmp/microfe-rendered.yaml
+          grep -Eq 'image: ghcr.io/phanthienquoc/microfe-ws@sha256:[0-9a-f]{64}' /tmp/microfe-rendered.yaml
+
+      - name: Scope MicroFE promotion changes
+        run: |
+          set -euo pipefail
+          test "$(git diff --name-only)" = 'platform/microfe/kustomization.yaml' || {
+            echo '::error::MicroFE promotion must change only platform/microfe/kustomization.yaml'
+            git diff --name-only
+            exit 1
+          }
+
+      - name: Create MicroFE promotion PR
+        id: promotion
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676  # v7
+        with:
+          branch: automation/promote-microfe-${{ steps.digests.outputs.source_commit }}
+          delete-branch: true
+          title: 'chore: promote MicroFE digests ${{ steps.digests.outputs.release }}'
+          commit-message: 'chore: promote MicroFE digests ${{ steps.digests.outputs.release }}'
+          body: |
+            Automated atomic MicroFE digest promotion from TCE-dashboard CI.
+
+            - Shell digest: `${{ steps.digests.outputs.shell_digest }}`
+            - WS digest: `${{ steps.digests.outputs.ws_digest }}`
+            - Source commit: `${{ steps.digests.outputs.source_commit }}`
+
+            Auth is managed independently by `phanthienquoc-authentication` using the canonical `auth-service/auth` image.
+
+      - name: Validate promotion PR checks
+        if: steps.promotion.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.promotion.outputs.pull-request-number }}
+        run: |
+          set -euo pipefail
+          required="$(gh pr checks "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --required --json state 2>/dev/null || printf '[]')"
+          required_count="$(printf '%s' "$required" | jq 'length')"
+          if [ "$required_count" -eq 0 ]; then
+            echo 'No required promotion PR checks are configured.'
+            exit 0
+          fi
+          for attempt in $(seq 1 30); do
+            state="$(printf '%s' "$required" | jq -r 'if any(.[]; .state == "FAILURE" or .state == "ERROR") then "FAILURE" elif all(.[]; .state == "SUCCESS") then "SUCCESS" else "PENDING" end')"
+            case "$state" in
+              SUCCESS) exit 0 ;;
+              FAILURE) echo '::error::MicroFE promotion PR checks failed'; exit 1 ;;
+            esac
+            sleep 10
+            required="$(gh pr checks "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --required --json state 2>/dev/null || printf '[]')"
+          done
+          echo '::error::MicroFE promotion checks did not complete in time'
+          exit 1
+
+      - name: Merge MicroFE promotion PR
+        if: steps.promotion.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.promotion.outputs.pull-request-number }}
+        run: gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --squash --delete-branch
+
+      - name: Trigger shared VPS reconciliation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE: ${{ steps.digests.outputs.release }}
+        run: |
+          set -euo pipefail
+          gh api --method POST -H 'Accept: application/vnd.github+json' \\
+            "/repos/${GITHUB_REPOSITORY}/dispatches" \\
+            -f event_type='gitops-promoted-ready' \\
+            -f 'client_payload[app]=microfe' \\
+            -f 'client_payload[component]=release' \\
+            -f "client_payload[release]=$RELEASE"
+
+  fanout-tce-release:
   fanout-tce-release:
     if: github.event_name == 'repository_dispatch' && github.event.action == 'tce-release-requested'
     name: Fan out TCE release
@@ -187,7 +334,7 @@ jobs:
           exit 1
 
   promote:
-    if: github.event_name != 'repository_dispatch' || (github.event.action != 'tce-release-requested' && github.event.action != 'media-release-requested')
+    if: github.event_name != 'repository_dispatch' || (github.event.action != 'tce-release-requested' && github.event.action != 'media-release-requested' && github.event.action != 'microfe-images-published')
     name: Promote ${{ github.event.client_payload.app || inputs.app }} / ${{ github.event.client_payload.component || inputs.component }}
     runs-on: ubuntu-latest
 
