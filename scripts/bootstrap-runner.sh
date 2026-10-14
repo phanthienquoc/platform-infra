@@ -46,7 +46,7 @@ case "${1:-}" in
     ;;
   policy-version)
     [[ "$#" -eq 1 ]] || exit 2
-    echo "platform-kubectl policy: rollout-status-v7-auth-secret-provision"
+    echo "platform-kubectl policy: rollout-status-v8-auth-secret-provision"
     exit 0
     ;;
   reconcile-ghcr-pull)
@@ -98,12 +98,16 @@ case "${1:-}" in
       exit 2
     }
     # Values flow only through stdin and a pipe; no command-line args, temp files, output, or logs.
-    {
+    if ! {
       printf 'SUPABASE_URL=%s\n' "$supabase_url"
       printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n' "$supabase_service_role_key"
       printf 'JWT_SECRET=%s\n' "$jwt_secret"
       printf 'MFA_ENCRYPTION_KEY=%s\n' "$mfa_encryption_key"
-    } | "${KUBECTL[@]}" -n microfe-platform create secret generic microfe-auth-secrets --from-env-file=/dev/stdin --dry-run=client -o yaml | "${KUBECTL[@]}" apply -f - >/dev/null
+    } | "${KUBECTL[@]}" -n microfe-platform create secret generic microfe-auth-secrets --from-env-file=/dev/stdin --dry-run=client -o yaml | "${KUBECTL[@]}" apply -f - >/dev/null; then
+      unset supabase_url supabase_service_role_key jwt_secret mfa_encryption_key
+      echo "platform-kubectl: failed to provision Auth runtime Secret; values suppressed" >&2
+      exit 1
+    fi
     unset supabase_url supabase_service_role_key jwt_secret mfa_encryption_key
     echo "Auth runtime Secret provisioned in microfe-platform; values suppressed."
     ;;
@@ -210,7 +214,7 @@ echo "platform-kubectl: command is not allowlisted" >&2
 exit 2
 EOF
 chmod 0755 /usr/local/sbin/platform-kubectl
-echo "platform-kubectl policy: rollout-status-v7-auth-secret-provision"
+echo "platform-kubectl policy: rollout-status-v8-auth-secret-provision"
 cat >/etc/sudoers.d/platform-infra-runner <<EOF
 $RUNNER_USER ALL=(root) NOPASSWD: /usr/local/sbin/platform-kubectl *
 EOF

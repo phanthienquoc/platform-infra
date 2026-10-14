@@ -110,7 +110,7 @@ jobs:
           set -euo pipefail
           for attempt in $(seq 1 24); do
             if policy="$(sudo /usr/local/sbin/platform-kubectl policy-version 2>/dev/null)" &&
-              [ "$policy" = "platform-kubectl policy: rollout-status-v7-auth-secret-provision" ]; then
+              [ "$policy" = "platform-kubectl policy: rollout-status-v8-auth-secret-provision" ]; then
               echo "Runner reconciliation policy is ready."
               exit 0
             fi
