@@ -27,10 +27,10 @@ The database login **does not yet have a password**. Set a strong unique passwor
 
 1. The production workflow refuses rollout unless `KEYCLOAK_DB_USERNAME=keycloak_runtime.gtqovpusfyyvxpeezxlo`, the DB URL equals the chosen Session Pooler URL, and all five secrets are present with minimum password lengths.
 2. The dedicated workflow target `keycloak` provisions only the Keycloak Secret and applies only `platform/keycloak`; it does not apply `environments/prod` or restart other workloads.
-3. The self-hosted VPS wrapper must be updated from policy v9 to v10 by running the reviewed `scripts/bootstrap-runner.sh` through the normal platform administration process. Until that server-side allowlist is updated, the new Keycloak provisioning/apply commands are intentionally rejected.
+3. PR #542 was merged and the `Bootstrap self-hosted runner` workflow completed successfully on the merge commit (run 38574201661), installing the v10 `platform-kubectl` wrapper from `scripts/bootstrap-runner.sh`. The Keycloak lane additionally requires the live wrapper to report v10 before it can provision secrets or apply resources.
 4. DNS for `sso.mrcute.space` must resolve to the existing Traefik public IP so cert-manager can issue TLS. DNS is not controlled by these manifests.
 5. After initial bootstrap, follow Keycloak's supported procedure for rotating/removing bootstrap admin credentials; do not rely on bootstrap variables as an ongoing user-management mechanism.
 
 ## Activation status
 
-The isolated manifests and workflow are proposed on the deployment branch but are not merged or live. No Keycloak Kubernetes Secret, production workload, public ingress activation, app client, or user/session migration has been performed.
+The isolated manifests and workflow are merged (PR #542) but are not live. The post-merge shared reconciliation run (38574201455) succeeded with no manifest drift, skipped applying production manifests, passed existing app health lanes, and skipped the Keycloak lane because the target was `all`. No Keycloak Kubernetes Secret, production workload, public ingress activation, app client, or user/session migration has been performed.
