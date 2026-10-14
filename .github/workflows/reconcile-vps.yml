@@ -238,13 +238,13 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl get pods -A -o wide
 
       - name: Verify Auth rollout
-        if: ${{ env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'auth-service') }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'auth-service') }}
         run: |
           set -euo pipefail
           sudo /usr/local/sbin/platform-kubectl rollout status deployment/microfe-auth -n microfe-platform --timeout=180s
 
       - name: Verify Auth HTTPS
-        if: ${{ env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'auth-service') }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'auth-service') }}
         run: |
           set -euo pipefail
           tls_output="$(printf '' | openssl s_client -connect auth.mrcute.space:443 -servername auth.mrcute.space -verify_return_error 2>&1 || true)"
@@ -254,7 +254,7 @@ jobs:
 
       - name: Verify TCE GitOps images
         id: verify_tce_images
-        if: ${{ env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'tce-dashboard') }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'tce-dashboard') }}
         continue-on-error: true
         run: |
           set -euo pipefail
@@ -263,7 +263,7 @@ jobs:
 
       - name: Verify stockdividend rollout
         id: verify_stock
-        if: ${{ env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'stockdividend') }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'stockdividend') }}
         continue-on-error: true
         run: |
           set -u
@@ -275,7 +275,7 @@ jobs:
 
       - name: Verify MicroFE rollout
         id: verify_microfe
-        if: ${{ env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'microfe') }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'microfe') }}
         continue-on-error: true
         run: |
           set -u
@@ -287,7 +287,7 @@ jobs:
 
       - name: Verify TCE rollout
         id: verify_tce
-        if: ${{ env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'tce-dashboard') }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'tce-dashboard') }}
         continue-on-error: true
         run: |
           set -u
@@ -298,7 +298,7 @@ jobs:
 
       - name: Verify media-generation rollout
         id: verify_media
-        if: ${{ env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'media-generation') }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'media-generation') }}
         continue-on-error: true
         run: |
           set -u
@@ -512,6 +512,10 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$DRIFT" = "true" ]; then
+          if [ "$DRIFT" != "true" ]; then
+            echo "No manifest drift detected; apply and rollout checks were correctly skipped."
+            exit 0
+          fi
             [ "$APPLY_STATUS" = "success" ] || { echo "Production manifest reconciliation failed." >&2; exit 1; }
             [ "$DRIFT_STATUS" = "success" ] || { echo "Post-reconcile GitOps drift verification failed." >&2; exit 1; }
           else
