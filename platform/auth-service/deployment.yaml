@@ -18,7 +18,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: auth
-          image: ghcr.io/phanthienquoc/auth-service/auth:0.1.0
+          image: ghcr.io/phanthienquoc/auth-service/auth:8138295b27f8754d96255d292e3ec630270abfe9
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4010
