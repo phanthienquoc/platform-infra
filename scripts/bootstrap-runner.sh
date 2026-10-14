@@ -144,7 +144,7 @@ case "${1:-}" in
     IFS= read -r keycloak_admin_username || true
     IFS= read -r keycloak_admin_password || true
     if [[ "$keycloak_db_url" != "jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require" ||
-          "$keycloak_db_username" != "keycloak_runtime" ||
+          "$keycloak_db_username" != "keycloak_runtime.gtqovpusfyyvxpeezxlo" ||
           "${#keycloak_db_password}" -lt 32 ||
           -z "$keycloak_admin_username" ||
           "${#keycloak_admin_password}" -lt 24 ]]; then
