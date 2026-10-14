@@ -244,6 +244,44 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl get nodes -o wide
           sudo /usr/local/sbin/platform-kubectl get pods -A -o wide
 
+      - name: Verify drift cleared
+        id: verify_drift
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' }}
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          diff_stderr="$(mktemp)"
+          trap 'rm -f "$diff_stderr"' EXIT
+          set +e
+          sudo /usr/local/sbin/platform-kubectl diff -k environments/prod 2>"$diff_stderr"
+          rc=$?
+          set -e
+          case "$rc" in
+            0) echo "Post-reconcile GitOps state is clean." ;;
+            1) echo "Post-reconcile drift remains; refusing to report reconciliation as healthy." >&2 ;;
+            *)
+              echo "Post-reconcile drift verification failed with exit code $rc." >&2
+              sed -n '1,120p' "$diff_stderr" >&2 || true
+              ;;
+          esac
+          exit "$rc"
+
+      - name: Fail if shared reconciliation failed
+        if: ${{ !cancelled() && env.RECONCILE_MODE == 'apply' }}
+        env:
+          APPLY_STATUS: ${{ steps.apply.outcome }}
+          DRIFT_STATUS: ${{ steps.verify_drift.outcome }}
+          DRIFT: ${{ steps.preflight.outputs.drift }}
+        run: |
+          set -euo pipefail
+          if [ "$DRIFT" = "true" ]; then
+            [ "$APPLY_STATUS" = "success" ] || { echo "Production manifest reconciliation failed." >&2; exit 1; }
+            [ "$DRIFT_STATUS" = "success" ] || { echo "Post-reconcile GitOps drift verification failed." >&2; exit 1; }
+          else
+            echo "No manifest drift detected; apply was correctly skipped."
+          fi
+          echo "Shared manifest reconciliation passed; application lanes may proceed."
+
   deploy-auth-service:
     name: Deploy lane — Auth
     needs: reconcile
