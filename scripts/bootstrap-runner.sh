@@ -99,10 +99,10 @@ case "${1:-}" in
     }
     # Values flow only through stdin and a pipe; no command-line args, temp files, output, or logs.
     {
-      printf 'SUPABASE_URL=%s\\n' "$supabase_url"
-      printf 'SUPABASE_SERVICE_ROLE_KEY=%s\\n' "$supabase_service_role_key"
-      printf 'JWT_SECRET=%s\\n' "$jwt_secret"
-      printf 'MFA_ENCRYPTION_KEY=%s\\n' "$mfa_encryption_key"
+      printf 'SUPABASE_URL=%s\n' "$supabase_url"
+      printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n' "$supabase_service_role_key"
+      printf 'JWT_SECRET=%s\n' "$jwt_secret"
+      printf 'MFA_ENCRYPTION_KEY=%s\n' "$mfa_encryption_key"
     } | "${KUBECTL[@]}" -n microfe-platform create secret generic microfe-auth-secrets \\
       --from-env-file=/dev/stdin --dry-run=client -o yaml | "${KUBECTL[@]}" apply -f - >/dev/null
     unset supabase_url supabase_service_role_key jwt_secret mfa_encryption_key
@@ -134,7 +134,7 @@ case "${1:-}" in
       local namespace="$1"
       shift
       local blocked
-      blocked="$("${KUBECTL[@]}" -n "$namespace" get pods -o jsonpath='{range .items[*]}{.status.containerStatuses[*].state.waiting.reason}{"\\n"}{end}' 2>/dev/null | grep -E '(ImagePullBackOff|ErrImagePull)' || true)"
+      blocked="$("${KUBECTL[@]}" -n "$namespace" get pods -o jsonpath='{range .items[*]}{.status.containerStatuses[*].state.waiting.reason}{"\n"}{end}' 2>/dev/null | grep -E '(ImagePullBackOff|ErrImagePull)' || true)"
       if [[ -n "$blocked" ]]; then
         echo "Image pull failures detected in $namespace; restarting fixed production workloads."
         "${KUBECTL[@]}" -n "$namespace" rollout restart "$@"
