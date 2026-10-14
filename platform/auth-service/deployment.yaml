@@ -18,7 +18,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: auth
-          image: ghcr.io/phanthienquoc/microfe-auth:0.1.0
+          image: ghcr.io/phanthienquoc/auth-service/auth:0.1.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4010
