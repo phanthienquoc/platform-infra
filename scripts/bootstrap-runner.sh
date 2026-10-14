@@ -183,7 +183,7 @@ case "${1:-}" in
     username="$(printf '%s' "$secret_json" | jq -r '.data.KEYCLOAK_DB_USERNAME | @base64d')"
     url="$(printf '%s' "$secret_json" | jq -r '.data.KEYCLOAK_DB_URL | @base64d')"
     unset secret_json
-    [[ "$username" == "keycloak_runtime" && "$url" == "jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require" ]] || {
+    [[ "$username" == "keycloak_runtime.gtqovpusfyyvxpeezxlo" && "$url" == "jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require" ]] || {
       unset username url
       echo "platform-kubectl: Keycloak runtime Secret has invalid DB target/user; values suppressed" >&2
       exit 1
@@ -280,7 +280,7 @@ echo "platform-kubectl: command is not allowlisted" >&2
 exit 2
 EOF
 chmod 0755 /usr/local/sbin/platform-kubectl
-echo "platform-kubectl policy: rollout-status-v9-auth-secret-provision"
+echo "platform-kubectl policy: rollout-status-v10-keycloak-secret-provision"
 cat >/etc/sudoers.d/platform-infra-runner <<EOF
 $RUNNER_USER ALL=(root) NOPASSWD: /usr/local/sbin/platform-kubectl *
 EOF
