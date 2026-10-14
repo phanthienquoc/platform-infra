@@ -1,23 +1,35 @@
-# MicroFE NestJS rollout contract
+# MicroFE NestJS Auth rollout contract
 
-MicroFE Auth must be a standalone NestJS + TypeScript service. **No Supabase SDK, Data API, Supabase Auth, RPC-based auth logic, or Supabase service-role key in the auth runtime.**
+MicroFE Auth is a standalone NestJS + TypeScript service. NestJS owns authentication and authorization business logic; Supabase is used only as the persistence layer through the server-side Supabase client. Do not use Supabase Auth or Realtime.
 
-## Auth runtime
-- NestJS owns authentication/authorization business logic: password verification, MFA/recovery policy, session lifecycle, refresh rotation/reuse detection, CSRF, passkey challenge and credential-counter logic, role checks.
-- PostgreSQL is the data store. Connect using the standard `pg` driver with `DATABASE_URL` and bounded `DB_POOL_MAX`; use parameterized SQL and transactions for atomic operations.
-- Reuse the existing `public.users`, `public.refresh_sessions`, `public.mfa_recovery_codes`, `public.auth_passkey_challenges`, and `public.auth_passkey_credentials` tables. Preserve API paths, cookie names/domain and existing password hash compatibility.
-- Do not create duplicate user/session tables. The Auth branch includes the narrowly scoped migration `microfe/auth/migrations/0001_allow_mfa_challenges.sql` to allow the `mfa` purpose on the shared challenge table; review and apply it through the normal database migration process before deploying.
-- Store only secret references in Kubernetes manifests; never print or commit secret values. The runtime Secret must provide `DATABASE_URL`, `JWT_SECRET`, and `MFA_ENCRYPTION_KEY` (plus passkey RP/origin config as non-secret values).
-- Never copy Supabase service-role credentials into this service. Confirm existing DB URL secret source and network/SSL connectivity using key names only, without exposing credentials.
+## Runtime configuration
+- Required secret values: `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`, and `MFA_ENCRYPTION_KEY`.
+- Required non-secret setting: `SUPABASE_URL` (GitHub Actions Variable preferred; an existing Kubernetes ConfigMap/Secret value may be used as fallback).
+- Source runtime configuration from GitHub Actions Secrets/Variables first. If absent, fall back to existing `microfe-auth-secrets` and approved legacy TCE Kubernetes secret/config keys. Never log, decode for logs, or commit secret values.
+- Required secrets must fail closed if no valid GitHub or Kubernetes source exists. Never generate fake credentials or use placeholder values for secrets.
+- Keep auth business logic, cookie names/domain, API routes, password-hash compatibility, and existing user/session tables unchanged.
+- Use the existing Supabase project and existing `public.users`, `public.refresh_sessions`, `public.mfa_recovery_codes`, `public.auth_passkey_challenges`, and `public.auth_passkey_credentials` tables. Do not create duplicate user/session tables.
+- Apply the reviewed `supabase/migrations/20261012000000_auth_persistence_rpcs.sql` to the intended Supabase project before enabling the RPC-backed persistence paths. Confirm table/column compatibility first.
+- Keep the service-role key server-side only. It must never be exposed to browser bundles, client responses, or logs.
 - Preserve immutable SHA/digest image promotion.
 
-## Gates before applying production
-1. NestJS build, lint, unit and end-to-end tests pass.
-2. Review and apply `microfe/auth/migrations/0001_allow_mfa_challenges.sql` to the existing database before deploying MFA challenge persistence.
-3. Confirm existing password hash formats and passkey schema compatibility.
-4. Test refresh rotation/reuse, recovery-code single use, MFA challenge single use and passkey challenge single use under concurrent requests.
-5. Confirm Kubernetes secret source has `DATABASE_URL`, `JWT_SECRET` and `MFA_ENCRYPTION_KEY`; do not display values.
-6. Kustomize validation succeeds and immutable image digest is available.
-7. Rollout probes pass and HTTPS health checks return expected results.
+## GitHub Actions configuration
+Secrets (preferred; aliases may be supported):
+- `SUPABASE_SERVICE_ROLE_KEY` or `MICROFE_SUPABASE_SERVICE_ROLE_KEY`
+- `JWT_SECRET` or `MICROFE_JWT_SECRET`
+- `MFA_ENCRYPTION_KEY` or `MICROFE_MFA_ENCRYPTION_KEY`
 
-No production deploy or schema mutation before all gates pass.
+Variables:
+- `SUPABASE_URL` or `MICROFE_SUPABASE_URL`
+- Optional non-secret auth settings: CORS origins, JWT issuer/audience and TTLs, passkey RP ID/name/origin.
+
+## Production rollout gates
+1. Auth repository CI passes: tests, typecheck, build, and Docker image build.
+2. Confirm Supabase project URL and target schema before applying the RPC migration.
+3. Apply and verify `supabase/migrations/20261012000000_auth_persistence_rpcs.sql` using the approved migration process; do not run schema mutations implicitly during deployment.
+4. Exercise signup/login, refresh rotation and replay/revocation, MFA recovery-code single-use, MFA challenge single-use, passkey challenge single-use/counter compare-and-set, CSRF and cookie behavior against a non-production project.
+5. Verify required credentials exist by key name only; do not expose values.
+6. Kustomize render and immutable image digest validation pass.
+7. Rollout readiness/liveness and HTTPS checks pass before traffic cutover.
+
+No production deploy or traffic cutover until all gates pass. Missing credentials may use an approved existing secret/config fallback; if no valid source exists, stop and report the exact missing key names.
