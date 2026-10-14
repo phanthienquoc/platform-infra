@@ -45,19 +45,30 @@ if "github.event_name == 'schedule'" in reconcile and not re.search(
         "but does not declare an on.schedule trigger."
     )
 
-# Production reconciliation must retain a final hard failure gate.
-if "name: Fail if targeted deployment failed" not in reconcile:
-    fail("reconcile-vps.yml is missing its final deployment failure gate.")
+# The shared apply job and the aggregate lane gate must both fail hard on errors.
+if "name: Fail if shared reconciliation failed" not in reconcile:
+    fail("reconcile-vps.yml is missing its shared reconciliation failure gate.")
+if "name: Deployment lane summary / final gate" not in reconcile:
+    fail("reconcile-vps.yml is missing its final deployment lane failure gate.")
 
-# Protected deployment verification must not be silently disabled.
-required_steps = (
-    "Verify MicroFE rollout",
-    "Verify TCE rollout",
-    "Verify media-generation rollout",
-    "Verify targeted workload health",
+# Each application must have an independent rollout/health lane.
+required_lanes = (
+    "  deploy-auth-service:",
+    "  deploy-microfe:",
+    "  deploy-tce-dashboard:",
+    "  deploy-stockdividend:",
+    "  deploy-media-generation:",
 )
-for step in required_steps:
-    if step not in reconcile:
-        fail(f"reconcile-vps.yml is missing required verification step: {step}")
+for lane in required_lanes:
+    if lane not in reconcile:
+        fail(f"reconcile-vps.yml is missing independent deployment lane: {lane.strip()}")
+
+# Auth rollout must not be part of the MicroFE Shell/WS lane.
+microfe_lane = reconcile.split("  deploy-microfe:", 1)[1].split("  deploy-tce-dashboard:", 1)[0]
+if "rollout status deployment/microfe-auth" in microfe_lane:
+    fail("MicroFE lane must not wait for the independent Auth rollout.")
+
+if "Verify Auth workload health" not in reconcile or "Verify MicroFE workload health" not in reconcile:
+    fail("Auth and MicroFE lanes must retain workload health verification.")
 
 print("Workflow contract validation passed.")
