@@ -103,8 +103,7 @@ case "${1:-}" in
       printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n' "$supabase_service_role_key"
       printf 'JWT_SECRET=%s\n' "$jwt_secret"
       printf 'MFA_ENCRYPTION_KEY=%s\n' "$mfa_encryption_key"
-    } | "${KUBECTL[@]}" -n microfe-platform create secret generic microfe-auth-secrets \\
-      --from-env-file=/dev/stdin --dry-run=client -o yaml | "${KUBECTL[@]}" apply -f - >/dev/null
+    } | "${KUBECTL[@]}" -n microfe-platform create secret generic microfe-auth-secrets --from-env-file=/dev/stdin --dry-run=client -o yaml | "${KUBECTL[@]}" apply -f - >/dev/null
     unset supabase_url supabase_service_role_key jwt_secret mfa_encryption_key
     echo "Auth runtime Secret provisioned in microfe-platform; values suppressed."
     ;;
