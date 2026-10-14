@@ -2,55 +2,60 @@
 
 ## Goal
 
-Configure the production Keycloak workload to use the existing Supabase PostgreSQL project as its **own isolated database/schema**, through the PostgreSQL JDBC driver. This is distinct from NestJS using `@supabase/supabase-js`.
+Configure production Keycloak to use the existing Supabase PostgreSQL project through JDBC, isolated from the existing application schemas. This is different from NestJS using `@supabase/supabase-js`.
 
-Target Supabase project currently visible in the connected account:
+Verified connected project metadata:
 - Project ref: `gtqovpusfyyvxpeezxlo`
 - Region: `ap-southeast-1`
 - PostgreSQL 17
-- The project already stores application data for Auth, TCE, Media and other workloads. Do not use the existing `public` application tables as Keycloak storage.
+- Existing active application tables include NestJS Auth, TCE, Media and other application data. Keycloak must not create its tables in the existing `public` application schema.
 
-## Where to obtain the JDBC URL
+## Obtain the JDBC connection string
 
-Open the project dashboard and choose **Connect**. Select the PostgreSQL connection options and copy the JDBC URL from the JDBC tab if shown. The Supabase JDBC example documents the session pooler on port `5432` for persistent connections from IPv4-only environments; a direct connection on port `5432` is suitable for persistent servers when the runtime network supports IPv6. Do not choose transaction pooler mode (port `6543`) as the initial Keycloak connection without compatibility tests.
+In Supabase Dashboard, open the project and select **Connect**. Choose the PostgreSQL/JDBC tab. In the Session pooler section, copy the JDBC URL if available. Do not copy credentials into Git or chat.
 
-Official docs:
+The user's screenshot shows the Session pooler screen and a JDBC selector. The exact host, pooler username and password remain secrets; use the URL copied from Dashboard, not a reconstructed URL.
+
+Official documentation:
 - https://supabase.com/docs/guides/database/connecting-to-postgres
 - https://supabase.com/docs/guides/platform/ssl-enforcement
+- https://www.keycloak.org/server/db
 
-## Required production configuration
+For a persistent Keycloak server:
+- Direct connection, port 5432, is suitable if the Kubernetes VPS supports IPv6 (or the project has IPv4 connectivity).
+- Supavisor Session Pooler, port 5432, is the alternative for persistent clients on IPv4-only networks.
+- Do not choose transaction pooler port 6543 as the default without testing Keycloak/JDBC session behavior.
 
-Use a dedicated JDBC connection secret, separate from the existing NestJS SDK credentials:
-
-- `KC_DB=postgres`
-- `KC_DB_URL` = JDBC URL for the chosen direct or session-mode PostgreSQL endpoint, database `postgres`, SSL required.
-- `KC_DB_USERNAME` = database role for Keycloak, not the `service_role` API key.
-- `KC_DB_PASSWORD` = database password for that database role.
-- `KC_DB_SCHEMA=keycloak` (only if the selected Keycloak release supports configuring schema this way; verify exact supported option for the pinned release before deployment).
-
-The URL must be TLS-protected. Prefer CA/hostname verification when supported by the selected driver and connection setup; at minimum explicitly require SSL, never allow a plaintext fallback.
-
-## Required isolation and access checks
-
-Before production rollout:
-1. Review current Supabase project plan, connection limits/headroom, network family from the Kubernetes VPS, SSL CA and backup/PITR settings.
-2. Verify the pinned Keycloak release's PostgreSQL 17 compatibility and supported JDBC schema configuration.
-3. Create a dedicated database role with only the permissions needed for the isolated Keycloak schema; do not reuse the Supabase `service_role` API key or expose it as a password.
-4. Create an isolated `keycloak` schema and ensure no Keycloak tables land in `public`. Verify that the Keycloak database role can create/update objects in that schema but has no unnecessary application-data privileges.
-5. Confirm the Keycloak startup migrations, health/readiness, restart persistence, backup and restore in a dedicated non-production environment before any production switch.
-6. Keep existing NestJS Auth / TCE / Media workloads and their current `microfe-auth-secrets` unchanged. Keycloak should be a separate Deployment and use a separate Secret, not replace the existing `microfe-auth` service until a reviewed migration and rollback plan is complete.
-7. Store the connection values as GitHub Actions **production Environment Secrets** or an approved external secret manager, then provision a Kubernetes Secret through an allowlisted protected workflow. Never place connection strings or passwords in Git, PR descriptions, ConfigMaps, logs, workflow outputs, realm exports or public variables.
-
-## Release / rollout gate
-
-This PR must only add documentation/manifest wiring and safe validation. It must not create or expose production credentials, run production database DDL, start a production Keycloak Deployment, change ingress/routing, or migrate users/sessions automatically. Those actions require confirmed JDBC parameters, verified role/schema isolation, health tests, and an explicit production rollout approval.
-
-## Connection string shape
-
-Examples are illustrative only; replace placeholders in the protected secret store, not in this file:
-
+Illustrative URL shape only:
 ```text
-jdbc:postgresql://db.<project-ref>.supabase.co:5432/postgres?sslmode=require
+jdbc:postgresql://<host>:5432/postgres?sslmode=require
 ```
 
-For a Supavisor session pooler, copy the project-specific JDBC/session URL from the Connect panel rather than inventing its hostname or username. The exact URI may include a pooler-specific username and must be percent-encoded if password characters require it.
+Copy the project-specific JDBC string from the Dashboard, including its correct hostname, username parameters and SSL settings. Prefer certificate/hostname verification if available. Do not use plaintext or permit SSL fallback.
+
+## Production runtime configuration
+
+Use a **separate Keycloak Deployment and Secret**. The existing `microfe-auth` NestJS service must remain untouched.
+
+Keycloak runtime settings to wire after confirming the pinned Keycloak release's supported options:
+- `KC_DB=postgres`
+- `KC_DB_URL` = JDBC URL copied from Supabase Connect, with TLS required
+- `KC_DB_USERNAME` = dedicated database role for Keycloak (not the Supabase API service-role key)
+- `KC_DB_PASSWORD` = database password for that role
+- Configure the `keycloak` schema using only a setting supported by the pinned Keycloak release; validate this exact option in its documentation before deploying.
+
+Never use `SUPABASE_SERVICE_ROLE_KEY` as a JDBC password. It is an API key, not a PostgreSQL credential.
+
+Store JDBC URL, username and password as GitHub Actions **production Environment Secrets** or an approved external secret manager. Provision them to a distinct Kubernetes Secret through a protected workflow that reads secret values via stdin. Never place them in Git, ConfigMaps, PR text, dispatch payloads, workflow outputs, artifacts or logs.
+
+## Isolation and production gate
+
+Before any production rollout:
+1. Confirm the project is approved for Keycloak and verify Supabase plan, connection headroom, the cluster's network/IP mode, TLS CA and backup/PITR restore path.
+2. Pin a supported Keycloak release and verify compatibility with PostgreSQL 17 and the exact JDBC schema configuration.
+3. Create an isolated `keycloak` schema and a dedicated least-privilege database role. Verify the role cannot read/write existing application tables.
+4. Test Keycloak database initialization/migrations, restart persistence, login/session behavior, health/readiness and backup/restore in an approved non-production target first.
+5. Add a separate Keycloak Deployment/Service, dedicated Secret references, health probes, resource limits, proxy/hostname/TLS settings and restricted admin access after those checks.
+6. Do not change `auth.mrcute.space` ingress or cut over TCE/Media as part of this DB change. Existing NestJS Auth, TCE and Media must keep operating unchanged until an independently reviewed migration and rollback plan is approved.
+
+No database DDL, role creation, credential creation, Kubernetes secret mutation, live Keycloak deploy, DNS/Ingress change, or user/session migration is performed by this documentation PR.
