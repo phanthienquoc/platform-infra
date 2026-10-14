@@ -178,7 +178,7 @@ jobs:
           RELEASE: ${{ steps.digests.outputs.release }}
         run: |
           set -euo pipefail
-          gh api --method POST -H 'Accept: application/vnd.github+json' \\
+          gh api --method POST -H 'Accept: application/vnd.github+json' \
             "/repos/${GITHUB_REPOSITORY}/dispatches" \\
             -f event_type='gitops-promoted-ready' \\
             -f 'client_payload[app]=microfe' \\
