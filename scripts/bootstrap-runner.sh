@@ -46,7 +46,7 @@ case "${1:-}" in
     ;;
   policy-version)
     [[ "$#" -eq 1 ]] || exit 2
-    echo "platform-kubectl policy: rollout-status-v9-auth-secret-provision"
+    echo "platform-kubectl policy: rollout-status-v10-keycloak-secret-provision"
     exit 0
     ;;
   reconcile-ghcr-pull)
@@ -132,6 +132,66 @@ case "${1:-}" in
     echo "Auth runtime Secret exists and contains all required keys; values suppressed."
     exit 0
     ;;
+  provision-keycloak-secret)
+    [[ "$#" -eq 1 ]] || {
+      echo "platform-kubectl: provision-keycloak-secret takes no arguments; values must be provided on stdin" >&2
+      exit 2
+    }
+    # Read only protected values from stdin. Never echo, trace or put credentials in argv/files.
+    IFS= read -r keycloak_db_url || true
+    IFS= read -r keycloak_db_username || true
+    IFS= read -r keycloak_db_password || true
+    IFS= read -r keycloak_admin_username || true
+    IFS= read -r keycloak_admin_password || true
+    if [[ "$keycloak_db_url" != "jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require" ||
+          "$keycloak_db_username" != "keycloak_runtime" ||
+          "${#keycloak_db_password}" -lt 32 ||
+          -z "$keycloak_admin_username" ||
+          "${#keycloak_admin_password}" -lt 24 ]]; then
+      unset keycloak_db_url keycloak_db_username keycloak_db_password keycloak_admin_username keycloak_admin_password
+      echo "platform-kubectl: Keycloak credentials failed validation; values suppressed" >&2
+      exit 2
+    fi
+    if ! {
+      printf 'KEYCLOAK_DB_URL=%s\n' "$keycloak_db_url"
+      printf 'KEYCLOAK_DB_USERNAME=%s\n' "$keycloak_db_username"
+      printf 'KEYCLOAK_DB_PASSWORD=%s\n' "$keycloak_db_password"
+      printf 'KEYCLOAK_ADMIN_USERNAME=%s\n' "$keycloak_admin_username"
+      printf 'KEYCLOAK_ADMIN_PASSWORD=%s\n' "$keycloak_admin_password"
+    } | "${KUBECTL[@]}" -n microfe-platform create secret generic keycloak-runtime-secrets --from-env-file=/dev/stdin --dry-run=client -o yaml | "${KUBECTL[@]}" apply -f - >/dev/null; then
+      unset keycloak_db_url keycloak_db_username keycloak_db_password keycloak_admin_username keycloak_admin_password
+      echo "platform-kubectl: failed to provision Keycloak runtime Secret; values suppressed" >&2
+      exit 1
+    fi
+    unset keycloak_db_url keycloak_db_username keycloak_db_password keycloak_admin_username keycloak_admin_password
+    echo "Keycloak runtime Secret provisioned; values suppressed."
+    exit 0
+    ;;
+  verify-keycloak-secret)
+    [[ "$#" -eq 1 ]] || exit 2
+    secret_json="$("${KUBECTL[@]}" -n microfe-platform get secret keycloak-runtime-secrets -o json 2>/dev/null)" || {
+      echo "platform-kubectl: keycloak-runtime-secrets is missing" >&2
+      exit 1
+    }
+    for key in KEYCLOAK_DB_URL KEYCLOAK_DB_USERNAME KEYCLOAK_DB_PASSWORD KEYCLOAK_ADMIN_USERNAME KEYCLOAK_ADMIN_PASSWORD; do
+      printf '%s' "$secret_json" | jq -e --arg key "$key" '.data[$key] != null and .data[$key] != ""' >/dev/null || {
+        unset secret_json
+        echo "platform-kubectl: keycloak-runtime-secrets is missing required key: $key" >&2
+        exit 1
+      }
+    done
+    username="$(printf '%s' "$secret_json" | jq -r '.data.KEYCLOAK_DB_USERNAME | @base64d')"
+    url="$(printf '%s' "$secret_json" | jq -r '.data.KEYCLOAK_DB_URL | @base64d')"
+    unset secret_json
+    [[ "$username" == "keycloak_runtime" && "$url" == "jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require" ]] || {
+      unset username url
+      echo "platform-kubectl: Keycloak runtime Secret has invalid DB target/user; values suppressed" >&2
+      exit 1
+    }
+    unset username url
+    echo "Keycloak runtime Secret exists and passed key/target validation; values suppressed."
+    exit 0
+    ;;
   restart-blocked-image-pulls)
     [[ "$#" -eq 1 ]] || exit 2
     restart_if_blocked() {
@@ -170,8 +230,11 @@ case "${1:-}" in
           ;;
       esac
     fi
+    if [[ "${2:-}" == "-k" && "${3:-}" == "platform/keycloak" && "${4:-}" == "" ]]; then
+      exec "${KUBECTL[@]}" apply -k platform/keycloak
+    fi
     [[ "${2:-}" == "-k" && "${3:-}" == "environments/prod" && "${4:-}" == "" ]] || {
-      echo "platform-kubectl: only approved GitOps namespace manifests or -k environments/prod are allowed for apply" >&2
+      echo "platform-kubectl: only approved GitOps namespace manifests, -k environments/prod, or -k platform/keycloak are allowed for apply" >&2
       exit 2
     }
     exec "${KUBECTL[@]}" apply -k environments/prod
@@ -204,9 +267,11 @@ case "${1:-}" in
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/media-generation-frontend" && "${4:-}" == "-n" && "${5:-}" == "media-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/media-generation-frontend -n media-prod --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/microfe-auth" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/microfe-auth -n microfe-platform --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/microfe-shell" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/microfe-shell -n microfe-platform --timeout=180s
+    [[ "${2:-}" == "status" && "${3:-}" == "deployment/keycloak" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "--timeout=300s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/keycloak -n microfe-platform --timeout=300s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/microfe-ws" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/microfe-ws -n microfe-platform --timeout=180s
     ;;
   get)
+    [[ "${2:-}" == "ingress" && "${3:-}" == "keycloak-public" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "" ]] && exec "${KUBECTL[@]}" get ingress keycloak-public -n microfe-platform
     [[ "${2:-}" == "ingress" && "${3:-}" == "microfe-public" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "" ]] && exec "${KUBECTL[@]}" get ingress microfe-public -n microfe-platform
     ;;
 esac
