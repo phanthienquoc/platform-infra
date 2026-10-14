@@ -4,6 +4,6 @@ resources:
 - deployment.yaml
 - configmap.yaml
 images:
-- name: ghcr.io/phanthienquoc/microfe-auth
-  newName: ghcr.io/phanthienquoc/microfe-auth
+- name: ghcr.io/phanthienquoc/auth-service/auth
+  newName: ghcr.io/phanthienquoc/auth-service/auth
   newTag: 0.1.0
