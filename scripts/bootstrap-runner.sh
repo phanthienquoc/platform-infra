@@ -115,7 +115,7 @@ case "${1:-}" in
     }
 
     secret_json="$("${KUBECTL[@]}" -n microfe-platform get secret microfe-auth-secrets -o json 2>/dev/null)" || {
-      echo "platform-kubectl: missing microfe-auth-secrets in namespace microfe-platform; provision it through the approved secret manager" >&2
+      echo "platform-kubectl: missing microfe-auth-secrets in namespace microfe-platform; run the protected platform-infra production provisioning workflow" >&2
       exit 1
     }
     for key in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY JWT_SECRET MFA_ENCRYPTION_KEY; do
