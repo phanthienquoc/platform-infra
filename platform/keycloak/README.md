@@ -25,7 +25,7 @@ The database login **does not yet have a password**. Set a strong unique passwor
 
 ## Deployment guardrails
 
-1. The production workflow refuses rollout unless `KEYCLOAK_DB_USERNAME=keycloak_runtime`, the DB URL equals the chosen Session Pooler URL, and all five secrets are present with minimum password lengths.
+1. The production workflow refuses rollout unless `KEYCLOAK_DB_USERNAME=keycloak_runtime.gtqovpusfyyvxpeezxlo`, the DB URL equals the chosen Session Pooler URL, and all five secrets are present with minimum password lengths.
 2. The dedicated workflow target `keycloak` provisions only the Keycloak Secret and applies only `platform/keycloak`; it does not apply `environments/prod` or restart other workloads.
 3. The self-hosted VPS wrapper must be updated from policy v9 to v10 by running the reviewed `scripts/bootstrap-runner.sh` through the normal platform administration process. Until that server-side allowlist is updated, the new Keycloak provisioning/apply commands are intentionally rejected.
 4. DNS for `sso.mrcute.space` must resolve to the existing Traefik public IP so cert-manager can issue TLS. DNS is not controlled by these manifests.
