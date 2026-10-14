@@ -28,11 +28,30 @@ esac
 
 kubectl_bin=(sudo /usr/local/sbin/platform-kubectl)
 failed=0
+label_selector=""
+
+# microfe-auth, microfe-shell, and microfe-ws share a namespace but are
+# independent deployment lanes. Scope each check to its own app label.
+case "$TARGET_APP" in
+  auth-service) label_selector="app=microfe-auth" ;;
+  microfe) label_selector="app=microfe-shell,app=microfe-ws" ;;
+  *) ;;
+esac
 
 for namespace in "${namespaces[@]}"; do
   echo "Checking workload health in namespace: $namespace"
 
-  rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.metadata.deletionTimestamp}{"\t"}{.status.phase}{"\t"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{" "}{end}{"\n"}{end}')"
+  if [ -n "$label_selector" ]; then
+    rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -l "$label_selector" -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.metadata.deletionTimestamp}{"\t"}{.status.phase}{"\t"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{" "}{end}{"\n"}{end}')"
+  else
+    rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.metadata.deletionTimestamp}{"\t"}{.status.phase}{"\t"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{" "}{end}{"\n"}{end}')"
+  fi
+
+  if [ -z "$rows" ]; then
+    echo "::error::No pods found in namespace $namespace for target $TARGET_APP." >&2
+    failed=1
+    continue
+  fi
 
   while IFS=$'\t' read -r pod deletion_timestamp phase containers; do
     [ -n "$pod" ] || continue
