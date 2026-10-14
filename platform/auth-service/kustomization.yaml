@@ -6,4 +6,4 @@ resources:
 images:
 - name: ghcr.io/phanthienquoc/auth-service/auth
   newName: ghcr.io/phanthienquoc/auth-service/auth
-  newTag: prod-v1.0.0-97fea65
+  newTag: prod-v1.0.0-931d3a4
