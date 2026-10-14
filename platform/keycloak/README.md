@@ -10,7 +10,7 @@ The Deployment pins Keycloak to `quay.io/keycloak/keycloak:26.8.1` and uses prod
 
 Required GitHub Environment `production` secrets:
 - `KEYCLOAK_DB_URL`
-- `KEYCLOAK_DB_USERNAME`
+- `KEYCLOAK_DB_USERNAME` = `keycloak_runtime.gtqovpusfyyvxpeezxlo` (Supavisor username syntax)
 - `KEYCLOAK_DB_PASSWORD`
 - `KEYCLOAK_ADMIN_USERNAME`
 - `KEYCLOAK_ADMIN_PASSWORD`
@@ -21,7 +21,7 @@ Provisioning will materialize these into Kubernetes Secret `keycloak-runtime-sec
 
 The isolated schema `keycloak` exists. The dedicated login role `keycloak_runtime` was created with `LOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS`, and it has `CONNECT` on database `postgres` and `USAGE, CREATE` on schema `keycloak`. It is not a member of privileged app roles. Live privilege checks confirmed it has no SELECT/INSERT/UPDATE/DELETE permission on `public.users`, and no usage on `auth`, `storage` or `extensions` schemas.
 
-The database login **does not yet have a password**. Set a strong unique password through a protected database administration channel and set the same value in GitHub Environment secret `KEYCLOAK_DB_PASSWORD`. Never paste it into chat or commit it. The schema remains owned by the database owner; Keycloak can create/alter its own objects within `keycloak` using its schema privileges. Verify effective grants and TLS connection before rollout.
+The database login **does not yet have a password**. Set a strong unique password through a protected database administration channel and set the same value in GitHub Environment secret `KEYCLOAK_DB_PASSWORD`. For the Supavisor pooler connection, the **connection username** in GitHub must be `keycloak_runtime.gtqovpusfyyvxpeezxlo`; the actual PostgreSQL role is named `keycloak_runtime`. Never paste it into chat or commit it. The schema remains owned by the database owner; Keycloak can create/alter its own objects within `keycloak` using its schema privileges. Verify effective grants and TLS connection before rollout.
 
 ## Deployment guardrails
 
