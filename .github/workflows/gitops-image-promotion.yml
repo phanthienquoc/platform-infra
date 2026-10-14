@@ -13,6 +13,7 @@ on:
           - stockdividend
           - tce-dashboard
           - media-generation
+          - auth-service
       component:
         description: Image component
         required: true
@@ -26,6 +27,7 @@ on:
       - image-published
       - tce-release-requested
       - media-release-requested
+      - auth-image-published
 
 permissions:
   contents: write
@@ -215,7 +217,7 @@ jobs:
           TAG="${EVENT_TAG:-$INPUT_TAG}"
 
           case "$APP/$COMPONENT" in
-            stockdividend/backend|stockdividend/admin|tce-dashboard/web|tce-dashboard/service|media-generation/backend|media-generation/frontend) ;;
+            stockdividend/backend|stockdividend/admin|tce-dashboard/web|tce-dashboard/service|media-generation/backend|media-generation/frontend|auth-service/auth) ;;
             *)
               echo "::error::Unsupported image target: $APP/$COMPONENT"
               exit 1
@@ -235,7 +237,7 @@ jobs:
                 exit 1
               }
               ;;
-            stockdividend)
+            auth-service|stockdividend)
               [[ "$TAG" =~ ^[0-9a-f]{7,64}$ ]] || {
                 echo "::error::StockDividend tag must be an immutable Git SHA"
                 exit 1
@@ -252,7 +254,7 @@ jobs:
       - name: Validate promoted image in GHCR
         env:
           GHCR_USERNAME: ${{ github.actor }}
-          GHCR_TOKEN: ${{ github.token }}
+          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN || github.token }}
           APP: ${{ steps.input.outputs.app }}
           COMPONENT: ${{ steps.input.outputs.component }}
           TAG: ${{ steps.input.outputs.tag }}
@@ -261,6 +263,8 @@ jobs:
 
           if [ "$APP" = "media-generation" ]; then
             IMAGE="ghcr.io/phanthienquoc/media-generation/${COMPONENT}:${TAG}"
+          elif [ "$APP" = "auth-service" ]; then
+            IMAGE="ghcr.io/phanthienquoc/microfe-auth:${TAG}"
           else
             IMAGE="ghcr.io/phanthienquoc/${APP}/${COMPONENT}:${TAG}"
           fi
@@ -286,6 +290,7 @@ jobs:
             stockdividend) FILE="apps/stockdividend/overlays/prod/kustomization.yaml" ;;
             tce-dashboard) FILE="apps/tce-dashboard/overlays/prod/kustomization.yaml" ;;
             media-generation) FILE="apps/media-generation/overlays/prod/kustomization.yaml" ;;
+            auth-service) FILE="platform/auth-service/kustomization.yaml" ;;
             *) echo "::error::Unsupported application: $APP"; exit 1 ;;
           esac
 
@@ -300,7 +305,9 @@ jobs:
 
           lines = path.read_text().splitlines()
           expected = (
-              f"ghcr.io/phanthienquoc/media-generation/{component}"
+              "ghcr.io/phanthienquoc/microfe-auth"
+              if app == "auth-service"
+              else f"ghcr.io/phanthienquoc/media-generation/{component}"
               if app == "media-generation"
               else f"ghcr.io/phanthienquoc/{app}/{component}"
           )
@@ -322,6 +329,8 @@ jobs:
 
           if [ "$APP" = "media-generation" ]; then
             grep -A1 "name: ghcr.io/phanthienquoc/media-generation/${COMPONENT}" "$FILE"
+          elif [ "$APP" = "auth-service" ]; then
+            grep -A1 "name: ghcr.io/phanthienquoc/microfe-auth" "$FILE"
           else
             grep -A1 "name: ghcr.io/phanthienquoc/${APP}/${COMPONENT}" "$FILE"
           fi
@@ -335,6 +344,7 @@ jobs:
             stockdividend) TARGET_FILE="apps/stockdividend/overlays/prod/kustomization.yaml" ;;
             tce-dashboard) TARGET_FILE="apps/tce-dashboard/overlays/prod/kustomization.yaml" ;;
             media-generation) TARGET_FILE="apps/media-generation/overlays/prod/kustomization.yaml" ;;
+            auth-service) TARGET_FILE="platform/auth-service/kustomization.yaml" ;;
             *) echo "::error::Unsupported promotion app"; exit 1 ;;
           esac
           test -n "$(git diff --name-only -- "$TARGET_FILE")" || { echo "::error::Expected promotion diff missing for $TARGET_FILE"; git diff --name-only; exit 1; }
@@ -442,7 +452,7 @@ jobs:
           done
 
       - name: Determine release readiness
-        if: steps.input.outputs.app == 'stockdividend' || steps.input.outputs.app == 'media-generation'
+        if: steps.input.outputs.app == 'stockdividend' || steps.input.outputs.app == 'media-generation' || steps.input.outputs.app == 'auth-service'
         id: readiness
         env:
           APP: ${{ steps.input.outputs.app }}
@@ -451,7 +461,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [ "$APP" = "stockdividend" ]; then
+          if [ "$APP" = "stockdividend" ] || [ "$APP" = "auth-service" ]; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -474,7 +484,7 @@ jobs:
           fi
 
       - name: Trigger VPS reconciliation
-        if: (steps.input.outputs.app == 'stockdividend' || steps.input.outputs.app == 'media-generation') && steps.readiness.outputs.ready == 'true'
+        if: (steps.input.outputs.app == 'stockdividend' || steps.input.outputs.app == 'media-generation' || steps.input.outputs.app == 'auth-service') && steps.readiness.outputs.ready == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           APP: ${{ steps.input.outputs.app }}

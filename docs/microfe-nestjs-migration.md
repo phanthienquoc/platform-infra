@@ -4,8 +4,11 @@
 
 - `platform-infra` owns Kubernetes manifests, Kustomize overlays, deployment/reconciliation workflows, immutable image promotion, and rollout/health verification only.
 - Application implementation belongs in its application repository: source code, package manifests, Dockerfiles, unit/integration tests, and application-owned database migrations must not live in `platform-infra`.
-- The Auth application repository is `phanthienquoc/phanthienquoc-authentication`. Its CI builds and publishes the Auth image; `platform-infra` consumes the published immutable image reference and deploys it.
-- Keep deployment manifests such as `platform/auth-service/deployment.yaml`, `platform/microfe/**/deployment.yaml`, certificates, ingress, namespace, and Kustomize configuration in this repository.
+- The Auth application repository is `phanthienquoc/phanthienquoc-authentication`. It exclusively owns Auth source, tests, Dockerfile, application dependencies, and database migrations. Its CI tests and publishes `ghcr.io/phanthienquoc/microfe-auth:<git-sha>`; `platform-infra` only consumes the immutable image tag and deploys it.
+- TCE Dashboard, Media Generation, and MRCute are Auth clients. They must integrate with the shared Auth API; they must not copy authentication business logic or create parallel user/session stores.
+- Auth release handoff contract: repository dispatch `image-published` to `phanthienquoc/platform-infra` with `client_payload.app=auth-service`, `client_payload.component=auth`, and `client_payload.tag=<full-git-sha>`. The Auth repository needs a repository-scoped token secret such as `PLATFORM_INFRA_DISPATCH_TOKEN` with permission to dispatch events to `platform-infra`. Never use the Supabase service-role key for this purpose.
+- `platform-infra` promotes only `platform/auth-service/kustomization.yaml` for this event, opens a narrowly scoped promotion PR, and reconciles the Auth workload after the image reference is merged. It must not rebuild or host Auth application code.
+- Keep deployment manifests such as `platform/auth-service/deployment.yaml`, `platform/microfe/**/deployment.yaml`, certificates, ingress, namespace, and Kustomize configuration in this repository. Do not add Auth source files, package manifests, Dockerfiles, application tests, or app-owned migrations here.
 
 ## Auth runtime contract
 
