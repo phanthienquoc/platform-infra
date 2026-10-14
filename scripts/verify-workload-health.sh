@@ -17,7 +17,7 @@ case "$TARGET_APP" in
   media-generation)
     namespaces=(media-prod)
     ;;
-  microfe|auth-service)
+  microfe|auth-service|keycloak)
     namespaces=(microfe-platform)
     ;;
   *)
@@ -34,6 +34,7 @@ label_selector=""
 # independent deployment lanes. Scope each check to its own app label.
 case "$TARGET_APP" in
   auth-service) label_selector="app=microfe-auth" ;;
+  keycloak) label_selector="app.kubernetes.io/name=keycloak" ;;
   microfe) label_selector='app in (microfe-shell,microfe-ws)' ;;
   *) ;;
 esac
