@@ -264,7 +264,7 @@ jobs:
           if [ "$APP" = "media-generation" ]; then
             IMAGE="ghcr.io/phanthienquoc/media-generation/${COMPONENT}:${TAG}"
           elif [ "$APP" = "auth-service" ]; then
-            IMAGE="ghcr.io/phanthienquoc/microfe-auth:${TAG}"
+            IMAGE="ghcr.io/phanthienquoc/auth-service/auth:${TAG}"
           else
             IMAGE="ghcr.io/phanthienquoc/${APP}/${COMPONENT}:${TAG}"
           fi
@@ -305,7 +305,7 @@ jobs:
 
           lines = path.read_text().splitlines()
           expected = (
-              "ghcr.io/phanthienquoc/microfe-auth"
+              "ghcr.io/phanthienquoc/auth-service/auth"
               if app == "auth-service"
               else f"ghcr.io/phanthienquoc/media-generation/{component}"
               if app == "media-generation"
@@ -330,7 +330,7 @@ jobs:
           if [ "$APP" = "media-generation" ]; then
             grep -A1 "name: ghcr.io/phanthienquoc/media-generation/${COMPONENT}" "$FILE"
           elif [ "$APP" = "auth-service" ]; then
-            grep -A1 "name: ghcr.io/phanthienquoc/microfe-auth" "$FILE"
+            grep -A1 "name: ghcr.io/phanthienquoc/auth-service/auth" "$FILE"
           else
             grep -A1 "name: ghcr.io/phanthienquoc/${APP}/${COMPONENT}" "$FILE"
           fi
