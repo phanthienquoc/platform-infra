@@ -237,7 +237,13 @@ jobs:
                 exit 1
               }
               ;;
-            auth-service|stockdividend)
+            auth-service)
+              [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,40}$ ]] || {
+                echo "::error::Auth tag must be prod-v<semver>-<short-git-sha>"
+                exit 1
+              }
+              ;;
+            stockdividend)
               [[ "$TAG" =~ ^[0-9a-f]{7,64}$ ]] || {
                 echo "::error::StockDividend tag must be an immutable Git SHA"
                 exit 1
