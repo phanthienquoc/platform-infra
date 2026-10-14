@@ -123,6 +123,13 @@ case "${1:-}" in
     }
     exec "${KUBECTL[@]}" diff -k environments/prod
     ;;
+  port-forward)
+    [[ "${2:-}" == "-n" && "${3:-}" == "microfe-platform" && "${4:-}" == "svc/microfe-ws" && "${5:-}" == "18080:8080" && "${6:-}" == "" ]] || {
+      echo "platform-kubectl: only the approved MicroFE WS event port-forward is allowed" >&2
+      exit 2
+    }
+    exec "${KUBECTL[@]}" -n microfe-platform port-forward svc/microfe-ws 18080:8080
+    ;;
   describe-media)
     [[ "$#" -eq 1 ]] || exit 2
     exec "${KUBECTL[@]}" describe deployment/media-generation -n media-prod
