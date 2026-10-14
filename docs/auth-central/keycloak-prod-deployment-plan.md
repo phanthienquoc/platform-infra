@@ -17,7 +17,7 @@
 ## Required GitHub Environment secrets
 These must be in the `production` Environment because the workflow uses `environment: production`:
 - `KEYCLOAK_DB_URL` = `jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require`
-- `KEYCLOAK_DB_USERNAME` = `keycloak_runtime` (not `postgres.gtqovpusfyyvxpeezxlo`)
+- `KEYCLOAK_DB_USERNAME` = `keycloak_runtime.gtqovpusfyyvxpeezxlo` (PostgreSQL role is `keycloak_runtime`; Supavisor Session Pooler requires `<role>.<project-ref>`)
 - `KEYCLOAK_DB_PASSWORD` = password of the dedicated `keycloak_runtime` DB role, not the Supabase owner password
 - `KEYCLOAK_ADMIN_USERNAME`
 - `KEYCLOAK_ADMIN_PASSWORD`
