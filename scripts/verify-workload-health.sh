@@ -34,7 +34,7 @@ label_selector=""
 # independent deployment lanes. Scope each check to its own app label.
 case "$TARGET_APP" in
   auth-service) label_selector="app=microfe-auth" ;;
-  microfe) label_selector="app=microfe-shell,app=microfe-ws" ;;
+  microfe) label_selector='app in (microfe-shell,microfe-ws)' ;;
   *) ;;
 esac
 
