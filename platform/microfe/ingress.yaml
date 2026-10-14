@@ -36,3 +36,9 @@ spec:
           - path: /
             pathType: Prefix
             backend: {service: {name: microfe-ws, port: {number: 8080}}}
+    - host: sso.mrcute.space
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: {service: {name: keycloak, port: {number: 80}}}
