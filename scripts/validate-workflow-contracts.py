@@ -78,7 +78,7 @@ if 'needs.reconcile.outputs.target_app == \'keycloak\'' not in keycloak_lane:
     fail("Keycloak lane must require explicit target_app=keycloak.")
 if "apply -k platform/keycloak" not in keycloak_lane:
     fail("Keycloak lane must use its isolated Kustomize path.")
-if "keycloak-runtime-secrets" not in keycloak_lane:
+if "provision-keycloak-secret" not in keycloak_lane:
     fail("Keycloak lane must provision its separate runtime Secret.")
 
 print("Workflow contract validation passed.")
