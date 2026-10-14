@@ -24,6 +24,7 @@ name: reconcile-vps
         type: choice
         options:
           - all
+          - auth-service
           - tce-dashboard
           - stockdividend
           - media-generation
@@ -83,7 +84,7 @@ jobs:
         run: |
           set -euo pipefail
           case "$TARGET_APP" in
-            all|tce-dashboard|stockdividend|media-generation|microfe) ;;
+            all|auth-service|tce-dashboard|stockdividend|media-generation|microfe) ;;
             *) echo "::error::Unsupported deployment scope: $TARGET_APP"; exit 1 ;;
           esac
           echo "Deployment scope: $TARGET_APP"
@@ -236,8 +237,14 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl get nodes -o wide
           sudo /usr/local/sbin/platform-kubectl get pods -A -o wide
 
+      - name: Verify Auth rollout
+        if: ${{ env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'auth-service') }}
+        run: |
+          set -euo pipefail
+          sudo /usr/local/sbin/platform-kubectl rollout status deployment/microfe-auth -n microfe-platform --timeout=180s
+
       - name: Verify Auth HTTPS
-        if: ${{ env.RECONCILE_MODE == 'apply' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'auth-service') }}
         run: |
           set -euo pipefail
           tls_output="$(printf '' | openssl s_client -connect auth.mrcute.space:443 -servername auth.mrcute.space -verify_return_error 2>&1 || true)"

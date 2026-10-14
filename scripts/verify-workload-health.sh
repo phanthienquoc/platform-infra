@@ -17,7 +17,7 @@ case "$TARGET_APP" in
   media-generation)
     namespaces=(media-prod)
     ;;
-  microfe)
+  microfe|auth-service)
     namespaces=(microfe-platform)
     ;;
   *)
