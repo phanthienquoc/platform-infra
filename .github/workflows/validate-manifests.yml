@@ -85,6 +85,38 @@ jobs:
             esac
           done
 
+      - name: Validate isolated Keycloak manifests
+        run: |
+          set -euo pipefail
+          kubectl kustomize platform/keycloak > /tmp/keycloak-rendered.yaml
+          python3 - <<'PY'
+          from pathlib import Path
+          import yaml
+
+          rendered = Path("/tmp/keycloak-rendered.yaml").read_text()
+          docs = list(yaml.safe_load_all(rendered))
+          if len(docs) != 4:
+              raise SystemExit(f"Expected 4 isolated Keycloak resources, got {len(docs)}")
+          identities = {(item.get("kind"), item.get("metadata", {}).get("name")) for item in docs}
+          required = {
+              ("Deployment", "keycloak"),
+              ("Service", "keycloak"),
+              ("Ingress", "keycloak-public"),
+              ("Certificate", "keycloak-sso-tls"),
+          }
+          if not required.issubset(identities):
+              raise SystemExit(f"Keycloak resource contract mismatch: {identities}")
+          deployment = next(item for item in docs if item.get("kind") == "Deployment")
+          container = deployment["spec"]["template"]["spec"]["containers"][0]
+          if container.get("image") != "quay.io/keycloak/keycloak:26.8.1":
+              raise SystemExit("Keycloak image must remain pinned to 26.8.1.")
+          if any(item.get("kind") == "Secret" for item in docs):
+              raise SystemExit("Keycloak credentials must not be stored as Git manifests.")
+          if "sso.mrcute.space" not in rendered or "auth.mrcute.space" in rendered:
+              raise SystemExit("Keycloak resources must only own the dedicated SSO hostname.")
+          print("Validated isolated Keycloak Deployment, Service, Ingress, Certificate and secret references.")
+          PY
+
       - name: Validate network boundaries
         run: |
           chmod +x scripts/validate-network-boundaries.sh

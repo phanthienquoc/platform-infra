@@ -58,6 +58,7 @@ required_lanes = (
     "  deploy-tce-dashboard:",
     "  deploy-stockdividend:",
     "  deploy-media-generation:",
+    "  deploy-keycloak:",
 )
 for lane in required_lanes:
     if lane not in reconcile:
@@ -68,7 +69,16 @@ microfe_lane = reconcile.split("  deploy-microfe:", 1)[1].split("  deploy-tce-da
 if "rollout status deployment/microfe-auth" in microfe_lane:
     fail("MicroFE lane must not wait for the independent Auth rollout.")
 
-if "Verify Auth workload health" not in reconcile or "Verify MicroFE workload health" not in reconcile:
+if "Verify Auth workload health" not in reconcile or "Verify MicroFE workload health" not in reconcile or "Verify Keycloak workload health" not in reconcile:
     fail("Auth and MicroFE lanes must retain workload health verification.")
+
+# Keycloak must have a dedicated target and must not be added to regular app reconciliation.
+keycloak_lane = reconcile.split("  deploy-keycloak:", 1)[1].split("  deploy-tce-dashboard:", 1)[0]
+if 'needs.reconcile.outputs.target_app == \'keycloak\'' not in keycloak_lane:
+    fail("Keycloak lane must require explicit target_app=keycloak.")
+if "apply -k platform/keycloak" not in keycloak_lane:
+    fail("Keycloak lane must use its isolated Kustomize path.")
+if "provision-keycloak-secret" not in keycloak_lane:
+    fail("Keycloak lane must provision its separate runtime Secret.")
 
 print("Workflow contract validation passed.")
