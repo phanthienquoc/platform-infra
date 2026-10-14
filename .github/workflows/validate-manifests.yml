@@ -85,6 +85,9 @@ jobs:
             esac
           done
 
+      - name: Validate Auth GitOps contract
+        run: bash scripts/validate-auth-gitops-contract.sh /tmp/platform-infra-rendered.yaml
+
       - name: Validate network boundaries
         run: |
           chmod +x scripts/validate-network-boundaries.sh
