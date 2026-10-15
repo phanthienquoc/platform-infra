@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-10-15T13:28:18+00:00
+Generated: 2026-10-15T13:36:54+00:00
 
 ## Host
 uname: Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,18 +11,18 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.8Gi       617Mi        91Mi        19Gi        19Gi
+Mem:            23Gi       3.7Gi       638Mi        91Mi        19Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   32G   14G  70% /
 disk_pressure: normal (70%)
- 13:28:18 up 166 days, 23:18,  0 users,  load average: 0.04, 0.09, 0.16
+ 13:36:54 up 166 days, 23:27,  0 users,  load average: 0.65, 0.28, 0.20
 
 ## Runner
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
 1340196 /opt/media-actions-runner/bin/Runner.Listener run --startuptype service
-2501051 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+2509654 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
   actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-media-generation.media-generation-k3s-01)
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service           loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
@@ -91,12 +91,18 @@ NAMESPACE          NAME                                         READY   STATUS  
 cert-manager       cert-manager-75b96c9588-lgn7d                1/1     Running            0               51d     10.42.0.98    tce-k3s-01   <none>           <none>
 cert-manager       cert-manager-cainjector-b644b66f7-l8jdq      1/1     Running            1 (51d ago)     51d     10.42.0.100   tce-k3s-01   <none>           <none>
 cert-manager       cert-manager-webhook-76d97df888-wwq49        1/1     Running            0               51d     10.42.0.99    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29867835-4wf5f            0/1     StartError         0               13m     10.42.0.73    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29867835-6hhts            0/1     StartError         0               8m6s    10.42.0.77    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29867835-95hsd            0/1     StartError         0               13m     10.42.0.72    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29867835-k5m5r            0/1     StartError         0               10m     10.42.0.76    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29867835-rd2wz            0/1     StartError         0               12m     10.42.0.75    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29867835-rm2b4            0/1     StartError         0               12m     10.42.0.74    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29867835-4wf5f            0/1     StartError         0               21m     10.42.0.73    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29867835-6hhts            0/1     StartError         0               16m     10.42.0.77    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29867835-95hsd            0/1     StartError         0               21m     10.42.0.72    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29867835-k5m5r            0/1     StartError         0               19m     10.42.0.76    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29867835-rd2wz            0/1     StartError         0               20m     10.42.0.75    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29867835-rm2b4            0/1     StartError         0               21m     10.42.0.74    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29867850-8x4zz            0/1     StartError         0               102s    10.42.0.83    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29867850-hz9qx            0/1     StartError         0               6m23s   10.42.0.80    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29867850-jpzh9            0/1     StartError         0               4m22s   10.42.0.82    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29867850-mltjx            0/1     StartError         0               5m42s   10.42.0.81    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29867850-pbxw8            0/1     StartError         0               6m44s   10.42.0.79    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29867850-vgxnc            0/1     StartError         0               6m56s   10.42.0.78    tce-k3s-01   <none>           <none>
 kube-system        coredns-54996dc9b4-d68pf                     1/1     Running            0               54d     10.42.0.6     tce-k3s-01   <none>           <none>
 kube-system        helm-install-traefik-crd-mq7w8               0/1     Completed          0               54d     10.42.0.3     tce-k3s-01   <none>           <none>
 kube-system        helm-install-traefik-s2twj                   0/1     Completed          1 (54d ago)     54d     10.42.0.2     tce-k3s-01   <none>           <none>
@@ -104,17 +110,17 @@ kube-system        local-path-provisioner-58d557dc48-jbhhp      1/1     Running 
 kube-system        metrics-server-6dc596dfb8-s2bzm              1/1     Running            0               54d     10.42.0.4     tce-k3s-01   <none>           <none>
 kube-system        svclb-traefik-859779c1-7bwx2                 2/2     Running            0               54d     10.42.0.7     tce-k3s-01   <none>           <none>
 kube-system        traefik-59b7647586-gml84                     1/1     Running            0               54d     10.42.0.8     tce-k3s-01   <none>           <none>
-media-prod         media-generation-5c9b76dfb9-zh8jr            1/1     Running            0               33h     10.42.0.85    tce-k3s-01   <none>           <none>
-media-prod         media-generation-frontend-597b779c9d-dvrft   1/1     Running            0               33h     10.42.0.84    tce-k3s-01   <none>           <none>
-microfe-platform   microfe-auth-f5997bbd8-jpglt                 1/1     Running            0               3h15m   10.42.0.240   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-shell-6cd948f78d-bl2bl               0/1     ErrImagePull       0               3h15m   10.42.0.241   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-shell-dbbbfdf8c-5rkwz                1/1     Running            0               6d7h    10.42.0.158   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-ws-5587c8844c-rbtgx                  1/1     Running            10 (6d7h ago)   6d7h    10.42.0.157   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-ws-d5c448545-zr5zf                   0/1     ErrImagePull       0               3h15m   10.42.0.239   tce-k3s-01   <none>           <none>
+media-prod         media-generation-5c9b76dfb9-zh8jr            1/1     Running            0               34h     10.42.0.85    tce-k3s-01   <none>           <none>
+media-prod         media-generation-frontend-597b779c9d-dvrft   1/1     Running            0               34h     10.42.0.84    tce-k3s-01   <none>           <none>
+microfe-platform   microfe-auth-f5997bbd8-jpglt                 1/1     Running            0               3h24m   10.42.0.240   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-shell-6cd948f78d-bl2bl               0/1     ImagePullBackOff   0               3h24m   10.42.0.241   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-shell-dbbbfdf8c-5rkwz                1/1     Running            0               6d8h    10.42.0.158   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-ws-5587c8844c-rbtgx                  1/1     Running            10 (6d7h ago)   6d8h    10.42.0.157   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-ws-d5c448545-zr5zf                   0/1     ImagePullBackOff   0               3h24m   10.42.0.239   tce-k3s-01   <none>           <none>
 microfe-platform   nats-7bc8d9f768-q682m                        1/1     Running            0               6d7h    10.42.0.178   tce-k3s-01   <none>           <none>
 stock-prod         stock-admin-558cfc4457-vpdvs                 0/1     ImagePullBackOff   0               8h      10.42.0.116   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-9bbbf8fb4-45b9d                  0/1     ImagePullBackOff   0               3h15m   10.42.0.242   tce-k3s-01   <none>           <none>
-stock-prod         stock-backend-549796df58-9zbvk               0/1     ImagePullBackOff   0               3h15m   10.42.0.243   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-9bbbf8fb4-45b9d                  0/1     ImagePullBackOff   0               3h24m   10.42.0.242   tce-k3s-01   <none>           <none>
+stock-prod         stock-backend-549796df58-9zbvk               0/1     ImagePullBackOff   0               3h24m   10.42.0.243   tce-k3s-01   <none>           <none>
 stock-prod         stock-backend-57ccb8ff6-d25jq                1/1     Running            0               26d     10.42.0.55    tce-k3s-01   <none>           <none>
 stock-prod         stock-frontend-79c57845df-z747s              1/1     Running            0               26d     10.42.0.56    tce-k3s-01   <none>           <none>
 tce-prod           tce-frontend-7d9f887944-mkdlk                1/1     Running            0               3d20h   10.42.0.25    tce-k3s-01   <none>           <none>
@@ -140,8 +146,8 @@ tce-prod           tce-frontend                1/1     1            1           
 tce-prod           tce-service                 1/1     1            1           51d
 
 ### Pod failure evidence
-microfe-platform	microfe-shell-6cd948f78d-bl2bl	ErrImagePull	failed to pull and unpack image "ghcr.io/phanthienquoc/microfe-shell:0.1.0": failed to resolve reference "ghcr.io/phanthienquoc/microfe-shell:0.1.0": failed to authorize: failed to fetch oauth token: unexpected status from GET request to https://ghcr.io/token?scope=repository%3Aphanthienquoc%2Fmicrofe-shell%3Apull&service=ghcr.io: 403 Forbidden
-microfe-platform	microfe-ws-d5c448545-zr5zf	ErrImagePull	failed to pull and unpack image "ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA": failed to resolve reference "ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA": failed to authorize: failed to fetch oauth token: unexpected status from GET request to https://ghcr.io/token?scope=repository%3Aphanthienquoc%2Fmicrofe-ws%3Apull&service=ghcr.io: 403 Forbidden
+microfe-platform	microfe-shell-6cd948f78d-bl2bl	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/microfe-shell:0.1.0": ErrImagePull: failed to pull and unpack image "ghcr.io/phanthienquoc/microfe-shell:0.1.0": failed to resolve reference "ghcr.io/phanthienquoc/microfe-shell:0.1.0": failed to authorize: failed to fetch oauth token: unexpected status from GET request to https://ghcr.io/token?scope=repository%3Aphanthienquoc%2Fmicrofe-shell%3Apull&service=ghcr.io: 403 Forbidden
+microfe-platform	microfe-ws-d5c448545-zr5zf	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA": ErrImagePull: failed to pull and unpack image "ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA": failed to resolve reference "ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA": failed to authorize: failed to fetch oauth token: unexpected status from GET request to https://ghcr.io/token?scope=repository%3Aphanthienquoc%2Fmicrofe-ws%3Apull&service=ghcr.io: 403 Forbidden
 stock-prod	stock-admin-558cfc4457-vpdvs	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": ErrImagePull: failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": failed to resolve reference "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": failed to authorize: failed to fetch oauth token: unexpected status from GET request to https://ghcr.io/token?scope=repository%3Aphanthienquoc%2Fstockdividend%2Fadmin%3Apull&service=ghcr.io: 403 Forbidden
 stock-prod	stock-admin-9bbbf8fb4-45b9d	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": ErrImagePull: failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": failed to resolve reference "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": failed to authorize: failed to fetch oauth token: unexpected status from GET request to https://ghcr.io/token?scope=repository%3Aphanthienquoc%2Fstockdividend%2Fadmin%3Apull&service=ghcr.io: 403 Forbidden
 stock-prod	stock-backend-549796df58-9zbvk	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/backend:12d63b4": ErrImagePull: failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/backend:12d63b4": failed to resolve reference "ghcr.io/phanthienquoc/stockdividend/backend:12d63b4": failed to authorize: failed to fetch oauth token: unexpected status from GET request to https://ghcr.io/token?scope=repository%3Aphanthienquoc%2Fstockdividend%2Fbackend%3Apull&service=ghcr.io: 403 Forbidden
