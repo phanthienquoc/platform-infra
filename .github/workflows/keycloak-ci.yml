@@ -66,6 +66,14 @@ jobs:
           print("Keycloak resource contract passed.")
           PY
 
+      - name: Validate self-registration policy contract
+        run: |
+          set -euo pipefail
+          grep -Fq "dedicated application realm named mrcute" platform/keycloak/README.md
+          grep -Fq "Set email verification to disabled" platform/keycloak/README.md
+          grep -Fq "Do not enable public registration on master" platform/keycloak/README.md
+          echo "No-email self-registration policy is documented; this check does not claim live realm activation."
+
       - name: Validate network boundaries
         run: |
           chmod +x scripts/validate-network-boundaries.sh
