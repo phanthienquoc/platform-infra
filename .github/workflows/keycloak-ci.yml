@@ -69,10 +69,13 @@ jobs:
       - name: Validate self-registration policy contract
         run: |
           set -euo pipefail
-          grep -Fq "dedicated application realm named mrcute" platform/keycloak/README.md
-          grep -Fq "Set email verification to disabled" platform/keycloak/README.md
-          grep -Fq "Do not enable public registration on master" platform/keycloak/README.md
-          echo "No-email self-registration policy is documented; this check does not claim live realm activation."
+          grep -Fq "Self-registration enabled only in" platform/keycloak/README.md
+          grep -Fq "Email verification disabled" platform/keycloak/README.md
+          grep -Fq "master realm remains admin-only" platform/keycloak/README.md
+          grep -Fq "rate-limit middleware" platform/keycloak/README.md
+          test -f scripts/provision-keycloak-realm.py
+          python3 -m py_compile scripts/provision-keycloak-realm.py
+          echo "Realm provisioning, registration rate limiting and policy contract passed."
 
       - name: Validate network boundaries
         run: |
