@@ -76,7 +76,7 @@ def main():
             "rememberMe": True,
             "bruteForceProtected": True,
             "eventsEnabled": True,
-            "eventsListeners": ["jboss-logging"],
+            "eventsListeners": sorted(listeners),
             "adminEventsEnabled": True,
             "adminEventsDetailsEnabled": False,
             "passwordPolicy": "length(12) and notUsername",
@@ -85,6 +85,8 @@ def main():
         print("Created realm mrcute with self-registration enabled, email verification disabled, and security events enabled.")
     else:
         # Preserve existing clients and unrelated realm settings.
+        listeners = set(existing.get("eventsListeners") or [])
+        listeners.add("jboss-logging")
         existing.update({
             "enabled": True,
             "registrationAllowed": True,
