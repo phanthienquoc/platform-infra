@@ -1,0 +1,72 @@
+# yamllint disable rule:line-length
+name: keycloak-ci
+
+on:
+  pull_request:
+    paths:
+      - "platform/keycloak/**"
+      - ".github/workflows/keycloak-ci.yml"
+      - ".github/workflows/validate-manifests.yml"
+      - "scripts/validate-network-boundaries.sh"
+  push:
+    branches: [master]
+    paths:
+      - "platform/keycloak/**"
+      - ".github/workflows/keycloak-ci.yml"
+      - ".github/workflows/validate-manifests.yml"
+      - "scripts/validate-network-boundaries.sh"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-keycloak:
+    name: Validate Keycloak manifests and boundaries
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Render Keycloak manifests
+        run: kubectl kustomize platform/keycloak > /tmp/keycloak-rendered.yaml
+
+      - name: Validate rendered Keycloak resources
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import yaml
+
+          rendered = Path("/tmp/keycloak-rendered.yaml").read_text()
+          docs = list(yaml.safe_load_all(rendered))
+          if len(docs) != 4:
+              raise SystemExit(f"Expected 4 resources, got {len(docs)}")
+          identities = {(item.get("kind"), item.get("metadata", {}).get("name")) for item in docs}
+          required = {
+              ("Deployment", "keycloak"),
+              ("Service", "keycloak"),
+              ("Ingress", "keycloak-public"),
+              ("Certificate", "keycloak-sso-tls"),
+          }
+          if identities != required:
+              raise SystemExit(f"Unexpected Keycloak resource set: {identities}")
+          deployment = next(item for item in docs if item.get("kind") == "Deployment")
+          spec = deployment["spec"]["template"]["spec"]
+          container = spec["containers"][0]
+          if container.get("image") != "quay.io/keycloak/keycloak:26.8.1":
+              raise SystemExit("Keycloak image must remain pinned to 26.8.1.")
+          if any(item.get("kind") == "Secret" for item in docs):
+              raise SystemExit("Credentials must not be stored as Git manifests.")
+          if "sso.mrcute.space" not in rendered or "auth.mrcute.space" in rendered:
+              raise SystemExit("Keycloak must only own sso.mrcute.space.")
+          print("Keycloak resource contract passed.")
+          PY
+
+      - name: Validate network boundaries
+        run: |
+          chmod +x scripts/validate-network-boundaries.sh
+          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
