@@ -25,14 +25,14 @@ The database login **does not yet have a password**. Set a strong unique passwor
 
 ## Self-registration policy (proposed)
 
-- Use a dedicated application realm named `mrcute`; keep the `master` realm admin-only.
+- Use a dedicated application realm named mrcute; keep the master realm admin-only.
 - Enable user self-registration only for `mrcute`.
 - Set email verification to disabled for this initial phase; SMTP is not a prerequisite.
 - Do not grant administrator or application-specific roles to newly registered users by default.
 - Password reset via email is not available until SMTP is configured.
 - Email ownership is not verified in this phase. Before public registration is enabled, add edge rate limiting and abuse monitoring, and validate registration/login/password policy end to end.
 - Create each app's OIDC client with exact redirect URIs and least-privilege role mappings in a separate reviewed step. Do not use wildcard redirect URIs.
-- Do not enable public registration on `master`.
+- Do not enable public registration on master.
 
 ## Deployment guardrails
 
