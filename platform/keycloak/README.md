@@ -23,14 +23,25 @@ The isolated schema `keycloak` exists. The dedicated login role `keycloak_runtim
 
 The database login **does not yet have a password**. Set a strong unique password through a protected database administration channel and set the same value in GitHub Environment secret `KEYCLOAK_DB_PASSWORD`. For the Supavisor pooler connection, the **connection username** in GitHub must be `keycloak_runtime.gtqovpusfyyvxpeezxlo`; the actual PostgreSQL role is named `keycloak_runtime`. Never paste it into chat or commit it. The schema remains owned by the database owner; Keycloak can create/alter its own objects within `keycloak` using its schema privileges. Verify effective grants and TLS connection before rollout.
 
+## Self-registration policy (proposed)
+
+- Use a dedicated application realm named `mrcute`; keep the `master` realm admin-only.
+- Enable user self-registration only for `mrcute`.
+- Set email verification to disabled for this initial phase; SMTP is not a prerequisite.
+- Do not grant administrator or application-specific roles to newly registered users by default.
+- Password reset via email is not available until SMTP is configured.
+- Email ownership is not verified in this phase. Before public registration is enabled, add edge rate limiting and abuse monitoring, and validate registration/login/password policy end to end.
+- Create each app's OIDC client with exact redirect URIs and least-privilege role mappings in a separate reviewed step. Do not use wildcard redirect URIs.
+- Do not enable public registration on `master`.
+
 ## Deployment guardrails
 
 1. The production workflow refuses rollout unless `KEYCLOAK_DB_USERNAME=keycloak_runtime.gtqovpusfyyvxpeezxlo`, the DB URL equals the chosen Session Pooler URL, and all five secrets are present with minimum password lengths.
 2. The dedicated workflow target `keycloak` provisions only the Keycloak Secret and applies only `platform/keycloak`; it does not apply `environments/prod` or restart other workloads.
-3. The self-hosted VPS wrapper must be updated from policy v9 to v10 by running the reviewed `scripts/bootstrap-runner.sh` through the normal platform administration process. Until that server-side allowlist is updated, the new Keycloak provisioning/apply commands are intentionally rejected.
+3. The self-hosted VPS wrapper currently contains the Keycloak secret provision and apply allowlist, but Keycloak rollout is still allowlisted only for `--timeout=300s`. Previous bootstrap exceeded that window; update workflow and installed wrapper together before increasing it, then verify the exact allowlisted command.
 4. DNS for `sso.mrcute.space` must resolve to the existing Traefik public IP so cert-manager can issue TLS. DNS is not controlled by these manifests.
-5. After initial bootstrap, follow Keycloak's supported procedure for rotating/removing bootstrap admin credentials; do not rely on bootstrap variables as an ongoing user-management mechanism.
+5. Bootstrap admin secrets do not configure realm self-registration. Realm/client provisioning must be performed by a reviewed, idempotent Admin API job or an authenticated, controlled admin-console procedure. Never put admin credentials in Git, workflow outputs or logs.
 
 ## Activation status
 
-The isolated manifests and workflow are proposed on the deployment branch but are not merged or live. No Keycloak Kubernetes Secret, production workload, public ingress activation, app client, or user/session migration has been performed.
+This repository currently has Keycloak runtime infrastructure manifests, but no realm provisioning configuration or job is included here. This document records the desired policy only; it does not create the `mrcute` realm, enable registration, create app OIDC clients, or activate production registration. The database password is also a blocking runtime prerequisite noted above.
