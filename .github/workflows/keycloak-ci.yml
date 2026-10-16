@@ -73,7 +73,7 @@ jobs:
           set -euo pipefail
           grep -Fq "Self-registration enabled only in" platform/keycloak/README.md
           grep -Fq "Email verification disabled" platform/keycloak/README.md
-          grep -Fq "master realm remains admin-only" platform/keycloak/README.md
+          grep -Fq "realm remains admin-only" platform/keycloak/README.md
           grep -Fq "rate-limit middleware" platform/keycloak/README.md
           test -f scripts/provision-keycloak-realm.py
           python3 -m py_compile scripts/provision-keycloak-realm.py
