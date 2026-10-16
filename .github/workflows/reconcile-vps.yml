@@ -431,6 +431,15 @@ jobs:
           set -euo pipefail
           chmod +x scripts/verify-workload-health.sh
           ./scripts/verify-workload-health.sh
+      - name: Provision and verify mrcute self-registration realm
+        env:
+          KEYCLOAK_ADMIN_USERNAME: ${{ secrets.KEYCLOAK_ADMIN_USERNAME }}
+          KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          python3 scripts/provision-keycloak-realm.py
+          unset KEYCLOAK_ADMIN_USERNAME KEYCLOAK_ADMIN_PASSWORD
       - name: Verify public OIDC discovery
         run: |
           set -euo pipefail
