@@ -50,7 +50,9 @@ jobs:
               ("Deployment", "keycloak"),
               ("Service", "keycloak"),
               ("Ingress", "keycloak-public"),
-              ("Certificate", "keycloak-sso-tls"),\n              ("Middleware", "keycloak-registration-rate-limit"),\n              ("Ingress", "keycloak-registration-rate-limit"),
+              ("Certificate", "keycloak-sso-tls"),
+              ("Middleware", "keycloak-registration-rate-limit"),
+              ("Ingress", "keycloak-registration-rate-limit"),
           }
           if identities != required:
               raise SystemExit(f"Unexpected Keycloak resource set: {identities}")
