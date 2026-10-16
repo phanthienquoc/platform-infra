@@ -43,8 +43,8 @@ jobs:
 
           rendered = Path("/tmp/keycloak-rendered.yaml").read_text()
           docs = list(yaml.safe_load_all(rendered))
-          if len(docs) != 4:
-              raise SystemExit(f"Expected 4 resources, got {len(docs)}")
+          if len(docs) != 6:
+              raise SystemExit(f"Expected 6 resources, got {len(docs)}")
           identities = {(item.get("kind"), item.get("metadata", {}).get("name")) for item in docs}
           required = {
               ("Deployment", "keycloak"),
