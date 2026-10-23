@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-10-23T07:35:12+00:00
+Generated: 2026-10-23T07:50:23+00:00
 
 ## Host
 uname: Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,17 +11,17 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       4.4Gi       635Mi        80Mi        18Gi        18Gi
+Mem:            23Gi       4.4Gi       563Mi        80Mi        18Gi        18Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   30G   16G  67% /
 disk_pressure: normal (67%)
- 07:35:12 up 174 days, 17:25,  0 users,  load average: 0.26, 0.22, 0.23
+ 07:50:23 up 174 days, 17:40,  0 users,  load average: 0.14, 0.11, 0.15
 
 ## Runner
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
 21684 /opt/media-actions-runner/bin/Runner.Listener run --startuptype service
-48138 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+62256 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
   actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-media-generation.media-generation-k3s-01)
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service           loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
@@ -96,17 +96,18 @@ NAMESPACE          NAME                                         READY   STATUS  
 cert-manager       cert-manager-75b96c9588-lgn7d                1/1     Running            0              58d     10.42.0.98    tce-k3s-01   <none>           <none>
 cert-manager       cert-manager-cainjector-b644b66f7-l8jdq      1/1     Running            1 (58d ago)    58d     10.42.0.100   tce-k3s-01   <none>           <none>
 cert-manager       cert-manager-webhook-76d97df888-wwq49        1/1     Running            0              58d     10.42.0.99    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29878995-2kjn5            0/1     StartError         0              15m     10.42.0.88    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29878995-4vktx            0/1     StartError         0              19m     10.42.0.86    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29878995-d8fmc            0/1     StartError         0              17m     10.42.0.87    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29878995-dgtdc            0/1     StartError         0              20m     10.42.0.82    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29878995-kjmk7            0/1     StartError         0              19m     10.42.0.83    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29878995-zn7k5            0/1     StartError         0              20m     10.42.0.81    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29879010-4bs75            0/1     StartError         0              4m      10.42.0.92    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29879010-7qhc5            0/1     StartError         0              4m41s   10.42.0.91    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29879010-ffcmd            0/1     StartError         0              5m14s   10.42.0.89    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29879010-n2wtr            0/1     StartError         0              5m2s    10.42.0.90    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29879010-qd9nq            0/1     StartError         0              2m39s   10.42.0.93    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29879010-4bs75            0/1     StartError         0              19m     10.42.0.92    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29879010-7qhc5            0/1     StartError         0              19m     10.42.0.91    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29879010-ffcmd            0/1     StartError         0              20m     10.42.0.89    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29879010-n2wtr            0/1     StartError         0              20m     10.42.0.90    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29879010-qd9nq            0/1     StartError         0              17m     10.42.0.93    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29879010-z4bgw            0/1     StartError         0              15m     10.42.0.94    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29879025-76k6q            0/1     StartError         0              11s     10.42.0.103   tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29879025-8kp7b            0/1     StartError         0              5m14s   10.42.0.96    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29879025-9c4fl            0/1     StartError         0              5m25s   10.42.0.95    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29879025-b2vnk            0/1     StartError         0              4m12s   10.42.0.101   tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29879025-rvtwp            0/1     StartError         0              4m53s   10.42.0.97    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29879025-sq7zm            0/1     StartError         0              2m52s   10.42.0.102   tce-k3s-01   <none>           <none>
 kube-system        coredns-54996dc9b4-d68pf                     1/1     Running            0              62d     10.42.0.6     tce-k3s-01   <none>           <none>
 kube-system        helm-install-traefik-crd-mq7w8               0/1     Completed          0              62d     10.42.0.3     tce-k3s-01   <none>           <none>
 kube-system        helm-install-traefik-s2twj                   0/1     Completed          1 (62d ago)    62d     10.42.0.2     tce-k3s-01   <none>           <none>
@@ -116,17 +117,17 @@ kube-system        svclb-traefik-859779c1-7bwx2                 2/2     Running 
 kube-system        traefik-59b7647586-gml84                     1/1     Running            0              62d     10.42.0.8     tce-k3s-01   <none>           <none>
 media-prod         media-generation-5c9b76dfb9-zh8jr            1/1     Running            0              9d      10.42.0.85    tce-k3s-01   <none>           <none>
 media-prod         media-generation-frontend-597b779c9d-dvrft   1/1     Running            0              9d      10.42.0.84    tce-k3s-01   <none>           <none>
-microfe-platform   keycloak-68c4bc764c-4pp66                    1/1     Running            0              6d21h   10.42.0.124   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-auth-59cf6454f8-lbgtn                1/1     Running            0              64m     10.42.0.59    tce-k3s-01   <none>           <none>
-microfe-platform   microfe-shell-598654d8b7-7rxlw               0/1     ImagePullBackOff   0              64m     10.42.0.61    tce-k3s-01   <none>           <none>
+microfe-platform   keycloak-68c4bc764c-4pp66                    1/1     Running            0              6d22h   10.42.0.124   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-auth-59cf6454f8-lbgtn                1/1     Running            0              79m     10.42.0.59    tce-k3s-01   <none>           <none>
+microfe-platform   microfe-shell-598654d8b7-7rxlw               0/1     ImagePullBackOff   0              79m     10.42.0.61    tce-k3s-01   <none>           <none>
 microfe-platform   microfe-shell-dbbbfdf8c-5rkwz                1/1     Running            0              14d     10.42.0.158   tce-k3s-01   <none>           <none>
 microfe-platform   microfe-ws-5587c8844c-rbtgx                  1/1     Running            10 (14d ago)   14d     10.42.0.157   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-ws-b8b8bc85d-ncqhm                   0/1     ImagePullBackOff   0              64m     10.42.0.60    tce-k3s-01   <none>           <none>
+microfe-platform   microfe-ws-b8b8bc85d-ncqhm                   0/1     ImagePullBackOff   0              79m     10.42.0.60    tce-k3s-01   <none>           <none>
 microfe-platform   nats-7bc8d9f768-q682m                        1/1     Running            0              14d     10.42.0.178   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-79c598f7db-plb5z                 0/1     ImagePullBackOff   0              6h2m    10.42.0.185   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-89dc549ff-smh9w                  0/1     ImagePullBackOff   0              64m     10.42.0.62    tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-79c598f7db-plb5z                 0/1     ImagePullBackOff   0              6h17m   10.42.0.185   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-89dc549ff-smh9w                  0/1     ImagePullBackOff   0              79m     10.42.0.62    tce-k3s-01   <none>           <none>
 stock-prod         stock-backend-57ccb8ff6-d25jq                1/1     Running            0              34d     10.42.0.55    tce-k3s-01   <none>           <none>
-stock-prod         stock-backend-786b76d66f-gdk5j               0/1     ImagePullBackOff   0              64m     10.42.0.63    tce-k3s-01   <none>           <none>
+stock-prod         stock-backend-786b76d66f-gdk5j               0/1     ImagePullBackOff   0              79m     10.42.0.63    tce-k3s-01   <none>           <none>
 stock-prod         stock-frontend-79c57845df-z747s              1/1     Running            0              34d     10.42.0.56    tce-k3s-01   <none>           <none>
 tce-prod           tce-frontend-5c57b4b667-4cszn                1/1     Running            0              47h     10.42.0.67    tce-k3s-01   <none>           <none>
 tce-prod           tce-service-5db78d488-5m6dl                  1/1     Running            0              47h     10.42.0.68    tce-k3s-01   <none>           <none>
@@ -140,7 +141,7 @@ kube-system        metrics-server              1/1     1            1           
 kube-system        traefik                     1/1     1            1           62d
 media-prod         media-generation            1/1     1            1           22d
 media-prod         media-generation-frontend   1/1     1            1           22d
-microfe-platform   keycloak                    1/1     1            1           6d21h
+microfe-platform   keycloak                    1/1     1            1           6d22h
 microfe-platform   microfe-auth                1/1     1            1           17d
 microfe-platform   microfe-shell               1/1     1            1           17d
 microfe-platform   microfe-ws                  1/1     1            1           17d
@@ -193,7 +194,7 @@ kube-system        metrics-server              ClusterIP      10.43.120.41    <n
 kube-system        traefik                     LoadBalancer   10.43.213.239   10.0.0.120    80:30225/TCP,443:30415/TCP   62d
 media-prod         media-generation            ClusterIP      10.43.252.95    <none>        3000/TCP                     22d
 media-prod         media-generation-frontend   ClusterIP      10.43.48.52     <none>        80/TCP                       22d
-microfe-platform   keycloak                    ClusterIP      10.43.142.95    <none>        80/TCP,9000/TCP              6d21h
+microfe-platform   keycloak                    ClusterIP      10.43.142.95    <none>        80/TCP,9000/TCP              6d22h
 microfe-platform   microfe-auth                ClusterIP      10.43.83.168    <none>        80/TCP                       17d
 microfe-platform   microfe-shell               ClusterIP      10.43.6.23      <none>        80/TCP                       17d
 microfe-platform   microfe-ws                  ClusterIP      10.43.86.34     <none>        8080/TCP                     17d
@@ -206,7 +207,7 @@ tce-prod           tce-frontend                ClusterIP      10.43.99.130    <n
 tce-prod           tce-service                 ClusterIP      10.43.189.227   <none>        8210/TCP                     58d
 NAMESPACE          NAME              CLASS     HOSTS                                                          ADDRESS      PORTS     AGE
 media-prod         media             traefik   media.mrcute.space                                             10.0.0.120   80, 443   22d
-microfe-platform   keycloak-public   traefik   sso.mrcute.space                                               10.0.0.120   80, 443   6d21h
+microfe-platform   keycloak-public   traefik   sso.mrcute.space                                               10.0.0.120   80, 443   6d22h
 microfe-platform   microfe-public    traefik   app.mrcute.space,auth.mrcute.space,ws.mrcute.space             10.0.0.120   80, 443   17d
 stock-prod         stock             traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   30d
 stock-prod         stock-ingress     traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   34d
