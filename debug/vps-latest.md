@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-10-25T12:41:43+00:00
+Generated: 2026-10-25T14:24:25+00:00
 
 ## Host
 uname: Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,18 +11,18 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       4.4Gi       629Mi        83Mi        18Gi        18Gi
+Mem:            23Gi       4.4Gi       575Mi        84Mi        18Gi        18Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   30G   16G  67% /
 disk_pressure: normal (67%)
- 12:41:43 up 176 days, 22:32,  0 users,  load average: 0.55, 0.27, 0.21
+ 14:24:25 up 177 days, 14 min,  0 users,  load average: 0.14, 0.15, 0.15
 
 ## Runner
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
 21684 /opt/media-actions-runner/bin/Runner.Listener run --startuptype service
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-2896495 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+2986488 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
   actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-media-generation.media-generation-k3s-01)
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service           loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
@@ -97,12 +97,18 @@ NAMESPACE          NAME                                         READY   STATUS  
 cert-manager       cert-manager-75b96c9588-lgn7d                1/1     Running            0              61d     10.42.0.98    tce-k3s-01   <none>           <none>
 cert-manager       cert-manager-cainjector-b644b66f7-l8jdq      1/1     Running            1 (61d ago)    61d     10.42.0.100   tce-k3s-01   <none>           <none>
 cert-manager       cert-manager-webhook-76d97df888-wwq49        1/1     Running            0              61d     10.42.0.99    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29882190-2gk8s            0/1     StartError         0              11m     10.42.0.22    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29882190-75qgp            0/1     StartError         0              11m     10.42.0.24    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29882190-f49zk            0/1     StartError         0              9m11s   10.42.0.26    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29882190-qlwmr            0/1     StartError         0              11m     10.42.0.23    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29882190-whbx6            0/1     StartError         0              6m30s   10.42.0.27    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29882190-xlbmr            0/1     StartError         0              10m     10.42.0.25    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29882280-2bl89            0/1     StartError         0              24m     10.42.0.61    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29882280-4cpnt            0/1     StartError         0              23m     10.42.0.62    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29882280-g84l4            0/1     StartError         0              24m     10.42.0.60    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29882280-gwg5z            0/1     StartError         0              19m     10.42.0.65    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29882280-pttj6            0/1     StartError         0              21m     10.42.0.64    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29882280-v2gtb            0/1     StartError         0              23m     10.42.0.63    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29882295-5psxz            0/1     StartError         0              8m15s   10.42.0.71    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29882295-6plsb            0/1     StartError         0              4m15s   10.42.0.73    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29882295-8m948            0/1     StartError         0              9m15s   10.42.0.69    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29882295-ghnsk            0/1     StartError         0              8m55s   10.42.0.70    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29882295-pwxbf            0/1     StartError         0              9m27s   10.42.0.66    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29882295-rwc4t            0/1     StartError         0              6m55s   10.42.0.72    tce-k3s-01   <none>           <none>
 kube-system        coredns-54996dc9b4-d68pf                     1/1     Running            0              64d     10.42.0.6     tce-k3s-01   <none>           <none>
 kube-system        helm-install-traefik-crd-mq7w8               0/1     Completed          0              64d     10.42.0.3     tce-k3s-01   <none>           <none>
 kube-system        helm-install-traefik-s2twj                   0/1     Completed          1 (64d ago)    64d     10.42.0.2     tce-k3s-01   <none>           <none>
@@ -113,19 +119,19 @@ kube-system        traefik-59b7647586-gml84                     1/1     Running 
 media-prod         media-generation-5c9b76dfb9-zh8jr            1/1     Running            0              11d     10.42.0.85    tce-k3s-01   <none>           <none>
 media-prod         media-generation-frontend-597b779c9d-dvrft   1/1     Running            0              11d     10.42.0.84    tce-k3s-01   <none>           <none>
 microfe-platform   keycloak-68c4bc764c-4pp66                    1/1     Running            0              9d      10.42.0.124   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-auth-5b4f5b5455-nbzhm                1/1     Running            0              39m     10.42.0.9     tce-k3s-01   <none>           <none>
-microfe-platform   microfe-shell-867945c964-p7xqw               0/1     ImagePullBackOff   0              39m     10.42.0.11    tce-k3s-01   <none>           <none>
+microfe-platform   microfe-auth-5b4f5b5455-nbzhm                1/1     Running            0              142m    10.42.0.9     tce-k3s-01   <none>           <none>
+microfe-platform   microfe-shell-867945c964-p7xqw               0/1     ImagePullBackOff   0              142m    10.42.0.11    tce-k3s-01   <none>           <none>
 microfe-platform   microfe-shell-dbbbfdf8c-5rkwz                1/1     Running            0              16d     10.42.0.158   tce-k3s-01   <none>           <none>
 microfe-platform   microfe-ws-5587c8844c-rbtgx                  1/1     Running            10 (16d ago)   16d     10.42.0.157   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-ws-79c6459dd5-78vzd                  0/1     ImagePullBackOff   0              39m     10.42.0.10    tce-k3s-01   <none>           <none>
+microfe-platform   microfe-ws-79c6459dd5-78vzd                  0/1     ImagePullBackOff   0              142m    10.42.0.10    tce-k3s-01   <none>           <none>
 microfe-platform   nats-7bc8d9f768-q682m                        1/1     Running            0              16d     10.42.0.178   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-67848b9ccd-95k52                 0/1     ImagePullBackOff   0              6h2m    10.42.0.120   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-cf8797f6-fd7p7                   0/1     ImagePullBackOff   0              39m     10.42.0.12    tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-67848b9ccd-95k52                 0/1     ImagePullBackOff   0              7h45m   10.42.0.120   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-cf8797f6-fd7p7                   0/1     ImagePullBackOff   0              142m    10.42.0.12    tce-k3s-01   <none>           <none>
 stock-prod         stock-backend-57ccb8ff6-d25jq                1/1     Running            0              36d     10.42.0.55    tce-k3s-01   <none>           <none>
-stock-prod         stock-backend-86dbfb698-24jwm                0/1     ImagePullBackOff   0              39m     10.42.0.13    tce-k3s-01   <none>           <none>
+stock-prod         stock-backend-86dbfb698-24jwm                0/1     ImagePullBackOff   0              142m    10.42.0.13    tce-k3s-01   <none>           <none>
 stock-prod         stock-frontend-79c57845df-z747s              1/1     Running            0              36d     10.42.0.56    tce-k3s-01   <none>           <none>
-tce-prod           tce-frontend-5c57b4b667-4cszn                1/1     Running            0              4d4h    10.42.0.67    tce-k3s-01   <none>           <none>
-tce-prod           tce-service-5db78d488-5m6dl                  1/1     Running            0              4d4h    10.42.0.68    tce-k3s-01   <none>           <none>
+tce-prod           tce-frontend-5c57b4b667-4cszn                1/1     Running            0              4d6h    10.42.0.67    tce-k3s-01   <none>           <none>
+tce-prod           tce-service-5db78d488-5m6dl                  1/1     Running            0              4d6h    10.42.0.68    tce-k3s-01   <none>           <none>
 NAMESPACE          NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
 cert-manager       cert-manager                1/1     1            1           61d
 cert-manager       cert-manager-cainjector     1/1     1            1           61d
