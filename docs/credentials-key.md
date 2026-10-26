@@ -73,6 +73,7 @@ These are sourced from Platform Infra's protected GitHub Actions Environment nam
 3. **MFA key names differ by purpose:** `MFA_ENCRYPTION_KEY`, `MFA_ENCRYPTION_KEY_PROD`, and `MFA_ENCRYPTION_KEY_STG` are not interchangeable without verifying each workflow's environment/cluster mapping.
 4. **Secret names do not prove configured existence:** this is a source-code inventory. The GitHub connector used for this audit cannot read secret values and this inventory does not claim to validate which keys are configured in repository, organization, or environment settings.
 5. **Credential values stay out of Git:** store values only in GitHub Secrets/Environment Secrets or the appropriate secret manager. Never add values to this file, workflow outputs, issue comments, build artifacts, or plaintext manifests.
+6. **Official references:** [GitHub Actions secret naming/scope](https://docs.github.com/en/actions/reference/security/secrets), [GitHub Actions variable naming](https://docs.github.com/en/actions/reference/workflows-and-actions/variables), and [GitHub secrets context including the automatic GITHUB_TOKEN](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#secrets-context).
 
 ## Workflow references
 
