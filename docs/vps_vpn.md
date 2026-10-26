@@ -1,0 +1,439 @@
+nt --comment "rule to jump traffic from POD name:metrics-server-6dc596dfb8-s2bzm namespace: kube-system to chain KUBE-POD-FW-5Q2MR3XHZ4UANGGY" -j KUBE-POD-FW-5Q2MR3XHZ4UANGGY
+-A KUBE-ROUTER-FORWARD -d 10.42.0.105/32 -m comment --comment "rule to jump traffic destined to POD name:microfe-auth-78cf6b6fbc-mq8wh namespace: microfe-platform to chain KUBE-POD-FW-WEA7FJP6B6JTLUUZ" -j KUBE-POD-FW-WEA7FJP6B6JTLUUZ
+-A KUBE-ROUTER-FORWARD -d 10.42.0.105/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:microfe-auth-78cf6b6fbc-mq8wh namespace: microfe-platform to chain KUBE-POD-FW-WEA7FJP6B6JTLUUZ" -j KUBE-POD-FW-WEA7FJP6B6JTLUUZ
+-A KUBE-ROUTER-FORWARD -s 10.42.0.105/32 -m comment --comment "rule to jump traffic from POD name:microfe-auth-78cf6b6fbc-mq8wh namespace: microfe-platform to chain KUBE-POD-FW-WEA7FJP6B6JTLUUZ" -j KUBE-POD-FW-WEA7FJP6B6JTLUUZ
+-A KUBE-ROUTER-FORWARD -s 10.42.0.105/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:microfe-auth-78cf6b6fbc-mq8wh namespace: microfe-platform to chain KUBE-POD-FW-WEA7FJP6B6JTLUUZ" -j KUBE-POD-FW-WEA7FJP6B6JTLUUZ
+-A KUBE-ROUTER-FORWARD -d 10.42.0.157/32 -m comment --comment "rule to jump traffic destined to POD name:microfe-ws-5587c8844c-rbtgx namespace: microfe-platform to chain KUBE-POD-FW-XVATMYD2AB3ZI2OL" -j KUBE-POD-FW-XVATMYD2AB3ZI2OL
+-A KUBE-ROUTER-FORWARD -d 10.42.0.157/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:microfe-ws-5587c8844c-rbtgx namespace: microfe-platform to chain KUBE-POD-FW-XVATMYD2AB3ZI2OL" -j KUBE-POD-FW-XVATMYD2AB3ZI2OL
+-A KUBE-ROUTER-FORWARD -s 10.42.0.157/32 -m comment --comment "rule to jump traffic from POD name:microfe-ws-5587c8844c-rbtgx namespace: microfe-platform to chain KUBE-POD-FW-XVATMYD2AB3ZI2OL" -j KUBE-POD-FW-XVATMYD2AB3ZI2OL
+-A KUBE-ROUTER-FORWARD -s 10.42.0.157/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:microfe-ws-5587c8844c-rbtgx namespace: microfe-platform to chain KUBE-POD-FW-XVATMYD2AB3ZI2OL" -j KUBE-POD-FW-XVATMYD2AB3ZI2OL
+-A KUBE-ROUTER-FORWARD -d 10.42.0.124/32 -m comment --comment "rule to jump traffic destined to POD name:keycloak-68c4bc764c-4pp66 namespace: microfe-platform to chain KUBE-POD-FW-J2ZHO6CNU5R74VA5" -j KUBE-POD-FW-J2ZHO6CNU5R74VA5
+-A KUBE-ROUTER-FORWARD -d 10.42.0.124/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:keycloak-68c4bc764c-4pp66 namespace: microfe-platform to chain KUBE-POD-FW-J2ZHO6CNU5R74VA5" -j KUBE-POD-FW-J2ZHO6CNU5R74VA5
+-A KUBE-ROUTER-FORWARD -s 10.42.0.124/32 -m comment --comment "rule to jump traffic from POD name:keycloak-68c4bc764c-4pp66 namespace: microfe-platform to chain KUBE-POD-FW-J2ZHO6CNU5R74VA5" -j KUBE-POD-FW-J2ZHO6CNU5R74VA5
+-A KUBE-ROUTER-FORWARD -s 10.42.0.124/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:keycloak-68c4bc764c-4pp66 namespace: microfe-platform to chain KUBE-POD-FW-J2ZHO6CNU5R74VA5" -j KUBE-POD-FW-J2ZHO6CNU5R74VA5
+-A KUBE-ROUTER-FORWARD -d 10.42.0.85/32 -m comment --comment "rule to jump traffic destined to POD name:media-generation-5c9b76dfb9-zh8jr namespace: media-prod to chain KUBE-POD-FW-UF6MBJBFV63DFMTK" -j KUBE-POD-FW-UF6MBJBFV63DFMTK
+-A KUBE-ROUTER-FORWARD -d 10.42.0.85/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:media-generation-5c9b76dfb9-zh8jr namespace: media-prod to chain KUBE-POD-FW-UF6MBJBFV63DFMTK" -j KUBE-POD-FW-UF6MBJBFV63DFMTK
+-A KUBE-ROUTER-FORWARD -s 10.42.0.85/32 -m comment --comment "rule to jump traffic from POD name:media-generation-5c9b76dfb9-zh8jr namespace: media-prod to chain KUBE-POD-FW-UF6MBJBFV63DFMTK" -j KUBE-POD-FW-UF6MBJBFV63DFMTK
+-A KUBE-ROUTER-FORWARD -s 10.42.0.85/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:media-generation-5c9b76dfb9-zh8jr namespace: media-prod to chain KUBE-POD-FW-UF6MBJBFV63DFMTK" -j KUBE-POD-FW-UF6MBJBFV63DFMTK
+-A KUBE-ROUTER-FORWARD -d 10.42.0.106/32 -m comment --comment "rule to jump traffic destined to POD name:microfe-shell-5576677b5b-s4vrq namespace: microfe-platform to chain KUBE-POD-FW-OLOTS2RHJECOL6DX" -j KUBE-POD-FW-OLOTS2RHJECOL6DX
+-A KUBE-ROUTER-FORWARD -d 10.42.0.106/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:microfe-shell-5576677b5b-s4vrq namespace: microfe-platform to chain KUBE-POD-FW-OLOTS2RHJECOL6DX" -j KUBE-POD-FW-OLOTS2RHJECOL6DX
+-A KUBE-ROUTER-FORWARD -s 10.42.0.106/32 -m comment --comment "rule to jump traffic from POD name:microfe-shell-5576677b5b-s4vrq namespace: microfe-platform to chain KUBE-POD-FW-OLOTS2RHJECOL6DX" -j KUBE-POD-FW-OLOTS2RHJECOL6DX
+-A KUBE-ROUTER-FORWARD -s 10.42.0.106/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:microfe-shell-5576677b5b-s4vrq namespace: microfe-platform to chain KUBE-POD-FW-OLOTS2RHJECOL6DX" -j KUBE-POD-FW-OLOTS2RHJECOL6DX
+-A KUBE-ROUTER-FORWARD -d 10.42.0.104/32 -m comment --comment "rule to jump traffic destined to POD name:microfe-ws-f5c8d7bd6-td48b namespace: microfe-platform to chain KUBE-POD-FW-M7DNLBWPCYMMGMBP" -j KUBE-POD-FW-M7DNLBWPCYMMGMBP
+-A KUBE-ROUTER-FORWARD -d 10.42.0.104/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:microfe-ws-f5c8d7bd6-td48b namespace: microfe-platform to chain KUBE-POD-FW-M7DNLBWPCYMMGMBP" -j KUBE-POD-FW-M7DNLBWPCYMMGMBP
+-A KUBE-ROUTER-FORWARD -s 10.42.0.104/32 -m comment --comment "rule to jump traffic from POD name:microfe-ws-f5c8d7bd6-td48b namespace: microfe-platform to chain KUBE-POD-FW-M7DNLBWPCYMMGMBP" -j KUBE-POD-FW-M7DNLBWPCYMMGMBP
+-A KUBE-ROUTER-FORWARD -s 10.42.0.104/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:microfe-ws-f5c8d7bd6-td48b namespace: microfe-platform to chain KUBE-POD-FW-M7DNLBWPCYMMGMBP" -j KUBE-POD-FW-M7DNLBWPCYMMGMBP
+-A KUBE-ROUTER-FORWARD -d 10.42.0.100/32 -m comment --comment "rule to jump traffic destined to POD name:cert-manager-cainjector-b644b66f7-l8jdq namespace: cert-manager to chain KUBE-POD-FW-UEZL6MUFIOQDENPJ" -j KUBE-POD-FW-UEZL6MUFIOQDENPJ
+-A KUBE-ROUTER-FORWARD -d 10.42.0.100/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:cert-manager-cainjector-b644b66f7-l8jdq namespace: cert-manager to chain KUBE-POD-FW-UEZL6MUFIOQDENPJ" -j KUBE-POD-FW-UEZL6MUFIOQDENPJ
+-A KUBE-ROUTER-FORWARD -s 10.42.0.100/32 -m comment --comment "rule to jump traffic from POD name:cert-manager-cainjector-b644b66f7-l8jdq namespace: cert-manager to chain KUBE-POD-FW-UEZL6MUFIOQDENPJ" -j KUBE-POD-FW-UEZL6MUFIOQDENPJ
+-A KUBE-ROUTER-FORWARD -s 10.42.0.100/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:cert-manager-cainjector-b644b66f7-l8jdq namespace: cert-manager to chain KUBE-POD-FW-UEZL6MUFIOQDENPJ" -j KUBE-POD-FW-UEZL6MUFIOQDENPJ
+-A KUBE-ROUTER-FORWARD -d 10.42.0.6/32 -m comment --comment "rule to jump traffic destined to POD name:coredns-54996dc9b4-d68pf namespace: kube-system to chain KUBE-POD-FW-TJTQIV2BZXVDXNKD" -j KUBE-POD-FW-TJTQIV2BZXVDXNKD
+-A KUBE-ROUTER-FORWARD -d 10.42.0.6/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:coredns-54996dc9b4-d68pf namespace: kube-system to chain KUBE-POD-FW-TJTQIV2BZXVDXNKD" -j KUBE-POD-FW-TJTQIV2BZXVDXNKD
+-A KUBE-ROUTER-FORWARD -s 10.42.0.6/32 -m comment --comment "rule to jump traffic from POD name:coredns-54996dc9b4-d68pf namespace: kube-system to chain KUBE-POD-FW-TJTQIV2BZXVDXNKD" -j KUBE-POD-FW-TJTQIV2BZXVDXNKD
+-A KUBE-ROUTER-FORWARD -s 10.42.0.6/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:coredns-54996dc9b4-d68pf namespace: kube-system to chain KUBE-POD-FW-TJTQIV2BZXVDXNKD" -j KUBE-POD-FW-TJTQIV2BZXVDXNKD
+-A KUBE-ROUTER-FORWARD -d 10.42.0.99/32 -m comment --comment "rule to jump traffic destined to POD name:cert-manager-webhook-76d97df888-wwq49 namespace: cert-manager to chain KUBE-POD-FW-452RRPICOOZK6WHJ" -j KUBE-POD-FW-452RRPICOOZK6WHJ
+-A KUBE-ROUTER-FORWARD -d 10.42.0.99/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:cert-manager-webhook-76d97df888-wwq49 namespace: cert-manager to chain KUBE-POD-FW-452RRPICOOZK6WHJ" -j KUBE-POD-FW-452RRPICOOZK6WHJ
+-A KUBE-ROUTER-FORWARD -s 10.42.0.99/32 -m comment --comment "rule to jump traffic from POD name:cert-manager-webhook-76d97df888-wwq49 namespace: cert-manager to chain KUBE-POD-FW-452RRPICOOZK6WHJ" -j KUBE-POD-FW-452RRPICOOZK6WHJ
+-A KUBE-ROUTER-FORWARD -s 10.42.0.99/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:cert-manager-webhook-76d97df888-wwq49 namespace: cert-manager to chain KUBE-POD-FW-452RRPICOOZK6WHJ" -j KUBE-POD-FW-452RRPICOOZK6WHJ
+-A KUBE-ROUTER-FORWARD -d 10.42.0.107/32 -m comment --comment "rule to jump traffic destined to POD name:stock-backend-d9946b74f-hlgjj namespace: stock-prod to chain KUBE-POD-FW-K2S4IHP5B2MGBQ3N" -j KUBE-POD-FW-K2S4IHP5B2MGBQ3N
+-A KUBE-ROUTER-FORWARD -d 10.42.0.107/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:stock-backend-d9946b74f-hlgjj namespace: stock-prod to chain KUBE-POD-FW-K2S4IHP5B2MGBQ3N" -j KUBE-POD-FW-K2S4IHP5B2MGBQ3N
+-A KUBE-ROUTER-FORWARD -s 10.42.0.107/32 -m comment --comment "rule to jump traffic from POD name:stock-backend-d9946b74f-hlgjj namespace: stock-prod to chain KUBE-POD-FW-K2S4IHP5B2MGBQ3N" -j KUBE-POD-FW-K2S4IHP5B2MGBQ3N
+-A KUBE-ROUTER-FORWARD -s 10.42.0.107/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:stock-backend-d9946b74f-hlgjj namespace: stock-prod to chain KUBE-POD-FW-K2S4IHP5B2MGBQ3N" -j KUBE-POD-FW-K2S4IHP5B2MGBQ3N
+-A KUBE-ROUTER-FORWARD -d 10.42.0.98/32 -m comment --comment "rule to jump traffic destined to POD name:cert-manager-75b96c9588-lgn7d namespace: cert-manager to chain KUBE-POD-FW-FT3OHUOWKWZY2RGW" -j KUBE-POD-FW-FT3OHUOWKWZY2RGW
+-A KUBE-ROUTER-FORWARD -d 10.42.0.98/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:cert-manager-75b96c9588-lgn7d namespace: cert-manager to chain KUBE-POD-FW-FT3OHUOWKWZY2RGW" -j KUBE-POD-FW-FT3OHUOWKWZY2RGW
+-A KUBE-ROUTER-FORWARD -s 10.42.0.98/32 -m comment --comment "rule to jump traffic from POD name:cert-manager-75b96c9588-lgn7d namespace: cert-manager to chain KUBE-POD-FW-FT3OHUOWKWZY2RGW" -j KUBE-POD-FW-FT3OHUOWKWZY2RGW
+-A KUBE-ROUTER-FORWARD -s 10.42.0.98/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:cert-manager-75b96c9588-lgn7d namespace: cert-manager to chain KUBE-POD-FW-FT3OHUOWKWZY2RGW" -j KUBE-POD-FW-FT3OHUOWKWZY2RGW
+-A KUBE-ROUTER-FORWARD -d 10.42.0.56/32 -m comment --comment "rule to jump traffic destined to POD name:stock-frontend-79c57845df-z747s namespace: stock-prod to chain KUBE-POD-FW-HQGIJK7R6MFYCVCP" -j KUBE-POD-FW-HQGIJK7R6MFYCVCP
+-A KUBE-ROUTER-FORWARD -d 10.42.0.56/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:stock-frontend-79c57845df-z747s namespace: stock-prod to chain KUBE-POD-FW-HQGIJK7R6MFYCVCP" -j KUBE-POD-FW-HQGIJK7R6MFYCVCP
+-A KUBE-ROUTER-FORWARD -s 10.42.0.56/32 -m comment --comment "rule to jump traffic from POD name:stock-frontend-79c57845df-z747s namespace: stock-prod to chain KUBE-POD-FW-HQGIJK7R6MFYCVCP" -j KUBE-POD-FW-HQGIJK7R6MFYCVCP
+-A KUBE-ROUTER-FORWARD -s 10.42.0.56/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:stock-frontend-79c57845df-z747s namespace: stock-prod to chain KUBE-POD-FW-HQGIJK7R6MFYCVCP" -j KUBE-POD-FW-HQGIJK7R6MFYCVCP
+-A KUBE-ROUTER-FORWARD -d 10.42.0.205/32 -m comment --comment "rule to jump traffic destined to POD name:stock-admin-84f9c9d8f9-2r9vg namespace: stock-prod to chain KUBE-POD-FW-R7S74KH347GFUN3D" -j KUBE-POD-FW-R7S74KH347GFUN3D
+-A KUBE-ROUTER-FORWARD -d 10.42.0.205/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:stock-admin-84f9c9d8f9-2r9vg namespace: stock-prod to chain KUBE-POD-FW-R7S74KH347GFUN3D" -j KUBE-POD-FW-R7S74KH347GFUN3D
+-A KUBE-ROUTER-FORWARD -s 10.42.0.205/32 -m comment --comment "rule to jump traffic from POD name:stock-admin-84f9c9d8f9-2r9vg namespace: stock-prod to chain KUBE-POD-FW-R7S74KH347GFUN3D" -j KUBE-POD-FW-R7S74KH347GFUN3D
+-A KUBE-ROUTER-FORWARD -s 10.42.0.205/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:stock-admin-84f9c9d8f9-2r9vg namespace: stock-prod to chain KUBE-POD-FW-R7S74KH347GFUN3D" -j KUBE-POD-FW-R7S74KH347GFUN3D
+-A KUBE-ROUTER-FORWARD -d 10.42.0.8/32 -m comment --comment "rule to jump traffic destined to POD name:traefik-59b7647586-gml84 namespace: kube-system to chain KUBE-POD-FW-XR5FWUNLD4V7SE4U" -j KUBE-POD-FW-XR5FWUNLD4V7SE4U
+-A KUBE-ROUTER-FORWARD -d 10.42.0.8/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:traefik-59b7647586-gml84 namespace: kube-system to chain KUBE-POD-FW-XR5FWUNLD4V7SE4U" -j KUBE-POD-FW-XR5FWUNLD4V7SE4U
+-A KUBE-ROUTER-FORWARD -s 10.42.0.8/32 -m comment --comment "rule to jump traffic from POD name:traefik-59b7647586-gml84 namespace: kube-system to chain KUBE-POD-FW-XR5FWUNLD4V7SE4U" -j KUBE-POD-FW-XR5FWUNLD4V7SE4U
+-A KUBE-ROUTER-FORWARD -s 10.42.0.8/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:traefik-59b7647586-gml84 namespace: kube-system to chain KUBE-POD-FW-XR5FWUNLD4V7SE4U" -j KUBE-POD-FW-XR5FWUNLD4V7SE4U
+-A KUBE-ROUTER-FORWARD -d 10.42.0.7/32 -m comment --comment "rule to jump traffic destined to POD name:svclb-traefik-859779c1-7bwx2 namespace: kube-system to chain KUBE-POD-FW-L5PIUCLT5UMRM5S5" -j KUBE-POD-FW-L5PIUCLT5UMRM5S5
+-A KUBE-ROUTER-FORWARD -d 10.42.0.7/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:svclb-traefik-859779c1-7bwx2 namespace: kube-system to chain KUBE-POD-FW-L5PIUCLT5UMRM5S5" -j KUBE-POD-FW-L5PIUCLT5UMRM5S5
+-A KUBE-ROUTER-FORWARD -s 10.42.0.7/32 -m comment --comment "rule to jump traffic from POD name:svclb-traefik-859779c1-7bwx2 namespace: kube-system to chain KUBE-POD-FW-L5PIUCLT5UMRM5S5" -j KUBE-POD-FW-L5PIUCLT5UMRM5S5
+-A KUBE-ROUTER-FORWARD -s 10.42.0.7/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:svclb-traefik-859779c1-7bwx2 namespace: kube-system to chain KUBE-POD-FW-L5PIUCLT5UMRM5S5" -j KUBE-POD-FW-L5PIUCLT5UMRM5S5
+-A KUBE-ROUTER-FORWARD -d 10.42.0.129/32 -m comment --comment "rule to jump traffic destined to POD name:tce-service-7f44bf89c7-cvvhs namespace: tce-prod to chain KUBE-POD-FW-DVPPROPAFJSEBZNR" -j KUBE-POD-FW-DVPPROPAFJSEBZNR
+-A KUBE-ROUTER-FORWARD -d 10.42.0.129/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:tce-service-7f44bf89c7-cvvhs namespace: tce-prod to chain KUBE-POD-FW-DVPPROPAFJSEBZNR" -j KUBE-POD-FW-DVPPROPAFJSEBZNR
+-A KUBE-ROUTER-FORWARD -s 10.42.0.129/32 -m comment --comment "rule to jump traffic from POD name:tce-service-7f44bf89c7-cvvhs namespace: tce-prod to chain KUBE-POD-FW-DVPPROPAFJSEBZNR" -j KUBE-POD-FW-DVPPROPAFJSEBZNR
+-A KUBE-ROUTER-FORWARD -s 10.42.0.129/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:tce-service-7f44bf89c7-cvvhs namespace: tce-prod to chain KUBE-POD-FW-DVPPROPAFJSEBZNR" -j KUBE-POD-FW-DVPPROPAFJSEBZNR
+-A KUBE-ROUTER-FORWARD -d 10.42.0.55/32 -m comment --comment "rule to jump traffic destined to POD name:stock-backend-57ccb8ff6-d25jq namespace: stock-prod to chain KUBE-POD-FW-Q7APVEUORHJAUHEG" -j KUBE-POD-FW-Q7APVEUORHJAUHEG
+-A KUBE-ROUTER-FORWARD -d 10.42.0.55/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:stock-backend-57ccb8ff6-d25jq namespace: stock-prod to chain KUBE-POD-FW-Q7APVEUORHJAUHEG" -j KUBE-POD-FW-Q7APVEUORHJAUHEG
+-A KUBE-ROUTER-FORWARD -s 10.42.0.55/32 -m comment --comment "rule to jump traffic from POD name:stock-backend-57ccb8ff6-d25jq namespace: stock-prod to chain KUBE-POD-FW-Q7APVEUORHJAUHEG" -j KUBE-POD-FW-Q7APVEUORHJAUHEG
+-A KUBE-ROUTER-FORWARD -s 10.42.0.55/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:stock-backend-57ccb8ff6-d25jq namespace: stock-prod to chain KUBE-POD-FW-Q7APVEUORHJAUHEG" -j KUBE-POD-FW-Q7APVEUORHJAUHEG
+-A KUBE-ROUTER-FORWARD -d 10.42.0.84/32 -m comment --comment "rule to jump traffic destined to POD name:media-generation-frontend-597b779c9d-dvrft namespace: media-prod to chain KUBE-POD-FW-UD7E2IQM237YF7HS" -j KUBE-POD-FW-UD7E2IQM237YF7HS
+-A KUBE-ROUTER-FORWARD -d 10.42.0.84/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:media-generation-frontend-597b779c9d-dvrft namespace: media-prod to chain KUBE-POD-FW-UD7E2IQM237YF7HS" -j KUBE-POD-FW-UD7E2IQM237YF7HS
+-A KUBE-ROUTER-FORWARD -s 10.42.0.84/32 -m comment --comment "rule to jump traffic from POD name:media-generation-frontend-597b779c9d-dvrft namespace: media-prod to chain KUBE-POD-FW-UD7E2IQM237YF7HS" -j KUBE-POD-FW-UD7E2IQM237YF7HS
+-A KUBE-ROUTER-FORWARD -s 10.42.0.84/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:media-generation-frontend-597b779c9d-dvrft namespace: media-prod to chain KUBE-POD-FW-UD7E2IQM237YF7HS" -j KUBE-POD-FW-UD7E2IQM237YF7HS
+-A KUBE-ROUTER-FORWARD -d 10.42.0.158/32 -m comment --comment "rule to jump traffic destined to POD name:microfe-shell-dbbbfdf8c-5rkwz namespace: microfe-platform to chain KUBE-POD-FW-7Q6FSAJ3Z7G7OFH5" -j KUBE-POD-FW-7Q6FSAJ3Z7G7OFH5
+-A KUBE-ROUTER-FORWARD -d 10.42.0.158/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:microfe-shell-dbbbfdf8c-5rkwz namespace: microfe-platform to chain KUBE-POD-FW-7Q6FSAJ3Z7G7OFH5" -j KUBE-POD-FW-7Q6FSAJ3Z7G7OFH5
+-A KUBE-ROUTER-FORWARD -s 10.42.0.158/32 -m comment --comment "rule to jump traffic from POD name:microfe-shell-dbbbfdf8c-5rkwz namespace: microfe-platform to chain KUBE-POD-FW-7Q6FSAJ3Z7G7OFH5" -j KUBE-POD-FW-7Q6FSAJ3Z7G7OFH5
+-A KUBE-ROUTER-FORWARD -s 10.42.0.158/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:microfe-shell-dbbbfdf8c-5rkwz namespace: microfe-platform to chain KUBE-POD-FW-7Q6FSAJ3Z7G7OFH5" -j KUBE-POD-FW-7Q6FSAJ3Z7G7OFH5
+-A KUBE-ROUTER-FORWARD -d 10.42.0.128/32 -m comment --comment "rule to jump traffic destined to POD name:tce-frontend-79988675b8-86clf namespace: tce-prod to chain KUBE-POD-FW-YZN23NEXW4U5VOKD" -j KUBE-POD-FW-YZN23NEXW4U5VOKD
+-A KUBE-ROUTER-FORWARD -d 10.42.0.128/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:tce-frontend-79988675b8-86clf namespace: tce-prod to chain KUBE-POD-FW-YZN23NEXW4U5VOKD" -j KUBE-POD-FW-YZN23NEXW4U5VOKD
+-A KUBE-ROUTER-FORWARD -s 10.42.0.128/32 -m comment --comment "rule to jump traffic from POD name:tce-frontend-79988675b8-86clf namespace: tce-prod to chain KUBE-POD-FW-YZN23NEXW4U5VOKD" -j KUBE-POD-FW-YZN23NEXW4U5VOKD
+-A KUBE-ROUTER-FORWARD -s 10.42.0.128/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:tce-frontend-79988675b8-86clf namespace: tce-prod to chain KUBE-POD-FW-YZN23NEXW4U5VOKD" -j KUBE-POD-FW-YZN23NEXW4U5VOKD
+-A KUBE-ROUTER-FORWARD -d 10.42.0.5/32 -m comment --comment "rule to jump traffic destined to POD name:local-path-provisioner-58d557dc48-jbhhp namespace: kube-system to chain KUBE-POD-FW-UMYD4JYKBHL4BHNR" -j KUBE-POD-FW-UMYD4JYKBHL4BHNR
+-A KUBE-ROUTER-FORWARD -d 10.42.0.5/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:local-path-provisioner-58d557dc48-jbhhp namespace: kube-system to chain KUBE-POD-FW-UMYD4JYKBHL4BHNR" -j KUBE-POD-FW-UMYD4JYKBHL4BHNR
+-A KUBE-ROUTER-FORWARD -s 10.42.0.5/32 -m comment --comment "rule to jump traffic from POD name:local-path-provisioner-58d557dc48-jbhhp namespace: kube-system to chain KUBE-POD-FW-UMYD4JYKBHL4BHNR" -j KUBE-POD-FW-UMYD4JYKBHL4BHNR
+-A KUBE-ROUTER-FORWARD -s 10.42.0.5/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:local-path-provisioner-58d557dc48-jbhhp namespace: kube-system to chain KUBE-POD-FW-UMYD4JYKBHL4BHNR" -j KUBE-POD-FW-UMYD4JYKBHL4BHNR
+-A KUBE-ROUTER-FORWARD -d 10.42.0.108/32 -m comment --comment "rule to jump traffic destined to POD name:stock-admin-6b95d4d66c-tjvgp namespace: stock-prod to chain KUBE-POD-FW-LIWGIIMMOWM7EHMY" -j KUBE-POD-FW-LIWGIIMMOWM7EHMY
+-A KUBE-ROUTER-FORWARD -d 10.42.0.108/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic destined to POD name:stock-admin-6b95d4d66c-tjvgp namespace: stock-prod to chain KUBE-POD-FW-LIWGIIMMOWM7EHMY" -j KUBE-POD-FW-LIWGIIMMOWM7EHMY
+-A KUBE-ROUTER-FORWARD -s 10.42.0.108/32 -m comment --comment "rule to jump traffic from POD name:stock-admin-6b95d4d66c-tjvgp namespace: stock-prod to chain KUBE-POD-FW-LIWGIIMMOWM7EHMY" -j KUBE-POD-FW-LIWGIIMMOWM7EHMY
+-A KUBE-ROUTER-FORWARD -s 10.42.0.108/32 -m physdev --physdev-is-bridged -m comment --comment "rule to jump traffic from POD name:stock-admin-6b95d4d66c-tjvgp namespace: stock-prod to chain KUBE-POD-FW-LIWGIIMMOWM7EHMY" -j KUBE-POD-FW-LIWGIIMMOWM7EHMY
+-A KUBE-ROUTER-INPUT -d 10.43.0.0/16 -m comment --comment "allow traffic to primary/secondary cluster IP range - EKROEGTNIJ3AP3LC" -j RETURN
+-A KUBE-ROUTER-INPUT -p tcp -m comment --comment "allow LOCAL TCP traffic to node ports - LR7XO7NXDBGQJD2M" -m addrtype --dst-type LOCAL -m multiport --dports 30000:32767 -j RETURN
+-A KUBE-ROUTER-INPUT -p udp -m comment --comment "allow LOCAL UDP traffic to node ports - 76UCBPIZNGJNWNUZ" -m addrtype --dst-type LOCAL -m multiport --dports 30000:32767 -j RETURN
+-A KUBE-ROUTER-INPUT -s 10.42.0.178/32 -m comment --comment "rule to jump traffic from POD name:nats-7bc8d9f768-q682m namespace: microfe-platform to chain KUBE-POD-FW-3WOW3YMEZV2AFEEP" -j KUBE-POD-FW-3WOW3YMEZV2AFEEP
+-A KUBE-ROUTER-INPUT -s 10.42.0.4/32 -m comment --comment "rule to jump traffic from POD name:metrics-server-6dc596dfb8-s2bzm namespace: kube-system to chain KUBE-POD-FW-5Q2MR3XHZ4UANGGY" -j KUBE-POD-FW-5Q2MR3XHZ4UANGGY
+-A KUBE-ROUTER-INPUT -s 10.42.0.105/32 -m comment --comment "rule to jump traffic from POD name:microfe-auth-78cf6b6fbc-mq8wh namespace: microfe-platform to chain KUBE-POD-FW-WEA7FJP6B6JTLUUZ" -j KUBE-POD-FW-WEA7FJP6B6JTLUUZ
+-A KUBE-ROUTER-INPUT -s 10.42.0.157/32 -m comment --comment "rule to jump traffic from POD name:microfe-ws-5587c8844c-rbtgx namespace: microfe-platform to chain KUBE-POD-FW-XVATMYD2AB3ZI2OL" -j KUBE-POD-FW-XVATMYD2AB3ZI2OL
+-A KUBE-ROUTER-INPUT -s 10.42.0.124/32 -m comment --comment "rule to jump traffic from POD name:keycloak-68c4bc764c-4pp66 namespace: microfe-platform to chain KUBE-POD-FW-J2ZHO6CNU5R74VA5" -j KUBE-POD-FW-J2ZHO6CNU5R74VA5
+-A KUBE-ROUTER-INPUT -s 10.42.0.85/32 -m comment --comment "rule to jump traffic from POD name:media-generation-5c9b76dfb9-zh8jr namespace: media-prod to chain KUBE-POD-FW-UF6MBJBFV63DFMTK" -j KUBE-POD-FW-UF6MBJBFV63DFMTK
+-A KUBE-ROUTER-INPUT -s 10.42.0.106/32 -m comment --comment "rule to jump traffic from POD name:microfe-shell-5576677b5b-s4vrq namespace: microfe-platform to chain KUBE-POD-FW-OLOTS2RHJECOL6DX" -j KUBE-POD-FW-OLOTS2RHJECOL6DX
+-A KUBE-ROUTER-INPUT -s 10.42.0.104/32 -m comment --comment "rule to jump traffic from POD name:microfe-ws-f5c8d7bd6-td48b namespace: microfe-platform to chain KUBE-POD-FW-M7DNLBWPCYMMGMBP" -j KUBE-POD-FW-M7DNLBWPCYMMGMBP
+-A KUBE-ROUTER-INPUT -s 10.42.0.100/32 -m comment --comment "rule to jump traffic from POD name:cert-manager-cainjector-b644b66f7-l8jdq namespace: cert-manager to chain KUBE-POD-FW-UEZL6MUFIOQDENPJ" -j KUBE-POD-FW-UEZL6MUFIOQDENPJ
+-A KUBE-ROUTER-INPUT -s 10.42.0.6/32 -m comment --comment "rule to jump traffic from POD name:coredns-54996dc9b4-d68pf namespace: kube-system to chain KUBE-POD-FW-TJTQIV2BZXVDXNKD" -j KUBE-POD-FW-TJTQIV2BZXVDXNKD
+-A KUBE-ROUTER-INPUT -s 10.42.0.99/32 -m comment --comment "rule to jump traffic from POD name:cert-manager-webhook-76d97df888-wwq49 namespace: cert-manager to chain KUBE-POD-FW-452RRPICOOZK6WHJ" -j KUBE-POD-FW-452RRPICOOZK6WHJ
+-A KUBE-ROUTER-INPUT -s 10.42.0.107/32 -m comment --comment "rule to jump traffic from POD name:stock-backend-d9946b74f-hlgjj namespace: stock-prod to chain KUBE-POD-FW-K2S4IHP5B2MGBQ3N" -j KUBE-POD-FW-K2S4IHP5B2MGBQ3N
+-A KUBE-ROUTER-INPUT -s 10.42.0.98/32 -m comment --comment "rule to jump traffic from POD name:cert-manager-75b96c9588-lgn7d namespace: cert-manager to chain KUBE-POD-FW-FT3OHUOWKWZY2RGW" -j KUBE-POD-FW-FT3OHUOWKWZY2RGW
+-A KUBE-ROUTER-INPUT -s 10.42.0.56/32 -m comment --comment "rule to jump traffic from POD name:stock-frontend-79c57845df-z747s namespace: stock-prod to chain KUBE-POD-FW-HQGIJK7R6MFYCVCP" -j KUBE-POD-FW-HQGIJK7R6MFYCVCP
+-A KUBE-ROUTER-INPUT -s 10.42.0.205/32 -m comment --comment "rule to jump traffic from POD name:stock-admin-84f9c9d8f9-2r9vg namespace: stock-prod to chain KUBE-POD-FW-R7S74KH347GFUN3D" -j KUBE-POD-FW-R7S74KH347GFUN3D
+-A KUBE-ROUTER-INPUT -s 10.42.0.8/32 -m comment --comment "rule to jump traffic from POD name:traefik-59b7647586-gml84 namespace: kube-system to chain KUBE-POD-FW-XR5FWUNLD4V7SE4U" -j KUBE-POD-FW-XR5FWUNLD4V7SE4U
+-A KUBE-ROUTER-INPUT -s 10.42.0.7/32 -m comment --comment "rule to jump traffic from POD name:svclb-traefik-859779c1-7bwx2 namespace: kube-system to chain KUBE-POD-FW-L5PIUCLT5UMRM5S5" -j KUBE-POD-FW-L5PIUCLT5UMRM5S5
+-A KUBE-ROUTER-INPUT -s 10.42.0.129/32 -m comment --comment "rule to jump traffic from POD name:tce-service-7f44bf89c7-cvvhs namespace: tce-prod to chain KUBE-POD-FW-DVPPROPAFJSEBZNR" -j KUBE-POD-FW-DVPPROPAFJSEBZNR
+-A KUBE-ROUTER-INPUT -s 10.42.0.55/32 -m comment --comment "rule to jump traffic from POD name:stock-backend-57ccb8ff6-d25jq namespace: stock-prod to chain KUBE-POD-FW-Q7APVEUORHJAUHEG" -j KUBE-POD-FW-Q7APVEUORHJAUHEG
+-A KUBE-ROUTER-INPUT -s 10.42.0.84/32 -m comment --comment "rule to jump traffic from POD name:media-generation-frontend-597b779c9d-dvrft namespace: media-prod to chain KUBE-POD-FW-UD7E2IQM237YF7HS" -j KUBE-POD-FW-UD7E2IQM237YF7HS
+-A KUBE-ROUTER-INPUT -s 10.42.0.158/32 -m comment --comment "rule to jump traffic from POD name:microfe-shell-dbbbfdf8c-5rkwz namespace: microfe-platform to chain KUBE-POD-FW-7Q6FSAJ3Z7G7OFH5" -j KUBE-POD-FW-7Q6FSAJ3Z7G7OFH5
+-A KUBE-ROUTER-INPUT -s 10.42.0.128/32 -m comment --comment "rule to jump traffic from POD name:tce-frontend-79988675b8-86clf namespace: tce-prod to chain KUBE-POD-FW-YZN23NEXW4U5VOKD" -j KUBE-POD-FW-YZN23NEXW4U5VOKD
+-A KUBE-ROUTER-INPUT -s 10.42.0.5/32 -m comment --comment "rule to jump traffic from POD name:local-path-provisioner-58d557dc48-jbhhp namespace: kube-system to chain KUBE-POD-FW-UMYD4JYKBHL4BHNR" -j KUBE-POD-FW-UMYD4JYKBHL4BHNR
+-A KUBE-ROUTER-INPUT -s 10.42.0.108/32 -m comment --comment "rule to jump traffic from POD name:stock-admin-6b95d4d66c-tjvgp namespace: stock-prod to chain KUBE-POD-FW-LIWGIIMMOWM7EHMY" -j KUBE-POD-FW-LIWGIIMMOWM7EHMY
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.178/32 -m comment --comment "rule to jump traffic destined to POD name:nats-7bc8d9f768-q682m namespace: microfe-platform to chain KUBE-POD-FW-3WOW3YMEZV2AFEEP" -j KUBE-POD-FW-3WOW3YMEZV2AFEEP
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.178/32 -m comment --comment "rule to jump traffic from POD name:nats-7bc8d9f768-q682m namespace: microfe-platform to chain KUBE-POD-FW-3WOW3YMEZV2AFEEP" -j KUBE-POD-FW-3WOW3YMEZV2AFEEP
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.4/32 -m comment --comment "rule to jump traffic destined to POD name:metrics-server-6dc596dfb8-s2bzm namespace: kube-system to chain KUBE-POD-FW-5Q2MR3XHZ4UANGGY" -j KUBE-POD-FW-5Q2MR3XHZ4UANGGY
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.4/32 -m comment --comment "rule to jump traffic from POD name:metrics-server-6dc596dfb8-s2bzm namespace: kube-system to chain KUBE-POD-FW-5Q2MR3XHZ4UANGGY" -j KUBE-POD-FW-5Q2MR3XHZ4UANGGY
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.105/32 -m comment --comment "rule to jump traffic destined to POD name:microfe-auth-78cf6b6fbc-mq8wh namespace: microfe-platform to chain KUBE-POD-FW-WEA7FJP6B6JTLUUZ" -j KUBE-POD-FW-WEA7FJP6B6JTLUUZ
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.105/32 -m comment --comment "rule to jump traffic from POD name:microfe-auth-78cf6b6fbc-mq8wh namespace: microfe-platform to chain KUBE-POD-FW-WEA7FJP6B6JTLUUZ" -j KUBE-POD-FW-WEA7FJP6B6JTLUUZ
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.157/32 -m comment --comment "rule to jump traffic destined to POD name:microfe-ws-5587c8844c-rbtgx namespace: microfe-platform to chain KUBE-POD-FW-XVATMYD2AB3ZI2OL" -j KUBE-POD-FW-XVATMYD2AB3ZI2OL
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.157/32 -m comment --comment "rule to jump traffic from POD name:microfe-ws-5587c8844c-rbtgx namespace: microfe-platform to chain KUBE-POD-FW-XVATMYD2AB3ZI2OL" -j KUBE-POD-FW-XVATMYD2AB3ZI2OL
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.124/32 -m comment --comment "rule to jump traffic destined to POD name:keycloak-68c4bc764c-4pp66 namespace: microfe-platform to chain KUBE-POD-FW-J2ZHO6CNU5R74VA5" -j KUBE-POD-FW-J2ZHO6CNU5R74VA5
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.124/32 -m comment --comment "rule to jump traffic from POD name:keycloak-68c4bc764c-4pp66 namespace: microfe-platform to chain KUBE-POD-FW-J2ZHO6CNU5R74VA5" -j KUBE-POD-FW-J2ZHO6CNU5R74VA5
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.85/32 -m comment --comment "rule to jump traffic destined to POD name:media-generation-5c9b76dfb9-zh8jr namespace: media-prod to chain KUBE-POD-FW-UF6MBJBFV63DFMTK" -j KUBE-POD-FW-UF6MBJBFV63DFMTK
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.85/32 -m comment --comment "rule to jump traffic from POD name:media-generation-5c9b76dfb9-zh8jr namespace: media-prod to chain KUBE-POD-FW-UF6MBJBFV63DFMTK" -j KUBE-POD-FW-UF6MBJBFV63DFMTK
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.106/32 -m comment --comment "rule to jump traffic destined to POD name:microfe-shell-5576677b5b-s4vrq namespace: microfe-platform to chain KUBE-POD-FW-OLOTS2RHJECOL6DX" -j KUBE-POD-FW-OLOTS2RHJECOL6DX
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.106/32 -m comment --comment "rule to jump traffic from POD name:microfe-shell-5576677b5b-s4vrq namespace: microfe-platform to chain KUBE-POD-FW-OLOTS2RHJECOL6DX" -j KUBE-POD-FW-OLOTS2RHJECOL6DX
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.104/32 -m comment --comment "rule to jump traffic destined to POD name:microfe-ws-f5c8d7bd6-td48b namespace: microfe-platform to chain KUBE-POD-FW-M7DNLBWPCYMMGMBP" -j KUBE-POD-FW-M7DNLBWPCYMMGMBP
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.104/32 -m comment --comment "rule to jump traffic from POD name:microfe-ws-f5c8d7bd6-td48b namespace: microfe-platform to chain KUBE-POD-FW-M7DNLBWPCYMMGMBP" -j KUBE-POD-FW-M7DNLBWPCYMMGMBP
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.100/32 -m comment --comment "rule to jump traffic destined to POD name:cert-manager-cainjector-b644b66f7-l8jdq namespace: cert-manager to chain KUBE-POD-FW-UEZL6MUFIOQDENPJ" -j KUBE-POD-FW-UEZL6MUFIOQDENPJ
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.100/32 -m comment --comment "rule to jump traffic from POD name:cert-manager-cainjector-b644b66f7-l8jdq namespace: cert-manager to chain KUBE-POD-FW-UEZL6MUFIOQDENPJ" -j KUBE-POD-FW-UEZL6MUFIOQDENPJ
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.6/32 -m comment --comment "rule to jump traffic destined to POD name:coredns-54996dc9b4-d68pf namespace: kube-system to chain KUBE-POD-FW-TJTQIV2BZXVDXNKD" -j KUBE-POD-FW-TJTQIV2BZXVDXNKD
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.6/32 -m comment --comment "rule to jump traffic from POD name:coredns-54996dc9b4-d68pf namespace: kube-system to chain KUBE-POD-FW-TJTQIV2BZXVDXNKD" -j KUBE-POD-FW-TJTQIV2BZXVDXNKD
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.99/32 -m comment --comment "rule to jump traffic destined to POD name:cert-manager-webhook-76d97df888-wwq49 namespace: cert-manager to chain KUBE-POD-FW-452RRPICOOZK6WHJ" -j KUBE-POD-FW-452RRPICOOZK6WHJ
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.99/32 -m comment --comment "rule to jump traffic from POD name:cert-manager-webhook-76d97df888-wwq49 namespace: cert-manager to chain KUBE-POD-FW-452RRPICOOZK6WHJ" -j KUBE-POD-FW-452RRPICOOZK6WHJ
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.107/32 -m comment --comment "rule to jump traffic destined to POD name:stock-backend-d9946b74f-hlgjj namespace: stock-prod to chain KUBE-POD-FW-K2S4IHP5B2MGBQ3N" -j KUBE-POD-FW-K2S4IHP5B2MGBQ3N
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.107/32 -m comment --comment "rule to jump traffic from POD name:stock-backend-d9946b74f-hlgjj namespace: stock-prod to chain KUBE-POD-FW-K2S4IHP5B2MGBQ3N" -j KUBE-POD-FW-K2S4IHP5B2MGBQ3N
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.98/32 -m comment --comment "rule to jump traffic destined to POD name:cert-manager-75b96c9588-lgn7d namespace: cert-manager to chain KUBE-POD-FW-FT3OHUOWKWZY2RGW" -j KUBE-POD-FW-FT3OHUOWKWZY2RGW
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.98/32 -m comment --comment "rule to jump traffic from POD name:cert-manager-75b96c9588-lgn7d namespace: cert-manager to chain KUBE-POD-FW-FT3OHUOWKWZY2RGW" -j KUBE-POD-FW-FT3OHUOWKWZY2RGW
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.56/32 -m comment --comment "rule to jump traffic destined to POD name:stock-frontend-79c57845df-z747s namespace: stock-prod to chain KUBE-POD-FW-HQGIJK7R6MFYCVCP" -j KUBE-POD-FW-HQGIJK7R6MFYCVCP
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.56/32 -m comment --comment "rule to jump traffic from POD name:stock-frontend-79c57845df-z747s namespace: stock-prod to chain KUBE-POD-FW-HQGIJK7R6MFYCVCP" -j KUBE-POD-FW-HQGIJK7R6MFYCVCP
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.205/32 -m comment --comment "rule to jump traffic destined to POD name:stock-admin-84f9c9d8f9-2r9vg namespace: stock-prod to chain KUBE-POD-FW-R7S74KH347GFUN3D" -j KUBE-POD-FW-R7S74KH347GFUN3D
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.205/32 -m comment --comment "rule to jump traffic from POD name:stock-admin-84f9c9d8f9-2r9vg namespace: stock-prod to chain KUBE-POD-FW-R7S74KH347GFUN3D" -j KUBE-POD-FW-R7S74KH347GFUN3D
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.8/32 -m comment --comment "rule to jump traffic destined to POD name:traefik-59b7647586-gml84 namespace: kube-system to chain KUBE-POD-FW-XR5FWUNLD4V7SE4U" -j KUBE-POD-FW-XR5FWUNLD4V7SE4U
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.8/32 -m comment --comment "rule to jump traffic from POD name:traefik-59b7647586-gml84 namespace: kube-system to chain KUBE-POD-FW-XR5FWUNLD4V7SE4U" -j KUBE-POD-FW-XR5FWUNLD4V7SE4U
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.7/32 -m comment --comment "rule to jump traffic destined to POD name:svclb-traefik-859779c1-7bwx2 namespace: kube-system to chain KUBE-POD-FW-L5PIUCLT5UMRM5S5" -j KUBE-POD-FW-L5PIUCLT5UMRM5S5
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.7/32 -m comment --comment "rule to jump traffic from POD name:svclb-traefik-859779c1-7bwx2 namespace: kube-system to chain KUBE-POD-FW-L5PIUCLT5UMRM5S5" -j KUBE-POD-FW-L5PIUCLT5UMRM5S5
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.129/32 -m comment --comment "rule to jump traffic destined to POD name:tce-service-7f44bf89c7-cvvhs namespace: tce-prod to chain KUBE-POD-FW-DVPPROPAFJSEBZNR" -j KUBE-POD-FW-DVPPROPAFJSEBZNR
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.129/32 -m comment --comment "rule to jump traffic from POD name:tce-service-7f44bf89c7-cvvhs namespace: tce-prod to chain KUBE-POD-FW-DVPPROPAFJSEBZNR" -j KUBE-POD-FW-DVPPROPAFJSEBZNR
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.55/32 -m comment --comment "rule to jump traffic destined to POD name:stock-backend-57ccb8ff6-d25jq namespace: stock-prod to chain KUBE-POD-FW-Q7APVEUORHJAUHEG" -j KUBE-POD-FW-Q7APVEUORHJAUHEG
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.55/32 -m comment --comment "rule to jump traffic from POD name:stock-backend-57ccb8ff6-d25jq namespace: stock-prod to chain KUBE-POD-FW-Q7APVEUORHJAUHEG" -j KUBE-POD-FW-Q7APVEUORHJAUHEG
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.84/32 -m comment --comment "rule to jump traffic destined to POD name:media-generation-frontend-597b779c9d-dvrft namespace: media-prod to chain KUBE-POD-FW-UD7E2IQM237YF7HS" -j KUBE-POD-FW-UD7E2IQM237YF7HS
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.84/32 -m comment --comment "rule to jump traffic from POD name:media-generation-frontend-597b779c9d-dvrft namespace: media-prod to chain KUBE-POD-FW-UD7E2IQM237YF7HS" -j KUBE-POD-FW-UD7E2IQM237YF7HS
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.158/32 -m comment --comment "rule to jump traffic destined to POD name:microfe-shell-dbbbfdf8c-5rkwz namespace: microfe-platform to chain KUBE-POD-FW-7Q6FSAJ3Z7G7OFH5" -j KUBE-POD-FW-7Q6FSAJ3Z7G7OFH5
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.158/32 -m comment --comment "rule to jump traffic from POD name:microfe-shell-dbbbfdf8c-5rkwz namespace: microfe-platform to chain KUBE-POD-FW-7Q6FSAJ3Z7G7OFH5" -j KUBE-POD-FW-7Q6FSAJ3Z7G7OFH5
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.128/32 -m comment --comment "rule to jump traffic destined to POD name:tce-frontend-79988675b8-86clf namespace: tce-prod to chain KUBE-POD-FW-YZN23NEXW4U5VOKD" -j KUBE-POD-FW-YZN23NEXW4U5VOKD
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.128/32 -m comment --comment "rule to jump traffic from POD name:tce-frontend-79988675b8-86clf namespace: tce-prod to chain KUBE-POD-FW-YZN23NEXW4U5VOKD" -j KUBE-POD-FW-YZN23NEXW4U5VOKD
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.5/32 -m comment --comment "rule to jump traffic destined to POD name:local-path-provisioner-58d557dc48-jbhhp namespace: kube-system to chain KUBE-POD-FW-UMYD4JYKBHL4BHNR" -j KUBE-POD-FW-UMYD4JYKBHL4BHNR
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.5/32 -m comment --comment "rule to jump traffic from POD name:local-path-provisioner-58d557dc48-jbhhp namespace: kube-system to chain KUBE-POD-FW-UMYD4JYKBHL4BHNR" -j KUBE-POD-FW-UMYD4JYKBHL4BHNR
+-A KUBE-ROUTER-OUTPUT -d 10.42.0.108/32 -m comment --comment "rule to jump traffic destined to POD name:stock-admin-6b95d4d66c-tjvgp namespace: stock-prod to chain KUBE-POD-FW-LIWGIIMMOWM7EHMY" -j KUBE-POD-FW-LIWGIIMMOWM7EHMY
+-A KUBE-ROUTER-OUTPUT -s 10.42.0.108/32 -m comment --comment "rule to jump traffic from POD name:stock-admin-6b95d4d66c-tjvgp namespace: stock-prod to chain KUBE-POD-FW-LIWGIIMMOWM7EHMY" -j KUBE-POD-FW-LIWGIIMMOWM7EHMY
+-A KUBE-SERVICES -d 10.43.97.150/32 -p tcp -m comment --comment "stock-prod/stock-admin:http has no endpoints" -m tcp --dport 3000 -j REJECT --reject-with icmp-port-unreachable
+-P PREROUTING ACCEPT
+-P INPUT ACCEPT
+-P OUTPUT ACCEPT
+-P POSTROUTING ACCEPT
+-N CNI-DN-acfea58e68c360b21475b
+-N CNI-HOSTPORT-DNAT
+-N CNI-HOSTPORT-MASQ
+-N CNI-HOSTPORT-SETMARK
+-N DOCKER
+-N FLANNEL-POSTRTG
+-N KUBE-EXT-CVG3OEGEH7H5P3HQ
+-N KUBE-EXT-UQMCRMJZLI3FTLDP
+-N KUBE-KUBELET-CANARY
+-N KUBE-MARK-MASQ
+-N KUBE-NODEPORTS
+-N KUBE-POSTROUTING
+-N KUBE-PROXY-CANARY
+-N KUBE-SEP-3PDUSUZ3CMUMH64T
+-N KUBE-SEP-5AWGYLH65CGM43UR
+-N KUBE-SEP-722PH7PYZIC4JEXF
+-N KUBE-SEP-7KPAUC7DBZEOGEJO
+-N KUBE-SEP-AZHSVXG5CSN37Z5Y
+-N KUBE-SEP-FP46O4CTXQS5FCOK
+-N KUBE-SEP-HWCO2CCBUOFZAELI
+-N KUBE-SEP-IWLCZJYVI2QX4OD5
+-N KUBE-SEP-JTXSGLPCOZC5ZVFU
+-N KUBE-SEP-K22DDYUQEB4BEARQ
+-N KUBE-SEP-LTK3UOR77LGEXYQR
+-N KUBE-SEP-MLOSTVP7NO3SMAQ6
+-N KUBE-SEP-MYQ5ZTRJQYQJPUAK
+-N KUBE-SEP-NHQQEEGP346E2W2A
+-N KUBE-SEP-P5K6MKRT42E42YET
+-N KUBE-SEP-PK2JJP3XEEJW3OPW
+-N KUBE-SEP-QMNQ4GQ2JI3QXI4N
+-N KUBE-SEP-RPZJDVAFVJ3AQVLQ
+-N KUBE-SEP-TM7E4QVH2ZVBUPYT
+-N KUBE-SEP-TO6DGEX6YA4F3F65
+-N KUBE-SEP-U5J636EHMZWW53MJ
+-N KUBE-SEP-VRMF6DHTIIT2PVBT
+-N KUBE-SEP-WGLCOKUE4XHSDP77
+-N KUBE-SEP-XJ3DT63JQUTXVAQY
+-N KUBE-SEP-ZCYOIL7VQAK3WT27
+-N KUBE-SERVICES
+-N KUBE-SVC-4QJZF3PVRDB2IA2F
+-N KUBE-SVC-4QK7KW5IB56WUZPN
+-N KUBE-SVC-CVG3OEGEH7H5P3HQ
+-N KUBE-SVC-ERIFXISQEP7F7OF4
+-N KUBE-SVC-GZ5NCFYAOFUJKUOD
+-N KUBE-SVC-JD5MR3NA4I4DYORP
+-N KUBE-SVC-JRLGMRLKB3YE7CEY
+-N KUBE-SVC-K3FQOVUCEDDGDAPE
+-N KUBE-SVC-KMECTPXUBDWOU35U
+-N KUBE-SVC-KQT5HHT3MCOB5YAI
+-N KUBE-SVC-MEFJN27JGKP7TVNS
+-N KUBE-SVC-NPX46M4PTMTKRN6Y
+-N KUBE-SVC-NUAP4YV3ASURR6PA
+-N KUBE-SVC-PIIK6DXGFMFZSDPN
+-N KUBE-SVC-QDRC7QOOD6WPSXLV
+-N KUBE-SVC-QGZ33WYDFC2LQUPT
+-N KUBE-SVC-RGIIBWIGLZLGQUPM
+-N KUBE-SVC-SKR6ZYZRQTML2PJY
+-N KUBE-SVC-SVZDY75I3PSKUN2N
+-N KUBE-SVC-TCOU7JCQXEZGVUNU
+-N KUBE-SVC-TUJUTMSJS6VYDXQS
+-N KUBE-SVC-UQMCRMJZLI3FTLDP
+-N KUBE-SVC-WH23OUNZRUJHDSYT
+-N KUBE-SVC-Z4ANX4WAEWEBLCTM
+-N KUBE-SVC-ZUD4L6KQKCHD52W4
+-A PREROUTING -m comment --comment "kubernetes service portals" -j KUBE-SERVICES
+-A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
+-A PREROUTING -m addrtype --dst-type LOCAL -j CNI-HOSTPORT-DNAT
+-A OUTPUT -m comment --comment "kubernetes service portals" -j KUBE-SERVICES
+-A OUTPUT ! -d 127.0.0.0/8 -m addrtype --dst-type LOCAL -j DOCKER
+-A OUTPUT -m addrtype --dst-type LOCAL -j CNI-HOSTPORT-DNAT
+-A POSTROUTING -m comment --comment "CNI portfwd requiring masquerade" -j CNI-HOSTPORT-MASQ
+-A POSTROUTING -m comment --comment "kubernetes postrouting rules" -j KUBE-POSTROUTING
+-A POSTROUTING -s 172.24.0.0/16 ! -o br-95531b0ef222 -j MASQUERADE
+-A POSTROUTING -s 172.23.0.0/16 ! -o br-373fd8adf42e -j MASQUERADE
+-A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -j MASQUERADE
+-A POSTROUTING -s 172.20.0.0/16 ! -o br-7d96bad019da -j MASQUERADE
+-A POSTROUTING -s 172.21.0.0/16 ! -o br-28d9b2b42fa9 -j MASQUERADE
+-A POSTROUTING -s 172.22.0.0/16 ! -o br-14ad7f39eb40 -j MASQUERADE
+-A POSTROUTING -s 172.19.0.0/16 ! -o br-0179f3ea9709 -j MASQUERADE
+-A POSTROUTING -m comment --comment "flanneld masq" -j FLANNEL-POSTRTG
+-A CNI-DN-acfea58e68c360b21475b -s 10.42.0.0/24 -p tcp -m tcp --dport 80 -j CNI-HOSTPORT-SETMARK
+-A CNI-DN-acfea58e68c360b21475b -s 127.0.0.1/32 -p tcp -m tcp --dport 80 -j CNI-HOSTPORT-SETMARK
+-A CNI-DN-acfea58e68c360b21475b -p tcp -m tcp --dport 80 -j DNAT --to-destination 10.42.0.7:80
+-A CNI-DN-acfea58e68c360b21475b -s 10.42.0.0/24 -p tcp -m tcp --dport 443 -j CNI-HOSTPORT-SETMARK
+-A CNI-DN-acfea58e68c360b21475b -s 127.0.0.1/32 -p tcp -m tcp --dport 443 -j CNI-HOSTPORT-SETMARK
+-A CNI-DN-acfea58e68c360b21475b -p tcp -m tcp --dport 443 -j DNAT --to-destination 10.42.0.7:443
+-A CNI-HOSTPORT-DNAT -p tcp -m comment --comment "dnat name: \"cbr0\" id: \"caedb6c5eb8ccc0ed32cfeaf68cd771a01e80fb8a01f51fe569db8e8e66f10e3\"" -m multiport --dports 80,443 -j CNI-DN-acfea58e68c360b21475b
+-A CNI-HOSTPORT-MASQ -m mark --mark 0x2000/0x2000 -j MASQUERADE
+-A CNI-HOSTPORT-SETMARK -m comment --comment "CNI portfwd masquerade mark" -j MARK --set-xmark 0x2000/0x2000
+-A DOCKER ! -i br-0179f3ea9709 -p tcp -m tcp --dport 9090 -j DNAT --to-destination 172.19.0.2:9090
+-A DOCKER ! -i br-0179f3ea9709 -p tcp -m tcp --dport 3000 -j DNAT --to-destination 172.19.0.3:3000
+-A DOCKER -d 127.0.0.1/32 ! -i br-28d9b2b42fa9 -p tcp -m tcp --dport 8088 -j DNAT --to-destination 172.21.0.3:8080
+-A DOCKER ! -i br-7d96bad019da -p tcp -m tcp --dport 6380 -j DNAT --to-destination 172.20.0.2:6379
+-A DOCKER ! -i br-0179f3ea9709 -p tcp -m tcp --dport 9100 -j DNAT --to-destination 172.19.0.4:9100
+-A DOCKER ! -i br-373fd8adf42e -p tcp -m tcp --dport 4566 -j DNAT --to-destination 172.23.0.2:4566
+-A DOCKER -d 127.0.0.1/32 ! -i br-95531b0ef222 -p tcp -m tcp --dport 3201 -j DNAT --to-destination 172.24.0.3:3000
+-A DOCKER -d 127.0.0.1/32 ! -i br-95531b0ef222 -p tcp -m tcp --dport 3200 -j DNAT --to-destination 172.24.0.4:80
+-A DOCKER -d 127.0.0.1/32 ! -i docker0 -p tcp -m tcp --dport 3210 -j DNAT --to-destination 172.17.0.2:80
+-A FLANNEL-POSTRTG -m mark --mark 0x4000/0x4000 -m comment --comment "flanneld masq" -j RETURN
+-A FLANNEL-POSTRTG -s 10.42.0.0/24 -d 10.42.0.0/16 -m comment --comment "flanneld masq" -j RETURN
+-A FLANNEL-POSTRTG -s 10.42.0.0/16 -d 10.42.0.0/24 -m comment --comment "flanneld masq" -j RETURN
+-A FLANNEL-POSTRTG ! -s 10.42.0.0/16 -d 10.42.0.0/24 -m comment --comment "flanneld masq" -j RETURN
+-A FLANNEL-POSTRTG -s 10.42.0.0/16 ! -d 224.0.0.0/4 -m comment --comment "flanneld masq" -j MASQUERADE --random-fully
+-A FLANNEL-POSTRTG ! -s 10.42.0.0/16 -d 10.42.0.0/16 -m comment --comment "flanneld masq" -j MASQUERADE --random-fully
+-A KUBE-EXT-CVG3OEGEH7H5P3HQ -m comment --comment "masquerade traffic for kube-system/traefik:websecure external destinations" -j KUBE-MARK-MASQ
+-A KUBE-EXT-CVG3OEGEH7H5P3HQ -j KUBE-SVC-CVG3OEGEH7H5P3HQ
+-A KUBE-EXT-UQMCRMJZLI3FTLDP -m comment --comment "masquerade traffic for kube-system/traefik:web external destinations" -j KUBE-MARK-MASQ
+-A KUBE-EXT-UQMCRMJZLI3FTLDP -j KUBE-SVC-UQMCRMJZLI3FTLDP
+-A KUBE-MARK-MASQ -j MARK --set-xmark 0x4000/0x4000
+-A KUBE-NODEPORTS -d 127.0.0.0/8 -p tcp -m comment --comment "kube-system/traefik:websecure" -m tcp --dport 30415 -m nfacct --nfacct-name  localhost_nps_accepted_pkts -j KUBE-EXT-CVG3OEGEH7H5P3HQ
+-A KUBE-NODEPORTS -p tcp -m comment --comment "kube-system/traefik:websecure" -m tcp --dport 30415 -j KUBE-EXT-CVG3OEGEH7H5P3HQ
+-A KUBE-NODEPORTS -d 127.0.0.0/8 -p tcp -m comment --comment "kube-system/traefik:web" -m tcp --dport 30225 -m nfacct --nfacct-name  localhost_nps_accepted_pkts -j KUBE-EXT-UQMCRMJZLI3FTLDP
+-A KUBE-NODEPORTS -p tcp -m comment --comment "kube-system/traefik:web" -m tcp --dport 30225 -j KUBE-EXT-UQMCRMJZLI3FTLDP
+-A KUBE-POSTROUTING -m mark ! --mark 0x4000/0x4000 -j RETURN
+-A KUBE-POSTROUTING -j MARK --set-xmark 0x4000/0x0
+-A KUBE-POSTROUTING -m comment --comment "kubernetes service traffic requiring SNAT" -j MASQUERADE --random-fully
+-A KUBE-SEP-3PDUSUZ3CMUMH64T -s 10.42.0.105/32 -m comment --comment "microfe-platform/microfe-auth" -j KUBE-MARK-MASQ
+-A KUBE-SEP-3PDUSUZ3CMUMH64T -p tcp -m comment --comment "microfe-platform/microfe-auth" -m tcp -j DNAT --to-destination 10.42.0.105:4010
+-A KUBE-SEP-5AWGYLH65CGM43UR -s 10.42.0.85/32 -m comment --comment "media-prod/media-generation:http" -j KUBE-MARK-MASQ
+-A KUBE-SEP-5AWGYLH65CGM43UR -p tcp -m comment --comment "media-prod/media-generation:http" -m tcp -j DNAT --to-destination 10.42.0.85:3000
+-A KUBE-SEP-722PH7PYZIC4JEXF -s 10.42.0.124/32 -m comment --comment "microfe-platform/keycloak:management" -j KUBE-MARK-MASQ
+-A KUBE-SEP-722PH7PYZIC4JEXF -p tcp -m comment --comment "microfe-platform/keycloak:management" -m tcp -j DNAT --to-destination 10.42.0.124:9000
+-A KUBE-SEP-7KPAUC7DBZEOGEJO -s 10.42.0.6/32 -m comment --comment "kube-system/kube-dns:dns-tcp" -j KUBE-MARK-MASQ
+-A KUBE-SEP-7KPAUC7DBZEOGEJO -p tcp -m comment --comment "kube-system/kube-dns:dns-tcp" -m tcp -j DNAT --to-destination 10.42.0.6:53
+-A KUBE-SEP-AZHSVXG5CSN37Z5Y -s 10.42.0.99/32 -m comment --comment "cert-manager/cert-manager-webhook:https" -j KUBE-MARK-MASQ
+-A KUBE-SEP-AZHSVXG5CSN37Z5Y -p tcp -m comment --comment "cert-manager/cert-manager-webhook:https" -m tcp -j DNAT --to-destination 10.42.0.99:10250
+-A KUBE-SEP-FP46O4CTXQS5FCOK -s 10.42.0.55/32 -m comment --comment "stock-prod/backend" -j KUBE-MARK-MASQ
+-A KUBE-SEP-FP46O4CTXQS5FCOK -p tcp -m comment --comment "stock-prod/backend" -m tcp -j DNAT --to-destination 10.42.0.55:8080
+-A KUBE-SEP-HWCO2CCBUOFZAELI -s 10.42.0.98/32 -m comment --comment "cert-manager/cert-manager:http-metrics" -j KUBE-MARK-MASQ
+-A KUBE-SEP-HWCO2CCBUOFZAELI -p tcp -m comment --comment "cert-manager/cert-manager:http-metrics" -m tcp -j DNAT --to-destination 10.42.0.98:9402
+-A KUBE-SEP-IWLCZJYVI2QX4OD5 -s 10.42.0.157/32 -m comment --comment "microfe-platform/microfe-ws:http" -j KUBE-MARK-MASQ
+-A KUBE-SEP-IWLCZJYVI2QX4OD5 -p tcp -m comment --comment "microfe-platform/microfe-ws:http" -m tcp -j DNAT --to-destination 10.42.0.157:8080
+-A KUBE-SEP-JTXSGLPCOZC5ZVFU -s 10.42.0.55/32 -m comment --comment "stock-prod/stock-backend:http" -j KUBE-MARK-MASQ
+-A KUBE-SEP-JTXSGLPCOZC5ZVFU -p tcp -m comment --comment "stock-prod/stock-backend:http" -m tcp -j DNAT --to-destination 10.42.0.55:8080
+-A KUBE-SEP-K22DDYUQEB4BEARQ -s 10.42.0.178/32 -m comment --comment "microfe-platform/nats:monitor" -j KUBE-MARK-MASQ
+-A KUBE-SEP-K22DDYUQEB4BEARQ -p tcp -m comment --comment "microfe-platform/nats:monitor" -m tcp -j DNAT --to-destination 10.42.0.178:8222
+-A KUBE-SEP-LTK3UOR77LGEXYQR -s 10.42.0.56/32 -m comment --comment "stock-prod/stock-frontend:http" -j KUBE-MARK-MASQ
+-A KUBE-SEP-LTK3UOR77LGEXYQR -p tcp -m comment --comment "stock-prod/stock-frontend:http" -m tcp -j DNAT --to-destination 10.42.0.56:3000
+-A KUBE-SEP-MLOSTVP7NO3SMAQ6 -s 10.0.0.120/32 -m comment --comment "default/kubernetes:https" -j KUBE-MARK-MASQ
+-A KUBE-SEP-MLOSTVP7NO3SMAQ6 -p tcp -m comment --comment "default/kubernetes:https" -m tcp -j DNAT --to-destination 10.0.0.120:6443
+-A KUBE-SEP-MYQ5ZTRJQYQJPUAK -s 10.42.0.8/32 -m comment --comment "kube-system/traefik:websecure" -j KUBE-MARK-MASQ
+-A KUBE-SEP-MYQ5ZTRJQYQJPUAK -p tcp -m comment --comment "kube-system/traefik:websecure" -m tcp -j DNAT --to-destination 10.42.0.8:8443
+-A KUBE-SEP-NHQQEEGP346E2W2A -s 10.42.0.178/32 -m comment --comment "microfe-platform/nats:client" -j KUBE-MARK-MASQ
+-A KUBE-SEP-NHQQEEGP346E2W2A -p tcp -m comment --comment "microfe-platform/nats:client" -m tcp -j DNAT --to-destination 10.42.0.178:4222
+-A KUBE-SEP-P5K6MKRT42E42YET -s 10.42.0.129/32 -m comment --comment "tce-prod/tce-service:http" -j KUBE-MARK-MASQ
+-A KUBE-SEP-P5K6MKRT42E42YET -p tcp -m comment --comment "tce-prod/tce-service:http" -m tcp -j DNAT --to-destination 10.42.0.129:8210
+-A KUBE-SEP-PK2JJP3XEEJW3OPW -s 10.42.0.6/32 -m comment --comment "kube-system/kube-dns:metrics" -j KUBE-MARK-MASQ
+-A KUBE-SEP-PK2JJP3XEEJW3OPW -p tcp -m comment --comment "kube-system/kube-dns:metrics" -m tcp -j DNAT --to-destination 10.42.0.6:9153
+-A KUBE-SEP-QMNQ4GQ2JI3QXI4N -s 10.42.0.6/32 -m comment --comment "kube-system/kube-dns:dns" -j KUBE-MARK-MASQ
+-A KUBE-SEP-QMNQ4GQ2JI3QXI4N -p udp -m comment --comment "kube-system/kube-dns:dns" -m udp -j DNAT --to-destination 10.42.0.6:53
+-A KUBE-SEP-RPZJDVAFVJ3AQVLQ -s 10.42.0.84/32 -m comment --comment "media-prod/media-generation-frontend:http" -j KUBE-MARK-MASQ
+-A KUBE-SEP-RPZJDVAFVJ3AQVLQ -p tcp -m comment --comment "media-prod/media-generation-frontend:http" -m tcp -j DNAT --to-destination 10.42.0.84:3000
+-A KUBE-SEP-TM7E4QVH2ZVBUPYT -s 10.42.0.128/32 -m comment --comment "tce-prod/tce-frontend:http" -j KUBE-MARK-MASQ
+-A KUBE-SEP-TM7E4QVH2ZVBUPYT -p tcp -m comment --comment "tce-prod/tce-frontend:http" -m tcp -j DNAT --to-destination 10.42.0.128:80
+-A KUBE-SEP-TO6DGEX6YA4F3F65 -s 10.42.0.8/32 -m comment --comment "kube-system/traefik:web" -j KUBE-MARK-MASQ
+-A KUBE-SEP-TO6DGEX6YA4F3F65 -p tcp -m comment --comment "kube-system/traefik:web" -m tcp -j DNAT --to-destination 10.42.0.8:8000
+-A KUBE-SEP-U5J636EHMZWW53MJ -s 10.42.0.4/32 -m comment --comment "kube-system/metrics-server:https" -j KUBE-MARK-MASQ
+-A KUBE-SEP-U5J636EHMZWW53MJ -p tcp -m comment --comment "kube-system/metrics-server:https" -m tcp -j DNAT --to-destination 10.42.0.4:10250
+-A KUBE-SEP-VRMF6DHTIIT2PVBT -s 10.42.0.99/32 -m comment --comment "cert-manager/cert-manager-webhook:metrics" -j KUBE-MARK-MASQ
+-A KUBE-SEP-VRMF6DHTIIT2PVBT -p tcp -m comment --comment "cert-manager/cert-manager-webhook:metrics" -m tcp -j DNAT --to-destination 10.42.0.99:9402
+-A KUBE-SEP-WGLCOKUE4XHSDP77 -s 10.42.0.158/32 -m comment --comment "microfe-platform/microfe-shell" -j KUBE-MARK-MASQ
+-A KUBE-SEP-WGLCOKUE4XHSDP77 -p tcp -m comment --comment "microfe-platform/microfe-shell" -m tcp -j DNAT --to-destination 10.42.0.158:80
+-A KUBE-SEP-XJ3DT63JQUTXVAQY -s 10.42.0.100/32 -m comment --comment "cert-manager/cert-manager-cainjector:http-metrics" -j KUBE-MARK-MASQ
+-A KUBE-SEP-XJ3DT63JQUTXVAQY -p tcp -m comment --comment "cert-manager/cert-manager-cainjector:http-metrics" -m tcp -j DNAT --to-destination 10.42.0.100:9402
+-A KUBE-SEP-ZCYOIL7VQAK3WT27 -s 10.42.0.124/32 -m comment --comment "microfe-platform/keycloak:http" -j KUBE-MARK-MASQ
+-A KUBE-SEP-ZCYOIL7VQAK3WT27 -p tcp -m comment --comment "microfe-platform/keycloak:http" -m tcp -j DNAT --to-destination 10.42.0.124:8080
+-A KUBE-SERVICES -d 10.43.213.239/32 -p tcp -m comment --comment "kube-system/traefik:websecure cluster IP" -m tcp --dport 443 -j KUBE-SVC-CVG3OEGEH7H5P3HQ
+-A KUBE-SERVICES -d 10.0.0.120/32 -p tcp -m comment --comment "kube-system/traefik:websecure loadbalancer IP" -m tcp --dport 443 -j KUBE-EXT-CVG3OEGEH7H5P3HQ
+-A KUBE-SERVICES -d 10.43.53.102/32 -p tcp -m comment --comment "stock-prod/stock-frontend:http cluster IP" -m tcp --dport 3000 -j KUBE-SVC-4QK7KW5IB56WUZPN
+-A KUBE-SERVICES -d 10.43.189.227/32 -p tcp -m comment --comment "tce-prod/tce-service:http cluster IP" -m tcp --dport 8210 -j KUBE-SVC-WH23OUNZRUJHDSYT
+-A KUBE-SERVICES -d 10.43.0.1/32 -p tcp -m comment --comment "default/kubernetes:https cluster IP" -m tcp --dport 443 -j KUBE-SVC-NPX46M4PTMTKRN6Y
+-A KUBE-SERVICES -d 10.43.0.10/32 -p udp -m comment --comment "kube-system/kube-dns:dns cluster IP" -m udp --dport 53 -j KUBE-SVC-TCOU7JCQXEZGVUNU
+-A KUBE-SERVICES -d 10.43.138.27/32 -p tcp -m comment --comment "cert-manager/cert-manager:http-metrics cluster IP" -m tcp --dport 9402 -j KUBE-SVC-GZ5NCFYAOFUJKUOD
+-A KUBE-SERVICES -d 10.43.52.112/32 -p tcp -m comment --comment "cert-manager/cert-manager-webhook:https cluster IP" -m tcp --dport 443 -j KUBE-SVC-ZUD4L6KQKCHD52W4
+-A KUBE-SERVICES -d 10.43.48.52/32 -p tcp -m comment --comment "media-prod/media-generation-frontend:http cluster IP" -m tcp --dport 80 -j KUBE-SVC-SKR6ZYZRQTML2PJY
+-A KUBE-SERVICES -d 10.43.83.168/32 -p tcp -m comment --comment "microfe-platform/microfe-auth cluster IP" -m tcp --dport 80 -j KUBE-SVC-QGZ33WYDFC2LQUPT
+-A KUBE-SERVICES -d 10.43.247.219/32 -p tcp -m comment --comment "stock-prod/stock-backend:http cluster IP" -m tcp --dport 8080 -j KUBE-SVC-K3FQOVUCEDDGDAPE
+-A KUBE-SERVICES -d 10.43.0.10/32 -p tcp -m comment --comment "kube-system/kube-dns:metrics cluster IP" -m tcp --dport 9153 -j KUBE-SVC-JD5MR3NA4I4DYORP
+-A KUBE-SERVICES -d 10.43.120.41/32 -p tcp -m comment --comment "kube-system/metrics-server:https cluster IP" -m tcp --dport 443 -j KUBE-SVC-Z4ANX4WAEWEBLCTM
+-A KUBE-SERVICES -d 10.43.52.112/32 -p tcp -m comment --comment "cert-manager/cert-manager-webhook:metrics cluster IP" -m tcp --dport 9402 -j KUBE-SVC-KMECTPXUBDWOU35U
+-A KUBE-SERVICES -d 10.43.252.95/32 -p tcp -m comment --comment "media-prod/media-generation:http cluster IP" -m tcp --dport 3000 -j KUBE-SVC-QDRC7QOOD6WPSXLV
+-A KUBE-SERVICES -d 10.43.86.34/32 -p tcp -m comment --comment "microfe-platform/microfe-ws:http cluster IP" -m tcp --dport 8080 -j KUBE-SVC-NUAP4YV3ASURR6PA
+-A KUBE-SERVICES -d 10.43.142.95/32 -p tcp -m comment --comment "microfe-platform/keycloak:http cluster IP" -m tcp --dport 80 -j KUBE-SVC-SVZDY75I3PSKUN2N
+-A KUBE-SERVICES -d 10.43.0.10/32 -p tcp -m comment --comment "kube-system/kube-dns:dns-tcp cluster IP" -m tcp --dport 53 -j KUBE-SVC-ERIFXISQEP7F7OF4
+-A KUBE-SERVICES -d 10.43.135.132/32 -p tcp -m comment --comment "cert-manager/cert-manager-cainjector:http-metrics cluster IP" -m tcp --dport 9402 -j KUBE-SVC-RGIIBWIGLZLGQUPM
+-A KUBE-SERVICES -d 10.43.46.139/32 -p tcp -m comment --comment "stock-prod/backend cluster IP" -m tcp --dport 8080 -j KUBE-SVC-MEFJN27JGKP7TVNS
+-A KUBE-SERVICES -d 10.43.99.130/32 -p tcp -m comment --comment "tce-prod/tce-frontend:http cluster IP" -m tcp --dport 80 -j KUBE-SVC-PIIK6DXGFMFZSDPN
+-A KUBE-SERVICES -d 10.43.6.23/32 -p tcp -m comment --comment "microfe-platform/microfe-shell cluster IP" -m tcp --dport 80 -j KUBE-SVC-TUJUTMSJS6VYDXQS
+-A KUBE-SERVICES -d 10.43.147.69/32 -p tcp -m comment --comment "microfe-platform/nats:client cluster IP" -m tcp --dport 4222 -j KUBE-SVC-KQT5HHT3MCOB5YAI
+-A KUBE-SERVICES -d 10.43.147.69/32 -p tcp -m comment --comment "microfe-platform/nats:monitor cluster IP" -m tcp --dport 8222 -j KUBE-SVC-JRLGMRLKB3YE7CEY
+-A KUBE-SERVICES -d 10.43.142.95/32 -p tcp -m comment --comment "microfe-platform/keycloak:management cluster IP" -m tcp --dport 9000 -j KUBE-SVC-4QJZF3PVRDB2IA2F
+-A KUBE-SERVICES -d 10.43.213.239/32 -p tcp -m comment --comment "kube-system/traefik:web cluster IP" -m tcp --dport 80 -j KUBE-SVC-UQMCRMJZLI3FTLDP
+-A KUBE-SERVICES -d 10.0.0.120/32 -p tcp -m comment --comment "kube-system/traefik:web loadbalancer IP" -m tcp --dport 80 -j KUBE-EXT-UQMCRMJZLI3FTLDP
+-A KUBE-SERVICES -m comment --comment "kubernetes service nodeports; NOTE: this must be the last rule in this chain" -m addrtype --dst-type LOCAL -j KUBE-NODEPORTS
+-A KUBE-SVC-4QJZF3PVRDB2IA2F ! -s 10.42.0.0/16 -d 10.43.142.95/32 -p tcp -m comment --comment "microfe-platform/keycloak:management cluster IP" -m tcp --dport 9000 -j KUBE-MARK-MASQ
+-A KUBE-SVC-4QJZF3PVRDB2IA2F -m comment --comment "microfe-platform/keycloak:management -> 10.42.0.124:9000" -j KUBE-SEP-722PH7PYZIC4JEXF
+-A KUBE-SVC-4QK7KW5IB56WUZPN ! -s 10.42.0.0/16 -d 10.43.53.102/32 -p tcp -m comment --comment "stock-prod/stock-frontend:http cluster IP" -m tcp --dport 3000 -j KUBE-MARK-MASQ
+-A KUBE-SVC-4QK7KW5IB56WUZPN -m comment --comment "stock-prod/stock-frontend:http -> 10.42.0.56:3000" -j KUBE-SEP-LTK3UOR77LGEXYQR
+-A KUBE-SVC-CVG3OEGEH7H5P3HQ ! -s 10.42.0.0/16 -d 10.43.213.239/32 -p tcp -m comment --comment "kube-system/traefik:websecure cluster IP" -m tcp --dport 443 -j KUBE-MARK-MASQ
+-A KUBE-SVC-CVG3OEGEH7H5P3HQ -m comment --comment "kube-system/traefik:websecure -> 10.42.0.8:8443" -j KUBE-SEP-MYQ5ZTRJQYQJPUAK
+-A KUBE-SVC-ERIFXISQEP7F7OF4 ! -s 10.42.0.0/16 -d 10.43.0.10/32 -p tcp -m comment --comment "kube-system/kube-dns:dns-tcp cluster IP" -m tcp --dport 53 -j KUBE-MARK-MASQ
+-A KUBE-SVC-ERIFXISQEP7F7OF4 -m comment --comment "kube-system/kube-dns:dns-tcp -> 10.42.0.6:53" -j KUBE-SEP-7KPAUC7DBZEOGEJO
+-A KUBE-SVC-GZ5NCFYAOFUJKUOD ! -s 10.42.0.0/16 -d 10.43.138.27/32 -p tcp -m comment --comment "cert-manager/cert-manager:http-metrics cluster IP" -m tcp --dport 9402 -j KUBE-MARK-MASQ
+-A KUBE-SVC-GZ5NCFYAOFUJKUOD -m comment --comment "cert-manager/cert-manager:http-metrics -> 10.42.0.98:9402" -j KUBE-SEP-HWCO2CCBUOFZAELI
+-A KUBE-SVC-JD5MR3NA4I4DYORP ! -s 10.42.0.0/16 -d 10.43.0.10/32 -p tcp -m comment --comment "kube-system/kube-dns:metrics cluster IP" -m tcp --dport 9153 -j KUBE-MARK-MASQ
+-A KUBE-SVC-JD5MR3NA4I4DYORP -m comment --comment "kube-system/kube-dns:metrics -> 10.42.0.6:9153" -j KUBE-SEP-PK2JJP3XEEJW3OPW
+-A KUBE-SVC-JRLGMRLKB3YE7CEY ! -s 10.42.0.0/16 -d 10.43.147.69/32 -p tcp -m comment --comment "microfe-platform/nats:monitor cluster IP" -m tcp --dport 8222 -j KUBE-MARK-MASQ
+-A KUBE-SVC-JRLGMRLKB3YE7CEY -m comment --comment "microfe-platform/nats:monitor -> 10.42.0.178:8222" -j KUBE-SEP-K22DDYUQEB4BEARQ
+-A KUBE-SVC-K3FQOVUCEDDGDAPE ! -s 10.42.0.0/16 -d 10.43.247.219/32 -p tcp -m comment --comment "stock-prod/stock-backend:http cluster IP" -m tcp --dport 8080 -j KUBE-MARK-MASQ
+-A KUBE-SVC-K3FQOVUCEDDGDAPE -m comment --comment "stock-prod/stock-backend:http -> 10.42.0.55:8080" -j KUBE-SEP-JTXSGLPCOZC5ZVFU
+-A KUBE-SVC-KMECTPXUBDWOU35U ! -s 10.42.0.0/16 -d 10.43.52.112/32 -p tcp -m comment --comment "cert-manager/cert-manager-webhook:metrics cluster IP" -m tcp --dport 9402 -j KUBE-MARK-MASQ
+-A KUBE-SVC-KMECTPXUBDWOU35U -m comment --comment "cert-manager/cert-manager-webhook:metrics -> 10.42.0.99:9402" -j KUBE-SEP-VRMF6DHTIIT2PVBT
+-A KUBE-SVC-KQT5HHT3MCOB5YAI ! -s 10.42.0.0/16 -d 10.43.147.69/32 -p tcp -m comment --comment "microfe-platform/nats:client cluster IP" -m tcp --dport 4222 -j KUBE-MARK-MASQ
+-A KUBE-SVC-KQT5HHT3MCOB5YAI -m comment --comment "microfe-platform/nats:client -> 10.42.0.178:4222" -j KUBE-SEP-NHQQEEGP346E2W2A
+-A KUBE-SVC-MEFJN27JGKP7TVNS ! -s 10.42.0.0/16 -d 10.43.46.139/32 -p tcp -m comment --comment "stock-prod/backend cluster IP" -m tcp --dport 8080 -j KUBE-MARK-MASQ
+-A KUBE-SVC-MEFJN27JGKP7TVNS -m comment --comment "stock-prod/backend -> 10.42.0.55:8080" -j KUBE-SEP-FP46O4CTXQS5FCOK
+-A KUBE-SVC-NPX46M4PTMTKRN6Y ! -s 10.42.0.0/16 -d 10.43.0.1/32 -p tcp -m comment --comment "default/kubernetes:https cluster IP" -m tcp --dport 443 -j KUBE-MARK-MASQ
+-A KUBE-SVC-NPX46M4PTMTKRN6Y -m comment --comment "default/kubernetes:https -> 10.0.0.120:6443" -j KUBE-SEP-MLOSTVP7NO3SMAQ6
+-A KUBE-SVC-NUAP4YV3ASURR6PA ! -s 10.42.0.0/16 -d 10.43.86.34/32 -p tcp -m comment --comment "microfe-platform/microfe-ws:http cluster IP" -m tcp --dport 8080 -j KUBE-MARK-MASQ
+-A KUBE-SVC-NUAP4YV3ASURR6PA -m comment --comment "microfe-platform/microfe-ws:http -> 10.42.0.157:8080" -j KUBE-SEP-IWLCZJYVI2QX4OD5
+-A KUBE-SVC-PIIK6DXGFMFZSDPN ! -s 10.42.0.0/16 -d 10.43.99.130/32 -p tcp -m comment --comment "tce-prod/tce-frontend:http cluster IP" -m tcp --dport 80 -j KUBE-MARK-MASQ
+-A KUBE-SVC-PIIK6DXGFMFZSDPN -m comment --comment "tce-prod/tce-frontend:http -> 10.42.0.128:80" -j KUBE-SEP-TM7E4QVH2ZVBUPYT
+-A KUBE-SVC-QDRC7QOOD6WPSXLV ! -s 10.42.0.0/16 -d 10.43.252.95/32 -p tcp -m comment --comment "media-prod/media-generation:http cluster IP" -m tcp --dport 3000 -j KUBE-MARK-MASQ
+-A KUBE-SVC-QDRC7QOOD6WPSXLV -m comment --comment "media-prod/media-generation:http -> 10.42.0.85:3000" -j KUBE-SEP-5AWGYLH65CGM43UR
+-A KUBE-SVC-QGZ33WYDFC2LQUPT ! -s 10.42.0.0/16 -d 10.43.83.168/32 -p tcp -m comment --comment "microfe-platform/microfe-auth cluster IP" -m tcp --dport 80 -j KUBE-MARK-MASQ
+-A KUBE-SVC-QGZ33WYDFC2LQUPT -m comment --comment "microfe-platform/microfe-auth -> 10.42.0.105:4010" -j KUBE-SEP-3PDUSUZ3CMUMH64T
+-A KUBE-SVC-RGIIBWIGLZLGQUPM ! -s 10.42.0.0/16 -d 10.43.135.132/32 -p tcp -m comment --comment "cert-manager/cert-manager-cainjector:http-metrics cluster IP" -m tcp --dport 9402 -j KUBE-MARK-MASQ
+-A KUBE-SVC-RGIIBWIGLZLGQUPM -m comment --comment "cert-manager/cert-manager-cainjector:http-metrics -> 10.42.0.100:9402" -j KUBE-SEP-XJ3DT63JQUTXVAQY
+-A KUBE-SVC-SKR6ZYZRQTML2PJY ! -s 10.42.0.0/16 -d 10.43.48.52/32 -p tcp -m comment --comment "media-prod/media-generation-frontend:http cluster IP" -m tcp --dport 80 -j KUBE-MARK-MASQ
+-A KUBE-SVC-SKR6ZYZRQTML2PJY -m comment --comment "media-prod/media-generation-frontend:http -> 10.42.0.84:3000" -j KUBE-SEP-RPZJDVAFVJ3AQVLQ
+-A KUBE-SVC-SVZDY75I3PSKUN2N ! -s 10.42.0.0/16 -d 10.43.142.95/32 -p tcp -m comment --comment "microfe-platform/keycloak:http cluster IP" -m tcp --dport 80 -j KUBE-MARK-MASQ
+-A KUBE-SVC-SVZDY75I3PSKUN2N -m comment --comment "microfe-platform/keycloak:http -> 10.42.0.124:8080" -j KUBE-SEP-ZCYOIL7VQAK3WT27
+-A KUBE-SVC-TCOU7JCQXEZGVUNU ! -s 10.42.0.0/16 -d 10.43.0.10/32 -p udp -m comment --comment "kube-system/kube-dns:dns cluster IP" -m udp --dport 53 -j KUBE-MARK-MASQ
+-A KUBE-SVC-TCOU7JCQXEZGVUNU -m comment --comment "kube-system/kube-dns:dns -> 10.42.0.6:53" -j KUBE-SEP-QMNQ4GQ2JI3QXI4N
+-A KUBE-SVC-TUJUTMSJS6VYDXQS ! -s 10.42.0.0/16 -d 10.43.6.23/32 -p tcp -m comment --comment "microfe-platform/microfe-shell cluster IP" -m tcp --dport 80 -j KUBE-MARK-MASQ
+-A KUBE-SVC-TUJUTMSJS6VYDXQS -m comment --comment "microfe-platform/microfe-shell -> 10.42.0.158:80" -j KUBE-SEP-WGLCOKUE4XHSDP77
+-A KUBE-SVC-UQMCRMJZLI3FTLDP ! -s 10.42.0.0/16 -d 10.43.213.239/32 -p tcp -m comment --comment "kube-system/traefik:web cluster IP" -m tcp --dport 80 -j KUBE-MARK-MASQ
+-A KUBE-SVC-UQMCRMJZLI3FTLDP -m comment --comment "kube-system/traefik:web -> 10.42.0.8:8000" -j KUBE-SEP-TO6DGEX6YA4F3F65
+-A KUBE-SVC-WH23OUNZRUJHDSYT ! -s 10.42.0.0/16 -d 10.43.189.227/32 -p tcp -m comment --comment "tce-prod/tce-service:http cluster IP" -m tcp --dport 8210 -j KUBE-MARK-MASQ
+-A KUBE-SVC-WH23OUNZRUJHDSYT -m comment --comment "tce-prod/tce-service:http -> 10.42.0.129:8210" -j KUBE-SEP-P5K6MKRT42E42YET
+-A KUBE-SVC-Z4ANX4WAEWEBLCTM ! -s 10.42.0.0/16 -d 10.43.120.41/32 -p tcp -m comment --comment "kube-system/metrics-server:https cluster IP" -m tcp --dport 443 -j KUBE-MARK-MASQ
+-A KUBE-SVC-Z4ANX4WAEWEBLCTM -m comment --comment "kube-system/metrics-server:https -> 10.42.0.4:10250" -j KUBE-SEP-U5J636EHMZWW53MJ
+-A KUBE-SVC-ZUD4L6KQKCHD52W4 ! -s 10.42.0.0/16 -d 10.43.52.112/32 -p tcp -m comment --comment "cert-manager/cert-manager-webhook:https cluster IP" -m tcp --dport 443 -j KUBE-MARK-MASQ
+-A KUBE-SVC-ZUD4L6KQKCHD52W4 -m comment --comment "cert-manager/cert-manager-webhook:https -> 10.42.0.99:10250" -j KUBE-SEP-AZHSVXG5CSN37Z5Y
+
+========== KUBERNETES ==========
+NAME         STATUS   ROLES           AGE   VERSION        INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION              CONTAINER-RUNTIME
+tce-k3s-01   Ready    control-plane   65d   v1.36.3+k3s1   10.0.0.120    <none>        Ubuntu 22.04.5 LTS   6.8.0-1049-oracle (arm64)   containerd://2.3.2-k3s2
+NAMESPACE          NAME                                READY   STATUS             RESTARTS      AGE
+k3s-debug          k3s-debug-snapshot-29883555-bgd74   0/1     StartError         0             17m
+k3s-debug          k3s-debug-snapshot-29883555-crhvj   0/1     StartError         0             16m
+k3s-debug          k3s-debug-snapshot-29883555-kx9rv   0/1     StartError         0             17m
+k3s-debug          k3s-debug-snapshot-29883555-sf2ng   0/1     StartError         0             17m
+k3s-debug          k3s-debug-snapshot-29883555-t5qp5   0/1     StartError         0             12m
+k3s-debug          k3s-debug-snapshot-29883555-v82pz   0/1     StartError         0             15m
+k3s-debug          k3s-debug-snapshot-29883570-2bzcw   0/1     StartError         0             89s
+k3s-debug          k3s-debug-snapshot-29883570-4blwb   0/1     StartError         0             2m32s
+k3s-debug          k3s-debug-snapshot-29883570-62dxg   0/1     StartError         0             2m11s
+k3s-debug          k3s-debug-snapshot-29883570-7tqbm   0/1     StartError         0             8s
+k3s-debug          k3s-debug-snapshot-29883570-h7lx9   0/1     StartError         0             2m44s
+kube-system        helm-install-traefik-crd-mq7w8      0/1     Completed          0             65d
+kube-system        helm-install-traefik-s2twj          0/1     Completed          1 (65d ago)   65d
+microfe-platform   microfe-shell-5576677b5b-s4vrq      0/1     ImagePullBackOff   0             128m
+microfe-platform   microfe-ws-f5c8d7bd6-td48b          0/1     ErrImagePull       0             128m
+stock-prod         stock-admin-6b95d4d66c-tjvgp        0/1     ImagePullBackOff   0             128m
+stock-prod         stock-admin-84f9c9d8f9-2r9vg        0/1     ImagePullBackOff   0             7h47m
+stock-prod         stock-backend-d9946b74f-hlgjj       0/1     ImagePullBackOff   0             128m
+
+========== UDP PORT 51820 ==========
+ubuntu@chat-20260107-1525:~$ 
