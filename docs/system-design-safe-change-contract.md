@@ -31,7 +31,8 @@ flowchart TB
   Browser[Browser / MicroFE shell]
   Edge[Ingress / TLS]
   Shell[Shell workload]
-  Auth[Central NestJS Auth API]
+  Auth[Central NestJS Auth API - legacy sessions + OIDC resource endpoint]
+  IdP[Keycloak SSO - sso.mrcute.space]
   TCE[TCE Dashboard API and Web]
   Stock[StockDividend]
   Media[Media Generation]
@@ -50,8 +51,12 @@ flowchart TB
   Edge --> WS
   Browser --> Stock
   Browser --> Media
+  Browser --> IdP
+  IdP -. OIDC Authorization Code + PKCE .-> Browser
   TCE --> Auth
   Media --> Auth
+  TCE -. Bearer token validation contract .-> Auth
+  Media -. Bearer token validation contract .-> Auth
   Stock --> Auth
   Auth --> PG
   TCE --> PG
@@ -117,6 +122,64 @@ The platform contract declares a self-hosted Auth API; Supabase Auth is **not** 
 The existing Auth evidence document identifies possible route-prefix, cookie-path, cookie-only `/auth/me`, and JWT issuer/audience mismatches across consumers. These are **compatibility gates to resolve with source and integration tests**, not permission to change URLs or token rules opportunistically.
 
 See [Auth Central phase 0/1 evidence](https://github.com/phanthienquoc/platform-infra/blob/master/docs/auth-central/phase-0-1-evidence.md).
+
+
+
+### Keycloak SSO status and integration contract (2026-10-26)
+
+**Important distinction:** Keycloak is an existing infrastructure workload/SSO candidate, but that does **not** mean every application is already an OIDC client or that production SSO is fully enabled.
+
+Source review found the following:
+
+| Repository / component | Source-verified capability | Gap before end-to-end SSO |
+|---|---|---|
+| `platform-infra` | Keycloak workload manifests, dedicated `sso.mrcute.space` ingress/certificate, isolated deployment lane and secret-name contract exist in the repository. Platform docs report Keycloak 26.8.1 and public discovery for the `master` realm; the intended `mrcute` realm issuer/client configuration must be verified separately. | Reconcile conflicting deployment notes, verify the live `mrcute` discovery document, client redirect URIs, TLS/DNS, and current rollout. Do not assume a manifest or historical debug snapshot proves current health. |
+| `phanthienquoc-authentication` | Keycloak JWT/JWKS validation, exact issuer/audience/expiry/RS256 checks, a guarded `GET /api/oidc/me` endpoint and minimal identity mapping are present. Existing custom JWT/session, MFA/recovery and passkey routes remain active. | Validate the live realm/client/audience configuration and endpoint through end-to-end tests. This is resource-server validation, not yet a unified browser BFF/session migration. |
+| `TCE-dashboard` | Web login currently uses the existing shared-auth login/MFA/passkey endpoints. TCE API bridges the shared cookie session into its internal JWT context. | No verified Keycloak OIDC browser flow or Keycloak bearer-token-to-TCE authorization bridge was found. Do not send Keycloak tokens to TCE APIs until a verified identity/authorization mapping is implemented. |
+| `media-generation` | Frontend login proxy calls the existing central Auth `/auth/login`; its app page redirects unauthenticated users to the legacy Auth login URL. | No verified Keycloak OIDC client/callback or Keycloak-backed Media API session was found. |
+| StockDividend / MicroFE shell / WebSocket | Existing shared-auth links/introspection are present in repository evidence. | Must be individually inspected and integrated; do not claim these consumers are covered by the TCE/Media rollout. |
+
+#### Target topology
+
+```mermaid
+sequenceDiagram
+  participant U as Browser
+  participant A as TCE / Media app
+  participant K as Keycloak (sso.mrcute.space)
+  participant H as Central Auth API (auth.mrcute.space)
+  participant R as Resource API
+
+  U->>A: Open protected app
+  A-->>U: Redirect to Keycloak authorization endpoint
+  U->>K: Authorization Code + PKCE (state/nonce)
+  K-->>U: Redirect to exact registered callback with code
+  U->>A: Callback (code + state)
+  A->>K: Server-side code exchange / token validation
+  A->>H: Verify identity/token and apply shared mapping contract
+  A->>R: Authenticated session or scoped access token
+```
+
+This is the **target design**, not a claim that this complete flow is implemented today. Prefer a server-side BFF/session boundary for web applications; do not persist bearer/refresh tokens in `localStorage`, put tokens in URLs, or expose client secrets in `NEXT_PUBLIC_*`. If a browser public client is used for a separately approved flow, use Authorization Code + PKCE S256 and keep access tokens in memory only; API authorization must still be implemented and tested.
+
+#### Ordered implementation plan
+
+1. **Baseline / identity contract (current):** inspect Keycloak live realm discovery and registered clients; record exact issuer, client IDs, redirect/logout URIs, audience mapper, role claims, and current deployment status. Never export secret values.
+2. **Central Auth contract:** keep existing login/session/MFA/passkey behavior unchanged. Verify the existing OIDC JWKS validator and `/api/oidc/me` endpoint with positive and negative tests (bad signature, wrong issuer/audience, expired token, malformed token, missing role). Define stable identity mapping and API audience/role semantics before apps consume it.
+3. **TCE non-production integration:** implement an opt-in OIDC callback/BFF or explicitly scoped bearer integration; map Keycloak subject to the application's authorization identity without assuming `sub` equals an existing user UUID. Add tests for CSRF/state/nonce/PKCE, logout, session expiry, role denial and Auth/IdP outage. Keep legacy mode default.
+4. **Media non-production integration:** repeat the same approved contract using a distinct Keycloak client and exact redirect URIs; do not copy client secrets between apps. Keep the existing login route working in legacy mode.
+5. **Cross-app SSO verification:** prove login once then access both apps, logout semantics, MFA/required actions, account linking, role mapping, session expiry, and API denial behavior. Test all participating apps (including Stock/MicroFE/WebSocket) separately before calling the platform-wide SSO complete.
+6. **Production cutover:** only after non-production acceptance and rollback drills, update protected runtime config/secret references and promote immutable images via the narrowest reviewed deployment path. Do not alter live clients, credentials, user records, database schema or production traffic as part of a documentation change.
+
+#### Acceptance gates
+
+- [ ] Live `https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration` returns HTTP 200 and its issuer exactly matches `KEYCLOAK_ISSUER`.
+- [ ] Each app has its own least-privilege client, exact redirect/logout URIs and explicit API audience.
+- [ ] No ID token is used as an API access token; API access tokens are verified using JWKS, issuer, audience, expiry and algorithm.
+- [ ] Keycloak roles are mapped to application permissions deny-by-default; identity linking cannot grant roles or merge accounts based only on matching email.
+- [ ] Existing legacy sessions, MFA/recovery, passkeys, cookies and APIs remain compatible until an explicit cutover.
+- [ ] Cross-repo contract tests and rollback instructions pass; production rollout remains a separate reviewed operation.
+
+Plan owner: `platform-infra` owns deployment topology and rollout coordination; central Auth owns identity/token validation; each application repository owns its OIDC client/BFF and resource authorization implementation.
 
 ## 5. Supabase: production data-plane contract
 
@@ -237,7 +300,7 @@ These observations are not all proven live-runtime failures; they require curren
 - [ ] Verify current deployed image IDs, pod readiness, ingress/TLS, DNS and health endpoints when operationally relevant.
 - [ ] Verify the actual GitHub Environment/repository/organization scope for credential names without reading or copying their values.
 - [ ] Confirm backup/PITR configuration and perform a restore drill against an isolated target before relying on it.
-- [ ] Keep Keycloak isolated from the existing Auth API until a separately reviewed architecture/identity migration decision is approved and compatibility gates pass.
+- [ ] Complete the Keycloak SSO integration plan above; Keycloak is not yet proven end-to-end for TCE/Media even though central Auth has OIDC token-validation code.
 - [ ] Review scheduled reconciliation behavior periodically: it can apply declared manifests. Scheduled runs must not be interpreted as permission for intentional image promotions or unreviewed schema mutations.
 
 ## 11. Source of truth and review cadence
