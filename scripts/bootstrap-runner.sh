@@ -211,6 +211,10 @@ case "${1:-}" in
     exit 0
     ;;
   logs)
+    # Read-only Keycloak diagnostics: allow a bounded tail only; never permit env/secret reads.
+    if [[ "${2:-}" == "deployment/keycloak" && "${3:-}" == "-n" && "${4:-}" == "microfe-platform" && "${5:-}" == "--since=2h" && "${6:-}" == "--tail=200" && "${7:-}" == "" ]]; then
+      exec "${KUBECTL[@]}" logs deployment/keycloak -n microfe-platform --since=2h --tail=200
+    fi
     if [[ "${2:-}" == "deployment/media-generation" && "${3:-}" == "-n" && "${4:-}" == "media-prod" && ( "${5:-}" == "--tail=200" || "${5:-}" == "--previous" ) ]]; then
       if [[ "${5:-}" == "--previous" ]]; then exec "${KUBECTL[@]}" logs deployment/media-generation -n media-prod --previous --tail=200; fi
       exec "${KUBECTL[@]}" logs deployment/media-generation -n media-prod --tail=200
