@@ -63,6 +63,9 @@ def main():
         raise RuntimeError("Keycloak token response did not contain an access token.")
 
     status, existing = request(f"/admin/realms/{REALM_NAME}", token=token, expected=(200, 404))
+    # Seed the listener set before either branch so first-time realm creation
+    # never references an uninitialized local variable.
+    listeners = {"jboss-logging"}
     if status == 404:
         realm = {
             "realm": REALM_NAME,
@@ -85,8 +88,7 @@ def main():
         print("Created realm mrcute with self-registration enabled, email verification disabled, and security events enabled.")
     else:
         # Preserve existing clients and unrelated realm settings.
-        listeners = set(existing.get("eventsListeners") or [])
-        listeners.add("jboss-logging")
+        listeners.update(existing.get("eventsListeners") or [])
         existing.update({
             "enabled": True,
             "registrationAllowed": True,
@@ -98,7 +100,7 @@ def main():
             "rememberMe": True,
             "bruteForceProtected": True,
             "eventsEnabled": True,
-            "eventsListeners": ["jboss-logging"],
+            "eventsListeners": sorted(listeners),
             "adminEventsEnabled": True,
             "adminEventsDetailsEnabled": False,
             "passwordPolicy": "length(12) and notUsername",
