@@ -1,0 +1,38 @@
+name: Verify Keycloak TCE OIDC client
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - "scripts/verify-keycloak-tce-client.py"
+      - ".github/workflows/verify-keycloak-tce-client.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-keycloak-tce-oidc-client
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/master'
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    environment: production
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify live TCE OIDC client (read-only)
+        env:
+          KEYCLOAK_ADMIN_USERNAME: ${{ secrets.KEYCLOAK_ADMIN_USERNAME }}
+          KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "${KEYCLOAK_ADMIN_USERNAME:-}" || { echo "::error::Missing KEYCLOAK_ADMIN_USERNAME."; exit 1; }
+          test -n "${KEYCLOAK_ADMIN_PASSWORD:-}" || { echo "::error::Missing KEYCLOAK_ADMIN_PASSWORD."; exit 1; }
+          python3 scripts/verify-keycloak-tce-client.py
