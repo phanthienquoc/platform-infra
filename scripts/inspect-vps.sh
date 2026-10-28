@@ -90,13 +90,13 @@ mkdir -p "$(dirname "$OUT")"
   echo
   echo "## Keycloak diagnostics (read-only; namespace=microfe-platform)"
   KCTL=/usr/local/sbin/platform-kubectl
-  "$KCTL" -n microfe-platform get deployment keycloak -o wide 2>&1 || true
-  "$KCTL" -n microfe-platform get pods -o wide 2>&1 | grep -i keycloak || true
-  "$KCTL" -n microfe-platform get services,endpoints 2>&1 | grep -i keycloak || true
+  "$KCTL" get deployment keycloak -n microfe-platform -o wide 2>&1 || true
+  "$KCTL" get pods -n microfe-platform -o wide 2>&1 | grep -i keycloak || true
+  "$KCTL" get services,endpoints -n microfe-platform 2>&1 | grep -i keycloak || true
   echo
   echo "### Keycloak recent diagnostic log lines (last 2h; redacted)"
-  if "$KCTL" -n microfe-platform get deployment keycloak >/dev/null 2>&1; then
-    "$KCTL" -n microfe-platform logs deployment/keycloak --all-containers=true --since=2h --tail=1200 2>&1 |
+  if "$KCTL" get deployment keycloak -n microfe-platform >/dev/null 2>&1; then
+    "$KCTL" logs deployment/keycloak -n microfe-platform --all-containers=true --since=2h --tail=1200 2>&1 |
       grep -Ei 'error|exception|timeout|timed out|database|jdbc|liquibase|admin.?api|unauthorized|forbidden|realm|connection refused|connection reset|readiness|liveness' |
       sed -E 's/((password|token|secret|authorization|client_secret)[=: ]+)[^ ,;\"]+/\1[REDACTED]/Ig; s/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/[EMAIL]/g; s#(postgres(ql)?://)[^/@ ]+:[^/@ ]+@#\1[REDACTED]@#Ig' |
       cut -c1-500 | tail -n 80 || true
