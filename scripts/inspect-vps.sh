@@ -87,5 +87,31 @@ mkdir -p "$(dirname "$OUT")"
   echo "## K3s service"
   systemctl is-active k3s || true
   systemctl is-enabled k3s || true
+  echo
+  echo "## Keycloak diagnostics (read-only; namespace=microfe-platform)"
+  KCTL=/usr/local/sbin/platform-kubectl
+  "$KCTL" -n microfe-platform get deployment keycloak -o wide 2>&1 || true
+  "$KCTL" -n microfe-platform get pods -o wide 2>&1 | grep -i keycloak || true
+  "$KCTL" -n microfe-platform get services,endpoints 2>&1 | grep -i keycloak || true
+  echo
+  echo "### Keycloak recent diagnostic log lines (last 2h; redacted)"
+  if "$KCTL" -n microfe-platform get deployment keycloak >/dev/null 2>&1; then
+    "$KCTL" -n microfe-platform logs deployment/keycloak --all-containers=true --since=2h --tail=1200 2>&1 |
+      grep -Ei 'error|exception|timeout|timed out|database|jdbc|liquibase|admin.?api|unauthorized|forbidden|realm|connection refused|connection reset|readiness|liveness' |
+      sed -E 's/((password|token|secret|authorization|client_secret)[=: ]+)[^ ,;\"]+/\1[REDACTED]/Ig; s/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/[EMAIL]/g; s#(postgres(ql)?://)[^/@ ]+:[^/@ ]+@#\1[REDACTED]@#Ig' |
+      cut -c1-500 | tail -n 80 || true
+  else
+    echo "Keycloak deployment not found in microfe-platform."
+  fi
+  echo
+  echo "### Public OIDC endpoint probes (status and latency only; response bodies omitted)"
+  for endpoint in \
+    "https://sso.mrcute.space/realms/master/.well-known/openid-configuration" \
+    "https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration"; do
+    printf '%s ' "$endpoint"
+    curl --silent --show-error --output /dev/null --connect-timeout 5 --max-time 10 \
+      --write-out 'http_code=%{http_code} time_total=%{time_total}s remote_ip=%{remote_ip}\n' \
+      "$endpoint" 2>&1 || true
+  done
 } >"$OUT"
 echo "Wrote $OUT"

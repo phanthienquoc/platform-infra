@@ -3,6 +3,11 @@ name: inspect-vps
 
 on:
   workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - "scripts/inspect-vps.sh"
+      - ".github/workflows/inspect-vps.yml"
   schedule:
     - cron: "15 * * * *"
     - cron: "30 * * * *"
