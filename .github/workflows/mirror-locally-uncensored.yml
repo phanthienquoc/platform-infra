@@ -1,0 +1,35 @@
+name: Mirror locally-uncensored into private repository
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - .github/workflows/mirror-locally-uncensored.yml
+  workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror-locally-uncensored-private
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Mirror all Git refs and history
+        env:
+          MIRROR_TOKEN: ${{ secrets['Platform-infra-token'] }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${MIRROR_TOKEN:-}" || { echo "Missing Platform-infra-token secret"; exit 1; }
+          git clone --mirror https://github.com/phanthienquoc/locally-uncensored.git source.git
+          cd source.git
+          git remote set-url origin "https://x-access-token:${MIRROR_TOKEN}@github.com/phanthienquoc/locally-uncensored-private.git"
+          git push --mirror
