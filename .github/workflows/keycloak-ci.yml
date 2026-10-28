@@ -43,14 +43,16 @@ jobs:
 
           rendered = Path("/tmp/keycloak-rendered.yaml").read_text()
           docs = list(yaml.safe_load_all(rendered))
-          if len(docs) != 4:
-              raise SystemExit(f"Expected 4 resources, got {len(docs)}")
+          if len(docs) != 6:
+              raise SystemExit(f"Expected 6 resources, got {len(docs)}")
           identities = {(item.get("kind"), item.get("metadata", {}).get("name")) for item in docs}
           required = {
               ("Deployment", "keycloak"),
               ("Service", "keycloak"),
               ("Ingress", "keycloak-public"),
               ("Certificate", "keycloak-sso-tls"),
+              ("Middleware", "keycloak-registration-rate-limit"),
+              ("Ingress", "keycloak-registration-rate-limit"),
           }
           if identities != required:
               raise SystemExit(f"Unexpected Keycloak resource set: {identities}")
@@ -69,10 +71,13 @@ jobs:
       - name: Validate self-registration policy contract
         run: |
           set -euo pipefail
-          grep -Fq "dedicated application realm named mrcute" platform/keycloak/README.md
-          grep -Fq "Set email verification to disabled" platform/keycloak/README.md
-          grep -Fq "Do not enable public registration on master" platform/keycloak/README.md
-          echo "No-email self-registration policy is documented; this check does not claim live realm activation."
+          grep -Fq "Self-registration enabled only in" platform/keycloak/README.md
+          grep -Fq "Email verification disabled" platform/keycloak/README.md
+          grep -Fq "realm remains admin-only" platform/keycloak/README.md
+          grep -Fq "rate-limit middleware" platform/keycloak/README.md
+          test -f scripts/provision-keycloak-realm.py
+          python3 -m py_compile scripts/provision-keycloak-realm.py
+          echo "Realm provisioning, registration rate limiting and policy contract passed."
 
       - name: Validate network boundaries
         run: |

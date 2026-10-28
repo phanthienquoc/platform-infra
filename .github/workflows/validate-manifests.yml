@@ -95,16 +95,18 @@ jobs:
 
           rendered = Path("/tmp/keycloak-rendered.yaml").read_text()
           docs = list(yaml.safe_load_all(rendered))
-          if len(docs) != 4:
-              raise SystemExit(f"Expected 4 isolated Keycloak resources, got {len(docs)}")
+          if len(docs) != 6:
+              raise SystemExit(f"Expected 6 isolated Keycloak resources, got {len(docs)}")
           identities = {(item.get("kind"), item.get("metadata", {}).get("name")) for item in docs}
           required = {
               ("Deployment", "keycloak"),
               ("Service", "keycloak"),
               ("Ingress", "keycloak-public"),
               ("Certificate", "keycloak-sso-tls"),
+              ("Middleware", "keycloak-registration-rate-limit"),
+              ("Ingress", "keycloak-registration-rate-limit"),
           }
-          if not required.issubset(identities):
+          if identities != required:
               raise SystemExit(f"Keycloak resource contract mismatch: {identities}")
           deployment = next(item for item in docs if item.get("kind") == "Deployment")
           container = deployment["spec"]["template"]["spec"]["containers"][0]
