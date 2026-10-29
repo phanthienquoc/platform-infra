@@ -3,6 +3,10 @@ name: Keycloak Auth Production Smoke Test
 on:
   workflow_dispatch:
   workflow_call:
+  push:
+    branches: [master]
+    paths:
+      - .github/workflows/keycloak-auth-production-smoke.yml
 
 permissions:
   contents: read
