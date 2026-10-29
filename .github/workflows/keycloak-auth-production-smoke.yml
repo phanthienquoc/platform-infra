@@ -1,0 +1,77 @@
+name: Keycloak Auth Production Smoke Test
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keycloak-auth-production-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke-test:
+    name: Verify public OIDC and Auth endpoints
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify Keycloak OIDC discovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration"
+          body="$(mktemp)"
+          status="$(curl --silent --show-error --location --max-time 20 --output "$body" --write-out '%{http_code}' "$url")"
+          if [[ "$status" != "200" ]]; then
+            echo "::error::OIDC discovery returned HTTP $status"
+            head -c 500 "$body" || true
+            exit 1
+          fi
+          jq -e '
+            .issuer == "https://sso.mrcute.space/realms/mrcute"
+            and (.authorization_endpoint | type == "string")
+            and (.token_endpoint | type == "string")
+            and (.jwks_uri | type == "string")
+          ' "$body" >/dev/null || {
+            echo "::error::OIDC discovery JSON is invalid or issuer/endpoints do not match expected values"
+            exit 1
+          }
+          echo "PASS: OIDC discovery is HTTP 200 and issuer/endpoints are valid."
+
+      - name: Verify Auth health and readiness
+        shell: bash
+        run: |
+          set -euo pipefail
+          for path in health ready; do
+            url="https://auth.mrcute.space/api/$path"
+            body="$(mktemp)"
+            status="$(curl --silent --show-error --location --max-time 15 --output "$body" --write-out '%{http_code}' "$url")"
+            if [[ "$status" != "200" ]]; then
+              echo "::error::Auth /api/$path returned HTTP $status"
+              head -c 500 "$body" || true
+              exit 1
+            fi
+            echo "PASS: Auth /api/$path returned HTTP 200."
+          done
+
+      - name: Verify protected OIDC endpoints reject anonymous requests
+        shell: bash
+        run: |
+          set -euo pipefail
+          for path in me session; do
+            url="https://auth.mrcute.space/api/oidc/$path"
+            body="$(mktemp)"
+            if [[ "$path" == "session" ]]; then
+              status="$(curl --silent --show-error --location --max-time 15 --request POST --output "$body" --write-out '%{http_code}' "$url")"
+            else
+              status="$(curl --silent --show-error --location --max-time 15 --output "$body" --write-out '%{http_code}' "$url")"
+            fi
+            if [[ "$status" != "401" ]]; then
+              echo "::error::Anonymous request to /api/oidc/$path returned HTTP $status; expected 401"
+              head -c 500 "$body" || true
+              exit 1
+            fi
+            echo "PASS: Anonymous request to /api/oidc/$path correctly returned HTTP 401."
+          done
