@@ -8,6 +8,9 @@ on:
       - ".github/workflows/keycloak-ci.yml"
       - ".github/workflows/validate-manifests.yml"
       - "scripts/validate-network-boundaries.sh"
+      - "scripts/provision-keycloak-realm.py"
+      - "scripts/verify-keycloak-tce-client.py"
+      - ".github/workflows/reconcile-vps.yml"
   push:
     branches: [master]
     paths:
@@ -76,8 +79,10 @@ jobs:
           grep -Fq "realm remains admin-only" platform/keycloak/README.md
           grep -Fq "rate-limit middleware" platform/keycloak/README.md
           test -f scripts/provision-keycloak-realm.py
-          python3 -m py_compile scripts/provision-keycloak-realm.py
-          echo "Realm provisioning, registration rate limiting and policy contract passed."
+          python3 -m py_compile scripts/provision-keycloak-realm.py scripts/verify-keycloak-tce-client.py
+          grep -Fq "TCE_CLIENT_ID =" scripts/provision-keycloak-realm.py
+          grep -Fq "python3 scripts/verify-keycloak-tce-client.py" .github/workflows/reconcile-vps.yml
+          echo "Realm/client provisioning, OIDC verification, registration rate limiting and policy contract passed."
 
       - name: Validate network boundaries
         run: |
