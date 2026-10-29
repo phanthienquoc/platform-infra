@@ -1,0 +1,64 @@
+# yamllint disable rule:line-length
+name: Provision TCE OIDC client
+
+"on":
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - ".github/workflows/provision-keycloak-tce-client.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: provision-tce-oidc-client
+  cancel-in-progress: false
+
+jobs:
+  provision:
+    if: github.ref == 'refs/heads/master'
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    environment: production
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Provision realm/client and verify TCE OIDC contract
+        env:
+          KEYCLOAK_ADMIN_USERNAME: ${{ secrets.KEYCLOAK_ADMIN_USERNAME }}
+          KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          test -n "${KEYCLOAK_ADMIN_USERNAME:-}" || { echo "::error::Missing production secret KEYCLOAK_ADMIN_USERNAME."; exit 1; }
+          test -n "${KEYCLOAK_ADMIN_PASSWORD:-}" || { echo "::error::Missing production secret KEYCLOAK_ADMIN_PASSWORD."; exit 1; }
+          python3 -m py_compile scripts/provision-keycloak-realm.py scripts/verify-keycloak-tce-client.py
+          python3 scripts/provision-keycloak-realm.py
+          python3 scripts/verify-keycloak-tce-client.py
+          unset KEYCLOAK_ADMIN_USERNAME KEYCLOAK_ADMIN_PASSWORD
+
+      - name: Verify public realm OIDC discovery
+        run: |
+          set -euo pipefail
+          response="$(mktemp)"
+          trap 'rm -f "$response"' EXIT
+          curl --fail --silent --show-error --max-time 15 \
+            https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration -o "$response"
+          python3 - "$response" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          data = json.loads(Path(sys.argv[1]).read_text())
+          if data.get("issuer") != "https://sso.mrcute.space/realms/mrcute":
+              raise SystemExit("OIDC discovery returned an unexpected realm issuer.")
+          for endpoint in ("authorization_endpoint", "token_endpoint", "jwks_uri", "end_session_endpoint"):
+              if not data.get(endpoint):
+                  raise SystemExit(f"OIDC discovery is missing {endpoint}.")
+          print("Public mrcute OIDC discovery passed.")
+          PY
