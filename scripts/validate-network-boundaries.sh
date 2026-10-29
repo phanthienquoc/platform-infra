@@ -25,6 +25,7 @@ admin.mrcute.space
 api.mrcute.space
 media.mrcute.space
 auth.mrcute.space
+sso.mrcute.space
 app.mrcute.space
 ws.mrcute.space
 '
