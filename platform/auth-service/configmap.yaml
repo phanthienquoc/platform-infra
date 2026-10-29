@@ -14,3 +14,10 @@ data:
   PASSKEY_RP_ID: "mrcute.space"
   PASSKEY_RP_NAME: "MRCute"
   PASSKEY_ORIGIN: "https://auth.mrcute.space"
+  # Keycloak token validation for the additive OIDC session-exchange endpoint.
+  # TCE frontend remains on legacy auth until end-to-end acceptance gates pass.
+  KEYCLOAK_URL: "https://sso.mrcute.space"
+  KEYCLOAK_REALM: "mrcute"
+  KEYCLOAK_ISSUER: "https://sso.mrcute.space/realms/mrcute"
+  KEYCLOAK_AUDIENCE: "nest-api"
+  KEYCLOAK_TCE_CLIENT_ID: "tce-dashboard"
