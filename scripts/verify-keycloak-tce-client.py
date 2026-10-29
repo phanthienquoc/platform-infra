@@ -14,6 +14,8 @@ REALM = "mrcute"
 CLIENT_ID = "tce-dashboard"
 CALLBACK = "https://tce.mrcute.space/auth/callback"
 ORIGIN = "https://tce.mrcute.space"
+LOGOUT_REDIRECT = "https://tce.mrcute.space/login"
+API_AUDIENCE_SCOPE = "nest-api-audience"
 
 
 def fail(message):
@@ -63,14 +65,42 @@ def main():
     redirects = client.get("redirectUris") or []
     origins = client.get("webOrigins") or []
     attributes = client.get("attributes") or {}
+    _, scopes = request(
+        f"{BASE_URL}/admin/realms/{REALM}/clients/{client['id']}/default-client-scopes",
+        token=token,
+    )
+    audience_scope = next(
+        (scope for scope in (scopes or []) if scope.get("name") == API_AUDIENCE_SCOPE),
+        None,
+    )
+    scope_id = audience_scope.get("id") if audience_scope else None
+    mapper_ok = False
+    if scope_id:
+        mappers = request(
+            f"{BASE_URL}/admin/realms/{REALM}/client-scopes/{scope_id}/protocol-mappers/models",
+            token=token,
+        )
+        mapper_ok = any(
+            mapper.get("protocolMapper") == "oidc-audience-mapper"
+            and mapper.get("config", {}).get("included.client.audience") == "nest-api"
+            and mapper.get("config", {}).get("access.token.claim") == "true"
+            and mapper.get("config", {}).get("id.token.claim") == "false"
+            for mapper in (mappers or [])
+        )
     checks = {
         "client_present": client.get("clientId") == CLIENT_ID,
+        "client_enabled": client.get("enabled") is True,
         "public_client": client.get("publicClient") is True,
         "standard_flow_enabled": client.get("standardFlowEnabled") is True,
+        "implicit_flow_disabled": client.get("implicitFlowEnabled") is False,
         "direct_grants_disabled": client.get("directAccessGrantsEnabled") is False,
-        "callback_allowed": CALLBACK in redirects or "https://tce.mrcute.space/*" in redirects,
-        "web_origin_allowed": ORIGIN in origins or "+" in origins,
+        "service_accounts_disabled": client.get("serviceAccountsEnabled") is False,
+        "exact_callback": redirects == [CALLBACK],
+        "exact_web_origin": origins == [ORIGIN],
         "pkce_s256": attributes.get("pkce.code.challenge.method") == "S256",
+        "exact_post_logout_redirect": attributes.get("post.logout.redirect.uris") == LOGOUT_REDIRECT,
+        "api_audience_scope_assigned": audience_scope is not None,
+        "api_audience_mapper": mapper_ok,
     }
     for name, passed in checks.items():
         print(f"{name}={'true' if passed else 'false'}")
