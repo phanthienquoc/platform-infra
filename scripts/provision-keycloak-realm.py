@@ -137,6 +137,7 @@ def ensure_tce_client(token):
         "name": "TCE Dashboard",
         "enabled": True,
         "protocol": "openid-connect",
+        "clientAuthenticatorType": "client-secret",
         "publicClient": True,
         "standardFlowEnabled": True,
         "implicitFlowEnabled": False,
