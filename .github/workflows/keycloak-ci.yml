@@ -18,6 +18,9 @@ on:
       - ".github/workflows/keycloak-ci.yml"
       - ".github/workflows/validate-manifests.yml"
       - "scripts/validate-network-boundaries.sh"
+      - "scripts/provision-keycloak-realm.py"
+      - "scripts/verify-keycloak-tce-client.py"
+      - ".github/workflows/reconcile-vps.yml"
   workflow_dispatch:
 
 permissions:
