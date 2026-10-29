@@ -1,11 +1,19 @@
 # Platform Infra Copilot Adoption Roadmap
 
+Operating guide: `/home/runner/work/platform-infra/platform-infra/.github/agentic/README.md`
+
 ## Phase 1 — Instruction compatibility and low-risk proof
 - Merge and inspect the guidance PR.
-- Confirm the target Copilot client discovers repository-wide and path-scoped instructions plus Planner/Developer/Reviewer agents.
+- Confirm the target Copilot client discovers repository-wide and path-scoped instructions plus Planner/Developer/Validation/Reviewer roles.
 - Run a documentation-only task through the full role sequence.
 - Verify branch isolation, honest validation reporting, diff review, and PR creation.
 - Do not make production changes during the proof.
+
+### Phase 1 measurable exit criteria
+- At least one documentation-only PR is completed using all four roles: Planner, Developer, Validation, and Reviewer.
+- The Validation evidence in that PR explicitly classifies each attempted or skipped check as **PASS**, **FAIL**, **BLOCKED**, or **NOT RUN**.
+- The PR includes command-level evidence for branch isolation (`git status --branch`), full diff inspection, and `git diff --check` execution result (or a documented BLOCKED reason).
+- The PR links both this roadmap and the operating guide to confirm the role model and evidence vocabulary in use.
 
 ## Phase 2 — Safe PR assistance
 - Use Planner -> Developer -> Validation -> Reviewer on manifest, documentation, and offline-validator changes.
