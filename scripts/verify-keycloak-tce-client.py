@@ -65,7 +65,7 @@ def main():
     redirects = client.get("redirectUris") or []
     origins = client.get("webOrigins") or []
     attributes = client.get("attributes") or {}
-    _, scopes = request(
+    scopes = request(
         f"{BASE_URL}/admin/realms/{REALM}/clients/{client['id']}/default-client-scopes",
         token=token,
     )
