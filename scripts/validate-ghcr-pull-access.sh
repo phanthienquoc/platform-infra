@@ -55,7 +55,9 @@ for package in "${all_packages[@]}"; do
       [[ "$package" == phanthienquoc/microfe-* ]] && include=1
       ;;
   esac
-  [ "$include" -eq 1 ] && packages+=("$package")
+  if [ "$include" -eq 1 ]; then
+    packages+=("$package")
+  fi
 done
 
 if [ "${#packages[@]}" -eq 0 ]; then
