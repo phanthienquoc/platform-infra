@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-10-30 17:04 UTC
+Last reviewed: 2026-10-30 18:13 UTC
 Reference contract: [Generic Production Release Pattern (WF-03)](GENERIC-WF03-RELEASE-PATTERN.md)
 
 ## Target operating model
@@ -124,8 +124,9 @@ Disposition meanings:
 - [x] Merge Media PR #61 (`708f893`) after exact-head CI passed backend tests, typecheck, and frontend/backend build; it adds a master-only release gate and push/PR CI.
 - [x] Merge StockDividend PR #11 (`982657b`) after all four exact-head CI jobs passed; workflow/docs-only pushes no longer trigger production image builds.
 - [x] Merge Media PR #62 (`b445f71`) after both exact-head CI runs passed; workflow/docs-only pushes no longer trigger automatic production releases.
-- [x] Verify pre-guard StockDividend build `41086093700` completed, but promotion `41087133466` failed because `PLATFORM_INFRA_TOKEN` was empty; no GitOps rollout was triggered.
-- [ ] Configure/verify `PLATFORM_INFRA_TOKEN` in StockDividend, then rerun promotion; Media promotion remains blocked by GHCR access denial.
+- [x] Verify StockDividend image publication completed; promotion run `41087133466` attempt 2 (18:13 UTC) again showed an empty `PLATFORM_INFRA_TOKEN`, so no `repository_dispatch` was sent and no GitOps rollout was triggered.
+- [ ] Add/verify a **repository-level Actions secret** `PLATFORM_INFRA_TOKEN` in StockDividend (`wf-platform-infra-release.yml` does not bind an Environment), with `Contents: write` on `phanthienquoc/platform-infra`; rerun the handoff. Media promotion remains blocked by GHCR access denial.
 - [x] Harden automatic GitOps promotion merges: manual dispatch is master-only, missing required checks fail closed, both promotion paths re-check the exact PR head, and squash merge uses `--match-head-commit`; failed merge no longer updates the branch and retries without revalidation.
+- [ ] Validate PR #839's GHCR preflight improvement on its exact head; the package check now probes Registry V2 `tags/list` after token issuance, then rerun promotion only after the production credential is repaired.
 - [ ] Review any workflow marked REVIEW using recent run evidence and consumers before deleting it.
 - [ ] Continue hourly tracking; do not alter TCE market-scan scheduling.
