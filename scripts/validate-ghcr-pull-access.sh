@@ -4,6 +4,14 @@ set -euo pipefail
 TARGET_APP="${TARGET_APP:-all}"
 GHCR_USERNAME="${GHCR_USERNAME:-}"
 GHCR_TOKEN="${GHCR_TOKEN:-}"
+# curl config must not be split by a copied secret line ending. Command substitution strips
+# trailing LF; remove a trailing CR as well, then reject any embedded whitespace or quotes.
+GHCR_TOKEN="$(printf '%s' "$GHCR_TOKEN" | sed 's/\r$//')"
+if [[ "$GHCR_TOKEN" == *[[:space:]]* || "$GHCR_TOKEN" == *'"'* ]]; then
+  echo "::error::GHCR_READ_TOKEN contains embedded whitespace or quotes; store the token value only, without surrounding quotes or line breaks." >&2
+  exit 1
+fi
+
 
 if [[ -z "$GHCR_USERNAME" || -z "$GHCR_TOKEN" ]]; then
   echo "::error::GHCR_USERNAME and GHCR_READ_TOKEN are required for pull-access preflight." >&2
