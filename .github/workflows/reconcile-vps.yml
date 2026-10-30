@@ -43,6 +43,8 @@ name: reconcile-vps
       - platform/microfe/**
       - scripts/reconcile-vps.sh
       - scripts/guard-reconcile-images.sh
+      - scripts/validate-ghcr-pull-access.sh
+      - scripts/verify-workload-health.sh
 
 permissions:
   contents: read
