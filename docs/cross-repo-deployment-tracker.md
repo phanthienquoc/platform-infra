@@ -126,5 +126,6 @@ Disposition meanings:
 - [x] Merge Media PR #62 (`b445f71`) after both exact-head CI runs passed; workflow/docs-only pushes no longer trigger automatic production releases.
 - [x] Verify pre-guard StockDividend build `41086093700` completed, but promotion `41087133466` failed because `PLATFORM_INFRA_TOKEN` was empty; no GitOps rollout was triggered.
 - [ ] Configure/verify `PLATFORM_INFRA_TOKEN` in StockDividend, then rerun promotion; Media promotion remains blocked by GHCR access denial.
+- [x] Harden automatic GitOps promotion merges: manual dispatch is master-only, missing required checks fail closed, both promotion paths re-check the exact PR head, and squash merge uses `--match-head-commit`; failed merge no longer updates the branch and retries without revalidation.
 - [ ] Review any workflow marked REVIEW using recent run evidence and consumers before deleting it.
 - [ ] Continue hourly tracking; do not alter TCE market-scan scheduling.
