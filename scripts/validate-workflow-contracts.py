@@ -123,11 +123,22 @@ if "secrets.GHCR_READ_TOKEN || github.token" in promotion:
 if promotion.count("GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}") < 2:
     fail("Both GitOps promotion paths must use canonical GHCR_READ_TOKEN.")
 
-# Promotion must validate package-level pull authorization before Docker login or GitOps mutation.
+# Promotion must validate package-level authorization and the exact immutable tag/digest before GitOps mutation.
 if 'TARGET_APP=microfe GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" bash scripts/validate-ghcr-pull-access.sh' not in promotion:
     fail("MicroFE promotion must validate GHCR package pull access before registry login.")
 if 'TARGET_APP="$APP" GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" bash scripts/validate-ghcr-pull-access.sh' not in promotion:
     fail("Application promotion must validate GHCR package pull access before registry login.")
+
+# Docker's registry-wide login endpoint can be denied even when scoped package reads work.
+# Verify the exact tag/digest directly with a package-scoped Registry V2 bearer token instead.
+if "docker login ghcr.io" in promotion or "docker manifest inspect" in promotion:
+    fail("Promotion must not depend on registry-wide Docker login for private GHCR reads.")
+if 'GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$image" bash scripts/validate-ghcr-image-reference.sh' not in promotion:
+    fail("MicroFE promotion must verify each exact immutable image digest through Registry V2.")
+if 'GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$IMAGE" bash scripts/validate-ghcr-image-reference.sh' not in promotion:
+    fail("Application promotion must verify the exact immutable tag through Registry V2.")
+if "github.event.action || github.event_name" not in promotion:
+    fail("GitOps promotion run names must identify dispatch events that omit app/component fields.")
 
 # The canonical GHCR credential is stored in the protected production Environment.
 # Every job that consumes it must bind that Environment or the secret resolves empty.
