@@ -25,11 +25,11 @@ esac
 
 mapfile -t all_packages < <(
   {
-    grep -hE '^[[:space:]]*name:[[:space:]]*ghcr\.io/' apps/*/overlays/prod/kustomization.yaml platform/auth-service/kustomization.yaml 2>/dev/null || true
+    grep -hE '^[[:space:]]*(-[[:space:]]*)?name:[[:space:]]*ghcr\.io/' apps/*/overlays/prod/kustomization.yaml platform/auth-service/kustomization.yaml 2>/dev/null || true
     find platform/microfe -type f \( -name '*.yaml' -o -name '*.yml' \) -print0 |
       xargs -0 -r grep -hE '^[[:space:]]*image:[[:space:]]*ghcr\.io/' || true
   } |
-    sed -E 's/^[[:space:]]*(name:|image:)[[:space:]]*ghcr\.io\///; s/[[:space:]]*$//' |
+    sed -E 's/^[[:space:]]*(-[[:space:]]*)?(name:|image:)[[:space:]]*ghcr\.io\///; s/[[:space:]]*$//' |
     sed -E 's/:([^/:]+)$//' |
     sort -u
 )
