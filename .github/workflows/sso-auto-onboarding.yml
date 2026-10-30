@@ -1,0 +1,114 @@
+# yamllint disable rule:line-length
+name: SSO auto-onboarding
+
+on:
+  pull_request:
+    paths:
+      - "config/sso/apps/**"
+      - "scripts/validate-sso-registry.py"
+      - "scripts/reconcile-keycloak-client.py"
+      - ".github/workflows/sso-auto-onboarding.yml"
+  push:
+    branches: [master]
+    paths:
+      - "config/sso/apps/**"
+      - "scripts/validate-sso-registry.py"
+      - "scripts/reconcile-keycloak-client.py"
+      - ".github/workflows/sso-auto-onboarding.yml"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Validate only, or apply one selected manifest"
+        type: choice
+        required: true
+        default: validate
+        options: [validate, apply]
+      app_id:
+        description: "Manifest ID to apply for manual runs (for example tce-dashboard)"
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sso-auto-onboarding
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate SSO registry and changed manifests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      changed_manifests: ${{ steps.changed.outputs.files }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate registry
+        run: python3 scripts/validate-sso-registry.py
+      - name: Validate every manifest with read-only preview
+        run: |
+          set -euo pipefail
+          for manifest in config/sso/apps/*.json; do
+            python3 scripts/reconcile-keycloak-client.py --manifest "$manifest" --dry-run >/dev/null
+          done
+      - name: Identify changed manifests
+        id: changed
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_BEFORE: ${{ github.event.before }}
+          EVENT_AFTER: ${{ github.sha }}
+          INPUT_APP_ID: ${{ inputs.app_id }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            if [[ -n "$INPUT_APP_ID" ]]; then
+              test -f "config/sso/apps/$INPUT_APP_ID.json" || { echo "::error::Manifest not found."; exit 1; }
+              printf 'files=%s\n' "config/sso/apps/$INPUT_APP_ID.json" >> "$GITHUB_OUTPUT"
+            else
+              printf 'files=%s\n' "" >> "$GITHUB_OUTPUT"
+            fi
+          elif [[ "$EVENT_NAME" == "push" && "$EVENT_BEFORE" != "0000000000000000000000000000000000000000" ]]; then
+            files="$(git diff --name-only "$EVENT_BEFORE" "$EVENT_AFTER" -- 'config/sso/apps/*.json' | while IFS= read -r path; do [[ -f "$path" ]] && printf '%s\n' "$path"; done | paste -sd ' ' -)"
+            printf 'files=%s\n' "$files" >> "$GITHUB_OUTPUT"
+          elif [[ "$EVENT_NAME" == "push" ]]; then
+            printf 'files=%s\n' "$(find config/sso/apps -maxdepth 1 -type f -name '*.json' -print | sort | paste -sd ' ' -)" >> "$GITHUB_OUTPUT"
+          else
+            printf 'files=%s\n' "" >> "$GITHUB_OUTPUT"
+          fi
+
+  apply:
+    name: Reconcile approved Keycloak client manifests
+    needs: validate
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/master' && needs.validate.outputs.changed_manifests != '') || (github.event_name == 'workflow_dispatch' && inputs.mode == 'apply' && inputs.app_id != '')
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    environment: production
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Reconcile changed manifests
+        env:
+          KEYCLOAK_ADMIN_USERNAME: ${{ secrets.KEYCLOAK_ADMIN_USERNAME }}
+          KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
+          MANIFESTS: ${{ needs.validate.outputs.changed_manifests }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          test -n "${KEYCLOAK_ADMIN_USERNAME:-}" || { echo "::error::Missing production secret KEYCLOAK_ADMIN_USERNAME."; exit 1; }
+          test -n "${KEYCLOAK_ADMIN_PASSWORD:-}" || { echo "::error::Missing production secret KEYCLOAK_ADMIN_PASSWORD."; exit 1; }
+          read -r -a manifests <<< "$MANIFESTS"
+          test "${#manifests[@]}" -gt 0 || { echo "::error::No manifests selected for apply."; exit 1; }
+          for manifest in "${manifests[@]}"; do
+            case "$manifest" in config/sso/apps/*.json) ;; *) echo "::error::Rejected unexpected manifest path."; exit 1 ;; esac
+            test -f "$manifest" || { echo "::error::Manifest does not exist: $manifest"; exit 1; }
+            python3 scripts/reconcile-keycloak-client.py --manifest "$manifest"
+          done
+          unset KEYCLOAK_ADMIN_USERNAME KEYCLOAK_ADMIN_PASSWORD
