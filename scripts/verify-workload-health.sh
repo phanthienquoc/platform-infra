@@ -26,7 +26,13 @@ case "$TARGET_APP" in
     ;;
 esac
 
-kubectl_bin=(sudo /usr/local/sbin/platform-kubectl)
+if [[ -n "${HEALTH_GATE_KUBECTL_BIN:-}" ]]; then
+  # Test seam for deterministic offline health-gate tests; production uses the allowlisted sudo wrapper.
+  kubectl_bin=("$HEALTH_GATE_KUBECTL_BIN")
+else
+  kubectl_bin=(sudo /usr/local/sbin/platform-kubectl)
+fi
+
 failed=0
 label_selector=""
 
@@ -43,9 +49,9 @@ for namespace in "${namespaces[@]}"; do
   echo "Checking workload health in namespace: $namespace"
 
   if [ -n "$label_selector" ]; then
-    rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -l "$label_selector" -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.metadata.deletionTimestamp}{"\t"}{.status.phase}{"\t"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{" "}{end}{"\n"}{end}')"
+    rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -l "$label_selector" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"|"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{" "}{end}{"\n"}{end}')"
   else
-    rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.metadata.deletionTimestamp}{"\t"}{.status.phase}{"\t"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{" "}{end}{"\n"}{end}')"
+    rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"|"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{" "}{end}{"\n"}{end}')"
   fi
 
   if [ -z "$rows" ]; then
@@ -54,7 +60,8 @@ for namespace in "${namespaces[@]}"; do
     continue
   fi
 
-  while IFS=$'\t' read -r pod deletion_timestamp phase containers; do
+  active_pods=0
+  while IFS='|' read -r pod deletion_timestamp phase containers; do
     [ -n "$pod" ] || continue
 
     if [ -n "$deletion_timestamp" ]; then
@@ -65,6 +72,8 @@ for namespace in "${namespaces[@]}"; do
     if [ "$phase" = "Succeeded" ]; then
       continue
     fi
+
+    active_pods=$((active_pods + 1))
 
     if [ "$phase" != "Running" ]; then
       echo "::error::Pod $namespace/$pod is not Running (phase=$phase)." >&2
@@ -82,6 +91,48 @@ for namespace in "${namespaces[@]}"; do
       failed=1
     fi
   done <<< "$rows"
+
+  if [ "$active_pods" -eq 0 ]; then
+    echo "::error::No non-terminating workload pods found in namespace $namespace for target $TARGET_APP." >&2
+    failed=1
+  fi
+
+  if [ -n "$label_selector" ]; then
+    deployment_rows="$("${kubectl_bin[@]}" get deployments -n "$namespace" -l "$label_selector" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.spec.replicas}{"|"}{.status.readyReplicas}{"|"}{.status.updatedReplicas}{"\n"}{end}')"
+  else
+    deployment_rows="$("${kubectl_bin[@]}" get deployments -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.spec.replicas}{"|"}{.status.readyReplicas}{"|"}{.status.updatedReplicas}{"\n"}{end}')"
+  fi
+
+  if [ -z "$deployment_rows" ]; then
+    echo "::error::No deployments found in namespace $namespace for target $TARGET_APP." >&2
+    failed=1
+    continue
+  fi
+
+  deployment_count=0
+  while IFS='|' read -r deployment desired ready updated; do
+    [ -n "$deployment" ] || continue
+    deployment_count=$((deployment_count + 1))
+    desired="${desired:-1}"
+    ready="${ready:-0}"
+    updated="${updated:-0}"
+
+    if ! [[ "$desired" =~ ^[0-9]+$ && "$ready" =~ ^[0-9]+$ && "$updated" =~ ^[0-9]+$ ]]; then
+      echo "::error::Deployment $namespace/$deployment returned invalid replica counts." >&2
+      failed=1
+      continue
+    fi
+
+    if [ "$desired" -gt 0 ] && { [ "$ready" -lt "$desired" ] || [ "$updated" -lt "$desired" ]; }; then
+      echo "::error::Deployment $namespace/$deployment is not fully ready (desired=$desired ready=$ready updated=$updated)." >&2
+      failed=1
+    fi
+  done <<< "$deployment_rows"
+
+  if [ "$deployment_count" -eq 0 ]; then
+    echo "::error::No deployment records found in namespace $namespace for target $TARGET_APP." >&2
+    failed=1
+  fi
 done
 
 if [ "$failed" -ne 0 ] && { [ "$TARGET_APP" = "media-generation" ] || [ "$TARGET_APP" = "all" ]; }; then
