@@ -30,13 +30,13 @@ case "$resource" in
   pods)
     case "$HEALTH_GATE_TEST_SCENARIO" in
       healthy)
-        printf 'pod-1\t\tRunning\ttrue:: \n'
+        printf 'pod-1||Running|true:: \n'
         ;;
       terminating-only)
-        printf 'pod-1\t2026-10-30T13:00:00Z\tRunning\ttrue:: \n'
+        printf 'pod-1|2026-10-30T13:00:00Z|Running|true:: \n'
         ;;
       image-pull)
-        printf 'pod-1\t\tPending\tfalse:ImagePullBackOff: \n'
+        printf 'pod-1||Pending|false:ImagePullBackOff: \n'
         ;;
       no-pods)
         exit 0
@@ -49,10 +49,10 @@ case "$resource" in
   deployments)
     case "$HEALTH_GATE_TEST_SCENARIO" in
       healthy)
-        printf 'stock-admin\t1\t1\t1\n'
+        printf 'stock-admin|1|1|1\n'
         ;;
       terminating-only|image-pull|no-pods)
-        printf 'stock-admin\t1\t0\t0\n'
+        printf 'stock-admin|1|0|0\n'
         ;;
       *)
         exit 3
