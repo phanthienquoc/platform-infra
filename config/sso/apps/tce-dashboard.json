@@ -1,0 +1,17 @@
+{
+  "app_id": "tce-dashboard",
+  "repository": "phanthienquoc/TCE-dashboard",
+  "enabled": true,
+  "client_id": "tce-dashboard",
+  "client_type": "public-pkce",
+  "redirect_uris": [
+    "https://tce.mrcute.space/auth/callback"
+  ],
+  "web_origins": [
+    "https://tce.mrcute.space"
+  ],
+  "post_logout_redirect_uris": [
+    "https://tce.mrcute.space/login"
+  ],
+  "api_audience": "nest-api"
+}
