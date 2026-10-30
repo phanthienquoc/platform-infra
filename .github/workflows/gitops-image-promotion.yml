@@ -185,6 +185,11 @@ jobs:
           state="PENDING"
           for attempt in $(seq 1 30); do
             required="$(gh pr checks "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --required --json state 2>/dev/null || printf '[]')"
+            current_required_count="$(printf '%s' "$required" | jq 'length')"
+            if [ "$current_required_count" -eq 0 ]; then
+              echo '::error::Required MicroFE promotion checks disappeared or could not be queried; refusing to merge.'
+              exit 1
+            fi
             state="$(printf '%s' "$required" | jq -r 'if any(.[]; .state == "FAILURE" or .state == "ERROR") then "FAILURE" elif all(.[]; .state == "SUCCESS") then "SUCCESS" else "PENDING" end')"
             case "$state" in
               SUCCESS) break ;;
@@ -612,6 +617,11 @@ jobs:
           state="PENDING"
           for attempt in $(seq 1 30); do
             required="$(gh pr checks "$PR_NUMBER" --repo "$REPO" --required --json state 2>/dev/null || printf '[]')"
+            current_required_count="$(printf '%s' "$required" | jq 'length')"
+            if [ "$current_required_count" -eq 0 ]; then
+              echo "::error::Required promotion checks disappeared or could not be queried; refusing to merge."
+              exit 1
+            fi
             state="$(printf '%s' "$required" | jq -r '
               if any(.[]; .state == "FAILURE" or .state == "ERROR") then "FAILURE"
               elif all(.[]; .state == "SUCCESS") then "SUCCESS"
