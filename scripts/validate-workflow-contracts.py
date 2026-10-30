@@ -101,6 +101,12 @@ if "secrets.GHCR_READ_TOKEN || github.token" in promotion:
 if promotion.count("GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}") < 2:
     fail("Both GitOps promotion paths must use canonical GHCR_READ_TOKEN.")
 
+# Promotion must validate package-level pull authorization before Docker login or GitOps mutation.
+if 'TARGET_APP=microfe GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" bash scripts/validate-ghcr-pull-access.sh' not in promotion:
+    fail("MicroFE promotion must validate GHCR package pull access before registry login.")
+if 'TARGET_APP="$APP" GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" bash scripts/validate-ghcr-pull-access.sh' not in promotion:
+    fail("Application promotion must validate GHCR package pull access before registry login.")
+
 # The canonical GHCR credential is stored in the protected production Environment.
 # Every job that consumes it must bind that Environment or the secret resolves empty.
 promotion_lines = promotion.splitlines()
