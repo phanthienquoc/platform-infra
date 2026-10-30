@@ -425,6 +425,10 @@ jobs:
             IMAGE="ghcr.io/phanthienquoc/${APP}/${COMPONENT}:${TAG}"
           fi
           echo "Validating $IMAGE"
+          if [[ -z "$GHCR_USERNAME" || -z "$GHCR_TOKEN" ]]; then
+            echo "::error::Configure GHCR_READ_TOKEN with read:packages access to the promoted private images."
+            exit 1
+          fi
 
           printf '%s' "$GHCR_TOKEN" |
             docker login ghcr.io --username "$GHCR_USERNAME" --password-stdin
