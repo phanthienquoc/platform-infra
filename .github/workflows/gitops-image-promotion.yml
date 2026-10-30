@@ -86,9 +86,17 @@ jobs:
             echo "::error::Configure GHCR_READ_TOKEN with read:packages access to the promoted private images."
             exit 1
           fi
-          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GHCR_USERNAME" --password-stdin
-          docker manifest inspect "ghcr.io/phanthienquoc/microfe-shell@$SHELL_DIGEST" >/dev/null
-          docker manifest inspect "ghcr.io/phanthienquoc/microfe-ws@$WS_DIGEST" >/dev/null
+          if ! printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GHCR_USERNAME" --password-stdin; then
+            echo "::error title=GHCR authentication rejected::GHCR_READ_TOKEN is present but GHCR rejected authentication. Use a classic PAT owned by GHCR_USERNAME with read:packages; grant that account access to each private package and authorize SSO if required. Confirm GHCR_USERNAME is the PAT owner's login. No GitOps mutation was made."
+            exit 1
+          fi
+          for image in "ghcr.io/phanthienquoc/microfe-shell@$SHELL_DIGEST" "ghcr.io/phanthienquoc/microfe-ws@$WS_DIGEST"; do
+            if ! docker manifest inspect "$image" >/dev/null; then
+              echo "::error title=GHCR image access denied::Registry login succeeded but an expected immutable MicroFE image manifest could not be read. Verify package-level read access and the exact published digest. No GitOps mutation was made."
+              exit 1
+            fi
+          done
+          echo "Validated both immutable MicroFE image manifests."
           docker logout ghcr.io >/dev/null 2>&1 || true
 
       - name: Update MicroFE Kustomize image digests
@@ -432,10 +440,16 @@ jobs:
             exit 1
           fi
 
-          printf '%s' "$GHCR_TOKEN" |
-            docker login ghcr.io --username "$GHCR_USERNAME" --password-stdin
+          if ! printf '%s' "$GHCR_TOKEN" |
+            docker login ghcr.io --username "$GHCR_USERNAME" --password-stdin; then
+            echo "::error title=GHCR authentication rejected::GHCR_READ_TOKEN is present but GHCR rejected authentication. Use a classic PAT owned by GHCR_USERNAME with read:packages; grant that account access to each private package and authorize SSO if required. Confirm GHCR_USERNAME is the PAT owner's login. No GitOps mutation was made."
+            exit 1
+          fi
 
-          docker manifest inspect "$IMAGE" >/dev/null
+          if ! docker manifest inspect "$IMAGE" >/dev/null; then
+            echo "::error title=GHCR image access denied::Registry login succeeded but the expected image manifest could not be read. Verify package-level read access and that the immutable tag exists. No GitOps mutation was made."
+            exit 1
+          fi
           echo "Validated GHCR image manifest: $IMAGE"
 
           docker logout ghcr.io >/dev/null 2>&1 || true
