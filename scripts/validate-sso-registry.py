@@ -70,6 +70,8 @@ def load_manifest(path):
             fail(f"{path}: {field} contains duplicates")
         for value in values:
             validate_url(value, field, allow_path=(field != "web_origins"))
+    if len(data["post_logout_redirect_uris"]) != 1:
+        fail(f"{path}: exactly one post-logout redirect is supported per client")
     if any(urlsplit(value).path not in ("", "/") for value in data["web_origins"]):
         fail(f"{path}: web_origins entries must be origins without paths")
     callback_hosts = {urlsplit(value).hostname for value in data["redirect_uris"]}
