@@ -60,8 +60,10 @@ jobs:
           fi
           shellcheck "${scripts[@]}"
 
-      - name: Run workload health gate regression tests
-        run: bash scripts/tests/verify-workload-health.test.sh
+      - name: Run ops regression tests
+        run: |
+          bash scripts/tests/verify-workload-health.test.sh
+          bash scripts/tests/validate-ghcr-pull-access.test.sh
 
       - name: Run workflow contract checks
         run: python3 scripts/validate-workflow-contracts.py
