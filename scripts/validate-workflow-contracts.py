@@ -43,6 +43,19 @@ if promotion.count("steps.validate-pr-checks.outputs.head_sha") < 2 or promotion
 if 'gh pr update-branch "$PR_NUMBER"' in promotion:
     fail("Promotion must not update a PR branch after checks and then merge without revalidation.")
 
+# Promotion PR workflows must run under a credential that triggers PR checks; GITHUB_TOKEN can suppress them.
+if promotion.count("token: ${{ secrets.PLATFORM_INFRA_AUTOMATION_TOKEN }}") < 2:
+    fail("Both promotion PR creation paths must use PLATFORM_INFRA_AUTOMATION_TOKEN so required PR checks can run.")
+if promotion.count("GH_TOKEN: ${{ secrets.PLATFORM_INFRA_AUTOMATION_TOKEN }}") < 4:
+    fail("Both promotion paths must use PLATFORM_INFRA_AUTOMATION_TOKEN to read required checks and merge the verified head.")
+if promotion.count("name: Require GitOps PR automation token") < 2:
+    fail("Both promotion paths must fail clearly before PR creation when PLATFORM_INFRA_AUTOMATION_TOKEN is missing.")
+if "checks: read" not in promotion or "statuses: read" not in promotion:
+    fail("Promotion workflow must have read access to GitHub check runs and commit statuses.")
+credentials = (ROOT / "docs" / "credentials-key.md").read_text(encoding="utf-8")
+if "`PLATFORM_INFRA_AUTOMATION_TOKEN`" not in credentials:
+    fail("credentials-key.md must document PLATFORM_INFRA_AUTOMATION_TOKEN and its required permissions.")
+
 # MicroFE digest promotions must use the shared GitOps promotion workflow.
 if "microfe-images-published" not in promotion:
     fail("gitops-image-promotion.yml must consume microfe-images-published.")
@@ -175,5 +188,21 @@ for namespace in ("microfe-platform", "stock-prod", "tce-prod", "media-prod"):
         fail(f"GHCR pull reconciliation is missing production namespace: {namespace}")
 if 'patch deployment "$deployment"' not in bootstrap_script or 'imagePullSecrets' not in bootstrap_script:
     fail("GHCR pull reconciliation must normalize GHCR workload imagePullSecrets.")
+
+# Deployment tracker structural contract: keep all five repositories and action section present.
+tracker = (ROOT / "docs" / "cross-repo-deployment-tracker.md").read_text(encoding="utf-8")
+if not tracker.startswith("# Cross-Repository Production Deployment Tracker"):
+    fail("Cross-repo deployment tracker title is missing.")
+if "Last reviewed:" not in tracker or "## Repository readiness" not in tracker or "## Current actions" not in tracker:
+    fail("Cross-repo deployment tracker must retain its review date, readiness table, and current actions.")
+for repository in (
+    "phanthienquoc/platform-infra",
+    "phanthienquoc/TCE-dashboard",
+    "phanthienquoc/stockdividend",
+    "phanthienquoc/media-generation",
+    "phanthienquoc/phanthienquoc-authentication",
+):
+    if repository not in tracker:
+        fail(f"Cross-repo deployment tracker is missing repository: {repository}")
 
 print("Workflow contract validation passed.")
