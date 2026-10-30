@@ -191,6 +191,9 @@ if 'patch deployment "$deployment"' not in bootstrap_script or 'imagePullSecrets
 
 # Deployment tracker structural contract: keep all five repositories and action section present.
 tracker = (ROOT / "docs" / "cross-repo-deployment-tracker.md").read_text(encoding="utf-8")
+if "PLATFORM_INFRA_AUTOMATION_TOKEN" in promotion and "PLATFORM_INFRA_AUTOMATION_TOKEN" not in tracker:
+    fail("Tracker must record the automation token required by the promotion workflow.")
+
 if not tracker.startswith("# Cross-Repository Production Deployment Tracker"):
     fail("Cross-repo deployment tracker title is missing.")
 if "Last reviewed:" not in tracker or "## Repository readiness" not in tracker or "## Current actions" not in tracker:
