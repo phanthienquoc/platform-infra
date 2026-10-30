@@ -90,6 +90,10 @@ if "${{ secrets.GHCR_READ_TOKEN }}" not in ghcr_step:
     fail("reconcile-vps.yml must use the canonical GHCR_READ_TOKEN secret.")
 if "secrets.GITHUB_TOKEN" in ghcr_step or "Platform-infra-token" in ghcr_step:
     fail("GHCR bootstrap must not silently fall back to a cross-repository-inadequate token.")
+if "secrets.GHCR_READ_TOKEN || github.token" in promotion:
+    fail("gitops-image-promotion.yml must not fall back to github.token for private GHCR packages.")
+if promotion.count("GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}") < 2:
+    fail("Both GitOps promotion paths must use canonical GHCR_READ_TOKEN.")
 for namespace in ("microfe-platform", "stock-prod", "tce-prod", "media-prod"):
     if namespace not in bootstrap_script.split("ghcr_namespaces=(", 1)[-1].split(")", 1)[0]:
         fail(f"GHCR pull reconciliation is missing production namespace: {namespace}")
