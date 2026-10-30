@@ -10,14 +10,17 @@ KCTL="${KCTL:-/usr/local/sbin/platform-kubectl}"
 CRI="${CRI:-/usr/local/sbin/platform-crictl}"
 [ -x "$CRI" ] || { echo "restricted CRI wrapper not found: $CRI" >&2; exit 2; }
 [ -x "$KCTL" ] || { echo "kubectl wrapper not found: $KCTL" >&2; exit 2; }
-[[ "$KEEP_UNUSED_IMAGES" =~ ^[0-9]+$ ]] && [ "$KEEP_UNUSED_IMAGES" -ge 1 ] || { echo "KEEP_UNUSED_IMAGES must be >= 1" >&2; exit 2; }
+if ! [[ "$KEEP_UNUSED_IMAGES" =~ ^[0-9]+$ ]] || [ "$KEEP_UNUSED_IMAGES" -lt 1 ]; then
+  echo "KEEP_UNUSED_IMAGES must be >= 1" >&2
+  exit 2
+fi
 [[ "$DRY_RUN" == true || "$DRY_RUN" == false ]] || { echo "DRY_RUN must be true or false" >&2; exit 2; }
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
-sudo "$KCTL" get pods -A -o json > "$tmp/pods.json"
-sudo "$CRI" ps -a -o json > "$tmp/containers.json"
-sudo "$CRI" images -o json > "$tmp/images.json"
+sudo "$KCTL" get pods -A -o json | tee "$tmp/pods.json" >/dev/null
+sudo "$CRI" ps -a -o json | tee "$tmp/containers.json" >/dev/null
+sudo "$CRI" images -o json | tee "$tmp/images.json" >/dev/null
 
 # Keep all image IDs referenced by Pod specs (including init/ephemeral containers).
 jq -r '.items[] | .spec.initContainers[]?.image, .spec.containers[]?.image, .spec.ephemeralContainers[]?.image' "$tmp/pods.json" | sort -u > "$tmp/pod-image-refs.txt"
@@ -71,8 +74,8 @@ done
 # Re-check Pod refs and all containers immediately before each deletion.
 head -n "$remove_count" "$tmp/unused.tsv" | while IFS=$'\t' read -r id tags size pinned created; do
   [ -n "$id" ] || continue
-  sudo "$KCTL" get pods -A -o json > "$tmp/pods-current.json"
-  sudo "$CRI" ps -a -o json > "$tmp/containers-current.json"
+  sudo "$KCTL" get pods -A -o json | tee "$tmp/pods-current.json" >/dev/null
+  sudo "$CRI" ps -a -o json | tee "$tmp/containers-current.json" >/dev/null
   grep -Fxq "$id" <(jq -r '.containers[]? | .imageRef // empty' "$tmp/containers-current.json") && {
     echo "Skip image still referenced by container: $id"; continue;
   }
