@@ -196,8 +196,8 @@ if "PLATFORM_INFRA_AUTOMATION_TOKEN" in promotion and "PLATFORM_INFRA_AUTOMATION
 
 if not tracker.startswith("# Cross-Repository Production Deployment Tracker"):
     fail("Cross-repo deployment tracker title is missing.")
-if "Last reviewed:" not in tracker or "## Repository readiness" not in tracker or "## Current actions" not in tracker:
-    fail("Cross-repo deployment tracker must retain its review date, readiness table, and current actions.")
+if "Last reviewed:" not in tracker or "## Repository readiness" not in tracker or "## Current actions" not in tracker or "## Current runtime blockers" not in tracker:
+    fail("Cross-repo deployment tracker must retain its review date, readiness table, current actions, and runtime blockers.")
 for repository in (
     "phanthienquoc/platform-infra",
     "phanthienquoc/TCE-dashboard",
