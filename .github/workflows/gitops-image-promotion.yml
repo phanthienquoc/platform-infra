@@ -68,6 +68,7 @@ jobs:
           SHELL_DIGEST: ${{ github.event.client_payload.shell_digest }}
           WS_DIGEST: ${{ github.event.client_payload.ws_digest }}
           SOURCE_COMMIT: ${{ github.event.client_payload.commit }}
+          RELEASE_INPUT: ${{ github.event.client_payload.release }}
         run: |
           set -euo pipefail
           # Auth is now released by phanthienquoc-authentication under the canonical
@@ -77,11 +78,16 @@ jobs:
             [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo '::error::Every MicroFE payload digest must be sha256:<64 hex>'; exit 1; }
           done
           [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo '::error::Missing or invalid source commit SHA'; exit 1; }
+          EXPECTED_RELEASE="microfe-${SOURCE_COMMIT:0:7}"
+          [[ "$RELEASE_INPUT" == "$EXPECTED_RELEASE" ]] || {
+            echo "::error::MicroFE release label must equal $EXPECTED_RELEASE derived from the full source commit SHA."
+            exit 1
+          }
           {
             echo "shell_digest=$SHELL_DIGEST"
             echo "ws_digest=$WS_DIGEST"
             echo "source_commit=$SOURCE_COMMIT"
-            echo "release=microfe-${SOURCE_COMMIT:0:7}"
+            echo "release=$EXPECTED_RELEASE"
           } >> "$GITHUB_OUTPUT"
 
       - name: Validate promoted MicroFE images in GHCR
