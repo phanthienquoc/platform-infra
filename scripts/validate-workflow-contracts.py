@@ -158,6 +158,13 @@ ghcr_preflight_block = reconcile.split("name: Validate GHCR pull access before m
 if 'TARGET_APP=all GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" ./scripts/validate-ghcr-pull-access.sh' not in ghcr_preflight_block:
     fail("Every non-Keycloak apply must validate all production GHCR packages before reconciling the shared pull Secret.")
 
+# GHCR pull preflight must safely handle copied secret line endings before using curl config.
+ghcr_probe = (ROOT / "scripts" / "validate-ghcr-pull-access.sh").read_text(encoding="utf-8")
+if "sed 's/\\r$//'" not in ghcr_probe:
+    fail("GHCR preflight must normalize a terminal CR from copied secret values.")
+if "contains embedded whitespace or quotes" not in ghcr_probe:
+    fail("GHCR preflight must reject embedded whitespace/quotes instead of passing malformed credentials to curl.")
+
 # GHCR pulls use one platform-owned credential across production namespaces.
 bootstrap_script = (ROOT / "scripts" / "bootstrap-runner.sh").read_text(encoding="utf-8")
 ghcr_step = reconcile.split("- name: Bootstrap GHCR pull credentials", 1)[1].split(
