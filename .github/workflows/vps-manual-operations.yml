@@ -1,0 +1,97 @@
+name: VPS manual operations
+
+"on":
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Read-only operation to run on the VPS/K3s host
+        required: true
+        type: choice
+        default: all_read_only
+        options:
+          - host_health
+          - service_status
+          - cluster_summary
+          - all_read_only
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vps-manual-operations
+  cancel-in-progress: false
+
+jobs:
+  inspect:
+    # This workflow runs on a production self-hosted runner. Never execute it from a feature ref.
+    if: ${{ github.ref == 'refs/heads/master' }}
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    environment: production
+    timeout-minutes: 5
+    steps:
+      - name: Verify dispatch context
+        env:
+          OPERATION: ${{ inputs.operation }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_REF" == "refs/heads/master" ]] || {
+            echo "::error::VPS operations may only run from master."
+            exit 1
+          }
+          case "$OPERATION" in
+            host_health|service_status|cluster_summary|all_read_only) ;;
+            *) echo "::error::Unsupported operation."; exit 2 ;;
+          esac
+          echo "Operation: $OPERATION"
+          echo "Run ID: $GITHUB_RUN_ID"
+
+      - name: Host health
+        if: ${{ inputs.operation == 'host_health' || inputs.operation == 'all_read_only' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "== filesystem =="
+          df -h /
+          echo "== memory =="
+          free -h
+          echo "== uptime/load =="
+          uptime
+          echo "== kernel =="
+          uname -srmo
+
+      - name: Service status
+        if: ${{ inputs.operation == 'service_status' || inputs.operation == 'all_read_only' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for service in k3s containerd; do
+            if systemctl is-active --quiet "$service"; then
+              printf '%s: active\n' "$service"
+            else
+              printf '%s: inactive-or-unavailable\n' "$service"
+            fi
+          done
+          echo "== platform runner service =="
+          systemctl list-units --type=service --state=running --no-legend 'actions.runner.phanthienquoc-platform-infra.*.service' || true
+
+      - name: K3s cluster summary
+        if: ${{ inputs.operation == 'cluster_summary' || inputs.operation == 'all_read_only' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          KUBECTL=/usr/local/sbin/platform-kubectl
+          test -x "$KUBECTL" || {
+            echo "::error::Allowlisted platform-kubectl wrapper is unavailable."
+            exit 1
+          }
+          echo "== nodes =="
+          sudo "$KUBECTL" get nodes -o wide
+          echo "== namespaces =="
+          sudo "$KUBECTL" get namespaces
+          echo "== deployments =="
+          sudo "$KUBECTL" get deployments -A
+          echo "== pods =="
+          sudo "$KUBECTL" get pods -A -o wide
+          echo "== services =="
+          sudo "$KUBECTL" get services -A
