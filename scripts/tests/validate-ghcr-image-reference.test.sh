@@ -25,7 +25,9 @@ for ((i=0; i<${#args[@]}; i++)); do
       ;;
     -H|--header)
       i=$((i+1))
-      auth_header="${args[$i]}"
+      case "${args[$i]}" in
+        Authorization:*) auth_header="${args[$i]}" ;;
+      esac
       ;;
   esac
 done
