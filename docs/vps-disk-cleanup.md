@@ -6,8 +6,8 @@
 df -h /
 sudo du -xhd1 /var/lib/rancher/k3s /var/lib/docker /var/log 2>/dev/null | sort -h
 sudo docker system df
-sudo crictl images
-sudo crictl ps -a
+sudo /usr/local/sbin/platform-crictl images
+sudo /usr/local/sbin/platform-crictl ps
 ```
 
 ## Immediate conservative cleanup
@@ -23,17 +23,17 @@ It keeps the newest 10 unused tagged images by default. It does not run Docker p
 Run a preview:
 
 ```bash
-cd /opt/platform-infra
-DRY_RUN=true KEEP_UNUSED_IMAGES=10 sudo -E bash scripts/cleanup-k3s-images.sh
+cd /opt/actions-runner/_work/platform-infra/platform-infra
+DRY_RUN=true KEEP_UNUSED_IMAGES=10 bash scripts/cleanup-k3s-images.sh
 ```
 
 Run deletion after reviewing the preview:
 
 ```bash
-DRY_RUN=false KEEP_UNUSED_IMAGES=10 sudo -E bash scripts/cleanup-k3s-images.sh
+DRY_RUN=false KEEP_UNUSED_IMAGES=10 bash scripts/cleanup-k3s-images.sh
 ```
 
-The weekly GitHub Actions workflow `.github/workflows/vps-image-cleanup.yml` runs in dry-run mode by default when scheduled (schedule resolves dry_run to false only if inputs missing in workflow expression—see schedule configuration). Manual dispatch defaults to dry-run. Production cleanup must remain opt-in; schedule is report-only.
+The weekly GitHub Actions workflow `.github/workflows/vps-image-cleanup.yml` always runs in dry-run mode on its schedule. Manual dispatch defaults to dry-run; set `dry_run=false` only after reviewing the candidate list. Scheduled deletion is deliberately disabled.
 
 ## Other safe space recovery
 

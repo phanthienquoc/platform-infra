@@ -7,9 +7,8 @@ set -euo pipefail
 DRY_RUN="${DRY_RUN:-true}"
 KEEP_UNUSED_IMAGES="${KEEP_UNUSED_IMAGES:-10}"
 KCTL="${KCTL:-/usr/local/sbin/platform-kubectl}"
-CRI="${CRI:-/usr/local/bin/crictl}"
-[ -x "$CRI" ] || CRI="$(command -v crictl || true)"
-[ -n "$CRI" ] && [ -x "$CRI" ] || { echo "crictl not found" >&2; exit 2; }
+CRI="${CRI:-/usr/local/sbin/platform-crictl}"
+[ -x "$CRI" ] || { echo "restricted CRI wrapper not found: $CRI" >&2; exit 2; }
 [ -x "$KCTL" ] || { echo "kubectl wrapper not found: $KCTL" >&2; exit 2; }
 [[ "$KEEP_UNUSED_IMAGES" =~ ^[0-9]+$ ]] && [ "$KEEP_UNUSED_IMAGES" -ge 1 ] || { echo "KEEP_UNUSED_IMAGES must be >= 1" >&2; exit 2; }
 [[ "$DRY_RUN" == true || "$DRY_RUN" == false ]] || { echo "DRY_RUN must be true or false" >&2; exit 2; }
@@ -33,16 +32,6 @@ jq -r --slurpfile refs "$tmp/pod-image-refs.txt" '
   .id
 ' "$tmp/images.json" | sort -u > "$tmp/pod-image-ids.txt"
 # Fail closed when a Pod spec reference cannot be mapped to a local image ID.
-missing_refs=0
-while IFS= read -r ref; do
-  [ -n "$ref" ] || continue
-  if ! jq -e --arg ref "$ref" 'any(.images[]?; any(.repoTags[]?; . == $ref) or any(.repoDigests[]?; . == $ref))' "$tmp/images.json" >/dev/null; then
-    echo "Cannot resolve Pod image reference; refusing all cleanup: $ref" >&2
-    missing_refs=1
-  fi
-done < "$tmp/pod-image-refs.txt"
-[ "$missing_refs" -eq 0 ] || exit 3
-
 missing_refs=0
 while IFS= read -r ref; do
   [ -n "$ref" ] || continue

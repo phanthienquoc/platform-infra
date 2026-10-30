@@ -285,8 +285,41 @@ exit 2
 EOF
 chmod 0755 /usr/local/sbin/platform-kubectl
 echo "platform-kubectl policy: rollout-status-v10-keycloak-secret-provision"
+cat >/usr/local/sbin/platform-crictl <<'EOF'
+#!/usr/bin/env bash
+# Root-owned restricted CRI interface for the platform cleanup helper.
+set -euo pipefail
+CRI_BIN=""
+for candidate in /usr/local/bin/crictl /usr/bin/crictl /var/lib/rancher/k3s/data/current/bin/crictl; do
+  if [[ -x "$candidate" ]]; then CRI_BIN="$candidate"; break; fi
+done
+[[ -n "$CRI_BIN" ]] || { echo "platform-crictl: crictl binary not found" >&2; exit 2; }
+case "${1:-}" in
+  images)
+    [[ "$#" -eq 1 ]] || exit 2
+    exec "$CRI_BIN" images -o json
+    ;;
+  ps)
+    [[ "$#" -eq 1 ]] || exit 2
+    exec "$CRI_BIN" ps -a -o json
+    ;;
+  rmi)
+    [[ "$#" -eq 2 && "${2}" =~ ^sha256:[a-fA-F0-9]{64}$ ]] || {
+      echo "platform-crictl: rmi requires one full sha256 image ID" >&2
+      exit 2
+    }
+    exec "$CRI_BIN" rmi "$2"
+    ;;
+  *)
+    echo "platform-crictl: allowed commands are images, ps, rmi <sha256:image-id>" >&2
+    exit 2
+    ;;
+esac
+EOF
+chmod 0755 /usr/local/sbin/platform-crictl
 cat >/etc/sudoers.d/platform-infra-runner <<EOF
 $RUNNER_USER ALL=(root) NOPASSWD: /usr/local/sbin/platform-kubectl *
+$RUNNER_USER ALL=(root) NOPASSWD: /usr/local/sbin/platform-crictl *
 EOF
 chmod 0440 /etc/sudoers.d/platform-infra-runner
 visudo -cf /etc/sudoers.d/platform-infra-runner
