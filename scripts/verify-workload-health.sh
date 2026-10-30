@@ -49,9 +49,9 @@ for namespace in "${namespaces[@]}"; do
   echo "Checking workload health in namespace: $namespace"
 
   if [ -n "$label_selector" ]; then
-    rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -l "$label_selector" -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.metadata.deletionTimestamp}{"\t"}{.status.phase}{"\t"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{" "}{end}{"\n"}{end}')"
+    rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -l "$label_selector" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"|"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{" "}{end}{"\n"}{end}')"
   else
-    rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.metadata.deletionTimestamp}{"\t"}{.status.phase}{"\t"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{" "}{end}{"\n"}{end}')"
+    rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"|"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{" "}{end}{"\n"}{end}')"
   fi
 
   if [ -z "$rows" ]; then
@@ -61,7 +61,7 @@ for namespace in "${namespaces[@]}"; do
   fi
 
   active_pods=0
-  while IFS=$'\t' read -r pod deletion_timestamp phase containers; do
+  while IFS='|' read -r pod deletion_timestamp phase containers; do
     [ -n "$pod" ] || continue
 
     if [ -n "$deletion_timestamp" ]; then
@@ -98,9 +98,9 @@ for namespace in "${namespaces[@]}"; do
   fi
 
   if [ -n "$label_selector" ]; then
-    deployment_rows="$("${kubectl_bin[@]}" get deployments -n "$namespace" -l "$label_selector" -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.replicas}{"\t"}{.status.readyReplicas}{"\t"}{.status.updatedReplicas}{"\n"}{end}')"
+    deployment_rows="$("${kubectl_bin[@]}" get deployments -n "$namespace" -l "$label_selector" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.spec.replicas}{"|"}{.status.readyReplicas}{"|"}{.status.updatedReplicas}{"\n"}{end}')"
   else
-    deployment_rows="$("${kubectl_bin[@]}" get deployments -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.replicas}{"\t"}{.status.readyReplicas}{"\t"}{.status.updatedReplicas}{"\n"}{end}')"
+    deployment_rows="$("${kubectl_bin[@]}" get deployments -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.spec.replicas}{"|"}{.status.readyReplicas}{"|"}{.status.updatedReplicas}{"\n"}{end}')"
   fi
 
   if [ -z "$deployment_rows" ]; then
@@ -110,7 +110,7 @@ for namespace in "${namespaces[@]}"; do
   fi
 
   deployment_count=0
-  while IFS=$'\t' read -r deployment desired ready updated; do
+  while IFS='|' read -r deployment desired ready updated; do
     [ -n "$deployment" ] || continue
     deployment_count=$((deployment_count + 1))
     desired="${desired:-1}"
