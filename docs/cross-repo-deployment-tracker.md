@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-10-31 (after PR #855 tracker merge; identified legacy TCE microfe-auth image publication not referenced by production Kustomize; no new runtime snapshot available)
+Last reviewed: 2026-10-31 (latest scheduled reconciliation #41140628682 failed closed on StockDividend package-level GHCR 403; found misleading final-gate message after failed preflight)
 Reference contract: [Generic Production Release Pattern (WF-03)](GENERIC-WF03-RELEASE-PATTERN.md)
 
 ## Target operating model
@@ -145,3 +145,5 @@ Disposition meanings:
 - [ ] Resolve MicroFE Shell/WS image references before rollout: current manifest-resolved tags `0.1.0` and `RELEASE_SHA` returned registry `NotFound` in the latest VPS snapshot. Identify the publishing source and a verified immutable image digest; do not replace tags with guesses.
 - [ ] Review any workflow marked REVIEW using recent run evidence and consumers before deleting it.
 - [ ] Continue hourly tracking; do not alter TCE market-scan scheduling.
+
+- [ ] Fix shared reconcile final-gate reporting: scheduled run [41140628682](https://github.com/phanthienquoc/platform-infra/actions/runs/41140628682) correctly failed at GHCR preflight because `stockdividend/admin` and `stockdividend/backend` returned HTTP 403, but the final step misleadingly printed “No manifest drift detected” because it inspected an empty drift output without checking `steps.preflight.outcome`. PR will require successful preflight and an explicit `true`/`false` drift value before reporting reconciliation success. No pull credentials, manifests, or workloads were mutated by that run.
