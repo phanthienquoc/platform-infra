@@ -113,4 +113,3 @@ if grep -q 'test-only-secret\|test-only-token' "$tmp_dir/resource-failure.log"; 
 fi
 
 echo "GHCR pull-access preflight regression tests passed."
-MOCK
