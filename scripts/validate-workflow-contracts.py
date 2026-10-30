@@ -68,6 +68,20 @@ if "github.event.client_payload.release || github.event.client_payload.commit" n
 for field in ("auth_digest", "shell_digest", "ws_digest"):
     if field not in promotion:
         fail(f"Shared MicroFE promoter is missing expected payload field: {field}")
+
+# Promotion renders the updated MicroFE Kustomization; do not rely on an ambient runner kubectl.
+microfe_job = promotion.split("  promote-microfe-digests:", 1)[1].split("  fanout-tce-release:", 1)[0]
+kubectl_install_index = microfe_job.find("name: Install pinned kubectl for MicroFE manifest render")
+kustomize_render_index = microfe_job.find("kubectl kustomize platform/microfe")
+if kubectl_install_index < 0 or kustomize_render_index < 0 or kubectl_install_index > kustomize_render_index:
+    fail("MicroFE promotion must install pinned kubectl before rendering the updated Kustomization.")
+for required in (
+    "KUBECTL_VERSION: v1.36.3",
+    "sha256sum --check",
+    "sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl",
+):
+    if required not in microfe_job:
+        fail(f"MicroFE promotion is missing pinned kubectl installation contract: {required}")
 if (WORKFLOW_DIR / "reconcile-microfe.yml").exists():
     fail("Dedicated reconcile-microfe.yml must be removed.")
 if "gitops-promoted-ready" not in reconcile:
