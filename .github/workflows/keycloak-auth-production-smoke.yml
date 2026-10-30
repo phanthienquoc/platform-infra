@@ -68,7 +68,10 @@ jobs:
             url="https://auth.mrcute.space/api/oidc/$path"
             body="$(mktemp)"
             if [[ "$path" == "session" ]]; then
-              status="$(curl --silent --show-error --location --max-time 15 --request POST --output "$body" --write-out '%{http_code}' "$url")"
+              status="$(
+              curl --silent --show-error --location --max-time 15 --request POST \
+                --output "$body" --write-out '%{http_code}' "$url"
+            )"
             else
               status="$(curl --silent --show-error --location --max-time 15 --output "$body" --write-out '%{http_code}' "$url")"
             fi

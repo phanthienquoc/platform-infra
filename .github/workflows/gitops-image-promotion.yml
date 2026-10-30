@@ -75,12 +75,16 @@ jobs:
 
       - name: Validate promoted MicroFE images in GHCR
         env:
-          GHCR_USERNAME: ${{ github.actor }}
-          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN || github.token }}
+          GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}
+          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
           SHELL_DIGEST: ${{ steps.digests.outputs.shell_digest }}
           WS_DIGEST: ${{ steps.digests.outputs.ws_digest }}
         run: |
           set -euo pipefail
+          if [[ -z "$GHCR_USERNAME" || -z "$GHCR_TOKEN" ]]; then
+            echo "::error::Configure GHCR_READ_TOKEN with read:packages access to the promoted private images."
+            exit 1
+          fi
           printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GHCR_USERNAME" --password-stdin
           docker manifest inspect "ghcr.io/phanthienquoc/microfe-shell@$SHELL_DIGEST" >/dev/null
           docker manifest inspect "ghcr.io/phanthienquoc/microfe-ws@$WS_DIGEST" >/dev/null
@@ -405,8 +409,8 @@ jobs:
 
       - name: Validate promoted image in GHCR
         env:
-          GHCR_USERNAME: ${{ github.actor }}
-          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN || github.token }}
+          GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}
+          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
           APP: ${{ steps.input.outputs.app }}
           COMPONENT: ${{ steps.input.outputs.component }}
           TAG: ${{ steps.input.outputs.tag }}
@@ -421,6 +425,10 @@ jobs:
             IMAGE="ghcr.io/phanthienquoc/${APP}/${COMPONENT}:${TAG}"
           fi
           echo "Validating $IMAGE"
+          if [[ -z "$GHCR_USERNAME" || -z "$GHCR_TOKEN" ]]; then
+            echo "::error::Configure GHCR_READ_TOKEN with read:packages access to the promoted private images."
+            exit 1
+          fi
 
           printf '%s' "$GHCR_TOKEN" |
             docker login ghcr.io --username "$GHCR_USERNAME" --password-stdin

@@ -5,7 +5,16 @@ mkdir -p "$(dirname "$OUT")"
 KCTL=/usr/local/sbin/platform-kubectl
 {
   echo "# VPS inspection"; echo; echo "Generated: $(date -Is)"; echo
-  echo "## Host"; uname -a; echo "arch: $(uname -m)"; . /etc/os-release && echo "os: $PRETTY_NAME"; echo "hostname: $(hostname)"; echo
+  echo "## Host"
+  uname -a
+  echo "arch: $(uname -m)"
+  if [ -r /etc/os-release ]; then
+    # shellcheck disable=SC1091
+    . /etc/os-release
+    echo "os: $PRETTY_NAME"
+  fi
+  echo "hostname: $(hostname)"
+  echo
   echo "## Resources"; nproc; free -h; df -h /; df -h /var/lib/rancher/k3s/agent/containerd /var/lib/docker 2>/dev/null || true
   disk_usage_pct="$(df --output=pcent / | tail -n 1 | tr -dc '0-9')"
   if [[ "$disk_usage_pct" =~ ^[0-9]+$ ]]; then
