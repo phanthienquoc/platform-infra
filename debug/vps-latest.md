@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-10-30T12:56:59+00:00
+Generated: 2026-10-30T13:21:40+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,21 +11,21 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       4.6Gi       533Mi        86Mi        18Gi        18Gi
+Mem:            23Gi       4.7Gi       3.4Gi        86Mi        15Gi        18Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/sda1        45G   38G  7.6G  84% /
+/dev/sda1        45G   25G   21G  54% /
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/sda1        45G   38G  7.6G  84% /
-disk_pressure: warning (84%)
- 12:56:59 up 181 days, 22:47,  1 user,  load average: 0.75, 0.36, 0.44
+/dev/sda1        45G   25G   21G  54% /
+disk_pressure: normal (54%)
+ 13:21:40 up 181 days, 23:12,  5 users,  load average: 0.17, 0.27, 0.31
 
 ### Top disk consumers
 
 ## Runner
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
 21684 /opt/media-actions-runner/bin/Runner.Listener run --startuptype service
-987670 /opt/actions-runner/bin/Runner.Worker spawnclient 159 162
+1014209 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
   actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-media-generation.media-generation-k3s-01)
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service           loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
@@ -60,7 +60,7 @@ libnetplan0/jammy-updates 0.107.1-3ubuntu0.22.04.5 arm64 [upgradable from: 0.106
 libnftables1/jammy-updates 1.0.2-1ubuntu3.1 arm64 [upgradable from: 1.0.2-1ubuntu3]
 libopeniscsiusr/jammy-updates 2.1.5-1ubuntu1.3 arm64 [upgradable from: 2.1.5-1ubuntu1.1]
 libxmlb2/jammy-updates 0.3.24-1~ubuntu0.22.04.1 arm64 [upgradable from: 0.3.6-2build1]
-linux-tools-common/jammy-updates 5.15.0-202.212 all [upgradable from: 5.15.0-198.208]
+linux-tools-common/jammy-updates,jammy-security 5.15.0-202.212 all [upgradable from: 5.15.0-198.208]
 lshw/jammy-updates 02.19.git.2021.06.19.996aaad9c7-2ubuntu0.22.04.1 arm64 [upgradable from: 02.19.git.2021.06.19.996aaad9c7-2build1]
 nano/jammy-updates 6.2-1ubuntu0.3 arm64 [upgradable from: 6.2-1ubuntu0.2]
 netplan.io/jammy-updates 0.107.1-3ubuntu0.22.04.5 arm64 [upgradable from: 0.106.1-7ubuntu0.22.04.4]
@@ -97,42 +97,36 @@ media-prod         Active   30d
 microfe-platform   Active   24d
 stock-prod         Active   41d
 tce-prod           Active   69d
-NAMESPACE          NAME                                         READY   STATUS             RESTARTS        AGE     IP            NODE         NOMINATED NODE   READINESS GATES
-cert-manager       cert-manager-75b96c9588-lgn7d                1/1     Running            0               66d     10.42.0.98    tce-k3s-01   <none>           <none>
-cert-manager       cert-manager-cainjector-b644b66f7-l8jdq      1/1     Running            1 (66d ago)     66d     10.42.0.100   tce-k3s-01   <none>           <none>
-cert-manager       cert-manager-webhook-76d97df888-wwq49        1/1     Running            0               66d     10.42.0.99    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29889405-46v6m            0/1     StartError         0               12m     10.42.0.47    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29889405-4nm2n            0/1     StartError         0               11m     10.42.0.48    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29889405-7p7z9            0/1     StartError         0               9m27s   10.42.0.51    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29889405-bwrt4            0/1     StartError         0               10m     10.42.0.50    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29889405-f9brd            0/1     StartError         0               11m     10.42.0.49    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29889405-n8vjc            0/1     StartError         0               6m47s   10.42.0.52    tce-k3s-01   <none>           <none>
-kube-system        coredns-54996dc9b4-d68pf                     1/1     Running            0               69d     10.42.0.6     tce-k3s-01   <none>           <none>
-kube-system        helm-install-traefik-crd-mq7w8               0/1     Completed          0               69d     10.42.0.3     tce-k3s-01   <none>           <none>
-kube-system        helm-install-traefik-s2twj                   0/1     Completed          1 (69d ago)     69d     10.42.0.2     tce-k3s-01   <none>           <none>
-kube-system        local-path-provisioner-58d557dc48-jbhhp      1/1     Running            1 (69d ago)     69d     10.42.0.5     tce-k3s-01   <none>           <none>
-kube-system        metrics-server-6dc596dfb8-s2bzm              1/1     Running            0               69d     10.42.0.4     tce-k3s-01   <none>           <none>
-kube-system        svclb-traefik-859779c1-7bwx2                 2/2     Running            0               69d     10.42.0.7     tce-k3s-01   <none>           <none>
-kube-system        traefik-59b7647586-gml84                     1/1     Running            0               69d     10.42.0.8     tce-k3s-01   <none>           <none>
-media-prod         media-generation-5c9b76dfb9-zh8jr            0/1     Running            0               16d     10.42.0.85    tce-k3s-01   <none>           <none>
-media-prod         media-generation-646c797f66-6fwn4            0/1     Running            0               28m     10.42.0.38    tce-k3s-01   <none>           <none>
-media-prod         media-generation-frontend-597b779c9d-dvrft   1/1     Running            0               16d     10.42.0.84    tce-k3s-01   <none>           <none>
-microfe-platform   keycloak-68c4bc764c-4pp66                    0/1     Running            0               14d     10.42.0.124   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-auth-5c8cc75f5c-nbn7g                0/1     Running            0               28m     10.42.0.33    tce-k3s-01   <none>           <none>
-microfe-platform   microfe-auth-fb48fdbc4-xnc2p                 0/1     Running            0               89m     10.42.0.250   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-shell-54c5886c87-52fs4               0/1     ImagePullBackOff   0               28m     10.42.0.35    tce-k3s-01   <none>           <none>
-microfe-platform   microfe-shell-dbbbfdf8c-5rkwz                1/1     Running            0               21d     10.42.0.158   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-ws-5587c8844c-rbtgx                  1/1     Running            10 (21d ago)    21d     10.42.0.157   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-ws-56f576754b-smkbc                  0/1     ImagePullBackOff   0               28m     10.42.0.34    tce-k3s-01   <none>           <none>
-microfe-platform   nats-7bc8d9f768-q682m                        1/1     Running            0               21d     10.42.0.178   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-649ff98f94-m4zg9                 0/1     ImagePullBackOff   0               89m     10.42.0.253   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-7967788c6c-jg7b2                 0/1     ImagePullBackOff   0               28m     10.42.0.37    tce-k3s-01   <none>           <none>
-stock-prod         stock-backend-57ccb8ff6-d25jq                1/1     Running            0               41d     10.42.0.55    tce-k3s-01   <none>           <none>
-stock-prod         stock-backend-74c99cd67c-9jmt6               0/1     ImagePullBackOff   0               28m     10.42.0.36    tce-k3s-01   <none>           <none>
-stock-prod         stock-frontend-79c57845df-z747s              1/1     Running            0               41d     10.42.0.56    tce-k3s-01   <none>           <none>
-tce-prod           tce-frontend-c8c48c548-fhx49                 1/1     Running            0               28m     10.42.0.39    tce-k3s-01   <none>           <none>
-tce-prod           tce-service-69d975d9f9-fxxqj                 1/1     Running            0               89m     10.42.0.3     tce-k3s-01   <none>           <none>
-tce-prod           tce-service-77dfdb7f5c-kmcz7                 0/1     CrashLoopBackOff   7 (3m55s ago)   28m     10.42.0.40    tce-k3s-01   <none>           <none>
+NAMESPACE          NAME                                         READY   STATUS             RESTARTS         AGE    IP            NODE         NOMINATED NODE   READINESS GATES
+cert-manager       cert-manager-75b96c9588-lgn7d                1/1     Running            0                66d    10.42.0.98    tce-k3s-01   <none>           <none>
+cert-manager       cert-manager-cainjector-b644b66f7-l8jdq      1/1     Running            1 (66d ago)      66d    10.42.0.100   tce-k3s-01   <none>           <none>
+cert-manager       cert-manager-webhook-76d97df888-wwq49        1/1     Running            0                66d    10.42.0.99    tce-k3s-01   <none>           <none>
+kube-system        coredns-54996dc9b4-d68pf                     1/1     Running            0                69d    10.42.0.6     tce-k3s-01   <none>           <none>
+kube-system        helm-install-traefik-crd-mq7w8               0/1     Completed          0                69d    10.42.0.3     tce-k3s-01   <none>           <none>
+kube-system        helm-install-traefik-s2twj                   0/1     Completed          1 (69d ago)      69d    10.42.0.2     tce-k3s-01   <none>           <none>
+kube-system        local-path-provisioner-58d557dc48-jbhhp      1/1     Running            1 (69d ago)      69d    10.42.0.5     tce-k3s-01   <none>           <none>
+kube-system        metrics-server-6dc596dfb8-s2bzm              1/1     Running            0                69d    10.42.0.4     tce-k3s-01   <none>           <none>
+kube-system        svclb-traefik-859779c1-7bwx2                 2/2     Running            0                69d    10.42.0.7     tce-k3s-01   <none>           <none>
+kube-system        traefik-59b7647586-gml84                     1/1     Running            0                69d    10.42.0.8     tce-k3s-01   <none>           <none>
+media-prod         media-generation-5c9b76dfb9-zh8jr            0/1     Running            0                16d    10.42.0.85    tce-k3s-01   <none>           <none>
+media-prod         media-generation-646c797f66-6fwn4            0/1     Running            0                53m    10.42.0.38    tce-k3s-01   <none>           <none>
+media-prod         media-generation-frontend-597b779c9d-dvrft   1/1     Running            0                16d    10.42.0.84    tce-k3s-01   <none>           <none>
+microfe-platform   keycloak-68c4bc764c-4pp66                    0/1     Running            0                14d    10.42.0.124   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-auth-5c8cc75f5c-nbn7g                0/1     Running            0                53m    10.42.0.33    tce-k3s-01   <none>           <none>
+microfe-platform   microfe-auth-fb48fdbc4-xnc2p                 0/1     Running            0                114m   10.42.0.250   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-shell-54c5886c87-52fs4               0/1     ImagePullBackOff   0                53m    10.42.0.35    tce-k3s-01   <none>           <none>
+microfe-platform   microfe-shell-dbbbfdf8c-5rkwz                1/1     Running            0                21d    10.42.0.158   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-ws-5587c8844c-rbtgx                  1/1     Running            10 (21d ago)     21d    10.42.0.157   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-ws-56f576754b-smkbc                  0/1     ImagePullBackOff   0                53m    10.42.0.34    tce-k3s-01   <none>           <none>
+microfe-platform   nats-7bc8d9f768-q682m                        1/1     Running            0                21d    10.42.0.178   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-649ff98f94-m4zg9                 0/1     ImagePullBackOff   0                114m   10.42.0.253   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-7967788c6c-jg7b2                 0/1     ImagePullBackOff   0                53m    10.42.0.37    tce-k3s-01   <none>           <none>
+stock-prod         stock-backend-57ccb8ff6-d25jq                1/1     Running            0                41d    10.42.0.55    tce-k3s-01   <none>           <none>
+stock-prod         stock-backend-74c99cd67c-9jmt6               0/1     ImagePullBackOff   0                53m    10.42.0.36    tce-k3s-01   <none>           <none>
+stock-prod         stock-frontend-79c57845df-z747s              1/1     Running            0                41d    10.42.0.56    tce-k3s-01   <none>           <none>
+tce-prod           tce-frontend-c8c48c548-fhx49                 1/1     Running            0                53m    10.42.0.39    tce-k3s-01   <none>           <none>
+tce-prod           tce-service-69d975d9f9-fxxqj                 1/1     Running            0                114m   10.42.0.3     tce-k3s-01   <none>           <none>
+tce-prod           tce-service-77dfdb7f5c-kmcz7                 0/1     Running            12 (6m30s ago)   53m    10.42.0.40    tce-k3s-01   <none>           <none>
 NAMESPACE          NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
 cert-manager       cert-manager                1/1     1            1           66d
 cert-manager       cert-manager-cainjector     1/1     1            1           66d
@@ -160,14 +154,13 @@ microfe-platform	microfe-ws-56f576754b-smkbc	ImagePullBackOff	Back-off pulling i
 stock-prod	stock-admin-649ff98f94-m4zg9	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": ErrImagePull: failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": failed to resolve reference "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": failed to authorize: failed to fetch oauth token: unexpected status from GET request to https://ghcr.io/token?scope=repository%3Aphanthienquoc%2Fstockdividend%2Fadmin%3Apull&service=ghcr.io: 403 Forbidden
 stock-prod	stock-admin-7967788c6c-jg7b2	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": ErrImagePull: failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": failed to resolve reference "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": failed to authorize: failed to fetch oauth token: unexpected status from GET request to https://ghcr.io/token?scope=repository%3Aphanthienquoc%2Fstockdividend%2Fadmin%3Apull&service=ghcr.io: 403 Forbidden
 stock-prod	stock-backend-74c99cd67c-9jmt6	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/backend:12d63b4": ErrImagePull: failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/backend:12d63b4": failed to resolve reference "ghcr.io/phanthienquoc/stockdividend/backend:12d63b4": failed to authorize: failed to fetch oauth token: unexpected status from GET request to https://ghcr.io/token?scope=repository%3Aphanthienquoc%2Fstockdividend%2Fbackend%3Apull&service=ghcr.io: 403 Forbidden
-tce-prod	tce-service-77dfdb7f5c-kmcz7	CrashLoopBackOff	back-off 5m0s restarting failed container=service pod=tce-service-77dfdb7f5c-kmcz7_tce-prod(6071c8f3-57a0-4ad0-a61b-66882bdde684)
 
 ### Recent failure events
 
 ### TCE service diagnostics (last 2h; redacted)
-NAME                           READY   STATUS             RESTARTS        AGE   IP           NODE         NOMINATED NODE   READINESS GATES
-tce-service-69d975d9f9-fxxqj   1/1     Running            0               89m   10.42.0.3    tce-k3s-01   <none>           <none>
-tce-service-77dfdb7f5c-kmcz7   0/1     CrashLoopBackOff   7 (3m55s ago)   28m   10.42.0.40   tce-k3s-01   <none>           <none>
+NAME                           READY   STATUS    RESTARTS         AGE    IP           NODE         NOMINATED NODE   READINESS GATES
+tce-service-69d975d9f9-fxxqj   1/1     Running   0                114m   10.42.0.3    tce-k3s-01   <none>           <none>
+tce-service-77dfdb7f5c-kmcz7   0/1     Running   12 (6m31s ago)   53m    10.42.0.40   tce-k3s-01   <none>           <none>
 -- pod tce-service-69d975d9f9-fxxqj describe --
 ### current logs for tce-service-69d975d9f9-fxxqj
 ### previous logs for tce-service-69d975d9f9-fxxqj
@@ -240,48 +233,40 @@ enabled
 ## Keycloak diagnostics
 NAME       READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                             SELECTOR
 keycloak   0/1     1            0           14d   keycloak     quay.io/keycloak/keycloak:26.8.1   app.kubernetes.io/name=keycloak
+	at org.keycloak.models.jpa.JpaRealmProvider.getRealms(JpaRealmProvider.java:186)
+	at org.keycloak.models.jpa.JpaRealmProvider.getRealmsStream(JpaRealmProvider.java:172)
+	at org.keycloak.models.cache.infinispan.RealmCacheSession.getRealmsStream(RealmCacheSession.java:571)
+Caused by: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2993)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:295)
 	at org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:62)
 	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquire(LogicalConnectionManagedImpl.java:187)
-2026-10-30 12:53:07,664 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"UP"},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:51:20,135"}}]}
-2026-10-30 12:53:17,703 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed reading from the DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
-	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2993)
-	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:295)
-	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:508)
-	at org.keycloak.quarkus.runtime.storage.database.jpa.AbstractJpaConnectionProviderFactory.getConnection(AbstractJpaConnectionProviderFactory.java:64)
-	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.getConnection(KEYCLOAK_JDBC_PING2.java:97)
-	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.readFromDB(KEYCLOAK_JDBC_PING2.java:207)
-	at org.jgroups.protocols.JDBC_PING2.readAll(JDBC_PING2.java:339)
-	at org.jgroups.protocols.JDBC_PING2.findMembers(JDBC_PING2.java:238)
-2026-10-30 12:53:25,166 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"UP"},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:51:20,135"}}]}
-2026-10-30 12:53:35,200 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
-2026-10-30 12:53:42,666 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"UP"},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:51:20,135"}}]}
-2026-10-30 12:53:52,706 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (jgroups-10382,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
-2026-10-30 12:53:54,180 ERROR [org.keycloak.models.sessions.infinispan.expiration.BaseExpirationTask] (user-session-purge-expired) Unexpected error while removing expired entries from database: jakarta.persistence.PersistenceException: JDBC exception executing SQL [ERROR: canceling statement due to statement timeout] [delete from keycloak.OFFLINE_CLIENT_SESSION pcse1_0 where pcse1_0.USER_SESSION_ID in (?) and pcse1_0.OFFLINE_FLAG=?]
-	at org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:104)
-	at org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:173)
-Caused by: org.hibernate.QueryTimeoutException: JDBC exception executing SQL [ERROR: canceling statement due to statement timeout] [delete from keycloak.OFFLINE_CLIENT_SESSION pcse1_0 where pcse1_0.USER_SESSION_ID in (?) and pcse1_0.OFFLINE_FLAG=?]
-	at org.hibernate.dialect.PostgreSQLDialect.lambda$buildSQLExceptionConversionDelegate$0(PostgreSQLDialect.java:1115)
-	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:34)
+2026-10-30 13:19:33,847 ERROR [org.keycloak.services.scheduled.ScheduledTaskRunner] (Timer-0) Failed to run scheduled task ClearExpiredIssuedVerifiableCredentials: org.hibernate.exception.GenericJDBCException: Unable to acquire JDBC Connection [FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode] [n/a]
+	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:39)
 	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:115)
-	at org.hibernate.sql.exec.internal.StandardJdbcMutationExecutor.handleException(StandardJdbcMutationExecutor.java:95)
-	at org.hibernate.sql.exec.internal.StandardJdbcMutationExecutor.execute(StandardJdbcMutationExecutor.java:84)
-Caused by: org.postgresql.util.PSQLException: ERROR: canceling statement due to statement timeout
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:101)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquire(LogicalConnectionManagedImpl.java:190)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquireConnectionIfNeeded(LogicalConnectionManagedImpl.java:87)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getPhysicalConnection(LogicalConnectionManagedImpl.java:126)
+	at org.hibernate.engine.jdbc.internal.StatementPreparerImpl.connection(StatementPreparerImpl.java:53)
+	at org.hibernate.engine.jdbc.internal.StatementPreparerImpl$1.doPrepare(StatementPreparerImpl.java:99)
+	at org.hibernate.engine.jdbc.internal.StatementPreparerImpl$StatementPreparationTemplate.prepareStatement(StatementPreparerImpl.java:183)
+	at org.hibernate.engine.jdbc.internal.StatementPreparerImpl.prepareStatement(StatementPreparerImpl.java:84)
+	at org.hibernate.engine.jdbc.internal.StatementPreparerImpl.prepareStatement(StatementPreparerImpl.java:78)
+	at org.hibernate.sql.exec.internal.StandardJdbcMutationExecutor.execute(StandardJdbcMutationExecutor.java:47)
+Caused by: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
 	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2993)
-	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:533)
-	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:449)
-	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:197)
-	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:158)
-	at org.hibernate.sql.exec.internal.StandardJdbcMutationExecutor.execute(StandardJdbcMutationExecutor.java:70)
-2026-10-30 12:53:56,648 WARN  [org.keycloak.infinispan.health.impl.JdbcPingClusterHealthImpl] (blocking-thread--p3-t3) Unable to check the cluster health because no coordinator has been found.
-2026-10-30 12:54:00,169 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"UP"},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:51:20,135"}}]}
-2026-10-30 12:54:03,460 WARN  [org.keycloak.infinispan.health.impl.JdbcPingClusterHealthImpl] (blocking-thread--p3-t3) Unable to check the cluster health because no coordinator has been found.
-2026-10-30 12:54:26,596 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"UP"}]}
-2026-10-30 12:54:26,664 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"UP"}]}
-2026-10-30 12:54:26,731 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"UP"}]}
-2026-10-30 12:54:28,203 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: This connection has been closed.
-2026-10-30 12:55:00,018 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (jgroups-10380,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
-2026-10-30 12:55:02,145 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:55:02,145"}}]}
-2026-10-30 12:55:16,484 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed reading from the DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:295)
+	at org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:62)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquire(LogicalConnectionManagedImpl.java:187)
+2026-10-30 13:19:39,926 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-30 13:19:39,933 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
+2026-10-30 13:19:57,436 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (jgroups-10406,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
+2026-10-30 13:19:57,439 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-30 13:20:15,646 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-30 13:20:33,144 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-30 13:20:50,642 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-30 13:20:56,273 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed reading from the DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
 	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2993)
 	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:295)
 	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:508)
@@ -290,28 +275,16 @@ Caused by: org.postgresql.util.PSQLException: ERROR: canceling statement due to 
 	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.readFromDB(KEYCLOAK_JDBC_PING2.java:207)
 	at org.jgroups.protocols.JDBC_PING2.readAll(JDBC_PING2.java:339)
 	at org.jgroups.protocols.JDBC_PING2.findMembers(JDBC_PING2.java:238)
-2026-10-30 12:55:19,656 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:55:02,145"}}]}
-2026-10-30 12:55:23,241 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:55:02,145"}}]}
-2026-10-30 12:55:39,085 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: This connection has been closed.
-2026-10-30 12:55:40,743 WARN  [io.agroal.pool] (agroal-11) Datasource '<default>': Failed to create fill connection: FATAL: Failed to connect to database: authentication did not complete within 15000ms
-2026-10-30 12:55:55,058 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:55:02,145"}}]}
-2026-10-30 12:56:11,910 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (jgroups-10383,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
-2026-10-30 12:56:12,562 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:55:02,145"}}]}
-2026-10-30 12:56:29,406 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed reading from the DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
-	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2993)
-	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:295)
-	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:508)
-	at org.keycloak.quarkus.runtime.storage.database.jpa.AbstractJpaConnectionProviderFactory.getConnection(AbstractJpaConnectionProviderFactory.java:64)
-	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.getConnection(KEYCLOAK_JDBC_PING2.java:97)
-	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.readFromDB(KEYCLOAK_JDBC_PING2.java:207)
-	at org.jgroups.protocols.JDBC_PING2.readAll(JDBC_PING2.java:339)
-	at org.jgroups.protocols.JDBC_PING2.findMembers(JDBC_PING2.java:238)
-2026-10-30 12:56:29,407 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:55:02,145"}}]}
-2026-10-30 12:56:46,915 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
-2026-10-30 12:56:46,917 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:55:02,145"}}]}
-2026-10-30 12:57:04,411 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (jgroups-10384,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
-2026-10-30 12:57:04,417 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:55:02,145"}}]}
+2026-10-30 13:21:08,156 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-30 13:21:12,444 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: sorry, too many clients already
+2026-10-30 13:21:22,328 ERROR [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01000: Error processing Health Checks: java.util.concurrent.RejectedExecutionException: No executor queue space remaining
+2026-10-30 13:21:22,328 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"org.keycloak.quarkus.runtime.services.health.KeycloakReadyHealthCheck_ClientProxy","status":"DOWN","data":{"exceptionClass":"java.util.concurrent.
+2026-10-30 13:21:25,657 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-30 13:21:42,327 ERROR [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01000: Error processing Health Checks: java.util.concurrent.RejectedExecutionException: No executor queue space remaining
+2026-10-30 13:21:42,327 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"org.keycloak.quarkus.runtime.services.health.KeycloakReadyHealthCheck_ClientProxy","status":"DOWN","data":{"exceptionClass":"java.util.concurrent.
+2026-10-30 13:21:43,155 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-30 13:21:44,255 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (jgroups-10408,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.112349s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049434s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.050535s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.050616s remote_ip=132.226.175.206
