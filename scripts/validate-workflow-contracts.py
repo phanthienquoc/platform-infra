@@ -46,6 +46,12 @@ if 'gh pr update-branch "$PR_NUMBER"' in promotion:
 # MicroFE digest promotions must use the shared GitOps promotion workflow.
 if "microfe-images-published" not in promotion:
     fail("gitops-image-promotion.yml must consume microfe-images-published.")
+if "RELEASE_INPUT: ${{ github.event.client_payload.release }}" not in promotion:
+    fail("MicroFE promotion must require a release label correlated with the source commit.")
+if '[[ "$RELEASE_INPUT" == "$EXPECTED_RELEASE" ]]' not in promotion:
+    fail("MicroFE release label must be checked against the full source commit SHA.")
+if "github.event.client_payload.release || github.event.client_payload.commit" not in promotion:
+    fail("Promotion run name must expose the correlated MicroFE release label.")
 for field in ("auth_digest", "shell_digest", "ws_digest"):
     if field not in promotion:
         fail(f"Shared MicroFE promoter is missing expected payload field: {field}")
@@ -123,11 +129,22 @@ if "secrets.GHCR_READ_TOKEN || github.token" in promotion:
 if promotion.count("GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}") < 2:
     fail("Both GitOps promotion paths must use canonical GHCR_READ_TOKEN.")
 
-# Promotion must validate package-level pull authorization before Docker login or GitOps mutation.
+# Promotion must validate package-level authorization and the exact immutable tag/digest before GitOps mutation.
 if 'TARGET_APP=microfe GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" bash scripts/validate-ghcr-pull-access.sh' not in promotion:
     fail("MicroFE promotion must validate GHCR package pull access before registry login.")
 if 'TARGET_APP="$APP" GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" bash scripts/validate-ghcr-pull-access.sh' not in promotion:
     fail("Application promotion must validate GHCR package pull access before registry login.")
+
+# Docker's registry-wide login endpoint can be denied even when scoped package reads work.
+# Verify the exact tag/digest directly with a package-scoped Registry V2 bearer token instead.
+if "docker login ghcr.io" in promotion or "docker manifest inspect" in promotion:
+    fail("Promotion must not depend on registry-wide Docker login for private GHCR reads.")
+if 'GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$image" bash scripts/validate-ghcr-image-reference.sh' not in promotion:
+    fail("MicroFE promotion must verify each exact immutable image digest through Registry V2.")
+if 'GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$IMAGE" bash scripts/validate-ghcr-image-reference.sh' not in promotion:
+    fail("Application promotion must verify the exact immutable tag through Registry V2.")
+if "github.event.action || github.event_name" not in promotion:
+    fail("GitOps promotion run names must identify dispatch events that omit app/component fields.")
 
 # The canonical GHCR credential is stored in the protected production Environment.
 # Every job that consumes it must bind that Environment or the secret resolves empty.

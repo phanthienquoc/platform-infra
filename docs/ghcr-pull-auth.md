@@ -13,7 +13,7 @@ The `reconcile-vps.yml` production Environment uses:
 - Secret `GHCR_READ_TOKEN`: token with `read:packages` permission and access to every private GHCR package deployed to production.
 - Variable `GHCR_USERNAME`: optional GHCR account name; defaults to the repository owner.
 
-The workflow intentionally does **not** fall back to `GITHUB_TOKEN` for Kubernetes pulls. A workflow token that cannot read another repository's private package must fail fast rather than silently creating a Kubernetes secret that returns 401/403. The preflight obtains a scoped bearer token and then probes each package's Registry V2 `tags/list` endpoint; a non-empty token response alone is not accepted as proof of package-level pull access.
+The workflow intentionally does **not** fall back to `GITHUB_TOKEN` for Kubernetes pulls. A workflow token that cannot read another repository's private package must fail fast rather than silently creating a Kubernetes secret that returns 401/403. The package preflight obtains a scoped bearer token and probes each package's Registry V2 `tags/list` endpoint. Promotion then uses `scripts/validate-ghcr-image-reference.sh` to request the exact tag or digest from `manifests/<reference>` with a package-scoped bearer token. This avoids relying on Docker's registry-wide `/v2/` login challenge, which can be denied even when scoped package reads succeed.
 
 Never print or commit token values. The workflow passes the credential through stdin to the root-owned, allowlisted `platform-kubectl reconcile-ghcr-pull` command.
 
@@ -32,6 +32,6 @@ Namespaces that do not exist yet are skipped and picked up by a later reconcilia
 
 ## Failure handling
 
-For GHCR `401`/`403` errors, verify that `GHCR_READ_TOKEN` is present, not expired, has `read:packages`, and belongs to an account with access to each referenced package. For `manifest unknown` or `not found`, verify the exact image name and immutable tag was published before promotion. Do not use repeated pod restarts as a substitute for fixing credentials or invalid image tags.
+For package-scoped GHCR `401`/`403` errors, verify that `GHCR_READ_TOKEN` is present, not expired, has `read:packages`, and belongs to an account with access to each referenced package. For `manifest unknown` or `not found` from the exact manifest probe, verify the exact image name and immutable tag/digest was published before promotion. A denied registry-wide Docker login alone is not treated as proof that package-scoped reads are denied. Do not use repeated pod restarts as a substitute for fixing credentials or invalid image tags.
 
 After changes to `scripts/bootstrap-runner.sh` are merged, the existing `bootstrap-runner.yml` workflow updates the installed allowlisted helper on the VPS. The regular reconciliation then refreshes Kubernetes secrets and workload pull-secret references.
