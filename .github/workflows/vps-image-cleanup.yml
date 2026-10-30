@@ -39,14 +39,14 @@ jobs:
           set -euo pipefail
           command -v jq
           sudo /usr/local/sbin/platform-kubectl version
-          test -x /usr/local/bin/crictl || command -v crictl
-          sudo crictl ps -a -o json >/dev/null
-          sudo crictl images -o json >/dev/null
+          test -x /usr/local/sbin/platform-crictl
+          sudo /usr/local/sbin/platform-crictl ps >/dev/null
+          sudo /usr/local/sbin/platform-crictl images >/dev/null
 
       - name: Dry-run or clean unused K3s images
         env:
           KEEP_UNUSED_IMAGES: "${{ inputs.keep_unused_images || '10' }}"
-          DRY_RUN: "${{ inputs.dry_run || 'false' }}"
+          DRY_RUN: "${{ github.event_name == 'schedule' && 'true' || (inputs.dry_run == true && 'true' || 'false') }}"
         run: |
           set -euo pipefail
           scripts/cleanup-k3s-images.sh
