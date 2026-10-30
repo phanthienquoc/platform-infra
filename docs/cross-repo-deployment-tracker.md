@@ -46,7 +46,7 @@ Disposition meanings:
 | `wf-09-tce-vps-safe-setup.yml` | KEEP | VPS setup |
 | `wf-10-tce-k3s-bootstrap.yml` | KEEP | K3s bootstrap |
 | `wf-11-tce-mobile-landscape-viewport.yml` | KEEP | UI/viewport validation |
-| `wf-00-tce-legacy-actions-cleanup.yml` | REVIEW | Manual-only workflow deletes historical non-WF workflow runs; unrelated to app deployment and potentially destructive. Remove only after confirming no remaining need for historical cleanup. |
+| `wf-00-tce-legacy-actions-cleanup.yml` | REMOVE (PR #980) | Manual-only one-off utility that deletes historical non-WF workflow runs; not needed for CI/release/deployment and potentially destructive. PR #980 removes the workflow definition without deleting any existing run history. |
 
 ### StockDividend
 
