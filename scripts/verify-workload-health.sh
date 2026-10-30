@@ -32,6 +32,7 @@ if [[ -n "${HEALTH_GATE_KUBECTL_BIN:-}" ]]; then
 else
   kubectl_bin=(sudo /usr/local/sbin/platform-kubectl)
 fi
+
 failed=0
 label_selector=""
 
@@ -60,7 +61,7 @@ for namespace in "${namespaces[@]}"; do
   fi
 
   active_pods=0
-  while IFS=
+  while IFS=$'\t' read -r pod deletion_timestamp phase containers; do
     [ -n "$pod" ] || continue
 
     if [ -n "$deletion_timestamp" ]; then
@@ -109,59 +110,7 @@ for namespace in "${namespaces[@]}"; do
   fi
 
   deployment_count=0
-  while IFS= { [ "$TARGET_APP" = "media-generation" ] || [ "$TARGET_APP" = "all" ]; }; then
-  echo "Media workload diagnostic (read-only):"
-  sudo /usr/local/sbin/platform-kubectl describe-media || true
-fi
-
-if [ "$failed" -ne 0 ]; then
-  echo "Workload health gate failed; refusing to report reconciliation as healthy." >&2
-  exit 1
-fi
-
-echo "Targeted workload health gate passed."
-\t' read -r pod deletion_timestamp phase containers; do
-    [ -n "$pod" ] || continue
-
-    if [ -n "$deletion_timestamp" ]; then
-      echo "Skipping terminating pod $namespace/$pod."
-      continue
-    fi
-
-    if [ "$phase" = "Succeeded" ]; then
-      continue
-    fi
-
-    if [ "$phase" != "Running" ]; then
-      echo "::error::Pod $namespace/$pod is not Running (phase=$phase)." >&2
-      failed=1
-      continue
-    fi
-
-    if printf '%s' "$containers" | grep -Eq '(^| )false:'; then
-      echo "::error::Pod $namespace/$pod has a non-ready container: $containers" >&2
-      failed=1
-    fi
-
-    if printf '%s' "$containers" | grep -Eq '(ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError|CreateContainerError|RunContainerError)'; then
-      echo "::error::Pod $namespace/$pod has a failed container state: $containers" >&2
-      failed=1
-    fi
-  done <<< "$rows"
-done
-
-if [ "$failed" -ne 0 ] && { [ "$TARGET_APP" = "media-generation" ] || [ "$TARGET_APP" = "all" ]; }; then
-  echo "Media workload diagnostic (read-only):"
-  sudo /usr/local/sbin/platform-kubectl describe-media || true
-fi
-
-if [ "$failed" -ne 0 ]; then
-  echo "Workload health gate failed; refusing to report reconciliation as healthy." >&2
-  exit 1
-fi
-
-echo "Targeted workload health gate passed."
-\t' read -r deployment desired ready updated; do
+  while IFS=$'\t' read -r deployment desired ready updated; do
     [ -n "$deployment" ] || continue
     deployment_count=$((deployment_count + 1))
     desired="${desired:-1}"
@@ -184,47 +133,6 @@ echo "Targeted workload health gate passed."
     echo "::error::No deployment records found in namespace $namespace for target $TARGET_APP." >&2
     failed=1
   fi
-done
-
-if [ "$failed" -ne 0 ] && { [ "$TARGET_APP" = "media-generation" ] || [ "$TARGET_APP" = "all" ]; }; then
-  echo "Media workload diagnostic (read-only):"
-  sudo /usr/local/sbin/platform-kubectl describe-media || true
-fi
-
-if [ "$failed" -ne 0 ]; then
-  echo "Workload health gate failed; refusing to report reconciliation as healthy." >&2
-  exit 1
-fi
-
-echo "Targeted workload health gate passed."
-\t' read -r pod deletion_timestamp phase containers; do
-    [ -n "$pod" ] || continue
-
-    if [ -n "$deletion_timestamp" ]; then
-      echo "Skipping terminating pod $namespace/$pod."
-      continue
-    fi
-
-    if [ "$phase" = "Succeeded" ]; then
-      continue
-    fi
-
-    if [ "$phase" != "Running" ]; then
-      echo "::error::Pod $namespace/$pod is not Running (phase=$phase)." >&2
-      failed=1
-      continue
-    fi
-
-    if printf '%s' "$containers" | grep -Eq '(^| )false:'; then
-      echo "::error::Pod $namespace/$pod has a non-ready container: $containers" >&2
-      failed=1
-    fi
-
-    if printf '%s' "$containers" | grep -Eq '(ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError|CreateContainerError|RunContainerError)'; then
-      echo "::error::Pod $namespace/$pod has a failed container state: $containers" >&2
-      failed=1
-    fi
-  done <<< "$rows"
 done
 
 if [ "$failed" -ne 0 ] && { [ "$TARGET_APP" = "media-generation" ] || [ "$TARGET_APP" = "all" ]; }; then
