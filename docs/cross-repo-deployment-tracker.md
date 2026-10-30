@@ -109,6 +109,8 @@ Disposition meanings:
 
 ## Current actions
 
+- [ ] Fix exact-image verification after MicroFE publication: TCE workflow run [41129701152](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41129701152) published Shell digest `sha256:518c5a1d558b57fe2d228c0abf1d5facab16d92911353c5da83d66ad4325a338` and WS digest `sha256:6cf4551554a67157363f9be07a17ecacc48f18d4b3babdbde4354682ae9d3250` for source commit `8aa31375680430e02e2a6450012c5476bfe07c0e`. Central promotion [41129871311](https://github.com/phanthienquoc/platform-infra/actions/runs/41129871311) passed scoped package `tags/list` checks for both packages but failed at `docker login ghcr.io` with registry-wide `/v2/` access denied, before exact digest validation or GitOps mutation. Replace Docker login/manifest-inspect with a package-scoped Registry V2 `manifests/<tag-or-digest>` request and make run names identify dispatch actions with no app/component fields; validate both source digest manifests before promoting them.
+
 - [x] Merge StockDividend PR #9 with squash after all four exact-head CI jobs passed (merge commit `42ed9ec`).
 - [x] Merge platform-infra PR #827 after `validate-github-actions`, `validate-manifests` and Keycloak manifest/boundary CI passed (merge commit `f22b649`); GHCR preflight now precedes Auth runtime Secret provisioning.
 - [ ] Repair GHCR package permissions: the latest package-level probe in [reconcile run 41111284264](https://github.com/phanthienquoc/platform-infra/actions/runs/41111284264) passed for seven production images but returned HTTP 403 for `stockdividend/admin` and `stockdividend/backend`. Grant the configured PAT owner read access to those two packages, then rerun preflight; never expose the token.
