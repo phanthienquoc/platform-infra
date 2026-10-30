@@ -75,7 +75,7 @@ run_case() {
   if HEALTH_GATE_TEST_SCENARIO="$scenario" \
     HEALTH_GATE_KUBECTL_BIN="$tmp_dir/kubectl-mock" \
     TARGET_APP=stockdividend \
-    "$health_gate" >"$tmp_dir/$scenario.log" 2>&1; then
+    bash "$health_gate" >"$tmp_dir/$scenario.log" 2>&1; then
     actual_status=0
   else
     actual_status=$?
