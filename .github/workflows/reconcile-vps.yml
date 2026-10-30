@@ -38,8 +38,12 @@ name: reconcile-vps
   push:
     branches: [master]
     paths:
-      - apps/stockdividend/**
-      - environments/prod/kustomization.yaml
+      # Reconcile whenever any resource referenced by environments/prod changes.
+      - apps/**
+      - environments/prod/**
+      - platform/auth-service/**
+      - platform/cert-manager/**
+      - platform/k3s-debug-logs/**
       - platform/microfe/**
       - scripts/reconcile-vps.sh
       - scripts/guard-reconcile-images.sh
