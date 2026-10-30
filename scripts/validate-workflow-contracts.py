@@ -115,6 +115,13 @@ auth_secret_index = reconcile.find("name: Provision Auth runtime Secret from pla
 if preflight_index < 0 or auth_secret_index < 0 or preflight_index > auth_secret_index:
     fail("GHCR pull-access preflight must run before provisioning the Auth runtime Secret.")
 
+# The GHCR pull Secret is shared across namespaces, so every apply must validate all referenced packages.
+ghcr_preflight_block = reconcile.split("name: Validate GHCR pull access before mutating cluster credentials", 1)[1].split(
+    "- name: Provision Auth runtime Secret from platform-infra Environment", 1
+)[0]
+if 'TARGET_APP=all GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" ./scripts/validate-ghcr-pull-access.sh' not in ghcr_preflight_block:
+    fail("Every non-Keycloak apply must validate all production GHCR packages before reconciling the shared pull Secret.")
+
 # GHCR pulls use one platform-owned credential across production namespaces.
 bootstrap_script = (ROOT / "scripts" / "bootstrap-runner.sh").read_text(encoding="utf-8")
 ghcr_step = reconcile.split("- name: Bootstrap GHCR pull credentials", 1)[1].split(

@@ -139,7 +139,9 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x scripts/validate-ghcr-pull-access.sh
-          ./scripts/validate-ghcr-pull-access.sh
+          # The Kubernetes pull Secret is shared across production namespaces. A targeted
+          # rollout must not rotate it unless every currently referenced GHCR package is readable.
+          TARGET_APP=all GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" ./scripts/validate-ghcr-pull-access.sh
 
       - name: Provision Auth runtime Secret from platform-infra Environment
         if: ${{ env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'auth-service' || env.TARGET_APP == 'all') }}
