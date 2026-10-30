@@ -15,8 +15,8 @@ Reference contract: [Generic Production Release Pattern (WF-03)](GENERIC-WF03-RE
 | Repository | Role | Current evidence | Status | Next action |
 |---|---|---|---|---|
 | `phanthienquoc/TCE-dashboard` | Reference application | `wf-03-tce-production-deploy.yml` is manual-dispatch only; immutable `prod-v<semver>-<sha>` tags; native ARM64 build; platform-infra promotion | Reference; runtime still needs live verification | Keep WF-01/02 validation separate from WF-03 release; confirm current GHCR/GitOps/K3s state |
-| `phanthienquoc/platform-infra` | Shared production deployment authority | `gitops-image-promotion.yml`, `reconcile-vps.yml`, validation and production smoke workflows; shared `ghcr-pull` contract merged in PR #817 | Contract merged; runtime verification pending | Keep one source of truth for manifests and pull credentials; validate each app lane independently |
-| `phanthienquoc/stockdividend` | Production application | Existing `deploy.yml` built images then deployed over SSH/Docker Compose; `wf-platform-infra-release.yml` also requested GitOps promotion; promotion requested unsupported `scraper` and full SHA tag was not published | Migration PR open | PR #7 removes SSH deploy, publishes full SHA tags, and dispatches only supported backend/admin components. Verify CI then merge and trace rollout |
+| `phanthienquoc/platform-infra` | Shared production deployment authority | `gitops-image-promotion.yml`, `reconcile-vps.yml`, validation and production smoke workflows; shared `ghcr-pull` contract merged in PR #817; PR #819 enforces canonical `GHCR_READ_TOKEN` for both promotion paths | Manifest validation passes; workflow lint still being repaired; runtime verification pending | Confirm PR #819 checks, merge when green, then validate image promotion and live app lanes |
+| `phanthienquoc/stockdividend` | Production application | PR #7 merged to `master` on 2026-10-30 (merge commit `735d5dd`); direct SSH/Docker Compose deployment removed; full SHA image tags and backend/admin-only GitOps dispatch now in `master`. Post-merge Build and Publish Images and StockDividend CI were queued/running at last check | GitOps-only change merged; image publication and live rollout not yet verified | Confirm post-merge CI/image publication, inspect platform-infra promotion and reconciliation, verify StockDividend rollout/health; investigate the separate scheduled scraper failures |
 | `phanthienquoc/media-generation` | Production FE/BE application | Single `wf-03-media-production-deploy.yml`; native ARM64 builds, immutable `prod-v<semver>-<sha>` tag, platform-infra release path | Workflow exists; end-to-end runtime not verified in this review | Verify dispatch contract, GHCR tags/digests, paired FE/BE GitOps convergence, and K3s rollout |
 | `phanthienquoc/phanthienquoc-authentication` | Production Auth service + web CI | `release.yml` is manual-dispatch only, builds ARM64 Auth image and dispatches `image-published`; `ci.yml` and path-filtered `web-ci.yml` cover validation | Workflow structure appears intentional; runtime not verified | Confirm image path/tag and protected dispatch token, then verify GitOps and live Auth health |
 
@@ -52,8 +52,8 @@ Disposition meanings:
 
 | Workflow | Disposition | Reason |
 |---|---|---|
-| `.github/workflows/deploy.yml` | CHANGE (PR #7) | Keep build/publish responsibility; remove duplicate direct SSH/Docker Compose deployment; publish full SHA tags |
-| `.github/workflows/wf-platform-infra-release.yml` | CHANGE (PR #7) | Keep GitOps dispatch; send only supported backend/admin components |
+| `.github/workflows/deploy.yml` | KEEP | PR #7 merged 2026-10-30; builds and publishes immutable full-SHA image tags without direct VPS deployment |
+| `.github/workflows/wf-platform-infra-release.yml` | KEEP | PR #7 merged 2026-10-30; dispatches only supported backend/admin components using the full SHA from the successful build |
 | `.github/workflows/run_scraper.yml` | KEEP | Scheduled/manual scraper execution is a separate task; no equivalent K3s scraper workload was found in the production Kustomize overlay |
 
 ### Media Generation
