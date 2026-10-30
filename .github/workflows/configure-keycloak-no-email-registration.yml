@@ -1,0 +1,46 @@
+name: Configure Keycloak Registration Without Email Verification
+
+"on":
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type ENABLE for public self-registration without email verification"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keycloak-no-email-registration
+  cancel-in-progress: false
+
+jobs:
+  configure-registration:
+    if: github.ref == 'refs/heads/master' && inputs.confirm == 'ENABLE'
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    environment: production
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Disable email verification for mrcute self-registration
+        env:
+          KEYCLOAK_ADMIN_USERNAME: ${{ secrets.KEYCLOAK_ADMIN_USERNAME }}
+          KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          for name in KEYCLOAK_ADMIN_USERNAME KEYCLOAK_ADMIN_PASSWORD; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Missing production Environment secret: $name"
+              exit 1
+            fi
+          done
+          python3 -m py_compile scripts/configure-keycloak-no-email-registration.py
+          python3 scripts/configure-keycloak-no-email-registration.py
+          unset KEYCLOAK_ADMIN_USERNAME KEYCLOAK_ADMIN_PASSWORD
