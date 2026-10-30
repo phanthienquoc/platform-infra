@@ -15,10 +15,16 @@ Reference contract: [Generic Production Release Pattern (WF-03)](GENERIC-WF03-RE
 | Repository | Role | Current evidence | Status | Next action |
 |---|---|---|---|---|
 | `phanthienquoc/TCE-dashboard` | Reference application | `wf-03-tce-production-deploy.yml` is manual-dispatch only; immutable `prod-v<semver>-<sha>` tags; native ARM64 build; platform-infra promotion | Reference; runtime still needs live verification | Keep WF-01/02 validation separate from WF-03 release; confirm current GHCR/GitOps/K3s state |
-| `phanthienquoc/platform-infra` | Shared production deployment authority | `gitops-image-promotion.yml`, `reconcile-vps.yml`, validation and production smoke workflows; shared `ghcr-pull` contract merged in PR #817 | Contract merged; runtime verification pending | Keep one source of truth for manifests and pull credentials; validate each app lane independently |
-| `phanthienquoc/stockdividend` | Production application | Existing `deploy.yml` built images then deployed over SSH/Docker Compose; `wf-platform-infra-release.yml` also requested GitOps promotion; promotion requested unsupported `scraper` and full SHA tag was not published | Migration PR open | PR #7 removes SSH deploy, publishes full SHA tags, and dispatches only supported backend/admin components. Verify CI then merge and trace rollout |
+| `phanthienquoc/platform-infra` | Shared production deployment authority | Shared `ghcr-pull` contract merged in PR #817; canonical `GHCR_READ_TOKEN` promotion validation merged in PR #819 (master commit `92c17f4`). Live inspection at 2026-10-30T14:08Z shows GHCR 403s for MicroFE Shell/WS and StockDividend backend/admin; Keycloak is 0/1 and public OIDC discovery returns HTTP 503 with database pool checkout timeouts | Credential contract merged; production runtime is degraded and not healthy | Verify GHCR_READ_TOKEN has `read:packages` plus access to every private production package; verify scheduled reconciliation and image pulls; resolve Keycloak database connection checkout failures; rerun smoke and verify all rollouts before declaring healthy |
+| `phanthienquoc/stockdividend` | Production application | PR #7 merged to `master` on 2026-10-30 (merge commit `735d5dd`); direct SSH/Docker Compose deployment removed and only backend/admin GitOps dispatch remains. Post-merge StockDividend CI passed, but image build `41068677403` failed because pip could not install quarantined PyPI package `vnstock`; downstream promotion `41068883593` was skipped. PR #8 now pins Vnstock 5.0.1 from its official package index and adds no-push image-build CI | GitOps-only change merged; scraper image publishing blocked; no new production promotion occurred | Verify PR #8's no-push container build and all checks, merge only when green, then verify post-merge image publication → promotion → rollout/health; investigate the separate scheduled scraper failures |
 | `phanthienquoc/media-generation` | Production FE/BE application | Single `wf-03-media-production-deploy.yml`; native ARM64 builds, immutable `prod-v<semver>-<sha>` tag, platform-infra release path | Workflow exists; end-to-end runtime not verified in this review | Verify dispatch contract, GHCR tags/digests, paired FE/BE GitOps convergence, and K3s rollout |
 | `phanthienquoc/phanthienquoc-authentication` | Production Auth service + web CI | `release.yml` is manual-dispatch only, builds ARM64 Auth image and dispatches `image-published`; `ci.yml` and path-filtered `web-ci.yml` cover validation | Workflow structure appears intentional; runtime not verified | Confirm image path/tag and protected dispatch token, then verify GitOps and live Auth health |
+
+## Current runtime blockers (2026-10-30)
+
+- **GHCR pulls:** the latest self-hosted VPS inspection reports `ImagePullBackOff` with HTTP 403 authorization failures for `ghcr.io/phanthienquoc/microfe-shell:0.1.0`, `microfe-ws:RELEASE_SHA`, and StockDividend backend/admin images. The code path reconciles the shared `ghcr-pull` secret, but actual token/package access still needs verification; do not place token values in logs or Git.
+- **Keycloak/OIDC:** the production smoke run returned HTTP 503 for OIDC discovery. The VPS inspection shows Keycloak 0/1 with Supabase/PostgreSQL session-pool checkout timeouts (`ECHECKOUTTIMEOUT`) and a down cluster-health check. No database or credential mutation was performed in this pass.
+- **StockDividend image build:** post-merge image publication failed because pip could not resolve the quarantined PyPI `vnstock` project. The follow-up is [StockDividend PR #8](https://github.com/phanthienquoc/stockdividend/pull/8); its CI builds the scraper image without publishing.
 
 ## Workflow inventory and disposition
 
@@ -52,8 +58,8 @@ Disposition meanings:
 
 | Workflow | Disposition | Reason |
 |---|---|---|
-| `.github/workflows/deploy.yml` | CHANGE (PR #7) | Keep build/publish responsibility; remove duplicate direct SSH/Docker Compose deployment; publish full SHA tags |
-| `.github/workflows/wf-platform-infra-release.yml` | CHANGE (PR #7) | Keep GitOps dispatch; send only supported backend/admin components |
+| `.github/workflows/deploy.yml` | KEEP | PR #7 merged 2026-10-30; builds and publishes immutable full-SHA image tags without direct VPS deployment |
+| `.github/workflows/wf-platform-infra-release.yml` | KEEP | PR #7 merged 2026-10-30; dispatches only supported backend/admin components using the full SHA from the successful build |
 | `.github/workflows/run_scraper.yml` | KEEP | Scheduled/manual scraper execution is a separate task; no equivalent K3s scraper workload was found in the production Kustomize overlay |
 
 ### Media Generation
