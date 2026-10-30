@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-10-31 (after PR #854 merge and post-merge validate/lint pass; no new production reconciliation or runtime snapshot available)
+Last reviewed: 2026-10-31 (after PR #855 tracker merge; identified legacy TCE microfe-auth image publication not referenced by production Kustomize; no new runtime snapshot available)
 Reference contract: [Generic Production Release Pattern (WF-03)](GENERIC-WF03-RELEASE-PATTERN.md)
 
 ## Target operating model
@@ -54,7 +54,7 @@ Disposition meanings:
 | `wf-06-tce-healthcheck.yml` | KEEP | Health checks |
 | `wf-07-tce-backup.yml` | KEEP | Backup |
 | `wf-07-tce-integration-check.yml` | KEEP | Integration checks; distinct from backup |
-| `wf-08b-tce-microfe-build-publish.yml` | KEEP | MicroFE image publication |
+| `wf-08b-tce-microfe-build-publish.yml` | KEEP | Shell/WS immutable image publication is still required. The workflow also builds `microfe-auth`, but production Kustomize deploys the canonical `auth-service/auth` image and the shared promoter does not apply `auth_digest`; audit the legacy Auth subjob/payload separately before removing it. |
 | `wf-09-nginx-readonly-audit.yml` | KEEP | Read-only audit |
 | `wf-09-tce-vps-safe-setup.yml` | KEEP | VPS setup |
 | `wf-10-tce-k3s-bootstrap.yml` | KEEP | K3s bootstrap |
@@ -141,6 +141,7 @@ Disposition meanings:
 - [x] Merge platform-infra PR #842 (`1b93c98`) after exact-head `validate`, Keycloak manifest/boundary, and `lint` checks passed; push reconciliation now watches all production manifest subtrees and preserves `workflow_dispatch`, `repository_dispatch`, and the 15-minute schedule. Post-merge validation for `1b93c98` is queued as of 2026-10-31 20:06 UTC.
 - [x] Merge platform-infra PR #844 (`c04f577`) after exact-head `validate`, `lint`, and Keycloak manifest/boundary checks passed; offline validation now runs on `ubuntu-latest`, with pinned `kubectl` v1.36.3 checksum verification and explicit PyYAML installation. Post-merge validation on `c04f577` passed: [validate #41128324100](https://github.com/phanthienquoc/platform-infra/actions/runs/41128324100), [lint #41128323776](https://github.com/phanthienquoc/platform-infra/actions/runs/41128323776), and [Keycloak boundary #41128323812](https://github.com/phanthienquoc/platform-infra/actions/runs/41128323812).
 - [x] Merge Platform Infra PR #854 (`0b08765`) to install checksum-verified kubectl v1.36.3 before MicroFE Kustomize rendering and enforce the dependency in `validate-workflow-contracts.py`. Exact-head checks and post-merge validation passed: [validate #41135749415](https://github.com/phanthienquoc/platform-infra/actions/runs/41135749415), [lint #41135749561](https://github.com/phanthienquoc/platform-infra/actions/runs/41135749561). No production mutation occurred; credential blockers remain.
+- [ ] Coordinate a legacy MicroFE Auth publication cleanup across TCE and Platform Infra: TCE `wf-08b` still builds/publishes `microfe-auth` and sends `auth_digest`, while the production Deployment uses `ghcr.io/phanthienquoc/auth-service/auth:<immutable-tag>` and the shared promoter only validates the legacy digest format. Keep this workflow for Shell/WS; remove only the unused Auth image build/payload after updating both sides and their contract tests. No removal is made by this tracker-only change.
 - [ ] Resolve MicroFE Shell/WS image references before rollout: current manifest-resolved tags `0.1.0` and `RELEASE_SHA` returned registry `NotFound` in the latest VPS snapshot. Identify the publishing source and a verified immutable image digest; do not replace tags with guesses.
 - [ ] Review any workflow marked REVIEW using recent run evidence and consumers before deleting it.
 - [ ] Continue hourly tracking; do not alter TCE market-scan scheduling.
