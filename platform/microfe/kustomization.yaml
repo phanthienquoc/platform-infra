@@ -10,3 +10,11 @@ resources:
 - ws-gateway/deployment.yaml
 
 # trigger immutable MicroFE publish through the VPS reconciler
+
+images:
+- name: ghcr.io/phanthienquoc/microfe-shell
+  newName: ghcr.io/phanthienquoc/microfe-shell
+  digest: sha256:dfdf663628ee75aca6a0215a7fc20d9d1f9d9d4135b72be5a0611cf8f0c7b0c6
+- name: ghcr.io/phanthienquoc/microfe-ws
+  newName: ghcr.io/phanthienquoc/microfe-ws
+  digest: sha256:1083de4ac00f3babdc8100916e2c3afedca830e7f36bf52498882b128b745d88
