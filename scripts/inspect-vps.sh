@@ -114,4 +114,5 @@ mkdir -p "$(dirname "$OUT")"
       "$endpoint" 2>&1 || true
   done
 } >"$OUT"
+scripts/inspect-vps-runtime.sh "$OUT"
 echo "Wrote $OUT"
