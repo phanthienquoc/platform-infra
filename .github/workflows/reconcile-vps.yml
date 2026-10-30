@@ -1,5 +1,6 @@
 # yamllint disable rule:line-length
 name: reconcile-vps
+run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target_app || 'all' }} / ${{ github.event.client_payload.release || inputs.mode || github.event_name }}
 
 "on":
   workflow_dispatch:

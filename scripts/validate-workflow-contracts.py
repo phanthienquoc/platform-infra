@@ -53,6 +53,8 @@ if (WORKFLOW_DIR / "reconcile-microfe.yml").exists():
     fail("Dedicated reconcile-microfe.yml must be removed.")
 if "gitops-promoted-ready" not in reconcile:
     fail("reconcile-vps.yml must consume the shared GitOps promotion event.")
+if "run-name:" not in reconcile or "github.event.client_payload.app" not in reconcile or "github.event.client_payload.release" not in reconcile:
+    fail("reconcile-vps.yml must expose target app and release in its run name for release verification.")
 if "microfe" not in reconcile:
     fail("reconcile-vps.yml must retain MicroFE deployment scope support.")
 
