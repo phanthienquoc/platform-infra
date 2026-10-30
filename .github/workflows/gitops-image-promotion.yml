@@ -40,6 +40,16 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  reject-non-master-manual-run:
+    if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/master'
+    name: Reject manual promotion outside master
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail closed for non-master manual promotion
+        run: |
+          echo "::error::Manual GitOps image promotion must run from refs/heads/master. Select master as the workflow ref."
+          exit 1
+
   promote-microfe-digests:
     if: github.event_name == 'repository_dispatch' && github.event.action == 'microfe-images-published'
     name: Promote MicroFE image digests as one GitOps change
@@ -155,36 +165,55 @@ jobs:
             Auth is managed independently by `phanthienquoc-authentication` using the canonical `auth-service/auth` image.
 
       - name: Validate promotion PR checks
+        id: validate-pr-checks
         if: steps.promotion.outputs.pull-request-number != ''
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.promotion.outputs.pull-request-number }}
         run: |
           set -euo pipefail
+          PR_HEAD_SHA="$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json headRefOid --jq '.headRefOid')"
+          [[ "$PR_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo '::error::Could not resolve the promotion PR head SHA'; exit 1; }
+
           required="$(gh pr checks "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --required --json state 2>/dev/null || printf '[]')"
           required_count="$(printf '%s' "$required" | jq 'length')"
           if [ "$required_count" -eq 0 ]; then
-            echo 'No required promotion PR checks are configured.'
-            exit 0
+            echo '::error::No required promotion PR checks are configured; refusing to merge without an explicit passing gate.'
+            exit 1
           fi
-          for _ in $(seq 1 30); do
+
+          state="PENDING"
+          for attempt in $(seq 1 30); do
+            required="$(gh pr checks "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --required --json state 2>/dev/null || printf '[]')"
             state="$(printf '%s' "$required" | jq -r 'if any(.[]; .state == "FAILURE" or .state == "ERROR") then "FAILURE" elif all(.[]; .state == "SUCCESS") then "SUCCESS" else "PENDING" end')"
             case "$state" in
-              SUCCESS) exit 0 ;;
+              SUCCESS) break ;;
               FAILURE) echo '::error::MicroFE promotion PR checks failed'; exit 1 ;;
             esac
             sleep 10
-            required="$(gh pr checks "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --required --json state 2>/dev/null || printf '[]')"
           done
-          echo '::error::MicroFE promotion checks did not complete in time'
-          exit 1
+          if [ "$state" != "SUCCESS" ]; then
+            echo '::error::MicroFE promotion checks did not complete in time'
+            exit 1
+          fi
+
+          CURRENT_HEAD_SHA="$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json headRefOid --jq '.headRefOid')"
+          if [ "$CURRENT_HEAD_SHA" != "$PR_HEAD_SHA" ]; then
+            echo '::error::MicroFE promotion PR head changed while checks were running; refusing to merge an unverified commit.'
+            exit 1
+          fi
+          echo "head_sha=$PR_HEAD_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Merge MicroFE promotion PR
         if: steps.promotion.outputs.pull-request-number != ''
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.promotion.outputs.pull-request-number }}
-        run: gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --squash --delete-branch
+          HEAD_SHA: ${{ steps.validate-pr-checks.outputs.head_sha }}
+        run: |
+          set -euo pipefail
+          test -n "$HEAD_SHA" || { echo '::error::Verified promotion PR head SHA is missing'; exit 1; }
+          gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --squash --delete-branch --match-head-commit "$HEAD_SHA"
 
       - name: Trigger shared VPS reconciliation
         env:
@@ -347,7 +376,7 @@ jobs:
           exit 1
 
   promote:
-    if: github.event_name != 'repository_dispatch' || (github.event.action != 'tce-release-requested' && github.event.action != 'media-release-requested' && github.event.action != 'microfe-images-published')
+    if: (github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/master') && (github.event_name != 'repository_dispatch' || (github.event.action != 'tce-release-requested' && github.event.action != 'media-release-requested' && github.event.action != 'microfe-images-published'))
     name: Promote ${{ github.event.client_payload.app || inputs.app }} / ${{ github.event.client_payload.component || inputs.component }}
     runs-on: ubuntu-latest
     environment: production
@@ -559,25 +588,30 @@ jobs:
             - image tag: ${{ steps.input.outputs.tag }}
 
       - name: Validate promotion PR checks
+        id: validate-pr-checks
         if: steps.promotion.outputs.pull-request-number != ''
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.promotion.outputs.pull-request-number }}
         run: |
           set -euo pipefail
-          REPO="${GITHUB_REPOSITORY}"
+          REPO="$GITHUB_REPOSITORY"
           echo "Validating promotion PR #$PR_NUMBER before merge."
+
+          PR_HEAD_SHA="$(gh pr view "$PR_NUMBER" --repo "$REPO" --json headRefOid --jq '.headRefOid')"
+          [[ "$PR_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Could not resolve promotion PR head SHA."; exit 1; }
 
           required="$(gh pr checks "$PR_NUMBER" --repo "$REPO" --required --json state 2>/dev/null || printf '[]')"
           required_count="$(printf '%s' "$required" | jq 'length')"
-
           if [ "$required_count" -eq 0 ]; then
-            echo "No required PR checks are configured; continuing to merge gate."
-            exit 0
+            echo "::error::No required PR checks are configured; refusing to merge a promotion without an explicit passing gate."
+            exit 1
           fi
 
           echo "Waiting for $required_count required PR check(s)."
+          state="PENDING"
           for attempt in $(seq 1 30); do
+            required="$(gh pr checks "$PR_NUMBER" --repo "$REPO" --required --json state 2>/dev/null || printf '[]')"
             state="$(printf '%s' "$required" | jq -r '
               if any(.[]; .state == "FAILURE" or .state == "ERROR") then "FAILURE"
               elif all(.[]; .state == "SUCCESS") then "SUCCESS"
@@ -585,59 +619,40 @@ jobs:
               end
             ')"
             echo "Promotion PR check state: $state (attempt $attempt/30)"
-
             case "$state" in
-              SUCCESS) exit 0 ;;
+              SUCCESS) break ;;
               FAILURE)
                 echo "::error::Required promotion PR checks failed."
                 exit 1
                 ;;
             esac
-
             sleep 10
-            required="$(gh pr checks "$PR_NUMBER" --repo "$REPO" --required --json state 2>/dev/null || printf '[]')"
           done
 
-          echo "::error::Required promotion PR checks did not complete within the validation window."
-          exit 1
+          if [ "$state" != "SUCCESS" ]; then
+            echo "::error::Required promotion PR checks did not complete within the validation window."
+            exit 1
+          fi
+
+          CURRENT_HEAD_SHA="$(gh pr view "$PR_NUMBER" --repo "$REPO" --json headRefOid --jq '.headRefOid')"
+          if [ "$CURRENT_HEAD_SHA" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Promotion PR head changed while checks were running; refusing to merge an unverified commit."
+            exit 1
+          fi
+          echo "head_sha=$PR_HEAD_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Merge promotion PR
         if: steps.promotion.outputs.pull-request-number != ''
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.promotion.outputs.pull-request-number }}
+          HEAD_SHA: ${{ steps.validate-pr-checks.outputs.head_sha }}
         run: |
           set -euo pipefail
-
-          REPO="${GITHUB_REPOSITORY}"
-          MAX_ATTEMPTS=4
-
-          for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
-            echo "Merge attempt $attempt/$MAX_ATTEMPTS for PR #$PR_NUMBER"
-
-            if gh pr merge "$PR_NUMBER" --repo "$REPO" --squash --delete-branch; then
-              echo "Promotion PR #$PR_NUMBER merged successfully."
-              exit 0
-            fi
-
-            if [ "$attempt" -eq "$MAX_ATTEMPTS" ]; then
-              echo "::error::Promotion PR #$PR_NUMBER could not be merged after $MAX_ATTEMPTS attempts."
-              exit 1
-            fi
-
-            echo "Base branch changed or merge was temporarily unavailable; updating PR branch before retry."
-            gh pr update-branch "$PR_NUMBER" --repo "$REPO" --rebase
-
-            for _ in 1 2 3 4 5; do
-              sleep 2
-              state="$(gh pr view "$PR_NUMBER" --repo "$REPO" --json mergeStateStatus --jq '.mergeStateStatus')"
-              echo "PR merge state after branch update: $state"
-              case "$state" in
-                CLEAN|BEHIND|UNSTABLE) break ;;
-              esac
-            done
-          done
-
+          REPO="$GITHUB_REPOSITORY"
+          test -n "$HEAD_SHA" || { echo "::error::Verified promotion PR head SHA is missing."; exit 1; }
+          gh pr merge "$PR_NUMBER" --repo "$REPO" --squash --delete-branch --match-head-commit "$HEAD_SHA"
+          echo "Promotion PR #$PR_NUMBER merged at the verified head $HEAD_SHA."
       - name: Determine release readiness
         if: steps.input.outputs.app == 'stockdividend' || steps.input.outputs.app == 'media-generation' || steps.input.outputs.app == 'auth-service'
         id: readiness
