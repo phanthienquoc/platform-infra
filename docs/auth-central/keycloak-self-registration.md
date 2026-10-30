@@ -54,3 +54,25 @@ SMTP provider/host, port, sender address, and credentials have not yet been supp
 
 ## Operational note
 The first Keycloak bootstrap took longer than the existing 300-second deployment rollout wait. Before the next Keycloak deployment, update both the GitHub workflow and the installed `platform-kubectl` allowlist together to use a 900-second timeout, then verify the exact allowlisted command. Updating only the workflow would be rejected by the wrapper.
+
+
+## Resend SMTP implementation
+
+A manual workflow, `.github/workflows/configure-keycloak-resend-smtp.yml`, configures the `mrcute` realm through the Keycloak Admin REST API. It tests SMTP connectivity first; only after that succeeds does it enable email verification and password reset.
+
+No additional mail server or Kubernetes workload is required.
+
+1. Create an account at https://resend.com and add `mrcute.space` as a sending domain.
+2. Publish the DNS records Resend provides and wait for domain verification.
+3. Create a Resend API key with sending permission.
+4. In GitHub repository `phanthienquoc/platform-infra`, open **Settings → Environments → production** and set:
+   - Secret `RESEND_SMTP_API_KEY`: the Resend API key.
+   - Variable `RESEND_SMTP_FROM`: a sender address on the verified domain, for example `noreply@mrcute.space`.
+   - Optional variable `RESEND_SMTP_FROM_DISPLAY_NAME`: for example `mrcute SSO`.
+   - Existing secrets `KEYCLOAK_ADMIN_USERNAME` and `KEYCLOAK_ADMIN_PASSWORD` must be present.
+5. After merging the implementation, run **Actions → Configure Keycloak Resend SMTP → Run workflow** on `master`.
+6. Verify a real registration email, the verification link, and a password-reset email before sharing registration publicly.
+
+The workflow uses `smtp.resend.com:465` with SSL and the SMTP username `resend`. The API key is passed as a protected secret, never printed, and never committed to source or manifests.
+
+Keycloak registration is separate from TCE application authorization. The current TCE session exchange still requires a verified email matching an existing active TCE account; this workflow does not create TCE application accounts or grant application roles.
