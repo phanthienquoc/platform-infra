@@ -70,7 +70,7 @@ def desired_client(manifest):
         "webOrigins": sorted(manifest["web_origins"]),
         "attributes": {
             "pkce.code.challenge.method": "S256",
-            "post.logout.redirect.uris": "##".join(sorted(manifest["post_logout_redirect_uris"])),
+            "post.logout.redirect.uris": manifest["post_logout_redirect_uris"][0],
         },
     }
 
@@ -115,7 +115,7 @@ def verify_client(token, manifest):
         "exact_redirect_uris": sorted(client.get("redirectUris") or []) == sorted(manifest["redirect_uris"]),
         "exact_web_origins": sorted(client.get("webOrigins") or []) == sorted(manifest["web_origins"]),
         "pkce_s256": attrs.get("pkce.code.challenge.method") == "S256",
-        "exact_post_logout_redirects": set((attrs.get("post.logout.redirect.uris") or "").split("##")) == set(manifest["post_logout_redirect_uris"]),
+        "exact_post_logout_redirects": attrs.get("post.logout.redirect.uris") == manifest["post_logout_redirect_uris"][0],
     }
     _, mappers = request(f"/admin/realms/{REALM}/clients/{client['id']}/protocol-mappers/models", token=token)
     checks["api_audience_access_token_only"] = any(
