@@ -20,7 +20,7 @@ GitHub Actions can resolve secrets/variables from repository, organization, and 
 |---|---|---|
 | `BINANCE_TESTNET_API_KEY` | TCE Dashboard: `wf-07-tce-integration-check.yml` | Binance **testnet-only** integration checks; never use production credentials for this key. |
 | `BINANCE_TESTNET_API_SECRET` | TCE Dashboard: `wf-07-tce-integration-check.yml` | Binance testnet secret paired with the testnet API key. |
-| `GHCR_READ_TOKEN` | Platform Infra: `gitops-image-promotion.yml`, `reconcile-vps.yml` | Read-only GHCR package pull credential fallback. Use minimum package/repository scope. |
+| `GHCR_READ_TOKEN` | Platform Infra: `gitops-image-promotion.yml`, `reconcile-vps.yml` | Canonical read-only credential used to pull private GHCR images across `microfe-platform`, `stock-prod`, `tce-prod`, and `media-prod`. Must have `read:packages` and access to each required package; no `GITHUB_TOKEN` fallback. |
 | `JWT_SECRET` | TCE Dashboard: `wf-01-tce-build-verify.yml`; Platform Infra: `provision-auth-runtime-secret.yml`, `reconcile-vps.yml` | Server-side JWT signing secret. Platform Infra consumes it from the protected `production` Environment when provisioning the Auth runtime. Do not print or rotate casually; coordinate session compatibility. |
 | `KEYCLOAK_ADMIN_PASSWORD` | Platform Infra: `reconcile-vps.yml` | Keycloak administrator password. Treat as high sensitivity. |
 | `KEYCLOAK_ADMIN_USERNAME` | Platform Infra: `reconcile-vps.yml` | Keycloak administrator login identifier; currently referenced through the secret context. |
@@ -39,7 +39,7 @@ GitHub Actions can resolve secrets/variables from repository, organization, and 
 | `VPS_HOST` | Platform Infra: `bootstrap-runner.yml` | VPS endpoint used for runner bootstrap SSH. Currently stored under the secret context. |
 | `VPS_SSH_PRIVATE_KEY` | TCE Dashboard: `wf-01-tce-build-verify.yml`, `wf-04-tce-k3s-cleanup.yml`, `wf-06-tce-healthcheck.yml`, `wf-07-tce-backup.yml`, `wf-09-nginx-readonly-audit.yml`, `wf-09-tce-vps-safe-setup.yml`, `wf-10-tce-k3s-bootstrap.yml`; Platform Infra: `bootstrap-runner.yml` | SSH private key for VPS access. Never commit, echo, upload as an artifact, or broaden runner permissions. |
 | `VPS_USER` | Platform Infra: `bootstrap-runner.yml` | SSH login user for runner bootstrap; currently stored under the secret context. |
-| `Platform-infra-token` | Platform Infra: `reconcile-vps.yml` dynamic fallback expression | **Needs verification/cleanup.** Referenced as `secrets['Platform-infra-token']` before falling back to `GHCR_READ_TOKEN` and `GITHUB_TOKEN`. GitHub secret naming convention generally uses letters, digits and underscores; prefer a valid canonical name such as `PLATFORM_INFRA_TOKEN` only after confirming the intended token and replacing the fallback safely. Do not assume this is a configured secret. |
+
 
 ## Quick index — GitHub Variables
 
@@ -68,7 +68,7 @@ These are sourced from Platform Infra's protected GitHub Actions Environment nam
 
 ## Naming inconsistencies and recommended follow-up
 
-1. **Release handoff token names differ:** TCE uses `PLATFORM_INFRA_TOKEN`; Authentication uses `PLATFORM_INFRA_DISPATCH_TOKEN`; Platform Infra contains a dynamic fallback lookup for `Platform-infra-token`. Document their independent scopes and permissions; standardize only through a deliberate workflow change with a controlled rotation plan.
+1. **Release handoff token names differ:** TCE uses `PLATFORM_INFRA_TOKEN`; Authentication uses `PLATFORM_INFRA_DISPATCH_TOKEN`. Document their independent scopes and permissions; do not reuse either as the Kubernetes GHCR pull credential.
 2. **Telegram token storage differs:** TCE reads `TELEGRAM_BOT_TOKEN` via `vars`; Platform Infra reads the same key via `secrets`. Avoid placing a bot token in an unprotected variable; migrate through a carefully tested change if TCE still needs it.
 3. **MFA key names differ by purpose:** `MFA_ENCRYPTION_KEY`, `MFA_ENCRYPTION_KEY_PROD`, and `MFA_ENCRYPTION_KEY_STG` are not interchangeable without verifying each workflow's environment/cluster mapping.
 4. **Secret names do not prove configured existence:** this is a source-code inventory. The GitHub connector used for this audit cannot read secret values and this inventory does not claim to validate which keys are configured in repository, organization, or environment settings.

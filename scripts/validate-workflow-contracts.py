@@ -81,4 +81,19 @@ if "apply -k platform/keycloak" not in keycloak_lane:
 if "provision-keycloak-secret" not in keycloak_lane:
     fail("Keycloak lane must provision its separate runtime Secret.")
 
+# GHCR pulls use one platform-owned credential across production namespaces.
+bootstrap_script = (ROOT / "scripts" / "bootstrap-runner.sh").read_text(encoding="utf-8")
+ghcr_step = reconcile.split("- name: Bootstrap GHCR pull credentials", 1)[1].split(
+    "- name: Restart workloads blocked on image pulls", 1
+)[0]
+if "${{ secrets.GHCR_READ_TOKEN }}" not in ghcr_step:
+    fail("reconcile-vps.yml must use the canonical GHCR_READ_TOKEN secret.")
+if "secrets.GITHUB_TOKEN" in ghcr_step or "Platform-infra-token" in ghcr_step:
+    fail("GHCR bootstrap must not silently fall back to a cross-repository-inadequate token.")
+for namespace in ("microfe-platform", "stock-prod", "tce-prod", "media-prod"):
+    if namespace not in bootstrap_script.split("ghcr_namespaces=(", 1)[-1].split(")", 1)[0]:
+        fail(f"GHCR pull reconciliation is missing production namespace: {namespace}")
+if 'patch deployment "$deployment"' not in bootstrap_script or 'imagePullSecrets' not in bootstrap_script:
+    fail("GHCR pull reconciliation must normalize GHCR workload imagePullSecrets.")
+
 print("Workflow contract validation passed.")

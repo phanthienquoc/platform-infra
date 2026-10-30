@@ -60,7 +60,15 @@ case "${1:-}" in
       echo "platform-kubectl: GHCR credentials must be provided on stdin" >&2
       exit 2
     }
-    for namespace in microfe-platform stock-prod; do
+    # Single platform-owned pull credential for all production GHCR workloads.
+    # Keep this allowlist aligned with the private-image production namespaces.
+    ghcr_namespaces=(microfe-platform stock-prod tce-prod media-prod)
+    for namespace in "${ghcr_namespaces[@]}"; do
+      if ! "${KUBECTL[@]}" get namespace "$namespace" >/dev/null 2>&1; then
+        echo "Skipping GHCR setup for absent namespace: $namespace"
+        continue
+      fi
+
       "${KUBECTL[@]}" -n "$namespace" create secret docker-registry ghcr-pull \
         --docker-server=ghcr.io \
         --docker-username="$ghcr_username" \
@@ -69,6 +77,20 @@ case "${1:-}" in
       "${KUBECTL[@]}" -n "$namespace" patch serviceaccount default \
         --type="merge" \
         -p '{"imagePullSecrets":[{"name":"ghcr-pull"}]}'
+
+      # Normalize existing per-Deployment overrides to the platform-owned secret.
+      deployment_names="$("${KUBECTL[@]}" -n "$namespace" get deployments -o json | jq -r '
+        .items[]
+        | select([.spec.template.spec.containers[]?, .spec.template.spec.initContainers[]?]
+          | any((.image // "") | startswith("ghcr.io/")))
+        | .metadata.name
+      ')"
+      while IFS= read -r deployment; do
+        [[ -n "$deployment" ]] || continue
+        "${KUBECTL[@]}" -n "$namespace" patch deployment "$deployment" \
+          --type="merge" \
+          -p '{"spec":{"template":{"spec":{"imagePullSecrets":[{"name":"ghcr-pull"}]}}}}'
+      done <<< "$deployment_names"
     done
     exit 0
     ;;
