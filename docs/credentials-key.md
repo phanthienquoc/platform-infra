@@ -1,7 +1,7 @@
 # GitHub Credentials Key Inventory
 
 **Audited:** 2026-10-26  
-**Purpose:** Reusable index of GitHub Actions secret and variable names referenced by workflows across TCE Dashboard, Authentication, and Platform Infra.  
+**Purpose:** Reusable index of GitHub Actions secret and variable names referenced by workflows across TCE Dashboard, StockDividend, Authentication, and Platform Infra.  
 **Safety:** This document intentionally contains names and usage metadata only. It MUST NOT contain credential values, environment-file contents, generated tokens, or copies of GitHub secret values.
 
 ## Source coverage
@@ -9,6 +9,7 @@
 Inventoried the workflow files currently present in these repositories:
 
 - [TCE Dashboard workflows](https://github.com/phanthienquoc/TCE-dashboard/tree/master/.github/workflows)
+- [StockDividend workflows](https://github.com/phanthienquoc/stockdividend/tree/master/.github/workflows)
 - [Authentication workflows](https://github.com/phanthienquoc/phanthienquoc-authentication/tree/master/.github/workflows)
 - [Platform Infra workflows](https://github.com/phanthienquoc/platform-infra/tree/master/.github/workflows)
 
@@ -20,7 +21,7 @@ GitHub Actions can resolve secrets/variables from repository, organization, and 
 |---|---|---|
 | `BINANCE_TESTNET_API_KEY` | TCE Dashboard: `wf-07-tce-integration-check.yml` | Binance **testnet-only** integration checks; never use production credentials for this key. |
 | `BINANCE_TESTNET_API_SECRET` | TCE Dashboard: `wf-07-tce-integration-check.yml` | Binance testnet secret paired with the testnet API key. |
-| `GHCR_READ_TOKEN` | Platform Infra: `gitops-image-promotion.yml`, `reconcile-vps.yml` | Canonical read-only credential used to pull private GHCR images across `microfe-platform`, `stock-prod`, `tce-prod`, and `media-prod`. Must have `read:packages` and access to each required package; no `GITHUB_TOKEN` fallback. |
+| `GHCR_READ_TOKEN` | Platform Infra: `gitops-image-promotion.yml`, `reconcile-vps.yml` | Canonical read-only credential stored in the protected `production` Environment and used by both GHCR-consuming promotion jobs plus production reconciliation. Must have `read:packages` and access to every required private package across `microfe-platform`, `stock-prod`, `tce-prod`, and `media-prod`; no `GITHUB_TOKEN` fallback. Jobs consuming this Environment secret must declare `environment: production`. |
 | `JWT_SECRET` | TCE Dashboard: `wf-01-tce-build-verify.yml`; Platform Infra: `provision-auth-runtime-secret.yml`, `reconcile-vps.yml` | Server-side JWT signing secret. Platform Infra consumes it from the protected `production` Environment when provisioning the Auth runtime. Do not print or rotate casually; coordinate session compatibility. |
 | `KEYCLOAK_ADMIN_PASSWORD` | Platform Infra: `reconcile-vps.yml` | Keycloak administrator password. Treat as high sensitivity. |
 | `KEYCLOAK_ADMIN_USERNAME` | Platform Infra: `reconcile-vps.yml` | Keycloak administrator login identifier; currently referenced through the secret context. |
@@ -30,7 +31,7 @@ GitHub Actions can resolve secrets/variables from repository, organization, and 
 | `MFA_ENCRYPTION_KEY` | TCE Dashboard: `wf-01-tce-build-verify.yml`; Platform Infra: `provision-auth-runtime-secret.yml`, `reconcile-vps.yml` | Backend MFA-encryption key. Platform Infra maps the production Environment secret into the Auth runtime secret. Preserve ciphertext compatibility. |
 | `MFA_ENCRYPTION_KEY_PROD` | TCE Dashboard: `wf-10-tce-k3s-bootstrap.yml` | Separate TCE production bootstrap key name; do not assume it is a synonym for `MFA_ENCRYPTION_KEY`. |
 | `MFA_ENCRYPTION_KEY_STG` | TCE Dashboard: `wf-10-tce-k3s-bootstrap.yml` | Separate TCE staging bootstrap key name; do not reuse the production value by assumption. |
-| `PLATFORM_INFRA_TOKEN` | TCE Dashboard: `wf-03-tce-production-deploy.yml`, `wf-08b-tce-microfe-build-publish.yml` | Token used by TCE workflows to request release/GitOps handoff to Platform Infra. Scope narrowly to required dispatch permissions. |
+| `PLATFORM_INFRA_TOKEN` | TCE Dashboard: `wf-03-tce-production-deploy.yml`, `wf-08b-tce-microfe-build-publish.yml`; StockDividend: `wf-platform-infra-release.yml` | Cross-repository release/GitOps handoff token. StockDividend requires `Contents: write` access to `phanthienquoc/platform-infra` for `repository_dispatch`; TCE workflows use it for their release handoff. This is separate from `GHCR_READ_TOKEN` and Authentication's `PLATFORM_INFRA_DISPATCH_TOKEN`. |
 | `PLATFORM_INFRA_DISPATCH_TOKEN` | Authentication: `release.yml` | Auth service release handoff token for `repository_dispatch` to Platform Infra. Distinct name from TCE's `PLATFORM_INFRA_TOKEN`; don't assume they share a value. |
 | `RUNNER_REGISTRATION_PAT` | Platform Infra: `bootstrap-runner.yml` | PAT used to request a short-lived self-hosted runner registration token. Prefer minimal repository/action-runner administration scope; never store the generated short-lived token. |
 | `SUPABASE_SERVICE_ROLE_KEY` | TCE Dashboard: `wf-01-tce-build-verify.yml`; Platform Infra: `provision-auth-runtime-secret.yml`, `reconcile-vps.yml` | Privileged Supabase backend credential. Keep server-only; never expose in frontend, logs, artifacts, command output, or this inventory. |
@@ -93,6 +94,12 @@ These are sourced from Platform Infra's protected GitHub Actions Environment nam
 - `wf-09-tce-vps-safe-setup.yml`
 - `wf-10-tce-k3s-bootstrap.yml`
 - `wf-11-tce-mobile-landscape-viewport.yml`
+
+### StockDividend
+
+- `deploy.yml`
+- `wf-platform-infra-release.yml`
+- `run_scraper.yml`
 
 ### Authentication
 
