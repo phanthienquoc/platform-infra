@@ -13,6 +13,8 @@ The `reconcile-vps.yml` production Environment uses:
 - Secret `GHCR_READ_TOKEN`: token with `read:packages` permission and access to every private GHCR package deployed to production.
 - Variable `GHCR_USERNAME`: optional GHCR account name; defaults to the repository owner.
 
+Because `ghcr-pull` is shared across production namespaces, every non-Keycloak apply validates **all** referenced production GHCR packages before the Secret can be reconciled—even when the requested rollout targets only one app. This prevents a MicroFE-only package check from authorizing a shared credential update while StockDividend or another package is still inaccessible.
+
 The workflow intentionally does **not** fall back to `GITHUB_TOKEN` for Kubernetes pulls. A workflow token that cannot read another repository's private package must fail fast rather than silently creating a Kubernetes secret that returns 401/403. The package preflight obtains a scoped bearer token and probes each package's Registry V2 `tags/list` endpoint. Promotion then uses `scripts/validate-ghcr-image-reference.sh` to request the exact tag or digest from `manifests/<reference>` with a package-scoped bearer token. This avoids relying on Docker's registry-wide `/v2/` login challenge, which can be denied even when scoped package reads succeed.
 
 Never print or commit token values. The workflow passes the credential through stdin to the root-owned, allowlisted `platform-kubectl reconcile-ghcr-pull` command.
