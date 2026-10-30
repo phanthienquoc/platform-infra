@@ -28,7 +28,7 @@ spec:
         env:
         - {name: NODE_ENV, value: production}
         - {name: PORT, value: "3000"}
-        - {name: WORKER_ENABLED, value: "true"}
+        - {name: WORKER_ENABLED, value: "false"}
         - {name: WORKER_POLL_MS, value: "3000"}
         - {name: MEDIA_STORAGE_BUCKET, value: media-generation}
         - {name: AUTH_SERVICE_URL, value: http://microfe-auth.microfe-platform.svc.cluster.local}
