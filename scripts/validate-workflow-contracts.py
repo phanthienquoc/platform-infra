@@ -81,6 +81,12 @@ if "apply -k platform/keycloak" not in keycloak_lane:
 if "provision-keycloak-secret" not in keycloak_lane:
     fail("Keycloak lane must provision its separate runtime Secret.")
 
+# Validate private-image pull access before any runtime Secret or pull credential mutation.
+preflight_index = reconcile.find("name: Validate GHCR pull access before mutating cluster credentials")
+auth_secret_index = reconcile.find("name: Provision Auth runtime Secret from platform-infra Environment")
+if preflight_index < 0 or auth_secret_index < 0 or preflight_index > auth_secret_index:
+    fail("GHCR pull-access preflight must run before provisioning the Auth runtime Secret.")
+
 # GHCR pulls use one platform-owned credential across production namespaces.
 bootstrap_script = (ROOT / "scripts" / "bootstrap-runner.sh").read_text(encoding="utf-8")
 ghcr_step = reconcile.split("- name: Bootstrap GHCR pull credentials", 1)[1].split(
