@@ -46,6 +46,12 @@ if 'gh pr update-branch "$PR_NUMBER"' in promotion:
 # MicroFE digest promotions must use the shared GitOps promotion workflow.
 if "microfe-images-published" not in promotion:
     fail("gitops-image-promotion.yml must consume microfe-images-published.")
+if "RELEASE_INPUT: ${{ github.event.client_payload.release }}" not in promotion:
+    fail("MicroFE promotion must require a release label correlated with the source commit.")
+if '[[ "$RELEASE_INPUT" == "$EXPECTED_RELEASE" ]]' not in promotion:
+    fail("MicroFE release label must be checked against the full source commit SHA.")
+if "github.event.client_payload.release || github.event.client_payload.commit" not in promotion:
+    fail("Promotion run name must expose the correlated MicroFE release label.")
 for field in ("auth_digest", "shell_digest", "ws_digest"):
     if field not in promotion:
         fail(f"Shared MicroFE promoter is missing expected payload field: {field}")
