@@ -23,6 +23,24 @@ def fail(message: str) -> None:
 reconcile = read("reconcile-vps.yml")
 promotion = read("gitops-image-promotion.yml")
 
+# Manual production promotion must originate from master; non-master dispatches fail visibly.
+if "if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/master'" not in promotion:
+    fail("Manual GitOps promotion must fail closed when dispatched from a non-master ref.")
+if "github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/master'" not in promotion:
+    fail("The application promotion job must only run manual promotions from master.")
+
+# Promotion PR auto-merge must fail closed without required checks and pin the exact verified head.
+if promotion.count("No required") < 2 or promotion.count("refusing to merge") < 2:
+    fail("Both promotion PR merge paths must refuse to merge when no required checks are configured.")
+if "No required promotion PR checks are configured.\n" in promotion or "No required PR checks are configured; continuing to merge gate." in promotion:
+    fail("Promotion PR checks must not treat an empty required-check list as success.")
+if promotion.count("gh pr view \"$PR_NUMBER\" --repo") < 4 or promotion.count("--json headRefOid --jq '.headRefOid'") < 4:
+    fail("Both promotion paths must capture and re-check the promotion PR head SHA.")
+if promotion.count("steps.validate-pr-checks.outputs.head_sha") < 2 or promotion.count('--match-head-commit "$HEAD_SHA"') < 2:
+    fail("Both promotion merges must be pinned to the exact PR head that passed checks.")
+if 'gh pr update-branch "$PR_NUMBER"' in promotion:
+    fail("Promotion must not update a PR branch after checks and then merge without revalidation.")
+
 # MicroFE digest promotions must use the shared GitOps promotion workflow.
 if "microfe-images-published" not in promotion:
     fail("gitops-image-promotion.yml must consume microfe-images-published.")
