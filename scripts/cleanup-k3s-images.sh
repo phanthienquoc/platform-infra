@@ -25,14 +25,23 @@ jq -r '.items[] | .spec.initContainers[]?.image, .spec.containers[]?.image, .spe
 # Keep every image used by a currently existing container, including terminated containers.
 jq -r '.containers[]? | .imageRef // empty' "$tmp/containers.json" | sort -u > "$tmp/container-image-ids.txt"
 
-# Resolve Pod references to CRI IDs. If a reference cannot be resolved, abort deletion
-# rather than risk deleting an image that Kubernetes needs to restart a workload.
+# Resolve Pod image refs (tags and digests) to immutable local IDs.
 jq -r --slurpfile refs "$tmp/pod-image-refs.txt" '
   .images[]? |
   select(any(.repoTags[]?; . as $tag | $refs[0][] == $tag) or
          any(.repoDigests[]?; . as $digest | $refs[0][] == $digest)) |
   .id
 ' "$tmp/images.json" | sort -u > "$tmp/pod-image-ids.txt"
+# Fail closed when a Pod spec reference cannot be mapped to a local image ID.
+missing_refs=0
+while IFS= read -r ref; do
+  [ -n "$ref" ] || continue
+  if ! jq -e --arg ref "$ref" 'any(.images[]?; any(.repoTags[]?; . == $ref) or any(.repoDigests[]?; . == $ref))' "$tmp/images.json" >/dev/null; then
+    echo "Cannot resolve Pod image reference; refusing all cleanup: $ref" >&2
+    missing_refs=1
+  fi
+done < "$tmp/pod-image-refs.txt"
+[ "$missing_refs" -eq 0 ] || exit 3
 
 missing_refs=0
 while IFS= read -r ref; do
