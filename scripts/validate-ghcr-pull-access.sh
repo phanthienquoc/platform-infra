@@ -67,19 +67,31 @@ fi
 
 failed=0
 for package in "${packages[@]}"; do
-  # Read the bearer token response only through grep; never print or persist it.
-  if printf 'user = "%s:%s"\n' "$GHCR_USERNAME" "$GHCR_TOKEN" |
-    curl --config - --get --silent --show-error --fail \
-      --connect-timeout 10 --max-time 20 --retry 2 --retry-delay 1 \
-      --data-urlencode "service=ghcr.io" \
-      --data-urlencode "scope=repository:${package}:pull" \
-      "https://ghcr.io/token" |
-    grep -Eq '"(token|access_token)"[[:space:]]*:[[:space:]]*"[^"]+"'; then
-    echo "Verified GHCR pull authorization for ghcr.io/$package"
-  else
+  # A non-empty token response is not proof that GHCR granted the requested package scope.
+  # Exchange credentials for a scoped bearer token, then probe the Registry V2 package
+  # endpoint to prove that this token can actually read the private package.
+  token_response=""
+  if ! token_response="$(printf 'user = "%s:%s"\n' "$GHCR_USERNAME" "$GHCR_TOKEN" | curl --config - --get --silent --show-error --fail --connect-timeout 10 --max-time 20 --retry 2 --retry-delay 1 --data-urlencode "service=ghcr.io" --data-urlencode "scope=repository:${package}:pull" "https://ghcr.io/token")"; then
     echo "::error::GHCR_READ_TOKEN cannot obtain pull access for ghcr.io/$package; verify classic PAT read:packages scope and package-level access." >&2
     failed=1
+    continue
   fi
+
+  bearer_token=""
+  if ! bearer_token="$(printf '%s' "$token_response" | jq -er '.token // .access_token // empty' 2>/dev/null)" || [[ -z "$bearer_token" ]]; then
+    echo "::error::GHCR_READ_TOKEN returned no usable scoped token for ghcr.io/$package; verify token scope and package access." >&2
+    failed=1
+    unset token_response bearer_token
+    continue
+  fi
+
+  if curl --fail --silent --show-error --connect-timeout 10 --max-time 20 -H "Authorization: Bearer $bearer_token" "https://ghcr.io/v2/$package/tags/list?n=1" >/dev/null; then
+    echo "Verified GHCR pull access for ghcr.io/$package"
+  else
+    echo "::error::GHCR_READ_TOKEN cannot read ghcr.io/$package even though the token endpoint returned a token; verify classic PAT read:packages scope and package-level access." >&2
+    failed=1
+  fi
+  unset token_response bearer_token
 done
 
 if [ "$failed" -ne 0 ]; then
