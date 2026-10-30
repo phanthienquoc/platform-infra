@@ -1,0 +1,44 @@
+name: Configure Keycloak Resend SMTP
+
+"on":
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keycloak-resend-smtp
+  cancel-in-progress: false
+
+jobs:
+  configure-email:
+    if: github.ref == 'refs/heads/master'
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    environment: production
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Test Resend SMTP and configure mrcute realm
+        env:
+          KEYCLOAK_ADMIN_USERNAME: ${{ secrets.KEYCLOAK_ADMIN_USERNAME }}
+          KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
+          RESEND_SMTP_API_KEY: ${{ secrets.RESEND_SMTP_API_KEY }}
+          RESEND_SMTP_FROM: ${{ vars.RESEND_SMTP_FROM }}
+          RESEND_SMTP_FROM_DISPLAY_NAME: ${{ vars.RESEND_SMTP_FROM_DISPLAY_NAME || 'mrcute SSO' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          for name in KEYCLOAK_ADMIN_USERNAME KEYCLOAK_ADMIN_PASSWORD RESEND_SMTP_API_KEY RESEND_SMTP_FROM; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Missing production Environment value: $name"
+              exit 1
+            fi
+          done
+          python3 -m py_compile scripts/configure-keycloak-resend-smtp.py
+          python3 scripts/configure-keycloak-resend-smtp.py
+          unset KEYCLOAK_ADMIN_USERNAME KEYCLOAK_ADMIN_PASSWORD RESEND_SMTP_API_KEY
