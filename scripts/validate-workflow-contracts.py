@@ -158,6 +158,160 @@ ghcr_preflight_block = reconcile.split("name: Validate GHCR pull access before m
 if 'TARGET_APP=all GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" ./scripts/validate-ghcr-pull-access.sh' not in ghcr_preflight_block:
     fail("Every non-Keycloak apply must validate all production GHCR packages before reconciling the shared pull Secret.")
 
+# GHCR pull credentials are passed through curl config. Normalize only terminal
+# line endings and reject embedded whitespace/quotes to avoid malformed directives.
+ghcr_probe = (ROOT / "scripts" / "validate-ghcr-pull-access.sh").read_text(encoding="utf-8")
+if "GHCR_TOKEN=\"${GHCR_TOKEN%
+ghcr_step = reconcile.split("- name: Bootstrap GHCR pull credentials", 1)[1].split(
+    "- name: Restart workloads blocked on image pulls", 1
+)[0]
+if "${{ secrets.GHCR_READ_TOKEN }}" not in ghcr_step:
+    fail("reconcile-vps.yml must use the canonical GHCR_READ_TOKEN secret.")
+if "secrets.GITHUB_TOKEN" in ghcr_step or "Platform-infra-token" in ghcr_step:
+    fail("GHCR bootstrap must not silently fall back to a cross-repository-inadequate token.")
+if "secrets.GHCR_READ_TOKEN || github.token" in promotion:
+    fail("gitops-image-promotion.yml must not fall back to github.token for private GHCR packages.")
+if promotion.count("GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}") < 2:
+    fail("Both GitOps promotion paths must use canonical GHCR_READ_TOKEN.")
+
+# Promotion must validate package-level authorization and the exact immutable tag/digest before GitOps mutation.
+if 'TARGET_APP=microfe GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" bash scripts/validate-ghcr-pull-access.sh' not in promotion:
+    fail("MicroFE promotion must validate GHCR package pull access before registry login.")
+if 'TARGET_APP="$APP" GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" bash scripts/validate-ghcr-pull-access.sh' not in promotion:
+    fail("Application promotion must validate GHCR package pull access before registry login.")
+
+# Docker's registry-wide login endpoint can be denied even when scoped package reads work.
+# Verify the exact tag/digest directly with a package-scoped Registry V2 bearer token instead.
+if "docker login ghcr.io" in promotion or "docker manifest inspect" in promotion:
+    fail("Promotion must not depend on registry-wide Docker login for private GHCR reads.")
+if 'GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$image" bash scripts/validate-ghcr-image-reference.sh' not in promotion:
+    fail("MicroFE promotion must verify each exact immutable image digest through Registry V2.")
+if 'GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$IMAGE" bash scripts/validate-ghcr-image-reference.sh' not in promotion:
+    fail("Application promotion must verify the exact immutable tag through Registry V2.")
+if "github.event.action || github.event_name" not in promotion:
+    fail("GitOps promotion run names must identify dispatch events that omit app/component fields.")
+
+# The canonical GHCR credential is stored in the protected production Environment.
+# Every job that consumes it must bind that Environment or the secret resolves empty.
+promotion_lines = promotion.splitlines()
+for job_name in ("promote-microfe-digests", "promote"):
+    start = next((i for i, line in enumerate(promotion_lines) if line == f"  {job_name}:"), None)
+    if start is None:
+        fail(f"Could not find GHCR-consuming promotion job: {job_name}")
+    end = next(
+        (i for i in range(start + 1, len(promotion_lines))
+         if promotion_lines[i].startswith("  ")
+         and not promotion_lines[i].startswith("    ")
+         and promotion_lines[i].endswith(":")),
+        len(promotion_lines),
+    )
+    block = "\n".join(promotion_lines[start:end])
+    if "    environment: production" not in block:
+        fail(f"{job_name} must bind the production Environment to read GHCR_READ_TOKEN.")
+for namespace in ("microfe-platform", "stock-prod", "tce-prod", "media-prod"):
+    if namespace not in bootstrap_script.split("ghcr_namespaces=(", 1)[-1].split(")", 1)[0]:
+        fail(f"GHCR pull reconciliation is missing production namespace: {namespace}")
+if 'patch deployment "$deployment"' not in bootstrap_script or 'imagePullSecrets' not in bootstrap_script:
+    fail("GHCR pull reconciliation must normalize GHCR workload imagePullSecrets.")
+
+# Deployment tracker structural contract: keep all five repositories and action section present.
+tracker = (ROOT / "docs" / "cross-repo-deployment-tracker.md").read_text(encoding="utf-8")
+if "PLATFORM_INFRA_AUTOMATION_TOKEN" in promotion and "PLATFORM_INFRA_AUTOMATION_TOKEN" not in tracker:
+    fail("Tracker must record the automation token required by the promotion workflow.")
+
+if not tracker.startswith("# Cross-Repository Production Deployment Tracker"):
+    fail("Cross-repo deployment tracker title is missing.")
+if "Last reviewed:" not in tracker or "## Repository readiness" not in tracker or "## Current actions" not in tracker or "## Current runtime blockers" not in tracker:
+    fail("Cross-repo deployment tracker must retain its review date, readiness table, current actions, and runtime blockers.")
+for repository in (
+    "phanthienquoc/platform-infra",
+    "phanthienquoc/TCE-dashboard",
+    "phanthienquoc/stockdividend",
+    "phanthienquoc/media-generation",
+    "phanthienquoc/phanthienquoc-authentication",
+):
+    if repository not in tracker:
+        fail(f"Cross-repo deployment tracker is missing repository: {repository}")
+
+print("Workflow contract validation passed.")
+\\n'}\"" not in ghcr_probe or "GHCR_TOKEN=\"${GHCR_TOKEN%
+ghcr_step = reconcile.split("- name: Bootstrap GHCR pull credentials", 1)[1].split(
+    "- name: Restart workloads blocked on image pulls", 1
+)[0]
+if "${{ secrets.GHCR_READ_TOKEN }}" not in ghcr_step:
+    fail("reconcile-vps.yml must use the canonical GHCR_READ_TOKEN secret.")
+if "secrets.GITHUB_TOKEN" in ghcr_step or "Platform-infra-token" in ghcr_step:
+    fail("GHCR bootstrap must not silently fall back to a cross-repository-inadequate token.")
+if "secrets.GHCR_READ_TOKEN || github.token" in promotion:
+    fail("gitops-image-promotion.yml must not fall back to github.token for private GHCR packages.")
+if promotion.count("GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}") < 2:
+    fail("Both GitOps promotion paths must use canonical GHCR_READ_TOKEN.")
+
+# Promotion must validate package-level authorization and the exact immutable tag/digest before GitOps mutation.
+if 'TARGET_APP=microfe GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" bash scripts/validate-ghcr-pull-access.sh' not in promotion:
+    fail("MicroFE promotion must validate GHCR package pull access before registry login.")
+if 'TARGET_APP="$APP" GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" bash scripts/validate-ghcr-pull-access.sh' not in promotion:
+    fail("Application promotion must validate GHCR package pull access before registry login.")
+
+# Docker's registry-wide login endpoint can be denied even when scoped package reads work.
+# Verify the exact tag/digest directly with a package-scoped Registry V2 bearer token instead.
+if "docker login ghcr.io" in promotion or "docker manifest inspect" in promotion:
+    fail("Promotion must not depend on registry-wide Docker login for private GHCR reads.")
+if 'GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$image" bash scripts/validate-ghcr-image-reference.sh' not in promotion:
+    fail("MicroFE promotion must verify each exact immutable image digest through Registry V2.")
+if 'GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$IMAGE" bash scripts/validate-ghcr-image-reference.sh' not in promotion:
+    fail("Application promotion must verify the exact immutable tag through Registry V2.")
+if "github.event.action || github.event_name" not in promotion:
+    fail("GitOps promotion run names must identify dispatch events that omit app/component fields.")
+
+# The canonical GHCR credential is stored in the protected production Environment.
+# Every job that consumes it must bind that Environment or the secret resolves empty.
+promotion_lines = promotion.splitlines()
+for job_name in ("promote-microfe-digests", "promote"):
+    start = next((i for i, line in enumerate(promotion_lines) if line == f"  {job_name}:"), None)
+    if start is None:
+        fail(f"Could not find GHCR-consuming promotion job: {job_name}")
+    end = next(
+        (i for i in range(start + 1, len(promotion_lines))
+         if promotion_lines[i].startswith("  ")
+         and not promotion_lines[i].startswith("    ")
+         and promotion_lines[i].endswith(":")),
+        len(promotion_lines),
+    )
+    block = "\n".join(promotion_lines[start:end])
+    if "    environment: production" not in block:
+        fail(f"{job_name} must bind the production Environment to read GHCR_READ_TOKEN.")
+for namespace in ("microfe-platform", "stock-prod", "tce-prod", "media-prod"):
+    if namespace not in bootstrap_script.split("ghcr_namespaces=(", 1)[-1].split(")", 1)[0]:
+        fail(f"GHCR pull reconciliation is missing production namespace: {namespace}")
+if 'patch deployment "$deployment"' not in bootstrap_script or 'imagePullSecrets' not in bootstrap_script:
+    fail("GHCR pull reconciliation must normalize GHCR workload imagePullSecrets.")
+
+# Deployment tracker structural contract: keep all five repositories and action section present.
+tracker = (ROOT / "docs" / "cross-repo-deployment-tracker.md").read_text(encoding="utf-8")
+if "PLATFORM_INFRA_AUTOMATION_TOKEN" in promotion and "PLATFORM_INFRA_AUTOMATION_TOKEN" not in tracker:
+    fail("Tracker must record the automation token required by the promotion workflow.")
+
+if not tracker.startswith("# Cross-Repository Production Deployment Tracker"):
+    fail("Cross-repo deployment tracker title is missing.")
+if "Last reviewed:" not in tracker or "## Repository readiness" not in tracker or "## Current actions" not in tracker or "## Current runtime blockers" not in tracker:
+    fail("Cross-repo deployment tracker must retain its review date, readiness table, current actions, and runtime blockers.")
+for repository in (
+    "phanthienquoc/platform-infra",
+    "phanthienquoc/TCE-dashboard",
+    "phanthienquoc/stockdividend",
+    "phanthienquoc/media-generation",
+    "phanthienquoc/phanthienquoc-authentication",
+):
+    if repository not in tracker:
+        fail(f"Cross-repo deployment tracker is missing repository: {repository}")
+
+print("Workflow contract validation passed.")
+\\r'}\"" not in ghcr_probe:
+    fail("GHCR preflight must strip terminal CR/LF characters from copied secret values.")
+if "contains embedded whitespace or quotes" not in ghcr_probe:
+    fail("GHCR preflight must reject embedded whitespace/quotes instead of passing malformed credentials to curl.")
+
 # GHCR pulls use one platform-owned credential across production namespaces.
 bootstrap_script = (ROOT / "scripts" / "bootstrap-runner.sh").read_text(encoding="utf-8")
 ghcr_step = reconcile.split("- name: Bootstrap GHCR pull credentials", 1)[1].split(
