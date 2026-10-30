@@ -100,6 +100,24 @@ if "secrets.GHCR_READ_TOKEN || github.token" in promotion:
     fail("gitops-image-promotion.yml must not fall back to github.token for private GHCR packages.")
 if promotion.count("GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}") < 2:
     fail("Both GitOps promotion paths must use canonical GHCR_READ_TOKEN.")
+
+# The canonical GHCR credential is stored in the protected production Environment.
+# Every job that consumes it must bind that Environment or the secret resolves empty.
+promotion_lines = promotion.splitlines()
+for job_name in ("promote-microfe-digests", "promote"):
+    start = next((i for i, line in enumerate(promotion_lines) if line == f"  {job_name}:"), None)
+    if start is None:
+        fail(f"Could not find GHCR-consuming promotion job: {job_name}")
+    end = next(
+        (i for i in range(start + 1, len(promotion_lines))
+         if promotion_lines[i].startswith("  ")
+         and not promotion_lines[i].startswith("    ")
+         and promotion_lines[i].endswith(":")),
+        len(promotion_lines),
+    )
+    block = "\n".join(promotion_lines[start:end])
+    if "    environment: production" not in block:
+        fail(f"{job_name} must bind the production Environment to read GHCR_READ_TOKEN.")
 for namespace in ("microfe-platform", "stock-prod", "tce-prod", "media-prod"):
     if namespace not in bootstrap_script.split("ghcr_namespaces=(", 1)[-1].split(")", 1)[0]:
         fail(f"GHCR pull reconciliation is missing production namespace: {namespace}")
