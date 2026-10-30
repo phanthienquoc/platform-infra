@@ -13,7 +13,7 @@ The `reconcile-vps.yml` production Environment uses:
 - Secret `GHCR_READ_TOKEN`: token with `read:packages` permission and access to every private GHCR package deployed to production.
 - Variable `GHCR_USERNAME`: optional GHCR account name; defaults to the repository owner.
 
-The workflow intentionally does **not** fall back to `GITHUB_TOKEN` for Kubernetes pulls. A workflow token that cannot read another repository's private package must fail fast rather than silently creating a Kubernetes secret that returns 401/403.
+The workflow intentionally does **not** fall back to `GITHUB_TOKEN` for Kubernetes pulls. A workflow token that cannot read another repository's private package must fail fast rather than silently creating a Kubernetes secret that returns 401/403. The preflight obtains a scoped bearer token and then probes each package's Registry V2 `tags/list` endpoint; a non-empty token response alone is not accepted as proof of package-level pull access.
 
 Never print or commit token values. The workflow passes the credential through stdin to the root-owned, allowlisted `platform-kubectl reconcile-ghcr-pull` command.
 
