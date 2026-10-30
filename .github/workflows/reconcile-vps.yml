@@ -327,17 +327,29 @@ jobs:
       - name: Fail if shared reconciliation failed
         if: ${{ !cancelled() && env.RECONCILE_MODE == 'apply' }}
         env:
+          PREFLIGHT_STATUS: ${{ steps.preflight.outcome }}
           APPLY_STATUS: ${{ steps.apply.outcome }}
           DRIFT_STATUS: ${{ steps.verify_drift.outcome }}
           DRIFT: ${{ steps.preflight.outputs.drift }}
         run: |
           set -euo pipefail
-          if [ "$DRIFT" = "true" ]; then
-            [ "$APPLY_STATUS" = "success" ] || { echo "Production manifest reconciliation failed." >&2; exit 1; }
-            [ "$DRIFT_STATUS" = "success" ] || { echo "Post-reconcile GitOps drift verification failed." >&2; exit 1; }
-          else
-            echo "No manifest drift detected; apply was correctly skipped."
+          if [ "$PREFLIGHT_STATUS" != "success" ]; then
+            echo "Shared reconciliation preflight did not succeed (status: ${PREFLIGHT_STATUS:-unknown}); refusing to report success." >&2
+            exit 1
           fi
+          case "$DRIFT" in
+            true)
+              [ "$APPLY_STATUS" = "success" ] || { echo "Production manifest reconciliation failed." >&2; exit 1; }
+              [ "$DRIFT_STATUS" = "success" ] || { echo "Post-reconcile GitOps drift verification failed." >&2; exit 1; }
+              ;;
+            false)
+              echo "Preflight succeeded and no manifest drift was detected; apply was correctly skipped."
+              ;;
+            *)
+              echo "Shared reconciliation preflight did not produce a valid drift result; refusing to report success." >&2
+              exit 1
+              ;;
+          esac
           echo "Shared manifest reconciliation passed; application lanes may proceed."
 
   deploy-auth-service:
