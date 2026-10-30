@@ -103,6 +103,15 @@ if "github.event_name == 'schedule'" in reconcile and not re.search(
 # The shared apply job and the aggregate lane gate must both fail hard on errors.
 if "name: Fail if shared reconciliation failed" not in reconcile:
     fail("reconcile-vps.yml is missing its shared reconciliation failure gate.")
+shared_gate = reconcile.split("name: Fail if shared reconciliation failed", 1)[1].split(
+    "  deploy-auth-service:", 1
+)[0]
+if "PREFLIGHT_STATUS: ${{ steps.preflight.outcome }}" not in shared_gate:
+    fail("The shared reconciliation gate must inspect the preflight step outcome.")
+if 'if [ "$PREFLIGHT_STATUS" != "success" ]' not in shared_gate:
+    fail("A failed preflight must never be reported as a successful no-drift reconciliation.")
+if 'case "$DRIFT" in' not in shared_gate or '            *)' not in shared_gate:
+    fail("The shared reconciliation gate must reject missing or invalid drift outputs.")
 if "name: Deployment lane summary / final gate" not in reconcile:
     fail("reconcile-vps.yml is missing its final deployment lane failure gate.")
 
