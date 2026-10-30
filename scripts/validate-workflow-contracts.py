@@ -32,6 +32,8 @@ if "github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/master
 # Promotion PR auto-merge must fail closed without required checks and pin the exact verified head.
 if promotion.count("No required") < 2 or promotion.count("refusing to merge") < 2:
     fail("Both promotion PR merge paths must refuse to merge when no required checks are configured.")
+if promotion.count("current_required_count") < 4:
+    fail("Both promotion PR check-polling loops must fail closed if required checks disappear or cannot be queried.")
 if "No required promotion PR checks are configured.\n" in promotion or "No required PR checks are configured; continuing to merge gate." in promotion:
     fail("Promotion PR checks must not treat an empty required-check list as success.")
 if promotion.count("gh pr view \"$PR_NUMBER\" --repo") < 4 or promotion.count("--json headRefOid --jq '.headRefOid'") < 4:
