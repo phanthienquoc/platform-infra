@@ -1,9 +1,9 @@
 # VPS inspection
 
-Generated: 2026-10-30T08:41:58+00:00
+Generated: 2026-10-30T12:56:59+00:00
 
 ## Host
-uname: Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
+Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
 arch: aarch64
 os: Ubuntu 22.04.5 LTS
 hostname: chat-20260107-1525
@@ -11,17 +11,21 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       4.5Gi       538Mi        86Mi        18Gi        18Gi
+Mem:            23Gi       4.6Gi       533Mi        86Mi        18Gi        18Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/sda1        45G   33G   13G  73% /
-disk_pressure: normal (73%)
- 08:41:58 up 181 days, 18:32,  0 users,  load average: 2.09, 0.69, 0.38
+/dev/sda1        45G   38G  7.6G  84% /
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1        45G   38G  7.6G  84% /
+disk_pressure: warning (84%)
+ 12:56:59 up 181 days, 22:47,  1 user,  load average: 0.75, 0.36, 0.44
+
+### Top disk consumers
 
 ## Runner
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
 21684 /opt/media-actions-runner/bin/Runner.Listener run --startuptype service
-741895 /opt/actions-runner/bin/Runner.Worker spawnclient 157 161
+987670 /opt/actions-runner/bin/Runner.Worker spawnclient 159 162
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
   actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-media-generation.media-generation-k3s-01)
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service           loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
@@ -75,7 +79,6 @@ ubuntu-pro-client/jammy-updates 38ubuntu0~22.04 arm64 [upgradable from: 37.2ubun
 ubuntu-release-upgrader-core/jammy-updates 1:22.04.21 all [upgradable from: 1:22.04.20]
 ubuntu-server/jammy-updates 1.481.5 arm64 [upgradable from: 1.481.4]
 ubuntu-standard/jammy-updates 1.481.5 arm64 [upgradable from: 1.481.4]
-
 restart_required: yes
 
 ## K3s
@@ -90,43 +93,46 @@ k3s-debug          Active   22d
 kube-node-lease    Active   69d
 kube-public        Active   69d
 kube-system        Active   69d
-media-prod         Active   29d
+media-prod         Active   30d
 microfe-platform   Active   24d
 stock-prod         Active   41d
 tce-prod           Active   69d
-NAMESPACE          NAME                                         READY   STATUS             RESTARTS       AGE     IP            NODE         NOMINATED NODE   READINESS GATES
-cert-manager       cert-manager-75b96c9588-lgn7d                1/1     Running            0              66d     10.42.0.98    tce-k3s-01   <none>           <none>
-cert-manager       cert-manager-cainjector-b644b66f7-l8jdq      1/1     Running            1 (66d ago)    66d     10.42.0.100   tce-k3s-01   <none>           <none>
-cert-manager       cert-manager-webhook-76d97df888-wwq49        1/1     Running            0              66d     10.42.0.99    tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29889150-6l5vj            0/1     StartError         0              9m25s   10.42.0.163   tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29889150-k9zb4            0/1     StartError         0              11m     10.42.0.161   tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29889150-m84kk            0/1     StartError         0              6m44s   10.42.0.164   tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29889150-mhjc6            0/1     StartError         0              11m     10.42.0.159   tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29889150-whz4v            0/1     StartError         0              10m     10.42.0.162   tce-k3s-01   <none>           <none>
-k3s-debug          k3s-debug-snapshot-29889150-zhpx8            0/1     StartError         0              11m     10.42.0.160   tce-k3s-01   <none>           <none>
-kube-system        coredns-54996dc9b4-d68pf                     1/1     Running            0              69d     10.42.0.6     tce-k3s-01   <none>           <none>
-kube-system        helm-install-traefik-crd-mq7w8               0/1     Completed          0              69d     10.42.0.3     tce-k3s-01   <none>           <none>
-kube-system        helm-install-traefik-s2twj                   0/1     Completed          1 (69d ago)    69d     10.42.0.2     tce-k3s-01   <none>           <none>
-kube-system        local-path-provisioner-58d557dc48-jbhhp      1/1     Running            1 (69d ago)    69d     10.42.0.5     tce-k3s-01   <none>           <none>
-kube-system        metrics-server-6dc596dfb8-s2bzm              1/1     Running            0              69d     10.42.0.4     tce-k3s-01   <none>           <none>
-kube-system        svclb-traefik-859779c1-7bwx2                 2/2     Running            0              69d     10.42.0.7     tce-k3s-01   <none>           <none>
-kube-system        traefik-59b7647586-gml84                     1/1     Running            0              69d     10.42.0.8     tce-k3s-01   <none>           <none>
-media-prod         media-generation-5c9b76dfb9-zh8jr            1/1     Running            0              16d     10.42.0.85    tce-k3s-01   <none>           <none>
-media-prod         media-generation-frontend-597b779c9d-dvrft   1/1     Running            0              16d     10.42.0.84    tce-k3s-01   <none>           <none>
-microfe-platform   keycloak-68c4bc764c-4pp66                    1/1     Running            0              13d     10.42.0.124   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-auth-76459c67b9-ncd4m                1/1     Running            0              25s     10.42.0.165   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-shell-5d4f857447-fgv2m               0/1     ImagePullBackOff   0              25s     10.42.0.167   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-shell-dbbbfdf8c-5rkwz                1/1     Running            0              21d     10.42.0.158   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-ws-5587c8844c-rbtgx                  1/1     Running            10 (21d ago)   21d     10.42.0.157   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-ws-6cd5f9656b-42bcx                  0/1     ImagePullBackOff   0              25s     10.42.0.166   tce-k3s-01   <none>           <none>
-microfe-platform   nats-7bc8d9f768-q682m                        1/1     Running            0              21d     10.42.0.178   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-b959549d5-chmbj                  0/1     ImagePullBackOff   0              144m    10.42.0.102   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-c647b74f5-m4wxb                  0/1     ImagePullBackOff   0              25s     10.42.0.168   tce-k3s-01   <none>           <none>
-stock-prod         stock-backend-54cfdb7f4f-mrdcv               0/1     ImagePullBackOff   0              25s     10.42.0.169   tce-k3s-01   <none>           <none>
-stock-prod         stock-backend-57ccb8ff6-d25jq                1/1     Running            0              41d     10.42.0.55    tce-k3s-01   <none>           <none>
-stock-prod         stock-frontend-79c57845df-z747s              1/1     Running            0              41d     10.42.0.56    tce-k3s-01   <none>           <none>
-tce-prod           tce-frontend-79988675b8-86clf                1/1     Running            0              4d16h   10.42.0.128   tce-k3s-01   <none>           <none>
-tce-prod           tce-service-7f44bf89c7-cvvhs                 1/1     Running            0              4d16h   10.42.0.129   tce-k3s-01   <none>           <none>
+NAMESPACE          NAME                                         READY   STATUS             RESTARTS        AGE     IP            NODE         NOMINATED NODE   READINESS GATES
+cert-manager       cert-manager-75b96c9588-lgn7d                1/1     Running            0               66d     10.42.0.98    tce-k3s-01   <none>           <none>
+cert-manager       cert-manager-cainjector-b644b66f7-l8jdq      1/1     Running            1 (66d ago)     66d     10.42.0.100   tce-k3s-01   <none>           <none>
+cert-manager       cert-manager-webhook-76d97df888-wwq49        1/1     Running            0               66d     10.42.0.99    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29889405-46v6m            0/1     StartError         0               12m     10.42.0.47    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29889405-4nm2n            0/1     StartError         0               11m     10.42.0.48    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29889405-7p7z9            0/1     StartError         0               9m27s   10.42.0.51    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29889405-bwrt4            0/1     StartError         0               10m     10.42.0.50    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29889405-f9brd            0/1     StartError         0               11m     10.42.0.49    tce-k3s-01   <none>           <none>
+k3s-debug          k3s-debug-snapshot-29889405-n8vjc            0/1     StartError         0               6m47s   10.42.0.52    tce-k3s-01   <none>           <none>
+kube-system        coredns-54996dc9b4-d68pf                     1/1     Running            0               69d     10.42.0.6     tce-k3s-01   <none>           <none>
+kube-system        helm-install-traefik-crd-mq7w8               0/1     Completed          0               69d     10.42.0.3     tce-k3s-01   <none>           <none>
+kube-system        helm-install-traefik-s2twj                   0/1     Completed          1 (69d ago)     69d     10.42.0.2     tce-k3s-01   <none>           <none>
+kube-system        local-path-provisioner-58d557dc48-jbhhp      1/1     Running            1 (69d ago)     69d     10.42.0.5     tce-k3s-01   <none>           <none>
+kube-system        metrics-server-6dc596dfb8-s2bzm              1/1     Running            0               69d     10.42.0.4     tce-k3s-01   <none>           <none>
+kube-system        svclb-traefik-859779c1-7bwx2                 2/2     Running            0               69d     10.42.0.7     tce-k3s-01   <none>           <none>
+kube-system        traefik-59b7647586-gml84                     1/1     Running            0               69d     10.42.0.8     tce-k3s-01   <none>           <none>
+media-prod         media-generation-5c9b76dfb9-zh8jr            0/1     Running            0               16d     10.42.0.85    tce-k3s-01   <none>           <none>
+media-prod         media-generation-646c797f66-6fwn4            0/1     Running            0               28m     10.42.0.38    tce-k3s-01   <none>           <none>
+media-prod         media-generation-frontend-597b779c9d-dvrft   1/1     Running            0               16d     10.42.0.84    tce-k3s-01   <none>           <none>
+microfe-platform   keycloak-68c4bc764c-4pp66                    0/1     Running            0               14d     10.42.0.124   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-auth-5c8cc75f5c-nbn7g                0/1     Running            0               28m     10.42.0.33    tce-k3s-01   <none>           <none>
+microfe-platform   microfe-auth-fb48fdbc4-xnc2p                 0/1     Running            0               89m     10.42.0.250   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-shell-54c5886c87-52fs4               0/1     ImagePullBackOff   0               28m     10.42.0.35    tce-k3s-01   <none>           <none>
+microfe-platform   microfe-shell-dbbbfdf8c-5rkwz                1/1     Running            0               21d     10.42.0.158   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-ws-5587c8844c-rbtgx                  1/1     Running            10 (21d ago)    21d     10.42.0.157   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-ws-56f576754b-smkbc                  0/1     ImagePullBackOff   0               28m     10.42.0.34    tce-k3s-01   <none>           <none>
+microfe-platform   nats-7bc8d9f768-q682m                        1/1     Running            0               21d     10.42.0.178   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-649ff98f94-m4zg9                 0/1     ImagePullBackOff   0               89m     10.42.0.253   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-7967788c6c-jg7b2                 0/1     ImagePullBackOff   0               28m     10.42.0.37    tce-k3s-01   <none>           <none>
+stock-prod         stock-backend-57ccb8ff6-d25jq                1/1     Running            0               41d     10.42.0.55    tce-k3s-01   <none>           <none>
+stock-prod         stock-backend-74c99cd67c-9jmt6               0/1     ImagePullBackOff   0               28m     10.42.0.36    tce-k3s-01   <none>           <none>
+stock-prod         stock-frontend-79c57845df-z747s              1/1     Running            0               41d     10.42.0.56    tce-k3s-01   <none>           <none>
+tce-prod           tce-frontend-c8c48c548-fhx49                 1/1     Running            0               28m     10.42.0.39    tce-k3s-01   <none>           <none>
+tce-prod           tce-service-69d975d9f9-fxxqj                 1/1     Running            0               89m     10.42.0.3     tce-k3s-01   <none>           <none>
+tce-prod           tce-service-77dfdb7f5c-kmcz7                 0/1     CrashLoopBackOff   7 (3m55s ago)   28m     10.42.0.40    tce-k3s-01   <none>           <none>
 NAMESPACE          NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
 cert-manager       cert-manager                1/1     1            1           66d
 cert-manager       cert-manager-cainjector     1/1     1            1           66d
@@ -135,27 +141,42 @@ kube-system        coredns                     1/1     1            1           
 kube-system        local-path-provisioner      1/1     1            1           69d
 kube-system        metrics-server              1/1     1            1           69d
 kube-system        traefik                     1/1     1            1           69d
-media-prod         media-generation            1/1     1            1           29d
+media-prod         media-generation            0/1     1            0           30d
 media-prod         media-generation-frontend   1/1     1            1           29d
-microfe-platform   keycloak                    1/1     1            1           13d
-microfe-platform   microfe-auth                1/1     1            1           24d
+microfe-platform   keycloak                    0/1     1            0           14d
+microfe-platform   microfe-auth                0/1     1            0           24d
 microfe-platform   microfe-shell               1/1     1            1           24d
 microfe-platform   microfe-ws                  1/1     1            1           24d
 microfe-platform   nats                        1/1     1            1           21d
 stock-prod         stock-admin                 0/1     1            0           37d
 stock-prod         stock-backend               1/1     1            1           41d
 stock-prod         stock-frontend              1/1     1            1           41d
-tce-prod           tce-frontend                1/1     1            1           65d
-tce-prod           tce-service                 1/1     1            1           65d
+tce-prod           tce-frontend                1/1     1            1           66d
+tce-prod           tce-service                 1/1     1            1           66d
 
 ### Pod failure evidence
-microfe-platform	microfe-shell-5d4f857447-fgv2m	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/microfe-shell:0.1.0": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image "ghcr.io/phanthienquoc/microfe-shell:0.1.0": failed to resolve reference "ghcr.io/phanthienquoc/microfe-shell:0.1.0": ghcr.io/phanthienquoc/microfe-shell:0.1.0: not found
-microfe-platform	microfe-ws-6cd5f9656b-42bcx	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image "ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA": failed to resolve reference "ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA": ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA: not found
-stock-prod	stock-admin-b959549d5-chmbj	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": ErrImagePull: failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": failed to resolve reference "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": failed to authorize: failed to fetch oauth token: unexpected status from GET request to https://ghcr.io/token?scope=repository%3Aphanthienquoc%2Fstockdividend%2Fadmin%3Apull&service=ghcr.io: 403 Forbidden
-stock-prod	stock-admin-c647b74f5-m4wxb	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": ErrImagePull: failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": failed to resolve reference "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": unexpected status from HEAD request to https://ghcr.io/v2/phanthienquoc/stockdividend/admin/manifests/12d63b4: 403 Forbidden
-stock-prod	stock-backend-54cfdb7f4f-mrdcv	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/backend:12d63b4": ErrImagePull: failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/backend:12d63b4": failed to resolve reference "ghcr.io/phanthienquoc/stockdividend/backend:12d63b4": unexpected status from HEAD request to https://ghcr.io/v2/phanthienquoc/stockdividend/backend/manifests/12d63b4: 403 Forbidden
+microfe-platform	microfe-shell-54c5886c87-52fs4	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/microfe-shell:0.1.0": ErrImagePull: failed to pull and unpack image "ghcr.io/phanthienquoc/microfe-shell:0.1.0": failed to resolve reference "ghcr.io/phanthienquoc/microfe-shell:0.1.0": failed to authorize: failed to fetch oauth token: unexpected status from GET request to https://ghcr.io/token?scope=repository%3Aphanthienquoc%2Fmicrofe-shell%3Apull&service=ghcr.io: 403 Forbidden
+microfe-platform	microfe-ws-56f576754b-smkbc	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA": ErrImagePull: failed to pull and unpack image "ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA": failed to resolve reference "ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA": failed to authorize: failed to fetch oauth token: unexpected status from GET request to https://ghcr.io/token?scope=repository%3Aphanthienquoc%2Fmicrofe-ws%3Apull&service=ghcr.io: 403 Forbidden
+stock-prod	stock-admin-649ff98f94-m4zg9	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": ErrImagePull: failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": failed to resolve reference "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": failed to authorize: failed to fetch oauth token: unexpected status from GET request to https://ghcr.io/token?scope=repository%3Aphanthienquoc%2Fstockdividend%2Fadmin%3Apull&service=ghcr.io: 403 Forbidden
+stock-prod	stock-admin-7967788c6c-jg7b2	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": ErrImagePull: failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": failed to resolve reference "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": failed to authorize: failed to fetch oauth token: unexpected status from GET request to https://ghcr.io/token?scope=repository%3Aphanthienquoc%2Fstockdividend%2Fadmin%3Apull&service=ghcr.io: 403 Forbidden
+stock-prod	stock-backend-74c99cd67c-9jmt6	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/backend:12d63b4": ErrImagePull: failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/backend:12d63b4": failed to resolve reference "ghcr.io/phanthienquoc/stockdividend/backend:12d63b4": failed to authorize: failed to fetch oauth token: unexpected status from GET request to https://ghcr.io/token?scope=repository%3Aphanthienquoc%2Fstockdividend%2Fbackend%3Apull&service=ghcr.io: 403 Forbidden
+tce-prod	tce-service-77dfdb7f5c-kmcz7	CrashLoopBackOff	back-off 5m0s restarting failed container=service pod=tce-service-77dfdb7f5c-kmcz7_tce-prod(6071c8f3-57a0-4ad0-a61b-66882bdde684)
 
 ### Recent failure events
+
+### TCE service diagnostics (last 2h; redacted)
+NAME                           READY   STATUS             RESTARTS        AGE   IP           NODE         NOMINATED NODE   READINESS GATES
+tce-service-69d975d9f9-fxxqj   1/1     Running            0               89m   10.42.0.3    tce-k3s-01   <none>           <none>
+tce-service-77dfdb7f5c-kmcz7   0/1     CrashLoopBackOff   7 (3m55s ago)   28m   10.42.0.40   tce-k3s-01   <none>           <none>
+-- pod tce-service-69d975d9f9-fxxqj describe --
+### current logs for tce-service-69d975d9f9-fxxqj
+### previous logs for tce-service-69d975d9f9-fxxqj
+
+### CRI image inventory
+sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
+sudo: a password is required
+sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
+sudo: a password is required
 
 ### GitOps drift
 status: clean
@@ -171,15 +192,15 @@ kube-system        traefik                     rancher/mirrored-library-traefik:
 media-prod         media-generation            ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-58f80a8
 media-prod         media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-58f80a8
 microfe-platform   keycloak                    quay.io/keycloak/keycloak:26.8.1
-microfe-platform   microfe-auth                ghcr.io/phanthienquoc/auth-service/auth:prod-v1.0.0-aa40d00
+microfe-platform   microfe-auth                ghcr.io/phanthienquoc/auth-service/auth:prod-v1.0.0-ceb2688
 microfe-platform   microfe-shell               ghcr.io/phanthienquoc/microfe-shell:0.1.0
 microfe-platform   microfe-ws                  ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA
 microfe-platform   nats                        nats:2.12-alpine
 stock-prod         stock-admin                 ghcr.io/phanthienquoc/stockdividend/admin:12d63b4
 stock-prod         stock-backend               ghcr.io/phanthienquoc/stockdividend/backend:12d63b4
 stock-prod         stock-frontend              ghcr.io/phanthienquoc/stockdividend/user:23b2878
-tce-prod           tce-frontend                ghcr.io/phanthienquoc/tce-dashboard/web:prod-v0.1.0-5801bb2
-tce-prod           tce-service                 ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-5801bb2
+tce-prod           tce-frontend                ghcr.io/phanthienquoc/tce-dashboard/web:prod-v0.1.0-e75e338
+tce-prod           tce-service                 ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-e75e338
 NAMESPACE          NAME                        TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
 cert-manager       cert-manager                ClusterIP      10.43.138.27    <none>        9402/TCP                     66d
 cert-manager       cert-manager-cainjector     ClusterIP      10.43.135.132   <none>        9402/TCP                     66d
@@ -188,9 +209,9 @@ default            kubernetes                  ClusterIP      10.43.0.1       <n
 kube-system        kube-dns                    ClusterIP      10.43.0.10      <none>        53/UDP,53/TCP,9153/TCP       69d
 kube-system        metrics-server              ClusterIP      10.43.120.41    <none>        443/TCP                      69d
 kube-system        traefik                     LoadBalancer   10.43.213.239   10.0.0.120    80:30225/TCP,443:30415/TCP   69d
-media-prod         media-generation            ClusterIP      10.43.252.95    <none>        3000/TCP                     29d
+media-prod         media-generation            ClusterIP      10.43.252.95    <none>        3000/TCP                     30d
 media-prod         media-generation-frontend   ClusterIP      10.43.48.52     <none>        80/TCP                       29d
-microfe-platform   keycloak                    ClusterIP      10.43.142.95    <none>        80/TCP,9000/TCP              13d
+microfe-platform   keycloak                    ClusterIP      10.43.142.95    <none>        80/TCP,9000/TCP              14d
 microfe-platform   microfe-auth                ClusterIP      10.43.83.168    <none>        80/TCP                       24d
 microfe-platform   microfe-shell               ClusterIP      10.43.6.23      <none>        80/TCP                       24d
 microfe-platform   microfe-ws                  ClusterIP      10.43.86.34     <none>        8080/TCP                     24d
@@ -199,38 +220,98 @@ stock-prod         backend                     ClusterIP      10.43.46.139    <n
 stock-prod         stock-admin                 ClusterIP      10.43.97.150    <none>        3000/TCP                     37d
 stock-prod         stock-backend               ClusterIP      10.43.247.219   <none>        8080/TCP                     41d
 stock-prod         stock-frontend              ClusterIP      10.43.53.102    <none>        3000/TCP                     41d
-tce-prod           tce-frontend                ClusterIP      10.43.99.130    <none>        80/TCP                       65d
-tce-prod           tce-service                 ClusterIP      10.43.189.227   <none>        8210/TCP                     65d
+tce-prod           tce-frontend                ClusterIP      10.43.99.130    <none>        80/TCP                       66d
+tce-prod           tce-service                 ClusterIP      10.43.189.227   <none>        8210/TCP                     66d
 NAMESPACE          NAME                               CLASS     HOSTS                                                          ADDRESS      PORTS     AGE
-media-prod         media                              traefik   media.mrcute.space                                             10.0.0.120   80, 443   29d
-microfe-platform   keycloak-public                    traefik   sso.mrcute.space                                               10.0.0.120   80, 443   13d
-microfe-platform   keycloak-registration-rate-limit   traefik   sso.mrcute.space                                               10.0.0.120   80, 443   2d4h
+media-prod         media                              traefik   media.mrcute.space                                             10.0.0.120   80, 443   30d
+microfe-platform   keycloak-public                    traefik   sso.mrcute.space                                               10.0.0.120   80, 443   14d
+microfe-platform   keycloak-registration-rate-limit   traefik   sso.mrcute.space                                               10.0.0.120   80, 443   2d9h
 microfe-platform   microfe-public                     traefik   app.mrcute.space,auth.mrcute.space,ws.mrcute.space             10.0.0.120   80, 443   24d
 stock-prod         stock                              traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   37d
 stock-prod         stock-ingress                      traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   41d
-tce-prod           tce                                traefik   tce.mrcute.space                                               10.0.0.120   80, 443   65d
-
-### Ingress hosts
-media-prod         media                              media.mrcute.space
-microfe-platform   keycloak-public                    sso.mrcute.space
-microfe-platform   keycloak-registration-rate-limit   sso.mrcute.space
-microfe-platform   microfe-public                     app.mrcute.space,auth.mrcute.space,ws.mrcute.space
-stock-prod         stock                              mrcute.space,www.mrcute.space,admin.mrcute.space,api.mrcute.space
-stock-prod         stock-ingress                      mrcute.space,www.mrcute.space,admin.mrcute.space,api.mrcute.space
-tce-prod           tce                                tce.mrcute.space
+tce-prod           tce                                traefik   tce.mrcute.space                                               10.0.0.120   80, 443   66d
 
 ## K3s service
 active
 enabled
 
-## Keycloak diagnostics (read-only; namespace=microfe-platform)
+### K3s recent warnings (last 2h)
+
+## Keycloak diagnostics
 NAME       READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                             SELECTOR
-keycloak   1/1     1            1           13d   keycloak     quay.io/keycloak/keycloak:26.8.1   app.kubernetes.io/name=keycloak
-keycloak-68c4bc764c-4pp66        1/1     Running        0              13d   10.42.0.124   tce-k3s-01   <none>           <none>
-keycloak        ClusterIP   10.43.142.95   <none>        80/TCP,9000/TCP     13d
+keycloak   0/1     1            0           14d   keycloak     quay.io/keycloak/keycloak:26.8.1   app.kubernetes.io/name=keycloak
+	at org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:62)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquire(LogicalConnectionManagedImpl.java:187)
+2026-10-30 12:53:07,664 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"UP"},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:51:20,135"}}]}
+2026-10-30 12:53:17,703 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed reading from the DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2993)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:295)
+	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:508)
+	at org.keycloak.quarkus.runtime.storage.database.jpa.AbstractJpaConnectionProviderFactory.getConnection(AbstractJpaConnectionProviderFactory.java:64)
+	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.getConnection(KEYCLOAK_JDBC_PING2.java:97)
+	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.readFromDB(KEYCLOAK_JDBC_PING2.java:207)
+	at org.jgroups.protocols.JDBC_PING2.readAll(JDBC_PING2.java:339)
+	at org.jgroups.protocols.JDBC_PING2.findMembers(JDBC_PING2.java:238)
+2026-10-30 12:53:25,166 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"UP"},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:51:20,135"}}]}
+2026-10-30 12:53:35,200 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
+2026-10-30 12:53:42,666 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"UP"},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:51:20,135"}}]}
+2026-10-30 12:53:52,706 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (jgroups-10382,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
+2026-10-30 12:53:54,180 ERROR [org.keycloak.models.sessions.infinispan.expiration.BaseExpirationTask] (user-session-purge-expired) Unexpected error while removing expired entries from database: jakarta.persistence.PersistenceException: JDBC exception executing SQL [ERROR: canceling statement due to statement timeout] [delete from keycloak.OFFLINE_CLIENT_SESSION pcse1_0 where pcse1_0.USER_SESSION_ID in (?) and pcse1_0.OFFLINE_FLAG=?]
+	at org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:104)
+	at org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:173)
+Caused by: org.hibernate.QueryTimeoutException: JDBC exception executing SQL [ERROR: canceling statement due to statement timeout] [delete from keycloak.OFFLINE_CLIENT_SESSION pcse1_0 where pcse1_0.USER_SESSION_ID in (?) and pcse1_0.OFFLINE_FLAG=?]
+	at org.hibernate.dialect.PostgreSQLDialect.lambda$buildSQLExceptionConversionDelegate$0(PostgreSQLDialect.java:1115)
+	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:34)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:115)
+	at org.hibernate.sql.exec.internal.StandardJdbcMutationExecutor.handleException(StandardJdbcMutationExecutor.java:95)
+	at org.hibernate.sql.exec.internal.StandardJdbcMutationExecutor.execute(StandardJdbcMutationExecutor.java:84)
+Caused by: org.postgresql.util.PSQLException: ERROR: canceling statement due to statement timeout
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2993)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:533)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:449)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:197)
+	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:158)
+	at org.hibernate.sql.exec.internal.StandardJdbcMutationExecutor.execute(StandardJdbcMutationExecutor.java:70)
+2026-10-30 12:53:56,648 WARN  [org.keycloak.infinispan.health.impl.JdbcPingClusterHealthImpl] (blocking-thread--p3-t3) Unable to check the cluster health because no coordinator has been found.
+2026-10-30 12:54:00,169 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"UP"},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:51:20,135"}}]}
+2026-10-30 12:54:03,460 WARN  [org.keycloak.infinispan.health.impl.JdbcPingClusterHealthImpl] (blocking-thread--p3-t3) Unable to check the cluster health because no coordinator has been found.
+2026-10-30 12:54:26,596 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"UP"}]}
+2026-10-30 12:54:26,664 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"UP"}]}
+2026-10-30 12:54:26,731 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"UP"}]}
+2026-10-30 12:54:28,203 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: This connection has been closed.
+2026-10-30 12:55:00,018 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (jgroups-10380,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
+2026-10-30 12:55:02,145 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:55:02,145"}}]}
+2026-10-30 12:55:16,484 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed reading from the DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2993)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:295)
+	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:508)
+	at org.keycloak.quarkus.runtime.storage.database.jpa.AbstractJpaConnectionProviderFactory.getConnection(AbstractJpaConnectionProviderFactory.java:64)
+	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.getConnection(KEYCLOAK_JDBC_PING2.java:97)
+	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.readFromDB(KEYCLOAK_JDBC_PING2.java:207)
+	at org.jgroups.protocols.JDBC_PING2.readAll(JDBC_PING2.java:339)
+	at org.jgroups.protocols.JDBC_PING2.findMembers(JDBC_PING2.java:238)
+2026-10-30 12:55:19,656 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:55:02,145"}}]}
+2026-10-30 12:55:23,241 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:55:02,145"}}]}
+2026-10-30 12:55:39,085 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: This connection has been closed.
+2026-10-30 12:55:40,743 WARN  [io.agroal.pool] (agroal-11) Datasource '<default>': Failed to create fill connection: FATAL: Failed to connect to database: authentication did not complete within 15000ms
+2026-10-30 12:55:55,058 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:55:02,145"}}]}
+2026-10-30 12:56:11,910 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (jgroups-10383,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
+2026-10-30 12:56:12,562 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:55:02,145"}}]}
+2026-10-30 12:56:29,406 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed reading from the DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2993)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:295)
+	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:508)
+	at org.keycloak.quarkus.runtime.storage.database.jpa.AbstractJpaConnectionProviderFactory.getConnection(AbstractJpaConnectionProviderFactory.java:64)
+	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.getConnection(KEYCLOAK_JDBC_PING2.java:97)
+	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.readFromDB(KEYCLOAK_JDBC_PING2.java:207)
+	at org.jgroups.protocols.JDBC_PING2.readAll(JDBC_PING2.java:339)
+	at org.jgroups.protocols.JDBC_PING2.findMembers(JDBC_PING2.java:238)
+2026-10-30 12:56:29,407 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:55:02,145"}}]}
+2026-10-30 12:56:46,915 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
+2026-10-30 12:56:46,917 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:55:02,145"}}]}
+2026-10-30 12:57:04,411 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (jgroups-10384,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECHECKOUTTIMEOUT) unable to check out connection from the pool after 15000ms in Session mode
+2026-10-30 12:57:04,417 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:55:02,145"}}]}
 
-### Keycloak recent diagnostic log lines (last 2h; redacted)
-
-### Public OIDC endpoint probes (status and latency only; response bodies omitted)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=200 time_total=0.052720s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=200 time_total=0.051545s remote_ip=132.226.175.206
+### Public OIDC probes (status and latency only)
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.112349s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049434s remote_ip=132.226.175.206
