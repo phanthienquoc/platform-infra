@@ -63,6 +63,22 @@ jobs:
         with:
           persist-credentials: true
 
+      - name: Install pinned kubectl for MicroFE manifest render
+        env:
+          KUBECTL_VERSION: v1.36.3
+        run: |
+          set -euo pipefail
+          case "$(uname -m)" in
+            x86_64) kubectl_arch=amd64 ;;
+            aarch64|arm64) kubectl_arch=arm64 ;;
+            *) echo "Unsupported runner architecture: $(uname -m)" >&2; exit 1 ;;
+          esac
+          curl -fsSLo kubectl "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${kubectl_arch}/kubectl"
+          curl -fsSLo kubectl.sha256 "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${kubectl_arch}/kubectl.sha256"
+          echo "$(cat kubectl.sha256)  kubectl" | sha256sum --check
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+          kubectl version --client=true
+
       - name: Validate and resolve MicroFE digests
         id: digests
         env:
