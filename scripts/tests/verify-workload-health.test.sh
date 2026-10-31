@@ -48,7 +48,7 @@ case "$resource" in
         exit 0
         ;;
       scaled-down-stale-pod)
-        printf 'tce-frontend-abc||Running|true:: \\n'
+        printf 'tce-frontend-abc||Running|true:: \n'
         ;;
       *)
         exit 3
