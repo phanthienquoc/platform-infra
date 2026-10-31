@@ -1,0 +1,61 @@
+name: Reconcile Schedule Freshness Watchdog
+run-name: Reconcile Schedule Freshness Watchdog — ${{ github.event_name }}
+
+'on':
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: reconcile-schedule-freshness-watchdog
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify scheduled reconciliation freshness
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAX_AGE_MINUTES: "45"
+    steps:
+      - name: Inspect latest scheduled reconcile run
+        shell: bash
+        run: |
+          set -euo pipefail
+          response="$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" \
+            -f event=schedule \
+            -F per_page=1)"
+          latest="$(jq -c '.workflow_runs | sort_by(.created_at) | last // empty' <<< "$response")"
+          if [[ -z "$latest" ]]; then
+            echo "::error::No scheduled reconcile-vps run is available in GitHub Actions history."
+            exit 1
+          fi
+
+          created_at="$(jq -r '.created_at' <<< "$latest")"
+          created_epoch="$(jq -r '.created_at | fromdateiso8601' <<< "$latest")"
+          run_id="$(jq -r '.id' <<< "$latest")"
+          run_url="$(jq -r '.html_url' <<< "$latest")"
+          status="$(jq -r '.status' <<< "$latest")"
+          conclusion="$(jq -r '.conclusion // "pending"' <<< "$latest")"
+          now_epoch="$(date -u +%s)"
+          age_seconds=$((now_epoch - created_epoch))
+          age_minutes=$((age_seconds / 60))
+
+          if (( age_seconds < 0 )); then
+            echo "::error::GitHub returned a future timestamp for scheduled reconcile run #${run_id}: ${created_at}"
+            exit 1
+          fi
+          if (( age_minutes > MAX_AGE_MINUTES )); then
+            echo "::error::No scheduled reconcile-vps run within ${MAX_AGE_MINUTES} minutes. Latest is #${run_id}, created ${created_at}, age ${age_minutes} minutes, status=${status}, conclusion=${conclusion}: ${run_url}"
+            exit 1
+          fi
+
+          echo "Scheduled reconcile freshness passed: run #${run_id}, age ${age_minutes} minutes, status=${status}, conclusion=${conclusion}."
+          echo "Run evidence: ${run_url}"
