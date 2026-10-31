@@ -2,7 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata: {name: tce-frontend, namespace: tce-prod}
 spec:
-  replicas: 1
+  # TEMPORARY OPERATOR REQUEST: scale TCE down; restore to 1 when re-enabled.
+  replicas: 0
   strategy:
     type: RollingUpdate
     rollingUpdate: {maxUnavailable: 0, maxSurge: 1}
