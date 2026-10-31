@@ -1,5 +1,14 @@
 # Cross-Repository Production Deployment Tracker
 
+## Latest automation review (2026-10-31 18:04 ICT)
+
+- Fresh repository review: platform-infra master is `8abb4a1e90f5310acc68e5cc02cdde92341d7430`; manifest validation [#41192250133](https://github.com/phanthienquoc/platform-infra/actions/runs/41192250133) passed at 17:19 ICT. The targeted Auth/Keycloak shutdown [#41191877875](https://github.com/phanthienquoc/platform-infra/actions/runs/41191877875) remains the latest successful targeted production operation.
+- **Reconcile schedule delivery gap:** workflow definition still declares `*/15 * * * *`, but the latest schedule-triggered reconcile is [#41184627405](https://github.com/phanthienquoc/platform-infra/actions/runs/41184627405), created at 15:26 ICT; no newer `reconcile-vps.yml` schedule run appeared through 18:04 ICT. Read-only VPS inspection [#41190520868](https://github.com/phanthienquoc/platform-infra/actions/runs/41190520868) did run at 16:53 ICT, so this is not evidence that all scheduled Actions events stopped. Root cause remains unverified.
+- This change adds a read-only 15-minute freshness watchdog with a 45-minute threshold. It queries only the scheduled `reconcile-vps.yml` run history and fails visibly on stale/missing evidence; it does not dispatch reconciliation, touch Kubernetes, or alter the TCE market-scan schedule.
+- **Promotion remains blocked:** [#41192084543](https://github.com/phanthienquoc/platform-infra/actions/runs/41192084543) validated immutable MicroFE Shell/WS digests but failed because protected Environment secret `PLATFORM_INFRA_AUTOMATION_TOKEN` is missing. Do not bypass this gate. StockDividend's publisher [#41187981457](https://github.com/phanthienquoc/stockdividend/actions/runs/41187981457) also remains fail-closed because release enablement is false and `PLATFORM_INFRA_TOKEN` is missing; its deployed admin/backend tags lack ARM64-compatible manifests.
+- TCE public health check [#41185878137](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41185878137) returned HTTP 503 for TCE and Auth endpoints, consistent with the intentional zero-replica maintenance state. Keep the check failing rather than hiding unavailability.
+- Overall production remains **NOT HEALTHY/UNVERIFIED**. Exact next external prerequisite is configuring the distinct protected GitOps automation token and StockDividend handoff token; then rerun promotions and verify rollout/health evidence.
+
 ## Auth/Keycloak temporary shutdown request (2026-10-31)
 
 - Operator requested stopping Auth runtime traffic and Supavisor authentication retries. Dedicated branch `ops/stop-auth-and-keycloak` and PR #891 set `platform/auth-service/deployment.yaml` (`microfe-auth`) and `platform/keycloak/deployment.yaml` (`keycloak`) to `replicas: 0`.

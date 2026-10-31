@@ -294,4 +294,24 @@ for step_name in (
     if "steps.scope.outputs.target_app != 'auth-shutdown'" not in block.split("run:", 1)[0]:
         fail(f"{step_name} must not run for auth-shutdown because it mutates or restarts shared workloads.")
 
+
+# A read-only watchdog detects missing scheduled reconcile events independently.
+watchdog = read("reconcile-schedule-watchdog.yml")
+if 'cron: "*/15 * * * *"' not in reconcile:
+    fail("Production reconcile cadence must remain every 15 minutes.")
+if 'cron: "*/15 * * * *"' not in watchdog:
+    fail("The read-only reconcile schedule watchdog must run every 15 minutes.")
+if '"/repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs"' not in watchdog:
+    fail("The watchdog must query the reconcile-vps workflow-specific run history.")
+if "event=schedule" not in watchdog or "MAX_AGE_MINUTES: \"45\"" not in watchdog:
+    fail("The watchdog must check scheduled events and fail after 45 minutes without one.")
+if "actions: read" not in watchdog or "contents: read" not in watchdog:
+    fail("The schedule watchdog must use read-only repository permissions.")
+for forbidden in ("contents: write", "packages: write", "pull-requests: write",
+                  "platform-kubectl", "scripts/reconcile-vps.sh"):
+    if forbidden in watchdog:
+        fail(f"The read-only schedule watchdog must not mutate production or request write access: {forbidden}")
+if "No scheduled reconcile-vps run is available" not in watchdog:
+    fail("The watchdog must fail closed when no scheduled reconcile evidence exists.")
+
 print("Workflow contract validation passed.")
