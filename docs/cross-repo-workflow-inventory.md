@@ -1,4 +1,4 @@
-Last reviewed: 2026-10-31 16:09 ICT. Post-merge reconcile [#41187383657](https://github.com/phanthienquoc/platform-infra/actions/runs/41187383657) confirms TCE remains intentionally paused and exposes exact image-pull causes: MicroFE placeholder tags are not found, StockDividend tags lack ARM64 manifests, Auth and Media containers remain non-ready. The latest observed scheduled reconcile remains #41184627405 at 15:26 ICT; no later scheduled run is visible through 16:09 ICT.
+Last reviewed: 2026-10-31 16:16 ICT. StockDividend scraper PR #15 merged as a80f904 after all five CI checks passed, upgrading the disabled vnstock 5.0.1 pin to 5.2.1. The currently running scheduled scrape #41178133076 still uses the old commit and continues retrying failed symbol/date syncs; preserve the scheduled job and verify the next run. Production release remains fail-closed pending separate credentials.
 
 Last reviewed: 2026-10-31 12:03 ICT. Inventory is based on the workflow files present on each repository's default branch at review time; no workflow definitions were changed by the latest credentials documentation merge.
 
@@ -64,7 +64,7 @@ Last reviewed: 2026-10-31 12:03 ICT. Inventory is based on the workflow files pr
 | `.github/workflows/ci.yml` | Application CI. | Latest master CI passed. |
 | `.github/workflows/deploy.yml` | Build/publish ARM64 images from master after handoff and release-enable gates pass. | K3s diagnostics in [#41187383657](https://github.com/phanthienquoc/platform-infra/actions/runs/41187383657) confirm admin:12d63b4 and backend:12d63b4 have no matching ARM64 manifest. Publisher remains fail-closed: STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED is false and PLATFORM_INFRA_TOKEN is missing. PR #14 fixed the publisher to use native ARM64 and full-SHA tags; configure handoff first, then publish and verify new images before promotion. |
 | `.github/workflows/wf-platform-infra-release.yml` | Sends immutable full-source-SHA promotion dispatches to platform-infra after a successful publisher run. | Latest dispatch was skipped because the publisher was held/failed. |
-| `.github/workflows/run_scraper.yml` | Scraper job, including scheduled/manual operation. | Preserve scheduled data collection; unrelated to production image promotion. |
+| `.github/workflows/run_scraper.yml` | Scraper job, including scheduled/manual operation. | Scheduled run [#41178133076](https://github.com/phanthienquoc/stockdividend/actions/runs/41178133076) is still in progress on the old commit and logs repeatedly report disabled vnstock 5.0.1. PR [#15](https://github.com/phanthienquoc/stockdividend/pull/15) upgraded the dependency to 5.2.1 and merged after the five-job CI suite passed; the next run will pick up the new pin. Do not cancel or remove the scheduled job. |
 
 ## media-generation — application CI and release producer
 
