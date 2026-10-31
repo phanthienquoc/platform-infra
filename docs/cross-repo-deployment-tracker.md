@@ -1,3 +1,14 @@
+# Cross-Repository Production Deployment Tracker
+
+## Latest automation review (2026-10-31 20:59 ICT)
+
+- Reviewed current default-branch heads: platform-infra `d4f347096ddf8d8f78dc649b8cf8bcf3f345e218`, TCE-dashboard `8547e1315fea75202f70f14556589e76ab1f65ed`, StockDividend `a1ae52369859d9b72cc823621024bb408d72c168`, Media Generation `12372380849348eb3ed88cb8af3d8e7a6ccc2e23`, and Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Rechecked workflow evidence: platform-infra validation [#41204039425](https://github.com/phanthienquoc/platform-infra/actions/runs/41204039425) and [#41204130902](https://github.com/phanthienquoc/platform-infra/actions/runs/41204130902) passed. StockDividend CI [#41203909024](https://github.com/phanthienquoc/stockdividend/actions/runs/41203909024) passed all five jobs. Publisher [#41203908963](https://github.com/phanthienquoc/stockdividend/actions/runs/41203908963) succeeded with handoff validation and image publication skipped because production release remains disabled; no images were published and no dispatch was sent.
+- **Contract gap found and fixed in this PR:** the GitOps consumer accepted StockDividend tags of 7–64 hexadecimal characters even though the producer dispatches a full 40-character source SHA. The consumer now rejects abbreviated, overlong, and non-hex tags. No live manifest or production workload is changed by this validation tightening.
+- Open-PR review: no open deployment PR was returned for TCE-dashboard, StockDividend, or Media Generation. platform-infra and Authentication have older open PRs; the Auth migration-drift/UM-4 PRs remain untouched because their notes flag unresolved Supabase integration side effects.
+- **Release blockers remain:** MicroFE/Media promotion needs protected `PLATFORM_INFRA_AUTOMATION_TOKEN`; StockDividend release remains disabled and needs `PLATFORM_INFRA_TOKEN`, plus full-SHA ARM64 images before promotion. Existing StockDividend manifest tags are still `12d63b4` and have not been replaced.
+- The schedule watchdog has no observed runtime run in the inspected evidence. Its manual dispatch and scheduled-event delivery still need verification. TCE remains intentionally scaled to zero; Auth/Keycloak remain stopped. Production is **NOT HEALTHY/UNVERIFIED**. The TCE market-scan schedule was not changed.
+
 ## Post-merge verification (2026-10-31)
 
 - Tracker/inventory PR #901 was squash-merged as `3f1aa97b9086cc2dd77f3002bba883afe37a916d`; post-merge manifest validation [#41204039425](https://github.com/phanthienquoc/platform-infra/actions/runs/41204039425) passed.
@@ -43,8 +54,6 @@
 - **Promotion blockers remain:** MicroFE/Media promotion still needs the protected `PLATFORM_INFRA_AUTOMATION_TOKEN`; StockDividend remains held with `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED` false and `PLATFORM_INFRA_TOKEN` missing. Existing StockDividend admin/backend tags still lack a compatible ARM64 manifest. Do not bypass these gates.
 - TCE public smoke [#41185878137](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41185878137) returned HTTP 503 for TCE and Auth endpoints. TCE's response is consistent with the operator-requested scale-down; Auth/SSO also remains intentionally unavailable. Preserve the failing public smoke rather than masking the outage.
 - Overall production remains **NOT HEALTHY/UNVERIFIED**. Auth/Keycloak remain stopped; no runtime secret, database role, release flag, or TCE market-scan schedule was changed in this review.
-
-# Cross-Repository Production Deployment Tracker
 
 ## Previous automation review (2026-10-31 18:04 ICT)
 
