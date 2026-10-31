@@ -65,9 +65,11 @@ if '[[ "$RELEASE_INPUT" == "$EXPECTED_RELEASE" ]]' not in promotion:
     fail("MicroFE release label must be checked against the full source commit SHA.")
 if "github.event.client_payload.release || github.event.client_payload.commit" not in promotion:
     fail("Promotion run name must expose the correlated MicroFE release label.")
-for field in ("auth_digest", "shell_digest", "ws_digest"):
+for field in ("shell_digest", "ws_digest"):
     if field not in promotion:
         fail(f"Shared MicroFE promoter is missing expected payload field: {field}")
+if "auth_digest" in promotion or "AUTH_DIGEST" in promotion:
+    fail("MicroFE promotion must not consume the legacy Auth image; Auth is released by phanthienquoc-authentication.")
 
 # Promotion renders the updated MicroFE Kustomization; do not rely on an ambient runner kubectl.
 microfe_job = promotion.split("  promote-microfe-digests:", 1)[1].split("  fanout-tce-release:", 1)[0]
