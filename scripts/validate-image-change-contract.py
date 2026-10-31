@@ -166,17 +166,17 @@ def self_test() -> None:
         ),
         (
             "valid Media digest promotion",
-            f"+++ b/apps/media-generation/overlays/prod/kustomization.yaml\\n+  digest: {digest}\\n",
+            f"+++ b/apps/media-generation/overlays/prod/kustomization.yaml\n+  digest: {digest}\n",
             True,
         ),
         (
             "invalid abbreviated Media release tag",
-            "+++ b/apps/media-generation/overlays/prod/kustomization.yaml\\n+  newTag: prod-v0.3.0-58f80a8\\n",
+            "+++ b/apps/media-generation/overlays/prod/kustomization.yaml\n+  newTag: prod-v0.3.0-58f80a8\n",
             False,
         ),
         (
             "valid Media full-SHA release tag",
-            f"+++ b/apps/media-generation/overlays/prod/kustomization.yaml\\n+  newTag: prod-v0.3.0-{sha}\\n",
+            f"+++ b/apps/media-generation/overlays/prod/kustomization.yaml\n+  newTag: prod-v0.3.0-{sha}\n",
             True,
         ),
         (
