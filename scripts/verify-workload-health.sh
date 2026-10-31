@@ -97,11 +97,23 @@ for namespace in "${namespaces[@]}"; do
     failed=1
   fi
 
-  if [ -n "$label_selector" ]; then
-    deployment_rows="$("${kubectl_bin[@]}" get deployments -n "$namespace" -l "$label_selector" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.spec.replicas}{"|"}{.status.readyReplicas}{"|"}{.status.updatedReplicas}{"\n"}{end}')"
-  else
-    deployment_rows="$("${kubectl_bin[@]}" get deployments -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.spec.replicas}{"|"}{.status.readyReplicas}{"|"}{.status.updatedReplicas}{"\n"}{end}')"
-  fi
+  # Pod label selectors cannot be reused for Deployment objects unless the
+  # Deployment metadata itself carries those labels. Auth/MicroFE manifests label
+  # pod templates but not Deployment metadata, so list deployments and scope by
+  # canonical deployment name instead.
+  deployment_rows="$("${kubectl_bin[@]}" get deployments -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.spec.replicas}{"|"}{.status.readyReplicas}{"|"}{.status.updatedReplicas}{"\\n"}{end}')"
+
+  case "$TARGET_APP" in
+    auth-service)
+      deployment_rows="$(printf '%s\\n' "$deployment_rows" | awk -F'|' '$1 == "microfe-auth"')"
+      ;;
+    keycloak)
+      deployment_rows="$(printf '%s\\n' "$deployment_rows" | awk -F'|' '$1 == "keycloak"')"
+      ;;
+    microfe)
+      deployment_rows="$(printf '%s\\n' "$deployment_rows" | awk -F'|' '$1 == "microfe-shell" || $1 == "microfe-ws"')"
+      ;;
+  esac
 
   if [ -z "$deployment_rows" ]; then
     echo "::error::No deployments found in namespace $namespace for target $TARGET_APP." >&2
