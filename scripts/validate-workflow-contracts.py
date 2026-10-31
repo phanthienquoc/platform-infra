@@ -258,4 +258,30 @@ for repository in (
     if repository not in tracker:
         fail(f"Cross-repo deployment tracker is missing repository: {repository}")
 
+
+# Auth shutdown must be an isolated, allowlisted maintenance operation.
+if "rollout-status-v11-auth-shutdown" not in bootstrap_script:
+    fail("Runner bootstrap must publish the versioned Auth shutdown allowlist policy.")
+if '  scale)' not in bootstrap_script or 'scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform' not in bootstrap_script:
+    fail("Runner bootstrap must allow only the exact Auth/Keycloak scale-to-zero command.")
+if "name: Verify Auth and Keycloak shutdown state" not in reconcile:
+    fail("Auth shutdown must verify desired/ready/updated replicas are zero and no matching pods remain.")
+if 'if [ "$TARGET_APP" = "auth-shutdown" ]; then' not in reconcile:
+    fail("Auth shutdown must bypass shared GitOps apply and remain scoped to the two Auth workloads.")
+shutdown_block = reconcile.split("name: Apply Auth and Keycloak shutdown only", 1)[1].split("name: Preflight diff", 1)[0]
+if 'scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform' not in shutdown_block:
+    fail("Auth shutdown target is missing its exact allowlisted scale command.")
+for step_name in (
+    "Validate GHCR pull access before mutating cluster credentials",
+    "Bootstrap GHCR pull credentials",
+    "Restart workloads blocked on image pulls",
+):
+    start = reconcile.find(f"- name: {step_name}")
+    if start < 0:
+        fail(f"Missing shared maintenance step: {step_name}")
+    end = reconcile.find("\n      - name:", start + 10)
+    block = reconcile[start:end if end >= 0 else len(reconcile)]
+    if "env.TARGET_APP != 'auth-shutdown'" not in block.split("run:", 1)[0]:
+        fail(f"{step_name} must not run for auth-shutdown because it mutates or restarts shared workloads.")
+
 print("Workflow contract validation passed.")
