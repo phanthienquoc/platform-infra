@@ -1,3 +1,12 @@
+# Cross-Repository Workflow Inventory
+
+## Latest automation review (2026-10-31 20:59 ICT)
+
+- Application repositories own source tests/builds and immutable GHCR publication; platform-infra owns production manifests, shared GHCR pull credentials, promotion PRs, reconciliation, rollout and health verification.
+- StockDividend publishes a full source-SHA tag and dispatches only `backend` and `admin`, the components currently represented in the production Kustomize overlay. The GitOps consumer now requires exactly 40 lowercase hexadecimal characters for StockDividend promotion; shortened SHA tags are rejected.
+- Production release remains fail-closed until the distinct protected handoff credentials and image compatibility are verified. Do not enable release merely to test the dispatch path.
+- Preserve the intentional TCE scale-to-zero and all market-scan scheduling. Auth/Keycloak remains stopped; production readiness is NOT HEALTHY/UNVERIFIED until required workload health gates pass.
+
 ## Post-merge verification (2026-10-31)
 
 - Tracker/inventory PR #901 was squash-merged as `3f1aa97b9086cc2dd77f3002bba883afe37a916d`; post-merge manifest validation [#41204039425](https://github.com/phanthienquoc/platform-infra/actions/runs/41204039425) passed.
