@@ -30,7 +30,7 @@ MICROFE_DIGEST = re.compile(
 
 
 def scalar(value: str) -> str:
-    return value.strip().strip("\\"").strip("'")
+    return value.strip().split("#", 1)[0].strip().strip('"').strip("'")
 
 
 def validate_diff(diff: str) -> tuple[list[str], int]:
