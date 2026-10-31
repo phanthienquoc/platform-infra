@@ -1,12 +1,12 @@
 # Cross-Repository Workflow Inventory
 
-## Latest automation review (2026-10-31 21:58 ICT)
+## Latest automation review (2026-10-31 22:03 ICT; PR #906 merged)
 
 - Scheduled reconcile [#41211251969](https://github.com/phanthienquoc/platform-infra/actions/runs/41211251969) confirms `reconcile-vps.yml` is receiving schedule events. Shared reconcile passed, while MicroFE Shell/WS, Media Generation and StockDividend health lanes failed on missing/invalid production image references; Auth and TCE lanes passed their configured checks; Keycloak lane was skipped.
 - MicroFE production references currently resolve to missing `0.1.0` and `RELEASE_SHA` tags. Media is still pinned to `prod-v0.3.0-58f80a8` with an unready backend pod. StockDividend remains pinned to `12d63b4`, whose admin/backend images lack a compatible ARM64 manifest.
-- Added changed-line image contract coverage in this branch for StockDividend full-source-SHA tags and MicroFE source-SHA/digest references. The guard runs in manifest validation and has regression fixtures; unchanged legacy refs remain explicit blockers rather than being silently treated as healthy.
+- PR #906 merged as `daf518f98020893dae7560ff19378b91689d463f` after exact-head `lint`, `validate`, and Keycloak checks passed. Post-merge validation runs #41212962105, #41212962155, and #41212962167 also passed. The new guard applies to changed production image references only: StockDividend requires full source SHA tags and MicroFE requires full source SHA/digest references; legacy unchanged refs remain explicit blockers.
 - StockDividend release remains disabled and no new images/dispatch were produced. Missing protected GitOps tokens remain unresolved. Do not bypass the release gate or manually mutate production workload state.
-- The schedule watchdog has no observed run in the latest 100 workflow runs even though the main reconcile schedule is firing. Verify workflow enablement/event delivery and manually run the read-only watchdog. Preserve all useful CI/security/manual/release workflows and the TCE market-scan schedule.
+- The last observed scheduled reconcile is #41211251969 at 21:40 ICT; no newer scheduled run appears in the latest 100 workflow runs as of 22:03 ICT, and the watchdog has no observed run. Verify workflow enablement/event delivery and manually run the read-only watchdog. Preserve all useful CI/security/manual/release workflows and the TCE market-scan schedule.
 - Overall production remains **NOT HEALTHY/UNVERIFIED**; no credentials, release flags, production manifests, or K3s workloads were changed.
 
 ## Latest automation review (2026-10-31; after PR #904 merge)
