@@ -362,10 +362,10 @@ if 'cron: "*/15 * * * *"' not in reconcile:
     fail("Production reconcile cadence must remain every 15 minutes.")
 if 'cron: "*/15 * * * *"' not in watchdog:
     fail("The read-only reconcile schedule watchdog must run every 15 minutes.")
-if "workflow_run:" not in watchdog or "      - inspect-vps" not in watchdog:
-    fail("The watchdog must also run after inspect-vps workflow completions as a schedule-delivery fallback.")
+if "workflow_run:" not in watchdog or "      - inspect-vps" not in watchdog or "      - reconcile-vps" not in watchdog:
+    fail("The watchdog must run after scheduled reconciliation and inspection completions as a schedule-delivery fallback.")
 if "      - completed" not in watchdog or "github.event.workflow_run.event == 'schedule'" not in watchdog:
-    fail("The watchdog fallback must be limited to completed scheduled inspect-vps runs.")
+    fail("The watchdog fallback must be limited to completed scheduled reconcile-vps/inspect-vps runs.")
 if '"/repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs"' in watchdog:
     fail("The watchdog gh api endpoint must not start with a slash.")
 if '"repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs"' not in watchdog:
