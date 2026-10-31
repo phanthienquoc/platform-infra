@@ -112,17 +112,12 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl version
 
       - name: Wait for runner reconciliation policy
-        if: ${{ env.RECONCILE_MODE == 'apply' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP != 'auth-shutdown' }}
         run: |
           set -euo pipefail
           for attempt in $(seq 1 24); do
             if policy="$(sudo /usr/local/sbin/platform-kubectl policy-version 2>/dev/null)"; then
-              if [ "$TARGET_APP" = "auth-shutdown" ]; then
-            echo "Auth-shutdown uses isolated scale-only operation; skips full environment apply."
-            echo "drift=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          if [ "$TARGET_APP" = "keycloak" ]; then
+              if [ "$TARGET_APP" = "keycloak" ]; then
                 [[ "$policy" == "platform-kubectl policy: rollout-status-v10-keycloak-secret-provision" ]] && {
                   echo "Keycloak runner allowlist is ready."
                   exit 0
