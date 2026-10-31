@@ -101,8 +101,8 @@ if "Update Kustomize image tag or StockDividend digests" not in promotion:
     fail("StockDividend digest promotion must update both production image entries atomically.")
 if "stockdividend/release" not in promotion or "digest: {digest}" not in promotion:
     fail("StockDividend promotion must pin both images by registry digest, not only mutable tags.")
-if "backend_digest:$backend_digest" not in promotion or "admin_digest:$admin_digest" not in promotion:
-    fail("StockDividend dispatch contract must carry both image digests in one event.")
+if "EVENT_COMMIT" not in promotion or "EVENT_BACKEND_DIGEST" not in promotion or "EVENT_ADMIN_DIGEST" not in promotion:
+    fail("StockDividend promotion must resolve source commit and both image digests from the dispatch payload.")
 
 # MicroFE digest promotions must use the shared GitOps promotion workflow.
 if "microfe-images-published" not in promotion:
