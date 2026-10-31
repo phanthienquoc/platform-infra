@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-10-31 11:02 ICT. Inventory is based on the workflow files present on each repository's default branch at review time.
+Last reviewed: 2026-10-31 12:03 ICT. Inventory is based on the workflow files present on each repository's default branch at review time; no workflow definitions were changed by the latest credentials documentation merge.
 
 ## Deployment authority contract
 
@@ -15,7 +15,7 @@ Last reviewed: 2026-10-31 11:02 ICT. Inventory is based on the workflow files pr
 
 | Workflow file | Role / contract | Current note |
 |---|---|---|
-| `.github/workflows/reconcile-vps.yml` | Sole production GitOps reconcile authority; manual plan/apply, GitOps dispatch, path-scoped push, and declared 15-minute schedule. Owns K3s rollout and health gates. | Latest push reconcile failed on real workload readiness. The schedule-filtered run listing has no reconcile run newer than 2026-10-31 09:05 ICT; investigate schedule delivery/enablement without changing the TCE market-scan schedule. |
+| `.github/workflows/reconcile-vps.yml` | Sole production GitOps reconcile authority; manual plan/apply, GitOps dispatch, path-scoped push, and declared 15-minute schedule. Owns K3s rollout and health gates. | Latest all-app reconcile [#41162916140](https://github.com/phanthienquoc/platform-infra/actions/runs/41162916140) failed real workload health gates; the latest scheduled reconcile remains [#41158397795](https://github.com/phanthienquoc/platform-infra/actions/runs/41158397795) at 09:05 ICT, with no later scheduled reconcile in the current listing. Investigate event delivery/enablement without changing the TCE market-scan schedule. |
 | `.github/workflows/gitops-image-promotion.yml` | Validates release metadata and GHCR access, creates GitOps promotion changes, then dispatches reconciliation. | Media promotions are fail-closed because `PLATFORM_INFRA_AUTOMATION_TOKEN` is missing from the protected `production` Environment. |
 | `.github/workflows/validate-manifests.yml` | Manifest/render validation. | Latest master run passed. |
 | `.github/workflows/validate-github-actions.yml` | Workflow syntax/contract validation. | Latest master run passed. |
@@ -48,7 +48,7 @@ Last reviewed: 2026-10-31 11:02 ICT. Inventory is based on the workflow files pr
 | `.github/workflows/wf-02-tce-prettier-format.yml` | Formatting validation. | Latest master run passed. |
 | `.github/workflows/wf-03-tce-production-deploy.yml` | Explicit manual production image release from master; application-side build/publish and release dispatch, not production cluster reconciliation. | Do not rerun for workflow-only changes. |
 | `.github/workflows/wf-04-tce-k3s-cleanup.yml` | K3s cleanup/maintenance. | Preserve; audit before any retirement. |
-| `.github/workflows/wf-06-tce-healthcheck.yml` | Scheduled public HTTP health checks. | Latest observed run failed because Auth liveness/readiness returned HTTP 503. |
+| `.github/workflows/wf-06-tce-healthcheck.yml` | Scheduled public HTTP health checks. | Latest observed run [#41160165628](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41160165628) failed because Auth liveness/readiness returned HTTP 503; TCE container checks passed. |
 | `.github/workflows/wf-07-tce-backup.yml` | Backup operation. | Preserve recovery capability. |
 | `.github/workflows/wf-07-tce-integration-check.yml` | Integration checks. | Preserve. |
 | `.github/workflows/wf-08b-tce-microfe-build-publish.yml` | MicroFE Auth/Shell/WS checks and Shell/WS image publication; dispatches immutable image metadata for central promotion. | Latest PR CI passed; deployed Shell/WS replicas remain unhealthy/pending in the latest inspection. |
@@ -62,7 +62,7 @@ Last reviewed: 2026-10-31 11:02 ICT. Inventory is based on the workflow files pr
 | Workflow file | Role / contract | Current note |
 |---|---|---|
 | `.github/workflows/ci.yml` | Application CI. | Latest master CI passed. |
-| `.github/workflows/deploy.yml` | Build/publish ARM64 images from master after handoff and release-enable gates pass. | Intentionally fail-closed: `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED` remains disabled and `PLATFORM_INFRA_TOKEN` is missing. |
+| `.github/workflows/deploy.yml` | Build/publish ARM64 images from master after handoff and release-enable gates pass. | Intentionally fail-closed: `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED` remains disabled and `PLATFORM_INFRA_TOKEN` is missing; latest image build was skipped. |
 | `.github/workflows/wf-platform-infra-release.yml` | Sends immutable full-source-SHA promotion dispatches to platform-infra after a successful publisher run. | Latest dispatch was skipped because the publisher was held/failed. |
 | `.github/workflows/run_scraper.yml` | Scraper job, including scheduled/manual operation. | Preserve scheduled data collection; unrelated to production image promotion. |
 
@@ -71,14 +71,14 @@ Last reviewed: 2026-10-31 11:02 ICT. Inventory is based on the workflow files pr
 | Workflow file | Role / contract | Current note |
 |---|---|---|
 | `.github/workflows/ci.yml` | Media app CI. | Latest master CI passed. |
-| `.github/workflows/wf-03-media-production-deploy.yml` | Master-only/manual production release, immutable version + full-source-SHA tag publication, then central GitOps promotion request. | Release images exist, but frontend/backend promotions are blocked at the infrastructure automation-token gate. |
+| `.github/workflows/wf-03-media-production-deploy.yml` | Master-only/manual production release, immutable version + full-source-SHA tag publication, then central GitOps promotion request. | Immutable release images exist; frontend/backend promotion runs [#41158836425](https://github.com/phanthienquoc/platform-infra/actions/runs/41158836425) and [#41158836607](https://github.com/phanthienquoc/platform-infra/actions/runs/41158836607) passed GHCR validation but stopped at the missing `PLATFORM_INFRA_AUTOMATION_TOKEN` gate. |
 
 ## phanthienquoc-authentication — Auth application CI and release producer
 
 | Workflow file | Role / contract | Current note |
 |---|---|---|
 | `.github/workflows/ci.yml` | Auth service tests, typecheck, build, and container build. | Latest master CI passed. |
-| `.github/workflows/release.yml` | Explicit manual master-only Auth image release; verifies source SHA and version before publishing and dispatching. | Last release workflow passed, but public Auth health is still HTTP 503. Do not equate publish success with runtime health. |
+| `.github/workflows/release.yml` | Explicit manual master-only Auth image release; verifies source SHA and version before publishing and dispatching. | Last release workflow [#41040510320](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41040510320) passed, but public Auth health check [#41160165628](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41160165628) still returned HTTP 503. Do not equate publish success with runtime health. |
 | `.github/workflows/web-ci.yml` | Auth web CI. | Preserve separate web validation. |
 
 ## Release contract checks
