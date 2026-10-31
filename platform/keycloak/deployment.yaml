@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/name: keycloak
     app.kubernetes.io/part-of: auth-central
 spec:
-  # TEMPORARY OPERATOR REQUEST: stop Auth API and Keycloak to halt Auth-related traffic.
+  # TEMPORARY OPERATOR REQUEST: stop Auth API and Keycloak; reconcile this zero-replica state through the scoped shutdown target.
   # Restore replicas to 1 only after the Supabase/Keycloak connection issue is resolved.
   replicas: 0
   revisionHistoryLimit: 3
