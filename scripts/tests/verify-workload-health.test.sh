@@ -69,8 +69,27 @@ case "$resource" in
             printf 'microfe-shell|1|1|1\n'
             printf 'microfe-ws|1|1|1\n'
             ;;
+          tce-dashboard)
+            printf 'tce-frontend|1|1|1\\n'
+            printf 'tce-service|1|1|1\\n'
+            ;;
           *) exit 3 ;;
         esac
+        ;;
+      scaled-down)
+        [ "$TARGET_APP" = "tce-dashboard" ] || exit 3
+        printf 'tce-frontend|0|0|0\\n'
+        printf 'tce-service|0|0|0\\n'
+        ;;
+      scaled-down-not-converged)
+        [ "$TARGET_APP" = "tce-dashboard" ] || exit 3
+        printf 'tce-frontend|0|1|1\\n'
+        printf 'tce-service|0|0|0\\n'
+        ;;
+      scaled-down-stale-pod)
+        [ "$TARGET_APP" = "tce-dashboard" ] || exit 3
+        printf 'tce-frontend|0|0|0\\n'
+        printf 'tce-service|0|0|0\\n'
         ;;
       terminating-only|image-pull|no-pods)
         printf 'stock-admin|1|0|0\n'
