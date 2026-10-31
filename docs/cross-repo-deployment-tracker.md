@@ -1,5 +1,18 @@
 # Cross-Repository Production Deployment Tracker
 
+## Latest automation review (2026-10-31 21:58 ICT; scheduled reconcile #41211251969)
+
+- Reviewed current default-branch heads: platform-infra `d5b7990b925d2387bcbb9802d4f4494f25cde664`, TCE-dashboard `8547e1315fea75202f70f14556589e76ab1f65ed`, StockDividend `a1ae52369859d9b72cc823621024bb408d72c168`, Media Generation `12372380849348eb3ed88cb8af3d8e7a6ccc2e23`, and Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Latest scheduled production reconciliation [#41211251969](https://github.com/phanthienquoc/platform-infra/actions/runs/41211251969) was created at 21:40 ICT. Shared reconciliation succeeded, but the final health gate failed:
+  - MicroFE Shell/WS: `ImagePullBackOff`; GHCR returned `not found` for `microfe-shell:0.1.0` and `microfe-ws:RELEASE_SHA`.
+  - Media Generation: the current `prod-v0.3.0-58f80a8` backend image is not ready; deployment is `0/1` ready and reports `ProgressDeadlineExceeded`. Observed image digest: `sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d`.
+  - StockDividend: `admin:12d63b4` and `backend:12d63b4` fail with `no match for platform in manifest` on the ARM64 K3s node; the frontend deployment also reports `updated=0`.
+  - Auth and TCE lanes passed their configured checks; the dedicated Keycloak lane was skipped. This does not mean public TCE/SSO is available.
+- Reconciliation ran with `ALLOW_IMAGE_CHANGES=false`; it did not perform an image promotion. The StockDividend publisher remains release-disabled, so no new image or dispatch was produced. MicroFE/Media promotion still requires the protected `PLATFORM_INFRA_AUTOMATION_TOKEN`; StockDividend requires `PLATFORM_INFRA_TOKEN` and an explicit release-enable decision.
+- This branch adds a PR-only changed-reference guard: newly introduced StockDividend production tags must be full 40-character source SHAs (or a digest image reference), and MicroFE image changes must use a full source SHA or validated `sha256` digest. It intentionally does not make unrelated documentation PRs fail on pre-existing legacy refs; those refs remain readiness blockers until verified promotion.
+- Schedule evidence correction: `reconcile-vps.yml` is receiving scheduled events (latest run #41211251969). The watchdog itself still has no run in the latest 100 workflow runs. Next action is to inspect watchdog enablement/event delivery and trigger a read-only manual run through GitHub Actions; preserve the existing 15-minute reconciliation and TCE market-scan schedules.
+- Overall production remains **NOT HEALTHY/UNVERIFIED**. No credentials, release flags, production manifests, or K3s workloads were changed by this review.
+
 ## Latest automation review (2026-10-31; after PR #904 merge)
 
 - Current default-branch heads reviewed: platform-infra `fcc1e1204db4d34f5ccd20e73836a6c3fe66d8a7`, TCE-dashboard `8547e1315fea75202f70f14556589e76ab1f65ed`, StockDividend `a1ae52369859d9b72cc823621024bb408d72c168`, Media Generation `12372380849348eb3ed88cb8af3d8e7a6ccc2e23`, and Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
