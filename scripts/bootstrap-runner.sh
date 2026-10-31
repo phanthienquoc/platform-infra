@@ -46,7 +46,7 @@ case "${1:-}" in
     ;;
   policy-version)
     [[ "$#" -eq 1 ]] || exit 2
-    echo "platform-kubectl policy: rollout-status-v10-keycloak-secret-provision"
+    echo "platform-kubectl policy: rollout-status-v11-auth-shutdown"
     exit 0
     ;;
   reconcile-ghcr-pull)
@@ -296,6 +296,13 @@ case "${1:-}" in
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/keycloak" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "--timeout=300s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/keycloak -n microfe-platform --timeout=300s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/microfe-ws" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/microfe-ws -n microfe-platform --timeout=180s
     ;;
+  scale)
+    [[ "$#" -eq 6 && "${2:-}" == "deployment/microfe-auth" && "${3:-}" == "deployment/keycloak" && "${4:-}" == "--replicas=0" && "${5:-}" == "-n" && "${6:-}" == "microfe-platform" ]] || {
+      echo "platform-kubectl: only scale-to-zero for Auth and Keycloak is allowed" >&2
+      exit 2
+    }
+    exec "${KUBECTL[@]}" scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform
+    ;;
   get)
     [[ "${2:-}" == "ingress" && "${3:-}" == "keycloak-public" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "" ]] && exec "${KUBECTL[@]}" get ingress keycloak-public -n microfe-platform
     [[ "${2:-}" == "ingress" && "${3:-}" == "microfe-public" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "" ]] && exec "${KUBECTL[@]}" get ingress microfe-public -n microfe-platform
@@ -306,7 +313,7 @@ echo "platform-kubectl: command is not allowlisted" >&2
 exit 2
 EOF
 chmod 0755 /usr/local/sbin/platform-kubectl
-echo "platform-kubectl policy: rollout-status-v10-keycloak-secret-provision"
+echo "platform-kubectl policy: rollout-status-v11-auth-shutdown"
 cat >/usr/local/sbin/platform-crictl <<'EOF'
 #!/usr/bin/env bash
 # Root-owned restricted CRI interface for the platform cleanup helper.
