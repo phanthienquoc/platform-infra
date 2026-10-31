@@ -268,6 +268,10 @@ if "platform/keycloak/**" not in reconcile:
     fail("Keycloak manifest changes must trigger the shared reconcile workflow.")
 if "name: Resolve Keycloak push scope" not in reconcile:
     fail("Keycloak manifest pushes must select an isolated scope from the desired replica count.")
+if 'if: ${{ github.event_name == \'push\' }}' not in reconcile:
+    fail("Keycloak push-scope resolution must run for every push and inspect the complete changed-file range.")
+if 'git diff --name-only "$before" "$GITHUB_SHA"' not in reconcile:
+    fail("Push-scope resolution must inspect the complete before-to-head diff rather than only head_commit.modified.")
 if "name: Verify Auth and Keycloak shutdown state" not in reconcile:
     fail("Auth shutdown must verify desired/ready/updated replicas are zero and no matching pods remain.")
 if 'if [ "$TARGET_APP" = "auth-shutdown" ]; then' not in reconcile:
