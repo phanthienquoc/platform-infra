@@ -1,3 +1,11 @@
+## Post-merge verification (2026-10-31)
+
+- Tracker/inventory PR #901 was squash-merged as `3f1aa97b9086cc2dd77f3002bba883afe37a916d`; post-merge manifest validation [#41204039425](https://github.com/phanthienquoc/platform-infra/actions/runs/41204039425) passed.
+- StockDividend master CI [#41203909024](https://github.com/phanthienquoc/stockdividend/actions/runs/41203909024) completed successfully on merge commit `a1ae52369859d9b72cc823621024bb408d72c168`; backend build, scraper container build, scraper syntax, admin production build, and release-hold contract all passed.
+- Publisher [#41203908963](https://github.com/phanthienquoc/stockdividend/actions/runs/41203908963) succeeded with the production release hold still disabled. Its handoff validation and `build-and-push` were skipped, so **no images were published and no dispatch was sent**. The new same-job dispatch contract is merged and CI-tested, but live dispatch remains untested until the protected release prerequisites are configured.
+- The schedule watchdog still has no observed run in the latest 100 platform-infra workflow runs. Its workflow file includes both `schedule` and `workflow_dispatch`, but no manual or scheduled run evidence exists yet. Next action: manually dispatch the read-only watchdog through GitHub Actions and inspect why scheduled `reconcile-vps.yml` events stopped; do not change the TCE market-scan schedule.
+- Production remains **NOT HEALTHY/UNVERIFIED**: TCE public endpoints still return HTTP 503 while TCE is intentionally scaled to zero; Auth/SSO is unavailable; the last scheduled reconciliation failed the Auth, StockDividend, MicroFE, and Media health lanes. MicroFE/Media GitOps promotion still needs `PLATFORM_INFRA_AUTOMATION_TOKEN`; StockDividend release remains disabled and needs `PLATFORM_INFRA_TOKEN` plus compatible ARM64 image references before any live release.
+
 ## Latest automation review (2026-10-31; after StockDividend PR #18 merge)
 
 - `platform-infra/master` remains at `6fdae4a124d200c0fb9ed5be1963cad136f92de2`; post-merge manifest validation [#41199921378](https://github.com/phanthienquoc/platform-infra/actions/runs/41199921378) passed.
