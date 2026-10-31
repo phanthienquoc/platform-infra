@@ -45,6 +45,22 @@ if "if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/ma
 if "github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/master'" not in promotion:
     fail("The application promotion job must only run manual promotions from master.")
 
+# StockDividend's publisher emits the full 40-character source SHA; reject abbreviated tags.
+stockdividend_tag_block = re.search(
+    r"(?s)            stockdividend\)\n(.*?)\n              ;;",
+    promotion,
+)
+if stockdividend_tag_block is None or '[[ "$TAG" =~ ^[0-9a-f]{40}$ ]]' not in stockdividend_tag_block.group(1):
+    fail("StockDividend promotion must require a full 40-character source commit SHA.")
+if "StockDividend tag must be a full 40-character source commit SHA" not in promotion:
+    fail("StockDividend promotion must explain its full-SHA requirement.")
+full_sha_pattern = re.compile(r"^[0-9a-f]{40}$")
+if not full_sha_pattern.fullmatch("a" * 40):
+    fail("StockDividend full-SHA validator rejected a valid source SHA.")
+for invalid_tag in ("a" * 7, "a" * 39, "a" * 41, "g" * 40):
+    if full_sha_pattern.fullmatch(invalid_tag):
+        fail(f"StockDividend full-SHA validator accepted an invalid tag length/character: {invalid_tag}")
+
 # Promotion PR auto-merge must fail closed without required checks and pin the exact verified head.
 if promotion.count("No required") < 2 or promotion.count("refusing to merge") < 2:
     fail("Both promotion PR merge paths must refuse to merge when no required checks are configured.")
