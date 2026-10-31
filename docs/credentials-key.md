@@ -129,3 +129,8 @@ These are sourced from Platform Infra's protected GitHub Actions Environment nam
 ## Change policy
 
 Update this inventory when a workflow adds, renames, removes, or changes the scope of a secret/variable reference. Re-audit actual workflow expressions rather than assuming a key still exists. Do not modify or rotate runtime credentials as part of updating this documentation.
+
+
+## GHCR token is not a GitOps automation token
+
+A successful `GHCR_READ_TOKEN` registry preflight verifies only GHCR authentication and package access. It does not prove permission to write repository contents, open/update pull requests, inspect required checks, or read commit statuses. Keep `GHCR_READ_TOKEN` read-only and do not use it as a fallback for `PLATFORM_INFRA_AUTOMATION_TOKEN`. See [credentials.md](credentials.md) for the scope matrix and safe verification steps.
