@@ -58,6 +58,14 @@ def validate_diff(diff: str) -> tuple[list[str], int]:
                         f"{path}: StockDividend production newTag must be a full "
                         f"40-character lowercase source SHA, got {tag!r}"
                     )
+            elif line.startswith("digest:"):
+                digest = scalar(line.split(":", 1)[1])
+                inspected += 1
+                if not DIGEST.fullmatch(digest):
+                    errors.append(
+                        f"{path}: StockDividend image digest must be sha256:<64 lowercase hex>, "
+                        f"got {digest!r}"
+                    )
             elif line.startswith("image:"):
                 image = scalar(line.split(":", 1)[1])
                 if image.startswith("ghcr.io/phanthienquoc/stockdividend/"):
@@ -110,6 +118,16 @@ def self_test() -> None:
             "valid StockDividend source SHA",
             f"+++ b/apps/stockdividend/overlays/prod/kustomization.yaml\n+  newTag: {sha}\n",
             True,
+        ),
+        (
+            "valid StockDividend digest",
+            f"+++ b/apps/stockdividend/overlays/prod/kustomization.yaml\n+  digest: {digest}\n",
+            True,
+        ),
+        (
+            "invalid StockDividend digest",
+            "+++ b/apps/stockdividend/overlays/prod/kustomization.yaml\n+  digest: sha256:xyz\n",
+            False,
         ),
         (
             "invalid abbreviated StockDividend tag",
