@@ -1,6 +1,6 @@
 # yamllint disable rule:line-length
 name: reconcile-vps
-run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target_app || 'all' }} / ${{ github.event.client_payload.release || inputs.mode || github.event_name }}
+run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target_app || (github.event_name == 'push' && contains(join(github.event.head_commit.modified, ','), 'platform/keycloak/') && 'keycloak-manifest') || 'all' }} / ${{ github.event.client_payload.release || inputs.mode || github.event_name }}
 
 "on":
   workflow_dispatch:
@@ -47,6 +47,7 @@ run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target
       - platform/cert-manager/**
       - platform/k3s-debug-logs/**
       - platform/microfe/**
+      - platform/keycloak/**
       - scripts/reconcile-vps.sh
       - scripts/guard-reconcile-images.sh
       - scripts/validate-ghcr-pull-access.sh
@@ -90,6 +91,30 @@ jobs:
           git rev-parse HEAD
           test -f environments/prod/kustomization.yaml
           chmod +x scripts/reconcile-vps.sh
+
+      - name: Resolve Keycloak push scope
+        if: ${{ github.event_name == 'push' && contains(join(github.event.head_commit.modified, ','), 'platform/keycloak/') }}
+        run: |
+          set -euo pipefail
+          replicas="$(awk '
+            $0 == "spec:" { in_spec = 1; next }
+            in_spec && /^[^[:space:]]/ { in_spec = 0 }
+            in_spec && /^  replicas:/ { print $2; exit }
+          ' platform/keycloak/deployment.yaml)"
+          case "$replicas" in
+            0)
+              echo "TARGET_APP=auth-shutdown" >> "$GITHUB_ENV"
+              echo "Keycloak manifest declares replicas: 0; selecting isolated Auth/Keycloak shutdown."
+              ;;
+            1)
+              echo "TARGET_APP=keycloak" >> "$GITHUB_ENV"
+              echo "Keycloak manifest declares replicas: 1; selecting the dedicated Keycloak rollout."
+              ;;
+            *)
+              echo "::error::Keycloak push requires replicas 0 or 1, got ${replicas:-missing}"
+              exit 1
+              ;;
+          esac
 
       - name: Resolve deployment scope
         id: scope
@@ -220,7 +245,8 @@ jobs:
         if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP == 'auth-shutdown' }}
         run: |
           set -euo pipefail
-          # Explicit maintenance operation scoped only to Auth and Keycloak.
+          # Apply only the dedicated Keycloak resource set, then stop Auth and Keycloak.
+          sudo /usr/local/sbin/platform-kubectl apply -k platform/keycloak
           sudo /usr/local/sbin/platform-kubectl scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform
 
       - name: Verify Auth and Keycloak shutdown state
