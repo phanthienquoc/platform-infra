@@ -354,7 +354,7 @@ if "validate-image-change-contract.py --self-test" not in actions_validation:
 # A merge of the watchdog itself must exercise the read-only API path immediately.
 # This push-only smoke mode may warn about stale/missing schedule data, but normal
 # scheduled/manual/fallback invocations must continue to fail closed on stale data.
-if '  push:\\n    branches: [master]\\n    paths:\\n      - ".github/workflows/reconcile-schedule-watchdog.yml"' not in watchdog:
+if '  push:\n    branches: [master]\n    paths:\n      - ".github/workflows/reconcile-schedule-watchdog.yml"' not in watchdog:
     fail("The watchdog must run a path-scoped post-merge API smoke check on master.")
 if watchdog.count('if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then') != 2:
     fail("Only the watchdog's empty-history and stale-history guards may be warn-only for push smoke runs.")
