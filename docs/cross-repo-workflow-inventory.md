@@ -1,4 +1,4 @@
-Last reviewed: 2026-10-31 13:01 ICT. Inventory is based on workflow files present on each repository's default branch at review time; StockDividend's ARM64 publisher correction is in PR [#14](https://github.com/phanthienquoc/stockdividend/pull/14) and is not merged yet.
+Last reviewed: 2026-10-31 13:07 ICT. Inventory reflects current default-branch workflows; StockDividend's native ARM64 image publisher fix [PR #14](https://github.com/phanthienquoc/stockdividend/pull/14) is merged, but no post-fix production image has been published because release gates remain closed.
 
 Last reviewed: 2026-10-31 12:03 ICT. Inventory is based on the workflow files present on each repository's default branch at review time; no workflow definitions were changed by the latest credentials documentation merge.
 
