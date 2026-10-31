@@ -1,6 +1,6 @@
 # yamllint disable rule:line-length
 name: reconcile-vps
-run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target_app || 'all' }} / ${{ github.event.client_payload.release || inputs.mode || github.event_name }}
+run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target_app || (github.event_name == 'push' && contains(join(github.event.head_commit.modified, ','), 'platform/keycloak/') && 'keycloak-manifest') || 'all' }} / ${{ github.event.client_payload.release || inputs.mode || github.event_name }}
 
 "on":
   workflow_dispatch:
@@ -47,6 +47,7 @@ run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target
       - platform/cert-manager/**
       - platform/k3s-debug-logs/**
       - platform/microfe/**
+      - platform/keycloak/**
       - scripts/reconcile-vps.sh
       - scripts/guard-reconcile-images.sh
       - scripts/validate-ghcr-pull-access.sh
@@ -90,6 +91,30 @@ jobs:
           git rev-parse HEAD
           test -f environments/prod/kustomization.yaml
           chmod +x scripts/reconcile-vps.sh
+
+      - name: Resolve Keycloak push scope
+        if: ${{ github.event_name == 'push' && contains(join(github.event.head_commit.modified, ','), 'platform/keycloak/') }}
+        run: |
+          set -euo pipefail
+          replicas="$(awk '
+            $0 == "spec:" { in_spec = 1; next }
+            in_spec && /^[^[:space:]]/ { in_spec = 0 }
+            in_spec && /^  replicas:/ { print $2; exit }
+          ' platform/keycloak/deployment.yaml)"
+          case "$replicas" in
+            0)
+              echo "TARGET_APP=auth-shutdown" >> "$GITHUB_ENV"
+              echo "Keycloak manifest declares replicas: 0; selecting isolated Auth/Keycloak shutdown."
+              ;;
+            1)
+              echo "TARGET_APP=keycloak" >> "$GITHUB_ENV"
+              echo "Keycloak manifest declares replicas: 1; selecting the dedicated Keycloak rollout."
+              ;;
+            *)
+              echo "::error::Keycloak push requires replicas 0 or 1, got ${replicas:-missing}"
+              exit 1
+              ;;
+          esac
 
       - name: Resolve deployment scope
         id: scope
@@ -138,7 +163,7 @@ jobs:
           echo "Runner reconciliation policy did not become ready within 120s." >&2
           exit 1
       - name: Validate GHCR pull access before mutating cluster credentials
-        if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP != 'keycloak' && env.TARGET_APP != 'auth-shutdown' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app != 'keycloak' && steps.scope.outputs.target_app != 'auth-shutdown' }}
         env:
           GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}
           GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
@@ -150,7 +175,7 @@ jobs:
           TARGET_APP=all GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" ./scripts/validate-ghcr-pull-access.sh
 
       - name: Provision Auth runtime Secret from platform-infra Environment
-        if: ${{ env.RECONCILE_MODE == 'apply' && (env.TARGET_APP == 'auth-service' || env.TARGET_APP == 'all') }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && (steps.scope.outputs.target_app == 'auth-service' || steps.scope.outputs.target_app == 'all') }}
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -176,7 +201,7 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl verify-auth-secret
 
       - name: Bootstrap GHCR pull credentials
-        if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP != 'keycloak' && env.TARGET_APP != 'auth-shutdown' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app != 'keycloak' && steps.scope.outputs.target_app != 'auth-shutdown' }}
         env:
           GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}
           GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
@@ -190,19 +215,19 @@ jobs:
             sudo /usr/local/sbin/platform-kubectl reconcile-ghcr-pull
           echo "GHCR pull credentials reconciled across production GHCR namespaces."
       - name: Restart workloads blocked on image pulls
-        if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP != 'keycloak' && env.TARGET_APP != 'auth-shutdown' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app != 'keycloak' && steps.scope.outputs.target_app != 'auth-shutdown' }}
         run: |
           set -euo pipefail
           sudo /usr/local/sbin/platform-kubectl restart-blocked-image-pulls
       - name: Validate TCE release pairing
-        if: ${{ env.TARGET_APP != 'keycloak' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'tce-dashboard') }}
+        if: ${{ steps.scope.outputs.target_app != 'keycloak' && (steps.scope.outputs.target_app == 'all' || steps.scope.outputs.target_app == 'tce-dashboard') }}
         run: |
           set -euo pipefail
           chmod +x scripts/verify-tce-gitops-release.sh
           ./scripts/verify-tce-gitops-release.sh
 
       - name: Resolve media release tag
-        if: ${{ env.TARGET_APP != 'keycloak' && (env.TARGET_APP == 'media-generation' || env.TARGET_APP == 'all') }}
+        if: ${{ steps.scope.outputs.target_app != 'keycloak' && (steps.scope.outputs.target_app == 'media-generation' || steps.scope.outputs.target_app == 'all') }}
         run: |
           set -euo pipefail
           MEDIA_BACKEND_TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/media-generation/backend' apps/media-generation/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
@@ -217,14 +242,15 @@ jobs:
            } >> "$GITHUB_ENV"
 
       - name: Apply Auth and Keycloak shutdown only
-        if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP == 'auth-shutdown' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app == 'auth-shutdown' }}
         run: |
           set -euo pipefail
-          # Explicit maintenance operation scoped only to Auth and Keycloak.
+          # Apply only the dedicated Keycloak resource set, then stop Auth and Keycloak.
+          sudo /usr/local/sbin/platform-kubectl apply -k platform/keycloak
           sudo /usr/local/sbin/platform-kubectl scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform
 
       - name: Verify Auth and Keycloak shutdown state
-        if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP == 'auth-shutdown' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app == 'auth-shutdown' }}
         run: |
           set -euo pipefail
           for attempt in $(seq 1 24); do
@@ -330,7 +356,7 @@ jobs:
           curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=HTML"
 
       - name: Publish TCE deployment started event
-        if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && (env.TARGET_APP == 'all' || env.TARGET_APP == 'tce-dashboard') }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && (steps.scope.outputs.target_app == 'all' || steps.scope.outputs.target_app == 'tce-dashboard') }}
         continue-on-error: true
         run: |
           set -euo pipefail
@@ -342,7 +368,7 @@ jobs:
           ./scripts/publish-microfe-deployment-event.sh deploying tce-dashboard "$TAG" deploying
 
       - name: Verify cluster after reconciliation
-        if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP != 'keycloak' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app != 'keycloak' }}
         run: |
           set -euo pipefail
           sudo /usr/local/sbin/platform-kubectl get nodes -o wide
