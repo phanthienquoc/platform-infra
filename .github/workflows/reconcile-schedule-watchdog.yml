@@ -34,8 +34,9 @@ jobs:
         run: |
           set -euo pipefail
           response="$(gh api \
+            -X GET \
             -H "Accept: application/vnd.github+json" \
-            "/repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" \
             -f event=schedule \
             -F per_page=1)"
           latest="$(jq -c '.workflow_runs | sort_by(.created_at) | last // empty' <<< "$response")"
