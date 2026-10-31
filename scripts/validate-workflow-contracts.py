@@ -61,32 +61,40 @@ for invalid_tag in ("a" * 7, "a" * 39, "a" * 41, "g" * 40):
     if full_sha_pattern.fullmatch(invalid_tag):
         fail(f"StockDividend full-SHA validator accepted an invalid tag length/character: {invalid_tag}")
 
-# Promotion PR auto-merge must fail closed without required checks and pin the exact verified head.
-if promotion.count("No required") < 2 or promotion.count("refusing to merge") < 2:
-    fail("Both promotion PR merge paths must refuse to merge when no required checks are configured.")
-if promotion.count("current_required_count") < 4:
-    fail("Both promotion PR check-polling loops must fail closed if required checks disappear or cannot be queried.")
-if "No required promotion PR checks are configured.\n" in promotion or "No required PR checks are configured; continuing to merge gate." in promotion:
-    fail("Promotion PR checks must not treat an empty required-check list as success.")
-if promotion.count("gh pr view \"$PR_NUMBER\" --repo") < 4 or promotion.count("--json headRefOid --jq '.headRefOid'") < 4:
-    fail("Both promotion paths must capture and re-check the promotion PR head SHA.")
+# Promotion PRs use the repository-scoped GITHUB_TOKEN. Because GITHUB_TOKEN-created
+# PRs do not trigger pull_request workflows, explicitly dispatch manifest validation on
+# the exact PR branch and require a successful run for the exact head before merging.
+promotion_pr_validator = (ROOT / "scripts" / "validate-promotion-pr.sh").read_text(encoding="utf-8")
+if promotion.count("actions: write") < 2:
+    fail("Both promotion jobs must have Actions write permission to dispatch exact-head validation.")
+if promotion.count("token: ${{ github.token }}") < 2:
+    fail("Both promotion PR creation paths must use the repository-scoped GITHUB_TOKEN.")
+if promotion.count("GH_TOKEN: ${{ github.token }}") < 4:
+    fail("Both promotion paths must use GITHUB_TOKEN for validation and exact-head merge.")
+if promotion.count("bash scripts/validate-promotion-pr.sh") < 2:
+    fail("Both promotion paths must validate the exact PR head with the shared validator.")
+if promotion.count("name: Validate exact promotion PR head") < 2:
+    fail("Both promotion paths must run exact-head manifest validation before merge.")
 if promotion.count("steps.validate-pr-checks.outputs.head_sha") < 2 or promotion.count('--match-head-commit "$HEAD_SHA"') < 2:
-    fail("Both promotion merges must be pinned to the exact PR head that passed checks.")
-if 'gh pr update-branch "$PR_NUMBER"' in promotion:
-    fail("Promotion must not update a PR branch after checks and then merge without revalidation.")
-
-# Promotion PR workflows must run under a credential that triggers PR checks; GITHUB_TOKEN can suppress them.
-if promotion.count("token: ${{ secrets.PLATFORM_INFRA_AUTOMATION_TOKEN }}") < 2:
-    fail("Both promotion PR creation paths must use PLATFORM_INFRA_AUTOMATION_TOKEN so required PR checks can run.")
-if promotion.count("GH_TOKEN: ${{ secrets.PLATFORM_INFRA_AUTOMATION_TOKEN }}") < 4:
-    fail("Both promotion paths must use PLATFORM_INFRA_AUTOMATION_TOKEN to read required checks and merge the verified head.")
-if promotion.count("name: Require GitOps PR automation token") < 2:
-    fail("Both promotion paths must fail clearly before PR creation when PLATFORM_INFRA_AUTOMATION_TOKEN is missing.")
-if "checks: read" not in promotion or "statuses: read" not in promotion:
-    fail("Promotion workflow must have read access to GitHub check runs and commit statuses.")
-credentials = (ROOT / "docs" / "credentials-key.md").read_text(encoding="utf-8")
-if "`PLATFORM_INFRA_AUTOMATION_TOKEN`" not in credentials:
-    fail("credentials-key.md must document PLATFORM_INFRA_AUTOMATION_TOKEN and its required permissions.")
+    fail("Both promotion merges must be pinned to the exact PR head that passed validation.")
+if "PLATFORM_INFRA_AUTOMATION_TOKEN" in promotion or "gh pr checks" in promotion:
+    fail("GitOps promotion must not depend on the removed automation PAT or suppressed PR-triggered checks.")
+for required in (
+    "actions/workflows/validate-manifests.yml/dispatches",
+    '--data-urlencode "event=workflow_dispatch"',
+    ".head_sha == $sha",
+    '.event == "workflow_dispatch"',
+    "validation_conclusion",
+    "head.sha",
+    "head.ref",
+):
+    if required not in promotion_pr_validator:
+        fail(f"Exact-head promotion validator is missing required guard: {required}")
+if "GITHUB_TOKEN" not in (ROOT / "docs" / "credentials.md").read_text(encoding="utf-8"):
+    fail("credentials.md must document the workflow-scoped GITHUB_TOKEN promotion model.")
+credentials_key = (ROOT / "docs" / "credentials-key.md").read_text(encoding="utf-8")
+if "`PLATFORM_INFRA_AUTOMATION_TOKEN`" in credentials_key:
+    fail("credentials-key.md must not list the retired GitOps automation PAT.")
 
 # StockDividend publishes a paired, digest-only promotion payload after all ARM64 images verify.
 if "stockdividend-images-published" not in promotion:
