@@ -1,33 +1,33 @@
 # Credentials and Token Scope Guide
 
-Last reviewed: 2026-10-31
+Last reviewed: 2026-11-01
 
 This file documents credential purpose and safe selection only. **Never store secret values, PATs, passwords, environment files, or token fragments in this repository.**
 
-## Can `GHCR_READ_TOKEN` replace `PLATFORM_INFRA_AUTOMATION_TOKEN`?
+## GitOps promotion and GHCR credentials are separate
 
-**No. Keep them separate.**
+- `GHCR_READ_TOKEN` is a registry credential used by `gitops-image-promotion.yml` and `reconcile-vps.yml` to authenticate to GHCR and pull/read private container packages. Its documented minimum scope is `read:packages`, with package access to every production image and the correct `GHCR_USERNAME`.
+- Platform Infra GitOps promotion uses the workflow-scoped `GITHUB_TOKEN` with explicit `actions: write`, `contents: write`, `pull-requests: write`, and `packages: read` permissions. It creates the promotion PR, explicitly dispatches `validate-manifests.yml` on the PR branch, waits for a successful run tied to the exact head SHA, rechecks the open PR/head/base, then squash-merges with an exact-head guard.
+- GitHub suppresses most workflow runs caused by a `GITHUB_TOKEN`-created PR. The explicit `workflow_dispatch` validation is therefore mandatory; never replace it with an assumption that a PR check will start automatically.
+- `GHCR_READ_TOKEN` cannot replace `GITHUB_TOKEN`: the former grants package reads only, while the latter receives repository/action permissions from the workflow. Do not use the GHCR token as a GitOps write credential or add a PAT fallback.
+- `PLATFORM_INFRA_AUTOMATION_TOKEN` is no longer referenced by the active promotion workflow. Do not configure a new PAT for this path; existing unused secrets need not be rotated or deleted by this change.
 
-- `GHCR_READ_TOKEN` is a registry credential used by `reconcile-vps.yml` to authenticate to GHCR and pull/read private container packages. Its documented minimum scope is `read:packages`, with package access to every production image and the correct `GHCR_USERNAME`.
-- `PLATFORM_INFRA_AUTOMATION_TOKEN` is used by `gitops-image-promotion.yml` to create/update GitOps promotion commits or pull requests, inspect required checks, and squash-merge only a verified PR head. It requires repository permissions on `phanthienquoc/platform-infra`: `Contents: write`, `Pull requests: write`, `Checks: read`, and `Commit statuses: read`.
-- Successful GHCR Registry V2 preflight proves registry/package access for the checked packages; it does **not** prove GitHub repository Contents, Pull Requests, Checks, or Commit Status permissions.
-- Reusing a read-only package token for GitOps writes should fail due to insufficient scope and weakens separation of duties. Do not change the promotion workflow to use `GHCR_READ_TOKEN` as a fallback.
-- Do not rotate or replace a working GHCR token merely to resolve promotion failures. The current deployment evidence shows GHCR access recovered while promotion stops at the missing `PLATFORM_INFRA_AUTOMATION_TOKEN` secret.
+## Cross-repository application handoff credentials
 
-## Required configuration
+Keep application dispatch credentials separate from platform-owned GHCR pull access:
+- `PLATFORM_INFRA_TOKEN`: TCE Dashboard and StockDividend release handoff to Platform Infra; requires `Contents: write` on `phanthienquoc/platform-infra` for repository dispatch.
+- `PLATFORM_INFRA_DISPATCH_TOKEN`: Media Generation and Authentication release handoff. Media also reads Platform Infra Actions runs to verify dispatch correlation, so its repository secret needs `Contents: write` and `Actions: read`; Authentication needs dispatch permission (`Contents: write`). The same secret name does not imply the repositories share a token value.
 
-Configure `PLATFORM_INFRA_AUTOMATION_TOKEN` as a protected secret in the `production` GitHub Environment of `phanthienquoc/platform-infra`. Use a dedicated fine-grained PAT scoped to that repository and the permissions listed above. Verify the secret exists in the correct Environment without exposing its value.
+## Other production credentials
 
-Keep these credentials distinct:
-- `GHCR_READ_TOKEN`: registry read access only.
-- `PLATFORM_INFRA_AUTOMATION_TOKEN`: GitOps promotion PR/write/check permissions.
-- `PLATFORM_INFRA_TOKEN`: TCE/StockDividend release handoff; not a GHCR credential.
-- `PLATFORM_INFRA_DISPATCH_TOKEN`: Media/Auth release handoff; not a GHCR credential.
+- `GHCR_USERNAME`: package owner/login paired with `GHCR_READ_TOKEN`; keep package visibility and access least-privileged.
+- `RUNNER_REGISTRATION_PAT`: Platform Infra runner bootstrap only; use minimal runner-registration permissions and never store generated short-lived runner tokens.
+- `KEYCLOAK_DB_PASSWORD`, `KEYCLOAK_DB_URL`, `KEYCLOAK_DB_USERNAME`, `KEYCLOAK_ADMIN_USERNAME`, and `KEYCLOAK_ADMIN_PASSWORD`: protected Keycloak runtime credentials; keep out of logs, artifacts, manifests, and Git.
 
 ## Verification checklist
 
-1. Verify GHCR access using the existing registry preflight; never print the token.
-2. Verify promotion token configuration in GitHub Environment settings; secret values are intentionally not readable through the GitHub connector.
-3. Retry the promotion workflow only after the dedicated token is configured.
-4. Verify the resulting PR's exact head SHA and required checks before squash merge.
+1. Verify GHCR access using the existing package-scoped registry preflight; never print the token.
+2. Verify the GitOps workflow's declared permissions and exact-head validation run; secret values are intentionally not readable through the GitHub connector.
+3. Confirm each application repository's own dispatch credential is configured in its repository/environment scope before authorizing a release.
+4. Verify the resulting GitOps PR head SHA, exact-head manifest validation, merge SHA, reconciliation, K3s rollout, and application health before reporting promotion complete.
 5. Never paste credentials into issues, chat, logs, artifacts, or repository files.
