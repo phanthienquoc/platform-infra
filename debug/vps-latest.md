@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-10-31T18:35:32+00:00
+Generated: 2026-10-31T20:10:43+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,14 +11,14 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.6Gi       4.0Gi        85Mi        15Gi        19Gi
+Mem:            23Gi       3.6Gi       3.9Gi        85Mi        15Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/sda1        45G   25G   21G  54% /
+/dev/sda1        45G   25G   21G  55% /
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/sda1        45G   25G   21G  54% /
-disk_pressure: normal (54%)
- 18:35:32 up 183 days,  4:25,  0 users,  load average: 0.31, 0.16, 0.15
+/dev/sda1        45G   25G   21G  55% /
+disk_pressure: normal (55%)
+ 20:10:43 up 183 days,  6:01,  0 users,  load average: 0.34, 0.17, 0.11
 
 ### Top disk consumers
 
@@ -26,7 +26,7 @@ disk_pressure: normal (54%)
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
 21684 /opt/media-actions-runner/bin/Runner.Listener run --startuptype service
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-2403504 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+2478286 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
   actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-media-generation.media-generation-k3s-01)
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service           loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
@@ -107,18 +107,18 @@ kube-system        local-path-provisioner-58d557dc48-jbhhp      1/1     Running 
 kube-system        metrics-server-6dc596dfb8-s2bzm              1/1     Running            0              70d     10.42.0.4     tce-k3s-01   <none>           <none>
 kube-system        svclb-traefik-859779c1-7bwx2                 2/2     Running            0              70d     10.42.0.7     tce-k3s-01   <none>           <none>
 kube-system        traefik-59b7647586-gml84                     1/1     Running            0              70d     10.42.0.8     tce-k3s-01   <none>           <none>
-media-prod         media-generation-646c797f66-6fwn4            0/1     Running            0              30h     10.42.0.38    tce-k3s-01   <none>           <none>
-media-prod         media-generation-6c68f86bf4-pl927            0/1     Running            0              23h     10.42.0.80    tce-k3s-01   <none>           <none>
-media-prod         media-generation-frontend-5445d66b98-64pzz   1/1     Running            0              23h     10.42.0.79    tce-k3s-01   <none>           <none>
-microfe-platform   microfe-shell-64974f7f4-pcxw5                0/1     ImagePullBackOff   0              3h54m   10.42.0.132   tce-k3s-01   <none>           <none>
+media-prod         media-generation-646c797f66-6fwn4            0/1     Running            0              31h     10.42.0.38    tce-k3s-01   <none>           <none>
+media-prod         media-generation-6c68f86bf4-pl927            0/1     Running            0              25h     10.42.0.80    tce-k3s-01   <none>           <none>
+media-prod         media-generation-frontend-5445d66b98-64pzz   1/1     Running            0              25h     10.42.0.79    tce-k3s-01   <none>           <none>
+microfe-platform   microfe-shell-55ff4c858f-k8lx8               0/1     ImagePullBackOff   0              83m     10.42.0.137   tce-k3s-01   <none>           <none>
 microfe-platform   microfe-shell-dbbbfdf8c-5rkwz                1/1     Running            0              22d     10.42.0.158   tce-k3s-01   <none>           <none>
 microfe-platform   microfe-ws-5587c8844c-rbtgx                  1/1     Running            10 (22d ago)   22d     10.42.0.157   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-ws-7b948d4f65-hdrr2                  0/1     ImagePullBackOff   0              3h54m   10.42.0.131   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-ws-5fbdb87cf4-f4slj                  0/1     ImagePullBackOff   0              83m     10.42.0.136   tce-k3s-01   <none>           <none>
 microfe-platform   nats-7bc8d9f768-q682m                        1/1     Running            0              22d     10.42.0.178   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-5484cc6487-74s8g                 0/1     ImagePullBackOff   0              8h      10.42.0.129   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-5cf6d6f6db-z96zn                 0/1     ImagePullBackOff   0              3h54m   10.42.0.133   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-5cf6d6f6db-z96zn                 0/1     ErrImagePull       0              5h29m   10.42.0.133   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-66f845774d-524cs                 0/1     ImagePullBackOff   0              83m     10.42.0.138   tce-k3s-01   <none>           <none>
 stock-prod         stock-backend-57ccb8ff6-d25jq                1/1     Running            0              42d     10.42.0.55    tce-k3s-01   <none>           <none>
-stock-prod         stock-backend-7ffd8b6fc6-9m6j4               0/1     ImagePullBackOff   0              3h54m   10.42.0.134   tce-k3s-01   <none>           <none>
+stock-prod         stock-backend-7b9489b7f4-6jqbr               0/1     ImagePullBackOff   0              83m     10.42.0.139   tce-k3s-01   <none>           <none>
 stock-prod         stock-frontend-79c57845df-z747s              1/1     Running            0              42d     10.42.0.56    tce-k3s-01   <none>           <none>
 NAMESPACE          NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
 cert-manager       cert-manager                1/1     1            1           67d
@@ -142,11 +142,11 @@ tce-prod           tce-frontend                0/0     0            0           
 tce-prod           tce-service                 0/0     0            0           67d
 
 ### Pod failure evidence
-microfe-platform	microfe-shell-64974f7f4-pcxw5	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/microfe-shell:0.1.0": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image "ghcr.io/phanthienquoc/microfe-shell:0.1.0": failed to resolve reference "ghcr.io/phanthienquoc/microfe-shell:0.1.0": ghcr.io/phanthienquoc/microfe-shell:0.1.0: not found
-microfe-platform	microfe-ws-7b948d4f65-hdrr2	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image "ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA": failed to resolve reference "ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA": ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA: not found
-stock-prod	stock-admin-5484cc6487-74s8g	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": no match for platform in manifest: not found
-stock-prod	stock-admin-5cf6d6f6db-z96zn	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": no match for platform in manifest: not found
-stock-prod	stock-backend-7ffd8b6fc6-9m6j4	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/backend:12d63b4": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/backend:12d63b4": no match for platform in manifest: not found
+microfe-platform	microfe-shell-55ff4c858f-k8lx8	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/microfe-shell:0.1.0": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image "ghcr.io/phanthienquoc/microfe-shell:0.1.0": failed to resolve reference "ghcr.io/phanthienquoc/microfe-shell:0.1.0": ghcr.io/phanthienquoc/microfe-shell:0.1.0: not found
+microfe-platform	microfe-ws-5fbdb87cf4-f4slj	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image "ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA": failed to resolve reference "ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA": ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA: not found
+stock-prod	stock-admin-5cf6d6f6db-z96zn	ErrImagePull	rpc error: code = NotFound desc = failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": no match for platform in manifest: not found
+stock-prod	stock-admin-66f845774d-524cs	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": no match for platform in manifest: not found
+stock-prod	stock-backend-7b9489b7f4-6jqbr	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/backend:12d63b4": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/backend:12d63b4": no match for platform in manifest: not found
 
 ### Recent failure events
 
@@ -205,7 +205,7 @@ tce-prod           tce-service                 ClusterIP      10.43.189.227   <n
 NAMESPACE          NAME                               CLASS     HOSTS                                                          ADDRESS      PORTS     AGE
 media-prod         media                              traefik   media.mrcute.space                                             10.0.0.120   80, 443   31d
 microfe-platform   keycloak-public                    traefik   sso.mrcute.space                                               10.0.0.120   80, 443   15d
-microfe-platform   keycloak-registration-rate-limit   traefik   sso.mrcute.space                                               10.0.0.120   80, 443   3d14h
+microfe-platform   keycloak-registration-rate-limit   traefik   sso.mrcute.space                                               10.0.0.120   80, 443   3d16h
 microfe-platform   microfe-public                     traefik   app.mrcute.space,auth.mrcute.space,ws.mrcute.space             10.0.0.120   80, 443   25d
 stock-prod         stock                              traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   38d
 stock-prod         stock-ingress                      traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   42d
@@ -223,5 +223,5 @@ keycloak   0/0     0            0           15d   keycloak     quay.io/keycloak/
 error: timed out waiting for the condition
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.169563s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.050358s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.155056s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.050685s remote_ip=132.226.175.206
