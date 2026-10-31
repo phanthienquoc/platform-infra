@@ -101,17 +101,17 @@ for namespace in "${namespaces[@]}"; do
   # Deployment metadata itself carries those labels. Auth/MicroFE manifests label
   # pod templates but not Deployment metadata, so list deployments and scope by
   # canonical deployment name instead.
-  deployment_rows="$("${kubectl_bin[@]}" get deployments -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.spec.replicas}{"|"}{.status.readyReplicas}{"|"}{.status.updatedReplicas}{"\\n"}{end}')"
+  deployment_rows="$("${kubectl_bin[@]}" get deployments -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.spec.replicas}{"|"}{.status.readyReplicas}{"|"}{.status.updatedReplicas}{"\n"}{end}')"
 
   case "$TARGET_APP" in
     auth-service)
-      deployment_rows="$(printf '%s\\n' "$deployment_rows" | awk -F'|' '$1 == "microfe-auth"')"
+      deployment_rows="$(printf '%s\n' "$deployment_rows" | awk -F'|' '$1 == "microfe-auth"')"
       ;;
     keycloak)
-      deployment_rows="$(printf '%s\\n' "$deployment_rows" | awk -F'|' '$1 == "keycloak"')"
+      deployment_rows="$(printf '%s\n' "$deployment_rows" | awk -F'|' '$1 == "keycloak"')"
       ;;
     microfe)
-      deployment_rows="$(printf '%s\\n' "$deployment_rows" | awk -F'|' '$1 == "microfe-shell" || $1 == "microfe-ws"')"
+      deployment_rows="$(printf '%s\n' "$deployment_rows" | awk -F'|' '$1 == "microfe-shell" || $1 == "microfe-ws"')"
       ;;
   esac
 
