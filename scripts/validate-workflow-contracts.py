@@ -22,6 +22,22 @@ def fail(message: str) -> None:
 
 reconcile = read("reconcile-vps.yml")
 promotion = read("gitops-image-promotion.yml")
+inspection = read("inspect-vps.yml")
+manifest_validation = read("validate-manifests.yml")
+
+# The VPS inspection automation must validate the exact generated PR head before merge.
+if "workflow_dispatch:" not in manifest_validation:
+    fail("Manifest validation must expose workflow_dispatch for exact-head inspection validation.")
+if 'pull_request:\n    paths-ignore:\n      - "debug/vps-latest.md"' not in manifest_validation:
+    fail("Debug snapshot-only PRs must not create a jobless manifest-validation run.")
+if "/actions/workflows/validate-manifests.yml/dispatches" not in inspection:
+    fail("VPS inspection must explicitly dispatch manifest validation before merge.")
+if 'event == "workflow_dispatch"' not in inspection or "Exact-head manifest validation passed" not in inspection:
+    fail("VPS inspection must wait for a successful exact-head validation run.")
+if "sha: $sha" not in inspection or "PR_HEAD_SHA" not in inspection:
+    fail("VPS inspection must pin the squash merge to the validated PR head SHA.")
+if 'payload=\'{"merge_method":"squash"}\'' in inspection:
+    fail("VPS inspection must not use the legacy unguarded immediate merge payload.")
 
 # Manual production promotion must originate from master; non-master dispatches fail visibly.
 if "if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/master'" not in promotion:
