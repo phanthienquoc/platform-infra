@@ -1,5 +1,13 @@
 # Cross-Repository Production Deployment Tracker
 
+## Auth/Keycloak temporary shutdown request (2026-10-31)
+
+- Operator requested stopping Auth runtime traffic and Supavisor authentication retries. Dedicated branch `ops/stop-auth-and-keycloak` and PR #891 set `platform/auth-service/deployment.yaml` (`microfe-auth`) and `platform/keycloak/deployment.yaml` (`keycloak`) to `replicas: 0`.
+- Both manifests were re-fetched from the PR branch and verified at zero replicas. No Supabase project pause, role/password change, or Kubernetes Secret mutation was made.
+- Supabase project API reports `ACTIVE_HEALTHY`, but read-only Supavisor log buckets from 2026-10-31 09:00–09:59 UTC show continuing `keycloak_runtime` authentication/circuit-breaker failures (roughly 190–220 events per 5 minutes). Previous Postgres SQL connectivity checks timed out. This supports stopping Keycloak while investigating; it does not prove the role password mismatch.
+- PR #891 remains open pending required validation and review. Production is NOT YET STOPPED: GitOps reconcile has not been run and no post-apply Deployment/pod snapshot or post-stop Supavisor log verification exists. Auth API and SSO will be unavailable once the change is applied; restore replicas to 1 only on explicit operator request after DB connectivity is resolved.
+
+
 Last reviewed: 2026-10-31 16:18 ICT (fresh Supabase log query finds 380+ `keycloak_runtime` Supavisor circuit-breaker events in 10 minutes; SQL ping and role lookup still time out. This provides a concrete Auth DB-authentication blocker, but does not yet prove whether the password in the database role or the Kubernetes Secret is wrong. No credentials or database roles were changed.)
 
 Last reviewed: 2026-10-31 15:08 ICT (PR #884 merged as 9d3efdc after exact-head manifest and workflow validation passed. Post-merge reconcile #41183191817 now passes the TCE intentional scale-down health gate: desired/ready/updated replicas are zero and no active TCE pods remain. Aggregate production reconcile still fails other application lanes; production remains NOT HEALTHY/UNVERIFIED.)
