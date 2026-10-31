@@ -146,7 +146,7 @@ for namespace in "${namespaces[@]}"; do
     active_pods=$((active_pods + 1))
 
     if [ "$phase" != "Running" ]; then
-      echo "::error::Pod $namespace/$pod is not Running (phase=$phase)." >&2
+      echo "::error::Pod $namespace/$pod is not Running (phase=$phase); container diagnostics: $containers" >&2
       failed=1
       continue
     fi
