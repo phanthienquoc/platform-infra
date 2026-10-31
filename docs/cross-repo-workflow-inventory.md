@@ -1,4 +1,4 @@
-Last reviewed: 2026-10-31 16:16 ICT. StockDividend scraper PR #15 merged as a80f904 after all five CI checks passed, upgrading the disabled vnstock 5.0.1 pin to 5.2.1. The currently running scheduled scrape #41178133076 still uses the old commit and continues retrying failed symbol/date syncs; preserve the scheduled job and verify the next run. Production release remains fail-closed pending separate credentials.
+Last reviewed: 2026-10-31 16:18 ICT. Supabase log query returned 382 recent `keycloak_runtime` auth-error circuit-breaker events in 10 minutes; direct SQL ping and role lookup still time out. Auth remains non-ready, and the exact credential mismatch is not yet proven. No secret or database role was changed.
 
 Last reviewed: 2026-10-31 12:03 ICT. Inventory is based on the workflow files present on each repository's default branch at review time; no workflow definitions were changed by the latest credentials documentation merge.
 
@@ -78,7 +78,7 @@ Last reviewed: 2026-10-31 12:03 ICT. Inventory is based on the workflow files pr
 | Workflow file | Role / contract | Current note |
 |---|---|---|
 | `.github/workflows/ci.yml` | Auth service tests, typecheck, build, and container build. | Latest master CI passed. |
-| `.github/workflows/release.yml` | Explicit manual master-only Auth image release; verifies source SHA and version before publishing and dispatching. | Last release [#41040510320](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41040510320) passed, but post-merge reconcile [#41187383657](https://github.com/phanthienquoc/platform-infra/actions/runs/41187383657) shows microfe-auth desired=1/ready=0 on prod-v1.0.0-ceb2688; secret key-presence and TLS checks pass while public Auth health remains HTTP 503. Runtime DB connectivity remains unverified. |
+| `.github/workflows/release.yml` | Explicit manual master-only Auth image release; verifies source SHA and version before publishing and dispatching. | Post-merge reconcile [#41187383657](https://github.com/phanthienquoc/platform-infra/actions/runs/41187383657) shows `microfe-auth` desired=1/ready=0 on `prod-v1.0.0-ceb2688`; secret key-presence and TLS checks pass while public Auth health remains HTTP 503. Supabase logs on 2026-10-31 09:08–09:18 UTC show repeated `keycloak_runtime` `auth_error` circuit-breaker events; SQL ping and role lookup via the management connector time out, so role existence/password parity is not verified. Do not reset credentials until secure role/Secret comparison is possible. |
 | `.github/workflows/web-ci.yml` | Auth web CI. | Preserve separate web validation. |
 
 ## Release contract checks
