@@ -13,6 +13,12 @@ Workflow inventory: [Cross-Repository Workflow Inventory](cross-repo-workflow-in
 - Never let an application repository both deploy directly to the VPS and request GitOps promotion for the same production runtime.
 - Production health is only PASS when current Kubernetes rollout and application health evidence is available.
 
+## Temporary TCE shutdown (2026-10-31)
+
+- Operator requested a temporary stop of TCE workloads in K3s. Desired replicas for `tce-prod/tce-frontend` and `tce-prod/tce-service` are set to 0 in GitOps; restore both to 1 to re-enable.
+- This changes only the TCE application Deployments. It does not disable, pause, or modify the TCE market-scan schedule.
+- Immediate live scaling still requires the production K3s reconcile to apply this GitOps state; confirm the rollout after reconciliation.
+
 ## Repository readiness
 
 | Repository | Role | Current evidence | Status | Next action |
