@@ -86,7 +86,7 @@ def validate_diff(diff: str) -> tuple[list[str], int]:
             if line.startswith("newTag:"):
                 tag = scalar(line.split(":", 1)[1])
                 inspected += 1
-                if not re.fullmatch(r"prod-v[0-9]+\\.[0-9]+\\.[0-9]+-[0-9a-f]{40}", tag):
+                if not re.fullmatch(r"prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{40}", tag):
                     errors.append(
                         f"{path}: Media production newTag must contain the full source SHA, got {tag!r}"
                     )
