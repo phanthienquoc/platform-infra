@@ -1,5 +1,14 @@
 # Cross-Repository Workflow Inventory
 
+## Latest automation review (2026-10-31 21:58 ICT)
+
+- Scheduled reconcile [#41211251969](https://github.com/phanthienquoc/platform-infra/actions/runs/41211251969) confirms `reconcile-vps.yml` is receiving schedule events. Shared reconcile passed, while MicroFE Shell/WS, Media Generation and StockDividend health lanes failed on missing/invalid production image references; Auth and TCE lanes passed their configured checks; Keycloak lane was skipped.
+- MicroFE production references currently resolve to missing `0.1.0` and `RELEASE_SHA` tags. Media is still pinned to `prod-v0.3.0-58f80a8` with an unready backend pod. StockDividend remains pinned to `12d63b4`, whose admin/backend images lack a compatible ARM64 manifest.
+- Added changed-line image contract coverage in this branch for StockDividend full-source-SHA tags and MicroFE source-SHA/digest references. The guard runs in manifest validation and has regression fixtures; unchanged legacy refs remain explicit blockers rather than being silently treated as healthy.
+- StockDividend release remains disabled and no new images/dispatch were produced. Missing protected GitOps tokens remain unresolved. Do not bypass the release gate or manually mutate production workload state.
+- The schedule watchdog has no observed run in the latest 100 workflow runs even though the main reconcile schedule is firing. Verify workflow enablement/event delivery and manually run the read-only watchdog. Preserve all useful CI/security/manual/release workflows and the TCE market-scan schedule.
+- Overall production remains **NOT HEALTHY/UNVERIFIED**; no credentials, release flags, production manifests, or K3s workloads were changed.
+
 ## Latest automation review (2026-10-31; after PR #904 merge)
 
 - Platform Infra PR #904 is merged as `fcc1e1204db4d34f5ccd20e73836a6c3fe66d8a7`. Exact-head lint/validation and both post-merge checks passed.
