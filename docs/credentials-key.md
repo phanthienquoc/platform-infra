@@ -1,6 +1,6 @@
 # GitHub Credentials Key Inventory
 
-**Audited:** 2026-10-26  
+**Audited:** 2026-11-01  
 **Purpose:** Reusable index of GitHub Actions secret and variable names referenced by workflows across TCE Dashboard, StockDividend, Authentication, and Platform Infra.  
 **Safety:** This document intentionally contains names and usage metadata only. It MUST NOT contain credential values, environment-file contents, generated tokens, or copies of GitHub secret values.
 
