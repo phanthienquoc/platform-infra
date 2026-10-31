@@ -88,6 +88,22 @@ credentials = (ROOT / "docs" / "credentials-key.md").read_text(encoding="utf-8")
 if "`PLATFORM_INFRA_AUTOMATION_TOKEN`" not in credentials:
     fail("credentials-key.md must document PLATFORM_INFRA_AUTOMATION_TOKEN and its required permissions.")
 
+# StockDividend publishes a paired, digest-only promotion payload after all ARM64 images verify.
+if "stockdividend-images-published" not in promotion:
+    fail("GitOps promotion must consume the atomic StockDividend digest event.")
+if "EVENT_BACKEND_DIGEST" not in promotion or "EVENT_ADMIN_DIGEST" not in promotion:
+    fail("StockDividend atomic promotion must consume backend and admin digests.")
+if '[[ "$BACKEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]' not in promotion:
+    fail("StockDividend backend digest must be validated before GHCR access.")
+if '[[ "$ADMIN_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]' not in promotion:
+    fail("StockDividend admin digest must be validated before GHCR access.")
+if "Update Kustomize image tag or StockDividend digests" not in promotion:
+    fail("StockDividend digest promotion must update both production image entries atomically.")
+if "stockdividend/release" not in promotion or "digest: {digest}" not in promotion:
+    fail("StockDividend promotion must pin both images by registry digest, not only mutable tags.")
+if "EVENT_COMMIT" not in promotion or "EVENT_BACKEND_DIGEST" not in promotion or "EVENT_ADMIN_DIGEST" not in promotion:
+    fail("StockDividend promotion must resolve source commit and both image digests from the dispatch payload.")
+
 # MicroFE digest promotions must use the shared GitOps promotion workflow.
 if "microfe-images-published" not in promotion:
     fail("gitops-image-promotion.yml must consume microfe-images-published.")
