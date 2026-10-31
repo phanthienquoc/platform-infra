@@ -321,8 +321,12 @@ if "workflow_run:" not in watchdog or "      - inspect-vps" not in watchdog:
     fail("The watchdog must also run after inspect-vps workflow completions as a schedule-delivery fallback.")
 if "      - completed" not in watchdog or "github.event.workflow_run.event == 'schedule'" not in watchdog:
     fail("The watchdog fallback must be limited to completed scheduled inspect-vps runs.")
-if '"/repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs"' not in watchdog:
+if '"/repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs"' in watchdog:
+    fail("The watchdog gh api endpoint must not start with a slash.")
+if '"repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs"' not in watchdog:
     fail("The watchdog must query the reconcile-vps workflow-specific run history.")
+if "-X GET" not in watchdog:
+    fail("The watchdog must explicitly use GET when passing event/per_page query parameters.")
 if "event=schedule" not in watchdog or "MAX_AGE_MINUTES: \"45\"" not in watchdog:
     fail("The watchdog must check scheduled events and fail after 45 minutes without one.")
 if "actions: read" not in watchdog or "contents: read" not in watchdog:
