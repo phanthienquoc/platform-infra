@@ -119,9 +119,9 @@ for namespace in "${namespaces[@]}"; do
   fi
 
   if [ -n "$label_selector" ]; then
-    rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -l "$label_selector" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"|"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{" "}{end}{"\n"}{end}')"
+    rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -l "$label_selector" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"|"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{":"}{.state.waiting.message}{" [container="}{.name}{", image="}{.image}{", imageID="}{.imageID}{", last="}{.lastState.terminated.reason}{"/"}{.lastState.terminated.exitCode}{"] "}{end}{"\n"}{end}')"
   else
-    rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"|"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{" "}{end}{"\n"}{end}')"
+    rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"|"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{":"}{.state.waiting.message}{" [container="}{.name}{", image="}{.image}{", imageID="}{.imageID}{", last="}{.lastState.terminated.reason}{"/"}{.lastState.terminated.exitCode}{"] "}{end}{"\n"}{end}')"
   fi
 
   if [ -z "$rows" ]; then
