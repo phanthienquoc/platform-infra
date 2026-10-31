@@ -5,6 +5,11 @@ run-name: Reconcile Schedule Freshness Watchdog — ${{ github.event_name }}
   schedule:
     - cron: "*/15 * * * *"
   workflow_dispatch:
+  workflow_run:
+    workflows:
+      - inspect-vps
+    types:
+      - completed
 
 permissions:
   actions: read
@@ -17,6 +22,7 @@ concurrency:
 jobs:
   verify:
     name: Verify scheduled reconciliation freshness
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.event == 'schedule' }}
     runs-on: ubuntu-latest
     timeout-minutes: 3
     env:
