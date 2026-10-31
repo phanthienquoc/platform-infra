@@ -31,6 +31,7 @@ run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target
           - media-generation
           - microfe
           - keycloak
+          - auth-shutdown
   repository_dispatch:
     types:
       - gitops-promoted-ready
@@ -95,7 +96,7 @@ jobs:
         run: |
           set -euo pipefail
           case "$TARGET_APP" in
-            all|auth-service|tce-dashboard|stockdividend|media-generation|microfe|keycloak) ;;
+            all|auth-service|tce-dashboard|stockdividend|media-generation|microfe|keycloak|auth-shutdown) ;;
             *) echo "::error::Unsupported deployment scope: $TARGET_APP"; exit 1 ;;
           esac
           echo "Deployment scope: $TARGET_APP"
@@ -116,7 +117,12 @@ jobs:
           set -euo pipefail
           for attempt in $(seq 1 24); do
             if policy="$(sudo /usr/local/sbin/platform-kubectl policy-version 2>/dev/null)"; then
-              if [ "$TARGET_APP" = "keycloak" ]; then
+              if [ "$TARGET_APP" = "auth-shutdown" ]; then
+            echo "Auth-shutdown uses isolated scale-only operation; skips full environment apply."
+            echo "drift=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$TARGET_APP" = "keycloak" ]; then
                 [[ "$policy" == "platform-kubectl policy: rollout-status-v10-keycloak-secret-provision" ]] && {
                   echo "Keycloak runner allowlist is ready."
                   exit 0
@@ -209,6 +215,15 @@ jobs:
              echo "MEDIA_FRONTEND_TAG=$MEDIA_FRONTEND_TAG"
              echo "MEDIA_TAG=$MEDIA_BACKEND_TAG"
            } >> "$GITHUB_ENV"
+
+      - name: Apply Auth and Keycloak shutdown only
+        if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP == 'auth-shutdown' }}
+        run: |
+          set -euo pipefail
+          # Explicit maintenance operation scoped only to Auth and Keycloak.
+          sudo /usr/local/sbin/platform-kubectl scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform
+          sudo /usr/local/sbin/platform-kubectl get deployments microfe-auth keycloak -n microfe-platform -o wide
+          sudo /usr/local/sbin/platform-kubectl get pods -n microfe-platform -o wide
 
       - name: Preflight diff
         id: preflight
