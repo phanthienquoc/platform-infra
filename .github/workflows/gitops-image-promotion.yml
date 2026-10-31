@@ -82,18 +82,16 @@ jobs:
       - name: Validate and resolve MicroFE digests
         id: digests
         env:
-          AUTH_DIGEST: ${{ github.event.client_payload.auth_digest }}
           SHELL_DIGEST: ${{ github.event.client_payload.shell_digest }}
           WS_DIGEST: ${{ github.event.client_payload.ws_digest }}
           SOURCE_COMMIT: ${{ github.event.client_payload.commit }}
           RELEASE_INPUT: ${{ github.event.client_payload.release }}
         run: |
           set -euo pipefail
-          # Auth is now released by phanthienquoc-authentication under the canonical
-          # auth-service/auth image. Validate the legacy digest for contract safety,
-          # but do not override the canonical Auth workload with microfe-auth.
-          for digest in "$AUTH_DIGEST" "$SHELL_DIGEST" "$WS_DIGEST"; do
-            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo '::error::Every MicroFE payload digest must be sha256:<64 hex>'; exit 1; }
+          # Auth is released independently by phanthienquoc-authentication. This
+          # promotion contract owns only the Shell and WebSocket image digests.
+          for digest in "$SHELL_DIGEST" "$WS_DIGEST"; do
+            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo '::error::Every MicroFE Shell/WS digest must be sha256:<64 hex>'; exit 1; }
           done
           [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo '::error::Missing or invalid source commit SHA'; exit 1; }
           EXPECTED_RELEASE="microfe-${SOURCE_COMMIT:0:7}"
