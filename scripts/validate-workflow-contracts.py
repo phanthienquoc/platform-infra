@@ -331,3 +331,16 @@ if "No scheduled reconcile-vps run is available" not in watchdog:
     fail("The watchdog must fail closed when no scheduled reconcile evidence exists.")
 
 print("Workflow contract validation passed.")
+
+
+# Production image changes must pass the changed-reference guard in both validation lanes.
+image_change_contract = ROOT / "scripts" / "validate-image-change-contract.py"
+if not image_change_contract.is_file():
+    fail("Changed production image-reference contract script is missing.")
+if "validate-image-change-contract.py --self-test" not in manifest_validation:
+    fail("Manifest validation must run the immutable image-change contract fixtures.")
+if 'validate-image-change-contract.py "$BASE_SHA" "$HEAD_SHA"' not in manifest_validation:
+    fail("Manifest validation must inspect changed production image references on pull requests.")
+actions_validation = read("validate-github-actions.yml")
+if "validate-image-change-contract.py --self-test" not in actions_validation:
+    fail("Workflow validation must run immutable image-change contract regression fixtures.")
