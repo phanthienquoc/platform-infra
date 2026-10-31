@@ -42,8 +42,8 @@ while (( SECONDS < deadline )); do
     --data-urlencode "event=workflow_dispatch" \
     --data-urlencode "per_page=20")"
 
-  validation_run="$(jq -c --arg sha "$PR_HEAD_SHA" \
-    '[.workflow_runs[]? | select(.head_sha == $sha and .event == "workflow_dispatch")] | sort_by(.created_at) | last // empty' \
+  validation_run="$(jq -c --arg sha "$PR_HEAD_SHA" --arg branch "$PR_BRANCH" \
+    '[.workflow_runs[]? | select(.head_sha == $sha and .head_branch == $branch and .event == "workflow_dispatch")] | sort_by(.created_at) | last // empty' \
     <<< "$runs_json")"
 
   if [[ -n "$validation_run" ]]; then
