@@ -89,12 +89,15 @@ jobs:
           RELEASE_INPUT: ${{ github.event.client_payload.release }}
         run: |
           set -euo pipefail
-          # Auth is now released by phanthienquoc-authentication under the canonical
-          # auth-service/auth image. Validate the legacy digest for contract safety,
-          # but do not override the canonical Auth workload with microfe-auth.
-          for digest in "$AUTH_DIGEST" "$SHELL_DIGEST" "$WS_DIGEST"; do
-            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo '::error::Every MicroFE payload digest must be sha256:<64 hex>'; exit 1; }
+          # Canonical Auth is released independently by phanthienquoc-authentication.
+          # Keep legacy auth_digest optional for older dispatch producers; this lane
+          # always requires Shell and WebSocket digests and never updates the Auth image.
+          for digest in "$SHELL_DIGEST" "$WS_DIGEST"; do
+            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo '::error::Every required MicroFE Shell/WS digest must be sha256:<64 hex>'; exit 1; }
           done
+          if [[ -n "${AUTH_DIGEST:-}" ]]; then
+            [[ "$AUTH_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo '::error::Legacy auth_digest, when supplied, must be sha256:<64 hex>'; exit 1; }
+          fi
           [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo '::error::Missing or invalid source commit SHA'; exit 1; }
           EXPECTED_RELEASE="microfe-${SOURCE_COMMIT:0:7}"
           [[ "$RELEASE_INPUT" == "$EXPECTED_RELEASE" ]] || {
