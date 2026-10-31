@@ -1,3 +1,5 @@
+# Cross-Repository Production Deployment Tracker
+
 Last reviewed: 2026-10-31 16:02 ICT (fresh scheduled reconcile [#41184627405](https://github.com/phanthienquoc/platform-infra/actions/runs/41184627405) ran at 15:26 ICT; shared GitOps preflight succeeded, TCE's intentional zero-replica lane passed, but Auth, StockDividend, MicroFE and Media health lanes failed. No later scheduled reconcile is visible in Actions history through 16:02 ICT despite the declared 15-minute cron, so event delivery needs a settings/queue check. Current health-gate output omits container waiting messages and exact image references; this PR adds those read-only diagnostics.)
 
 Last reviewed: 2026-10-31 15:08 ICT (PR #884 merged as 9d3efdc after exact-head manifest and workflow validation passed. Post-merge reconcile #41183191817 now passes the TCE intentional scale-down health gate: desired/ready/updated replicas are zero and no active TCE pods remain. Aggregate production reconcile still fails other application lanes; production remains NOT HEALTHY/UNVERIFIED.)
