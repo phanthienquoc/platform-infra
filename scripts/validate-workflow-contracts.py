@@ -83,6 +83,7 @@ for required in (
     "actions/workflows/validate-manifests.yml/dispatches",
     '--data-urlencode "event=workflow_dispatch"',
     ".head_sha == $sha",
+    ".head_branch == $branch",
     '.event == "workflow_dispatch"',
     "validation_conclusion",
     "head.sha",
