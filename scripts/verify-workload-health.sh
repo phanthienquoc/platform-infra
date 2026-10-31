@@ -51,17 +51,17 @@ for namespace in "${namespaces[@]}"; do
   # An explicit zero-replica Deployment is a supported maintenance state.
   # Verify the Deployment controller converged and no active pods remain before
   # skipping pod-readiness checks; never treat an unready scale-down as success.
-  scale_down_rows="$("${kubectl_bin[@]}" get deployments -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.spec.replicas}{"|"}{.status.readyReplicas}{"|"}{.status.updatedReplicas}{"\\n"}{end}')"
+  scale_down_rows="$("${kubectl_bin[@]}" get deployments -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.spec.replicas}{"|"}{.status.readyReplicas}{"|"}{.status.updatedReplicas}{"\n"}{end}')"
 
   case "$TARGET_APP" in
     auth-service)
-      scale_down_rows="$(printf '%s\\n' "$scale_down_rows" | awk -F'|' '$1 == "microfe-auth"')"
+      scale_down_rows="$(printf '%s\n' "$scale_down_rows" | awk -F'|' '$1 == "microfe-auth"')"
       ;;
     keycloak)
-      scale_down_rows="$(printf '%s\\n' "$scale_down_rows" | awk -F'|' '$1 == "keycloak"')"
+      scale_down_rows="$(printf '%s\n' "$scale_down_rows" | awk -F'|' '$1 == "keycloak"')"
       ;;
     microfe)
-      scale_down_rows="$(printf '%s\\n' "$scale_down_rows" | awk -F'|' '$1 == "microfe-shell" || $1 == "microfe-ws"')"
+      scale_down_rows="$(printf '%s\n' "$scale_down_rows" | awk -F'|' '$1 == "microfe-shell" || $1 == "microfe-ws"')"
       ;;
   esac
 
@@ -96,9 +96,9 @@ for namespace in "${namespaces[@]}"; do
     fi
 
     if [ -n "$label_selector" ]; then
-      scale_down_pods="$("${kubectl_bin[@]}" get pods -n "$namespace" -l "$label_selector" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"\\n"}{end}')"
+      scale_down_pods="$("${kubectl_bin[@]}" get pods -n "$namespace" -l "$label_selector" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"\n"}{end}')"
     else
-      scale_down_pods="$("${kubectl_bin[@]}" get pods -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"\\n"}{end}')"
+      scale_down_pods="$("${kubectl_bin[@]}" get pods -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"\n"}{end}')"
     fi
 
     active_scale_down_pods=0
