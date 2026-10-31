@@ -48,6 +48,76 @@ esac
 for namespace in "${namespaces[@]}"; do
   echo "Checking workload health in namespace: $namespace"
 
+  # An explicit zero-replica Deployment is a supported maintenance state.
+  # Verify the Deployment controller converged and no active pods remain before
+  # skipping pod-readiness checks; never treat an unready scale-down as success.
+  scale_down_rows="$("${kubectl_bin[@]}" get deployments -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.spec.replicas}{"|"}{.status.readyReplicas}{"|"}{.status.updatedReplicas}{"\n"}{end}')"
+
+  case "$TARGET_APP" in
+    auth-service)
+      scale_down_rows="$(printf '%s\n' "$scale_down_rows" | awk -F'|' '$1 == "microfe-auth"')"
+      ;;
+    keycloak)
+      scale_down_rows="$(printf '%s\n' "$scale_down_rows" | awk -F'|' '$1 == "keycloak"')"
+      ;;
+    microfe)
+      scale_down_rows="$(printf '%s\n' "$scale_down_rows" | awk -F'|' '$1 == "microfe-shell" || $1 == "microfe-ws"')"
+      ;;
+  esac
+
+  scale_down_count=0
+  scale_down_all_zero=1
+  scale_down_converged=1
+  while IFS='|' read -r deployment desired ready updated; do
+    [ -n "$deployment" ] || continue
+    scale_down_count=$((scale_down_count + 1))
+    desired="${desired:-1}"
+    ready="${ready:-0}"
+    updated="${updated:-0}"
+    if ! [[ "$desired" =~ ^[0-9]+$ && "$ready" =~ ^[0-9]+$ && "$updated" =~ ^[0-9]+$ ]]; then
+      echo "::error::Deployment $namespace/$deployment returned invalid replica counts." >&2
+      failed=1
+      scale_down_converged=0
+      scale_down_all_zero=0
+      continue
+    fi
+    if [ "$desired" -gt 0 ]; then
+      scale_down_all_zero=0
+    elif [ "$ready" -ne 0 ] || [ "$updated" -ne 0 ]; then
+      echo "::error::Deployment $namespace/$deployment has desired replicas 0 but has not converged (ready=$ready updated=$updated)." >&2
+      failed=1
+      scale_down_converged=0
+    fi
+  done <<< "$scale_down_rows"
+
+  if [ "$scale_down_count" -gt 0 ] && [ "$scale_down_all_zero" -eq 1 ]; then
+    if [ "$scale_down_converged" -ne 1 ]; then
+      continue
+    fi
+
+    if [ -n "$label_selector" ]; then
+      scale_down_pods="$("${kubectl_bin[@]}" get pods -n "$namespace" -l "$label_selector" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"\n"}{end}')"
+    else
+      scale_down_pods="$("${kubectl_bin[@]}" get pods -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"\n"}{end}')"
+    fi
+
+    active_scale_down_pods=0
+    while IFS='|' read -r pod deletion_timestamp phase; do
+      [ -n "$pod" ] || continue
+      [ -n "$deletion_timestamp" ] && continue
+      [ "$phase" = "Succeeded" ] && continue
+      active_scale_down_pods=$((active_scale_down_pods + 1))
+    done <<< "$scale_down_pods"
+
+    if [ "$active_scale_down_pods" -gt 0 ]; then
+      echo "::error::Deployment scope $namespace/$TARGET_APP is configured at zero replicas but active pods remain." >&2
+      failed=1
+    else
+      echo "Deployment scope $namespace/$TARGET_APP is intentionally scaled to zero; no active pods remain."
+    fi
+    continue
+  fi
+
   if [ -n "$label_selector" ]; then
     rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -l "$label_selector" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"|"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{" "}{end}{"\n"}{end}')"
   else
