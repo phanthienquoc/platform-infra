@@ -478,8 +478,8 @@ jobs:
               }
               ;;
             stockdividend)
-              [[ "$TAG" =~ ^[0-9a-f]{7,64}$ ]] || {
-                echo "::error::StockDividend tag must be an immutable Git SHA"
+              [[ "$TAG" =~ ^[0-9a-f]{40}$ ]] || {
+                echo "::error::StockDividend tag must be a full 40-character source commit SHA"
                 exit 1
               }
               ;;
