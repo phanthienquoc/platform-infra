@@ -1,3 +1,5 @@
+Last reviewed: 2026-10-31 17:01 ICT. Auth shutdown is not yet verified: merged PR #891 changed the Auth manifest, but reconcile #41190669294 applied the shared environment overlay without applying the separate Keycloak Kustomize path; its snapshot still showed a Keycloak pod Running 0/1. PR #892 is being hardened so the manual `auth-shutdown` target uses an exact runner allowlist, skips shared GHCR mutation/restarts, and fails until both workloads have zero desired/ready/updated replicas and no matching pods remain. No TCE market-scan schedule change. Production remains NOT HEALTHY/UNVERIFIED.
+
 Last reviewed: 2026-10-31 16:18 ICT. Supabase log query returned 382 recent `keycloak_runtime` auth-error circuit-breaker events in 10 minutes; direct SQL ping and role lookup still time out. Auth remains non-ready, and the exact credential mismatch is not yet proven. No secret or database role was changed.
 
 Last reviewed: 2026-10-31 12:03 ICT. Inventory is based on the workflow files present on each repository's default branch at review time; no workflow definitions were changed by the latest credentials documentation merge.
