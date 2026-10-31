@@ -5,6 +5,12 @@ run-name: Reconcile Schedule Freshness Watchdog — ${{ github.event_name }}
   schedule:
     - cron: "*/15 * * * *"
   workflow_dispatch:
+  # Exercise the read-only GitHub API path after a watchdog change lands.
+  # Push runs are diagnostic smoke tests; scheduled/manual/fallback runs enforce freshness.
+  push:
+    branches: [master]
+    paths:
+      - ".github/workflows/reconcile-schedule-watchdog.yml"
   workflow_run:
     workflows:
       - inspect-vps
@@ -41,6 +47,10 @@ jobs:
             -F per_page=1)"
           latest="$(jq -c '.workflow_runs | sort_by(.created_at) | last // empty' <<< "$response")"
           if [[ -z "$latest" ]]; then
+            if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+              echo "::warning::Read-only API smoke succeeded, but no scheduled reconcile-vps run is present yet."
+              exit 0
+            fi
             echo "::error::No scheduled reconcile-vps run is available in GitHub Actions history."
             exit 1
           fi
@@ -60,6 +70,13 @@ jobs:
             exit 1
           fi
           if (( age_minutes > MAX_AGE_MINUTES )); then
+            if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+              echo "::warning::Read-only API smoke succeeded; latest scheduled reconcile is stale."
+              echo "::warning::Latest run #${run_id}: created=${created_at}, age=${age_minutes}m."
+              echo "::warning::status=${status}, conclusion=${conclusion}."
+              echo "::warning::Run evidence: ${run_url}"
+              exit 0
+            fi
             echo "::error::No scheduled reconcile-vps run within ${MAX_AGE_MINUTES} minutes."
             echo "::error::Latest run #${run_id}: created=${created_at}, age=${age_minutes}m."
             echo "::error::status=${status}, conclusion=${conclusion}."
