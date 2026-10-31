@@ -12,10 +12,17 @@ set -euo pipefail
 
 action="${1:-}"
 resource="${2:-}"
+deployment_selector=""
 shift 2
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    -n|-l|-o)
+    -n|-o)
+      shift 2
+      ;;
+    -l)
+      if [ "$resource" = "deployments" ]; then
+        deployment_selector="${2:-}"
+      fi
       shift 2
       ;;
     *)
@@ -23,7 +30,6 @@ while [ "$#" -gt 0 ]; do
       ;;
   esac
 done
-
 [ "$action" = "get" ] || exit 2
 
 case "$resource" in
@@ -47,9 +53,21 @@ case "$resource" in
     esac
     ;;
   deployments)
+    # Simulate the real manifests: scoped Deployments do not carry the same
+    # metadata labels as their pod templates.
+    [ -z "$deployment_selector" ] || exit 0
     case "$HEALTH_GATE_TEST_SCENARIO" in
       healthy)
-        printf 'stock-admin|1|1|1\n'
+        case "$TARGET_APP" in
+          stockdividend) printf 'stock-admin|1|1|1\n' ;;
+          auth-service) printf 'microfe-auth|1|1|1\n' ;;
+          keycloak) printf 'keycloak|1|1|1\n' ;;
+          microfe)
+            printf 'microfe-shell|1|1|1\n'
+            printf 'microfe-ws|1|1|1\n'
+            ;;
+          *) exit 3 ;;
+        esac
         ;;
       terminating-only|image-pull|no-pods)
         printf 'stock-admin|1|0|0\n'
@@ -70,27 +88,30 @@ chmod +x "$tmp_dir/kubectl-mock"
 run_case() {
   local scenario="$1"
   local expected_status="$2"
+  local target_app="${3:-stockdividend}"
   local actual_status=0
 
   if HEALTH_GATE_TEST_SCENARIO="$scenario" \
     HEALTH_GATE_KUBECTL_BIN="$tmp_dir/kubectl-mock" \
-    TARGET_APP=stockdividend \
-    bash "$health_gate" >"$tmp_dir/$scenario.log" 2>&1; then
+    TARGET_APP="$target_app" \
+    bash "$health_gate" >"$tmp_dir/$scenario-$target_app.log" 2>&1; then
     actual_status=0
   else
     actual_status=$?
   fi
 
   if [ "$actual_status" -ne "$expected_status" ]; then
-    cat "$tmp_dir/$scenario.log" >&2
-    echo "Expected $scenario to exit $expected_status, got $actual_status." >&2
+    cat "$tmp_dir/$scenario-$target_app.log" >&2
+    echo "Expected $scenario/$target_app to exit $expected_status, got $actual_status." >&2
     exit 1
   fi
 }
 
-run_case healthy 0
-run_case terminating-only 1
-run_case image-pull 1
-run_case no-pods 1
-
+run_case healthy 0 stockdividend
+run_case terminating-only 1 stockdividend
+run_case image-pull 1 stockdividend
+run_case no-pods 1 stockdividend
+run_case healthy 0 auth-service
+run_case healthy 0 keycloak
+run_case healthy 0 microfe
 echo "Workload health gate regression tests passed."
