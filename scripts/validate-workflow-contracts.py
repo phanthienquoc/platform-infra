@@ -287,7 +287,7 @@ for step_name in (
         fail(f"Missing shared maintenance step: {step_name}")
     end = reconcile.find("\n      - name:", start + 10)
     block = reconcile[start:end if end >= 0 else len(reconcile)]
-    if "env.TARGET_APP != 'auth-shutdown'" not in block.split("run:", 1)[0]:
+    if "steps.scope.outputs.target_app != 'auth-shutdown'" not in block.split("run:", 1)[0]:
         fail(f"{step_name} must not run for auth-shutdown because it mutates or restarts shared workloads.")
 
 print("Workflow contract validation passed.")
