@@ -59,18 +59,18 @@ case "$resource" in
     case "$HEALTH_GATE_TEST_SCENARIO" in
       healthy)
         case "$TARGET_APP" in
-          stockdividend) printf 'stock-admin|1|1|1\\n' ;;
-          auth-service) printf 'microfe-auth|1|1|1\\n' ;;
-          keycloak) printf 'keycloak|1|1|1\\n' ;;
+          stockdividend) printf 'stock-admin|1|1|1\n' ;;
+          auth-service) printf 'microfe-auth|1|1|1\n' ;;
+          keycloak) printf 'keycloak|1|1|1\n' ;;
           microfe)
-            printf 'microfe-shell|1|1|1\\n'
-            printf 'microfe-ws|1|1|1\\n'
+            printf 'microfe-shell|1|1|1\n'
+            printf 'microfe-ws|1|1|1\n'
             ;;
           *) exit 3 ;;
         esac
         ;;
       terminating-only|image-pull|no-pods)
-        printf 'stock-admin|1|0|0\\n'
+        printf 'stock-admin|1|0|0\n'
         ;;
       *)
         exit 3
@@ -91,9 +91,9 @@ run_case() {
   local target_app="${3:-stockdividend}"
   local actual_status=0
 
-  if HEALTH_GATE_TEST_SCENARIO="$scenario" \\
-    HEALTH_GATE_KUBECTL_BIN="$tmp_dir/kubectl-mock" \\
-    TARGET_APP="$target_app" \\
+  if HEALTH_GATE_TEST_SCENARIO="$scenario" \
+    HEALTH_GATE_KUBECTL_BIN="$tmp_dir/kubectl-mock" \
+    TARGET_APP="$target_app" \
     bash "$health_gate" >"$tmp_dir/$scenario-$target_app.log" 2>&1; then
     actual_status=0
   else
