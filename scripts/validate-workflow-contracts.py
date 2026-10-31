@@ -47,7 +47,7 @@ if "github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/master
 
 # StockDividend's publisher emits the full 40-character source SHA; reject abbreviated tags.
 stockdividend_tag_block = re.search(
-    r"(?s)            stockdividend\\)\\n(.*?)\\n              ;;",
+    r"(?s)            stockdividend\)\n(.*?)\n              ;;",
     promotion,
 )
 if stockdividend_tag_block is None or '[[ "$TAG" =~ ^[0-9a-f]{40}$ ]]' not in stockdividend_tag_block.group(1):
