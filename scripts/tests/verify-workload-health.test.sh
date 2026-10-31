@@ -42,7 +42,7 @@ case "$resource" in
         printf 'pod-1|2026-10-30T13:00:00Z|Running|true:: \n'
         ;;
       image-pull)
-        printf 'pod-1||Pending|false:ImagePullBackOff: \n'
+        printf 'pod-1||Pending|false:ImagePullBackOff::manifest unknown [container=stock-admin, image=ghcr.io/phanthienquoc/stockdividend/admin:missing, imageID=, last=/] \n'
         ;;
       no-pods|scaled-down|scaled-down-not-converged)
         exit 0
@@ -126,6 +126,18 @@ run_case() {
     cat "$tmp_dir/$scenario-$target_app.log" >&2
     echo "Expected $scenario/$target_app to exit $expected_status, got $actual_status." >&2
     exit 1
+  fi
+  if [ "$scenario" = "image-pull" ]; then
+    grep -Fq "manifest unknown" "$tmp_dir/$scenario-$target_app.log" || {
+      cat "$tmp_dir/$scenario-$target_app.log" >&2
+      echo "Image-pull diagnostics must preserve the registry error message." >&2
+      exit 1
+    }
+    grep -Fq "image=ghcr.io/phanthienquoc/stockdividend/admin:missing" "$tmp_dir/$scenario-$target_app.log" || {
+      cat "$tmp_dir/$scenario-$target_app.log" >&2
+      echo "Image-pull diagnostics must include the exact image reference." >&2
+      exit 1
+    }
   fi
 }
 
