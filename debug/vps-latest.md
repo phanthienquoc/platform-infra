@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-10-31T07:01:26+00:00
+Generated: 2026-10-31T07:06:25+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,14 +11,14 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       4.6Gi       3.0Gi        86Mi        15Gi        18Gi
+Mem:            23Gi       4.5Gi       3.1Gi        85Mi        15Gi        18Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   25G   21G  55% /
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   25G   21G  55% /
 disk_pressure: normal (55%)
- 07:01:26 up 182 days, 16:51,  0 users,  load average: 0.11, 0.18, 0.28
+ 07:06:26 up 182 days, 16:56,  0 users,  load average: 0.12, 0.23, 0.27
 
 ### Top disk consumers
 
@@ -26,7 +26,7 @@ disk_pressure: normal (55%)
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
 21684 /opt/media-actions-runner/bin/Runner.Listener run --startuptype service
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-1858373 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+1862822 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
   actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-media-generation.media-generation-k3s-01)
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service           loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
@@ -111,16 +111,16 @@ media-prod         media-generation-646c797f66-6fwn4            0/1     Running 
 media-prod         media-generation-6c68f86bf4-pl927            0/1     Running            0              12h     10.42.0.80    tce-k3s-01   <none>           <none>
 media-prod         media-generation-frontend-5445d66b98-64pzz   1/1     Running            0              12h     10.42.0.79    tce-k3s-01   <none>           <none>
 microfe-platform   keycloak-68c4bc764c-4pp66                    0/1     Running            0              14d     10.42.0.124   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-auth-579b5c57f6-5fh8d                0/1     Running            0              4h5m    10.42.0.88    tce-k3s-01   <none>           <none>
-microfe-platform   microfe-auth-78c96c4c8d-bptzm                0/1     Running            0              3h54m   10.42.0.94    tce-k3s-01   <none>           <none>
-microfe-platform   microfe-shell-6555dd4b8d-j87vw               0/1     ImagePullBackOff   0              3h54m   10.42.0.95    tce-k3s-01   <none>           <none>
+microfe-platform   microfe-auth-579b5c57f6-5fh8d                0/1     Running            0              4h10m   10.42.0.88    tce-k3s-01   <none>           <none>
+microfe-platform   microfe-auth-78c96c4c8d-bptzm                0/1     Running            0              3h59m   10.42.0.94    tce-k3s-01   <none>           <none>
+microfe-platform   microfe-shell-6555dd4b8d-j87vw               0/1     ImagePullBackOff   0              3h59m   10.42.0.95    tce-k3s-01   <none>           <none>
 microfe-platform   microfe-shell-dbbbfdf8c-5rkwz                1/1     Running            0              22d     10.42.0.158   tce-k3s-01   <none>           <none>
 microfe-platform   microfe-ws-5587c8844c-rbtgx                  1/1     Running            10 (22d ago)   22d     10.42.0.157   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-ws-559b78d74c-fpk8n                  0/1     ImagePullBackOff   0              3h54m   10.42.0.93    tce-k3s-01   <none>           <none>
+microfe-platform   microfe-ws-559b78d74c-fpk8n                  0/1     ImagePullBackOff   0              3h59m   10.42.0.93    tce-k3s-01   <none>           <none>
 microfe-platform   nats-7bc8d9f768-q682m                        1/1     Running            0              22d     10.42.0.178   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-7b9ddb6d8d-z9xq9                 0/1     ImagePullBackOff   0              3h54m   10.42.0.96    tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-8566b5d44-6wjgw                  0/1     ImagePullBackOff   0              4h5m    10.42.0.92    tce-k3s-01   <none>           <none>
-stock-prod         stock-backend-564bfb98d7-f5fxj               0/1     ImagePullBackOff   0              3h54m   10.42.0.97    tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-7b9ddb6d8d-z9xq9                 0/1     ImagePullBackOff   0              3h59m   10.42.0.96    tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-8566b5d44-6wjgw                  0/1     ImagePullBackOff   0              4h10m   10.42.0.92    tce-k3s-01   <none>           <none>
+stock-prod         stock-backend-564bfb98d7-f5fxj               0/1     ImagePullBackOff   0              3h59m   10.42.0.97    tce-k3s-01   <none>           <none>
 stock-prod         stock-backend-57ccb8ff6-d25jq                1/1     Running            0              42d     10.42.0.55    tce-k3s-01   <none>           <none>
 stock-prod         stock-frontend-79c57845df-z747s              1/1     Running            0              42d     10.42.0.56    tce-k3s-01   <none>           <none>
 tce-prod           tce-frontend-584547f57b-dx924                1/1     Running            0              12h     10.42.0.77    tce-k3s-01   <none>           <none>
@@ -227,80 +227,64 @@ enabled
 ## Keycloak diagnostics
 NAME       READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                             SELECTOR
 keycloak   0/1     1            0           14d   keycloak     quay.io/keycloak/keycloak:26.8.1   app.kubernetes.io/name=keycloak
-	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:508)
-	at org.keycloak.quarkus.runtime.storage.database.jpa.AbstractJpaConnectionProviderFactory.getConnection(AbstractJpaConnectionProviderFactory.java:64)
-	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.getConnection(KEYCLOAK_JDBC_PING2.java:97)
-	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.readFromDB(KEYCLOAK_JDBC_PING2.java:207)
-	at org.jgroups.protocols.JDBC_PING2.readAll(JDBC_PING2.java:339)
-	at org.jgroups.protocols.JDBC_PING2.findMembers(JDBC_PING2.java:238)
-2026-10-31 06:58:49,879 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked
-2026-10-31 06:58:52,866 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
-2026-10-31 06:59:02,877 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
-2026-10-31 06:59:04,875 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
-2026-10-31 06:59:14,879 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
-2026-10-31 06:59:20,960 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (jgroups-11026,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked
-2026-10-31 06:59:24,876 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
-2026-10-31 06:59:33,643 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed reading from the DB: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked
-	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:295)
-	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:508)
-	at org.keycloak.quarkus.runtime.storage.database.jpa.AbstractJpaConnectionProviderFactory.getConnection(AbstractJpaConnectionProviderFactory.java:64)
-	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.getConnection(KEYCLOAK_JDBC_PING2.java:97)
-	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.readFromDB(KEYCLOAK_JDBC_PING2.java:207)
-	at org.jgroups.protocols.JDBC_PING2.readAll(JDBC_PING2.java:339)
-	at org.jgroups.protocols.JDBC_PING2.findMembers(JDBC_PING2.java:238)
-2026-10-31 06:59:35,880 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
-2026-10-31 06:59:36,189 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked
-2026-10-31 06:59:44,878 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
-2026-10-31 06:59:55,477 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (jgroups-11025,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked
-2026-10-31 06:59:55,879 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
-2026-10-31 07:00:19,693 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
-2026-10-31 07:00:25,014 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed reading from the DB: org.postgresql.util.PSQLException: FATAL: (EAUTHQUERY) authentication query failed: connection to database not available
-	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:295)
-	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:508)
-	at org.keycloak.quarkus.runtime.storage.database.jpa.AbstractJpaConnectionProviderFactory.getConnection(AbstractJpaConnectionProviderFactory.java:64)
-	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.getConnection(KEYCLOAK_JDBC_PING2.java:97)
-	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.readFromDB(KEYCLOAK_JDBC_PING2.java:207)
-	at org.jgroups.protocols.JDBC_PING2.readAll(JDBC_PING2.java:339)
-	at org.jgroups.protocols.JDBC_PING2.findMembers(JDBC_PING2.java:238)
-2026-10-31 07:00:35,353 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
-2026-10-31 07:00:41,660 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (EAUTHQUERY) authentication query failed: connection to database not available
-2026-10-31 07:00:43,003 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
-2026-10-31 07:00:54,268 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
-2026-10-31 07:00:54,270 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (jgroups-11026,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked
-2026-10-31 07:00:55,811 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
-2026-10-31 07:00:57,356 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
-2026-10-31 07:01:02,872 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
-2026-10-31 07:01:07,212 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed reading from the DB: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked
-	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:295)
-	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:508)
-	at org.keycloak.quarkus.runtime.storage.database.jpa.AbstractJpaConnectionProviderFactory.getConnection(AbstractJpaConnectionProviderFactory.java:64)
-	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.getConnection(KEYCLOAK_JDBC_PING2.java:97)
-	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.readFromDB(KEYCLOAK_JDBC_PING2.java:207)
-	at org.jgroups.protocols.JDBC_PING2.readAll(JDBC_PING2.java:339)
-	at org.jgroups.protocols.JDBC_PING2.findMembers(JDBC_PING2.java:238)
-2026-10-31 07:01:08,758 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked
-2026-10-31 07:01:12,756 ERROR [org.keycloak.models.sessions.infinispan.expiration.BaseExpirationTask] (user-session-purge-expired) Unexpected error while removing expired entries from database: org.hibernate.exception.GenericJDBCException: Unable to acquire JDBC Connection [FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked] [n/a]
-	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:39)
-	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:115)
-	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:101)
-	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquire(LogicalConnectionManagedImpl.java:190)
-	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquireConnectionIfNeeded(LogicalConnectionManagedImpl.java:87)
-	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getPhysicalConnection(LogicalConnectionManagedImpl.java:126)
-	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.doExecuteQuery(JdbcSelectExecutorStandardImpl.java:132)
-	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.executeQuery(JdbcSelectExecutorStandardImpl.java:100)
-	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.scroll(JdbcSelectExecutor.java:167)
-	at org.keycloak.models.jpa.JpaRealmProvider.getRealms(JpaRealmProvider.java:186)
-	at org.keycloak.models.jpa.JpaRealmProvider.getRealmsStream(JpaRealmProvider.java:172)
-	at org.keycloak.models.cache.infinispan.RealmCacheSession.getRealmsStream(RealmCacheSession.java:571)
 Caused by: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked
 	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:295)
 	at org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:62)
 	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquire(LogicalConnectionManagedImpl.java:187)
-2026-10-31 07:01:12,871 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
-2026-10-31 07:01:22,866 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
-2026-10-31 07:01:27,976 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (jgroups-11029,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked
-2026-10-31 07:01:32,870 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-31 07:04:21,195 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed reading from the DB: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:295)
+	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:508)
+	at org.keycloak.quarkus.runtime.storage.database.jpa.AbstractJpaConnectionProviderFactory.getConnection(AbstractJpaConnectionProviderFactory.java:64)
+	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.getConnection(KEYCLOAK_JDBC_PING2.java:97)
+	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.readFromDB(KEYCLOAK_JDBC_PING2.java:207)
+	at org.jgroups.protocols.JDBC_PING2.readAll(JDBC_PING2.java:339)
+	at org.jgroups.protocols.JDBC_PING2.findMembers(JDBC_PING2.java:238)
+2026-10-31 07:04:22,740 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked
+2026-10-31 07:04:28,871 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-31 07:04:32,504 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (jgroups-11030,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked
+2026-10-31 07:04:38,872 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-31 07:04:47,715 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed reading from the DB: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:295)
+	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:508)
+	at org.keycloak.quarkus.runtime.storage.database.jpa.AbstractJpaConnectionProviderFactory.getConnection(AbstractJpaConnectionProviderFactory.java:64)
+	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.getConnection(KEYCLOAK_JDBC_PING2.java:97)
+	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.readFromDB(KEYCLOAK_JDBC_PING2.java:207)
+	at org.jgroups.protocols.JDBC_PING2.readAll(JDBC_PING2.java:339)
+	at org.jgroups.protocols.JDBC_PING2.findMembers(JDBC_PING2.java:238)
+2026-10-31 07:04:49,876 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-31 07:04:50,254 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked
+2026-10-31 07:04:58,872 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-31 07:05:05,387 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (jgroups-11030,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked
+2026-10-31 07:05:08,868 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-31 07:05:18,088 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed reading from the DB: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:295)
+	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:508)
+	at org.keycloak.quarkus.runtime.storage.database.jpa.AbstractJpaConnectionProviderFactory.getConnection(AbstractJpaConnectionProviderFactory.java:64)
+	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.getConnection(KEYCLOAK_JDBC_PING2.java:97)
+	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.readFromDB(KEYCLOAK_JDBC_PING2.java:207)
+	at org.jgroups.protocols.JDBC_PING2.readAll(JDBC_PING2.java:339)
+	at org.jgroups.protocols.JDBC_PING2.findMembers(JDBC_PING2.java:238)
+2026-10-31 07:05:19,871 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-31 07:05:20,634 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked
+2026-10-31 07:05:28,866 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-31 07:05:48,001 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (jgroups-11030,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) failed to retrieve database credentials after multiple attempts, new connections are temporarily blocked
+2026-10-31 07:05:58,008 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed reading from the DB: org.postgresql.util.PSQLException: FATAL: (EAUTHQUERY) authentication query failed: connection to database not available
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:295)
+	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:508)
+	at org.keycloak.quarkus.runtime.storage.database.jpa.AbstractJpaConnectionProviderFactory.getConnection(AbstractJpaConnectionProviderFactory.java:64)
+	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.getConnection(KEYCLOAK_JDBC_PING2.java:97)
+	at org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2.readFromDB(KEYCLOAK_JDBC_PING2.java:207)
+	at org.jgroups.protocols.JDBC_PING2.readAll(JDBC_PING2.java:339)
+	at org.jgroups.protocols.JDBC_PING2.findMembers(JDBC_PING2.java:238)
+2026-10-31 07:05:58,008 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-31 07:06:19,683 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-31 07:06:19,684 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (Timer runner-2,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (EAUTHQUERY) authentication query failed: connection to database not available
+2026-10-31 07:06:21,228 ERROR [org.keycloak.jgroups.protocol.KEYCLOAK_JDBC_PING2] (jgroups-11033,keycloak-68c4bc764c-4pp66-19695(v=16.0.15)) keycloak-68c4bc764c-4pp66-19695(v=16.0.15): failed writing to DB: org.postgresql.util.PSQLException: FATAL: (ECIRCUITBREAKER) too many authentication failures, new connections are temporarily blocked
+2026-10-31 07:06:21,230 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-31 07:06:22,774 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-31 07:06:24,322 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
+2026-10-31 07:06:27,873 INFO  [io.smallrye.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {"status":"DOWN","checks":[{"name":"Graceful Shutdown","status":"UP"},{"name":"Keycloak Initialized","status":"UP"},{"name":"Keycloak cluster health check","status":"DOWN","data":{"Failing since":"2026-10-30 12:54:00,328"}},{"name":"Keycloak database connections async health check","status":"DOWN","data":{"Failing since":"2026-10-30 13:14:59,164"}}]}
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.144682s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.062087s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.049630s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049340s remote_ip=132.226.175.206
