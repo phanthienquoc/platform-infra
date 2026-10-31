@@ -4,7 +4,9 @@ metadata:
   name: microfe-auth
   namespace: microfe-platform
 spec:
-  replicas: 1
+  # TEMPORARY OPERATOR REQUEST: stop Auth API and Keycloak to halt Auth-related traffic.
+  # Restore replicas to 1 only after the Supabase/Keycloak connection issue is resolved.
+  replicas: 0
   selector:
     matchLabels:
       app: microfe-auth
