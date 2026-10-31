@@ -35,8 +35,6 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  checks: read
-  statuses: read
   packages: read
 
 concurrency:
@@ -59,6 +57,11 @@ jobs:
     name: Promote MicroFE image digests as one GitOps change
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      actions: write
+      contents: write
+      packages: read
+      pull-requests: write
     steps:
       - name: Checkout infrastructure
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
@@ -130,22 +133,6 @@ jobs:
             GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$image" bash scripts/validate-ghcr-image-reference.sh
           done
 
-      - name: Require GitOps PR automation token
-        env:
-          PLATFORM_INFRA_AUTOMATION_TOKEN: ${{ secrets.PLATFORM_INFRA_AUTOMATION_TOKEN }}
-        run: |
-          set -euo pipefail
-          if [[ -z "${PLATFORM_INFRA_AUTOMATION_TOKEN:-}" ]]; then
-            echo "::error::Configure production Environment secret PLATFORM_INFRA_AUTOMATION_TOKEN with Contents: write, Pull requests: write, Checks: read, and Commit statuses: read. GITHUB_TOKEN-created PR checks may require manual approval."
-            exit 1
-          fi
-          curl --fail --silent --show-error \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer $PLATFORM_INFRA_AUTOMATION_TOKEN" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/phanthienquoc/platform-infra" |
-            jq -e '.full_name == "phanthienquoc/platform-infra"' >/dev/null
-
       - name: Update MicroFE Kustomize image digests
         env:
           SHELL_DIGEST: ${{ steps.digests.outputs.shell_digest }}
@@ -187,7 +174,7 @@ jobs:
         id: promotion
         uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676  # v7
         with:
-          token: ${{ secrets.PLATFORM_INFRA_AUTOMATION_TOKEN }}
+          token: ${{ github.token }}
           branch: automation/promote-microfe-${{ steps.digests.outputs.source_commit }}
           delete-branch: true
           title: 'chore: promote MicroFE digests ${{ steps.digests.outputs.release }}'
@@ -201,59 +188,20 @@ jobs:
 
             Auth is managed independently by `phanthienquoc-authentication` using the canonical `auth-service/auth` image.
 
-      - name: Validate promotion PR checks
+      - name: Validate exact promotion PR head
         id: validate-pr-checks
         if: steps.promotion.outputs.pull-request-number != ''
         env:
-          GH_TOKEN: ${{ secrets.PLATFORM_INFRA_AUTOMATION_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.promotion.outputs.pull-request-number }}
-        run: |
-          set -euo pipefail
-          PR_HEAD_SHA="$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json headRefOid --jq '.headRefOid')"
-          [[ "$PR_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo '::error::Could not resolve the promotion PR head SHA'; exit 1; }
-
-          state="PENDING"
-          seen_required_checks=0
-          for attempt in $(seq 1 30); do
-            required="$(gh pr checks "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --required --json state 2>/dev/null || printf '[]')"
-            current_required_count="$(printf '%s' "$required" | jq 'length')"
-            if [ "$current_required_count" -eq 0 ]; then
-              if [ "$seen_required_checks" -eq 1 ]; then
-                echo '::error::Required MicroFE promotion checks disappeared or could not be queried; refusing to merge.'
-                exit 1
-              fi
-              echo "Required MicroFE checks are not visible yet (attempt $attempt/30)."
-              sleep 10
-              continue
-            fi
-            seen_required_checks=1
-            state="$(printf '%s' "$required" | jq -r 'if any(.[]; .state == "FAILURE" or .state == "ERROR") then "FAILURE" elif all(.[]; .state == "SUCCESS") then "SUCCESS" else "PENDING" end')"
-            case "$state" in
-              SUCCESS) break ;;
-              FAILURE) echo '::error::MicroFE promotion PR checks failed'; exit 1 ;;
-            esac
-            sleep 10
-          done
-          if [ "$seen_required_checks" -eq 0 ]; then
-            echo '::error::No required MicroFE promotion PR checks appeared; refusing to merge.'
-            exit 1
-          fi
-          if [ "$state" != "SUCCESS" ]; then
-            echo '::error::MicroFE promotion checks did not complete in time'
-            exit 1
-          fi
-
-          CURRENT_HEAD_SHA="$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json headRefOid --jq '.headRefOid')"
-          if [ "$CURRENT_HEAD_SHA" != "$PR_HEAD_SHA" ]; then
-            echo '::error::MicroFE promotion PR head changed while checks were running; refusing to merge an unverified commit.'
-            exit 1
-          fi
-          echo "head_sha=$PR_HEAD_SHA" >> "$GITHUB_OUTPUT"
-
+          PR_HEAD_SHA: ${{ steps.promotion.outputs.pull-request-head-sha }}
+          PR_BRANCH: ${{ steps.promotion.outputs.pull-request-branch }}
+          REPOSITORY: ${{ github.repository }}
+        run: bash scripts/validate-promotion-pr.sh
       - name: Merge MicroFE promotion PR
         if: steps.promotion.outputs.pull-request-number != ''
         env:
-          GH_TOKEN: ${{ secrets.PLATFORM_INFRA_AUTOMATION_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.promotion.outputs.pull-request-number }}
           HEAD_SHA: ${{ steps.validate-pr-checks.outputs.head_sha }}
         run: |
@@ -426,6 +374,11 @@ jobs:
     name: Promote ${{ github.event.client_payload.app || inputs.app || github.event.action || github.event_name }} / ${{ github.event.client_payload.component || inputs.component || github.event.client_payload.tag || github.event.client_payload.commit || github.event_name }}
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      actions: write
+      contents: write
+      packages: read
+      pull-requests: write
 
     steps:
       - name: Checkout infrastructure
@@ -589,22 +542,6 @@ jobs:
             GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$IMAGE" bash scripts/validate-ghcr-image-reference.sh
           fi
 
-      - name: Require GitOps PR automation token
-        env:
-          PLATFORM_INFRA_AUTOMATION_TOKEN: ${{ secrets.PLATFORM_INFRA_AUTOMATION_TOKEN }}
-        run: |
-          set -euo pipefail
-          if [[ -z "${PLATFORM_INFRA_AUTOMATION_TOKEN:-}" ]]; then
-            echo "::error::Configure production Environment secret PLATFORM_INFRA_AUTOMATION_TOKEN with Contents: write, Pull requests: write, Checks: read, and Commit statuses: read. GITHUB_TOKEN-created PR checks may require manual approval."
-            exit 1
-          fi
-          curl --fail --silent --show-error \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer $PLATFORM_INFRA_AUTOMATION_TOKEN" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/phanthienquoc/platform-infra" |
-            jq -e '.full_name == "phanthienquoc/platform-infra"' >/dev/null
-
       - name: Update Kustomize image tag or paired digests
         env:
           APP: ${{ steps.input.outputs.app }}
@@ -750,7 +687,7 @@ jobs:
         id: promotion
         uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676  # v7
         with:
-          token: ${{ secrets.PLATFORM_INFRA_AUTOMATION_TOKEN }}
+          token: ${{ github.token }}
           branch: automation/promote-${{ steps.input.outputs.app }}-${{ steps.input.outputs.component }}-${{ steps.input.outputs.tag }}
           delete-branch: true
           title: "chore: promote ${{ steps.input.outputs.app }}/${{ steps.input.outputs.component }} ${{ steps.input.outputs.tag }}"
@@ -767,73 +704,20 @@ jobs:
             - admin digest: ${{ steps.input.outputs.admin_digest }}
             - frontend digest: ${{ steps.input.outputs.frontend_digest }}
 
-      - name: Validate promotion PR checks
+      - name: Validate exact promotion PR head
         id: validate-pr-checks
         if: steps.promotion.outputs.pull-request-number != ''
         env:
-          GH_TOKEN: ${{ secrets.PLATFORM_INFRA_AUTOMATION_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.promotion.outputs.pull-request-number }}
-        run: |
-          set -euo pipefail
-          REPO="$GITHUB_REPOSITORY"
-          echo "Validating promotion PR #$PR_NUMBER before merge."
-
-          PR_HEAD_SHA="$(gh pr view "$PR_NUMBER" --repo "$REPO" --json headRefOid --jq '.headRefOid')"
-          [[ "$PR_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Could not resolve promotion PR head SHA."; exit 1; }
-
-          echo "Waiting for required promotion PR checks to appear and pass."
-          state="PENDING"
-          seen_required_checks=0
-          for attempt in $(seq 1 30); do
-            required="$(gh pr checks "$PR_NUMBER" --repo "$REPO" --required --json state 2>/dev/null || printf '[]')"
-            current_required_count="$(printf '%s' "$required" | jq 'length')"
-            if [ "$current_required_count" -eq 0 ]; then
-              if [ "$seen_required_checks" -eq 1 ]; then
-                echo "::error::Required promotion checks disappeared or could not be queried; refusing to merge."
-                exit 1
-              fi
-              echo "Required promotion checks are not visible yet (attempt $attempt/30)."
-              sleep 10
-              continue
-            fi
-            seen_required_checks=1
-            state="$(printf '%s' "$required" | jq -r '
-              if any(.[]; .state == "FAILURE" or .state == "ERROR") then "FAILURE"
-              elif all(.[]; .state == "SUCCESS") then "SUCCESS"
-              else "PENDING"
-              end
-            ')"
-            echo "Promotion PR check state: $state (attempt $attempt/30)"
-            case "$state" in
-              SUCCESS) break ;;
-              FAILURE)
-                echo "::error::Required promotion PR checks failed."
-                exit 1
-                ;;
-            esac
-            sleep 10
-          done
-
-          if [ "$seen_required_checks" -eq 0 ]; then
-            echo "::error::No required promotion PR checks appeared; refusing to merge."
-            exit 1
-          fi
-          if [ "$state" != "SUCCESS" ]; then
-            echo "::error::Required promotion PR checks did not complete within the validation window."
-            exit 1
-          fi
-
-          CURRENT_HEAD_SHA="$(gh pr view "$PR_NUMBER" --repo "$REPO" --json headRefOid --jq '.headRefOid')"
-          if [ "$CURRENT_HEAD_SHA" != "$PR_HEAD_SHA" ]; then
-            echo "::error::Promotion PR head changed while checks were running; refusing to merge an unverified commit."
-            exit 1
-          fi
-          echo "head_sha=$PR_HEAD_SHA" >> "$GITHUB_OUTPUT"
-
+          PR_HEAD_SHA: ${{ steps.promotion.outputs.pull-request-head-sha }}
+          PR_BRANCH: ${{ steps.promotion.outputs.pull-request-branch }}
+          REPOSITORY: ${{ github.repository }}
+        run: bash scripts/validate-promotion-pr.sh
       - name: Merge promotion PR
         if: steps.promotion.outputs.pull-request-number != ''
         env:
-          GH_TOKEN: ${{ secrets.PLATFORM_INFRA_AUTOMATION_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.promotion.outputs.pull-request-number }}
           HEAD_SHA: ${{ steps.validate-pr-checks.outputs.head_sha }}
         run: |
