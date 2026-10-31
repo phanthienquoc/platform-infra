@@ -112,17 +112,22 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl version
 
       - name: Wait for runner reconciliation policy
-        if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP != 'auth-shutdown' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' }}
         run: |
           set -euo pipefail
           for attempt in $(seq 1 24); do
             if policy="$(sudo /usr/local/sbin/platform-kubectl policy-version 2>/dev/null)"; then
-              if [ "$TARGET_APP" = "keycloak" ]; then
-                [[ "$policy" == "platform-kubectl policy: rollout-status-v10-keycloak-secret-provision" ]] && {
+              if [ "$TARGET_APP" = "auth-shutdown" ]; then
+                [[ "$policy" == "platform-kubectl policy: rollout-status-v11-auth-shutdown" ]] && {
+                  echo "Auth shutdown runner allowlist is ready."
+                  exit 0
+                }
+              elif [ "$TARGET_APP" = "keycloak" ]; then
+                [[ "$policy" == "platform-kubectl policy: rollout-status-v10-keycloak-secret-provision" || "$policy" == "platform-kubectl policy: rollout-status-v11-auth-shutdown" ]] && {
                   echo "Keycloak runner allowlist is ready."
                   exit 0
                 }
-              elif [[ "$policy" == "platform-kubectl policy: rollout-status-v9-auth-secret-provision" || "$policy" == "platform-kubectl policy: rollout-status-v10-keycloak-secret-provision" ]]; then
+              elif [[ "$policy" == "platform-kubectl policy: rollout-status-v9-auth-secret-provision" || "$policy" == "platform-kubectl policy: rollout-status-v10-keycloak-secret-provision" || "$policy" == "platform-kubectl policy: rollout-status-v11-auth-shutdown" ]]; then
                 echo "Runner reconciliation policy is ready."
                 exit 0
               fi
@@ -133,7 +138,7 @@ jobs:
           echo "Runner reconciliation policy did not become ready within 120s." >&2
           exit 1
       - name: Validate GHCR pull access before mutating cluster credentials
-        if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP != 'keycloak' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP != 'keycloak' && env.TARGET_APP != 'auth-shutdown' }}
         env:
           GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}
           GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
@@ -171,7 +176,7 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl verify-auth-secret
 
       - name: Bootstrap GHCR pull credentials
-        if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP != 'keycloak' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP != 'keycloak' && env.TARGET_APP != 'auth-shutdown' }}
         env:
           GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}
           GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
@@ -185,7 +190,7 @@ jobs:
             sudo /usr/local/sbin/platform-kubectl reconcile-ghcr-pull
           echo "GHCR pull credentials reconciled across production GHCR namespaces."
       - name: Restart workloads blocked on image pulls
-        if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP != 'keycloak' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP != 'keycloak' && env.TARGET_APP != 'auth-shutdown' }}
         run: |
           set -euo pipefail
           sudo /usr/local/sbin/platform-kubectl restart-blocked-image-pulls
@@ -217,13 +222,44 @@ jobs:
           set -euo pipefail
           # Explicit maintenance operation scoped only to Auth and Keycloak.
           sudo /usr/local/sbin/platform-kubectl scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform
-          sudo /usr/local/sbin/platform-kubectl get deployments microfe-auth keycloak -n microfe-platform -o wide
-          sudo /usr/local/sbin/platform-kubectl get pods -n microfe-platform -o wide
+
+      - name: Verify Auth and Keycloak shutdown state
+        if: ${{ env.RECONCILE_MODE == 'apply' && env.TARGET_APP == 'auth-shutdown' }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 24); do
+            all_zero=true
+            for deployment in microfe-auth keycloak; do
+              state="$(sudo /usr/local/sbin/platform-kubectl get deployment "$deployment" -n microfe-platform -o 'jsonpath={.spec.replicas} {.status.readyReplicas} {.status.updatedReplicas}')"
+              read -r desired ready updated <<< "$state"
+              if [[ "$desired" != "0" || "${ready:-0}" != "0" || "${updated:-0}" != "0" ]]; then
+                all_zero=false
+                echo "$deployment has not converged to desired/ready/updated=0: $state"
+              fi
+            done
+            auth_pods="$(sudo /usr/local/sbin/platform-kubectl get pods -n microfe-platform -l app=microfe-auth -o name)"
+            keycloak_pods="$(sudo /usr/local/sbin/platform-kubectl get pods -n microfe-platform -l app.kubernetes.io/name=keycloak -o name)"
+            if [[ "$all_zero" == true && -z "$auth_pods" && -z "$keycloak_pods" ]]; then
+              echo "Auth and Keycloak are scaled to zero with no matching pods remaining."
+              exit 0
+            fi
+            [[ -z "$auth_pods" ]] || printf 'Remaining Auth pods:\n%s\n' "$auth_pods"
+            [[ -z "$keycloak_pods" ]] || printf 'Remaining Keycloak pods:\n%s\n' "$keycloak_pods"
+            echo "Waiting for Auth/Keycloak shutdown convergence (attempt $attempt/24)..."
+            sleep 5
+          done
+          echo "::error::Auth/Keycloak shutdown did not converge to zero replicas and no matching pods within 120 seconds."
+          exit 1
 
       - name: Preflight diff
         id: preflight
         run: |
           set -euo pipefail
+          if [ "$TARGET_APP" = "auth-shutdown" ]; then
+            echo "Auth shutdown is a narrow scale-to-zero maintenance operation; no shared GitOps apply is permitted."
+            echo "drift=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           if [ "$TARGET_APP" = "keycloak" ]; then
             echo "Keycloak has a separate allowlisted reconcile path; shared environments/prod manifests remain untouched."
             echo "drift=false" >> "$GITHUB_OUTPUT"
