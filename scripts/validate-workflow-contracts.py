@@ -97,12 +97,32 @@ if '[[ "$BACKEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]' not in promotion:
     fail("StockDividend backend digest must be validated before GHCR access.")
 if '[[ "$ADMIN_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]' not in promotion:
     fail("StockDividend admin digest must be validated before GHCR access.")
-if "Update Kustomize image tag or StockDividend digests" not in promotion:
-    fail("StockDividend digest promotion must update both production image entries atomically.")
+if "Update Kustomize image tag or paired digests" not in promotion:
+    fail("StockDividend/Media digest promotion must update both production image entries atomically.")
 if "stockdividend/release" not in promotion or "digest: {digest}" not in promotion:
     fail("StockDividend promotion must pin both images by registry digest, not only mutable tags.")
 if "EVENT_COMMIT" not in promotion or "EVENT_BACKEND_DIGEST" not in promotion or "EVENT_ADMIN_DIGEST" not in promotion:
     fail("StockDividend promotion must resolve source commit and both image digests from the dispatch payload.")
+
+# Media Generation publishes one paired digest event and promotion pins both images atomically.
+if "media-images-published" not in promotion:
+    fail("GitOps promotion must consume the paired Media digest event.")
+if "EVENT_FRONTEND_DIGEST" not in promotion or "EVENT_BACKEND_DIGEST" not in promotion:
+    fail("Media digest promotion must consume frontend and backend digest payload fields.")
+if "media-generation/release" not in promotion:
+    fail("Media digest promotion must use the paired release target, not independent component updates.")
+if '[[ "$FRONTEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]' not in promotion:
+    fail("Media frontend digest must be validated before GHCR access.")
+if '[[ "$BACKEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]' not in promotion:
+    fail("Media backend digest must be validated before GHCR access.")
+if '[[ "$TAG" == *-"$SOURCE_COMMIT" ]]' not in promotion:
+    fail("Media release label must correlate to its full source commit SHA.")
+if "MEDIA_FRONTEND_REF" not in reconcile or "MEDIA_BACKEND_REF" not in reconcile:
+    fail("Shared reconciliation must resolve both Media image references.")
+if "digest:sha256:[0-9a-f]{64}" not in reconcile:
+    fail("Shared reconciliation must validate digest-pinned Media image references.")
+if "Resolve paired Media image references" not in reconcile:
+    fail("Shared reconciliation must support paired Media tags and digests.")
 
 # MicroFE digest promotions must use the shared GitOps promotion workflow.
 if "microfe-images-published" not in promotion:

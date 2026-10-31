@@ -237,20 +237,60 @@ jobs:
           chmod +x scripts/verify-tce-gitops-release.sh
           ./scripts/verify-tce-gitops-release.sh
 
-      - name: Resolve media release tag
+      - name: Resolve paired Media image references
         if: ${{ steps.scope.outputs.target_app != 'keycloak' && (steps.scope.outputs.target_app == 'media-generation' || steps.scope.outputs.target_app == 'all') }}
         run: |
           set -euo pipefail
-          MEDIA_BACKEND_TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/media-generation/backend' apps/media-generation/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
-          MEDIA_FRONTEND_TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/media-generation/frontend' apps/media-generation/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
-          test -n "$MEDIA_BACKEND_TAG" || { echo "Unable to resolve media-generation backend image tag"; exit 1; }
-          test -n "$MEDIA_FRONTEND_TAG" || { echo "Unable to resolve media-generation frontend image tag"; exit 1; }
-          test "$MEDIA_BACKEND_TAG" = "$MEDIA_FRONTEND_TAG" || { echo "Media backend/frontend tags must be paired"; exit 1; }
-           {
-             echo "MEDIA_BACKEND_TAG=$MEDIA_BACKEND_TAG"
-             echo "MEDIA_FRONTEND_TAG=$MEDIA_FRONTEND_TAG"
-             echo "MEDIA_TAG=$MEDIA_BACKEND_TAG"
-           } >> "$GITHUB_ENV"
+          FILE="apps/media-generation/overlays/prod/kustomization.yaml"
+          MEDIA_BACKEND_REF="$(awk '
+            $0 == "- name: ghcr.io/phanthienquoc/media-generation/backend" { in_image=1; next }
+            in_image && /^- name:/ { exit }
+            in_image && /newTag:/ { print "tag:" $2; exit }
+            in_image && /digest:/ { print "digest:" $2; exit }
+          ' "$FILE")"
+          MEDIA_FRONTEND_REF="$(awk '
+            $0 == "- name: ghcr.io/phanthienquoc/media-generation/frontend" { in_image=1; next }
+            in_image && /^- name:/ { exit }
+            in_image && /newTag:/ { print "tag:" $2; exit }
+            in_image && /digest:/ { print "digest:" $2; exit }
+          ' "$FILE")"
+
+          test -n "$MEDIA_BACKEND_REF" || { echo "::error::Unable to resolve Media backend image reference"; exit 1; }
+          test -n "$MEDIA_FRONTEND_REF" || { echo "::error::Unable to resolve Media frontend image reference"; exit 1; }
+
+          if [[ "$MEDIA_BACKEND_REF" =~ ^tag:prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}$ ]] &&
+             [[ "$MEDIA_FRONTEND_REF" =~ ^tag:prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}$ ]]; then
+            MEDIA_BACKEND_TAG="${MEDIA_BACKEND_REF#tag:}"
+            MEDIA_FRONTEND_TAG="${MEDIA_FRONTEND_REF#tag:}"
+            test "$MEDIA_BACKEND_TAG" = "$MEDIA_FRONTEND_TAG" || {
+              echo "::error::Legacy Media backend/frontend tags must be paired"; exit 1;
+            }
+            MEDIA_TAG="$MEDIA_BACKEND_TAG"
+          elif [[ "$MEDIA_BACKEND_REF" =~ ^digest:sha256:[0-9a-f]{64}$ ]] &&
+               [[ "$MEDIA_FRONTEND_REF" =~ ^digest:sha256:[0-9a-f]{64}$ ]]; then
+            MEDIA_BACKEND_DIGEST="${MEDIA_BACKEND_REF#digest:}"
+            MEDIA_FRONTEND_DIGEST="${MEDIA_FRONTEND_REF#digest:}"
+            MEDIA_TAG="${RELEASE_TAG:-digest-pinned}"
+            if [[ -n "${RELEASE_TAG:-}" ]]; then
+              [[ "$RELEASE_TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{40}$ ]] || {
+                echo "::error::Digest-pinned Media reconciliation requires a full-SHA release label"; exit 1;
+              }
+            fi
+            echo "Media backend digest: $MEDIA_BACKEND_DIGEST"
+            echo "Media frontend digest: $MEDIA_FRONTEND_DIGEST"
+            echo "MEDIA_BACKEND_DIGEST=$MEDIA_BACKEND_DIGEST" >> "$GITHUB_ENV"
+            echo "MEDIA_FRONTEND_DIGEST=$MEDIA_FRONTEND_DIGEST" >> "$GITHUB_ENV"
+          else
+            echo "::error::Media backend/frontend must both be full release tags or both SHA-256 digests"
+            echo "backend=$MEDIA_BACKEND_REF frontend=$MEDIA_FRONTEND_REF"
+            exit 1
+          fi
+
+          {
+            echo "MEDIA_BACKEND_REF=$MEDIA_BACKEND_REF"
+            echo "MEDIA_FRONTEND_REF=$MEDIA_FRONTEND_REF"
+            echo "MEDIA_TAG=$MEDIA_TAG"
+          } >> "$GITHUB_ENV"
 
       - name: Apply Auth and Keycloak shutdown only
         if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app == 'auth-shutdown' }}
