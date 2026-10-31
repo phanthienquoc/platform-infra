@@ -1,5 +1,14 @@
 # Cross-Repository Workflow Inventory
 
+## Latest automation review (2026-11-01 00:56 ICT; watchdog post-merge API smoke PR #913 open)
+
+- PR [#913](https://github.com/phanthienquoc/platform-infra/pull/913) adds a path-scoped `push` trigger for `.github/workflows/reconcile-schedule-watchdog.yml`. This runs the read-only GitHub API query after a watchdog change reaches master. The diagnostic push path warns if scheduled history is absent/stale, while schedule/manual/scheduled-inspection fallback paths still fail closed at 45 minutes. Static contract checks cover this separation; exact-head CI is pending.
+- Schedule evidence: reconciliation [#41211251969](https://github.com/phanthienquoc/platform-infra/actions/runs/41211251969) last observed at 21:40 ICT (aggregate health failure); inspection [#41216706436](https://github.com/phanthienquoc/platform-infra/actions/runs/41216706436) last observed at 22:49 ICT (success); pre-fix watchdog [#41217883661](https://github.com/phanthienquoc/platform-infra/actions/runs/41217883661) failed at 23:04 ICT. No new scheduled inspection, reconciliation, or watchdog run after the API fix merge was visible at 00:56 ICT on 2026-11-01.
+- Open PRs: platform-infra #913 plus older unrelated/stale PRs #795/#749/#741/#648 and Keycloak PRs #544/#541/#539/#538; Authentication #75/#76; none observed in TCE-dashboard, StockDividend, or Media Generation.
+- Production blockers remain: missing MicroFE `0.1.0` / `RELEASE_SHA` tags; Media backend unready on `prod-v0.3.0-58f80a8`; StockDividend `12d63b4` images lack ARM64-compatible manifests; protected GitOps/release tokens remain unconfigured. StockDividend publication is still correctly held, and no live image dispatch was observed.
+- Preserve app CI, immutable image publication, platform-owned GitOps, read-only schedule monitoring, useful manual/release/security workflows, and the TCE market-scan schedule. No production resources or credentials changed. Production remains **NOT HEALTHY/UNVERIFIED**.
+
+
 ## Latest automation review (2026-10-31 23:59 ICT; watchdog API fix merged)
 
 - Watchdog PR [#911](https://github.com/phanthienquoc/platform-infra/pull/911) is merged as `32d9000ae28bbbd2767f609f016b9c4cda941ae7`; exact-head validation and lint plus post-merge validation/lint all passed. The runtime failure [#41217883661](https://github.com/phanthienquoc/platform-infra/actions/runs/41217883661) was caused by a leading-slash `gh api` endpoint and omitted explicit GET with query fields. The workflow now uses a relative endpoint and `-X GET`; contract tests guard both requirements.
