@@ -1,3 +1,5 @@
+# Cross-Repository Production Deployment Tracker
+
 Last reviewed: 2026-10-31 14:01 ICT (fresh read-only VPS snapshot #41178914394: node Ready and disk 55%, but Keycloak/Auth/Media backend are 0/1, MicroFE Shell/WS and StockDividend admin/backend have image-pull failures. Inspection PR #879 was merged before its validate-manifests run completed; this change adds exact-head validation gating. User-provided Supabase Usage screenshot shows Log Ingestion 6.183/1 GB, Log Query 326.108/100 GB and Egress 6.971/5 GB; quota overage is not yet proven to be the cause of Keycloak DB authentication failures.)
 
 Last reviewed: 2026-10-31 12:05 ICT (post-merge manifest validation passed; a fresh read-only Supavisor log query confirms ongoing authentication failures for `keycloak_runtime`. No new production reconcile or live K3s snapshot is available. Production remains NOT HEALTHY/UNVERIFIED.)
