@@ -1,6 +1,6 @@
 # yamllint disable rule:line-length
 name: reconcile-vps
-run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target_app || (github.event_name == 'push' && contains(join(github.event.head_commit.modified, ','), 'platform/keycloak/') && 'keycloak-manifest') || 'all' }} / ${{ github.event.client_payload.release || inputs.mode || github.event_name }}
+run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target_app || (github.event_name == 'push' && 'push-auto') || 'all' }} / ${{ github.event.client_payload.release || inputs.mode || github.event_name }}
 
 "on":
   workflow_dispatch:
@@ -93,9 +93,20 @@ jobs:
           chmod +x scripts/reconcile-vps.sh
 
       - name: Resolve Keycloak push scope
-        if: ${{ github.event_name == 'push' && contains(join(github.event.head_commit.modified, ','), 'platform/keycloak/') }}
+        if: ${{ github.event_name == 'push' }}
         run: |
           set -euo pipefail
+          before="$(jq -r '.before // empty' "$GITHUB_EVENT_PATH")"
+          if [[ -z "$before" || "$before" =~ ^0+$ ]]; then
+            echo "::error::Cannot safely resolve push scope because the before SHA is missing."
+            exit 1
+          fi
+          git fetch --no-tags --depth=1 origin "$before"
+          changed_paths="$(git diff --name-only "$before" "$GITHUB_SHA")"
+          if ! grep -q '^platform/keycloak/' <<< "$changed_paths"; then
+            echo "No Keycloak path changed; retaining the default push scope."
+            exit 0
+          fi
           replicas="$(awk '
             $0 == "spec:" { in_spec = 1; next }
             in_spec && /^[^[:space:]]/ { in_spec = 0 }
