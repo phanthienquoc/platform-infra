@@ -23,6 +23,19 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Test immutable image-change contract
+        run: python3 scripts/validate-image-change-contract.py --self-test
+
+      - name: Validate changed production image references
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          python3 scripts/validate-image-change-contract.py "$BASE_SHA" "$HEAD_SHA"
+
       - name: Install offline validation dependencies
         env:
           KUBECTL_VERSION: v1.36.3
