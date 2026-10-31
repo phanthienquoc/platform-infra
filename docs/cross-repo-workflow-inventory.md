@@ -1,4 +1,4 @@
-# Cross-Repository Workflow Inventory
+Last reviewed: 2026-10-31 13:01 ICT. Inventory is based on workflow files present on each repository's default branch at review time; StockDividend's ARM64 publisher correction is in PR [#14](https://github.com/phanthienquoc/stockdividend/pull/14) and is not merged yet.
 
 Last reviewed: 2026-10-31 12:03 ICT. Inventory is based on the workflow files present on each repository's default branch at review time; no workflow definitions were changed by the latest credentials documentation merge.
 
@@ -62,7 +62,7 @@ Last reviewed: 2026-10-31 12:03 ICT. Inventory is based on the workflow files pr
 | Workflow file | Role / contract | Current note |
 |---|---|---|
 | `.github/workflows/ci.yml` | Application CI. | Latest master CI passed. |
-| `.github/workflows/deploy.yml` | Build/publish ARM64 images from master after handoff and release-enable gates pass. | Intentionally fail-closed: `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED` remains disabled and `PLATFORM_INFRA_TOKEN` is missing; latest image build was skipped. |
+| `.github/workflows/deploy.yml` | Build/publish ARM64 images from master after handoff and release-enable gates pass. | Intentionally fail-closed: `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED` remains disabled and `PLATFORM_INFRA_TOKEN` is missing; latest image build was skipped. Source audit found `deploy.yml` used `ubuntu-latest` without explicit platforms for scraper/admin/backend. PR [#14](https://github.com/phanthienquoc/stockdividend/pull/14) adds a native ARM64 runner, explicit `linux/arm64` builds, and full-source-SHA contract assertions; wait for current-head CI before release. |
 | `.github/workflows/wf-platform-infra-release.yml` | Sends immutable full-source-SHA promotion dispatches to platform-infra after a successful publisher run. | Latest dispatch was skipped because the publisher was held/failed. |
 | `.github/workflows/run_scraper.yml` | Scraper job, including scheduled/manual operation. | Preserve scheduled data collection; unrelated to production image promotion. |
 
