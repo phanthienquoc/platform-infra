@@ -1,11 +1,12 @@
 # Cross-Repository Workflow Inventory
 
-## Latest automation review (2026-10-31 20:59 ICT)
+## Latest automation review (2026-10-31; after PR #904 merge)
 
-- Application repositories own source tests/builds and immutable GHCR publication; platform-infra owns production manifests, shared GHCR pull credentials, promotion PRs, reconciliation, rollout and health verification.
-- StockDividend publishes a full source-SHA tag and dispatches only `backend` and `admin`, the components currently represented in the production Kustomize overlay. The GitOps consumer now requires exactly 40 lowercase hexadecimal characters for StockDividend promotion; shortened SHA tags are rejected.
-- Production release remains fail-closed until the distinct protected handoff credentials and image compatibility are verified. Do not enable release merely to test the dispatch path.
-- Preserve the intentional TCE scale-to-zero and all market-scan scheduling. Auth/Keycloak remains stopped; production readiness is NOT HEALTHY/UNVERIFIED until required workload health gates pass.
+- Platform Infra PR #904 is merged as `fcc1e1204db4d34f5ccd20e73836a6c3fe66d8a7`. Exact-head lint/validation and both post-merge checks passed.
+- StockDividend GitOps promotion now accepts only a full 40-character source SHA for StockDividend image tags; short SHA inputs fail closed. Producer dispatch remains same-job and only covers `backend` and `admin`, the components declared in the current production Kustomize overlay.
+- App repositories remain release producers; platform-infra remains the sole owner of production manifests, shared pull credentials, GitOps promotion/reconciliation and rollout health gates. Do not enable StockDividend production publishing merely to test the handoff.
+- Current blockers: protected `PLATFORM_INFRA_AUTOMATION_TOKEN` for MicroFE/Media; `PLATFORM_INFRA_TOKEN` and explicit release enablement for StockDividend; StockDividend production manifest tags have not been promoted from `12d63b4`. TCE remains intentionally at zero replicas and Auth/Keycloak remain stopped.
+- Production is **NOT HEALTHY/UNVERIFIED**. Schedule watchdog runtime and scheduled-event delivery remain unverified. Preserve all useful CI/security/manual/release workflows and the TCE market-scan schedule.
 
 ## Post-merge verification (2026-10-31)
 
