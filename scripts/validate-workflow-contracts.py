@@ -264,11 +264,17 @@ if "rollout-status-v11-auth-shutdown" not in bootstrap_script:
     fail("Runner bootstrap must publish the versioned Auth shutdown allowlist policy.")
 if '  scale)' not in bootstrap_script or 'scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform' not in bootstrap_script:
     fail("Runner bootstrap must allow only the exact Auth/Keycloak scale-to-zero command.")
+if "platform/keycloak/**" not in reconcile:
+    fail("Keycloak manifest changes must trigger the shared reconcile workflow.")
+if "name: Resolve Keycloak push scope" not in reconcile:
+    fail("Keycloak manifest pushes must select an isolated scope from the desired replica count.")
 if "name: Verify Auth and Keycloak shutdown state" not in reconcile:
     fail("Auth shutdown must verify desired/ready/updated replicas are zero and no matching pods remain.")
 if 'if [ "$TARGET_APP" = "auth-shutdown" ]; then' not in reconcile:
     fail("Auth shutdown must bypass shared GitOps apply and remain scoped to the two Auth workloads.")
 shutdown_block = reconcile.split("name: Apply Auth and Keycloak shutdown only", 1)[1].split("name: Preflight diff", 1)[0]
+if 'sudo /usr/local/sbin/platform-kubectl apply -k platform/keycloak' not in shutdown_block:
+    fail("Auth shutdown must reconcile only the dedicated Keycloak resource set before scaling workloads.")
 if 'scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform' not in shutdown_block:
     fail("Auth shutdown target is missing its exact allowlisted scale command.")
 for step_name in (
