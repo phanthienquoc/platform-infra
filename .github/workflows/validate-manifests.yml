@@ -4,6 +4,8 @@ name: validate-manifests
 on:
   workflow_dispatch:
   pull_request:
+    paths-ignore:
+      - "debug/vps-latest.md"
   push:
     branches: [master]
 
