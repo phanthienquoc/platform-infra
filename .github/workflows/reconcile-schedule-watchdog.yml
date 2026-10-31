@@ -53,9 +53,13 @@ jobs:
             exit 1
           fi
           if (( age_minutes > MAX_AGE_MINUTES )); then
-            echo "::error::No scheduled reconcile-vps run within ${MAX_AGE_MINUTES} minutes. Latest is #${run_id}, created ${created_at}, age ${age_minutes} minutes, status=${status}, conclusion=${conclusion}: ${run_url}"
+            echo "::error::No scheduled reconcile-vps run within ${MAX_AGE_MINUTES} minutes."
+            echo "::error::Latest run #${run_id}: created=${created_at}, age=${age_minutes}m."
+            echo "::error::status=${status}, conclusion=${conclusion}."
+            echo "::error::Run evidence: ${run_url}"
             exit 1
           fi
 
-          echo "Scheduled reconcile freshness passed: run #${run_id}, age ${age_minutes} minutes, status=${status}, conclusion=${conclusion}."
+          echo "Scheduled reconcile freshness passed for run #${run_id}."
+          echo "age=${age_minutes}m status=${status} conclusion=${conclusion}."
           echo "Run evidence: ${run_url}"
