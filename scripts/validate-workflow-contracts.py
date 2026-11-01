@@ -441,7 +441,7 @@ for step_name in (
 # A read-only watchdog detects missing scheduled reconcile events independently.
 watchdog = read("reconcile-schedule-watchdog.yml")
 def scheduled_crons(workflow: str) -> list[str]:
-    return re.findall(r'(?m)^ *- *cron: *"([^"]+)" *
+    return re.findall(r'(?m)^ *- *cron: *"([^"]+)"', workflow)
 if "workflow_run:" not in watchdog or "      - inspect-vps" not in watchdog or "      - reconcile-vps" not in watchdog:
     fail("The watchdog must run after scheduled reconciliation and inspection completions as a schedule-delivery fallback.")
 if "      - completed" not in watchdog or "github.event.workflow_run.event == 'schedule'" not in watchdog:
