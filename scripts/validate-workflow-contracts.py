@@ -45,6 +45,14 @@ for digest_reference in (
     if digest_reference not in manifest_validation:
         fail(f"Manifest validation must accept verified immutable MicroFE digests: {digest_reference}")
 
+# Application GitOps promotions may use immutable digest references as well as legacy full-SHA release tags.
+for required in (
+    "(backend|admin)(:[0-9a-f]{7,64}|@sha256:[0-9a-f]{64})",
+    "(backend|frontend)(:([0-9a-f]{7,64}|prod-v[0-9]+\\.[0-9]+\\.[0-9]+-[0-9a-f]{7,64})|@sha256:[0-9a-f]{64})",
+):
+    if required not in manifest_validation:
+        fail(f"Manifest validation is missing immutable application digest support: {required}")
+
 # The VPS inspection automation must validate the exact generated PR head before merge.
 if "workflow_dispatch:" not in manifest_validation:
     fail("Manifest validation must expose workflow_dispatch for exact-head inspection validation.")
