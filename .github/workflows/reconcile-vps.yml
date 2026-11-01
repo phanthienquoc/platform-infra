@@ -55,7 +55,6 @@ run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target
 
 permissions:
   contents: read
-  packages: write
 
 concurrency:
   group: platform-vps-reconcile
