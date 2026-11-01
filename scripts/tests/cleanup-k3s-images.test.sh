@@ -40,8 +40,8 @@ cat > "$tmp/bin/platform-crictl" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
 case "$*" in
-  "ps -a -o json") cat "$MOCK_FIXTURE_DIR/containers.json" ;;
-  "images -o json") cat "$MOCK_FIXTURE_DIR/images.json" ;;
+  "ps") cat "$MOCK_FIXTURE_DIR/containers.json" ;;
+  "images") cat "$MOCK_FIXTURE_DIR/images.json" ;;
   *) echo "unexpected CRI arguments: $*" >&2; exit 64 ;;
 esac
 SH
