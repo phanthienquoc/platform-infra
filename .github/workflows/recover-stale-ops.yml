@@ -89,7 +89,9 @@ jobs:
             exit 1
           }
           case "$SOURCE_WORKFLOW_PATH" in
-            .github/workflows/wf-06-tce-healthcheck.yml|.github/workflows/wf-07-tce-integration-check.yml|.github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml) ;;
+            .github/workflows/wf-06-tce-healthcheck.yml|\
+            .github/workflows/wf-07-tce-integration-check.yml|\
+            .github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml) ;;
             *) echo "::error::Unapproved TCE heartbeat workflow path."; exit 1 ;;
           esac
           [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ && "$HEARTBEAT_RUN_ID" =~ ^[0-9]+$ ]] || {
@@ -100,7 +102,8 @@ jobs:
             echo "::error::TCE heartbeat SHAs must be full commit IDs."
             exit 1
           }
-          echo "Accepted authenticated TCE schedule heartbeat: source=$SOURCE_WORKFLOW_PATH run=$SOURCE_RUN_ID sha=$SOURCE_HEAD_SHA heartbeat_run=$HEARTBEAT_RUN_ID."
+          printf 'Accepted authenticated TCE schedule heartbeat: source=%s run=%s sha=%s heartbeat_run=%s\n' \
+            "$SOURCE_WORKFLOW_PATH" "$SOURCE_RUN_ID" "$SOURCE_HEAD_SHA" "$HEARTBEAT_RUN_ID"
 
       - name: Verify and await source reconciliation completion
         id: source
