@@ -17,7 +17,7 @@ This file documents credential purpose and safe selection only. **Never store se
 ## Cross-repository application handoff credentials
 
 Keep application dispatch credentials separate from platform-owned GHCR pull access:
-- `PLATFORM_INFRA_TOKEN`: TCE Dashboard and StockDividend release handoff to Platform Infra; requires `Contents: write` on `phanthienquoc/platform-infra` for repository dispatch.
+- `PLATFORM_INFRA_TOKEN`: TCE Dashboard and StockDividend release handoff to Platform Infra; requires `Contents: write` on `phanthienquoc/platform-infra` for repository dispatch. TCE WF-12 also uses this same scoped credential to send the `tce-schedule-heartbeat` signal; the Platform receiver validates the source payload and alone decides whether to dispatch existing reconciliation/inspection workflows.
 - `PLATFORM_INFRA_DISPATCH_TOKEN`: Media Generation and Authentication release handoff. Media also reads Platform Infra Actions runs to verify dispatch correlation, so its repository secret needs `Contents: write` and `Actions: read`; Authentication needs dispatch permission (`Contents: write`). The same secret name does not imply the repositories share a token value.
 
 ## Other production credentials
