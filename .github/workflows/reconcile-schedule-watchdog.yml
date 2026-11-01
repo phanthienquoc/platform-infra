@@ -11,11 +11,12 @@ run-name: Reconcile Schedule Freshness Watchdog — ${{ github.event_name }}
     branches: [master]
     paths:
       - ".github/workflows/reconcile-schedule-watchdog.yml"
-  # Check freshness immediately after either scheduled reconciliation or inspection.
+  # Check freshness after scheduled reconcile/inspection runs and the independent hourly mirror heartbeat.
   workflow_run:
     workflows:
       - inspect-vps
       - reconcile-vps
+      - Mirror locally-uncensored into private repository
     types:
       - completed
 
