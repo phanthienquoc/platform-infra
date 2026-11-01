@@ -1,5 +1,53 @@
 # Cross-Repository Workflow Inventory
 
+## Latest workflow inventory review (2026-11-01 15:08 UTC; recovery-controller fixes merged; TCE WF-06 delivery observed)
+
+### Repository heads and open PRs
+
+- Master heads: platform-infra `f98e65050968810b71027d77a83268284c0df9ea`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `f5c04475eb4e67811c66b350d60541b21b8262c7`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: Platform Infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #75/#76; no open PRs in TCE, StockDividend, or Media.
+- Platform recovery fixes #995 and #996 are merged. PR #995 uses workflow resource path rather than dynamic `workflow_run.name`; PR #996 anchors recovery freshness after source completion.
+
+### Latest Platform Infra workflow evidence
+
+- PR #995 exact-head validation: [#41319147036](https://github.com/phanthienquoc/platform-infra/actions/runs/41319147036) and [#41319146752](https://github.com/phanthienquoc/platform-infra/actions/runs/41319146752), both SUCCESS; post-merge [#41319189184](https://github.com/phanthienquoc/platform-infra/actions/runs/41319189184) and [#41319189181](https://github.com/phanthienquoc/platform-infra/actions/runs/41319189181), both SUCCESS.
+- PR #996 exact-head [#41319502754](https://github.com/phanthienquoc/platform-infra/actions/runs/41319502754) and [#41319502774](https://github.com/phanthienquoc/platform-infra/actions/runs/41319502774), both SUCCESS; post-merge [#41319548298](https://github.com/phanthienquoc/platform-infra/actions/runs/41319548298) and [#41319548285](https://github.com/phanthienquoc/platform-infra/actions/runs/41319548285), both SUCCESS.
+- Recovery push [#41319548302](https://github.com/phanthienquoc/platform-infra/actions/runs/41319548302) SUCCESS; it observed recent reconciliation/inspection and correctly did not dispatch duplicates.
+- Reconciliation [#41319201561](https://github.com/phanthienquoc/platform-infra/actions/runs/41319201561): shared preflight/credential reconciliation/cluster verification PASS; no drift so manifest apply skipped; Media/TCE/MicroFE/Auth lanes PASS; StockDividend health FAIL; Keycloak skipped. Overall run FAILURE is expected from StockDividend.
+- Recovery handoff [#41319362275](https://github.com/phanthienquoc/platform-infra/actions/runs/41319362275) exposed the reference-clock ordering bug; PR #996 fixed it. Runtime proof of the source-run wait branch remains pending.
+
+### TCE Dashboard
+
+- Latest scheduled WF-06 [#41319526719](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41319526719) delivered at 15:06:39Z. SSH diagnostic PASS; four public endpoints returned 503 because TCE/Auth are intentionally stopped.
+- WF-12 workflow-run follow-up [#41319543937](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41319543937) SUCCESS; age 0m, queue 0m, schedule delivery fresh.
+- WF-07 scheduled [#41311225433](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41311225433) SUCCESS. Preserve WF-06/WF-07/WF-12 and the TCE market-scan schedule unchanged.
+
+### StockDividend
+
+- Master CI [#41314359022](https://github.com/phanthienquoc/stockdividend/actions/runs/41314359022) and publisher [#41314359012](https://github.com/phanthienquoc/stockdividend/actions/runs/41314359012) SUCCESS on `f5c04475eb4e67811c66b350d60541b21b8262c7`.
+- Verified ARM64 digests: scraper `sha256:2146540a30d972af2d41688b6dc6640353f7552da86f740a092e85c082e7fd4f`; admin `sha256:488cd38462ac66b36258cc84296fe0d2d1f9cb029c9cb53c3b93f49dfe19f621`; backend `sha256:a3ec6f8c95bfb0184d97228cba25f433d942720aad728fef7716e8f5b6282c94`.
+- Production release flag remains false; no handoff or digest dispatch. Current K3s still references old `12d63b4` Admin/Backend images, which lack ARM64 manifests.
+- Weekend scraper #41284033242 cancelled after six hours on pre-fix SHA; retain its schedule/manual trigger and checkpointing.
+
+### Media, Authentication, Supabase
+
+- Media master `d8e695d7`; latest Media CI [#41246414186](https://github.com/phanthienquoc/media-generation/actions/runs/41246414186) SUCCESS. Latest reconciliation Media lane PASS; prior fresh K3s inspection [#41315143069](https://github.com/phanthienquoc/platform-infra/actions/runs/41315143069) recorded backend/frontend 1/1.
+- Authentication master `ceb2688d`; CI [#41033586844](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41033586844) and release [#41040510320](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41040510320) are historical SUCCESS. PR #75/#76 remain open; Auth/Keycloak intentionally stopped.
+- Supabase `gtqovpusfyyvxpeezxlo`: SQL probe 14:03:48Z PASS; 13:00–14:04Z log query found 0 HTTP 522, 0 HTTP 5xx, 0 statement timeout matches.
+
+### Workflow ownership and safety
+
+- App repositories own CI, tests/builds, and immutable GHCR publication. Platform Infra owns production manifests, shared GHCR pull credentials, GitOps promotion/reconciliation, K3s rollout and health verification.
+- `reconcile-vps.yml` remains the sole GitOps apply authority; `inspect-vps.yml` remains read-only; `recover-stale-ops.yml` dispatches only these existing authorities.
+- Recovery dispatch uses master ref/full SHA and `allow_image_changes=false`; StockDividend production release remains gated by explicit authorization.
+- Platform scheduled reconciliation/inspection are still stale (latest scheduled reconcile 11:13:47Z; inspection 11:27:15Z). Push recovery works, but schedule cadence is not yet proven restored.
+- Mirror workflow still requires `Platform-infra-token` with destination-only Contents:write.
+- Preserve useful CI, test, security, backup, manual, release, and scheduled workflows. No duplicate SSH/Compose authority; no TCE market-scan schedule change.
+
+---
+
+# Cross-Repository Workflow Inventory
+
 
 ## Latest workflow inventory review (2026-11-01 14:16 UTC; recovery bootstrap and StockDividend ARM64 publication)
 
