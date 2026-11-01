@@ -1,6 +1,23 @@
 # Cross-Repository Workflow Inventory
 
-## Latest workflow inventory review (2026-11-01 18:19 ICT; recovery controller event-driven fallback added)
+## Latest workflow inventory review (2026-11-01 12:07 UTC; restricted CRI inspection and terminal-Pod cleanup contract)
+
+- Current heads: platform-infra \`ff14d67a0b17de7a6bac5e0db2938ddbe0b713ec\`; TCE Dashboard \`49fe5841cce460df2a7be6d8846b34a57b6be152\`; StockDividend \`a6f55ee2e511ab5910c825e56803bd82fe9a0f62\`; Media Generation \`d8e695d772ab2dc0da5c15cc428ee78ac6537518\`; Authentication \`ceb2688d6277b10f1bfe7652223d1d295b7e49d9\`.
+- Open PRs: platform-infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #76/#75; none in TCE, StockDividend, or Media.
+- PR #981 aligns VPS inspection with the runner's existing restricted \`platform-crictl\` wrapper. Inspection now requires valid JSON image/container inventories, and avoids unsupported sudo for Docker/disk diagnostics. PR #982 records a fresh snapshot with CRI inventories present. PR #983 narrows the cleanup fail-closed rule: unresolved references from terminal Pods may be ignored only when no local image exists; unresolved Pending/Running/Unknown Pod refs still block cleanup. All three PRs were merged after exact-head validation.
+- Validation evidence: #981 PR lint/manifest #41304584095/#41304584154 and post-merge #41304636196/#41304636183 passed; #982 inspection validation #41304694475 passed; #983 PR lint/manifest #41304887010/#41304886843 and post-merge #41304930174/#41304930186 passed.
+- Fresh inspection [#41304636230](https://github.com/phanthienquoc/platform-infra/actions/runs/41304636230) completed and snapshot PR #982 merged. It confirms Media/MicroFE ready, TCE/Auth/Keycloak stopped at 0/0, StockDividend admin/backend image pulls blocked on non-ARM64 tag \`12d63b4\`, node Ready, disk 54%, and GitOps drift clean.
+- Cleanup push dry-run [#41304930180](https://github.com/phanthienquoc/platform-infra/actions/runs/41304930180) remains a deliberate failure gate: terminal klipper-helm is ignored, while two active StockDividend Pending refs cause exit 3. \`DRY_RUN=true\`; no image was deleted. Preserve weekly/manual cleanup and fail-closed behavior.
+- Platform scheduled reconciliation remains stale after #41300948892 (11:13:47Z); inspection schedule delivered #41301947264 (11:27:15Z), and its watchdog #41302040071 passed. Push inspection #41304636230 is not scheduled-delivery evidence. No \`recover-stale-ops\` run observed; continue monitoring before claiming cadence recovery.
+- TCE WF-06 last scheduled event #41287060151 (09:01:02Z) failed HTTP 503 while services are intentionally stopped; WF-12 latest run #41291809063 was push-triggered (09:08:42Z), with no newer scheduled run observed. Preserve WF-06/WF-12 and all existing cron expressions; do not alter the market-scan schedule.
+- StockDividend ARM64 publication #41273202844 remains verified; production promotion stays disabled. Weekend scraper #41284033242 remains active; preserve its scheduled/manual job.
+- Media CI #41246414186 remains successful and the fresh runtime snapshot shows backend/frontend 1/1. Authentication CI/release #41033586844/#41040510320 are historical successes; Auth/Keycloak remain intentionally stopped.
+- Supabase SQL probe passed at 12:07:39Z; unified logs query returned a backend error, so log health is not inferred.
+- No workflow removed, no duplicate direct SSH/Compose authority added, no production manifest/credential/database/release flag/replica changed.
+
+---
+
+## Previous workflow inventory review (2026-11-01 18:19 ICT; recovery controller event-driven fallback added)
 
 - Current heads: platform-infra `af3c383a3f22191f3eadac61b02fa612e188cf95`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
 - Open PRs: platform-infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #76 (draft)/#75; none in TCE, StockDividend, or Media.
