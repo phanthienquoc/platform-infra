@@ -85,7 +85,13 @@ jobs:
             exit 0
           fi
 
+          dispatch_sha="$(gh api "repos/${GITHUB_REPOSITORY}/commits/master" --jq .sha)"
+          [[ "$dispatch_sha" =~ ^[0-9a-f]{40}$ ]] || {
+            echo "::error::Unable to resolve the exact master SHA for reconciliation dispatch."
+            exit 1
+          }
           echo "::warning::No recent master reconciliation run; dispatching the existing GitOps authority in its scheduled apply mode."
+          echo "Dispatch payload: ref=master sha=$dispatch_sha mode=apply allow_image_changes=false target_app=all"
           gh workflow run reconcile-vps.yml \
             --repo "$GITHUB_REPOSITORY" \
             --ref master \
@@ -96,8 +102,8 @@ jobs:
           dispatched_run=""
           for attempt in $(seq 1 6); do
             response="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" -f event=workflow_dispatch -F branch=master -F per_page=100)"
-            dispatched_run="$(jq -c --arg started "$REFERENCE_AT" \
-              '[.workflow_runs[] | select(.event == "workflow_dispatch" and .head_branch == "master" and .created_at >= $started)] | sort_by(.created_at) | last // empty' \
+            dispatched_run="$(jq -c --arg started "$REFERENCE_AT" --arg sha "$dispatch_sha" \
+              '[.workflow_runs[] | select(.event == "workflow_dispatch" and .head_branch == "master" and .head_sha == $sha and .created_at >= $started)] | sort_by(.created_at) | last // empty' \
               <<< "$response")"
             if [[ -n "$dispatched_run" ]]; then
               run_id="$(jq -r '.id' <<< "$dispatched_run")"
@@ -153,14 +159,20 @@ jobs:
             exit 0
           fi
 
+          dispatch_sha="$(gh api "repos/${GITHUB_REPOSITORY}/commits/master" --jq .sha)"
+          [[ "$dispatch_sha" =~ ^[0-9a-f]{40}$ ]] || {
+            echo "::error::Unable to resolve the exact master SHA for inspection dispatch."
+            exit 1
+          }
           echo "::warning::No recent master inspection run; dispatching the existing read-only inspection workflow."
+          echo "Dispatch payload: ref=master sha=$dispatch_sha (no inputs)"
           gh workflow run inspect-vps.yml --repo "$GITHUB_REPOSITORY" --ref master
 
           dispatched_run=""
           for attempt in $(seq 1 6); do
             response="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs" -f event=workflow_dispatch -F branch=master -F per_page=20)"
-            dispatched_run="$(jq -c --arg started "$REFERENCE_AT" \
-              '[.workflow_runs[] | select(.event == "workflow_dispatch" and .head_branch == "master" and .created_at >= $started)] | sort_by(.created_at) | last // empty' \
+            dispatched_run="$(jq -c --arg started "$REFERENCE_AT" --arg sha "$dispatch_sha" \
+              '[.workflow_runs[] | select(.event == "workflow_dispatch" and .head_branch == "master" and .head_sha == $sha and .created_at >= $started)] | sort_by(.created_at) | last // empty' \
               <<< "$response")"
             if [[ -n "$dispatched_run" ]]; then
               run_id="$(jq -r '.id' <<< "$dispatched_run")"
