@@ -860,3 +860,45 @@ No production manifests, runtime credentials, database objects, release flags, o
 5. Keep TCE and Auth/Keycloak at 0 replicas as requested. Continue Supabase SQL/REST monitoring.
 
 No production manifests, runtime credentials, database objects, release flags, or K3s desired replicas changed. Existing Platform reconcile/watchdog/inspection, TCE WF-06/WF-12, and TCE market-scan schedules remain unchanged; the new recovery workflow is additive only. Production remains **NOT HEALTHY/UNVERIFIED**.
+
+
+## Deployment review — 2026-11-01 17:12 ICT (schedule recovery merged)
+
+### Current repository heads and open PRs
+
+- Default-branch heads: platform-infra `0e0915e16e0e0cb4902ab889e510b0a51f4cfde3`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: Platform Infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #76/#75; none in TCE Dashboard, StockDividend, or Media Generation.
+
+### Merged deployment changes and validation
+
+- PR #968 merged as `1c4d19a100e5d9d6d066ba6132f90dbb20e69ae0`: removed unused GITHUB_TOKEN `packages: write/read` permissions from reconciliation and promotion. Exact-head lint #41295832489, manifest #41295832397, Keycloak CI #41295832402 and post-merge lint #41295916485, manifest #41295916470, Keycloak CI #41295916550 all passed. Private registry reads remain on `GHCR_READ_TOKEN`.
+- PR #969 merged as `0e0915e16e0e0cb4902ab889e510b0a51f4cfde3`: added `.github/workflows/recover-stale-ops.yml`. Exact-head lint [#41296300604](https://github.com/phanthienquoc/platform-infra/actions/runs/41296300604) and manifest [#41296300614](https://github.com/phanthienquoc/platform-infra/actions/runs/41296300614) passed. Post-merge lint [#41296352944](https://github.com/phanthienquoc/platform-infra/actions/runs/41296352944) and manifest [#41296353258](https://github.com/phanthienquoc/platform-infra/actions/runs/41296353258) passed.
+
+### Scheduled-ops recovery contract
+
+- New additive cron: `10,25,40,55 * * * *`. It checks latest master reconciliation activity and dispatches the existing `reconcile-vps.yml` only when no run activity is newer than 20 minutes, with `mode=apply`, `allow_image_changes=false`, and `target_app=all`.
+- If reconciliation is recent/not busy but inspection activity exceeds 75 minutes, it dispatches existing read-only `inspect-vps.yml`. Active/queued runs suppress duplicate dispatches. The workflow verifies the created `workflow_dispatch` run is on master and matches the exact master SHA captured before dispatch.
+- The controller uses the GitHub Actions API clock and latest `updated_at/run_started_at/created_at` activity. It has only `actions: write` and `contents: read`; it does not execute SSH/kubectl/Compose or apply manifests itself. `reconcile-vps.yml` remains the sole GitOps apply authority.
+- Existing Platform reconcile/watchdog/inspection cron expressions and TCE WF-06/WF-12 schedules were not changed. TCE market-scan schedule remains untouched.
+- **Runtime limitation:** PR #969 merged at 10:11:06Z, after the 10:10 recovery slot. The first post-merge recovery schedule slot is 10:25Z; no recovery workflow run or fallback dispatch has yet been observed. Static/PR/post-merge validation is not proof of runtime dispatch or K3s recovery.
+
+### Latest operational state and blockers
+
+- Platform scheduled reconcile remains stale at #41260761381 (attempt 2; created 01:21:35Z, rerun started 09:04:03Z) and inspection remains stale at #41264393955 (attempt 2; created 02:15:04Z, rerun started 04:01:50Z). Watchdog schedule #41264226448 remains failed. The next recovery workflow should dispatch the existing reconcile/inspection workflow if the latest master activity still exceeds its thresholds.
+- The old reconcile health rerun passed MicroFE/Media lanes but failed StockDividend: Admin/Backend still use `12d63b4` without ARM64 manifests; frontend remains on the old replica. The new ARM64 digests are published but promotion remains disabled.
+- TCE WF-06 scheduled run #41287060151 (09:01:02Z) delivered successfully but all four public endpoints returned HTTP 503 while TCE/Auth are intentionally stopped. WF-12 push smoke #41291809063 passed; no newer WF-12 scheduled event was observed at 10:07Z.
+- Private mirror run #41292061857 failed because the `MIRROR_TOKEN` environment value was empty; its source secret is `Platform-infra-token`. Preserve the purposeful mirror; configure a target-scoped Contents-write secret before rerunning. Secret values are not readable/configurable through this connector.
+- StockDividend publisher #41273202844 and CI #41273202852 passed. Three immutable ARM64 digests remain verified; release gate remains false and no dispatch was sent.
+- Weekend scraper #41284033242 remains in progress at `Run scraper` since 07:15:11Z, with no completed conclusion/log artifact. Preserve the scheduled data job; do not cancel without evidence.
+- Media CI #41246414186 passed; Media/MicroFE health gates passed in the latest health-only rerun. Last runtime imageID snapshot remains inspection #41275351280; no fresh full K3s inspection after PR #969 merge.
+- Supabase last read-only SQL probe at 09:09:08Z succeeded; no new SQL/REST probe in this review. Authentication PR #75/#76 remain open due unresolved project/environment binding and migration safety; Auth/Keycloak remain at operator-requested 0 replicas.
+
+### Next actions
+
+1. Observe first `recover-stale-ops.yml` scheduled run at/after 10:25Z; verify it skips or dispatches based on actual latest master activity. If it dispatches, inspect the created workflow_dispatch run, exact SHA, runner queue, apply result, and fresh K3s inspection.
+2. Confirm whether native Platform schedule events resume; fallback dispatch does not itself prove native scheduled-event delivery, so watchdog schedule freshness remains a separate signal.
+3. Configure `Platform-infra-token` with only private mirror target Contents-write scope, then rerun and verify refs.
+4. Keep StockDividend promotion disabled until explicit authorization; then use the verified digest pair through Platform Infra and confirm runtime imageIDs.
+5. Continue Supabase SQL/REST stability probes and obtain a fresh K3s inspection before any production health claim.
+
+No production manifests, runtime credentials, database objects, release flags, or K3s desired replicas changed in this review. TCE remains scale-to-zero; Auth/Keycloak remain stopped. Production remains **NOT HEALTHY/UNVERIFIED**.
