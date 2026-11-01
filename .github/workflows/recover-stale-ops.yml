@@ -112,6 +112,7 @@ jobs:
               echo "dispatched=true" >> "$GITHUB_OUTPUT"
               exit 0
             fi
+            echo "Waiting for reconciliation workflow_dispatch correlation (attempt $attempt/6)..."
             sleep 5
           done
           echo "::error::GitHub did not create a master workflow_dispatch run for reconcile-vps after the recovery request."
@@ -180,6 +181,7 @@ jobs:
               echo "Verified fallback inspection dispatch: #$run_id $run_url"
               exit 0
             fi
+            echo "Waiting for inspection workflow_dispatch correlation (attempt $attempt/6)..."
             sleep 5
           done
           echo "::error::GitHub did not create a master workflow_dispatch run for inspect-vps after the recovery request."
