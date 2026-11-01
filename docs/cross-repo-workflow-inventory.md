@@ -1,3 +1,12 @@
+## Post-merge workflow inventory correction (2026-11-01 11:31 ICT)
+
+- Platform Infra PR #948 merged as `ddc44cebcb2430b0da20fcbbdede1a78e7181407`; exact-head and post-merge manifest validation passed. PR #943 was closed as superseded, not merged.
+- Current open PRs: platform-infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #76/#75; none known in TCE Dashboard, StockDividend, or Media Generation.
+- StockDividend PR #21 merged. Post-merge CI [#41273202852](https://github.com/phanthienquoc/stockdividend/actions/runs/41273202852) passed; publisher [#41273202844](https://github.com/phanthienquoc/stockdividend/actions/runs/41273202844) is still building the ARM64 Scraper image. Promotion gate is false and Platform Infra handoff is skipped; no promotion dispatch is sent.
+- Supabase SQL and Media readiness REST checks have returned successfully through 04:29:41Z; aggregate logs show 182 HTTP 200 and zero HTTP 522 in 04:00–04:30Z, with zero timeout-manager events. Continue observing before declaring stable.
+- Latest scheduled reconcile remains #41260761381 (01:21:35Z), watchdog #41264226448 (02:12:35Z), inspection #41264393955 (02:15:04Z). No newer scheduled events were observed through 04:30Z; scheduled cadence is not proven.
+- Keep `reconcile-vps.yml` as the sole GitOps apply authority, inspection read-only, watchdog read-only/fail-closed, and preserve CI/test/security/backup/maintenance/manual/release/scheduled jobs. TCE market-scan schedule unchanged.
+
 ## Latest workflow inventory review (2026-11-01 11:30 ICT; StockDividend publisher/promotion split and runtime evidence)
 
 - Default-branch heads: platform-infra `29b5123ebcfaf6dddd42175a926914152b29627a`; TCE Dashboard `8547e1315fea75202f70f14556589e76ab1f65ed`; StockDividend `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
