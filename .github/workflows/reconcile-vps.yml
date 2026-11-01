@@ -788,7 +788,11 @@ jobs:
             -f "source_run_id=$SOURCE_RUN_ID" \
             -f "source_head_sha=$SOURCE_HEAD_SHA"
           for attempt in $(seq 1 6); do
-            runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/workflows/recover-stale-ops.yml/runs" -F event=workflow_dispatch -F branch=master -F per_page=100)"
+            runs="$(
+              gh api -X GET \
+                "repos/${GITHUB_REPOSITORY}/actions/workflows/recover-stale-ops.yml/runs" \
+                -F event=workflow_dispatch -F branch=master -F per_page=100
+            )"
             dispatched_run="$(jq -c --arg started "$started_at" --arg sha "$SOURCE_HEAD_SHA" '
               [.workflow_runs[] | select(
                 .event == "workflow_dispatch"
