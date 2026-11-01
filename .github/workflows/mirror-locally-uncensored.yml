@@ -24,11 +24,11 @@ jobs:
     steps:
       - name: Mirror all Git refs and history
         env:
-          MIRROR_TOKEN: ${{ secrets['Platform-infra-token'] }}
+          MIRROR_TOKEN: ${{ secrets.PLATFORM_INFRA_MIRROR_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-          test -n "${MIRROR_TOKEN:-}" || { echo "Missing Platform-infra-token secret"; exit 1; }
+          test -n "${MIRROR_TOKEN:-}" || { echo "Missing PLATFORM_INFRA_MIRROR_TOKEN secret"; exit 1; }
           git clone --mirror https://github.com/phanthienquoc/locally-uncensored.git source.git
           cd source.git
           git remote set-url origin "https://x-access-token:${MIRROR_TOKEN}@github.com/phanthienquoc/locally-uncensored-private.git"
