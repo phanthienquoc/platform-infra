@@ -108,13 +108,11 @@ resolve_pod_image_ids() {
           ;;
       esac
     fi
-    awk -F '\\t' -v ref="$normalized" '$2 == ref { print $1 }' "$map_file" >> "$output_file"
+    awk -F '\t' -v ref="$normalized" '$2 == ref { print $1 }' "$map_file" >> "$output_file"
   done < "$refs_file"
 
   rm -f "$refs_file" "$raw_map" "$map_file" "$local_refs"
   [[ "$missing_refs" -eq 0 ]] || return 3
-  sort -u -o "$output_file" "$output_file"
-}
   sort -u -o "$output_file" "$output_file"
 }
 
