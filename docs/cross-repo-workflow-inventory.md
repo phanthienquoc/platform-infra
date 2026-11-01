@@ -1,5 +1,23 @@
 # Cross-Repository Workflow Inventory
 
+## Latest workflow inventory review (2026-11-01 13:02 UTC; StockDividend scraper navigation fix merged)
+
+- Current master heads: platform-infra `2ca13b13f8aeb9a6035d928af08eee8259c1681d`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `1559097da834652e2f6dfbd5a8d012a526f0133b`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: Platform Infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #76/#75; none in TCE, StockDividend, or Media.
+- StockDividend PR #22 merged as `1559097`; exact-head CI #41309092011 passed all five jobs, including the new scraper single-navigation AST contract. Post-merge CI #41309267914 remains in progress. Publisher #41309267904 passed master and release-gate checks, but image build/push is queued and release handoff skipped because production release remains disabled. No new post-merge digest has been verified.
+- Weekend scraper #41284033242 remains in progress on pre-fix SHA `a6f55ee`; preserve its weekend schedule/manual trigger. The duplicate-navigation fix affects future runs only; do not claim the active run benefited.
+- Platform Infra PR #988 merged as `2ca13b13`; exact-head and post-merge manifest validations #41309196476/#41309250988 passed.
+- Platform schedule evidence is unchanged: latest scheduled reconciliation #41300948892 failed at StockDividend health; scheduled inspection #41301947264 and watchdog #41302040071 passed. No newer scheduled run or post-merge recovery-controller execution was observed through 13:02Z. Keep existing cron schedules and verify the next actual event before declaring recovery.
+- Latest K3s snapshot #41304636230 remains push-triggered at 12:03:24Z, not scheduled-delivery evidence. Node Ready/ARM64, disk 54%, GitOps drift clean; CRI inventory present; Media/MicroFE 1/1; StockDividend admin/backend blocked on old non-ARM64 `12d63b4`; TCE/Auth/Keycloak 0/0 intentionally.
+- Cleanup dry-run #41305323263 succeeded with no image removals. Preserve weekly/manual cleanup, dry-run push/schedule, and fail-closed reference handling.
+- TCE master push CI WF-01/WF-02/WF-05/WF-12 passed; latest scheduled WF-06 #41287060151 remains the last observed scheduled healthcheck and returned 503 while TCE/Auth are intentionally stopped. Preserve all TCE cron expressions and market-scan schedule.
+- Media CI #41246414186 remains the latest successful master CI; K3s health is from #41304636230. Authentication CI/release #41033586844/#41040510320 are historical; keep Auth manual-only and preserve open PRs #75/#76 pending migration/environment evidence.
+- Supabase read-only SQL probe at 13:01:18Z passed. Bounded logs query 12:30–13:02Z: 185 edge, 9 PostgREST, 0 HTTP 522, 0 statement-timeout matches.
+- Mirror workflow #41292061857 still lacks `Platform-infra-token`; owner-side setup requires a target-repository-scoped `Contents: write` token. Do not substitute unrelated credentials.
+- Preserve all CI/test/security/backup/manual/release/scheduled jobs. No workflow was removed, no production manifest/credential/release flag/database object/desired replica changed, and no duplicate SSH/Compose authority added.
+
+---
+
 ## Latest workflow inventory review (2026-11-01 12:57 UTC; scraper navigation optimization PR opened)
 
 - Current master heads: platform-infra `d551bcfbc761f927607db501fdb373afc564474e`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
