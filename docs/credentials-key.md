@@ -117,6 +117,7 @@ These are sourced from Platform Infra's protected GitHub Actions Environment nam
 - `provision-auth-runtime-secret.yml`
 - `reconcile-observability.yml`
 - `reconcile-vps.yml`
+- `recover-stale-ops.yml`
 - `runtime-secret-readiness.yml`
 - `smoke-production.yml`
 - `staging-dry-run.yml`
