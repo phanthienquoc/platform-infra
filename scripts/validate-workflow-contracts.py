@@ -69,10 +69,14 @@ for required in (
         fail(f"Post-reconciliation recovery dispatch is missing: {required}")
 if "github.event.workflow_run.head_branch == 'master'" not in recovery:
     fail("Recovery controller must ignore non-master workflow completion events.")
-if "github.event.workflow_run.name == 'reconcile-vps'" not in recovery:
-    fail("Recovery controller must retain the post-reconciliation recovery trigger.")
-if "github.event.workflow_run.name == 'inspect-vps'" not in recovery or "github.event.workflow_run.event == 'schedule'" not in recovery:
-    fail("Only scheduled master inspection completions may trigger the reconciliation recovery fallback.")
+if "run-name: Reconcile VPS —" not in reconcile:
+    fail("Reconciliation must retain its descriptive dynamic run-name contract.")
+if "github.event.workflow_run.name == 'reconcile-vps'" in recovery:
+    fail("Recovery must not compare workflow_run.name to the workflow name when reconcile-vps uses a dynamic run-name.")
+if "github.event.workflow.path == '.github/workflows/reconcile-vps.yml'" not in recovery:
+    fail("Recovery must identify reconciliation completions by the workflow resource path.")
+if "github.event.workflow.path == '.github/workflows/inspect-vps.yml'" not in recovery or "github.event.workflow_run.event == 'schedule'" not in recovery:
+    fail("Only scheduled master inspection completions may trigger reconciliation recovery.")
 guard_reconcile = (ROOT / "scripts" / "guard-reconcile-images.sh").read_text(encoding="utf-8")
 github_actions = read("validate-github-actions.yml")
 inspection_script = (ROOT / "scripts" / "inspect-vps.sh").read_text(encoding="utf-8")
