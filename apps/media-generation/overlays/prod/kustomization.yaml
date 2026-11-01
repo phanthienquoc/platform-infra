@@ -8,6 +8,7 @@ resources:
 images:
 # Published by Media WF-03 from source commit 58f80a8dd77f44a662bc748217c79050a26ec1fa.
 # Digests were confirmed by the publisher logs and the live K3s container imageIDs.
+# Reconcile trigger: retry the already-approved digest pin after push-scope resolver fix.
 - name: ghcr.io/phanthienquoc/media-generation/backend
   newName: ghcr.io/phanthienquoc/media-generation/backend
   digest: sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d
