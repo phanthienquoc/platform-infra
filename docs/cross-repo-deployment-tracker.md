@@ -1,3 +1,18 @@
+## Follow-up verification — 2026-11-02 07:00 ICT / 2026-11-02 00:00 UTC (three TCE heartbeat chains correlated; PR #1020 merged)
+
+- Documentation PR [#1020](https://github.com/phanthienquoc/platform-infra/pull/1020) was squash-merged as `b28d1f4e454cec8e521619b4fec33a9b3433a55c`. Exact-head `validate-manifests` [#41364647902](https://github.com/phanthienquoc/platform-infra/actions/runs/41364647902) and post-merge validation [#41364681389](https://github.com/phanthienquoc/platform-infra/actions/runs/41364681389) succeeded. Current Platform Infra master is `b28d1f4e454cec8e521619b4fec33a9b3433a55c`.
+- A further correlation review found **three** successful TCE heartbeat → Platform receiver → recovery chains, not just one:
+  1. WF-07 integration schedule #41355068024 → WF-12 `workflow_run` #41355080288 → Platform `repository_dispatch` #41355088547 → reconciliation #41355101409.
+  2. Direct WF-12 schedule #41358488421 → Platform `repository_dispatch` #41358495488 → reconciliation #41358507981.
+  3. WF-06 schedule #41360343131 → WF-12 `workflow_run` #41360361422 → Platform `repository_dispatch` #41360370906 → reconciliation #41360385108.
+- For all three Platform dispatches, the `recover` job completed successfully and `Validate external TCE schedule heartbeat payload` passed. The receiver verified the source workflow path, schedule event, master branch, exact run IDs, and full SHA values through the TCE Actions API. The TCE sender's notify jobs succeeded and logged accepted Platform dispatches.
+- All three correlated reconciliations completed shared reconciliation and inspection-recovery handoff; their final application gate failed only on StockDividend health. Media, TCE, MicroFE, and Auth lanes passed; Keycloak remained skipped. Production manifest apply and image-change guard were skipped. These are successful heartbeat/recovery contracts, not successful StockDividend rollouts.
+- The three events demonstrate the cross-repository heartbeat contract works across WF-07 completion, direct WF-12 schedule, and WF-06 completion. They do **not** prove uninterrupted native cron cadence: Platform's latest native scheduled reconcile/inspection remain #41351121366/#41351555469, and TCE WF-12's latest scheduled run #41358488421 itself failed its WF-06 freshness check even though its heartbeat-notify job succeeded.
+- Runner policy v13 installation remains verified by bootstrap [#41360807367](https://github.com/phanthienquoc/platform-infra/actions/runs/41360807367). A reconciliation exercising the new permanent-image-pull skip after that bootstrap is still pending; the three correlated reconciliations above predate v13 installation.
+- No production manifest, image reference, release flag, desired replica, GHCR credential, database object, or schedule changed. StockDividend release remains disabled; mirror token remains missing. Preserve TCE market-scan schedule unchanged.
+
+---
+
 ## Runtime verification update — 2026-11-02 06:55 ICT / 2026-11-01 23:55 UTC (runner policy v13 installed; TCE cross-repo heartbeat verified once)
 
 This addendum supersedes the earlier statements below that runner policy v13 installation and the TCE-to-Platform heartbeat were still pending. It records the exact runtime evidence observed in this review.
