@@ -1,3 +1,5 @@
+# Cross-Repository Production Deployment Tracker
+
 ## Latest automation review (2026-11-02 03:04 ICT / 2026-11-01 20:04 UTC; TCE scheduled heartbeat available; cross-repository recovery receiver added)
 
 This review inspected all five repository master refs, open PRs, latest workflow runs/checks, and the deployment tracker. It confirmed that TCE's scheduled WF-06 event has resumed delivery, but its four public endpoints still return HTTP 503 because TCE/Auth remain intentionally stopped. Platform Infra native scheduled reconciliation/inspection has not delivered a new run since 17:13Z. A dependency-safe cross-repository heartbeat contract is being added: TCE WF-12 will send an authenticated, payload-validated `repository_dispatch` to Platform Infra; the Platform controller remains the only component allowed to dispatch the existing GitOps reconciliation or read-only inspection workflows.
@@ -104,7 +106,6 @@ No production manifests, release flags, credentials, database objects, desired r
 
 ---
 
-# Cross-Repository Production Deployment Tracker
 
 ## Latest automation review (2026-11-01 16:18 UTC; mirror secret naming corrected; TCE independent heartbeat merged)
 
