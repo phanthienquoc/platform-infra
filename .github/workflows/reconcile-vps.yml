@@ -137,16 +137,16 @@ jobs:
         if: ${{ env.RECONCILE_MODE == 'apply' }}
         run: |
           set -euo pipefail
-          expected="platform-kubectl policy: rollout-status-v12-scoped-image-pull-restart"
+          expected="platform-kubectl policy: rollout-status-v13-permanent-image-pull-restart"
           for attempt in $(seq 1 24); do
             if policy="$(sudo /usr/local/sbin/platform-kubectl policy-version 2>/dev/null)" && [[ "$policy" == "$expected" ]]; then
-              echo "Scoped image-pull restart runner policy is ready."
+              echo "Permanent-error-aware scoped image-pull restart runner policy is ready."
               exit 0
             fi
-            echo "Waiting for runner bootstrap policy v12 (attempt $attempt/24)..."
+            echo "Waiting for runner bootstrap policy v13 (attempt $attempt/24)..."
             sleep 5
           done
-          echo "Runner policy is not updated to scoped image-pull restart v12; refusing production apply." >&2
+          echo "Runner policy is not updated to permanent-error-aware image-pull restart v13; refusing production apply." >&2
           exit 1
       - name: Validate GHCR pull access before mutating cluster credentials
         if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app != 'keycloak' && steps.scope.outputs.target_app != 'auth-shutdown' }}
