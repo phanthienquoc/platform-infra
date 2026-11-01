@@ -1,12 +1,14 @@
-## Cross-repository schedule heartbeat contract (2026-11-02; sender/receiver merged, runtime verification pending)
+## Cross-repository schedule heartbeat contract (2026-11-02 04:05 ICT; source-run metadata validation merged; runtime dispatch pending)
 
-- TCE Dashboard WF-12 is the external schedule heartbeat producer. It emits `repository_dispatch: tce-schedule-heartbeat` only for its own scheduled run or a `workflow_run` completion whose source event is `schedule` and whose workflow path is WF-06 or WF-07.
-- TCE sender PR #1010 merged at `d011fbb4099f5f9e24068878ac4e035b369e8ace`; Platform receiver PR #1008 merged at `70a82f8b06dca52612ea34dbe17f6b0567716bff`.
-- The producer uses the existing `PLATFORM_INFRA_TOKEN` already documented for TCE-to-Platform repository dispatch; no new token or GITHUB_TOKEN write permission is introduced in TCE.
-- Platform Infra `recover-stale-ops.yml` accepts the event only from `phanthienquoc/TCE-dashboard`, `source_event=schedule`, and exact allowlisted WF-06/WF-07/WF-12 workflow paths. It validates numeric run IDs and full 40-character source/heartbeat SHAs.
-- The event carries no app, image, release, mode, or target-scope inputs. The receiver uses only its own freshness API checks and existing workflow dispatch authority: `reconcile-vps.yml` with `allow_image_changes=false`, or read-only `inspect-vps.yml`.
-- This is a recovery signal, not a deployment authority. TCE does not perform SSH, kubectl, Compose, production manifest apply, or image promotion.
-- Runtime status: merged but not yet runtime-verified. The post-merge WF-12 push run skipped the heartbeat as intended. Wait for a scheduled WF-12 or scheduled WF-06/WF-07 completion, then correlate the authenticated repository_dispatch with the Platform recovery run before marking the contract operational.
+- TCE Dashboard WF-12 remains the scheduled heartbeat producer. It emits `repository_dispatch: tce-schedule-heartbeat` only for its own scheduled run or a `workflow_run` completion whose source event is `schedule` and whose source workflow is WF-06 or WF-07.
+- TCE sender PR #1010 remains merged at `d011fbb4099f5f9e24068878ac4e035b369e8ace`. It uses the existing `PLATFORM_INFRA_TOKEN` with Platform repository dispatch access; no new token or TCE GITHUB_TOKEN write permission is introduced.
+- Platform receiver PR #1008 remains merged. Hardening PR #1012 merged as `30017a9880469ebf7b5cd0157bfea5870f112892`; exact-head lint/manifest checks and post-merge lint/manifest checks passed.
+- Before using a heartbeat for freshness decisions, the receiver fetches the source TCE Actions run and the WF-12 heartbeat run from the public TCE Actions API. It verifies exact workflow path, `event=schedule`, master branch, full head SHA, and allowed run status. Direct WF-12 schedule heartbeats must use the same source/heartbeat run ID and SHA. WF-06/WF-07 source runs must be completed and forwarded by a WF-12 run with `event=workflow_run`.
+- The receiver accepts only `phanthienquoc/TCE-dashboard`, the event `tce-schedule-heartbeat`, and allowlisted WF-06/WF-07/WF-12 paths. The payload carries no app, image, release, mode, or target inputs.
+- TCE has no SSH, kubectl, Compose, manifest apply, or image-promotion authority. Platform recovery uses only its existing reconciliation workflow with `allow_image_changes=false` or read-only inspection.
+- Runtime status remains pending: latest post-merge TCE WF-12 run #41345501969 was a push and correctly skipped heartbeat dispatch. Latest scheduled WF-06 #41342785812, WF-12 #41339371004, and WF-07 #41311225433 all predate the sender merge. Wait for a scheduled event and correlate the source run, WF-12 run, Platform repository_dispatch, and recovery run.
+- Preserve the existing TCE WF-06/WF-07/WF-12 cron expressions and all market-scan schedules unchanged.
+
 
 ## Latest automation review (2026-11-02 02:03 ICT / 2026-11-01 19:03 UTC; TCE WF-12 correctly detected stale WF-06 delivery)
 
