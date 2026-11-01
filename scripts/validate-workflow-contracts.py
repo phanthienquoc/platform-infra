@@ -559,4 +559,15 @@ if "inspect-vps.yml/runs" not in watchdog or "Report latest scheduled inspection
     fail("The watchdog must report inspection runner queue delay to distinguish runner backlog from missing schedule events.")
 
 
+# Watchdog freshness and queue calculations must compare timestamps from the
+# GitHub Actions API, not the hosted runner wall clock (observed one-hour skew).
+if 'actions/runs/${GITHUB_RUN_ID}' not in watchdog:
+    fail("The watchdog must fetch its own run metadata as the GitHub API clock reference.")
+if "age_seconds=$((reference_epoch - created_epoch))" not in watchdog:
+    fail("Scheduled reconciliation freshness must use the GitHub API reference timestamp.")
+if "WATCHDOG_REFERENCE_EPOCH=$reference_epoch" not in watchdog or "WATCHDOG_REFERENCE_EPOCH" not in watchdog:
+    fail("The watchdog must pass its API reference timestamp to inspection queue diagnostics.")
+if "date -u +%s" in watchdog:
+    fail("The watchdog must not compare GitHub API timestamps with the hosted runner wall clock.")
+
 print("Workflow contract validation passed.")
