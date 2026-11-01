@@ -341,12 +341,33 @@ if '  scale)' not in bootstrap_script or 'scale deployment/microfe-auth deployme
     fail("Runner bootstrap must allow only the exact Auth/Keycloak scale-to-zero command.")
 if "platform/keycloak/**" not in reconcile:
     fail("Keycloak manifest changes must trigger the shared reconcile workflow.")
-if "name: Resolve Keycloak push scope" not in reconcile:
-    fail("Keycloak manifest pushes must select an isolated scope from the desired replica count.")
+if "name: Resolve push deployment scope" not in reconcile:
+    fail("Every production manifest push must resolve an app-specific rollout scope from the complete changed-file diff.")
 if 'if: ${{ github.event_name == \'push\' }}' not in reconcile:
-    fail("Keycloak push-scope resolution must run for every push and inspect the complete changed-file range.")
+    fail("Push deployment scope resolution must run only for push events.")
 if 'git diff --name-only "$before" "$GITHUB_SHA"' not in reconcile:
-    fail("Push-scope resolution must inspect the complete before-to-head diff rather than only head_commit.modified.")
+    fail("Push-scope resolution must inspect the complete before-to-head diff.")
+if "bash scripts/resolve-push-deployment-scope.sh" not in reconcile:
+    fail("The reconcile workflow must use the tested path-scope resolver.")
+push_scope_script = ROOT / "scripts" / "resolve-push-deployment-scope.sh"
+if not push_scope_script.is_file():
+    fail("The push deployment scope resolver script is missing.")
+push_scope_contract = push_scope_script.read_text(encoding="utf-8")
+for path_contract in (
+    "platform/microfe/*",
+    "platform/auth-service/*",
+    "apps/tce-dashboard/*",
+    "apps/stockdividend/*",
+    "apps/media-generation/*",
+    "platform/keycloak/*",
+    "environments/prod/*",
+):
+    if path_contract not in push_scope_contract:
+        fail(f"Push deployment scope resolver is missing path mapping: {path_contract}")
+if "Unclassified production-trigger path" not in push_scope_contract:
+    fail("Unknown push paths must fail closed instead of silently reconciling every application.")
+if "KEYCLOAK_REPLICAS_OVERRIDE" not in push_scope_contract or "auth-shutdown" not in push_scope_contract:
+    fail("Keycloak-only pushes must retain the isolated replica-aware Auth shutdown/Keycloak rollout contract.")
 if "name: Verify Auth and Keycloak shutdown state" not in reconcile:
     fail("Auth shutdown must verify desired/ready/updated replicas are zero and no matching pods remain.")
 if 'if [ "$TARGET_APP" = "auth-shutdown" ]; then' not in reconcile:
