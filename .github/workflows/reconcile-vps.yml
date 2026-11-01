@@ -92,8 +92,9 @@ jobs:
           test -f environments/prod/kustomization.yaml
           chmod +x scripts/reconcile-vps.sh
 
-      - name: Resolve Keycloak push scope
+      - name: Resolve push deployment scope
         if: ${{ github.event_name == 'push' }}
+        shell: bash
         run: |
           set -euo pipefail
           before="$(jq -r '.before // empty' "$GITHUB_EVENT_PATH")"
@@ -102,30 +103,16 @@ jobs:
             exit 1
           fi
           git fetch --no-tags --depth=1 origin "$before"
-          changed_paths="$(git diff --name-only "$before" "$GITHUB_SHA")"
-          if ! grep -q '^platform/keycloak/' <<< "$changed_paths"; then
-            echo "No Keycloak path changed; retaining the default push scope."
-            exit 0
+          changed_paths_output="$(git diff --name-only "$before" "$GITHUB_SHA")"
+          if [[ -z "$changed_paths_output" ]]; then
+            echo "::error::The push-triggered reconcile has no changed paths to scope."
+            exit 1
           fi
-          replicas="$(awk '
-            $0 == "spec:" { in_spec = 1; next }
-            in_spec && /^[^[:space:]]/ { in_spec = 0 }
-            in_spec && /^  replicas:/ { print $2; exit }
-          ' platform/keycloak/deployment.yaml)"
-          case "$replicas" in
-            0)
-              echo "TARGET_APP=auth-shutdown" >> "$GITHUB_ENV"
-              echo "Keycloak manifest declares replicas: 0; selecting isolated Auth/Keycloak shutdown."
-              ;;
-            1)
-              echo "TARGET_APP=keycloak" >> "$GITHUB_ENV"
-              echo "Keycloak manifest declares replicas: 1; selecting the dedicated Keycloak rollout."
-              ;;
-            *)
-              echo "::error::Keycloak push requires replicas 0 or 1, got ${replicas:-missing}"
-              exit 1
-              ;;
-          esac
+          mapfile -t changed_paths <<< "$changed_paths_output"
+          target_scope="$(printf '%s\n' "${changed_paths[@]}" | bash scripts/resolve-push-deployment-scope.sh)"
+          echo "TARGET_APP=$target_scope" >> "$GITHUB_ENV"
+          echo "Resolved push deployment scope: $target_scope"
+          printf 'Changed paths:\n%s\n' "${changed_paths[*]}"
 
       - name: Resolve deployment scope
         id: scope
