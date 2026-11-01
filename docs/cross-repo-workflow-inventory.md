@@ -1,5 +1,18 @@
 # Cross-Repository Workflow Inventory
 
+## Latest workflow inventory review (2026-11-01 18:15 ICT; one scheduled reconcile observed)
+
+- Current heads: platform-infra `817d3c5c3029a95a47f9aaca8645e802172d7eb4`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: platform-infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #76 (draft)/#75; none in TCE, StockDividend, or Media.
+- New scheduled reconciliation [#41300948892](https://github.com/phanthienquoc/platform-infra/actions/runs/41300948892) was delivered at 11:13:47Z. Shared reconciliation succeeded; MicroFE, TCE, Auth, and Media lanes passed; Keycloak skipped; StockDividend failed because admin/backend still reference non-ARM64 tag `12d63b4`. No manifest apply or image promotion occurred.
+- Scheduled watchdog [#41301007488](https://github.com/phanthienquoc/platform-infra/actions/runs/41301007488) observed reconciliation age/queue 0m, but failed inspection freshness: last inspection #41264393955 age 539m. One fresh reconcile is not sufficient to claim stable cadence.
+- No `recover-stale-ops` run observed; the fresh reconciliation was an ordinary scheduled event, not a recovery-controller dispatch. Next inspection slot 11:32Z.
+- `vps-image-cleanup.yml` remains a safe push/schedule dry-run plus explicit manual workflow. Latest dry-run #41300876011 correctly failed closed on three unresolved refs and deleted nothing. Keep the cleanup guard.
+- StockDividend publisher #41273202844 has verified three ARM64 digests, but production promotion remains disabled. Preserve manual/release gates.
+- Weekend scraper #41284033242 remains in progress; preserve its schedule/manual entry and review runtime before adding a timeout.
+- TCE WF-06/WF-12, TCE market-scan schedule, Media CI/runtime verification, Auth manual-only release, and all purposeful backup/security/test workflows remain unchanged.
+- No workflow removed, no duplicate direct SSH/Compose authority added, and no production manifests/credentials/database/release flags/replicas changed.
+
 ## Latest workflow inventory review (2026-11-01 18:13 ICT; cleanup normalization merged)
 
 - Current heads: platform-infra `deaf37cdb3a536e06a78336b8ec710356ab2b4d1`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
