@@ -24,8 +24,8 @@ reconcile = read("reconcile-vps.yml")
 promotion = read("gitops-image-promotion.yml")
 recovery = read("recover-stale-ops.yml")
 inspection = read("inspect-vps.yml")
-if 'workflows: ["reconcile-vps", "inspect-vps"]' not in recovery or "types: [completed]" not in recovery:
-    fail("Recovery controller must run after master reconciliation and scheduled inspection completions.")
+if 'workflows: ["reconcile-vps", "inspect-vps", "Mirror locally-uncensored into private repository"]' not in recovery or "types: [completed]" not in recovery:
+    fail("Recovery controller must run after master reconciliation, scheduled inspection, and the independent mirror schedule heartbeat.")
 if not re.search(r"(?m)^  push:\n    branches: \[master\]\n    paths:", recovery):
     fail("Recovery controller must bootstrap from deployment-relevant master pushes.")
 for required_path in (
@@ -77,6 +77,8 @@ if "github.event.workflow.path == '.github/workflows/reconcile-vps.yml'" not in 
     fail("Recovery must identify reconciliation completions by the workflow resource path.")
 if "github.event.workflow.path == '.github/workflows/inspect-vps.yml'" not in recovery or "github.event.workflow_run.event == 'schedule'" not in recovery:
     fail("Only scheduled master inspection completions may trigger reconciliation recovery.")
+if "github.event.workflow.path == '.github/workflows/mirror-locally-uncensored.yml'" not in recovery or "github.event.workflow_run.event == 'schedule'" not in recovery:
+    fail("Only scheduled master mirror completions may act as the independent recovery heartbeat.")
 source_verification_index = recovery.find("- name: Verify and await source reconciliation completion")
 reference_clock_index = recovery.find("- name: Resolve GitHub Actions API reference clock")
 if source_verification_index < 0 or reference_clock_index < 0 or source_verification_index > reference_clock_index:
