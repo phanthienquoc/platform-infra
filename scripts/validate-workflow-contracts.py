@@ -513,6 +513,8 @@ for required in (
     ".updated_at // .run_started_at // .created_at",
     ".run_started_at // .created_at",
     "gh api -X GET",
+    "head_sha == $sha",
+    "Dispatch payload: ref=master sha=$dispatch_sha",
     "sort_by(.updated_at // .run_started_at // .created_at)",
     "steps.reconcile.outputs.busy != 'true'",
 ):
