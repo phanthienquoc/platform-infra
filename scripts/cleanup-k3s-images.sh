@@ -19,8 +19,8 @@ fi
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 sudo "$KCTL" get pods -A -o json | tee "$tmp/pods.json" >/dev/null
-sudo "$CRI" ps -a -o json | tee "$tmp/containers.json" >/dev/null
-sudo "$CRI" images -o json | tee "$tmp/images.json" >/dev/null
+sudo "$CRI" ps | tee "$tmp/containers.json" >/dev/null
+sudo "$CRI" images | tee "$tmp/images.json" >/dev/null
 
 # Keep all image IDs referenced by Pod specs (including init/ephemeral containers).
 jq -r '.items[] | .spec.initContainers[]?.image, .spec.containers[]?.image, .spec.ephemeralContainers[]?.image' "$tmp/pods.json" | sort -u > "$tmp/pod-image-refs.txt"
@@ -77,7 +77,7 @@ done
 head -n "$remove_count" "$tmp/unused.tsv" | while IFS=$'\t' read -r id tags size pinned created; do
   [ -n "$id" ] || continue
   sudo "$KCTL" get pods -A -o json | tee "$tmp/pods-current.json" >/dev/null
-  sudo "$CRI" ps -a -o json | tee "$tmp/containers-current.json" >/dev/null
+  sudo "$CRI" ps | tee "$tmp/containers-current.json" >/dev/null
   grep -Fxq "$id" <(jq -r '.containers[]? | .imageRef // empty' "$tmp/containers-current.json") && {
     echo "Skip image still referenced by container: $id"; continue;
   }
