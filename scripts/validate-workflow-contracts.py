@@ -25,6 +25,20 @@ promotion = read("gitops-image-promotion.yml")
 inspection = read("inspect-vps.yml")
 manifest_validation = read("validate-manifests.yml")
 
+# Production MicroFE manifests must never accept the old placeholder tags.
+for placeholder in (
+    "ghcr.io/phanthienquoc/microfe-shell:0.1.0",
+    "ghcr.io/phanthienquoc/microfe-ws:RELEASE_SHA",
+):
+    if placeholder in manifest_validation:
+        fail(f"Manifest validation must reject the retired MicroFE placeholder: {placeholder}")
+for digest_reference in (
+    "ghcr.io/phanthienquoc/microfe-shell@sha256:*",
+    "ghcr.io/phanthienquoc/microfe-ws@sha256:*",
+):
+    if digest_reference not in manifest_validation:
+        fail(f"Manifest validation must accept verified immutable MicroFE digests: {digest_reference}")
+
 # The VPS inspection automation must validate the exact generated PR head before merge.
 if "workflow_dispatch:" not in manifest_validation:
     fail("Manifest validation must expose workflow_dispatch for exact-head inspection validation.")
