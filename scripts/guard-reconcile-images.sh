@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Media migration guard: preserve immutable image replacement protection.
 # Only match actual container image fields; ignore image strings inside annotations such as last-applied-configuration.
-# Only match actual container image fields; ignore image strings inside annotations such as last-applied-configuration.
 set -euo pipefail
 
 MODE="${1:-check}"
