@@ -1,12 +1,12 @@
 # Cross-Repository Workflow Inventory
 
-## Latest workflow inventory review (2026-11-01 16:14 UTC; mirror secret naming corrected; recovery-to-inspection runtime verified)
+## Latest workflow inventory review (2026-11-01 16:18 UTC; mirror secret naming corrected; TCE independent heartbeat merged)
 
 ### Repository heads and open PRs
 
-- Master heads: Platform Infra `b36d5be236d51cd0d659affa454fc73c98d42e48`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `f5c04475eb4e67811c66b350d60541b21b8262c7`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Master heads: Platform Infra `7b294c98eefcb54287dca54944cb0fcae51da71e`; TCE Dashboard `8882fc6dca77fc6abaaf45c673f7dfc4c8a400ae`; StockDividend `f5c04475eb4e67811c66b350d60541b21b8262c7`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
 - Open PRs: Platform Infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #75/#76; none in TCE, StockDividend, or Media.
-- Platform Infra #998 (schedule heartbeat), #999 (fresh inspection snapshot), #1000 (tracker refresh), and #1001 (mirror secret-name fix) are merged. No workflow was removed.
+- Platform Infra #998 (schedule heartbeat), #999 (fresh inspection snapshot), #1000/#1002 (tracker refreshes), and #1001 (mirror secret-name fix) are merged; TCE Dashboard #1009 (WF-07 independent heartbeat) is merged. No workflow was removed.
 
 ### Platform workflow inventory and runtime evidence
 
@@ -26,7 +26,7 @@
 
 ### Application workflow inventory
 
-- TCE Dashboard: WF-06 latest scheduled #41319526719 at 15:06:39Z failed only at public HTTP 503 health endpoints while TCE/Auth remain stopped; SSH diagnostics passed. WF-12 workflow_run follow-up #41319543937 succeeded. Latest scheduled WF-12 #41315132135 at 14:13:39Z reported stale WF-06. WF-07 scheduled #41311225433 at 13:26Z passed. Preserve all existing schedules and the market-scan cadence.
+- TCE Dashboard: WF-06 latest scheduled #41319526719 at 15:06:39Z failed only at public HTTP 503 health endpoints while TCE/Auth remain stopped; SSH diagnostics passed. WF-12 workflow_run follow-up #41319543937 succeeded. Latest scheduled WF-12 #41315132135 at 14:13:39Z reported stale WF-06. WF-07 scheduled #41311225433 at 13:26Z passed. PR #1009 adds WF-07 scheduled completion as an independent read-only WF-12 heartbeat with exact path/event guards; PR checks #41325492972/#41325493160 passed and post-merge WF-12 push smoke #41325592270 correctly warned that WF-06 was 71m old. The first post-merge scheduled WF-07 heartbeat is pending. Preserve all existing schedules and the market-scan cadence.
 - StockDividend: CI #41314359022 and ARM64 publisher #41314359012 passed on source `f5c04475`. All three immutable digests remain verified. Production release gate remains false; no digest dispatch or GitOps promotion.
 - Media Generation: latest CI #41246414186 passed; fresh K3s snapshot confirms backend/frontend 1/1 with digest-pinned imageIDs.
 - Authentication: latest CI #41033586844 and manual release #41040510320 passed on current master. Auth/Keycloak remain stopped; PR #75/#76 remain open pending environment and migration safety evidence.
