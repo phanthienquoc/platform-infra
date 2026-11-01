@@ -23,6 +23,7 @@ def fail(message: str) -> None:
 reconcile = read("reconcile-vps.yml")
 promotion = read("gitops-image-promotion.yml")
 inspection = read("inspect-vps.yml")
+watchdog = read("reconcile-schedule-watchdog.yml")
 manifest_validation = read("validate-manifests.yml")
 
 # Production MicroFE manifests must never accept the old placeholder tags.
@@ -188,12 +189,26 @@ if "microfe" not in reconcile:
 
 # Scheduled reconciliation logic must have a matching schedule trigger.
 if "github.event_name == 'schedule'" in reconcile and not re.search(
-    r"(?m)^\s*schedule:\s*$", reconcile
+    r"(?m)^\\s*schedule:\\s*$", reconcile
 ):
     fail(
         "reconcile-vps.yml references github.event_name == 'schedule' "
         "but does not declare an on.schedule trigger."
     )
+
+# Keep production clocks on distinct, off-boundary minute slots. GitHub schedule
+# delivery is best-effort; staggering avoids quarter-hour boundaries and prevents
+# reconcile, inspection, and watchdog clocks from competing at once.
+def scheduled_crons(workflow: str) -> list[str]:
+    return re.findall(r'(?m)^ *- *cron: *"([^"]+)" *$', workflow)
+
+
+if scheduled_crons(reconcile) != ["7,22,37,52 * * * *"]:
+    fail("reconcile-vps must retain a 15-minute cadence offset to minutes 7/22/37/52.")
+if scheduled_crons(watchdog) != ["12,27,42,57 * * * *"]:
+    fail("The read-only watchdog must run 5 minutes after each offset reconciliation slot.")
+if scheduled_crons(inspection) != ["2,32 * * * *"]:
+    fail("VPS inspection must retain its 30-minute cadence at minutes 2 and 32.")
 
 # The shared apply job and the aggregate lane gate must both fail hard on errors.
 if "name: Fail if shared reconciliation failed" not in reconcile:
