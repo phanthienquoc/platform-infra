@@ -1248,3 +1248,52 @@ No production manifests, runtime credentials, database objects, release flags, o
 5. Continue Supabase SQL/REST stability probes and obtain a fresh K3s inspection before any production health claim.
 
 No production manifests, runtime credentials, database objects, release flags, or K3s desired replicas changed in this review. TCE remains scale-to-zero; Auth/Keycloak remain stopped. Production remains **NOT HEALTHY/UNVERIFIED**.
+
+
+## Deployment review — 2026-11-02 00:00 ICT (scheduled recovery runtime and migration provenance revalidation)
+
+### Repository state and open PRs
+
+- Default-branch heads at review: Platform Infra `0d6fd3f6e629daf4b30147f0e34421394d8ab46c`; TCE Dashboard `8882fc6dca77fc6abaaf45c673f7dfc4c8a400ae`; StockDividend `f5c04475eb4e67811c66b350d60541b21b8262c7`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: Platform Infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #75/#76; none in TCE Dashboard, StockDividend, or Media Generation.
+- Platform Infra PRs #1001/#1002/#1003 and TCE Dashboard PR #1009 are merged. No workflow was removed. Authentication PR #76 received a new documentation-only evidence commit `f19cacb0bf2b454b3152bd3a501f6f88d0a14a58`; its CI run #41329425940 was in progress at review time.
+
+### Scheduled recovery and reconciliation runtime evidence
+
+- Scheduled recovery [#41328484657](https://github.com/phanthienquoc/platform-infra/actions/runs/41328484657) completed successfully at 2026-11-01 16:51:47Z on master SHA `0d6fd3f6e629daf4b30147f0e34421394d8ab46c`.
+- Its job log measured latest reconciliation activity at 43m and dispatched the existing sole GitOps authority with exact payload: `ref=master`, SHA `0d6fd3f6e629daf4b30147f0e34421394d8ab46c`, `mode=apply`, `allow_image_changes=false`, `target_app=all`. Dispatch correlation was verified as [reconciliation #41328497844](https://github.com/phanthienquoc/platform-infra/actions/runs/41328497844).
+- Reconciliation #41328497844 completed with overall FAILURE only because the StockDividend health lane failed. Shared repository verification, GHCR pull preflight, Auth runtime Secret verification, shared pull-credential bootstrap, scoped restart of blocked StockDividend workloads, and cluster verification all succeeded. GitOps drift was clean; manifest apply and image-change guard were skipped. MicroFE, Media, TCE, and Auth lanes passed their configured health/state contracts; Keycloak was skipped.
+- StockDividend health evidence remains concrete: Admin and Backend pods cannot pull `12d63b4` because the image manifest has no matching ARM64 platform. The old Frontend replica is still Ready 1/1 but updated=0. No production image references were changed.
+- Reconciliation's post-run handoff job succeeded and dispatched recovery controller [#41328656080](https://github.com/phanthienquoc/platform-infra/actions/runs/41328656080) with the source reconciliation run ID and exact source SHA. The controller verified/awaited source completion, resolved the API reference clock, then correctly avoided duplicate reconciliation because the latest reconciliation was age 0m. The latest inspection [#41324734578](https://github.com/phanthienquoc/platform-infra/actions/runs/41324734578) was age 44m, below the 75m inspection threshold, so no duplicate inspection dispatch was made. This verifies the completed-source handoff and its safe no-op decision.
+- The latest available full K3s inspection remains #41324734578 (workflow_dispatch on prior master SHA `41bc069ba7eb68815800700cf9ae510db5544308`, snapshot generated 16:08:15Z). It showed node `tce-k3s-01` Ready/ARM64, root disk 54%, Media backend/frontend 1/1, MicroFE Shell/WS 1/1, NATS 1/1, Stock Admin/Backend ImagePullBackOff, Stock Frontend old replica 1/1, and TCE/Auth/Keycloak 0/0. The latest recovery did not create a newer inspection because the snapshot was within the configured freshness budget.
+- **Do not conflate fallback recovery with native schedule restoration.** The recovery controller's scheduled fallback is now runtime-verified. The latest native scheduled reconciliation remains #41300948892 (11:13:47Z); latest native scheduled inspection remains #41301947264 (11:27:15Z); latest scheduled watchdog evidence remains #41301007488 (11:14:36Z). Later workflow_dispatch runs do not prove those native cron deliveries have resumed.
+
+### Mirror credential follow-up
+
+- The mirror workflow now references valid secret name `PLATFORM_INFRA_MIRROR_TOKEN` (PR #1001). The post-fix push smoke [#41325213359](https://github.com/phanthienquoc/platform-infra/actions/runs/41325213359) still failed before Git operations because the environment value was empty; its log explicitly reported `Missing PLATFORM_INFRA_MIRROR_TOKEN secret`.
+- The latest scheduled mirror run observed before the rename was [#41323952888](https://github.com/phanthienquoc/platform-infra/actions/runs/41323952888), which used the old invalid name. No post-fix scheduled mirror run has yet verified the new secret.
+- Remaining owner action: configure `PLATFORM_INFRA_MIRROR_TOKEN` as a Platform Infra Actions secret (or organization secret limited to Platform Infra), with destination-only `Contents: write` for `phanthienquoc/locally-uncensored-private`. Secret values cannot be read or created through the connected GitHub interface. Do not substitute GHCR or application release credentials.
+
+### TCE Dashboard and application repositories
+
+- TCE master CI after PR #1009: WF-01 build [#41325592312](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41325592312), WF-02 formatting [#41325592287](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41325592287), WF-05 tests [#41325592337](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41325592337), and WF-12 push smoke [#41325592270](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41325592270) all completed successfully. WF-12 correctly warned that latest scheduled WF-06 #41319526719 (15:06:39Z) was 71m old with 0m runner queue. Latest observed scheduled WF-07 remains #41311225433 (13:26Z); the first post-merge scheduled WF-07 heartbeat is not yet observed. WF-06/WF-07/WF-12 cron declarations and the TCE market-scan schedule remain unchanged.
+- StockDividend CI #41314359022 and publisher #41314359012 succeeded on source `f5c04475eb4e67811c66b350d60541b21b8262c7`. Immutable ARM64 digests remain: Scraper `2146540a30d972af2d41688b6dc6640353f7552da86f740a092e85c082e7fd4f`; Admin `488cd38462ac66b36258cc84296fe0d2d1f9cb029c9cb53c3b93f49dfe19f621`; Backend `a3ec6f8c95bfb0184d97228cba25f433d942720aad728fef7716e8f5b6282c94`. `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=false`; no dispatch or promotion was performed. Weekend scraper #41284033242 ended `cancelled` after approximately six hours on old SHA `a6f55ee`; preserve the scheduled/manual data workflow and investigate its next run rather than deleting it.
+- Media CI #41246414186 passed; the fresh inspection above showed Media backend/frontend 1/1 with pinned runtime images.
+- Authentication master CI #41033586844 and manual release #41040510320 succeeded on current master. Auth/Keycloak remain intentionally stopped; no live SSO health is claimed.
+
+### Supabase migration provenance revalidation
+
+- Supabase project `gtqovpusfyyvxpeezxlo` currently reports `ACTIVE_HEALTHY`, PostgreSQL `17.6.1.084`.
+- A fresh read-only comparison of the Supabase migration ledger with Authentication `master:supabase/migrations/` returned 84 remote rows and 84 local SQL files. All 84 version/name pairs match exactly; remote-only=0, local-only=0, duplicate local version prefixes=0. Latest matching version: `20261028020259_revoke_browser_access_from_tce_data_api`.
+- This supersedes the historical 2026-10-27 missing-source counts recorded in Auth PR #76 for the current master snapshot. It proves current version/name set alignment, not that an earlier Supabase GitHub deployment failure record has been cleared or that a future production integration run will succeed. Supabase branch metadata returned `main / FUNCTIONS_DEPLOYED`; this is not a substitute for authoritative GitHub integration deployment history.
+- Auth PR #75 remains open. Its current changed files are docs and HTTP tests only, with no migration SQL, and its recorded CI run #40446492086 passed on its old head. However, owner-provided evidence says the connected GitHub integration has Deploy to production enabled on `master`; do not merge until the integration's master-push behavior is authoritatively checked. Auth PR #76 now records the 84/84 revalidation; new CI #41329425940 was still running at review time. No migration, schema, data, branch, integration setting, or database deployment was changed.
+
+### Next actions
+
+1. Configure `PLATFORM_INFRA_MIRROR_TOKEN` with destination-only Contents write; then observe a post-fix scheduled mirror run and its recovery/watchdog heartbeat.
+2. Continue distinguishing native Platform cron delivery from the verified fallback dispatch; obtain new native schedule runs and a current full K3s snapshot.
+3. Keep StockDividend promotion disabled until explicit authorization; after authorization, use the verified paired immutable Admin/Backend digests through Platform Infra and verify rollout/imageIDs.
+4. Observe the first scheduled WF-07 completion after PR #1009 and verify WF-12 consumes it; keep the TCE market-scan schedule untouched.
+5. Finish PR #76 exact-head CI and retain the PR #75 Supabase production side-effect gate until integration behavior is verified.
+
+No production manifests, runtime credentials, release flags, database objects, or K3s desired replicas changed in this review. The only workload mutation was the already-authorized scoped restart of StockDividend Admin/Backend pods during reconciliation; it did not change image references. TCE remains scale-to-zero; Auth/Keycloak remain stopped. Production remains **NOT HEALTHY/UNVERIFIED**.

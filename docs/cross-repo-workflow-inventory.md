@@ -727,3 +727,47 @@ Preserve CI, tests, security, backups, manual release, and purposeful scheduled 
 - TCE WF-06 #41287060151 produced HTTP 503 on all four public endpoints while TCE/Auth remain intentionally stopped. WF-12 push smoke #41291809063 passed; no newer WF-12 schedule run observed.
 - Media CI #41246414186 passed; Media/MicroFE health passed in the last health-only reconciliation rerun; latest full runtime imageID evidence remains inspection #41275351280. Supabase SQL last succeeded at 09:09:08Z; no new probe in this review.
 - Authentication PR #75/#76 remain open pending project/environment binding and migration-safety evidence. Preserve useful CI, security, backup, manual/release, maintenance and scheduled data workflows.
+
+
+## Workflow inventory review — 2026-11-02 00:00 ICT (recovery runtime verified; mirror secret still absent)
+
+### Current repository heads and PRs
+
+- Platform Infra `0d6fd3f6e629daf4b30147f0e34421394d8ab46c`; TCE Dashboard `8882fc6dca77fc6abaaf45c673f7dfc4c8a400ae`; StockDividend `f5c04475eb4e67811c66b350d60541b21b8262c7`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: Platform Infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #75/#76; none in TCE, StockDividend, or Media.
+
+### Platform operations authority and recovery
+
+- `reconcile-vps.yml` remains the sole GitOps apply/reconciliation authority. It owns shared GHCR pull-credential reconciliation, scoped blocked-image restarts, manifest apply, rollout and health gates.
+- `inspect-vps.yml` remains read-only. `recover-stale-ops.yml` is a GitHub Actions dispatcher only; it has no SSH/kubectl/Compose/apply authority. It uses Actions write/Contents read and exact master-SHA correlation.
+- Scheduled recovery #41328484657 was delivered and successfully dispatched reconciliation #41328497844 with `mode=apply`, `allow_image_changes=false`, `target_app=all`, exact master SHA `0d6fd3f6e629daf4b30147f0e34421394d8ab46c`.
+- Reconciliation #41328497844 passed shared preflight/credential/cluster work and Media/MicroFE/TCE/Auth lanes; StockDividend failed on old Admin/Backend tag `12d63b4` without an ARM64 manifest. No production manifest apply or image promotion occurred.
+- The post-reconciliation job dispatched recovery #41328656080. That controller verified source completion and API-clock ordering, then skipped duplicate reconciliation (age 0m) and duplicate inspection (latest inspection age 44m, under 75m). This is runtime evidence for the completed-source handoff.
+- The last full inspection remains #41324734578 on prior master SHA `41bc069ba7eb68815800700cf9ae510db5544308`; its snapshot shows node Ready/ARM64, disk 54%, Media/MicroFE/NATS healthy, Stock Admin/Backend ImagePullBackOff, old Stock Frontend/Backend replicas still serving, and TCE/Auth/Keycloak 0/0.
+- Native scheduled reconciliation/inspection/watchdog histories remain stale at #41300948892 / #41301947264 / #41301007488 respectively. A workflow_dispatch fallback is not proof that native cron delivery recovered.
+
+### Mirror workflow and credential
+
+- `mirror-locally-uncensored.yml` remains a purposeful scheduled/manual full-ref mirror, not a deployment authority. Its schedule remains `17 * * * *`.
+- PR #1001 corrected the invalid hyphenated secret reference to `PLATFORM_INFRA_MIRROR_TOKEN`. Post-fix push run #41325213359 failed at preflight because that secret value is empty; no git mirror operation occurred.
+- Required external configuration: target-scoped token with only `Contents: write` on `phanthienquoc/locally-uncensored-private`, stored as Platform Infra repository Actions secret or an organization secret restricted to Platform Infra. Do not substitute GHCR or app handoff tokens.
+- The previous scheduled mirror run #41323952888 predates the rename; no post-fix scheduled mirror run has verified the new secret or its independent heartbeat.
+
+### TCE and application workflows
+
+- TCE PR #1009 added the existing scheduled WF-07 completion as a second read-only WF-12 heartbeat. Exact workflow path and `event=schedule` guards prevent manual/push runs from masquerading as schedule evidence. Post-merge WF-12 push smoke #41325592270 passed in warning-only mode but measured WF-06 #41319526719 at 71m old / 0m queue. The first post-merge scheduled WF-07 event remains pending. No TCE market-scan or existing WF-06/WF-07/WF-12 schedule changed.
+- StockDividend app repo owns tests/builds and immutable GHCR publication. CI #41314359022 and publisher #41314359012 passed on `f5c04475`; three ARM64 digests are recorded in the deployment tracker. Production release remains disabled; Platform Infra has not received an authorized digest dispatch. Weekend scraper #41284033242 was cancelled after approximately six hours; preserve the workflow and diagnose the next run.
+- Media CI #41246414186 passed; the latest inspection found Media backend/frontend healthy 1/1 with digest-pinned runtime images.
+- Authentication CI #41033586844 and manual release #41040510320 passed on current master. Auth/Keycloak remain stopped. PR #75/#76 remain open pending the Supabase production integration side-effect review and current-head validation.
+
+### Supabase migration source contract
+
+- Project `gtqovpusfyyvxpeezxlo` reports `ACTIVE_HEALTHY`, PostgreSQL `17.6.1.084`.
+- Read-only ledger/source comparison: 84 remote migration rows, 84 local SQL files, 84 exact version/name matches, no remote-only/local-only versions, and no duplicate local prefixes. Latest matching version is `20261028020259_revoke_browser_access_from_tce_data_api`.
+- Current source/ledger version-set alignment passes; this does not prove historical deployment errors are cleared or authorize a production migration/deploy. No database writes were performed.
+
+### Preservation rules
+
+- Keep CI/test/security, backup, manual/release, maintenance and purposeful scheduled data workflows.
+- Preserve reconciliation as the sole GitOps apply authority, inspection as read-only, and recovery/watchdog as API-only dispatch/monitoring.
+- No direct SSH/Compose deployment authority, no production image promotion, and no changes to TCE market-scan scheduling.
