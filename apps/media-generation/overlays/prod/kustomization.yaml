@@ -6,7 +6,11 @@ resources:
 - ../../base
 - ingress.yaml
 images:
+# Published by Media WF-03 from source commit 58f80a8dd77f44a662bc748217c79050a26ec1fa.
+# Digests were confirmed by the publisher logs and the live K3s container imageIDs.
 - name: ghcr.io/phanthienquoc/media-generation/backend
-  newTag: prod-v0.3.0-58f80a8
+  newName: ghcr.io/phanthienquoc/media-generation/backend
+  digest: sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d
 - name: ghcr.io/phanthienquoc/media-generation/frontend
-  newTag: prod-v0.3.0-58f80a8
+  newName: ghcr.io/phanthienquoc/media-generation/frontend
+  digest: sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a
