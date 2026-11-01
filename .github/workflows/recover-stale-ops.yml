@@ -39,12 +39,14 @@ concurrency:
 
 jobs:
   recover:
+    # workflow_run.name is the run display name; reconcile-vps sets a dynamic run-name.
+    # Use the top-level workflow resource path to distinguish source workflows safely.
     if: >-
       ${{ github.ref == 'refs/heads/master' &&
           (github.event_name != 'workflow_run' ||
            (github.event.workflow_run.head_branch == 'master' &&
-            (github.event.workflow_run.name == 'reconcile-vps' ||
-             (github.event.workflow_run.name == 'inspect-vps' &&
+            (github.event.workflow.path == '.github/workflows/reconcile-vps.yml' ||
+             (github.event.workflow.path == '.github/workflows/inspect-vps.yml' &&
               github.event.workflow_run.event == 'schedule')))) }}
     runs-on: ubuntu-latest
     timeout-minutes: 6
