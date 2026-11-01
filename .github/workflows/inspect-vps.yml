@@ -152,13 +152,61 @@ jobs:
           [[ "$(jq -r '.head.ref' <<< "$pr_json")" == "$PR_BRANCH" ]] || { echo "Inspection PR branch changed after validation; refusing merge." >&2; exit 1; }
 
           merge_payload="$(jq -n --arg sha "$PR_HEAD_SHA" '{merge_method: "squash", sha: $sha}')"
-          merge_result="$(curl --fail --silent --show-error \
+          merge_response="$RUNNER_TEMP/inspection-merge-response.json"
+          merge_http_status="$(curl --silent --show-error \
+            --output "$merge_response" \
+            --write-out '%{http_code}' \
             -X PUT \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             "https://api.github.com/repos/$REPOSITORY/pulls/$PR_NUMBER/merge" \
             -d "$merge_payload")"
-          [[ "$(jq -r '.merged' <<< "$merge_result")" == "true" ]] || { echo "GitHub did not confirm the squash merge." >&2; exit 1; }
-          echo "Squash-merged inspection PR #$PR_NUMBER only after validation passed for exact head $PR_HEAD_SHA."
+
+          if [[ "$merge_http_status" != "200" ]]; then
+            after_merge_pr="$(curl --fail --silent --show-error \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/$REPOSITORY/pulls/$PR_NUMBER")"
+            after_merge_state="$(jq -r '.state // empty' <<< "$after_merge_pr")"
+            after_merge_head="$(jq -r '.head.sha // empty' <<< "$after_merge_pr")"
+            after_merge_merged="$(jq -r '.merged // false' <<< "$after_merge_pr")"
+            after_merge_commit="$(jq -r '.merge_commit_sha // empty' <<< "$after_merge_pr")"
+
+            if [[ "$after_merge_merged" == "true" && "$after_merge_head" == "$PR_HEAD_SHA" && -n "$after_merge_commit" ]]; then
+              echo "Inspection PR #$PR_NUMBER was already squash-merged at the exact validated head $PR_HEAD_SHA (merge API HTTP $merge_http_status)."
+            else
+              api_message="$(jq -r '.message // empty' "$merge_response" 2>/dev/null || true)"
+              [[ -n "$api_message" ]] || api_message="GitHub returned no JSON error message."
+              echo "::error::GitHub rejected inspection squash merge (HTTP $merge_http_status): $api_message. PR state=${after_merge_state:-unknown}, head=${after_merge_head:-unknown}; leaving it open." >&2
+              exit 1
+            fi
+          else
+            merge_result="$(cat "$merge_response")"
+            [[ "$(jq -r '.merged // false' <<< "$merge_result")" == "true" ]] || {
+              echo "GitHub returned HTTP 200 without confirming the squash merge." >&2
+              exit 1
+            }
+
+            merged_pr_json="$(curl --fail --silent --show-error \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/$REPOSITORY/pulls/$PR_NUMBER")"
+            [[ "$(jq -r '.merged // false' <<< "$merged_pr_json")" == "true" ]] || {
+              echo "GitHub did not report the inspection PR as merged after the merge request." >&2
+              exit 1
+            }
+            [[ "$(jq -r '.head.sha // empty' <<< "$merged_pr_json")" == "$PR_HEAD_SHA" ]] || {
+              echo "Merged inspection PR head does not match the exact validated SHA $PR_HEAD_SHA." >&2
+              exit 1
+            }
+            merge_commit_sha="$(jq -r '.merge_commit_sha // empty' <<< "$merged_pr_json")"
+            [[ -n "$merge_commit_sha" ]] || {
+              echo "GitHub did not return a merge commit SHA for inspection PR #$PR_NUMBER." >&2
+              exit 1
+            }
+            echo "Squash-merged inspection PR #$PR_NUMBER at exact validated head $PR_HEAD_SHA (merge commit $merge_commit_sha)."
+          fi
 # yamllint enable rule:line-length

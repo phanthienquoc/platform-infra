@@ -76,6 +76,14 @@ if "sha: $sha" not in inspection or "PR_HEAD_SHA" not in inspection:
     fail("VPS inspection must pin the squash merge to the validated PR head SHA.")
 if 'payload=\'{"merge_method":"squash"}\'' in inspection:
     fail("VPS inspection must not use the legacy unguarded immediate merge payload.")
+if "inspection-merge-response.json" not in inspection or "merge_http_status" not in inspection:
+    fail("VPS inspection must capture the merge API status and response body for actionable diagnostics.")
+for required in ("after_merge_head", "after_merge_merged", "merge_commit_sha", "leaving it open"):
+    if required not in inspection:
+        fail(f"VPS inspection merge handling is missing exact-head/idempotency guard: {required}")
+if "Merged inspection PR head does not match the exact validated SHA" not in inspection:
+    fail("VPS inspection must verify the merged PR head still matches the exact validated SHA.")
+
 
 # Manual production promotion must originate from master; non-master dispatches fail visibly.
 if "if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/master'" not in promotion:

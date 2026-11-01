@@ -1,3 +1,5 @@
+# Cross-Repository Production Deployment Tracker
+
 ## Post-merge inventory correction (2026-11-01 11:31 ICT)
 
 - PR #948 was squash-merged as `ddc44cebcb2430b0da20fcbbdede1a78e7181407`; its exact-head manifest validation [#41273263181](https://github.com/phanthienquoc/platform-infra/actions/runs/41273263181) and post-merge validation [#41273290644](https://github.com/phanthienquoc/platform-infra/actions/runs/41273290644) passed.
@@ -26,7 +28,6 @@ Last reviewed: 2026-11-01 11:30 ICT. Production remains **NOT HEALTHY/UNVERIFIED
 - No production manifests, GHCR credentials, database objects, StockDividend release flag, or K3s desired replicas changed in this review. StockDividend promotion remains disabled; no repository dispatch was sent. TCE remains scale-to-zero; Auth/Keycloak remain stopped; TCE market-scan schedule unchanged.
 - Next actions: verify post-merge publisher [#41273202844](https://github.com/phanthienquoc/stockdividend/actions/runs/41273202844) completes and records three ARM64 digests; confirm no dispatch occurred while the promotion hold is false; then prepare a separate Platform Infra digest-promotion PR only after the release is authorized. Continue monitoring Supabase and scheduled reconciliation; verify pod `imageID`, rollout, and health after any authorized promotion.
 
-# Cross-Repository Production Deployment Tracker
 
 ## Latest automation review (2026-11-01 10:04 ICT; scoped image-pull recovery merged and runner v12 installed)
 
