@@ -67,6 +67,7 @@ jobs:
           bash scripts/tests/validate-ghcr-pull-access.test.sh
           bash scripts/tests/validate-ghcr-image-reference.test.sh
           bash scripts/tests/cleanup-k3s-images.test.sh
+          bash scripts/tests/inspect-vps-cri-contract.test.sh
           bash scripts/guard-reconcile-images.sh --self-test
 
       - name: Test path-scoped push deployment resolution

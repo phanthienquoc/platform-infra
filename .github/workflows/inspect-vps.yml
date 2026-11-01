@@ -65,6 +65,8 @@ jobs:
           grep -q "^### Pod failure evidence$" debug/vps-latest.md
           grep -q "^### Recent failure events$" debug/vps-latest.md
           grep -q "^### GitOps drift$" debug/vps-latest.md
+          grep -q "^Images (repo tags, repo digests, image ID, pinned, size bytes):$" debug/vps-latest.md
+          grep -q "^Containers (container ID, name, image reference, state):$" debug/vps-latest.md
           if grep -q "^echo  echo" debug/vps-latest.md; then
             echo "Malformed duplicate echo marker found in inspection output." >&2
             exit 1
