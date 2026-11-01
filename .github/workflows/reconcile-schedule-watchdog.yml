@@ -36,6 +36,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       MAX_AGE_MINUTES: "45"
+      MAX_QUEUE_MINUTES: "15"
     steps:
       - name: Verify reconcile-vps workflow is enabled
         shell: bash
@@ -81,10 +82,36 @@ jobs:
           now_epoch="$(date -u +%s)"
           age_seconds=$((now_epoch - created_epoch))
           age_minutes=$((age_seconds / 60))
+          started_at="$(jq -r '.run_started_at // empty' <<< "$latest")"
+          if [[ -n "$started_at" ]]; then
+            started_epoch="$(jq -r '.run_started_at | fromdateiso8601' <<< "$latest")"
+          else
+            # A queued run has not acquired a runner yet; measure its wait up to now.
+            started_epoch="$now_epoch"
+          fi
+          queue_seconds=$((started_epoch - created_epoch))
+          queue_minutes=$((queue_seconds / 60))
 
           if (( age_seconds < 0 )); then
             echo "::error::GitHub returned a future timestamp for scheduled reconcile run #${run_id}: ${created_at}"
             exit 1
+          fi
+          if (( queue_seconds < 0 )); then
+            echo "::error::GitHub returned a run_started_at earlier than created_at for scheduled reconcile #${run_id}."
+            exit 1
+          fi
+          if (( queue_minutes > MAX_QUEUE_MINUTES )); then
+            if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+              echo "::warning::Read-only API smoke succeeded; latest scheduled reconcile runner queue delay exceeds ${MAX_QUEUE_MINUTES}m."
+              echo "::warning::Latest run #${run_id}: queue_wait=${queue_minutes}m status=${status}."
+              echo "::warning::Run evidence: ${run_url}"
+            else
+              echo "::error::Scheduled reconcile #${run_id} waited ${queue_minutes}m for a runner."
+              echo "::error::Queue budget=${MAX_QUEUE_MINUTES}m; status=${status}."
+              echo "::error::created_at=${created_at}, run_started_at=${started_at:-not-started}."
+              echo "::error::Run evidence: ${run_url}"
+              exit 1
+            fi
           fi
           if (( age_minutes > MAX_AGE_MINUTES )); then
             if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
@@ -102,5 +129,47 @@ jobs:
           fi
 
           echo "Scheduled reconcile freshness passed for run #${run_id}."
-          echo "age=${age_minutes}m status=${status} conclusion=${conclusion}."
+          echo "age=${age_minutes}m queue_wait=${queue_minutes}m status=${status} conclusion=${conclusion}."
           echo "Run evidence: ${run_url}"
+
+      - name: Report latest scheduled inspection runner queue delay
+        shell: bash
+        run: |
+          set -euo pipefail
+          response="$(gh api \
+            -X GET \
+            -H "Accept: application/vnd.github+json" \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs" \
+            -f event=schedule \
+            -F per_page=1)"
+          latest="$(jq -c '.workflow_runs | sort_by(.created_at) | last // empty' <<< "$response")"
+          if [[ -z "$latest" ]]; then
+            echo "::warning::No scheduled inspect-vps run is available for runner queue diagnostics."
+            exit 0
+          fi
+
+          created_at="$(jq -r '.created_at' <<< "$latest")"
+          created_epoch="$(jq -r '.created_at | fromdateiso8601' <<< "$latest")"
+          started_at="$(jq -r '.run_started_at // empty' <<< "$latest")"
+          now_epoch="$(date -u +%s)"
+          if [[ -n "$started_at" ]]; then
+            started_epoch="$(jq -r '.run_started_at | fromdateiso8601' <<< "$latest")"
+          else
+            started_epoch="$now_epoch"
+          fi
+          queue_seconds=$((started_epoch - created_epoch))
+          queue_minutes=$((queue_seconds / 60))
+          run_id="$(jq -r '.id' <<< "$latest")"
+          run_url="$(jq -r '.html_url' <<< "$latest")"
+          status="$(jq -r '.status' <<< "$latest")"
+
+          if (( queue_seconds < 0 )); then
+            echo "::warning::Inspection run #${run_id} has an invalid negative queue duration."
+            exit 0
+          fi
+          echo "Latest scheduled inspect-vps run #${run_id}: queue_wait=${queue_minutes}m status=${status}."
+          echo "created_at=${created_at} started_at=${started_at:-not-started}."
+          if (( queue_minutes > MAX_QUEUE_MINUTES )); then
+            echo "::warning::Self-hosted inspection runner queue delay exceeds ${MAX_QUEUE_MINUTES}m."
+            echo "::warning::Run evidence: ${run_url}"
+          fi
