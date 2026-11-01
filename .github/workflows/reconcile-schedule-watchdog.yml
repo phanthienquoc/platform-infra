@@ -101,10 +101,16 @@ jobs:
             exit 1
           fi
           if (( queue_minutes > MAX_QUEUE_MINUTES )); then
-            echo "::error::Scheduled reconcile #${run_id} waited ${queue_minutes}m for a runner, exceeding the ${MAX_QUEUE_MINUTES}m queue budget."
-            echo "::error::created_at=${created_at}, run_started_at=${started_at:-not-started}, status=${status}."
-            echo "::error::Run evidence: ${run_url}"
-            exit 1
+            if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+              echo "::warning::Read-only API smoke succeeded; latest scheduled reconcile runner queue delay exceeds ${MAX_QUEUE_MINUTES}m."
+              echo "::warning::Latest run #${run_id}: queue_wait=${queue_minutes}m status=${status}."
+              echo "::warning::Run evidence: ${run_url}"
+            else
+              echo "::error::Scheduled reconcile #${run_id} waited ${queue_minutes}m for a runner, exceeding the ${MAX_QUEUE_MINUTES}m queue budget."
+              echo "::error::created_at=${created_at}, run_started_at=${started_at:-not-started}, status=${status}."
+              echo "::error::Run evidence: ${run_url}"
+              exit 1
+            fi
           fi
           if (( age_minutes > MAX_AGE_MINUTES )); then
             if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
