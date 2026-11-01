@@ -359,16 +359,16 @@ for repository in (
 
 
 # Auth shutdown must be an isolated, allowlisted maintenance operation.
-if "rollout-status-v12-scoped-image-pull-restart" not in bootstrap_script:
-    fail("Runner bootstrap must publish the versioned scoped image-pull restart policy.")
+if "rollout-status-v13-scoped-image-pull-restart-cooldown" not in bootstrap_script:
+    fail("Runner bootstrap must publish the versioned cooldown-aware scoped image-pull restart policy.")
 if '  scale)' not in bootstrap_script or 'scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform' not in bootstrap_script:
     fail("Runner bootstrap must allow only the exact Auth/Keycloak scale-to-zero command.")
 
-if "rollout-status-v12-scoped-image-pull-restart" not in reconcile:
-    fail("Production reconciliation must require the v12 scoped image-pull restart runner policy.")
+if "rollout-status-v13-scoped-image-pull-restart-cooldown" not in reconcile:
+    fail("Production reconciliation must require the v13 cooldown-aware scoped image-pull restart runner policy.")
 auth_provision = read("provision-auth-runtime-secret.yml")
-if "rollout-status-v12-scoped-image-pull-restart" not in auth_provision:
-    fail("Standalone Auth secret provisioning must accept the current v12 runner policy.")
+if "rollout-status-v13-scoped-image-pull-restart-cooldown" not in auth_provision:
+    fail("Standalone Auth secret provisioning must accept the current v13 cooldown-aware runner policy.")
 
 restart_step = reconcile.split("- name: Restart target workloads blocked on image pulls", 1)[1].split(
     "- name: Validate TCE release pairing", 1
@@ -387,6 +387,12 @@ if "local selector" not in restart_block or "matchLabels" not in restart_block:
     fail("Runner image-pull recovery must inspect only pods selected by each target Deployment.")
 if 'rollout restart "deployment/$deployment"' not in restart_block:
     fail("Runner image-pull recovery must restart only the Deployment with a blocked image pull.")
+if "local restart_cooldown_seconds=1800" not in restart_block:
+    fail("Runner image-pull recovery must enforce a 30-minute restart cooldown.")
+if "creationTimestamp" not in restart_block or "fromdateiso8601" not in restart_block:
+    fail("Runner image-pull recovery must base its cooldown on the newest selected pod creation time.")
+if "pod_age_seconds < restart_cooldown_seconds" not in restart_block:
+    fail("Runner image-pull recovery must skip repeated restarts while a selected pod is recent.")
 for required_target in (
     "microfe)","auth-service)","tce-dashboard)","stockdividend)","media-generation)","all)",
 ):
