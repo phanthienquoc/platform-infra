@@ -511,6 +511,8 @@ for required in (
     "-f target_app=all",
     "gh workflow run inspect-vps.yml",
     ".updated_at // .run_started_at // .created_at",
+    ".run_started_at // .created_at",
+    "sort_by(.updated_at // .run_started_at // .created_at)",
     "steps.reconcile.outputs.busy != 'true'",
 ):
     if required not in recovery:
