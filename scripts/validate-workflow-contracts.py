@@ -557,6 +557,11 @@ if 'MAX_QUEUE_MINUTES: "15"' not in watchdog or "run_started_at" not in watchdog
     fail("The watchdog must measure scheduled reconciliation runner queue delay and enforce a 15-minute queue budget.")
 if "inspect-vps.yml/runs" not in watchdog or "Report latest scheduled inspection runner queue delay" not in watchdog:
     fail("The watchdog must report inspection runner queue delay to distinguish runner backlog from missing schedule events.")
+inspection_queue_step = watchdog.find("name: Report latest scheduled inspection runner queue delay")
+if inspection_queue_step < 0 or "if: always()" not in watchdog[inspection_queue_step:]:
+    fail("Inspection queue diagnostics must run even when the reconciliation freshness step fails.")
+if 'WATCHDOG_REFERENCE_EPOCH:-' not in watchdog or 'actions/runs/${GITHUB_RUN_ID}' not in watchdog[inspection_queue_step:]:
+    fail("Inspection queue diagnostics must fetch an API-clock reference when the freshness step exits early.")
 
 
 # Watchdog freshness and queue calculations must compare timestamps from the
