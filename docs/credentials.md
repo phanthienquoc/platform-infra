@@ -7,10 +7,11 @@ This file documents credential purpose and safe selection only. **Never store se
 ## GitOps promotion and GHCR credentials are separate
 
 - `GHCR_READ_TOKEN` is a registry credential used by `gitops-image-promotion.yml` and `reconcile-vps.yml` to authenticate to GHCR and pull/read private container packages. Its documented minimum scope is `read:packages`, with package access to every production image and the correct `GHCR_USERNAME`.
-- Platform Infra GitOps promotion uses the workflow-scoped `GITHUB_TOKEN` with explicit `actions: write`, `contents: write`, `pull-requests: write`, and `packages: read` permissions. It creates the promotion PR, explicitly dispatches `validate-manifests.yml` on the PR branch, waits for a successful run tied to the exact head SHA, rechecks the open PR/head/base, then squash-merges with an exact-head guard.
+- Platform Infra GitOps promotion uses the workflow-scoped `GITHUB_TOKEN` with explicit `actions: write`, `contents: write`, and `pull-requests: write` permissions. It does **not** need `packages` permission: private registry reads use `GHCR_READ_TOKEN` through package-scoped Registry V2 preflight. It creates the promotion PR, explicitly dispatches `validate-manifests.yml` on the PR branch, waits for a successful run tied to the exact head SHA, rechecks the open PR/head/base, then squash-merges with an exact-head guard.
 - GitHub suppresses most workflow runs caused by a `GITHUB_TOKEN`-created PR. The explicit `workflow_dispatch` validation is therefore mandatory; never replace it with an assumption that a PR check will start automatically.
 - `GHCR_READ_TOKEN` cannot replace `GITHUB_TOKEN`: the former grants package reads only, while the latter receives repository/action permissions from the workflow. Do not use the GHCR token as a GitOps write credential or add a PAT fallback.
 - `PLATFORM_INFRA_AUTOMATION_TOKEN` is no longer referenced by the active promotion workflow. Do not configure a new PAT for this path; existing unused secrets need not be rotated or deleted by this change.
+- `Platform-infra-token` is referenced by `.github/workflows/mirror-locally-uncensored.yml` to push refs/history to `phanthienquoc/locally-uncensored-private`. The latest scheduled run observed this secret resolving empty; configure it only with the target repository's required `Contents: write` access. Do not substitute `GHCR_READ_TOKEN` or an application release-handoff token without independently verifying its scope.
 
 ## Cross-repository application handoff credentials
 
