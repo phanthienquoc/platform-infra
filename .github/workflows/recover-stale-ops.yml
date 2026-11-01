@@ -14,8 +14,7 @@ run-name: Recover Stale Scheduled Ops — ${{ github.event_name }}
       - "apps/**"
       - "platform/**"
       - "environments/prod/**"
-      - "scripts/reconcile-vps.sh"
-      - "scripts/inspect-vps.sh"
+      - "scripts/**"
   workflow_dispatch:
   workflow_run:
     workflows: ["reconcile-vps", "inspect-vps"]
