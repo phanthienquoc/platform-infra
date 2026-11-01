@@ -263,7 +263,7 @@ if "contains embedded whitespace or quotes" not in ghcr_probe:
 # GHCR pulls use one platform-owned credential across production namespaces.
 bootstrap_script = (ROOT / "scripts" / "bootstrap-runner.sh").read_text(encoding="utf-8")
 ghcr_step = reconcile.split("- name: Bootstrap GHCR pull credentials", 1)[1].split(
-    "- name: Restart workloads blocked on image pulls", 1
+    "- name: Restart target workloads blocked on image pulls", 1
 )[0]
 if "${{ secrets.GHCR_READ_TOKEN }}" not in ghcr_step:
     fail("reconcile-vps.yml must use the canonical GHCR_READ_TOKEN secret.")
@@ -427,7 +427,7 @@ if 'scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-pl
 for step_name in (
     "Validate GHCR pull access before mutating cluster credentials",
     "Bootstrap GHCR pull credentials",
-    "Restart workloads blocked on image pulls",
+    "Restart target workloads blocked on image pulls",
 ):
     start = reconcile.find(f"- name: {step_name}")
     if start < 0:
