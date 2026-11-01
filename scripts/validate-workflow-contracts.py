@@ -532,10 +532,10 @@ if "validate-image-change-contract.py --self-test" not in actions_validation:
 # scheduled/manual/fallback invocations must continue to fail closed on stale data.
 if '  push:\n    branches: [master]\n    paths:\n      - ".github/workflows/reconcile-schedule-watchdog.yml"' not in watchdog:
     fail("The watchdog must run a path-scoped post-merge API smoke check on master.")
-if watchdog.count('if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then') != 2:
-    fail("Only the watchdog's empty-history and stale-history guards may be warn-only for push smoke runs.")
+if watchdog.count('if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then') != 3:
+    fail("Only the watchdog's empty-history, queue-delay, and stale-history guards may be warn-only for push smoke runs.")
 if '::warning::Read-only API smoke succeeded' not in watchdog:
-    fail("The watchdog push smoke must clearly label stale/missing schedule data as a warning, not health success.")
+    fail("The watchdog push smoke must clearly label stale/missing schedule or queue data as a warning, not health success.")
 if '::error::No scheduled reconcile-vps run within ${MAX_AGE_MINUTES} minutes.' not in watchdog:
     fail("Scheduled/manual watchdog runs must still fail closed when reconciliation history is stale.")
 
