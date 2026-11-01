@@ -55,7 +55,7 @@ jobs:
             exit 1
           }
 
-          runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" -F branch=master -F per_page=100)"
+          runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" -F branch=master -F per_page=100)"
           latest="$(jq -c '.workflow_runs | sort_by(.updated_at // .run_started_at // .created_at) | last // empty' <<< "$runs")"
           if [[ -z "$latest" ]]; then
             age_seconds=$((MAX_RECONCILE_AGE_MINUTES * 60 + 1))
@@ -95,7 +95,7 @@ jobs:
 
           dispatched_run=""
           for attempt in $(seq 1 6); do
-            response="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" -f event=workflow_dispatch -F branch=master -F per_page=100)"
+            response="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" -f event=workflow_dispatch -F branch=master -F per_page=100)"
             dispatched_run="$(jq -c --arg started "$REFERENCE_AT" \
               '[.workflow_runs[] | select(.event == "workflow_dispatch" and .head_branch == "master" and .created_at >= $started)] | sort_by(.created_at) | last // empty' \
               <<< "$response")"
@@ -126,7 +126,7 @@ jobs:
             exit 1
           }
 
-          runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs" -F branch=master -F per_page=100)"
+          runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs" -F branch=master -F per_page=100)"
           latest="$(jq -c '.workflow_runs | sort_by(.updated_at // .run_started_at // .created_at) | last // empty' <<< "$runs")"
           if [[ -z "$latest" ]]; then
             age_seconds=$((MAX_INSPECTION_AGE_MINUTES * 60 + 1))
@@ -158,7 +158,7 @@ jobs:
 
           dispatched_run=""
           for attempt in $(seq 1 6); do
-            response="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs" -f event=workflow_dispatch -F branch=master -F per_page=20)"
+            response="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs" -f event=workflow_dispatch -F branch=master -F per_page=20)"
             dispatched_run="$(jq -c --arg started "$REFERENCE_AT" \
               '[.workflow_runs[] | select(.event == "workflow_dispatch" and .head_branch == "master" and .created_at >= $started)] | sort_by(.created_at) | last // empty' \
               <<< "$response")"
