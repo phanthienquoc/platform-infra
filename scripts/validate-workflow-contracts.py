@@ -24,6 +24,10 @@ reconcile = read("reconcile-vps.yml")
 promotion = read("gitops-image-promotion.yml")
 recovery = read("recover-stale-ops.yml")
 inspection = read("inspect-vps.yml")
+if 'workflows: ["reconcile-vps"]' not in recovery or "types: [completed]" not in recovery:
+    fail("Recovery controller must recheck stale inspection delivery after reconcile-vps completes.")
+if "github.event.workflow_run.head_branch == 'master'" not in recovery:
+    fail("Recovery controller must ignore non-master reconcile completion events.")
 guard_reconcile = (ROOT / "scripts" / "guard-reconcile-images.sh").read_text(encoding="utf-8")
 github_actions = read("validate-github-actions.yml")
 inspection_script = (ROOT / "scripts" / "inspect-vps.sh").read_text(encoding="utf-8")

@@ -5,6 +5,9 @@ run-name: Recover Stale Scheduled Ops — ${{ github.event_name }}
   schedule:
     - cron: "10,25,40,55 * * * *"
   workflow_dispatch:
+  workflow_run:
+    workflows: ["reconcile-vps"]
+    types: [completed]
 
 permissions:
   actions: write
@@ -16,7 +19,10 @@ concurrency:
 
 jobs:
   recover:
-    if: ${{ github.ref == 'refs/heads/master' }}
+    if: >-
+      ${{ github.ref == 'refs/heads/master' &&
+          (github.event_name != 'workflow_run' ||
+           github.event.workflow_run.head_branch == 'master') }}
     runs-on: ubuntu-latest
     timeout-minutes: 6
     env:
