@@ -23,8 +23,18 @@ def fail(message: str) -> None:
 reconcile = read("reconcile-vps.yml")
 promotion = read("gitops-image-promotion.yml")
 inspection = read("inspect-vps.yml")
+guard_reconcile = (ROOT / "scripts" / "guard-reconcile-images.sh").read_text(encoding="utf-8")
+github_actions = read("validate-github-actions.yml")
 inspection_script = (ROOT / "scripts" / "inspect-vps.sh").read_text(encoding="utf-8")
 manifest_validation = read("validate-manifests.yml")
+
+# The image guard must detect YAML image fields regardless of indentation and test the parser offline.
+if "grep -E '^-[[:space:]]+image:" not in guard_reconcile:
+    fail("Image guard must detect removed container image fields at any YAML indentation.")
+if "{10,}image:" in guard_reconcile:
+    fail("Image guard must not use the old over-restrictive indentation threshold.")
+if "bash scripts/guard-reconcile-images.sh --self-test" not in github_actions:
+    fail("GitHub Actions validation must execute the image guard parser regression test.")
 
 # VPS inspection must capture runtime container imageIDs, including init containers.
 for required in ("### Pod imageID evidence", "containerStatuses", "initContainerStatuses", ".status.imageID"):

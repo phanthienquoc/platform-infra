@@ -65,6 +65,7 @@ jobs:
           bash scripts/tests/verify-workload-health.test.sh
           bash scripts/tests/validate-ghcr-pull-access.test.sh
           bash scripts/tests/validate-ghcr-image-reference.test.sh
+          bash scripts/guard-reconcile-images.sh --self-test
 
       - name: Test path-scoped push deployment resolution
         run: bash scripts/resolve-push-deployment-scope.sh --self-test

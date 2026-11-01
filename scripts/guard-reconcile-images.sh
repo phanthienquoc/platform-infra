@@ -1,18 +1,48 @@
 #!/usr/bin/env bash
 # Media migration guard: preserve immutable image replacement protection.
 # Only match actual container image fields; ignore image strings inside annotations such as last-applied-configuration.
-# Only match actual container image fields; ignore image strings inside annotations such as last-applied-configuration.
 set -euo pipefail
 
 MODE="${1:-check}"
 ROOT="${GITHUB_WORKSPACE:-$(pwd)}"
 cd "$ROOT"
 
+
+extract_removed_image_lines() {
+  grep -E '^-[[:space:]]+image:[[:space:]]+' || true
+}
+
+self_test() {
+  local fixture removed_images actual_count
+  fixture="$(cat <<'EOF'
+-        image: ghcr.io/example/app:old
+-            image: ghcr.io/example/init:old
+-        {"last-applied-configuration":"image: ghcr.io/example/app:old"}
++        image: ghcr.io/example/app@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+EOF
+)"
+  removed_images="$(printf "%s\n" "$fixture" | extract_removed_image_lines)"
+  actual_count="$(printf "%s\n" "$removed_images" | grep -c '^-' || true)"
+  [[ "$actual_count" -eq 2 ]] || {
+    echo "Expected two removed YAML image fields, detected $actual_count." >&2
+    return 1
+  }
+  if grep -q 'last-applied-configuration' <<<"$removed_images"; then
+    echo "The image guard must ignore serialized annotations." >&2
+    return 1
+  fi
+  echo "Reconcile image guard parser tests passed."
+}
+
 case "$MODE" in
   check)
     ;;
+  --self-test)
+    self_test
+    exit 0
+    ;;
   *)
-    echo "Usage: $0 check" >&2
+    echo "Usage: $0 check | --self-test" >&2
     exit 2
     ;;
 esac
@@ -35,17 +65,17 @@ if [[ "$rc" -eq 0 ]]; then
   exit 0
 fi
 
-removed_images="$(grep -E '^-[[:space:]]{10,}image:' "$diff_output" || true)"
+removed_images="$(extract_removed_image_lines < "$diff_output")"
 
 if [[ -n "$removed_images" ]]; then
   legacy_media_image="$(printf '%s\n' "$removed_images" | grep -E '^-[[:space:]]+image:[[:space:]]+ghcr\.io/phanthienquoc/media-generation:[0-9a-f]{7,64}$' || true)"
-  desired_media_images="$(kubectl kustomize environments/prod 2>/dev/null | grep -E '^[[:space:]]+image:[[:space:]]+ghcr\.io/phanthienquoc/media-generation/(backend|frontend):[0-9a-f]{7,64}$' || true)"
+  desired_media_images="$(kubectl kustomize environments/prod 2>/dev/null | grep -E '^[[:space:]]+image:[[:space:]]+ghcr\.io/phanthienquoc/media-generation/(backend|frontend)(:[0-9a-f]{7,64}|@sha256:[0-9a-f]{64})$' || true)"
   legacy_debug_image="$(printf '%s\n' "$removed_images" | grep -F -- '-            image: rancher/kubectl:v1.36.3' || true)"
   desired_debug_image="$(kubectl kustomize environments/prod 2>/dev/null | grep -F -- 'image: rancher/kubectl:v1.36.2' || true)"
 
   if [[ -n "$legacy_media_image" ]] &&
-     grep -q 'ghcr\.io/phanthienquoc/media-generation-backend:' <<<"$desired_media_images" &&
-     grep -q 'ghcr\.io/phanthienquoc/media-generation-frontend:' <<<"$desired_media_images"; then
+     grep -q 'ghcr\.io/phanthienquoc/media-generation/backend' <<<"$desired_media_images" &&
+     grep -q 'ghcr\.io/phanthienquoc/media-generation/frontend' <<<"$desired_media_images"; then
     echo "Allowing the intentional media-generation monolith -> backend/frontend image migration."
   elif [[ -n "$legacy_debug_image" && -n "$desired_debug_image" ]]; then
     echo "Allowing the intentional k3s-debug collector image update v1.36.3 -> v1.36.2."
