@@ -126,8 +126,8 @@ jobs:
             exit 1
           }
 
-          runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs" -F branch=master -F per_page=20)"
-          latest="$(jq -c '.workflow_runs | sort_by(.created_at) | last // empty' <<< "$runs")"
+          runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs" -F branch=master -F per_page=100)"
+          latest="$(jq -c '.workflow_runs | sort_by(.updated_at // .run_started_at // .created_at) | last // empty' <<< "$runs")"
           if [[ -z "$latest" ]]; then
             age_seconds=$((MAX_INSPECTION_AGE_MINUTES * 60 + 1))
             latest_id="none"
