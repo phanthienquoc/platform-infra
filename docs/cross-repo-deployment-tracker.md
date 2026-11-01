@@ -714,3 +714,67 @@ Disposition meanings:
 - TCE PR #1007 remains merged at `7a9c6310b8da6ecf5d7e95b54f3df6365165bffd`; exact-head WF-02 #41287338443 and WF-05 #41287338448 passed. Post-merge WF-12 push smoke #41287452389 passed and measured WF-06 scheduled run #41287060151 at age=5m, queue=0m. WF-06 itself still failed its public endpoints with HTTP 503 because TCE/Auth remain intentionally stopped; schedule delivery and application health are separate signals. WF-01 image build [#41287452305](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41287452305) completed SUCCESS at 09:09:35Z; WF-02/WF-05/WF-12 post-merge runs passed.
 - StockDividend weekend scraper [#41284033242](https://github.com/phanthienquoc/stockdividend/actions/runs/41284033242) remains in progress at the scraper step; no final conclusion/log artifact is available, so do not cancel or label it failed. The three verified ARM64 image digests remain published, but production promotion is disabled. Latest runtime snapshot remains #41275351280 (05:02:36Z), with StockDividend old-image pull failures, Media/MicroFE healthy, and TCE/Auth/Keycloak at 0/0. Supabase's latest successful read-only SQL probe recorded in the tracker remains 07:03:53Z; no new probe or fresh K3s inspection was performed in this review.
 - No production manifests, credentials, release flags, database objects, desired replicas, or workloads changed. No workflow dispatch was sent because the connected GitHub action surface has no Actions dispatch operation. TCE market-scan schedule unchanged. Production remains **NOT HEALTHY/UNVERIFIED**.
+
+
+## Deployment review — 2026-11-01 (rerun-safe watchdogs and fresh health recheck)
+
+### Merged implementation
+
+- **Platform Infra PR #965** merged as `a54a35a`: the read-only schedule watchdog now verifies `inspect-vps.yml` is active and enforces a 75-minute freshness budget for its 30-minute schedule. It uses the current watchdog run's GitHub Actions API timestamp, and push smoke remains warning-only.
+- **Platform Infra PR #966** merged as `b05f775`: reconciliation and inspection queue telemetry now reads `run_attempt`. For rerun attempts greater than 1, queue duration is marked not measurable because GitHub retains the original `created_at` but updates `run_started_at`. Schedule freshness still uses the original scheduled event timestamp.
+- **TCE Dashboard PR #1008** merged as `49fe584`: WF-12 uses the same rerun-aware queue rule for WF-06. WF-06 remains on `*/15 * * * *`; WF-12 remains on `7,22,37,52 * * * *`. No market-scan schedule was changed.
+
+Exact-head and post-merge evidence:
+- Platform #965: PR lint [#41291490052](https://github.com/phanthienquoc/platform-infra/actions/runs/41291490052) and manifest validation [#41291490020](https://github.com/phanthienquoc/platform-infra/actions/runs/41291490020) succeeded; post-merge lint [#41291542999](https://github.com/phanthienquoc/platform-infra/actions/runs/41291542999), manifests [#41291542950](https://github.com/phanthienquoc/platform-infra/actions/runs/41291542950), and push smoke [#41291542883](https://github.com/phanthienquoc/platform-infra/actions/runs/41291542883) succeeded.
+- Platform #966: exact-head lint [#41291827481](https://github.com/phanthienquoc/platform-infra/actions/runs/41291827481) and manifests [#41291827384](https://github.com/phanthienquoc/platform-infra/actions/runs/41291827384) succeeded; post-merge lint [#41291879616](https://github.com/phanthienquoc/platform-infra/actions/runs/41291879616), manifests [#41291879597](https://github.com/phanthienquoc/platform-infra/actions/runs/41291879597), and watchdog push smoke [#41291879618](https://github.com/phanthienquoc/platform-infra/actions/runs/41291879618) succeeded.
+- TCE #1008: exact-head WF-02 [#41291734078](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41291734078) and WF-05 [#41291734067](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41291734067) succeeded. Post-merge WF-02 [#41291809188](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41291809188), WF-05 [#41291809106](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41291809106), and WF-12 push smoke [#41291809063](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41291809063) succeeded. WF-01 build [#41291809038](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41291809038) was still in progress at the last check.
+
+### Schedule delivery status
+
+The post-merge Platform watchdog smoke [#41291879618](https://github.com/phanthienquoc/platform-infra/actions/runs/41291879618) confirmed both workflows are active but their scheduled histories are stale:
+- Latest scheduled reconciliation #41260761381: original `created_at=2026-11-01T01:21:35Z`, age 468 minutes at the smoke. It is rerun attempt 2; queue duration is correctly reported as not measurable, not 468 minutes. Reconciliation freshness remains failed.
+- Latest scheduled inspection #41264393955: original `created_at=2026-11-01T02:15:04Z`, age 414 minutes at the smoke. It is also rerun attempt 2; queue duration is not measurable. Inspection freshness remains failed.
+- The push smoke is warning-only and succeeded; it does not prove scheduled delivery has recovered.
+
+The original inspection attempt had reported a 106-minute queue delay. That historical measurement remains recorded, but a rerun's updated `run_started_at` must not be subtracted from the original `created_at`.
+
+### Fresh K3s health evidence
+
+Failed health-only jobs from scheduled reconciliation #41260761381 were re-run as attempt 2. The shared reconciliation job succeeded and production apply remained skipped; the rerun refreshed read-only workload health:
+- MicroFE Shell/WS: health gate SUCCESS.
+- Media backend/frontend: health gate SUCCESS.
+- TCE Dashboard: intentionally scaled to zero; accepted as the declared maintenance state, not application health.
+- Auth service: intentionally scaled to zero; Keycloak lane skipped. This is not evidence that SSO is serving traffic.
+- StockDividend: health gate FAILURE. Admin pods and the new backend pod still use `12d63b4`; GHCR reports no matching ARM64 platform manifest. Frontend remains on the old `23b2878` replica with `updated=0`.
+- Deployment summary/final gate: FAILURE because StockDividend remains unhealthy.
+
+This was a health-only rerun; it did not publish images, change manifests, or apply production workloads.
+
+### Supabase and application publication
+
+- Supabase project `gtqovpusfyyvxpeezxlo` remained `ACTIVE_HEALTHY`. Read-only SQL probe at 09:09:08Z succeeded. Logs for 09:00–09:08Z contained 47 edge events and 3 PostgREST events, with 0 HTTP 522 in that window. Continue monitoring; this is an observed recovery window, not a long-term stability guarantee.
+- StockDividend publisher [#41273202844](https://github.com/phanthienquoc/stockdividend/actions/runs/41273202844) verified all three immutable ARM64 digests: scraper `69bbe0d160a80490fc92c73d77c9a657ffd853a29beb0972a615c10a710f4179`, admin `cdf2e9328b17bcbabc118591d3c179709f51753047d400bb524bc18d2d39053c`, backend `d188e5c4ae0bf4c882a560c0640a96f5497bc9623b863f1fea181dc6b3c974f3`.
+- The StockDividend production release flag remains `false`; the atomic digest dispatch payload is statically aligned with the Platform consumer, but no dispatch or promotion was executed.
+- Weekend scraper [#41284033242](https://github.com/phanthienquoc/stockdividend/actions/runs/41284033242) remained in progress. Its price-sync queue can be long-running; no failure evidence justified cancelling or removing this purposeful data job.
+
+### Repository heads and open PR inventory
+
+| Repository | Verified head | Open PRs |
+|---|---|---|
+| platform-infra | `b05f77510e44d71dc1730970adb1ef7221bc6e35` | #795, #749, #741, #648, #544, #541, #539, #538 |
+| TCE-dashboard | `49fe5841cce460df2a7be6d8846b34a57b6be152` | none |
+| stockdividend | `a6f55ee2e511ab5910c825e56803bd82fe9a0f62` | none |
+| media-generation | `d8e695d772ab2dc0da5c15cc428ee78ac6537518` | none |
+| phanthienquoc-authentication | `ceb2688d6277b10f1bfe7652223d1d295b7e49d9` | #76, #75 |
+
+Authentication PRs #75/#76 remain open because environment/project binding and migration safety are not yet independently resolved. Historical Auth CI/release success does not establish live SSO health.
+
+### Next actions
+
+1. Restore scheduled delivery for Platform reconciliation and inspection; both workflows are active, but their scheduled histories are stale. Verify multiple scheduled intervals before declaring recovery.
+2. Obtain a fresh K3s inspection after the watchdog changes.
+3. Keep StockDividend release hold until explicit authorization; then promote the paired Admin/Backend digest and the frontend digest through Platform Infra and verify runtime imageIDs.
+4. Keep TCE and Auth/Keycloak at the operator-requested zero replicas.
+5. Continue Supabase SQL/REST observation over longer windows.
+
+No production manifests, secrets, credentials, database objects, or K3s desired replicas were changed in this review. TCE market-scan schedule is unchanged.
