@@ -5,6 +5,7 @@ resources:
 - public-certificate.yaml
 - namespace.yaml
 - event-bus.yaml
+- ingress.yaml
 - shell
 - ws-gateway/deployment.yaml
 
