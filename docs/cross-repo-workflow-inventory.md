@@ -1,3 +1,12 @@
+## Cross-repository schedule heartbeat contract (2026-11-02)
+
+- TCE Dashboard WF-12 is the external schedule heartbeat producer. It emits `repository_dispatch: tce-schedule-heartbeat` only for its own scheduled run or a `workflow_run` completion whose source event is `schedule` and whose workflow path is WF-06 or WF-07.
+- The producer uses the existing `PLATFORM_INFRA_TOKEN` already documented for TCE-to-Platform repository dispatch; no new token or GITHUB_TOKEN write permission is introduced in TCE.
+- Platform Infra `recover-stale-ops.yml` accepts the event only from `phanthienquoc/TCE-dashboard`, `source_event=schedule`, and the exact allowlisted WF-06/WF-07/WF-12 workflow paths. It validates numeric run IDs and full 40-character source/heartbeat SHAs.
+- The event carries no app, image, release, mode, or target-scope inputs. The receiver uses only its own freshness API checks and the existing workflow dispatch authority: `reconcile-vps.yml` with `allow_image_changes=false`, or read-only `inspect-vps.yml`.
+- This is a recovery signal, not a deployment authority. TCE does not perform SSH, kubectl, Compose, production manifest apply, or image promotion.
+- Runtime status: implementation is under PR validation; do not mark the cross-repo heartbeat operational until a scheduled TCE run is correlated to a Platform repository_dispatch and recovery run.
+
 ## Latest automation review (2026-11-02 02:03 ICT / 2026-11-01 19:03 UTC; TCE WF-12 correctly detected stale WF-06 delivery)
 
 This review re-inspected the five repository master refs, open PRs, latest Actions runs/checks, the deployment tracker, the newest TCE watchdog failure log, Platform schedule history, and the latest available K3s snapshot. It found no new code defect to patch safely: the TCE watchdog failure is the intended stale-schedule alert, and the Platform watchdog failure was correctly caused by an inspection that was stale at that run's timestamp. The tracker and inventory are refreshed below; no production mutation or schedule change was made.
