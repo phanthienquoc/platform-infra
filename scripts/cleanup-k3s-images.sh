@@ -89,7 +89,149 @@ resolve_pod_image_ids() {
   cut -f2 "$map_file" | sort -u > "$local_refs"
 
   : > "$output_file"
-  while IFS=
+  while IFS=  [[ "$missing_refs" -eq 0 ]] || return 3
+  sort -u -o "$output_file" "$output_file"
+}
+
+resolve_pod_image_ids "$tmp/pods.json" "$tmp/images.json" "$tmp/pod-image-ids.txt" || exit 3
+# Fail closed above if any Pod reference cannot be mapped to a local image ID.
+
+jq -r '.images[]? | select((.repoTags // []) | length > 0) |
+  [.id, ((.repoTags // []) | join(",")), (.size // 0), (.pinned // false), (.createdAt // "")] | @tsv
+' "$tmp/images.json" | sort -t $'\t' -k5,5r > "$tmp/all-images.tsv"
+
+: > "$tmp/unused.tsv"
+while IFS=$'\t' read -r id tags size pinned created; do
+  [ -n "$id" ] || continue
+  [ "$pinned" = false ] || continue
+  grep -Fxq "$id" "$tmp/container-image-ids.txt" && continue
+  grep -Fxq "$id" "$tmp/pod-image-ids.txt" && continue
+  printf '%s\t%s\t%s\t%s\t%s\n' "$id" "$tags" "$size" "$pinned" "$created" >> "$tmp/unused.tsv"
+done < "$tmp/all-images.tsv"
+
+count="$(wc -l < "$tmp/unused.tsv" | tr -d ' ')"
+remove_count=$((count > KEEP_UNUSED_IMAGES ? count - KEEP_UNUSED_IMAGES : 0))
+echo "unused_images=$count retain=$KEEP_UNUSED_IMAGES remove=$remove_count dry_run=$DRY_RUN"
+head -n "$remove_count" "$tmp/unused.tsv" | while IFS=$'\t' read -r id tags size pinned created; do
+  printf 'candidate id=%s tags=%s size_bytes=%s created=%s\n' "$id" "$tags" "$size" "$created"
+done
+[ "$remove_count" -gt 0 ] || exit 0
+[ "$DRY_RUN" = true ] && { echo "DRY RUN: no images removed."; exit 0; }
+
+# Re-check Pod refs and all containers immediately before each deletion.
+head -n "$remove_count" "$tmp/unused.tsv" | while IFS=$'\t' read -r id tags size pinned created; do
+  [ -n "$id" ] || continue
+  sudo "$KCTL" get pods -A -o json | tee "$tmp/pods-current.json" >/dev/null
+  sudo "$CRI" ps | tee "$tmp/containers-current.json" >/dev/null
+  sudo "$CRI" images | tee "$tmp/images-current.json" >/dev/null
+  grep -Fxq "$id" <(jq -r '.containers[]? | .imageRef // empty' "$tmp/containers-current.json") && {
+    echo "Skip image still referenced by container: $id"; continue;
+  }
+  resolve_pod_image_ids "$tmp/pods-current.json" "$tmp/images-current.json" "$tmp/pod-image-ids-current.txt" || {
+    echo "Current Pod image references could not be resolved; aborting cleanup." >&2
+    exit 3
+  }
+  grep -Fxq "$id" "$tmp/pod-image-ids-current.txt" && {
+    echo "Skip image still referenced by current Pod: $id"; continue;
+  }
+  echo "Removing unused K3s image: $id ($tags)"
+  sudo "$CRI" rmi "$id"
+done
+echo "K3s/containerd unused-image cleanup completed."
+\\t' read -r phase ref; do
+    [[ -n "$ref" ]] || continue
+    normalized="$(canonical_image_ref "$ref")"
+    if ! grep -Fxq "$normalized" "$local_refs"; then
+      case "$phase" in
+        Succeeded|Failed)
+          # Terminal Pods may retain their original spec after containerd has
+          # garbage-collected the image. Existing CRI containers are protected
+          # separately through container-image-ids.txt, including exited ones.
+          echo "Ignoring unresolved image reference for terminal Pod phase=$phase; no local CRI image matched: $ref (normalized=$normalized)" >&2
+          continue
+          ;;
+        *)
+          echo "Cannot resolve non-terminal Pod image reference; refusing cleanup: phase=$phase ref=$ref (normalized=$normalized)" >&2
+          missing_refs=1
+          continue
+          ;;
+      esac
+    fi
+    awk -F '\\t' -v ref="$normalized" '$2 == ref { print $1 }' "$map_file" >> "$output_file"
+  done < "$refs_file"
+
+  rm -f "$refs_file" "$raw_map" "$map_file" "$local_refs"
+  [[ "$missing_refs" -eq 0 ]] || return 3
+  sort -u -o "$output_file" "$output_file"
+}
+
+resolve_pod_image_ids "$tmp/pods.json" "$tmp/images.json" "$tmp/pod-image-ids.txt" || exit 3
+# Fail closed above if any Pod reference cannot be mapped to a local image ID.
+
+jq -r '.images[]? | select((.repoTags // []) | length > 0) |
+  [.id, ((.repoTags // []) | join(",")), (.size // 0), (.pinned // false), (.createdAt // "")] | @tsv
+' "$tmp/images.json" | sort -t $'\t' -k5,5r > "$tmp/all-images.tsv"
+
+: > "$tmp/unused.tsv"
+while IFS=$'\t' read -r id tags size pinned created; do
+  [ -n "$id" ] || continue
+  [ "$pinned" = false ] || continue
+  grep -Fxq "$id" "$tmp/container-image-ids.txt" && continue
+  grep -Fxq "$id" "$tmp/pod-image-ids.txt" && continue
+  printf '%s\t%s\t%s\t%s\t%s\n' "$id" "$tags" "$size" "$pinned" "$created" >> "$tmp/unused.tsv"
+done < "$tmp/all-images.tsv"
+
+count="$(wc -l < "$tmp/unused.tsv" | tr -d ' ')"
+remove_count=$((count > KEEP_UNUSED_IMAGES ? count - KEEP_UNUSED_IMAGES : 0))
+echo "unused_images=$count retain=$KEEP_UNUSED_IMAGES remove=$remove_count dry_run=$DRY_RUN"
+head -n "$remove_count" "$tmp/unused.tsv" | while IFS=$'\t' read -r id tags size pinned created; do
+  printf 'candidate id=%s tags=%s size_bytes=%s created=%s\n' "$id" "$tags" "$size" "$created"
+done
+[ "$remove_count" -gt 0 ] || exit 0
+[ "$DRY_RUN" = true ] && { echo "DRY RUN: no images removed."; exit 0; }
+
+# Re-check Pod refs and all containers immediately before each deletion.
+head -n "$remove_count" "$tmp/unused.tsv" | while IFS=$'\t' read -r id tags size pinned created; do
+  [ -n "$id" ] || continue
+  sudo "$KCTL" get pods -A -o json | tee "$tmp/pods-current.json" >/dev/null
+  sudo "$CRI" ps | tee "$tmp/containers-current.json" >/dev/null
+  sudo "$CRI" images | tee "$tmp/images-current.json" >/dev/null
+  grep -Fxq "$id" <(jq -r '.containers[]? | .imageRef // empty' "$tmp/containers-current.json") && {
+    echo "Skip image still referenced by container: $id"; continue;
+  }
+  resolve_pod_image_ids "$tmp/pods-current.json" "$tmp/images-current.json" "$tmp/pod-image-ids-current.txt" || {
+    echo "Current Pod image references could not be resolved; aborting cleanup." >&2
+    exit 3
+  }
+  grep -Fxq "$id" "$tmp/pod-image-ids-current.txt" && {
+    echo "Skip image still referenced by current Pod: $id"; continue;
+  }
+  echo "Removing unused K3s image: $id ($tags)"
+  sudo "$CRI" rmi "$id"
+done
+echo "K3s/containerd unused-image cleanup completed."
+\t' read -r phase ref; do
+    [[ -n "$ref" ]] || continue
+    normalized="$(canonical_image_ref "$ref")"
+    if ! grep -Fxq "$normalized" "$local_refs"; then
+      case "$phase" in
+        Succeeded|Failed)
+          # Terminal Pods may retain their original spec after containerd has
+          # garbage-collected the image. Existing CRI containers are protected
+          # separately through container-image-ids.txt, including exited ones.
+          echo "Ignoring unresolved image reference for terminal Pod phase=$phase; no local CRI image matched: $ref (normalized=$normalized)" >&2
+          continue
+          ;;
+        *)
+          echo "Cannot resolve non-terminal Pod image reference; refusing cleanup: phase=$phase ref=$ref (normalized=$normalized)" >&2
+          missing_refs=1
+          continue
+          ;;
+      esac
+    fi
+    awk -F '\t' -v ref="$normalized" '$2 == ref { print $1 }' "$map_file" >> "$output_file"
+  done < "$refs_file"
+
   rm -f "$refs_file" "$raw_map" "$map_file" "$local_refs"
   [[ "$missing_refs" -eq 0 ]] || return 3
   sort -u -o "$output_file" "$output_file"
