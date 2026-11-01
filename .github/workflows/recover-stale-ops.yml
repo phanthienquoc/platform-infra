@@ -55,27 +55,8 @@ jobs:
       MAX_RECONCILE_AGE_MINUTES: "20"
       MAX_INSPECTION_AGE_MINUTES: "75"
     steps:
-      - name: Resolve GitHub Actions API reference clock
-        id: clock
-        shell: bash
-        run: |
-          set -euo pipefail
-          current_run="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")"
-          reference_at="$(jq -r '.run_started_at // .created_at // empty' <<< "$current_run")"
-          reference_epoch="$(
-            jq -r 'if (.run_started_at // .created_at) then
-              ((.run_started_at // .created_at) | fromdateiso8601)
-            else empty end' <<< "$current_run"
-          )"
-          [[ -n "$reference_at" && -n "$reference_epoch" ]] || {
-            echo "::error::Unable to resolve current recovery run timestamp from the Actions API."
-            exit 1
-          }
-          echo "reference_at=$reference_at" >> "$GITHUB_OUTPUT"
-          echo "reference_epoch=$reference_epoch" >> "$GITHUB_OUTPUT"
-          echo "Recovery reference clock: $reference_at (GitHub Actions API)."
-
       - name: Verify and await source reconciliation completion
+        id: source
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.source_run_id != '' }}
         env:
           SOURCE_RUN_ID: ${{ inputs.source_run_id }}
@@ -105,7 +86,13 @@ jobs:
             fi
             if [[ "$source_status" == "completed" ]]; then
               conclusion="$(jq -r '.conclusion // "unknown"' <<< "$source_run")"
-              echo "Verified source reconciliation #$SOURCE_RUN_ID completed with conclusion=$conclusion."
+              source_completed_at="$(jq -r '.updated_at // empty' <<< "$source_run")"
+              [[ -n "$source_completed_at" ]] || {
+                echo "::error::Completed source reconciliation has no updated_at timestamp."
+                exit 1
+              }
+              echo "completed_at=$source_completed_at" >> "$GITHUB_OUTPUT"
+              echo "Verified source reconciliation #$SOURCE_RUN_ID completed with conclusion=$conclusion at $source_completed_at."
               exit 0
             fi
             echo "Waiting for source reconciliation #$SOURCE_RUN_ID to complete (attempt $attempt/12; status=$source_status)."
@@ -113,6 +100,35 @@ jobs:
           done
           echo "::error::Source reconciliation #$SOURCE_RUN_ID did not complete within 60 seconds."
           exit 1
+
+      - name: Resolve GitHub Actions API reference clock
+        id: clock
+        env:
+          SOURCE_COMPLETED_AT: ${{ steps.source.outputs.completed_at }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          current_run="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")"
+          reference_at="$(jq -r '.updated_at // .run_started_at // .created_at // empty' <<< "$current_run")"
+          reference_epoch="$(
+            jq -r 'if (.updated_at // .run_started_at // .created_at) then
+              ((.updated_at // .run_started_at // .created_at) | fromdateiso8601)
+            else empty end' <<< "$current_run"
+          )"
+          [[ -n "$reference_at" && -n "$reference_epoch" ]] || {
+            echo "::error::Unable to resolve current recovery run timestamp from the Actions API."
+            exit 1
+          }
+          if [[ -n "$SOURCE_COMPLETED_AT" ]]; then
+            source_epoch="$(jq -nr --arg timestamp "$SOURCE_COMPLETED_AT" '$timestamp | fromdateiso8601')"
+            if (( source_epoch > reference_epoch )); then
+              reference_at="$SOURCE_COMPLETED_AT"
+              reference_epoch="$source_epoch"
+            fi
+          fi
+          echo "reference_at=$reference_at" >> "$GITHUB_OUTPUT"
+          echo "reference_epoch=$reference_epoch" >> "$GITHUB_OUTPUT"
+          echo "Recovery reference clock: $reference_at (GitHub Actions API; includes completed source run when newer)."
 
       - name: Recover missing reconciliation delivery
         id: reconcile
