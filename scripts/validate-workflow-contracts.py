@@ -24,6 +24,7 @@ reconcile = read("reconcile-vps.yml")
 promotion = read("gitops-image-promotion.yml")
 recovery = read("recover-stale-ops.yml")
 inspection = read("inspect-vps.yml")
+mirror = read("mirror-locally-uncensored.yml")
 if 'workflows: ["reconcile-vps", "inspect-vps", "Mirror locally-uncensored into private repository"]' not in recovery or "types: [completed]" not in recovery:
     fail("Recovery controller must run after master reconciliation, scheduled inspection, and the independent mirror schedule heartbeat.")
 if not re.search(r"(?m)^  push:\n    branches: \[master\]\n    paths:", recovery):
@@ -700,5 +701,13 @@ for required in (
 ):
     if required not in inspection_freshness_block:
         fail(f"Scheduled inspection freshness contract is missing: {required}")
+
+# GitHub Actions secret names cannot contain hyphens; keep the mirror credential valid and isolated.
+if "MIRROR_TOKEN: ${{ secrets.PLATFORM_INFRA_MIRROR_TOKEN }}" not in mirror:
+    fail("The mirror workflow must use the valid PLATFORM_INFRA_MIRROR_TOKEN secret name.")
+if "Platform-infra-token" in mirror or "secrets.PLATFORM_INFRA_TOKEN" in mirror or "secrets.PLATFORM_INFRA_DISPATCH_TOKEN" in mirror:
+    fail("The mirror workflow must not use an invalid hyphenated name or reuse application/GHCR credentials.")
+if "Missing PLATFORM_INFRA_MIRROR_TOKEN secret" not in mirror or "git push --mirror" not in mirror:
+    fail("The mirror workflow must fail clearly when its destination-scoped credential is absent and preserve full-ref mirroring.")
 
 print("Workflow contract validation passed.")
