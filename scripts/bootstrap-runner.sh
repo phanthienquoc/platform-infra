@@ -228,7 +228,7 @@ case "${1:-}" in
       local permanent_failures
 
       selector="$( "${KUBECTL[@]}" -n "$namespace" get deployment "$deployment" -o json |
-        jq -r '.spec.selector.matchLabels // {} | to_entries | map("\\(.key)=\\(.value)") | join(",")')"
+        jq -r '.spec.selector.matchLabels // {} | to_entries | map("\(.key)=\(.value)") | join(",")')"
       [[ -n "$selector" ]] || {
         echo "platform-kubectl: deployment $namespace/$deployment has no matchLabels selector" >&2
         return 1
@@ -240,7 +240,7 @@ case "${1:-}" in
           {reason: .state.waiting.reason, message: (.state.waiting.message // "")}]')"
       permanent_failures="$(jq -r '[.[] |
         select((.message | ascii_downcase) | test("no match for platform in manifest|manifest unknown|manifest not found")) |
-        "\\(.reason): \\(.message)"] | unique | join("; ")' <<< "$waiting_failures")"
+        "\(.reason): \(.message)"] | unique | join("; ")' <<< "$waiting_failures")"
 
       if [[ -n "$permanent_failures" ]]; then
         echo "Permanent image-pull failure for $namespace/$deployment; skipping rollout restart: $permanent_failures"
