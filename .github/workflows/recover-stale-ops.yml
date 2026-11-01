@@ -16,6 +16,15 @@ run-name: Recover Stale Scheduled Ops — ${{ github.event_name }}
       - "environments/prod/**"
       - "scripts/**"
   workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Optional completed reconcile-vps run to wait for before inspection recovery
+        required: false
+        type: string
+      source_head_sha:
+        description: Full source SHA for source_run_id verification
+        required: false
+        type: string
   workflow_run:
     workflows: ["reconcile-vps", "inspect-vps"]
     types: [completed]
@@ -63,6 +72,45 @@ jobs:
           echo "reference_at=$reference_at" >> "$GITHUB_OUTPUT"
           echo "reference_epoch=$reference_epoch" >> "$GITHUB_OUTPUT"
           echo "Recovery reference clock: $reference_at (GitHub Actions API)."
+
+      - name: Verify and await source reconciliation completion
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.source_run_id != '' }}
+        env:
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+          SOURCE_HEAD_SHA: ${{ inputs.source_head_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]] || {
+            echo "::error::source_run_id must be a numeric GitHub Actions run id."
+            exit 1
+          }
+          [[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || {
+            echo "::error::source_head_sha must be a full 40-character commit SHA."
+            exit 1
+          }
+          for attempt in $(seq 1 12); do
+            source_run="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_RUN_ID}")"
+            source_path="$(jq -r '.path // empty' <<< "$source_run")"
+            source_branch="$(jq -r '.head_branch // empty' <<< "$source_run")"
+            source_sha="$(jq -r '.head_sha // empty' <<< "$source_run")"
+            source_status="$(jq -r '.status // empty' <<< "$source_run")"
+            if [[ "$source_path" != ".github/workflows/reconcile-vps.yml" ||
+                  "$source_branch" != "master" ||
+                  "$source_sha" != "$SOURCE_HEAD_SHA" ]]; then
+              echo "::error::Source run identity does not match the expected master reconcile-vps workflow and SHA."
+              exit 1
+            fi
+            if [[ "$source_status" == "completed" ]]; then
+              conclusion="$(jq -r '.conclusion // "unknown"' <<< "$source_run")"
+              echo "Verified source reconciliation #$SOURCE_RUN_ID completed with conclusion=$conclusion."
+              exit 0
+            fi
+            echo "Waiting for source reconciliation #$SOURCE_RUN_ID to complete (attempt $attempt/12; status=$source_status)."
+            sleep 5
+          done
+          echo "::error::Source reconciliation #$SOURCE_RUN_ID did not complete within 60 seconds."
+          exit 1
 
       - name: Recover missing reconciliation delivery
         id: reconcile
