@@ -102,8 +102,89 @@ jobs:
             echo "::error::TCE heartbeat SHAs must be full commit IDs."
             exit 1
           }
-          printf 'Accepted authenticated TCE schedule heartbeat: source=%s run=%s sha=%s heartbeat_run=%s\n' \
-            "$SOURCE_WORKFLOW_PATH" "$SOURCE_RUN_ID" "$SOURCE_HEAD_SHA" "$HEARTBEAT_RUN_ID"
+
+          # Validate both run IDs against the public source repository's Actions API.
+          # Payload fields alone are not proof that a scheduled TCE run actually exists.
+          fetch_tce_run() {
+            curl --fail --silent --show-error --retry 2 --retry-delay 1 --max-time 20 \
+              --header "Accept: application/vnd.github+json" \
+              --header "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/$SOURCE_REPOSITORY/actions/runs/$1"
+          }
+
+          source_run="$(fetch_tce_run "$SOURCE_RUN_ID")"
+          source_run_path="$(jq -r '.path // empty' <<< "$source_run")"
+          source_run_event="$(jq -r '.event // empty' <<< "$source_run")"
+          source_run_branch="$(jq -r '.head_branch // empty' <<< "$source_run")"
+          source_run_sha="$(jq -r '.head_sha // empty' <<< "$source_run")"
+          source_run_status="$(jq -r '.status // empty' <<< "$source_run")"
+
+          [[ "$source_run_path" == "$SOURCE_WORKFLOW_PATH" ]] || {
+            echo "::error::TCE source run #$SOURCE_RUN_ID does not match the payload workflow path."
+            exit 1
+          }
+          [[ "$source_run_event" == "schedule" && "$source_run_branch" == "master" && "$source_run_sha" == "$SOURCE_HEAD_SHA" ]] || {
+            echo "::error::TCE source run #$SOURCE_RUN_ID is not the claimed scheduled master commit."
+            exit 1
+          }
+
+          case "$SOURCE_WORKFLOW_PATH" in
+            .github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml)
+              [[ "$SOURCE_RUN_ID" == "$HEARTBEAT_RUN_ID" && "$SOURCE_HEAD_SHA" == "$HEARTBEAT_HEAD_SHA" ]] || {
+                echo "::error::Direct WF-12 schedule heartbeat must identify the same source and heartbeat run."
+                exit 1
+              }
+              [[ "$source_run_status" == "in_progress" || "$source_run_status" == "completed" ]] || {
+                echo "::error::Direct WF-12 schedule run has an unexpected status: $source_run_status."
+                exit 1
+              }
+              heartbeat_run="$source_run"
+              ;;
+            .github/workflows/wf-06-tce-healthcheck.yml|.github/workflows/wf-07-tce-integration-check.yml)
+              [[ "$source_run_status" == "completed" ]] || {
+                echo "::error::WF-06/WF-07 heartbeat source must be completed before forwarding."
+                exit 1
+              }
+              heartbeat_run="$(fetch_tce_run "$HEARTBEAT_RUN_ID")"
+              ;;
+          esac
+
+          heartbeat_run_path="$(jq -r '.path // empty' <<< "$heartbeat_run")"
+          heartbeat_run_event="$(jq -r '.event // empty' <<< "$heartbeat_run")"
+          heartbeat_run_branch="$(jq -r '.head_branch // empty' <<< "$heartbeat_run")"
+          heartbeat_run_sha="$(jq -r '.head_sha // empty' <<< "$heartbeat_run")"
+          heartbeat_run_status="$(jq -r '.status // empty' <<< "$heartbeat_run")"
+
+          [[ "$heartbeat_run_path" == ".github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml" ]] || {
+            echo "::error::Heartbeat run #$HEARTBEAT_RUN_ID is not the TCE WF-12 watchdog."
+            exit 1
+          }
+          [[ "$heartbeat_run_branch" == "master" && "$heartbeat_run_sha" == "$HEARTBEAT_HEAD_SHA" ]] || {
+            echo "::error::TCE heartbeat run #$HEARTBEAT_RUN_ID does not match the claimed master SHA."
+            exit 1
+          }
+          [[ "$heartbeat_run_status" == "in_progress" || "$heartbeat_run_status" == "completed" ]] || {
+            echo "::error::TCE heartbeat run #$HEARTBEAT_RUN_ID has an unexpected status: $heartbeat_run_status."
+            exit 1
+          }
+
+          case "$SOURCE_WORKFLOW_PATH" in
+            .github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml)
+              [[ "$heartbeat_run_event" == "schedule" ]] || {
+                echo "::error::Direct WF-12 heartbeat run must have event=schedule."
+                exit 1
+              }
+              ;;
+            .github/workflows/wf-06-tce-healthcheck.yml|.github/workflows/wf-07-tce-integration-check.yml)
+              [[ "$heartbeat_run_event" == "workflow_run" ]] || {
+                echo "::error::WF-06/WF-07 heartbeat must be forwarded by a WF-12 workflow_run."
+                exit 1
+              }
+              ;;
+          esac
+
+          printf 'Verified TCE schedule heartbeat against Actions API: source=%s run=%s sha=%s heartbeat_run=%s event=%s\n' \
+            "$SOURCE_WORKFLOW_PATH" "$SOURCE_RUN_ID" "$SOURCE_HEAD_SHA" "$HEARTBEAT_RUN_ID" "$heartbeat_run_event"
 
       - name: Verify and await source reconciliation completion
         id: source
