@@ -1,3 +1,46 @@
+## Latest automation review (2026-11-02 03:04 ICT / 2026-11-01 20:04 UTC; TCE scheduled heartbeat available; cross-repository recovery receiver added)
+
+This review inspected all five repository master refs, open PRs, latest workflow runs/checks, and the deployment tracker. It confirmed that TCE's scheduled WF-06 event has resumed delivery, but its four public endpoints still return HTTP 503 because TCE/Auth remain intentionally stopped. Platform Infra native scheduled reconciliation/inspection has not delivered a new run since 17:13Z. A dependency-safe cross-repository heartbeat contract is being added: TCE WF-12 will send an authenticated, payload-validated `repository_dispatch` to Platform Infra; the Platform controller remains the only component allowed to dispatch the existing GitOps reconciliation or read-only inspection workflows.
+
+### Current repository state and open PRs
+
+- Platform Infra master: `408ddef74d2d702f925be4f8a90ce2a05c4f7050`; current open PRs #795/#749/#741/#648/#544/#541/#539/#538.
+- TCE Dashboard master: `8882fc6dca77fc6abaaf45c673f7dfc4c8a400ae`; no open PRs before this review's heartbeat change.
+- StockDividend master: `f5c04475eb4e67811c66b350d60541b21b8262c7`; no open PRs.
+- Media Generation master: `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; no open PRs.
+- Authentication master: `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`; open PRs #75/#76.
+
+### Latest scheduled evidence
+
+- Platform Infra latest scheduled reconciliation: [#41330228681](https://github.com/phanthienquoc/platform-infra/actions/runs/41330228681), created 2026-11-01 17:11:48Z, overall FAILURE only because the StockDividend lane cannot pull old Admin/Backend tags `12d63b4` on ARM64. Shared repository/GHCR preflight, protected Auth runtime Secret verification, shared pull credentials, targeted restart, and cluster verification passed; no GitOps drift, so manifest apply and image-change guard were skipped.
+- Platform Infra latest scheduled inspection: [#41330407550](https://github.com/phanthienquoc/platform-infra/actions/runs/41330407550), created 17:13:57Z and completed SUCCESS. No later Platform scheduled reconciliation/inspection event was present at this review time (20:04Z); native cadence remains stale. Recovery/workflow_run fallback is available but has not yet been triggered by a TCE cross-repository heartbeat.
+- Platform mirror latest scheduled run: [#41323952888](https://github.com/phanthienquoc/platform-infra/actions/runs/41323952888), 15:59:10Z, failed because `PLATFORM_INFRA_MIRROR_TOKEN` remains unconfigured. A scheduled mirror completion therefore cannot currently be relied upon as a heartbeat.
+- TCE latest scheduled WF-06: [#41342785812](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41342785812), created 19:38:53Z, completed FAILURE. Public TCE web, TCE API, Auth liveness, and Auth readiness each returned HTTP 503; the VPS/container diagnostic job succeeded. This matches the intentional TCE/Auth zero-replica state and is an application-health failure, not missed schedule delivery.
+- TCE WF-12 workflow_run watchdog: [#41342802620](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41342802620), created 19:39:06Z, SUCCESS. It confirms the latest scheduled WF-06 event was delivered; the workflow's schedule-delivery guard is healthy even though the public endpoints are not.
+- Latest scheduled TCE WF-07 remains [#41311225433](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41311225433), 13:26Z; no post-merge scheduled WF-07 event has yet exercised the independent heartbeat path.
+- StockDividend latest CI [#41314359022](https://github.com/phanthienquoc/stockdividend/actions/runs/41314359022) and publisher [#41314359012](https://github.com/phanthienquoc/stockdividend/actions/runs/41314359012) succeeded on `f5c04475`; three immutable native ARM64 digests remain verified. Production release remains disabled and no promotion was authorized.
+- Media latest CI [#41246414186](https://github.com/phanthienquoc/media-generation/actions/runs/41246414186) succeeded on `d8e695d7`; last K3s snapshot showed backend/frontend 1/1.
+- Authentication PR #76 CI [#41329425940](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41329425940) passed; the previously checked Supabase migration source/ledger set was 84/84 exact version/name matches. No fresh SQL probe was performed in this review.
+
+### Cross-repository TCE heartbeat contract
+
+- TCE WF-12 will dispatch `tce-schedule-heartbeat` to Platform Infra only when WF-12 itself runs on schedule or is triggered by a scheduled WF-06/WF-07 completion.
+- The dispatch uses the existing TCE `PLATFORM_INFRA_TOKEN` with its documented `Contents: write` permission on Platform Infra; no new secret or permission is introduced.
+- Payload identifies the source repository, scheduled event, approved source workflow path, source run ID/SHA, and heartbeat run ID/SHA. Platform Infra validates every field and accepts only WF-06, WF-07, or WF-12 schedule sources.
+- The event is a signal only. Platform Infra recovery checks its own freshness budgets and may dispatch only the existing `reconcile-vps.yml` with `allow_image_changes=false` or the read-only `inspect-vps.yml`. TCE never performs SSH, kubectl, Compose, manifest apply, or image promotion.
+- Platform receiver branch and TCE sender branch are under PR validation. Runtime delivery remains pending until both PRs are merged and a scheduled TCE WF-12 run produces a correlated Platform `repository_dispatch`/recovery run.
+- WF-06/WF-07/WF-12 cron expressions and all TCE market-scan schedules are unchanged.
+
+### Production and external blockers
+
+- Stock Admin/Backend remain ImagePullBackOff on old `12d63b4` references; production manifests remain unchanged. Release hold `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=false`; explicit authorization is required before paired digest promotion.
+- Platform mirror remains blocked until `PLATFORM_INFRA_MIRROR_TOKEN` is configured with destination-only `Contents: write` on `phanthienquoc/locally-uncensored-private`.
+- K3s latest available snapshot is still #41330407550; node was Ready/ARM64, disk 54%, GitOps drift clean, Media/MicroFE/NATS healthy, and StockDividend blocked. VPS reported pending OS updates/restart required; no reboot or package upgrade was performed.
+- TCE/Auth/Keycloak remain intentionally 0/0. Do not change their desired replicas.
+- No production manifest, runtime credential, database object, release flag, image cleanup, or cron expression is changed by this review.
+
+---
+
 ## Latest automation review (2026-11-02 02:03 ICT / 2026-11-01 19:03 UTC; TCE WF-12 correctly detected stale WF-06 delivery)
 
 This review re-inspected the five repository master refs, open PRs, latest Actions runs/checks, the deployment tracker, the newest TCE watchdog failure log, Platform schedule history, and the latest available K3s snapshot. It found no new code defect to patch safely: the TCE watchdog failure is the intended stale-schedule alert, and the Platform watchdog failure was correctly caused by an inspection that was stale at that run's timestamp. The tracker and inventory are refreshed below; no production mutation or schedule change was made.
