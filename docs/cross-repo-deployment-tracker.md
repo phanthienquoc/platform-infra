@@ -1,6 +1,25 @@
 # Cross-Repository Production Deployment Tracker
 
-## Latest automation review (2026-11-01 12:07 UTC; CRI inventory restored and cleanup narrowed to active Stock blockers)
+## Latest automation review (2026-11-01 12:12 UTC; cleanup dry-run restored and reconciliation fallback expanded)
+
+Last reviewed: 2026-11-01 12:12 UTC. This review records the post-merge cleanup dry-run and the additional scheduled-inspection recovery trigger.
+
+- Current heads: platform-infra 86cf196ae7049d226797bddbf1e6dedbd3db945e; TCE Dashboard 49fe5841cce460df2a7be6d8846b34a57b6be152; StockDividend a6f55ee2e511ab5910c825e56803bd82fe9a0f62; Media Generation d8e695d772ab2dc0da5c15cc428ee78ac6537518; Authentication ceb2688d6277b10f1bfe7652223d1d295b7e49d9.
+- Open PRs: platform-infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #76/#75; none in TCE Dashboard, StockDividend, or Media Generation.
+- Platform Infra PR #985 merged as b639a5b7bfb1de10d83754ab9b8b273e716cbd13. The cleanup resolver now ignores an unresolved image ref only when the Pod is terminal, or when the Pod is waiting in ImagePullBackOff/ErrImagePull with an empty imageID and no matching local CRI image. Existing CRI container image IDs remain protected; unresolved refs with a non-empty imageID, other waiting reasons, or unknown/running state still fail closed. Exact-head lint/manifest checks #41305229622/#41305229705 and post-merge #41305323253/#41305323287 passed.
+- Post-merge cleanup push dry-run #41305323263 succeeded. It logged the two StockDividend admin/backend ImagePullBackOff refs as having empty imageID/no local CRI image, ignored the terminal klipper-helm reference, and reported unused_images=8 retain=10 remove=0 dry_run=true. No image was deleted. This proves the safe inventory path works; it does not repair StockDividend.
+- Platform Infra PR #986 merged as 86cf196ae7049d226797bddbf1e6dedbd3db945e. The existing recovery controller now also listens for completed inspect-vps runs, but accepts that fallback only when the source event is a scheduled run on master. It reuses the existing reconcile-vps authority with mode=apply, allow_image_changes=false, target_app=all and exact master-SHA dispatch correlation. Exact-head checks #41305336219/#41305336211 and post-merge checks #41305383714/#41305383799 passed. Runtime verification of the new inspect-vps trigger is pending the next scheduled master inspection completion; no recovery-controller run has yet been observed.
+- PR #981 inspection fix, PR #982 fresh snapshot, and PR #984 tracker/inventory refresh remain merged. Fresh snapshot #41304636230 generated debug/vps-latest.md at 12:03:32Z with CRI image and container inventories present. Host is ARM64, disk pressure normal at 54%, K3s node Ready, GitOps drift clean, and restart_required=yes; no reboot was attempted.
+- Workloads in the fresh snapshot: Media backend/frontend 1/1; MicroFE Shell/WS 1/1; microfe-auth, Keycloak, and TCE workloads 0/0 as intentionally stopped. Stock admin has two ImagePullBackOff pods and Stock backend has one new ImagePullBackOff pod on tag 12d63b4; old backend/frontend replicas remain Running. The failures report no matching ARM64 manifest.
+- Platform schedule: latest scheduled reconciliation #41300948892 was created 11:13:47Z and overall failed at the StockDividend health lane; shared reconciliation and other app lanes succeeded, with no manifest apply/image promotion. No newer scheduled reconciliation was observed through 12:12Z, so the 45-minute freshness budget is exceeded. Latest scheduled inspection #41301947264 succeeded at 11:27:15Z; watchdog #41302040071 succeeded at 11:28:34Z. Push inspection #41304636230 is fresh runtime evidence but not scheduled-delivery evidence. Do not claim 15-minute reconciliation cadence has recovered.
+- TCE schedule: latest scheduled WF-06 #41287060151 was 09:01:02Z and failed public health endpoints with HTTP 503 while TCE/Auth remain intentionally stopped. Latest WF-12 #41291809063 was a push smoke at 09:08:42Z; no later scheduled WF-06/WF-12 run was observed. Preserve existing cron expressions and the TCE market-scan schedule.
+- StockDividend publisher #41273202844 still verifies three immutable ARM64 digests; STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED remains false and no promotion/dispatch occurred. Weekend scraper #41284033242 remains in progress since 07:15:11Z. Its scraper queues up to 1,000 pages and performs two driver.get calls per page with bounded Selenium waits; preserve the scheduled/manual workflow and do not cancel the active run without evidence.
+- Supabase project gtqovpusfyyvxpeezxlo: read-only SQL probe passed at 12:07:39Z (postgres, probe 1). The one-hour unified-log query returned a backend error; no HTTP 522 conclusion is drawn from that failed query.
+- No production manifest, GHCR credential, release flag, database object, or K3s desired replica was changed. No workflow was removed and no duplicate SSH/Compose authority was introduced.
+
+---
+
+## Previous automation review (2026-11-01 12:07 UTC; CRI inventory restored and cleanup narrowed to active Stock blockers)
 
 Last reviewed: 2026-11-01 12:07 UTC. This review records fresh inspection evidence after PR #981 and the safe terminal-Pod cleanup correction in PR #983.
 

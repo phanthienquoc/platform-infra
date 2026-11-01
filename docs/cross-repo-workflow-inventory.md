@@ -1,6 +1,22 @@
 # Cross-Repository Workflow Inventory
 
-## Latest workflow inventory review (2026-11-01 12:07 UTC; restricted CRI inspection and terminal-Pod cleanup contract)
+## Latest workflow inventory review (2026-11-01 12:12 UTC; safe cleanup dry-run and scheduled-inspection recovery)
+
+- Current heads: platform-infra 86cf196ae7049d226797bddbf1e6dedbd3db945e; TCE Dashboard 49fe5841cce460df2a7be6d8846b34a57b6be152; StockDividend a6f55ee2e511ab5910c825e56803bd82fe9a0f62; Media Generation d8e695d772ab2dc0da5c15cc428ee78ac6537518; Authentication ceb2688d6277b10f1bfe7652223d1d295b7e49d9.
+- Open PRs: platform-infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #76/#75; none in TCE, StockDividend, or Media.
+- PR #985 narrows cleanup resolution to terminal Pods or ImagePullBackOff/ErrImagePull Pods with empty imageID and no local CRI image. All existing CRI container IDs remain protected. PR checks #41305229622/#41305229705 and post-merge #41305323253/#41305323287 passed. Push dry-run #41305323263 succeeded with unused_images=8, retain=10, remove=0, dry_run=true; no deletion occurred.
+- PR #986 extends recover-stale-ops workflow_run triggers to reconcile-vps completions and scheduled inspect-vps completions from master. Push/manual inspection completions do not trigger the fallback. Dispatch remains through reconcile-vps only, with allow_image_changes=false and exact SHA correlation. Exact-head checks #41305336219/#41305336211 and post-merge #41305383714/#41305383799 passed; runtime event verification pending.
+- PR #981 switched inspection to the allowlisted platform-crictl wrapper; PR #982 committed a fresh snapshot with CRI image/container inventories; PR #984 refreshed tracker/inventory. Snapshot #41304636230 confirms Media/MicroFE healthy, TCE/Auth/Keycloak 0/0, StockDividend admin/backend blocked on old non-ARM64 tag 12d63b4, node Ready, disk 54%, and GitOps drift clean.
+- Platform reconciliation is stale after scheduled run #41300948892 (11:13:47Z). Scheduled inspection #41301947264 (11:27:15Z) and watchdog #41302040071 passed, but no newer scheduled reconciliation or recovery-controller run was observed. Push inspection #41304636230 does not prove schedule delivery. Verify the next scheduled inspection event triggers the new recovery fallback before claiming cadence recovery.
+- TCE WF-06 last scheduled run #41287060151 (09:01:02Z) failed HTTP 503 while services are intentionally stopped; WF-12 latest run #41291809063 was push-triggered at 09:08:42Z, with no newer scheduled run observed. Preserve WF-06/WF-12 cron and market-scan schedule.
+- StockDividend immutable ARM64 publication #41273202844 remains verified; production promotion stays disabled. Weekend scraper #41284033242 remains active; its 1,000-page queue and duplicate navigation explain potentially long runtime. Preserve scheduled/manual scraper jobs.
+- Media CI #41246414186 remains successful and the fresh snapshot shows backend/frontend 1/1. Authentication CI/release #41033586844/#41040510320 are historical successes; Auth/Keycloak remain intentionally stopped.
+- Supabase SQL probe passed at 12:07:39Z; unified logs query returned a backend error, so log health is not inferred.
+- No workflow removed, no duplicate direct SSH/Compose authority added, and no production manifest/credential/database/release flag/replica changed.
+
+---
+
+## Previous workflow inventory review (2026-11-01 12:07 UTC; restricted CRI inspection and terminal-Pod cleanup contract)
 
 - Current heads: platform-infra `ff14d67a0b17de7a6bac5e0db2938ddbe0b713ec`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
 - Open PRs: platform-infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #76/#75; none in TCE, StockDividend, or Media.
