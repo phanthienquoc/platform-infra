@@ -8,7 +8,7 @@ trap 'rm -rf "$tmp"' EXIT
 mkdir -p "$tmp/bin"
 
 cat > "$tmp/pods.json" <<'JSON'
-{"items":[{"spec":{"initContainers":[],"containers":[{"image":"ghcr.io/example/app:stable"}],"ephemeralContainers":[]}}]}
+{"items":[{"spec":{"initContainers":[],"containers":[{"image":"ghcr.io/example/app:stable"},{"image":"nats:2.12-alpine"},{"image":"rancher/klipper-helm:v0.13.3-build20260727"}],"ephemeralContainers":[]}}]}
 JSON
 cat > "$tmp/containers.json" <<'JSON'
 {"containers":[{"imageRef":"sha256:used"}]}
@@ -16,6 +16,8 @@ JSON
 cat > "$tmp/images.json" <<'JSON'
 {"images":[
   {"id":"sha256:used","repoTags":["ghcr.io/example/app:stable"],"repoDigests":[],"size":100,"pinned":false,"createdAt":"2026-11-01T00:00:00Z"},
+  {"id":"sha256:used-nats","repoTags":["docker.io/library/nats:2.12-alpine"],"repoDigests":[],"size":100,"pinned":false,"createdAt":"2026-11-01T00:00:00Z"},
+  {"id":"sha256:used-rancher","repoTags":["docker.io/rancher/klipper-helm:v0.13.3-build20260727"],"repoDigests":[],"size":100,"pinned":false,"createdAt":"2026-11-01T00:00:00Z"},
   {"id":"sha256:unused-new","repoTags":["ghcr.io/example/unused:new"],"repoDigests":[],"size":200,"pinned":false,"createdAt":"2026-11-01T02:00:00Z"},
   {"id":"sha256:unused-old","repoTags":["ghcr.io/example/unused:old"],"repoDigests":[],"size":300,"pinned":false,"createdAt":"2026-11-01T01:00:00Z"}
 ]}
@@ -57,10 +59,12 @@ output="$(
 )"
 grep -Fq "unused_images=2 retain=1 remove=1 dry_run=true" <<< "$output"
 grep -Fq "candidate id=sha256:unused-new" <<< "$output"
-if grep -Fq "candidate id=sha256:used" <<< "$output"; then
-  echo "Referenced image was incorrectly selected for cleanup." >&2
-  exit 1
-fi
+for referenced_id in sha256:used sha256:used-nats sha256:used-rancher; do
+  if grep -Fq "candidate id=$referenced_id" <<< "$output"; then
+    echo "Referenced image was incorrectly selected for cleanup: $referenced_id" >&2
+    exit 1
+  fi
+done
 if grep -Fq "Removing unused K3s image" <<< "$output"; then
   echo "Dry-run unexpectedly attempted image deletion." >&2
   exit 1
