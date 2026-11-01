@@ -77,6 +77,19 @@ if "github.event.workflow.path == '.github/workflows/reconcile-vps.yml'" not in 
     fail("Recovery must identify reconciliation completions by the workflow resource path.")
 if "github.event.workflow.path == '.github/workflows/inspect-vps.yml'" not in recovery or "github.event.workflow_run.event == 'schedule'" not in recovery:
     fail("Only scheduled master inspection completions may trigger reconciliation recovery.")
+source_verification_index = recovery.find("- name: Verify and await source reconciliation completion")
+reference_clock_index = recovery.find("- name: Resolve GitHub Actions API reference clock")
+if source_verification_index < 0 or reference_clock_index < 0 or source_verification_index > reference_clock_index:
+    fail("Recovery must verify/await its source reconciliation before resolving the freshness reference clock.")
+for required in (
+    "id: source",
+    "SOURCE_COMPLETED_AT: ${{ steps.source.outputs.completed_at }}",
+    "source_completed_at=",
+    ".updated_at // .run_started_at // .created_at",
+    "source_epoch > reference_epoch",
+):
+    if required not in recovery:
+        fail(f"Recovery reference clock must include the completed source run timestamp: {required}")
 guard_reconcile = (ROOT / "scripts" / "guard-reconcile-images.sh").read_text(encoding="utf-8")
 github_actions = read("validate-github-actions.yml")
 inspection_script = (ROOT / "scripts" / "inspect-vps.sh").read_text(encoding="utf-8")
