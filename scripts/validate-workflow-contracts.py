@@ -24,8 +24,8 @@ reconcile = read("reconcile-vps.yml")
 promotion = read("gitops-image-promotion.yml")
 recovery = read("recover-stale-ops.yml")
 inspection = read("inspect-vps.yml")
-if 'workflows: ["reconcile-vps", "inspect-vps"]' not in recovery or "types: [completed]" not in recovery:
-    fail("Recovery controller must run after master reconciliation and scheduled inspection completions.")
+if 'workflows: ["reconcile-vps", "inspect-vps", "Mirror locally-uncensored into private repository"]' not in recovery or "types: [completed]" not in recovery:
+    fail("Recovery controller must run after master reconciliation, scheduled inspection, and the independent mirror schedule heartbeat.")
 if not re.search(r"(?m)^  push:\n    branches: \[master\]\n    paths:", recovery):
     fail("Recovery controller must bootstrap from deployment-relevant master pushes.")
 for required_path in (
@@ -77,6 +77,8 @@ if "github.event.workflow.path == '.github/workflows/reconcile-vps.yml'" not in 
     fail("Recovery must identify reconciliation completions by the workflow resource path.")
 if "github.event.workflow.path == '.github/workflows/inspect-vps.yml'" not in recovery or "github.event.workflow_run.event == 'schedule'" not in recovery:
     fail("Only scheduled master inspection completions may trigger reconciliation recovery.")
+if "github.event.workflow.path == '.github/workflows/mirror-locally-uncensored.yml'" not in recovery or "github.event.workflow_run.event == 'schedule'" not in recovery:
+    fail("Only scheduled master mirror completions may act as the independent recovery heartbeat.")
 source_verification_index = recovery.find("- name: Verify and await source reconciliation completion")
 reference_clock_index = recovery.find("- name: Resolve GitHub Actions API reference clock")
 if source_verification_index < 0 or reference_clock_index < 0 or source_verification_index > reference_clock_index:
@@ -589,10 +591,10 @@ for required in (
 for forbidden in ("platform-kubectl", "scripts/reconcile-vps.sh", "kubectl apply", "docker compose", "ssh "):
     if forbidden in recovery:
         fail(f"Schedule recovery must dispatch existing GitHub workflows only, not deploy directly: {forbidden}")
-if "workflow_run:" not in watchdog or "      - inspect-vps" not in watchdog or "      - reconcile-vps" not in watchdog:
-    fail("The watchdog must run after scheduled reconciliation and inspection completions as a schedule-delivery fallback.")
+if "workflow_run:" not in watchdog or "      - inspect-vps" not in watchdog or "      - reconcile-vps" not in watchdog or "      - Mirror locally-uncensored into private repository" not in watchdog:
+    fail("The watchdog must run after scheduled reconciliation, inspection, and the independent mirror heartbeat.")
 if "      - completed" not in watchdog or "github.event.workflow_run.event == 'schedule'" not in watchdog:
-    fail("The watchdog fallback must be limited to completed scheduled reconcile-vps/inspect-vps runs.")
+    fail("The watchdog fallback must be limited to completed scheduled reconcile-vps/inspect-vps/mirror runs.")
 if '"/repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs"' in watchdog:
     fail("The watchdog gh api endpoint must not start with a slash.")
 if '"repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs"' not in watchdog:
