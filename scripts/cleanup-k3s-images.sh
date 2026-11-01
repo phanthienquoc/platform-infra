@@ -27,29 +27,83 @@ jq -r '.items[] | .spec.initContainers[]?.image, .spec.containers[]?.image, .spe
 # Keep every image used by a currently existing container, including terminated containers.
 jq -r '.containers[]? | .imageRef // empty' "$tmp/containers.json" | sort -u > "$tmp/container-image-ids.txt"
 
-# Resolve Pod image refs (tags and digests) to immutable local IDs.
-# Pod refs are newline-delimited plain text; --rawfile avoids treating them as JSON.
-jq -r --rawfile refs "$tmp/pod-image-refs.txt" '
-  ($refs | split("\n") | map(select(length > 0))) as $pod_refs |
-  .images[]? |
-  select(any(.repoTags[]?; . as $tag | $pod_refs | index($tag) != null) or
-         any(.repoDigests[]?; . as $digest | $pod_refs | index($digest) != null)) |
-  .id
-' "$tmp/images.json" | sort -u > "$tmp/pod-image-ids.txt"
-# Fail closed when a Pod spec reference cannot be mapped to a local image ID.
-missing_refs=0
-while IFS= read -r ref; do
-  [ -n "$ref" ] || continue
-  if ! jq -e --arg ref "$ref" '
-    any(.images[]?;
-      any(.repoTags[]?; . == $ref) or any(.repoDigests[]?; . == $ref)
-    )
-  ' "$tmp/images.json" >/dev/null; then
-    echo "Cannot resolve Pod image reference; refusing cleanup: $ref" >&2
-    missing_refs=1
+# Docker Hub references are normalized by the runtime (for example, nats:tag
+# becomes docker.io/library/nats:tag). Normalize both Pod specs and CRI names
+# before resolving refs to immutable local IDs.
+canonical_image_ref() {
+  local ref="$1"
+  local name suffix="" last_component first_component
+
+  if [[ "$ref" == *@* ]]; then
+    suffix="@${ref#*@}"
+    name="${ref%@*}"
+  else
+    name="$ref"
+    last_component="${name##*/}"
+    if [[ "$last_component" == *:* ]]; then
+      suffix=":${last_component##*:}"
+      name="${name%:*}"
+    else
+      suffix=":latest"
+    fi
   fi
-done < "$tmp/pod-image-refs.txt"
-[ "$missing_refs" -eq 0 ] || exit 3
+
+  if [[ "$name" == index.docker.io/* ]]; then
+    name="docker.io/${name#index.docker.io/}"
+  fi
+
+  if [[ "$name" != */* ]]; then
+    name="docker.io/library/$name"
+  else
+    first_component="${name%%/*}"
+    if [[ "$first_component" != *.* && "$first_component" != *:* && "$first_component" != "localhost" ]]; then
+      name="docker.io/$name"
+    fi
+  fi
+
+  printf '%s%s\n' "$name" "$suffix"
+}
+
+resolve_pod_image_ids() {
+  local pods_json="$1"
+  local images_json="$2"
+  local output_file="$3"
+  local refs_file="$tmp/pod-refs.$$.txt"
+  local raw_map="$tmp/image-ref-map-raw.$$.tsv"
+  local map_file="$tmp/image-ref-map.$$.tsv"
+  local local_refs="$tmp/local-image-refs.$$.txt"
+  local id ref normalized missing_refs=0
+
+  jq -r '.items[] | (.spec.initContainers[]?.image, .spec.containers[]?.image, .spec.ephemeralContainers[]?.image) | select(type == "string" and length > 0)' "$pods_json" | sort -u > "$refs_file"
+  jq -r '.images[]? as $image | $image.id as $id | ($image.repoTags[]?, $image.repoDigests[]?) as $ref | [$id, $ref] | @tsv' "$images_json" > "$raw_map"
+
+  : > "$map_file"
+  while IFS=$'\t' read -r id ref; do
+    [[ -n "$id" && -n "$ref" ]] || continue
+    normalized="$(canonical_image_ref "$ref")"
+    printf '%s\t%s\n' "$id" "$normalized" >> "$map_file"
+  done < "$raw_map"
+  cut -f2 "$map_file" | sort -u > "$local_refs"
+
+  : > "$output_file"
+  while IFS= read -r ref; do
+    [[ -n "$ref" ]] || continue
+    normalized="$(canonical_image_ref "$ref")"
+    if ! grep -Fxq "$normalized" "$local_refs"; then
+      echo "Cannot resolve Pod image reference after registry normalization; refusing cleanup: $ref (normalized=$normalized)" >&2
+      missing_refs=1
+      continue
+    fi
+    awk -F '\t' -v ref="$normalized" '$2 == ref { print $1 }' "$map_file" >> "$output_file"
+  done < "$refs_file"
+
+  rm -f "$refs_file" "$raw_map" "$map_file" "$local_refs"
+  [[ "$missing_refs" -eq 0 ]] || return 3
+  sort -u -o "$output_file" "$output_file"
+}
+
+resolve_pod_image_ids "$tmp/pods.json" "$tmp/images.json" "$tmp/pod-image-ids.txt" || exit 3
+# Fail closed above if any Pod reference cannot be mapped to a local image ID.
 
 jq -r '.images[]? | select((.repoTags // []) | length > 0) |
   [.id, ((.repoTags // []) | join(",")), (.size // 0), (.pinned // false), (.createdAt // "")] | @tsv
@@ -81,25 +135,19 @@ head -n "$remove_count" "$tmp/unused.tsv" | while IFS=$'\t' read -r id tags size
   grep -Fxq "$id" <(jq -r '.containers[]? | .imageRef // empty' "$tmp/containers-current.json") && {
     echo "Skip image still referenced by container: $id"; continue;
   }
-  # Resolve Pod refs again; if any refs fail resolution, abort conservatively.
-  while IFS= read -r ref; do
-    [ -n "$ref" ] || continue
-    if jq -e --arg ref "$ref" 'any(.images[]?; any(.repoTags[]?; . == $ref) or any(.repoDigests[]?; . == $ref))' "$tmp/images.json" >/dev/null; then
-      :
-    else
-      echo "Pod image ref unresolved during final safety check; aborting: $ref" >&2
-      exit 3
-    fi
-  done < <(jq -r '.items[] | .spec.initContainers[]?.image, .spec.containers[]?.image, .spec.ephemeralContainers[]?.image' "$tmp/pods-current.json")
-  mapfile -t refs_now < <(jq -r '.items[] | .spec.initContainers[]?.image, .spec.containers[]?.image, .spec.ephemeralContainers[]?.image' "$tmp/pods-current.json")
-  keep=false
-  for ref in "${refs_now[@]}"; do
-    if jq -e --arg id "$id" --arg ref "$ref" '
-      any(.images[]?; .id == $id and
-        (any(.repoTags[]?; . == $ref) or any(.repoDigests[]?; . == $ref)))
-    ' "$tmp/images.json" >/dev/null; then keep=true; break; fi
-  done
-  [ "$keep" = false ] || { echo "Skip image referenced by current Pod: $id"; continue; }
+  sudo "$KCTL" get pods -A -o json | tee "$tmp/pods-current.json" >/dev/null
+  sudo "$CRI" ps | tee "$tmp/containers-current.json" >/dev/null
+  sudo "$CRI" images | tee "$tmp/images-current.json" >/dev/null
+  grep -Fxq "$id" <(jq -r '.containers[]? | .imageRef // empty' "$tmp/containers-current.json") && {
+    echo "Skip image still referenced by container: $id"; continue;
+  }
+  resolve_pod_image_ids "$tmp/pods-current.json" "$tmp/images-current.json" "$tmp/pod-image-ids-current.txt" || {
+    echo "Current Pod image references could not be resolved; aborting cleanup." >&2
+    exit 3
+  }
+  grep -Fxq "$id" "$tmp/pod-image-ids-current.txt" && {
+    echo "Skip image still referenced by current Pod: $id"; continue;
+  }
   echo "Removing unused K3s image: $id ($tags)"
   sudo "$CRI" rmi "$id"
 done
