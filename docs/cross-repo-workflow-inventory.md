@@ -1,5 +1,24 @@
 # Cross-Repository Workflow Inventory
 
+## Latest workflow inventory review (2026-11-01 12:57 UTC; scraper navigation optimization PR opened)
+
+- Current master heads: platform-infra `d551bcfbc761f927607db501fdb373afc564474e`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: Platform Infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #76/#75; StockDividend #22 (CI in progress); no TCE or Media PRs.
+- Platform master validation #41305496035 succeeded at 12:14:06Z; no later Platform workflow run was observed through 12:57Z. Latest scheduled reconcile #41300948892 failed at StockDividend health, latest scheduled inspection #41301947264 succeeded at 11:27:15Z, and watchdog #41302040071 succeeded at 11:28:34Z. No post-merge runtime execution of recovery-controller PR #986 was observed; its new scheduled-inspection workflow_run trigger remains unverified.
+- Recovery authority boundaries remain unchanged: recovery dispatches only the existing `reconcile-vps.yml` apply path with `allow_image_changes=false`, or the existing read-only `inspect-vps.yml`; no second SSH/Compose authority exists. Cron schedules remain unchanged.
+- Latest K3s inspection #41304636230 was push-triggered at 12:03:24Z and succeeded: node Ready/ARM64, disk 54%, GitOps drift clean, CRI image/container inventory present; Media and MicroFE workloads 1/1; StockDividend admin/backend blocked on old non-ARM64 tag `12d63b4`; TCE/Auth/Keycloak 0/0 intentionally. This is not scheduled-delivery evidence.
+- Cleanup dry-run #41305323263 passed with no removals (`unused_images=8 retain=10 remove=0 dry_run=true`). Keep weekly/manual cleanup and fail-closed safeguards.
+- StockDividend PR #22 removes a duplicate per-page Selenium navigation and adds an AST regression test in CI. Exact head `0f694bf391a41b244c61d7de45b2a791c8e869c0`; CI #41309092011 remains in progress at 12:57Z. Syntax/navigation contract and release-hold jobs passed; backend, admin, and container-build jobs were still running. Do not merge until all required checks pass.
+- Weekend scraper run #41284033242 remains active since 07:15:11Z; all setup steps complete and scraper step still running at 12:57Z. The current run uses old master and is not affected by PR #22. Preserve the Saturday/Sunday schedule and manual dispatch; no cancellation issued.
+- StockDividend immutable ARM64 publication #41273202844 remains verified, but production release is disabled and no dispatch/promotion occurred. Do not modify production image tags without authorization.
+- TCE master WF-01/WF-02/WF-05/WF-12 push runs #41291809038/#41291809188/#41291809106/#41291809063 passed; latest scheduled WF-06 #41287060151 reported 503 because TCE/Auth are intentionally stopped. Preserve TCE market-scan and healthcheck schedules.
+- Media CI #41246414186 is the latest successful master CI; runtime health supported by inspection #41304636230. Authentication CI/release runs #41033586844/#41040510320 are historical; keep Auth manual-only and preserve open PRs #75/#76 pending migration/environment evidence.
+- Mirror workflow #41292061857 still lacks `Platform-infra-token`; owner-side setup needs a target-repository-scoped `Contents: write` token. Do not substitute unrelated credentials.
+- Supabase has no new probe in this review; latest recorded SQL probe passed at 12:07:39Z, while log query failed at backend. No database stability claim is made.
+- No workflow was removed; preserve CI, test, security, backup, manual/release, scheduled scraper, and TCE market-scan jobs. No production manifest, secret, credential, release flag, database object, or desired replica changed.
+
+---
+
 ## Latest workflow inventory review (2026-11-01 12:12 UTC; safe cleanup dry-run and scheduled-inspection recovery)
 
 - Current heads: platform-infra 86cf196ae7049d226797bddbf1e6dedbd3db945e; TCE Dashboard 49fe5841cce460df2a7be6d8846b34a57b6be152; StockDividend a6f55ee2e511ab5910c825e56803bd82fe9a0f62; Media Generation d8e695d772ab2dc0da5c15cc428ee78ac6537518; Authentication ceb2688d6277b10f1bfe7652223d1d295b7e49d9.
