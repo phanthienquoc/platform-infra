@@ -70,9 +70,38 @@ if grep -Fq "Removing unused K3s image" <<< "$output"; then
   exit 1
 fi
 
+# A terminal Pod may retain a spec reference after containerd has removed the image.
+# Its exited container is absent from CRI ps -a, so no local image ID can be deleted.
+cat > "$tmp/pods.json" <<'JSON'
+{"items":[
+  {"status":{"phase":"Running"},"spec":{"initContainers":[],"containers":[{"image":"ghcr.io/example/app:stable"}],"ephemeralContainers":[]}},
+  {"status":{"phase":"Succeeded"},"spec":{"initContainers":[],"containers":[{"image":"rancher/klipper-helm:v0.13.3-build20260727"}],"ephemeralContainers":[]}}
+]}
+JSON
+cat > "$tmp/images.json" <<'JSON'
+{"images":[
+  {"id":"sha256:used","repoTags":["ghcr.io/example/app:stable"],"repoDigests":[],"size":100,"pinned":false,"createdAt":"2026-11-01T00:00:00Z"},
+  {"id":"sha256:unused-new","repoTags":["ghcr.io/example/unused:new"],"repoDigests":[],"size":200,"pinned":false,"createdAt":"2026-11-01T02:00:00Z"},
+  {"id":"sha256:unused-old","repoTags":["ghcr.io/example/unused:old"],"repoDigests":[],"size":300,"pinned":false,"createdAt":"2026-11-01T01:00:00Z"}
+]}
+JSON
+terminal_output="$(
+  PATH="$tmp/bin:$PATH" \
+  KCTL="$tmp/bin/platform-kubectl" \
+  CRI="$tmp/bin/platform-crictl" \
+  DRY_RUN=true KEEP_UNUSED_IMAGES=1 \
+  bash "$cleanup_script" 2>&1
+)"
+grep -Fq "Ignoring unresolved image reference for terminal Pod phase=Succeeded" <<< "$terminal_output"
+grep -Fq "unused_images=2 retain=1 remove=1 dry_run=true" <<< "$terminal_output"
+if grep -Fq "candidate id=sha256:used" <<< "$terminal_output"; then
+  echo "Running Pod image was incorrectly selected after terminal Pod fallback." >&2
+  exit 1
+fi
+
 # An unresolved Pod image reference must fail closed before any deletion.
 cat > "$tmp/pods.json" <<'JSON'
-{"items":[{"spec":{"initContainers":[],"containers":[{"image":"ghcr.io/example/missing:tag"}],"ephemeralContainers":[]}}]}
+{"items":[{"status":{"phase":"Running"},"spec":{"initContainers":[],"containers":[{"image":"ghcr.io/example/missing:tag"}],"ephemeralContainers":[]}}]}
 JSON
 set +e
 PATH="$tmp/bin:$PATH" \
@@ -87,6 +116,6 @@ set -e
   cat "$tmp/unresolved.err" >&2
   exit 1
 }
-grep -Fq "Cannot resolve Pod image reference" "$tmp/unresolved.err"
+grep -Fq "Cannot resolve non-terminal Pod image reference" "$tmp/unresolved.err"
 
 echo "K3s image cleanup regression tests passed."
