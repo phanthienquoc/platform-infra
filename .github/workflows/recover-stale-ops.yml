@@ -28,6 +28,9 @@ run-name: Recover Stale Scheduled Ops — ${{ github.event_name }}
   workflow_run:
     workflows: ["reconcile-vps", "inspect-vps", "Mirror locally-uncensored into private repository"]
     types: [completed]
+  # Independent heartbeat from TCE's scheduled WF-06/WF-07/WF-12 checks.
+  repository_dispatch:
+    types: [tce-schedule-heartbeat]
 
 permissions:
   actions: write
@@ -49,7 +52,14 @@ jobs:
              (github.event.workflow.path == '.github/workflows/inspect-vps.yml' &&
               github.event.workflow_run.event == 'schedule') ||
              (github.event.workflow.path == '.github/workflows/mirror-locally-uncensored.yml' &&
-              github.event.workflow_run.event == 'schedule')))) }}
+              github.event.workflow_run.event == 'schedule')))) &&
+          (github.event_name != 'repository_dispatch' ||
+           (github.event.action == 'tce-schedule-heartbeat' &&
+            github.event.client_payload.source_repository == 'phanthienquoc/TCE-dashboard' &&
+            github.event.client_payload.source_event == 'schedule' &&
+            (github.event.client_payload.source_workflow_path == '.github/workflows/wf-06-tce-healthcheck.yml' ||
+             github.event.client_payload.source_workflow_path == '.github/workflows/wf-07-tce-integration-check.yml' ||
+             github.event.client_payload.source_workflow_path == '.github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml')))) }}
     runs-on: ubuntu-latest
     timeout-minutes: 6
     env:
@@ -57,6 +67,41 @@ jobs:
       MAX_RECONCILE_AGE_MINUTES: "20"
       MAX_INSPECTION_AGE_MINUTES: "75"
     steps:
+      - name: Validate external TCE schedule heartbeat payload
+        if: ${{ github.event_name == 'repository_dispatch' }}
+        env:
+          SOURCE_REPOSITORY: ${{ github.event.client_payload.source_repository }}
+          SOURCE_EVENT: ${{ github.event.client_payload.source_event }}
+          SOURCE_WORKFLOW_PATH: ${{ github.event.client_payload.source_workflow_path }}
+          SOURCE_RUN_ID: ${{ github.event.client_payload.source_run_id }}
+          SOURCE_HEAD_SHA: ${{ github.event.client_payload.source_head_sha }}
+          HEARTBEAT_RUN_ID: ${{ github.event.client_payload.heartbeat_run_id }}
+          HEARTBEAT_HEAD_SHA: ${{ github.event.client_payload.heartbeat_head_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_REPOSITORY" == "phanthienquoc/TCE-dashboard" ]] || {
+            echo "::error::Unexpected external heartbeat repository."
+            exit 1
+          }
+          [[ "$SOURCE_EVENT" == "schedule" ]] || {
+            echo "::error::External heartbeat must originate from a scheduled TCE event."
+            exit 1
+          }
+          case "$SOURCE_WORKFLOW_PATH" in
+            .github/workflows/wf-06-tce-healthcheck.yml|.github/workflows/wf-07-tce-integration-check.yml|.github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml) ;;
+            *) echo "::error::Unapproved TCE heartbeat workflow path."; exit 1 ;;
+          esac
+          [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ && "$HEARTBEAT_RUN_ID" =~ ^[0-9]+$ ]] || {
+            echo "::error::TCE heartbeat run IDs must be numeric."
+            exit 1
+          }
+          [[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ && "$HEARTBEAT_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || {
+            echo "::error::TCE heartbeat SHAs must be full commit IDs."
+            exit 1
+          }
+          echo "Accepted authenticated TCE schedule heartbeat: source=$SOURCE_WORKFLOW_PATH run=$SOURCE_RUN_ID sha=$SOURCE_HEAD_SHA heartbeat_run=$HEARTBEAT_RUN_ID."
+
       - name: Verify and await source reconciliation completion
         id: source
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.source_run_id != '' }}
