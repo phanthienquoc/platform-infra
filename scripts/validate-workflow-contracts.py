@@ -196,20 +196,6 @@ if "github.event_name == 'schedule'" in reconcile and not re.search(
         "but does not declare an on.schedule trigger."
     )
 
-# Keep production clocks on distinct, off-boundary minute slots. GitHub schedule
-# delivery is best-effort; staggering avoids quarter-hour boundaries and prevents
-# reconcile, inspection, and watchdog clocks from competing at once.
-def scheduled_crons(workflow: str) -> list[str]:
-    return re.findall(r'(?m)^ *- *cron: *"([^"]+)" *$', workflow)
-
-
-if scheduled_crons(reconcile) != ["7,22,37,52 * * * *"]:
-    fail("reconcile-vps must retain a 15-minute cadence offset to minutes 7/22/37/52.")
-if scheduled_crons(watchdog) != ["12,27,42,57 * * * *"]:
-    fail("The read-only watchdog must run 5 minutes after each offset reconciliation slot.")
-if scheduled_crons(inspection) != ["2,32 * * * *"]:
-    fail("VPS inspection must retain its 30-minute cadence at minutes 2 and 32.")
-
 # The shared apply job and the aggregate lane gate must both fail hard on errors.
 if "name: Fail if shared reconciliation failed" not in reconcile:
     fail("reconcile-vps.yml is missing its shared reconciliation failure gate.")
@@ -454,11 +440,79 @@ for step_name in (
 
 
 # A read-only watchdog detects missing scheduled reconcile events independently.
-watchdog = read("reconcile-schedule-watchdog.yml")
-if 'cron: "*/15 * * * *"' not in reconcile:
-    fail("Production reconcile cadence must remain every 15 minutes.")
-if 'cron: "*/15 * * * *"' not in watchdog:
-    fail("The read-only reconcile schedule watchdog must run every 15 minutes.")
+def scheduled_crons(workflow: str) -> list[str]:
+    return re.findall(r'(?m)^ *- *cron: *"([^"]+)" *
+if "workflow_run:" not in watchdog or "      - inspect-vps" not in watchdog or "      - reconcile-vps" not in watchdog:
+    fail("The watchdog must run after scheduled reconciliation and inspection completions as a schedule-delivery fallback.")
+if "      - completed" not in watchdog or "github.event.workflow_run.event == 'schedule'" not in watchdog:
+    fail("The watchdog fallback must be limited to completed scheduled reconcile-vps/inspect-vps runs.")
+if '"/repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs"' in watchdog:
+    fail("The watchdog gh api endpoint must not start with a slash.")
+if '"repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs"' not in watchdog:
+    fail("The watchdog must query the reconcile-vps workflow-specific run history.")
+if "-X GET" not in watchdog:
+    fail("The watchdog must explicitly use GET when passing event/per_page query parameters.")
+if "event=schedule" not in watchdog or "MAX_AGE_MINUTES: \"45\"" not in watchdog:
+    fail("The watchdog must check scheduled events and fail after 45 minutes without one.")
+if "actions: read" not in watchdog or "contents: read" not in watchdog:
+    fail("The schedule watchdog must use read-only repository permissions.")
+for forbidden in ("contents: write", "packages: write", "pull-requests: write",
+                  "platform-kubectl", "scripts/reconcile-vps.sh"):
+    if forbidden in watchdog:
+        fail(f"The read-only schedule watchdog must not mutate production or request write access: {forbidden}")
+if "No scheduled reconcile-vps run is available" not in watchdog:
+    fail("The watchdog must fail closed when no scheduled reconcile evidence exists.")
+
+
+# Production image changes must pass the changed-reference guard in both validation lanes.
+image_change_contract = ROOT / "scripts" / "validate-image-change-contract.py"
+if not image_change_contract.is_file():
+    fail("Changed production image-reference contract script is missing.")
+if "validate-image-change-contract.py --self-test" not in manifest_validation:
+    fail("Manifest validation must run the immutable image-change contract fixtures.")
+if 'validate-image-change-contract.py "$BASE_SHA" "$HEAD_SHA"' not in manifest_validation:
+    fail("Manifest validation must inspect changed production image references on pull requests.")
+actions_validation = read("validate-github-actions.yml")
+if "validate-image-change-contract.py --self-test" not in actions_validation:
+    fail("Workflow validation must run immutable image-change contract regression fixtures.")
+
+# A merge of the watchdog itself must exercise the read-only API path immediately.
+# This push-only smoke mode may warn about stale/missing schedule data, but normal
+# scheduled/manual/fallback invocations must continue to fail closed on stale data.
+if '  push:\n    branches: [master]\n    paths:\n      - ".github/workflows/reconcile-schedule-watchdog.yml"' not in watchdog:
+    fail("The watchdog must run a path-scoped post-merge API smoke check on master.")
+if watchdog.count('if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then') != 2:
+    fail("Only the watchdog's empty-history and stale-history guards may be warn-only for push smoke runs.")
+if '::warning::Read-only API smoke succeeded' not in watchdog:
+    fail("The watchdog push smoke must clearly label stale/missing schedule data as a warning, not health success.")
+if '::error::No scheduled reconcile-vps run within ${MAX_AGE_MINUTES} minutes.' not in watchdog:
+    fail("Scheduled/manual watchdog runs must still fail closed when reconciliation history is stale.")
+
+
+
+# The read-only watchdog must distinguish a disabled reconciliation workflow from
+# an active workflow whose scheduled run history is stale or missing.
+workflow_state_step = watchdog.find("name: Verify reconcile-vps workflow is enabled")
+latest_run_step = watchdog.find("name: Inspect latest scheduled reconcile run")
+if workflow_state_step < 0 or latest_run_step < 0 or workflow_state_step > latest_run_step:
+    fail("The watchdog must verify reconcile-vps is enabled before evaluating schedule freshness.")
+if '"repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml"' not in watchdog:
+    fail("The watchdog must query reconcile-vps workflow metadata through the Actions API.")
+if 'state="$(jq -r \'.state // empty\' <<< "$workflow")"' not in watchdog:
+    fail("The watchdog must inspect the workflow enabled state returned by GitHub.")
+if 'if [[ "$state" != "active" ]]; then' not in watchdog or "scheduled events cannot be relied on" not in watchdog:
+    fail("The watchdog must fail closed with an explicit diagnostic when reconcile-vps is disabled.")
+
+print("Workflow contract validation passed.")
+, workflow)
+
+
+if scheduled_crons(reconcile) != ["7,22,37,52 * * * *"]:
+    fail("reconcile-vps must retain a 15-minute cadence offset to minutes 7/22/37/52.")
+if scheduled_crons(watchdog) != ["12,27,42,57 * * * *"]:
+    fail("The read-only watchdog must run 5 minutes after each offset reconciliation slot.")
+if scheduled_crons(inspection) != ["2,32 * * * *"]:
+    fail("VPS inspection must retain its 30-minute cadence at minutes 2 and 32.")
 if "workflow_run:" not in watchdog or "      - inspect-vps" not in watchdog or "      - reconcile-vps" not in watchdog:
     fail("The watchdog must run after scheduled reconciliation and inspection completions as a schedule-delivery fallback.")
 if "      - completed" not in watchdog or "github.event.workflow_run.event == 'schedule'" not in watchdog:
