@@ -74,9 +74,15 @@ resolve_pod_image_ids() {
 
   jq -r '
     .items[] as $pod
-    | ($pod.spec.initContainers[]?.image, $pod.spec.containers[]?.image, $pod.spec.ephemeralContainers[]?.image)
-    | select(type == "string" and length > 0)
-    | [($pod.status.phase // "Unknown"), .] | @tsv
+    | (
+        (($pod.spec.initContainers // [])[]? | {name: .name, image: .image, statuses: ($pod.status.initContainerStatuses // [])}),
+        (($pod.spec.containers // [])[]? | {name: .name, image: .image, statuses: ($pod.status.containerStatuses // [])}),
+        (($pod.spec.ephemeralContainers // [])[]? | {name: .name, image: .image, statuses: ($pod.status.ephemeralContainerStatuses // [])})
+      )
+    | select((.image | type) == "string" and (.image | length) > 0)
+    | . as $container
+    | ($container.statuses | map(select(.name == $container.name)) | first // {}) as $status
+    | [($pod.status.phase // "Unknown"), $container.image, ($status.state.waiting.reason // ""), ($status.imageID // "")] | @tsv
   ' "$pods_json" | sort -u > "$refs_file"
   jq -r '.images[]? as $image | $image.id as $id | ($image.repoTags[]?, $image.repoDigests[]?) as $ref | [$id, $ref] | @tsv' "$images_json" > "$raw_map"
 
@@ -89,7 +95,7 @@ resolve_pod_image_ids() {
   cut -f2 "$map_file" | sort -u > "$local_refs"
 
   : > "$output_file"
-  while read -r phase ref; do
+  while read -r phase ref waiting_reason image_id; do
     [[ -n "$ref" ]] || continue
     normalized="$(canonical_image_ref "$ref")"
     if ! grep -Fxq "$normalized" "$local_refs"; then
@@ -101,12 +107,16 @@ resolve_pod_image_ids() {
           echo "Ignoring unresolved image reference for terminal Pod phase=$phase; no local CRI image matched: $ref (normalized=$normalized)" >&2
           continue
           ;;
-        *)
-          echo "Cannot resolve non-terminal Pod image reference; refusing cleanup: phase=$phase ref=$ref (normalized=$normalized)" >&2
-          missing_refs=1
-          continue
-          ;;
       esac
+      if [[ -z "$image_id" && ( "$waiting_reason" == "ImagePullBackOff" || "$waiting_reason" == "ErrImagePull" ) ]]; then
+        # Kubelet has not created a container and the validated local CRI
+        # inventory has no matching image; there is no local image ID to delete.
+        echo "Ignoring unresolved image reference for Pod with $waiting_reason and empty imageID: $ref (normalized=$normalized)" >&2
+        continue
+      fi
+      echo "Cannot resolve non-terminal Pod image reference; refusing cleanup: phase=$phase waiting_reason=$waiting_reason imageID=$image_id ref=$ref (normalized=$normalized)" >&2
+      missing_refs=1
+      continue
     fi
     awk -F '\t' -v ref="$normalized" '$2 == ref { print $1 }' "$map_file" >> "$output_file"
   done < "$refs_file"

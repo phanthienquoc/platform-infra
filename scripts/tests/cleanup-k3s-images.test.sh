@@ -99,6 +99,47 @@ if grep -Fq "candidate id=sha256:used" <<< "$terminal_output"; then
   exit 1
 fi
 
+# A Pending Pod in ImagePullBackOff with no imageID and no local CRI image
+# cannot be using or protecting a local image; unrelated cleanup can proceed.
+cat > "$tmp/pods.json" <<'JSON'
+{"items":[
+  {"status":{"phase":"Running","containerStatuses":[{"name":"app","imageID":"sha256:used","state":{"running":{"startedAt":"2026-11-01T00:00:00Z"}}}]},"spec":{"initContainers":[],"containers":[{"name":"app","image":"ghcr.io/example/app:stable"}],"ephemeralContainers":[]}},
+  {"status":{"phase":"Pending","containerStatuses":[{"name":"admin","imageID":"","state":{"waiting":{"reason":"ImagePullBackOff"}}}]},"spec":{"initContainers":[],"containers":[{"name":"admin","image":"ghcr.io/phanthienquoc/stockdividend/admin:12d63b4"}],"ephemeralContainers":[]}}
+]}
+JSON
+pull_failed_output="$(
+  PATH="$tmp/bin:$PATH" \
+  KCTL="$tmp/bin/platform-kubectl" \
+  CRI="$tmp/bin/platform-crictl" \
+  DRY_RUN=true KEEP_UNUSED_IMAGES=1 \
+  bash "$cleanup_script" 2>&1
+)"
+grep -Fq "Ignoring unresolved image reference for Pod with ImagePullBackOff and empty imageID" <<< "$pull_failed_output"
+grep -Fq "unused_images=2 retain=1 remove=1 dry_run=true" <<< "$pull_failed_output"
+if grep -Fq "candidate id=sha256:used" <<< "$pull_failed_output"; then
+  echo "Running container image was incorrectly selected while ignoring an image-pull failure." >&2
+  exit 1
+fi
+
+# A pull-failed Pod with a non-empty imageID remains fail-closed.
+cat > "$tmp/pods.json" <<'JSON'
+{"items":[{"status":{"phase":"Pending","containerStatuses":[{"name":"admin","imageID":"sha256:unknown","state":{"waiting":{"reason":"ImagePullBackOff"}}}]},"spec":{"initContainers":[],"containers":[{"name":"admin","image":"ghcr.io/phanthienquoc/stockdividend/admin:12d63b4"}],"ephemeralContainers":[]}}]}
+JSON
+set +e
+PATH="$tmp/bin:$PATH" \
+KCTL="$tmp/bin/platform-kubectl" \
+CRI="$tmp/bin/platform-crictl" \
+DRY_RUN=true KEEP_UNUSED_IMAGES=1 \
+bash "$cleanup_script" >"$tmp/pull-imageid.out" 2>"$tmp/pull-imageid.err"
+pull_imageid_status=$?
+set -e
+[[ "$pull_imageid_status" -eq 3 ]] || {
+  echo "Expected pull-failed Pod with imageID to exit 3, got $pull_imageid_status." >&2
+  cat "$tmp/pull-imageid.err" >&2
+  exit 1
+}
+grep -Fq "Cannot resolve non-terminal Pod image reference" "$tmp/pull-imageid.err"
+
 # An unresolved Pod image reference must fail closed before any deletion.
 cat > "$tmp/pods.json" <<'JSON'
 {"items":[{"status":{"phase":"Running"},"spec":{"initContainers":[],"containers":[{"image":"ghcr.io/example/missing:tag"}],"ephemeralContainers":[]}}]}
