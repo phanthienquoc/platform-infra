@@ -1,6 +1,39 @@
 # Cross-Repository Workflow Inventory
 
-## Latest workflow inventory review (2026-11-01 15:08 UTC; recovery-controller fixes merged; TCE WF-06 delivery observed)
+## Latest workflow inventory review (2026-11-01 16:10 UTC; mirror heartbeat merged; recovery-to-inspection runtime verified)
+
+### Repository heads and open PRs
+
+- Master heads: Platform Infra `92f85ff46a30c4297e7a8660c4fa665b1ac12888`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `f5c04475eb4e67811c66b350d60541b21b8262c7`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: Platform Infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #75/#76; none in TCE, StockDividend, or Media.
+- Platform Infra #998 (schedule heartbeat) and #999 (fresh inspection snapshot) are merged. No workflow was removed.
+
+### Platform workflow inventory and runtime evidence
+
+- Recovery controller and read-only schedule watchdog now also accept completed scheduled runs from the existing mirror workflow as an independent heartbeat. Exact source path, master branch, and `event=schedule` are required. Manual/push mirror runs are ignored. Cron expressions and deployment authorities are unchanged.
+- PR #998 exact-head validation [#41324459254](https://github.com/phanthienquoc/platform-infra/actions/runs/41324459254) and [#41324459291](https://github.com/phanthienquoc/platform-infra/actions/runs/41324459291) passed; post-merge [#41324507161](https://github.com/phanthienquoc/platform-infra/actions/runs/41324507161) and [#41324507168](https://github.com/phanthienquoc/platform-infra/actions/runs/41324507168) passed.
+- Recovery push [#41324507322](https://github.com/phanthienquoc/platform-infra/actions/runs/41324507322) verified dispatch of reconciliation #41324521466 on exact master SHA with `mode=apply`, `allow_image_changes=false`, `target_app=all`.
+- Reconciliation #41324521466 shared preflight/credential/cluster work passed; no drift so manifest apply skipped; Media/TCE/MicroFE/Auth lanes passed; StockDividend health failed on old non-ARM64 tags.
+- Recovery #41324707002 passed the completed-source wait and API reference-clock steps, did not dispatch a duplicate reconciliation, and verified dispatch of read-only inspection #41324734578 because the last inspection was 112m old.
+- Inspection #41324734578 succeeded. PR #999 exact-head validation #41324798596 passed; PR merged as `92f85ff`. Fresh snapshot: node Ready/ARM64, disk 54%, runner services active; Media/MicroFE 1/1; Stock Admin/Backend ImagePullBackOff on `12d63b4`; old Backend/Frontend replicas remain; TCE/Auth/Keycloak 0/0.
+- Normal scheduled Platform runs remain stale: reconcile #41300948892 (11:13:47Z), inspection #41301947264 (11:27:15Z), watchdog #41301007488 (11:14:36Z). No scheduled recovery-controller run observed.
+- Mirror schedule [#41323952888](https://github.com/phanthienquoc/platform-infra/actions/runs/41323952888) was delivered at 15:59:10Z but failed because `Platform-infra-token` is missing. The new mirror-triggered recovery/watchdog path is merged but awaits its first post-merge mirror completion.
+
+### Application workflow inventory
+
+- TCE Dashboard: WF-06 latest scheduled #41319526719 at 15:06:39Z failed only at public HTTP 503 health endpoints while TCE/Auth remain stopped; SSH diagnostics passed. WF-12 workflow_run follow-up #41319543937 succeeded. Latest scheduled WF-12 #41315132135 at 14:13:39Z reported stale WF-06. WF-07 scheduled #41311225433 at 13:26Z passed. Preserve all existing schedules and the market-scan cadence.
+- StockDividend: CI #41314359022 and ARM64 publisher #41314359012 passed on source `f5c04475`. All three immutable digests remain verified. Production release gate remains false; no digest dispatch or GitOps promotion.
+- Media Generation: latest CI #41246414186 passed; fresh K3s snapshot confirms backend/frontend 1/1 with digest-pinned imageIDs.
+- Authentication: latest CI #41033586844 and manual release #41040510320 passed on current master. Auth/Keycloak remain stopped; PR #75/#76 remain open pending environment and migration safety evidence.
+
+### External dependencies and operational notes
+
+- Mirror requires `Platform-infra-token` with only target repository `Contents: write`. Do not reuse GHCR_READ_TOKEN or app dispatch credentials.
+- Supabase project `gtqovpusfyyvxpeezxlo` was `ACTIVE_HEALTHY`; read-only SQL at 16:06:18Z passed. Bounded 15:00–16:06Z logs: 397 edge / 33 PostgREST, zero HTTP 522 mentions and zero statement-timeout mentions.
+- VPS reports `restart_required=yes` due pending OS package updates. Do not upgrade/reboot without an approved maintenance window.
+- Preserve weekly/manual image cleanup, manual/release workflows, CI/test/security jobs, and all existing deployment authorities. No SSH/Compose authority was added.
+
+## Previous workflow inventory review (2026-11-01 15:08 UTC; recovery-controller fixes merged; TCE WF-06 delivery observed)
 
 ### Repository heads and open PRs
 
