@@ -442,6 +442,15 @@ for step_name in (
 watchdog = read("reconcile-schedule-watchdog.yml")
 def scheduled_crons(workflow: str) -> list[str]:
     return re.findall(r'(?m)^ *- *cron: *"([^"]+)"', workflow)
+
+
+if scheduled_crons(reconcile) != ["7,22,37,52 * * * *"]:
+    fail("reconcile-vps must retain a 15-minute cadence offset to minutes 7/22/37/52.")
+if scheduled_crons(watchdog) != ["12,27,42,57 * * * *"]:
+    fail("The read-only watchdog must run 5 minutes after each offset reconciliation slot.")
+if scheduled_crons(inspection) != ["2,32 * * * *"]:
+    fail("VPS inspection must retain its 30-minute cadence at minutes 2 and 32.")
+
 if "workflow_run:" not in watchdog or "      - inspect-vps" not in watchdog or "      - reconcile-vps" not in watchdog:
     fail("The watchdog must run after scheduled reconciliation and inspection completions as a schedule-delivery fallback.")
 if "      - completed" not in watchdog or "github.event.workflow_run.event == 'schedule'" not in watchdog:
