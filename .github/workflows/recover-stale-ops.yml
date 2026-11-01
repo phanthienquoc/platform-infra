@@ -4,6 +4,17 @@ run-name: Recover Stale Scheduled Ops — ${{ github.event_name }}
 'on':
   schedule:
     - cron: "10,25,40,55 * * * *"
+  # Bootstrap recovery after deployment-contract changes even if schedule delivery is stale.
+  push:
+    branches: [master]
+    paths:
+      - ".github/workflows/reconcile-vps.yml"
+      - ".github/workflows/inspect-vps.yml"
+      - ".github/workflows/recover-stale-ops.yml"
+      - "apps/**"
+      - "platform/**"
+      - "environments/prod/**"
+      - "scripts/**"
   workflow_dispatch:
   workflow_run:
     workflows: ["reconcile-vps", "inspect-vps"]

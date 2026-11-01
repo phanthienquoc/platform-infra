@@ -26,6 +26,19 @@ recovery = read("recover-stale-ops.yml")
 inspection = read("inspect-vps.yml")
 if 'workflows: ["reconcile-vps", "inspect-vps"]' not in recovery or "types: [completed]" not in recovery:
     fail("Recovery controller must run after master reconciliation and scheduled inspection completions.")
+if not re.search(r"(?m)^  push:\n    branches: \[master\]\n    paths:", recovery):
+    fail("Recovery controller must bootstrap from deployment-relevant master pushes.")
+for required_path in (
+    '.github/workflows/reconcile-vps.yml',
+    '.github/workflows/inspect-vps.yml',
+    '.github/workflows/recover-stale-ops.yml',
+    'apps/**',
+    'platform/**',
+    'environments/prod/**',
+    'scripts/**',
+):
+    if required_path not in recovery:
+        fail(f"Recovery push bootstrap is missing deployment path filter: {required_path}")
 if "github.event.workflow_run.head_branch == 'master'" not in recovery:
     fail("Recovery controller must ignore non-master workflow completion events.")
 if "github.event.workflow_run.name == 'reconcile-vps'" not in recovery:
