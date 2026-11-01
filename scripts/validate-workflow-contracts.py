@@ -512,6 +512,7 @@ for required in (
     "gh workflow run inspect-vps.yml",
     ".updated_at // .run_started_at // .created_at",
     ".run_started_at // .created_at",
+    "gh api -X GET",
     "sort_by(.updated_at // .run_started_at // .created_at)",
     "steps.reconcile.outputs.busy != 'true'",
 ):
