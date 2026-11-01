@@ -1,12 +1,12 @@
 # Cross-Repository Workflow Inventory
 
-## Latest workflow inventory review (2026-11-01 16:10 UTC; mirror heartbeat merged; recovery-to-inspection runtime verified)
+## Latest workflow inventory review (2026-11-01 16:14 UTC; mirror secret naming corrected; recovery-to-inspection runtime verified)
 
 ### Repository heads and open PRs
 
-- Master heads: Platform Infra `92f85ff46a30c4297e7a8660c4fa665b1ac12888`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `f5c04475eb4e67811c66b350d60541b21b8262c7`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Master heads: Platform Infra `b36d5be236d51cd0d659affa454fc73c98d42e48`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `f5c04475eb4e67811c66b350d60541b21b8262c7`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
 - Open PRs: Platform Infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #75/#76; none in TCE, StockDividend, or Media.
-- Platform Infra #998 (schedule heartbeat) and #999 (fresh inspection snapshot) are merged. No workflow was removed.
+- Platform Infra #998 (schedule heartbeat), #999 (fresh inspection snapshot), #1000 (tracker refresh), and #1001 (mirror secret-name fix) are merged. No workflow was removed.
 
 ### Platform workflow inventory and runtime evidence
 
@@ -17,7 +17,12 @@
 - Recovery #41324707002 passed the completed-source wait and API reference-clock steps, did not dispatch a duplicate reconciliation, and verified dispatch of read-only inspection #41324734578 because the last inspection was 112m old.
 - Inspection #41324734578 succeeded. PR #999 exact-head validation #41324798596 passed; PR merged as `92f85ff`. Fresh snapshot: node Ready/ARM64, disk 54%, runner services active; Media/MicroFE 1/1; Stock Admin/Backend ImagePullBackOff on `12d63b4`; old Backend/Frontend replicas remain; TCE/Auth/Keycloak 0/0.
 - Normal scheduled Platform runs remain stale: reconcile #41300948892 (11:13:47Z), inspection #41301947264 (11:27:15Z), watchdog #41301007488 (11:14:36Z). No scheduled recovery-controller run observed.
-- Mirror schedule [#41323952888](https://github.com/phanthienquoc/platform-infra/actions/runs/41323952888) was delivered at 15:59:10Z but failed because `Platform-infra-token` is missing. The new mirror-triggered recovery/watchdog path is merged but awaits its first post-merge mirror completion.
+- Mirror schedule [#41323952888](https://github.com/phanthienquoc/platform-infra/actions/runs/41323952888) was delivered at 15:59:10Z but failed because the workflow referenced invalid hyphenated secret name `Platform-infra-token`. PR #1001 now uses valid `PLATFORM_INFRA_MIRROR_TOKEN`; the secret value still needs to be configured with destination-only `Contents: write`. The mirror-triggered recovery/watchdog path awaits its first post-merge mirror completion.
+
+### Mirror credential correction
+
+- The old `Platform-infra-token` secret name contained hyphens and was invalid under GitHub Actions naming rules. PR #1001 now references `PLATFORM_INFRA_MIRROR_TOKEN` and enforces it in `validate-workflow-contracts.py`.
+- The secret value still must be created in Platform Infra's Actions secret scope (or an organization scope limited to Platform Infra), with destination-only `Contents: write` on `phanthienquoc/locally-uncensored-private`. No token value is stored in the repository.
 
 ### Application workflow inventory
 
@@ -28,7 +33,7 @@
 
 ### External dependencies and operational notes
 
-- Mirror requires `Platform-infra-token` with only target repository `Contents: write`. Do not reuse GHCR_READ_TOKEN or app dispatch credentials.
+- Mirror requires `PLATFORM_INFRA_MIRROR_TOKEN` with only target repository `Contents: write`; the previous hyphenated name was invalid under GitHub's secret naming rules. Do not reuse GHCR_READ_TOKEN or app dispatch credentials.
 - Supabase project `gtqovpusfyyvxpeezxlo` was `ACTIVE_HEALTHY`; read-only SQL at 16:06:18Z passed. Bounded 15:00–16:06Z logs: 397 edge / 33 PostgREST, zero HTTP 522 mentions and zero statement-timeout mentions.
 - VPS reports `restart_required=yes` due pending OS package updates. Do not upgrade/reboot without an approved maintenance window.
 - Preserve weekly/manual image cleanup, manual/release workflows, CI/test/security jobs, and all existing deployment authorities. No SSH/Compose authority was added.
