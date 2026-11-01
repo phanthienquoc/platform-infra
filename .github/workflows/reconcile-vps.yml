@@ -103,15 +103,16 @@ jobs:
             exit 1
           fi
           git fetch --no-tags --depth=1 origin "$before"
-          mapfile -t changed_paths < <(git diff --name-only "$before" "$GITHUB_SHA")
-          if [[ "${#changed_paths[@]}" -eq 0 ]]; then
+          changed_paths_output="$(git diff --name-only "$before" "$GITHUB_SHA")"
+          if [[ -z "$changed_paths_output" ]]; then
             echo "::error::The push-triggered reconcile has no changed paths to scope."
             exit 1
           fi
-          target_scope="$(printf '%s\\n' "${changed_paths[@]}" | bash scripts/resolve-push-deployment-scope.sh)"
+          mapfile -t changed_paths <<< "$changed_paths_output"
+          target_scope="$(printf '%s\n' "${changed_paths[@]}" | bash scripts/resolve-push-deployment-scope.sh)"
           echo "TARGET_APP=$target_scope" >> "$GITHUB_ENV"
           echo "Resolved push deployment scope: $target_scope"
-          printf 'Changed paths:\\n%s\\n' "${changed_paths[*]}"
+          printf 'Changed paths:\n%s\n' "${changed_paths[*]}"
 
       - name: Resolve deployment scope
         id: scope
