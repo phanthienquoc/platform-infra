@@ -72,7 +72,12 @@ resolve_pod_image_ids() {
   local local_refs="$tmp/local-image-refs.$$.txt"
   local id ref normalized missing_refs=0
 
-  jq -r '.items[] | (.spec.initContainers[]?.image, .spec.containers[]?.image, .spec.ephemeralContainers[]?.image) | select(type == "string" and length > 0)' "$pods_json" | sort -u > "$refs_file"
+  jq -r '
+    .items[] as $pod
+    | ($pod.spec.initContainers[]?.image, $pod.spec.containers[]?.image, $pod.spec.ephemeralContainers[]?.image)
+    | select(type == "string" and length > 0)
+    | [($pod.status.phase // "Unknown"), .] | @tsv
+  ' "$pods_json" | sort -u > "$refs_file"
   jq -r '.images[]? as $image | $image.id as $id | ($image.repoTags[]?, $image.repoDigests[]?) as $ref | [$id, $ref] | @tsv' "$images_json" > "$raw_map"
 
   : > "$map_file"
@@ -84,13 +89,24 @@ resolve_pod_image_ids() {
   cut -f2 "$map_file" | sort -u > "$local_refs"
 
   : > "$output_file"
-  while IFS= read -r ref; do
+  while read -r phase ref; do
     [[ -n "$ref" ]] || continue
     normalized="$(canonical_image_ref "$ref")"
     if ! grep -Fxq "$normalized" "$local_refs"; then
-      echo "Cannot resolve Pod image reference after registry normalization; refusing cleanup: $ref (normalized=$normalized)" >&2
-      missing_refs=1
-      continue
+      case "$phase" in
+        Succeeded|Failed)
+          # Terminal Pods may retain their original spec after containerd has
+          # garbage-collected the image. Existing CRI containers are protected
+          # separately through container-image-ids.txt, including exited ones.
+          echo "Ignoring unresolved image reference for terminal Pod phase=$phase; no local CRI image matched: $ref (normalized=$normalized)" >&2
+          continue
+          ;;
+        *)
+          echo "Cannot resolve non-terminal Pod image reference; refusing cleanup: phase=$phase ref=$ref (normalized=$normalized)" >&2
+          missing_refs=1
+          continue
+          ;;
+      esac
     fi
     awk -F '\t' -v ref="$normalized" '$2 == ref { print $1 }' "$map_file" >> "$output_file"
   done < "$refs_file"
