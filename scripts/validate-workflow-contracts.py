@@ -477,16 +477,16 @@ for repository in (
 
 
 # Auth shutdown must be an isolated, allowlisted maintenance operation.
-if "rollout-status-v12-scoped-image-pull-restart" not in bootstrap_script:
+if "rollout-status-v13-permanent-image-pull-guard" not in bootstrap_script:
     fail("Runner bootstrap must publish the versioned scoped image-pull restart policy.")
 if '  scale)' not in bootstrap_script or 'scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform' not in bootstrap_script:
     fail("Runner bootstrap must allow only the exact Auth/Keycloak scale-to-zero command.")
 
-if "rollout-status-v12-scoped-image-pull-restart" not in reconcile:
+if "rollout-status-v13-permanent-image-pull-guard" not in reconcile:
     fail("Production reconciliation must require the v12 scoped image-pull restart runner policy.")
 auth_provision = read("provision-auth-runtime-secret.yml")
-if "rollout-status-v12-scoped-image-pull-restart" not in auth_provision:
-    fail("Standalone Auth secret provisioning must accept the current v12 runner policy.")
+if "rollout-status-v13-permanent-image-pull-guard" not in auth_provision:
+    fail("Standalone Auth secret provisioning must accept the current v13 runner policy.")
 
 restart_step = reconcile.split("- name: Restart target workloads blocked on image pulls", 1)[1].split(
     "- name: Validate TCE release pairing", 1
@@ -505,6 +505,10 @@ if "local selector" not in restart_block or "matchLabels" not in restart_block:
     fail("Runner image-pull recovery must inspect only pods selected by each target Deployment.")
 if 'rollout restart "deployment/$deployment"' not in restart_block:
     fail("Runner image-pull recovery must restart only the Deployment with a blocked image pull.")
+if "permanent_errors" not in restart_block or "no match for platform in manifest" not in restart_block or "manifest unknown" not in restart_block:
+    fail("Runner image-pull recovery must skip permanent architecture/manifest failures instead of restarting an unchanged image.")
+if restart_block.find('if [[ -n "$permanent_errors" ]]') < 0 or restart_block.find('if [[ -n "$permanent_errors" ]]') > restart_block.find('rollout restart "deployment/$deployment"'):
+    fail("Permanent image-reference failures must be checked before any rollout restart.")
 for required_target in (
     "microfe)","auth-service)","tce-dashboard)","stockdividend)","media-generation)","all)",
 ):
