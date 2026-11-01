@@ -35,8 +35,7 @@ for required_path in (
     'apps/**',
     'platform/**',
     'environments/prod/**',
-    'scripts/reconcile-vps.sh',
-    'scripts/inspect-vps.sh',
+    'scripts/**',
 ):
     if required_path not in recovery:
         fail(f"Recovery push bootstrap is missing deployment path filter: {required_path}")
