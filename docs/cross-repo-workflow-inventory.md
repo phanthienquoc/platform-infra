@@ -471,3 +471,16 @@ Preserve CI, tests, security, backups, manual release, and purposeful scheduled 
 - TCE WF-06 #41287060151 delivered a scheduled run but public endpoints returned 503 while TCE/Auth are intentionally stopped. WF-12 push smoke #41291809063 passed. Media/MicroFE health passed in the last health-only reconciliation rerun; no newer full K3s inspection was available.
 - Supabase last recorded read-only SQL probe at 09:09:08Z succeeded; no new probe in this review. Authentication PR #75/#76 remain open due unresolved project/environment binding and migration safety.
 - Preserve all useful CI/test/security/backup/manual/release/maintenance/scheduled workflows. No direct SSH/Compose deployment authority was added.
+
+
+## Workflow inventory review — 2026-11-01 17:12 ICT (schedule recovery merged)
+
+- **GHCR permission boundary:** PR #968 removed unused GITHUB_TOKEN package permissions from `reconcile-vps.yml` and `gitops-image-promotion.yml`. Private package reads use the protected `GHCR_READ_TOKEN` only. Exact-head and post-merge lint/manifest checks passed.
+- **Scheduled operations recovery:** PR #969 merged `recover-stale-ops.yml` with cron `10,25,40,55 * * * *`. It is a GitHub workflow dispatcher only: stale reconciliation (>20m activity) dispatches the existing `reconcile-vps.yml` with apply/image-change-disabled/all inputs; stale inspection (>75m) dispatches existing read-only `inspect-vps.yml`. It uses Actions write/Contents read, API timestamps, exact master-SHA dispatch correlation, and active-run suppression. It does not run kubectl/SSH/Compose or apply manifests directly.
+- **Runtime evidence pending:** PR #969 merged at 10:11:06Z, after the 10:10 slot. First post-merge recovery slot is 10:25Z; no scheduled recovery run/dispatch observed yet. Native Platform reconcile/watchdog/inspection schedules remain stale; the fallback controller is not yet runtime-verified.
+- Existing cron expressions unchanged: reconcile `7,22,37,52 * * * *`; watchdog `12,27,42,57 * * * *`; inspection `2,32 * * * *`; TCE WF-06 `*/15 * * * *`; TCE WF-12 `7,22,37,52 * * * *`. TCE market-scan schedule unchanged.
+- Mirror workflow remains purposeful but failed #41292061857 because `Platform-infra-token` resolved empty. Secret scope/configuration must be supplied by the owner; do not substitute GHCR or application handoff tokens.
+- StockDividend publication #41273202844 and CI #41273202852 passed; three immutable ARM64 digests are verified but promotion remains disabled. Weekend scraper #41284033242 remains in progress without a final conclusion; preserve it.
+- TCE WF-06 #41287060151 produced HTTP 503 on all four public endpoints while TCE/Auth remain intentionally stopped. WF-12 push smoke #41291809063 passed; no newer WF-12 schedule run observed.
+- Media CI #41246414186 passed; Media/MicroFE health passed in the last health-only reconciliation rerun; latest full runtime imageID evidence remains inspection #41275351280. Supabase SQL last succeeded at 09:09:08Z; no new probe in this review.
+- Authentication PR #75/#76 remain open pending project/environment binding and migration-safety evidence. Preserve useful CI, security, backup, manual/release, maintenance and scheduled data workflows.
