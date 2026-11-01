@@ -1,5 +1,65 @@
 # Cross-Repository Production Deployment Tracker
 
+## Latest automation review (2026-11-02 04:05 ICT / 2026-11-01 21:05 UTC; TCE heartbeat source-run identity verification merged; first post-merge scheduled dispatch still pending)
+
+This review rechecked the five repository master refs, open PRs, latest Actions runs/checks, the deployment tracker, current recovery dispatches, the latest available K3s snapshot, and the last bounded Supabase probe. Platform recovery is executing safely and its dispatches are correlated to exact master SHAs. The cross-repository heartbeat receiver now verifies both TCE run IDs against the public Actions API, but no scheduled TCE event has yet exercised the sender after merge. StockDividend remains the only failing application lane.
+
+### Repository heads and open PRs
+
+- Platform Infra master: `30017a9880469ebf7b5cd0157bfea5870f112892` (PR #1012 merged; TCE heartbeat source-run identity validation).
+- TCE Dashboard master: `d011fbb4099f5f9e24068878ac4e035b369e8ace` (scheduled heartbeat sender merged).
+- StockDividend master: `f5c04475eb4e67811c66b350d60541b21b8262c7`.
+- Media Generation master: `d8e695d772ab2dc0da5c15cc428ee78ac6537518`.
+- Authentication master: `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: Platform Infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #75/#76; none in TCE Dashboard, StockDividend, or Media Generation.
+
+### Cross-repository TCE heartbeat — receiver hardened, runtime still pending
+
+- Platform receiver PR #1012 merged as `30017a9880469ebf7b5cd0157bfea5870f112892`. Exact-head checks [#41350078371](https://github.com/phanthienquoc/platform-infra/actions/runs/41350078371) and [#41350078396](https://github.com/phanthienquoc/platform-infra/actions/runs/41350078396) passed; post-merge checks [#41350138366](https://github.com/phanthienquoc/platform-infra/actions/runs/41350138366) and [#41350138429](https://github.com/phanthienquoc/platform-infra/actions/runs/41350138429) passed.
+- The receiver now fetches the source TCE run and the WF-12 heartbeat run from the public TCE Actions API. It verifies exact workflow path, `event=schedule`, master branch, full head SHA, and allowed run status. A direct scheduled WF-12 event must use the same source/heartbeat run ID and SHA. WF-06/WF-07 sources must be completed and forwarded by a WF-12 run whose event is `workflow_run`.
+- No additional token, repository permission, app input, image input, or deployment authority was added. Platform still dispatches only its existing image-change-disabled reconciliation or read-only inspection.
+- Post-merge recovery push [#41350139319](https://github.com/phanthienquoc/platform-infra/actions/runs/41350139319) passed; it measured reconciliation age 8m and inspection age 50m and correctly skipped duplicate dispatches.
+- TCE WF-12 push smoke [#41345501969](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41345501969) succeeded before the new receiver validation merged and correctly skipped the heartbeat on a push event. Latest scheduled WF-06 remains [#41342785812](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41342785812) at 19:38:53Z (workflow failure due intentionally stopped public endpoints); latest scheduled WF-12 remains [#41339371004](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41339371004) at 18:59:02Z (stale WF-06 delivery); latest scheduled WF-07 remains [#41311225433](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41311225433) at 13:26Z. No post-merge scheduled event or authenticated repository_dispatch is observed yet.
+- The TCE secret `PLATFORM_INFRA_TOKEN` is documented but its value/presence cannot be read through the connector. Do not claim dispatch success until the TCE source run, WF-12 heartbeat run, Platform repository_dispatch, and resulting recovery run are correlated.
+- All TCE WF-06/WF-07/WF-12 cron declarations and TCE market-scan schedules remain unchanged.
+
+### Platform reconciliation, recovery, and schedule evidence
+
+- Scheduled recovery [#41349253469](https://github.com/phanthienquoc/platform-infra/actions/runs/41349253469) succeeded at 20:54:45Z. Its log found the latest reconciliation #41345493061 had last activity at 20:12:47Z (age 42m), then dispatched [reconciliation #41349269216](https://github.com/phanthienquoc/platform-infra/actions/runs/41349269216) on master SHA `0e0fd6b69c0f4b53a5f4684d9eb51e23a50d44d6` with `mode=apply`, `allow_image_changes=false`, `target_app=all`.
+- Reconciliation #41349269216 passed shared repository/GHCR preflight, protected Auth runtime Secret verification, shared pull-credential reconciliation, cluster verification, and Media/MicroFE/TCE/Auth lanes. GitOps drift was clean; manifest apply and image-change guard were skipped. StockDividend alone failed its application health gate on Admin/Backend tag `12d63b4` with no ARM64 manifest.
+- Post-reconciliation recovery [#41349422862](https://github.com/phanthienquoc/platform-infra/actions/runs/41349422862) succeeded, measured reconciliation age 0m and inspection age 42m, and skipped duplicate operations. The new master-push recovery [#41350139319](https://github.com/phanthienquoc/platform-infra/actions/runs/41350139319) also succeeded and skipped duplicates at reconciliation age 8m / inspection age 50m.
+- Latest native scheduled reconciliation remains [#41330228681](https://github.com/phanthienquoc/platform-infra/actions/runs/41330228681) at 17:11:48Z; latest native scheduled inspection remains [#41330407550](https://github.com/phanthienquoc/platform-infra/actions/runs/41330407550) at 17:13:57Z. The schedule watchdog [#41347037945](https://github.com/phanthienquoc/platform-infra/actions/runs/41347037945) failed at 20:28:39Z because, at that reference time, scheduled reconciliation/inspection were 196m/194m old. Later workflow_dispatch recovery is not evidence that native cron cadence is healthy.
+- Scheduled mirror [#41347028704](https://github.com/phanthienquoc/platform-infra/actions/runs/41347028704) failed before any Git operation because `PLATFORM_INFRA_MIRROR_TOKEN` is still empty. The corrected secret name is valid, but the token value remains an owner action.
+
+### K3s snapshot and workload readiness
+
+- Latest read-only snapshot is `debug/vps-latest.md`, generated 20:13:05Z by inspection [#41345694334](https://github.com/phanthienquoc/platform-infra/actions/runs/41345694334). At 21:05Z it is about 52m old.
+- Node `tce-k3s-01`: Ready, ARM64, K3s v1.36.3+k3s1, root disk 55% used, about 19 GiB available memory, GitOps drift clean. Host reports `restart_required=yes` because OS/Docker/containerd updates are pending; no reboot or package upgrade was performed.
+- Media backend/frontend, MicroFE Shell/WS, and NATS are 1/1. Stock Admin is 0/1 ImagePullBackOff on `admin:12d63b4`; new Stock Backend is 0/1 ImagePullBackOff on `backend:12d63b4` while the old backend replica remains 1/1; Stock Frontend remains on old `user:23b2878`, 1/1, updated=0. TCE is 0/0; `microfe-auth` is 1/1; Keycloak is 0/0.
+- No desired replica, production manifest, or runtime credential was changed.
+
+### Application publication and release boundaries
+
+- StockDividend CI [#41314359022](https://github.com/phanthienquoc/stockdividend/actions/runs/41314359022) and immutable native ARM64 publisher [#41314359012](https://github.com/phanthienquoc/stockdividend/actions/runs/41314359012) passed on `f5c04475`. Verified digests remain scraper `2146540a30d972af2d41688b6dc6640353f7552da86f740a092e85c082e7fd4f`, admin `488cd38462ac66b36258cc84296fe0d2d1f9cb029c9cb53c3b93f49dfe19f621`, backend `a3ec6f8c95bfb0184d97228cba25f433d942720aad728fef7716e8f5b6282c94`. `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=false`; no promotion dispatch or manifest change is authorized.
+- Media CI [#41246414186](https://github.com/phanthienquoc/media-generation/actions/runs/41246414186) passed; latest inspection records backend/frontend 1/1 with digest-pinned runtime imageIDs.
+- Authentication PR #76 CI [#41329425940](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41329425940) passed. PRs #75/#76 remain open pending production integration side-effect review. Previous Auth migration source/ledger comparison was 84/84 exact version/name matches; no migration was run in this review.
+
+### Supabase and security evidence
+
+- Last bounded read-only SQL probe was 20:22:20Z and succeeded against `postgres`. The 19:22–20:22Z log window had 360 Edge events and 28 PostgREST events, with zero HTTP 5xx and zero HTTP 522.
+- Previously observed Advisor findings remain owner-review items: 35 RLS-enabled tables without policies (INFO), 11 GraphQL-visible tables for each browser role (WARN), one mutable function search path on `public.set_video_generation_updated_at()` (WARN), and leaked-password protection disabled (WARN). No DDL, grants, RLS, migration, or Auth setting was changed.
+
+### Exact next actions
+
+1. Configure `PLATFORM_INFRA_MIRROR_TOKEN` as a Platform Infra Actions secret, scoped to destination repository `phanthienquoc/locally-uncensored-private` with only `Contents: write`. Do not substitute GHCR or application dispatch tokens.
+2. Observe the first scheduled TCE WF-06/WF-07/WF-12 event after the sender/receiver merge and correlate both TCE run IDs, the Platform `repository_dispatch`, and the recovery run. Do not infer success from push/manual runs.
+3. Continue observing native Platform reconciliation/inspection schedules; preserve all cron expressions.
+4. Keep StockDividend promotion disabled until explicit authorization; after authorization, require paired immutable digests and verify K3s rollout/imageIDs.
+5. Review Supabase browser-role grants/RLS/GraphQL exposure and leaked-password protection with the owning services before any database or Auth setting change.
+6. Schedule a VPS maintenance window before applying pending OS/Docker/containerd updates or rebooting.
+
+No production manifest, image reference, release flag, desired replica count, runtime credential, database object, or cron expression changed. Preserve CI/test/security, backups, manual/release, maintenance, mirror, and scheduled data workflows. No direct SSH/Compose deployment authority was added.
+
 ## Latest automation review (2026-11-02 03:24 ICT / 2026-11-01 20:24 UTC; heartbeat sender/receiver merged; first scheduled dispatch not yet observed)
 
 This review rechecked all five repositories, open PRs, latest Actions runs/checks, the current tracker, fresh VPS inspection, and Supabase production connectivity/security metadata. The TCE-to-Platform heartbeat sender/receiver are merged and validated, but GitHub has not delivered a scheduled WF-12/WF-06 event after the merge yet; therefore no authenticated cross-repository dispatch is claimed. Platform's push recovery path did run a safe reconciliation and read-only inspection. StockDividend remains the only failing application lane.
