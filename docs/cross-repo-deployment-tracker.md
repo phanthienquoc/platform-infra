@@ -1,3 +1,12 @@
+## Post-merge verification (2026-11-02 05:00 ICT / 2026-11-01 22:00 UTC)
+
+- Documentation PR [#1016](https://github.com/phanthienquoc/platform-infra/pull/1016) was squash-merged as `41d6a2b93334d08f20201edf5cfcf9d155c74c00`. Exact-head validation [#41354811426](https://github.com/phanthienquoc/platform-infra/actions/runs/41354811426) and post-merge validation [#41354880764](https://github.com/phanthienquoc/platform-infra/actions/runs/41354880764) both succeeded. Current Platform Infra master is `41d6a2b93334d08f20201edf5cfcf9d155c74c00`; the other four repository heads remain as recorded in the 04:55 review below.
+- New read-only Supabase probe at 22:00:13Z returned database `postgres` and connectivity probe `1`. Bounded unified logs for 20:55–21:55Z contained 359 Edge events and 28 PostgREST events, with zero HTTP 5xx and zero HTTP 522. No schema, credential, RLS, grant, or Auth setting was changed.
+- Platform native scheduled reconciliation #41351121366 remains the latest scheduled reconcile at 21:16:03Z; the next cron slot has not yet been observed. The latest native inspection #41351555469 at 21:20:58Z is successful. Recovery #41351669202 and watchdog #41351669205 succeeded after inspection. Do not count workflow_run recovery as native cron delivery.
+- Cross-repo TCE scheduled heartbeat remains unverified: no scheduled WF-06/WF-07/WF-12 event after sender/receiver merge and no correlated Platform `repository_dispatch` was found.
+- Permanent image-pull restart churn remains tracked in [issue #1015](https://github.com/phanthienquoc/platform-infra/issues/1015); the privileged runner helper has not been changed or reinstalled.
+- Mirror secret `PLATFORM_INFRA_MIRROR_TOKEN` remains missing. StockDividend promotion remains disabled pending explicit authorization.
+
 ## Latest automation review (2026-11-02 04:55 ICT / 2026-11-01 21:55 UTC; fresh K3s inspection completed; permanent image-pull restart churn identified)
 
 This review re-inspected all five default-branch heads, open PRs, recent Actions runs, the latest deployment tracker/inventory, native Platform/TCE schedules, the newest read-only VPS snapshot, and the last bounded Supabase probe. A new operational defect is now backed by direct runner logs: the shared reconciliation helper restarts StockDividend Deployments even when the registry has already returned a permanent ARM64 manifest mismatch. No production code or workload was changed in this review; the issue is tracked as [#1015](https://github.com/phanthienquoc/platform-infra/issues/1015).
