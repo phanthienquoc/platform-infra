@@ -138,7 +138,7 @@ jobs:
         if: ${{ env.RECONCILE_MODE == 'apply' }}
         run: |
           set -euo pipefail
-          expected="platform-kubectl policy: rollout-status-v12-scoped-image-pull-restart"
+          expected="platform-kubectl policy: rollout-status-v13-scoped-image-pull-restart-cooldown"
           for attempt in $(seq 1 24); do
             if policy="$(sudo /usr/local/sbin/platform-kubectl policy-version 2>/dev/null)" && [[ "$policy" == "$expected" ]]; then
               echo "Scoped image-pull restart runner policy is ready."
