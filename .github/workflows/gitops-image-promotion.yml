@@ -35,8 +35,6 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  packages: read
-
 concurrency:
   group: gitops-image-promotion-${{ github.event.client_payload.app || inputs.app }}-${{ github.event.client_payload.component || inputs.component }}
   cancel-in-progress: false
@@ -60,7 +58,6 @@ jobs:
     permissions:
       actions: write
       contents: write
-      packages: read
       pull-requests: write
     steps:
       - name: Checkout infrastructure
@@ -377,7 +374,6 @@ jobs:
     permissions:
       actions: write
       contents: write
-      packages: read
       pull-requests: write
 
     steps:
