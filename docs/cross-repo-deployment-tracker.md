@@ -778,3 +778,41 @@ Authentication PRs #75/#76 remain open because environment/project binding and m
 5. Continue Supabase SQL/REST observation over longer windows.
 
 No production manifests, secrets, credentials, database objects, or K3s desired replicas were changed in this review. TCE market-scan schedule is unchanged.
+
+
+## Deployment review — 2026-11-01 17:00 ICT (least-privilege GHCR permissions and current blockers)
+
+### Repository state and open PRs
+
+- Verified default-branch heads: platform-infra `6e43369c1f30b696bf9c90fd7da3680b1015a17b`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: platform-infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #76/#75; none in TCE Dashboard, StockDividend, or Media Generation.
+- Latest Platform master manifest validation [#41292014259](https://github.com/phanthienquoc/platform-infra/actions/runs/41292014259) passed on current head. Latest workflow lint [#41291879616](https://github.com/phanthienquoc/platform-infra/actions/runs/41291879616) passed on the immediately preceding workflow-equivalent head; current master change #967 is docs-only. Watchdog push smoke [#41291879618](https://github.com/phanthienquoc/platform-infra/actions/runs/41291879618) passed in warning-only mode.
+
+### Least-privilege GHCR credential boundary
+
+- Current source inspection found `reconcile-vps.yml` granting `packages: write` to its workflow token despite all private image reads using the protected `GHCR_READ_TOKEN` secret.
+- `gitops-image-promotion.yml` similarly granted `packages: read` at workflow and job scope while Registry V2 preflight uses `GHCR_READ_TOKEN`; its workflow token is used for Actions dispatch, contents/PR operations, not registry authentication.
+- A dedicated branch `security/remove-unused-ghcr-write-permissions-20261101` removes these unused package permissions, adds regression assertions to `scripts/validate-workflow-contracts.py`, and clarifies the separation in credential documentation. This is a workflow/security-only change; it does not modify production manifests, registry tokens, or runtime credentials.
+
+### Current workflow failures and operational evidence
+
+- Scheduled Platform reconciliation remains stale: latest scheduled run [#41260761381](https://github.com/phanthienquoc/platform-infra/actions/runs/41260761381), attempt 2, failed StockDividend health because Admin and Backend still reference `12d63b4` without an ARM64 manifest; frontend remains on an old replica. Shared reconcile/plan and MicroFE/Media health jobs passed; TCE/Auth zero-replica maintenance state was not treated as serving health.
+- Scheduled Platform inspection [#41264393955](https://github.com/phanthienquoc/platform-infra/actions/runs/41264393955), attempt 2, failed its old inspection-PR merge step with HTTP 405. Current push inspection after the race-safe fix [#41275351280](https://github.com/phanthienquoc/platform-infra/actions/runs/41275351280) succeeded; no newer scheduled inspection event is visible.
+- Scheduled Platform watchdog [#41264226448](https://github.com/phanthienquoc/platform-infra/actions/runs/41264226448) remains failed on stale history. The latest scheduled Platform event [#41292061857](https://github.com/phanthienquoc/platform-infra/actions/runs/41292061857) belongs to the unrelated mirror workflow, not reconciliation.
+- Mirror workflow [#41292061857](https://github.com/phanthienquoc/platform-infra/actions/runs/41292061857) failed immediately because `secrets['Platform-infra-token']` resolved empty. The workflow is a purposeful mirror to the private `locally-uncensored-private` repository, not a production deployment authority. It is preserved; the required target-scoped `Contents: write` secret cannot be configured or verified through this connector. Credential docs now record the exact key and missing configuration without exposing values.
+- TCE WF-06 scheduled run [#41287060151](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41287060151) ran at 09:01:02Z; all four public endpoints returned HTTP 503 while TCE/Auth are intentionally stopped. SSH diagnostics passed. WF-12 push smoke [#41291809063](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41291809063) passed; this verifies the read-only monitor, not continuous scheduled cadence.
+- StockDividend publisher [#41273202844](https://github.com/phanthienquoc/stockdividend/actions/runs/41273202844) and CI [#41273202852](https://github.com/phanthienquoc/stockdividend/actions/runs/41273202852) passed. Scraper/Admin/Backend immutable ARM64 digests remain verified; production promotion is disabled and no dispatch was sent.
+- StockDividend weekend scraper [#41284033242](https://github.com/phanthienquoc/stockdividend/actions/runs/41284033242) is still in progress since 07:15:11Z at the `Run scraper` step. The job has no explicit timeout; live logs are not yet downloadable. Preserve the purposeful weekend job and do not cancel or label it failed without a completed conclusion or diagnostic evidence.
+- Media CI [#41246414186](https://github.com/phanthienquoc/media-generation/actions/runs/41246414186) passed. The latest health-only reconciliation rerun #41260761381 attempt 2 reported Media/MicroFE gates successful. Runtime imageID evidence remains from inspection #41275351280; no newer full K3s inspection was available.
+- Supabase project `gtqovpusfyyvxpeezxlo` last recorded read-only SQL probe at 09:09:08Z succeeded; no new SQL/REST probe was run in this review. Treat this as a successful sample, not a stability guarantee.
+- Authentication PRs #75/#76 remain open due unresolved project/environment binding and migration safety. Historical Auth CI/release success does not prove live SSO; Auth/Keycloak remain at operator-requested 0 replicas.
+
+### Next actions
+
+1. Merge the least-privilege GHCR permission PR only after exact-head workflow lint and manifest validation pass; verify post-merge checks.
+2. Configure the missing Platform Infra `Platform-infra-token` secret with only the private mirror target's required Contents write scope; then rerun the mirror and verify refs. Do not reuse GHCR_READ_TOKEN or an application handoff token by assumption.
+3. Restore/verify scheduled Platform reconciliation and inspection; current connector exposes read-only run inspection but not workflow_dispatch/enable operations.
+4. Keep StockDividend production release disabled until explicit authorization; after authorization, promote the verified digest set through Platform Infra and verify runtime imageIDs.
+5. Preserve the weekend scraper and all purposeful CI/security/backup/manual/release/scheduled workflows. No direct SSH/Compose deployment authority was added.
+
+No production manifests, runtime credentials, database objects, release flags, or K3s desired replicas were changed in this review. TCE market-scan schedule is unchanged. Production remains **NOT HEALTHY/UNVERIFIED**.
