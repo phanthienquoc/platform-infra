@@ -37,6 +37,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       MAX_AGE_MINUTES: "45"
       MAX_QUEUE_MINUTES: "15"
+      MAX_INSPECTION_AGE_MINUTES: "75"
     steps:
       - name: Verify reconcile-vps workflow is enabled
         shell: bash
@@ -208,3 +209,83 @@ jobs:
             echo "::warning::Self-hosted inspection runner queue delay exceeds ${MAX_QUEUE_MINUTES}m."
             echo "::warning::Run evidence: ${run_url}"
           fi
+
+      - name: Verify scheduled inspection delivery
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          workflow="$(gh api \
+            -X GET \
+            -H "Accept: application/vnd.github+json" \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml")"
+          state="$(jq -r '.state // empty' <<< "$workflow")"
+          if [[ "$state" != "active" ]]; then
+            if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+              echo "::warning::Read-only API smoke succeeded; inspect-vps workflow is not active (state=${state:-missing})."
+              exit 0
+            fi
+            echo "::error::inspect-vps workflow is not active (state=${state:-missing}); scheduled inspection cannot be relied on."
+            exit 1
+          fi
+
+          response="$(gh api \
+            -X GET \
+            -H "Accept: application/vnd.github+json" \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs" \
+            -f event=schedule \
+            -F per_page=1)"
+          latest="$(jq -c '.workflow_runs | sort_by(.created_at) | last // empty' <<< "$response")"
+          if [[ -z "$latest" ]]; then
+            if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+              echo "::warning::Read-only API smoke succeeded, but no scheduled inspect-vps run is present yet."
+              exit 0
+            fi
+            echo "::error::No scheduled inspect-vps run is available in GitHub Actions history."
+            exit 1
+          fi
+
+          reference_epoch="${WATCHDOG_REFERENCE_EPOCH:-}"
+          if [[ -z "$reference_epoch" ]]; then
+            current_run="$(gh api \
+              -X GET \
+              -H "Accept: application/vnd.github+json" \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")"
+            reference_epoch="$(jq -r 'if .created_at then (.created_at | fromdateiso8601) else empty end' <<< "$current_run")"
+          fi
+          if [[ -z "$reference_epoch" ]]; then
+            echo "::error::Unable to obtain the current watchdog run timestamp from the Actions API."
+            exit 1
+          fi
+
+          created_at="$(jq -r '.created_at' <<< "$latest")"
+          created_epoch="$(jq -r '.created_at | fromdateiso8601' <<< "$latest")"
+          run_id="$(jq -r '.id' <<< "$latest")"
+          run_url="$(jq -r '.html_url' <<< "$latest")"
+          status="$(jq -r '.status' <<< "$latest")"
+          conclusion="$(jq -r '.conclusion // "pending"' <<< "$latest")"
+          age_seconds=$((reference_epoch - created_epoch))
+          age_minutes=$((age_seconds / 60))
+
+          if (( age_seconds < 0 )); then
+            echo "::error::GitHub returned a future timestamp for scheduled inspect-vps run #${run_id}: ${created_at}"
+            exit 1
+          fi
+          if (( age_minutes > MAX_INSPECTION_AGE_MINUTES )); then
+            if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+              echo "::warning::Read-only API smoke succeeded; scheduled inspect-vps is stale."
+              echo "::warning::Latest run #${run_id}: created=${created_at}, age=${age_minutes}m."
+              echo "::warning::status=${status}, conclusion=${conclusion}."
+              echo "::warning::Run evidence: ${run_url}"
+              exit 0
+            fi
+            echo "::error::No scheduled inspect-vps run within ${MAX_INSPECTION_AGE_MINUTES} minutes."
+            echo "::error::Latest run #${run_id}: created=${created_at}, age=${age_minutes}m."
+            echo "::error::status=${status}, conclusion=${conclusion}."
+            echo "::error::Run evidence: ${run_url}"
+            exit 1
+          fi
+
+          echo "Scheduled inspection delivery passed for run #${run_id}."
+          echo "age=${age_minutes}m status=${status} conclusion=${conclusion}."
+          echo "Run evidence: ${run_url}"

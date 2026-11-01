@@ -532,8 +532,8 @@ if "validate-image-change-contract.py --self-test" not in actions_validation:
 # scheduled/manual/fallback invocations must continue to fail closed on stale data.
 if '  push:\n    branches: [master]\n    paths:\n      - ".github/workflows/reconcile-schedule-watchdog.yml"' not in watchdog:
     fail("The watchdog must run a path-scoped post-merge API smoke check on master.")
-if watchdog.count('if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then') != 3:
-    fail("Only the watchdog's empty-history, queue-delay, and stale-history guards may be warn-only for push smoke runs.")
+if watchdog.count('if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then') != 6:
+    fail("Only the watchdog's empty-history, disabled-workflow, queue-delay, and stale-history guards may be warn-only for push smoke runs.")
 if '::warning::Read-only API smoke succeeded' not in watchdog:
     fail("The watchdog push smoke must clearly label stale/missing schedule or queue data as a warning, not health success.")
 if '::error::No scheduled reconcile-vps run within ${MAX_AGE_MINUTES} minutes.' not in watchdog:
@@ -574,5 +574,24 @@ if "WATCHDOG_REFERENCE_EPOCH=$reference_epoch" not in watchdog or "WATCHDOG_REFE
     fail("The watchdog must pass its API reference timestamp to inspection queue diagnostics.")
 if "date -u +%s" in watchdog:
     fail("The watchdog must not compare GitHub API timestamps with the hosted runner wall clock.")
+
+# Scheduled inspection delivery has its own cadence budget in addition to queue telemetry.
+if 'MAX_INSPECTION_AGE_MINUTES: "75"' not in watchdog:
+    fail("The watchdog must enforce a 75-minute freshness budget for the 30-minute inspection schedule.")
+inspection_freshness_step = watchdog.find("name: Verify scheduled inspection delivery")
+if inspection_freshness_step < 0 or "if: always()" not in watchdog[inspection_freshness_step:]:
+    fail("Scheduled inspection freshness must be checked even when reconciliation freshness fails.")
+inspection_freshness_block = watchdog[inspection_freshness_step:]
+for required in (
+    '"repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml"',
+    '"repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs"',
+    'event=schedule',
+    'age_seconds=$((reference_epoch - created_epoch))',
+    'age_minutes > MAX_INSPECTION_AGE_MINUTES',
+    '::error::No scheduled inspect-vps run within ${MAX_INSPECTION_AGE_MINUTES} minutes.',
+    '::warning::Read-only API smoke succeeded; scheduled inspect-vps is stale.',
+):
+    if required not in inspection_freshness_block:
+        fail(f"Scheduled inspection freshness contract is missing: {required}")
 
 print("Workflow contract validation passed.")
