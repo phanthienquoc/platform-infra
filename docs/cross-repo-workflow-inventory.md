@@ -1,5 +1,17 @@
 # Cross-Repository Workflow Inventory
 
+## Latest workflow inventory review (2026-11-01 13:04 ICT; TCE public endpoint matrix merged)
+
+- Current heads: platform-infra `33c19b8a73e0b77071b68b3987f8aef85c709aba`; TCE Dashboard `48a8c86497f55b0454ea20fda0567d27f7b9718b`; StockDividend `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: platform-infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #76 (draft)/#75; none in TCE, StockDividend, or Media.
+- **TCE WF-06 healthcheck:** PR #1005 merged at `48a8c864`. Public endpoint matrix now reports TCE web, TCE API `/api/health`, Auth liveness, and Auth readiness as independent jobs; `fail-fast: false`. Cron remains `*/15 * * * *`; manual dispatch and read-only VPS diagnostics remain. WF-02 and WF-05 exact-head PR checks passed; post-merge WF-02 passed; post-merge WF-01/WF-05 were still running at last observation. No TCE market-scan schedule was modified.
+- **TCE endpoint evidence:** latest scheduled WF-06 run #41261234620 (01:28:29Z) returned HTTP 503 for TCE web and both Auth endpoints; SSH/container diagnostics passed. The new TCE API lane has not yet been observed in a scheduled run.
+- **Platform Infra workflows:** post-merge lint #41275653303, manifest validation #41275653306, and watchdog push smoke #41275653339 succeeded. The push smoke reported `reconcile-vps` active. Latest scheduled reconcile #41260761381 (01:21:35Z) failed; scheduled watchdog #41264226448 (02:12:35Z) failed; inspection #41264393955 was queued 106m46s before starting. No newer scheduled events observed through 05:58Z; schedule delivery remains unverified.
+- **StockDividend publisher:** #41273202844 succeeded for source `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Scraper/Admin/Backend all published and their immutable ARM64 manifests verified. Promotion gate remained false, so handoff and dispatch were skipped. Production still references the old admin/backend tag; no rollout.
+- **Media/MicroFE:** latest K3s snapshot #41275351280 (05:02:36Z) reported both Media workloads and both MicroFE workloads 1/1 with runtime imageIDs matching pinned digests.
+- **Supabase/Auth safety:** project `gtqovpusfyyvxpeezxlo` ACTIVE_HEALTHY; SQL probe succeeded 05:59:45Z; Supabase reports 84 migration versions and Auth master has 84 matching version filenames; branch state FUNCTIONS_DEPLOYED. Auth PR #75 changes docs/tests only and exact-head CI #40446492086 passed; PR #76 remains draft and exact-head CI #40461047191 passed. Do not merge #75 until conflicting production/non-production classification and the GitHub integration's exact target binding are reconciled. Auth release remains manual-dispatch-only.
+- Preserve existing CI, security, backup, manual, release, and scheduled workflows. No workflow was removed. No direct SSH/Compose deployment authority was added. Reconciliation cron remains `7,22,37,52 * * * *`; watchdog remains `12,27,42,57 * * * *`; inspection remains `2,32 * * * *`.
+
 
 ## Latest workflow inventory review (2026-11-01 12:07 ICT; runner queue telemetry added)
 
