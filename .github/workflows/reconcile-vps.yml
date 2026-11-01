@@ -134,31 +134,20 @@ jobs:
           diff --version | head -n 1
           sudo /usr/local/sbin/platform-kubectl version
 
-      - name: Wait for runner reconciliation policy
+      - name: Wait for scoped image-pull restart runner policy
         if: ${{ env.RECONCILE_MODE == 'apply' }}
         run: |
           set -euo pipefail
+          expected="platform-kubectl policy: rollout-status-v12-scoped-image-pull-restart"
           for attempt in $(seq 1 24); do
-            if policy="$(sudo /usr/local/sbin/platform-kubectl policy-version 2>/dev/null)"; then
-              if [ "$TARGET_APP" = "auth-shutdown" ]; then
-                [[ "$policy" == "platform-kubectl policy: rollout-status-v11-auth-shutdown" ]] && {
-                  echo "Auth shutdown runner allowlist is ready."
-                  exit 0
-                }
-              elif [ "$TARGET_APP" = "keycloak" ]; then
-                [[ "$policy" == "platform-kubectl policy: rollout-status-v10-keycloak-secret-provision" || "$policy" == "platform-kubectl policy: rollout-status-v11-auth-shutdown" ]] && {
-                  echo "Keycloak runner allowlist is ready."
-                  exit 0
-                }
-              elif [[ "$policy" == "platform-kubectl policy: rollout-status-v9-auth-secret-provision" || "$policy" == "platform-kubectl policy: rollout-status-v10-keycloak-secret-provision" || "$policy" == "platform-kubectl policy: rollout-status-v11-auth-shutdown" ]]; then
-                echo "Runner reconciliation policy is ready."
-                exit 0
-              fi
+            if policy="$(sudo /usr/local/sbin/platform-kubectl policy-version 2>/dev/null)" && [[ "$policy" == "$expected" ]]; then
+              echo "Scoped image-pull restart runner policy is ready."
+              exit 0
             fi
-            echo "Waiting for runner bootstrap policy (attempt $attempt/24)..."
+            echo "Waiting for runner bootstrap policy v12 (attempt $attempt/24)..."
             sleep 5
           done
-          echo "Runner reconciliation policy did not become ready within 120s." >&2
+          echo "Runner policy is not updated to scoped image-pull restart v12; refusing production apply." >&2
           exit 1
       - name: Validate GHCR pull access before mutating cluster credentials
         if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app != 'keycloak' && steps.scope.outputs.target_app != 'auth-shutdown' }}
@@ -212,11 +201,11 @@ jobs:
           printf "%s\n%s\n" "$GHCR_USERNAME" "$GHCR_TOKEN" |
             sudo /usr/local/sbin/platform-kubectl reconcile-ghcr-pull
           echo "GHCR pull credentials reconciled across production GHCR namespaces."
-      - name: Restart workloads blocked on image pulls
+      - name: Restart target workloads blocked on image pulls
         if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app != 'keycloak' && steps.scope.outputs.target_app != 'auth-shutdown' }}
         run: |
           set -euo pipefail
-          sudo /usr/local/sbin/platform-kubectl restart-blocked-image-pulls
+          sudo /usr/local/sbin/platform-kubectl restart-blocked-image-pulls "$TARGET_APP"
       - name: Validate TCE release pairing
         if: ${{ steps.scope.outputs.target_app != 'keycloak' && (steps.scope.outputs.target_app == 'all' || steps.scope.outputs.target_app == 'tce-dashboard') }}
         run: |
