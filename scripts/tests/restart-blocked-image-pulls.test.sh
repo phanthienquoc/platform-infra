@@ -11,6 +11,7 @@ mkdir -p "$tmp/bin" "$tmp/fixtures"
 awk '/^cat >\/usr\/local\/sbin\/platform-kubectl <<.EOF.$/ { capture=1; next } capture && /^EOF$/ { exit } capture { print }' \
   "$bootstrap_script" > "$tmp/platform-kubectl"
 test -s "$tmp/platform-kubectl"
+chmod 700 "$tmp/platform-kubectl"
 
 # Replace only the binary path in the extracted test copy; production has no env override.
 sed -i "s|^KUBECTL=(/usr/local/bin/k3s kubectl)$|KUBECTL=(\"$tmp/bin/mock-kubectl\")|" \
