@@ -22,6 +22,7 @@ def fail(message: str) -> None:
 
 reconcile = read("reconcile-vps.yml")
 promotion = read("gitops-image-promotion.yml")
+recovery = read("recover-stale-ops.yml")
 inspection = read("inspect-vps.yml")
 guard_reconcile = (ROOT / "scripts" / "guard-reconcile-images.sh").read_text(encoding="utf-8")
 github_actions = read("validate-github-actions.yml")
@@ -498,6 +499,30 @@ if scheduled_crons(watchdog) != ["12,27,42,57 * * * *"]:
     fail("The read-only watchdog must run 5 minutes after each offset reconciliation slot.")
 if scheduled_crons(inspection) != ["2,32 * * * *"]:
     fail("VPS inspection must retain its 30-minute cadence at minutes 2 and 32.")
+
+if scheduled_crons(recovery) != ["10,25,40,55 * * * *"]:
+    fail("Scheduled ops recovery must retain its independent 15-minute offset.")
+if "actions: write" not in recovery or "contents: read" not in recovery:
+    fail("Scheduled ops recovery must use only Actions write and Contents read permissions.")
+for required in (
+    "gh workflow run reconcile-vps.yml",
+    "-f mode=apply",
+    "-f allow_image_changes=false",
+    "-f target_app=all",
+    "gh workflow run inspect-vps.yml",
+    ".updated_at // .run_started_at // .created_at",
+    ".run_started_at // .created_at",
+    "gh api -X GET",
+    "head_sha == $sha",
+    "Dispatch payload: ref=master sha=$dispatch_sha",
+    "sort_by(.updated_at // .run_started_at // .created_at)",
+    "steps.reconcile.outputs.busy != 'true'",
+):
+    if required not in recovery:
+        fail(f"Scheduled ops recovery contract is missing: {required}")
+for forbidden in ("platform-kubectl", "scripts/reconcile-vps.sh", "kubectl apply", "docker compose", "ssh "):
+    if forbidden in recovery:
+        fail(f"Schedule recovery must dispatch existing GitHub workflows only, not deploy directly: {forbidden}")
 if "workflow_run:" not in watchdog or "      - inspect-vps" not in watchdog or "      - reconcile-vps" not in watchdog:
     fail("The watchdog must run after scheduled reconciliation and inspection completions as a schedule-delivery fallback.")
 if "      - completed" not in watchdog or "github.event.workflow_run.event == 'schedule'" not in watchdog:

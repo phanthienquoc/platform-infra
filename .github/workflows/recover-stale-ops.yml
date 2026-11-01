@@ -1,0 +1,214 @@
+name: Recover Stale Scheduled Ops
+run-name: Recover Stale Scheduled Ops — ${{ github.event_name }}
+
+'on':
+  schedule:
+    - cron: "10,25,40,55 * * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: scheduled-ops-delivery-recovery
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    if: ${{ github.ref == 'refs/heads/master' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAX_RECONCILE_AGE_MINUTES: "20"
+      MAX_INSPECTION_AGE_MINUTES: "75"
+    steps:
+      - name: Resolve GitHub Actions API reference clock
+        id: clock
+        shell: bash
+        run: |
+          set -euo pipefail
+          current_run="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")"
+          reference_at="$(jq -r '.run_started_at // .created_at // empty' <<< "$current_run")"
+          reference_epoch="$(
+            jq -r 'if (.run_started_at // .created_at) then
+              ((.run_started_at // .created_at) | fromdateiso8601)
+            else empty end' <<< "$current_run"
+          )"
+          [[ -n "$reference_at" && -n "$reference_epoch" ]] || {
+            echo "::error::Unable to resolve current recovery run timestamp from the Actions API."
+            exit 1
+          }
+          echo "reference_at=$reference_at" >> "$GITHUB_OUTPUT"
+          echo "reference_epoch=$reference_epoch" >> "$GITHUB_OUTPUT"
+          echo "Recovery reference clock: $reference_at (GitHub Actions API)."
+
+      - name: Recover missing reconciliation delivery
+        id: reconcile
+        env:
+          REFERENCE_AT: ${{ steps.clock.outputs.reference_at }}
+          REFERENCE_EPOCH: ${{ steps.clock.outputs.reference_epoch }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          workflow="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml")"
+          state="$(jq -r '.state // empty' <<< "$workflow")"
+          [[ "$state" == "active" ]] || {
+            echo "::error::reconcile-vps is not active (state=${state:-missing}); refusing to dispatch."
+            exit 1
+          }
+
+          runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" -F branch=master -F per_page=100)"
+          latest="$(jq -c '.workflow_runs | sort_by(.updated_at // .run_started_at // .created_at) | last // empty' <<< "$runs")"
+          if [[ -z "$latest" ]]; then
+            age_seconds=$((MAX_RECONCILE_AGE_MINUTES * 60 + 1))
+            latest_id="none"
+          else
+            latest_id="$(jq -r '.id' <<< "$latest")"
+            status="$(jq -r '.status // empty' <<< "$latest")"
+            if [[ "$status" != "completed" ]]; then
+              echo "Reconciliation run #$latest_id is $status; avoiding duplicate reconciliation/inspection dispatches."
+              echo "busy=true" >> "$GITHUB_OUTPUT"
+              echo "dispatched=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            activity_at="$(jq -r '.updated_at // .run_started_at // .created_at' <<< "$latest")"
+            activity_epoch="$(jq -r '(.updated_at // .run_started_at // .created_at) | fromdateiso8601' <<< "$latest")"
+            age_seconds=$((REFERENCE_EPOCH - activity_epoch))
+            (( age_seconds >= 0 )) || {
+              echo "::error::Reconciliation activity timestamp is newer than the recovery API clock."
+              exit 1
+            }
+            echo "Latest master reconciliation run #$latest_id: last_activity=$activity_at, age=$((age_seconds / 60))m."
+          fi
+
+          if (( age_seconds <= MAX_RECONCILE_AGE_MINUTES * 60 )); then
+            echo "Reconciliation delivery is recent; no fallback dispatch needed."
+            echo "dispatched=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          dispatch_sha="$(gh api "repos/${GITHUB_REPOSITORY}/commits/master" --jq .sha)"
+          [[ "$dispatch_sha" =~ ^[0-9a-f]{40}$ ]] || {
+            echo "::error::Unable to resolve the exact master SHA for reconciliation dispatch."
+            exit 1
+          }
+          echo "::warning::No recent master reconciliation run; dispatching the existing GitOps authority in its scheduled apply mode."
+          echo "Dispatch payload: ref=master sha=$dispatch_sha mode=apply allow_image_changes=false target_app=all"
+          gh workflow run reconcile-vps.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref master \
+            -f mode=apply \
+            -f allow_image_changes=false \
+            -f target_app=all
+
+          dispatched_run=""
+          for attempt in $(seq 1 6); do
+            response="$(
+              gh api -X GET \
+                "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" \
+                -f event=workflow_dispatch -F branch=master -F per_page=100
+            )"
+              dispatched_run="$(
+                jq -c --arg started "$REFERENCE_AT" --arg sha "$dispatch_sha" \
+                  '[.workflow_runs[] | select(
+                    .event == "workflow_dispatch"
+                    and .head_branch == "master"
+                    and .head_sha == $sha
+                    and .created_at >= $started
+                  )] | sort_by(.created_at) | last // empty' \
+                  <<< "$response"
+              )"
+            if [[ -n "$dispatched_run" ]]; then
+              run_id="$(jq -r '.id' <<< "$dispatched_run")"
+              run_url="$(jq -r '.html_url' <<< "$dispatched_run")"
+              echo "Verified fallback reconciliation dispatch: #$run_id $run_url"
+              echo "dispatched=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "Waiting for reconciliation workflow_dispatch correlation (attempt $attempt/6)..."
+            sleep 5
+          done
+          echo "::error::GitHub did not create a master workflow_dispatch run for reconcile-vps after the recovery request."
+          exit 1
+
+      - name: Recover missing inspection delivery
+        if: ${{ steps.reconcile.outputs.dispatched != 'true' && steps.reconcile.outputs.busy != 'true' }}
+        env:
+          REFERENCE_AT: ${{ steps.clock.outputs.reference_at }}
+          REFERENCE_EPOCH: ${{ steps.clock.outputs.reference_epoch }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          workflow="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml")"
+          state="$(jq -r '.state // empty' <<< "$workflow")"
+          [[ "$state" == "active" ]] || {
+            echo "::error::inspect-vps is not active (state=${state:-missing}); refusing to dispatch."
+            exit 1
+          }
+
+          runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs" -F branch=master -F per_page=100)"
+          latest="$(jq -c '.workflow_runs | sort_by(.updated_at // .run_started_at // .created_at) | last // empty' <<< "$runs")"
+          if [[ -z "$latest" ]]; then
+            age_seconds=$((MAX_INSPECTION_AGE_MINUTES * 60 + 1))
+            latest_id="none"
+          else
+            latest_id="$(jq -r '.id' <<< "$latest")"
+            status="$(jq -r '.status // empty' <<< "$latest")"
+            if [[ "$status" != "completed" ]]; then
+              echo "Inspection run #$latest_id is $status; avoiding a duplicate dispatch."
+              exit 0
+            fi
+            activity_at="$(jq -r '.updated_at // .run_started_at // .created_at' <<< "$latest")"
+            activity_epoch="$(jq -r '(.updated_at // .run_started_at // .created_at) | fromdateiso8601' <<< "$latest")"
+            age_seconds=$((REFERENCE_EPOCH - activity_epoch))
+            (( age_seconds >= 0 )) || {
+              echo "::error::Inspection activity timestamp is newer than the recovery API clock."
+              exit 1
+            }
+            echo "Latest master inspection run #$latest_id: last_activity=$activity_at, age=$((age_seconds / 60))m."
+          fi
+
+          if (( age_seconds <= MAX_INSPECTION_AGE_MINUTES * 60 )); then
+            echo "Inspection delivery is recent; no fallback dispatch needed."
+            exit 0
+          fi
+
+          dispatch_sha="$(gh api "repos/${GITHUB_REPOSITORY}/commits/master" --jq .sha)"
+          [[ "$dispatch_sha" =~ ^[0-9a-f]{40}$ ]] || {
+            echo "::error::Unable to resolve the exact master SHA for inspection dispatch."
+            exit 1
+          }
+          echo "::warning::No recent master inspection run; dispatching the existing read-only inspection workflow."
+          echo "Dispatch payload: ref=master sha=$dispatch_sha (no inputs)"
+          gh workflow run inspect-vps.yml --repo "$GITHUB_REPOSITORY" --ref master
+
+          dispatched_run=""
+          for attempt in $(seq 1 6); do
+            response="$(
+              gh api -X GET \
+                "repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs" \
+                -f event=workflow_dispatch -F branch=master -F per_page=100
+            )"
+              dispatched_run="$(
+                jq -c --arg started "$REFERENCE_AT" --arg sha "$dispatch_sha" \
+                  '[.workflow_runs[] | select(
+                    .event == "workflow_dispatch"
+                    and .head_branch == "master"
+                    and .head_sha == $sha
+                    and .created_at >= $started
+                  )] | sort_by(.created_at) | last // empty' \
+                  <<< "$response"
+              )"
+            if [[ -n "$dispatched_run" ]]; then
+              run_id="$(jq -r '.id' <<< "$dispatched_run")"
+              run_url="$(jq -r '.html_url' <<< "$dispatched_run")"
+              echo "Verified fallback inspection dispatch: #$run_id $run_url"
+              exit 0
+            fi
+            echo "Waiting for inspection workflow_dispatch correlation (attempt $attempt/6)..."
+            sleep 5
+          done
+          echo "::error::GitHub did not create a master workflow_dispatch run for inspect-vps after the recovery request."
+          exit 1

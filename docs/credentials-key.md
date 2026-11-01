@@ -55,7 +55,7 @@ GitHub Actions can resolve secrets/variables from repository, organization, and 
 
 | Name / expression | Referenced in | Purpose / handling |
 |---|---|---|
-| `GITHUB_TOKEN` / `github.token` | TCE Dashboard: `wf-00-tce-legacy-actions-cleanup.yml`, `wf-02-tce-prettier-format.yml`, `wf-03-tce-production-deploy.yml`, `wf-08b-tce-microfe-build-publish.yml`; Authentication: `release.yml`; Platform Infra: `reconcile-vps.yml` fallback and `gitops-image-promotion.yml` | GitHub Actions-generated workflow token. It is not a long-lived PAT to copy between repositories. Platform Infra GitOps uses Actions/Contents/Pull Requests permissions only; GHCR reads are performed with `GHCR_READ_TOKEN`, not GITHUB_TOKEN package permissions. |
+| `GITHUB_TOKEN` / `github.token` | TCE Dashboard: `wf-00-tce-legacy-actions-cleanup.yml`, `wf-02-tce-prettier-format.yml`, `wf-03-tce-production-deploy.yml`, `wf-08b-tce-microfe-build-publish.yml`; Authentication: `release.yml`; Platform Infra: `reconcile-vps.yml` fallback, `gitops-image-promotion.yml`, `recover-stale-ops.yml` | GitHub Actions-generated workflow token. It is not a long-lived PAT to copy between repositories. Platform Infra GitOps uses Actions/Contents/Pull Requests permissions only; schedule recovery uses Actions write/Contents read only; GHCR reads are performed with `GHCR_READ_TOKEN`, not GITHUB_TOKEN package permissions. |
 
 ## Common runtime mapping
 
@@ -117,6 +117,7 @@ These are sourced from Platform Infra's protected GitHub Actions Environment nam
 - `provision-auth-runtime-secret.yml`
 - `reconcile-observability.yml`
 - `reconcile-vps.yml`
+- `recover-stale-ops.yml`
 - `runtime-secret-readiness.yml`
 - `smoke-production.yml`
 - `staging-dry-run.yml`
