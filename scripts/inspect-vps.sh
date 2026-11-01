@@ -3,6 +3,7 @@ set -euo pipefail
 OUT="${1:-debug/vps-latest.md}"
 mkdir -p "$(dirname "$OUT")"
 KCTL=/usr/local/sbin/platform-kubectl
+CRI=/usr/local/sbin/platform-crictl
 {
   echo "# VPS inspection"; echo; echo "Generated: $(date -Is)"; echo
   echo "## Host"
@@ -20,12 +21,12 @@ KCTL=/usr/local/sbin/platform-kubectl
   if [[ "$disk_usage_pct" =~ ^[0-9]+$ ]]; then
     if [ "$disk_usage_pct" -ge 90 ]; then echo "disk_pressure: critical (${disk_usage_pct}%)"; elif [ "$disk_usage_pct" -ge 80 ]; then echo "disk_pressure: warning (${disk_usage_pct}%)"; else echo "disk_pressure: normal (${disk_usage_pct}%)"; fi
   else echo "disk_pressure: unknown"; fi
-  uptime; echo; echo "### Top disk consumers"; sudo du -xhd1 /var/lib/rancher/k3s /var/lib/docker /var/log 2>/dev/null | sort -h | tail -n 30 || true
+  uptime; echo; echo "### Top disk consumers (best-effort, runner-readable paths)"; du -xhd1 /var/lib/rancher/k3s /var/lib/docker /var/log 2>/dev/null | sort -h | tail -n 30 || true
   echo; echo "## Runner"; id github-runner 2>/dev/null || true; pgrep -af "Runner.Listener|Runner.Worker" | head -20 || true
   systemctl list-units --type=service --all | grep -Ei "actions.runner|github" || true
   echo "runner_service: $(systemctl is-active actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service 2>/dev/null || true)"
   echo "runner_service_enabled: $(systemctl is-enabled actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service 2>/dev/null || true)"
-  echo; echo "## Docker"; docker --version 2>/dev/null || true; docker info --format "Server={{.ServerVersion}} RootDir={{.DockerRootDir}}" 2>/dev/null || true; sudo docker system df 2>/dev/null || true
+  echo; echo "## Docker"; docker --version 2>/dev/null || true; docker info --format "Server={{.ServerVersion}} RootDir={{.DockerRootDir}}" 2>/dev/null || true; docker system df 2>/dev/null || true
   echo; echo "## Updates"; apt list --upgradable 2>/dev/null | sed -n "1,80p" || true; echo "restart_required: $(test -f /var/run/reboot-required && echo yes || echo no)"
   echo; echo "## K3s"; sudo "$KCTL" version || true; sudo "$KCTL" get nodes -o wide || true; sudo "$KCTL" get namespaces || true
   sudo "$KCTL" get pods -A -o wide || true
@@ -68,9 +69,15 @@ KCTL=/usr/local/sbin/platform-kubectl
     done < <(sudo "$KCTL" get pods -n tce-prod -l app=tce-service -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n')
   else echo "TCE service deployment not found."; fi
   echo; echo "### CRI image inventory"
-  if [ -x /usr/local/bin/crictl ]; then sudo /usr/local/bin/crictl images 2>&1 | head -n 100 || true; sudo /usr/local/bin/crictl ps -a 2>&1 | head -n 100 || true
-  elif command -v crictl >/dev/null 2>&1; then sudo crictl images 2>&1 | head -n 100 || true; sudo crictl ps -a 2>&1 | head -n 100 || true
-  else echo "crictl not found"; fi
+  [[ -x "$CRI" ]] || { echo "Restricted CRI wrapper not found: $CRI" >&2; exit 2; }
+  images_json="$(sudo "$CRI" images)"
+  containers_json="$(sudo "$CRI" ps)"
+  jq -e '.images | type == "array"' <<< "$images_json" >/dev/null
+  jq -e '.containers | type == "array"' <<< "$containers_json" >/dev/null
+  echo "Images (repo tags, repo digests, image ID, pinned, size bytes):"
+  jq -r '.images[:100][]? | [((.repoTags // []) | join(",")), ((.repoDigests // []) | join(",")), (.id // ""), (.pinned // false | tostring), (.size // 0 | tostring)] | @tsv' <<< "$images_json"
+  echo "Containers (container ID, name, image reference, state):"
+  jq -r '.containers[:100][]? | [(.id // ""), (.metadata.name // ""), (.imageRef // ""), (.state // "")] | @tsv' <<< "$containers_json"
   echo; echo "### GitOps drift"; set +e; sudo "$KCTL" diff -k environments/prod >/dev/null 2>&1; drift_rc=$?; set -e
   case "$drift_rc" in 0) echo "status: clean";; 1) echo "status: drift-detected";; *) echo "status: diff-error"; echo "exit_code: $drift_rc";; esac
   echo; echo "### Images"; sudo "$KCTL" get deployments -A -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,IMAGES:.spec.template.spec.containers[*].image' --no-headers 2>/dev/null || true
