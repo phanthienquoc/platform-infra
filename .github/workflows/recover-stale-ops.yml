@@ -64,18 +64,19 @@ jobs:
             latest_id="$(jq -r '.id' <<< "$latest")"
             status="$(jq -r '.status // empty' <<< "$latest")"
             if [[ "$status" != "completed" ]]; then
-              echo "Reconciliation run #$latest_id is $status; avoiding a duplicate dispatch."
+              echo "Reconciliation run #$latest_id is $status; avoiding duplicate reconciliation/inspection dispatches."
+              echo "busy=true" >> "$GITHUB_OUTPUT"
               echo "dispatched=false" >> "$GITHUB_OUTPUT"
               exit 0
             fi
-            created_at="$(jq -r '.created_at' <<< "$latest")"
-            created_epoch="$(jq -r '.created_at | fromdateiso8601' <<< "$latest")"
-            age_seconds=$((REFERENCE_EPOCH - created_epoch))
+            activity_at="$(jq -r '.updated_at // .run_started_at // .created_at' <<< "$latest")"
+            activity_epoch="$(jq -r '(.updated_at // .run_started_at // .created_at) | fromdateiso8601' <<< "$latest")"
+            age_seconds=$((REFERENCE_EPOCH - activity_epoch))
             (( age_seconds >= 0 )) || {
-              echo "::error::Reconciliation run timestamp is newer than the recovery API clock."
+              echo "::error::Reconciliation activity timestamp is newer than the recovery API clock."
               exit 1
             }
-            echo "Latest master reconciliation run #$latest_id: $created_at, age=$((age_seconds / 60))m."
+            echo "Latest master reconciliation run #$latest_id: last_activity=$activity_at, age=$((age_seconds / 60))m."
           fi
 
           if (( age_seconds <= MAX_RECONCILE_AGE_MINUTES * 60 )); then
@@ -111,7 +112,7 @@ jobs:
           exit 1
 
       - name: Recover missing inspection delivery
-        if: ${{ steps.reconcile.outputs.dispatched != 'true' }}
+        if: ${{ steps.reconcile.outputs.dispatched != 'true' && steps.reconcile.outputs.busy != 'true' }}
         env:
           REFERENCE_AT: ${{ steps.clock.outputs.reference_at }}
           REFERENCE_EPOCH: ${{ steps.clock.outputs.reference_epoch }}
@@ -137,14 +138,14 @@ jobs:
               echo "Inspection run #$latest_id is $status; avoiding a duplicate dispatch."
               exit 0
             fi
-            created_at="$(jq -r '.created_at' <<< "$latest")"
-            created_epoch="$(jq -r '.created_at | fromdateiso8601' <<< "$latest")"
-            age_seconds=$((REFERENCE_EPOCH - created_epoch))
+            activity_at="$(jq -r '.updated_at // .run_started_at // .created_at' <<< "$latest")"
+            activity_epoch="$(jq -r '(.updated_at // .run_started_at // .created_at) | fromdateiso8601' <<< "$latest")"
+            age_seconds=$((REFERENCE_EPOCH - activity_epoch))
             (( age_seconds >= 0 )) || {
-              echo "::error::Inspection run timestamp is newer than the recovery API clock."
+              echo "::error::Inspection activity timestamp is newer than the recovery API clock."
               exit 1
             }
-            echo "Latest master inspection run #$latest_id: $created_at, age=$((age_seconds / 60))m."
+            echo "Latest master inspection run #$latest_id: last_activity=$activity_at, age=$((age_seconds / 60))m."
           fi
 
           if (( age_seconds <= MAX_INSPECTION_AGE_MINUTES * 60 )); then
