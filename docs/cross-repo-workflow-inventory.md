@@ -1,6 +1,18 @@
 # Cross-Repository Workflow Inventory
 
 
+## Latest workflow inventory review (2026-11-01 12:07 ICT; runner queue telemetry added)
+
+- Current heads: platform-infra `7fa8684d016154903a188fd11003d69a00545f80`; TCE Dashboard `8547e1315fea75202f70f14556589e76ab1f65ed`; StockDividend `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: platform-infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #76/#75; none observed in TCE, StockDividend, or Media.
+- **Reconcile schedule/watchdog:** reconciliation cron remains `7,22,37,52 * * * *`; watchdog remains `12,27,42,57 * * * *`; inspection remains `2,32 * * * *`. PR #953 adds read-only queue-delay measurement: scheduled/manual/fallback watchdog runs fail if the latest scheduled reconcile waits over 15 minutes for a runner; push smoke emits warnings only; the latest scheduled inspection queue delay is reported as a warning. No cron or permission change.
+- Queue evidence: scheduled inspect run #41264393955 waited 106m46s (created 02:15:04Z, started 04:01:50Z). Latest scheduled reconcile #41260761381 remains 01:21:35Z; latest scheduled watchdog #41264226448 remains 02:12:35Z. No newer schedule events observed through 05:07Z. The new watchdog will help distinguish queued-run pressure from missing schedule delivery.
+- PR #953 merged as `7fa8684d016154903a188fd11003d69a00545f80`; exact-head lint [#41275616540](https://github.com/phanthienquoc/platform-infra/actions/runs/41275616540) and manifest validation [#41275616418](https://github.com/phanthienquoc/platform-infra/actions/runs/41275616418) passed. Post-merge lint/manifest/watchdog smoke were queued at review time.
+- StockDividend publisher #41273202844 published and verified ARM64 full-SHA images: Scraper digest `69bbe0d160a80490fc92c73d77c9a657ffd853a29beb0972a615c10a710f4179`, Admin digest `cdf2e9328b17bcbabc118591d3c179709f51753047d400bb524bc18d2d39053c`, Backend digest `d188e5c4ae0bf4c882a560c0640a96f5497bc9623b863f1fea181dc6b3c974f3`. Promotion gate remained false; handoff/dispatch skipped. The Scraper has a separate weekend/manual GitHub-hosted workflow and no platform-infra workload manifest; preserve it.
+- Latest K3s inspection #41275351280: Media and MicroFE are 1/1 with pod imageIDs matching pinned digests; StockDividend Admin and new Backend pods remain ImagePullBackOff on old `12d63b4`; old Backend/Frontend replicas remain on `23b2878`; TCE/Auth/Keycloak are intentionally 0/0.
+- Supabase read-only SQL probe passed at 05:06:39Z; Media readiness REST window 05:02–05:07Z had 27 HTTP 200 / 0 HTTP 522; Postgres timeout/reset counts were zero. Continue monitoring; do not bypass readiness.
+- Preserve application CI/build/security, StockDividend weekend/manual scraper, backup, inspection, reconciliation, watchdog, and release workflows. No direct SSH/Compose deployment authority added. TCE market-scan schedule unchanged.
+
 ## Latest workflow inventory review (2026-11-01 12:02 ICT; StockDividend publication and inspection merge guard evidence refreshed)
 
 - Current heads: platform-infra `68aebdd7a68b6b79571243ae9a278fecc3262c32`; TCE Dashboard `8547e1315fea75202f70f14556589e76ab1f65ed`; StockDividend `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
