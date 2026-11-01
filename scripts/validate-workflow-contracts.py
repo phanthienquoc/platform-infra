@@ -555,6 +555,8 @@ if 'if [[ "$state" != "active" ]]; then' not in watchdog or "scheduled events ca
     fail("The watchdog must fail closed with an explicit diagnostic when reconcile-vps is disabled.")
 if 'MAX_QUEUE_MINUTES: "15"' not in watchdog or "run_started_at" not in watchdog or "queue_seconds" not in watchdog:
     fail("The watchdog must measure scheduled reconciliation runner queue delay and enforce a 15-minute queue budget.")
+if "run_attempt" not in watchdog or "queue wait" not in watchdog or "not-measurable" not in watchdog:
+    fail("The watchdog must avoid treating a rerun's run_started_at minus original created_at as runner queue time.")
 if "inspect-vps.yml/runs" not in watchdog or "Report latest scheduled inspection runner queue delay" not in watchdog:
     fail("The watchdog must report inspection runner queue delay to distinguish runner backlog from missing schedule events.")
 inspection_queue_step = watchdog.find("name: Report latest scheduled inspection runner queue delay")
