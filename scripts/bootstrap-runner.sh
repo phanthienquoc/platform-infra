@@ -46,7 +46,7 @@ case "${1:-}" in
     ;;
   policy-version)
     [[ "$#" -eq 1 ]] || exit 2
-    echo "platform-kubectl policy: rollout-status-v12-scoped-image-pull-restart"
+    echo "platform-kubectl policy: rollout-status-v13-permanent-image-pull-restart"
     exit 0
     ;;
   reconcile-ghcr-pull)
@@ -224,20 +224,28 @@ case "${1:-}" in
       local namespace="$1"
       local deployment="$2"
       local selector
-      local waiting_reasons
+      local waiting_failures
+      local permanent_failures
 
-      selector="$("${KUBECTL[@]}" -n "$namespace" get deployment "$deployment" -o json |
-        jq -r '.spec.selector.matchLabels // {} | to_entries | map("\(.key)=\(.value)") | join(",")')"
+      selector="$( "${KUBECTL[@]}" -n "$namespace" get deployment "$deployment" -o json |
+        jq -r '.spec.selector.matchLabels // {} | to_entries | map("\\(.key)=\\(.value)") | join(",")')"
       [[ -n "$selector" ]] || {
         echo "platform-kubectl: deployment $namespace/$deployment has no matchLabels selector" >&2
         return 1
       }
 
-      waiting_reasons="$("${KUBECTL[@]}" -n "$namespace" get pods -l "$selector" -o json |
-        jq -r '[.items[]? | ((.status.containerStatuses // []) + (.status.initContainerStatuses // []))[]? | .state.waiting.reason? // empty] | unique | join(",")')"
+      waiting_failures="$( "${KUBECTL[@]}" -n "$namespace" get pods -l "$selector" -o json |
+        jq -c '[.items[]? | ((.status.containerStatuses // []) + (.status.initContainerStatuses // []))[]? |
+          select(.state.waiting.reason? == "ImagePullBackOff" or .state.waiting.reason? == "ErrImagePull") |
+          {reason: .state.waiting.reason, message: (.state.waiting.message // "")}]')"
+      permanent_failures="$(jq -r '[.[] |
+        select((.message | ascii_downcase) | test("no match for platform in manifest|manifest unknown|manifest not found")) |
+        "\\(.reason): \\(.message)"] | unique | join("; ")' <<< "$waiting_failures")"
 
-      if [[ ",$waiting_reasons," == *",ImagePullBackOff,"* || ",$waiting_reasons," == *",ErrImagePull,"* ]]; then
-        echo "Image pull failure detected for $namespace/$deployment; restarting only that deployment."
+      if [[ -n "$permanent_failures" ]]; then
+        echo "Permanent image-pull failure for $namespace/$deployment; skipping rollout restart: $permanent_failures"
+      elif [[ "$waiting_failures" != "[]" ]]; then
+        echo "Transient image-pull failure detected for $namespace/$deployment; restarting only that deployment."
         "${KUBECTL[@]}" -n "$namespace" rollout restart "deployment/$deployment"
       else
         echo "No image-pull failures for $namespace/$deployment."
@@ -365,7 +373,7 @@ echo "platform-kubectl: command is not allowlisted" >&2
 exit 2
 EOF
 chmod 0755 /usr/local/sbin/platform-kubectl
-echo "platform-kubectl policy: rollout-status-v12-scoped-image-pull-restart"
+echo "platform-kubectl policy: rollout-status-v13-permanent-image-pull-restart"
 cat >/usr/local/sbin/platform-crictl <<'EOF'
 #!/usr/bin/env bash
 # Root-owned restricted CRI interface for the platform cleanup helper.
