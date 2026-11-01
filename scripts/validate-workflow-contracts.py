@@ -46,7 +46,7 @@ for required in (
     "SOURCE_RUN_ID: ${{ inputs.source_run_id }}",
     "SOURCE_HEAD_SHA: ${{ inputs.source_head_sha }}",
     '.path // empty',
-    'source_status="$(jq -r '.status // empty'',
+    "source_status",
     'source_status" == "completed"',
 ):
     if required not in recovery:
