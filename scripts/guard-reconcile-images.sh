@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Media migration guard: preserve immutable image replacement protection.
--        {"last-applied-configuration":"image: ghcr.io/example/app:old"}
+# Only match actual container image fields; ignore image strings inside annotations such as last-applied-configuration.
+# Only match actual container image fields; ignore image strings inside annotations such as last-applied-configuration.
 set -euo pipefail
 
 MODE="${1:-check}"
@@ -27,7 +28,7 @@ EOF
     echo "Expected two removed YAML image fields, detected $actual_count." >&2
     return 1
   }
--        {"last-applied-configuration":"image: ghcr.io/example/app:old"}
+  if grep -q 'last-applied-configuration' <<<"$removed_images"; then
     echo "The image guard must ignore serialized annotations." >&2
     return 1
   fi
