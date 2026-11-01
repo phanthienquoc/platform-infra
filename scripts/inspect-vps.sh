@@ -27,7 +27,27 @@ KCTL=/usr/local/sbin/platform-kubectl
   echo "runner_service_enabled: $(systemctl is-enabled actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service 2>/dev/null || true)"
   echo; echo "## Docker"; docker --version 2>/dev/null || true; docker info --format "Server={{.ServerVersion}} RootDir={{.DockerRootDir}}" 2>/dev/null || true; sudo docker system df 2>/dev/null || true
   echo; echo "## Updates"; apt list --upgradable 2>/dev/null | sed -n "1,80p" || true; echo "restart_required: $(test -f /var/run/reboot-required && echo yes || echo no)"
-  echo; echo "## K3s"; sudo "$KCTL" version || true; sudo "$KCTL" get nodes -o wide || true; sudo "$KCTL" get namespaces || true; sudo "$KCTL" get pods -A -o wide || true; sudo "$KCTL" get deployments -A || true
+  echo; echo "## K3s"; sudo "$KCTL" version || true; sudo "$KCTL" get nodes -o wide || true; sudo "$KCTL" get namespaces || true
+  sudo "$KCTL" get pods -A -o wide || true
+  echo; echo "### Pod imageID evidence"
+  sudo "$KCTL" get pods -A -o json | jq -r '
+    .items[] as $pod
+    | (
+        (($pod.status.containerStatuses // []) | map({kind: "container", status: .}))
+        + (($pod.status.initContainerStatuses // []) | map({kind: "init", status: .}))
+      )[]?
+    | [
+        $pod.metadata.namespace,
+        $pod.metadata.name,
+        .kind,
+        .status.name,
+        .status.image,
+        .status.imageID,
+        (.status.ready // false | tostring),
+        (.status.restartCount // 0 | tostring)
+      ] | @tsv
+  ' || true
+  sudo "$KCTL" get deployments -A || true
   echo; echo "### Pod failure evidence"
   sudo "$KCTL" get pods -A -o jsonpath='{range .items[*]}{.metadata.namespace}{"\t"}{.metadata.name}{"\t"}{range .status.containerStatuses[*]}{.state.waiting.reason}{"\t"}{.state.waiting.message}{"\n"}{end}{end}' 2>/dev/null | grep -E $'\t(ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError|CreateContainerError|RunContainerError)\t' || true
   echo; echo "### Recent failure events"

@@ -23,7 +23,13 @@ def fail(message: str) -> None:
 reconcile = read("reconcile-vps.yml")
 promotion = read("gitops-image-promotion.yml")
 inspection = read("inspect-vps.yml")
+inspection_script = (ROOT / "scripts" / "inspect-vps.sh").read_text(encoding="utf-8")
 manifest_validation = read("validate-manifests.yml")
+
+# VPS inspection must capture runtime container imageIDs, including init containers.
+for required in ("### Pod imageID evidence", "containerStatuses", "initContainerStatuses", ".status.imageID"):
+    if required not in inspection_script:
+        fail(f"VPS inspection is missing runtime image identity evidence: {required}")
 
 # Production MicroFE manifests must never accept the old placeholder tags.
 for placeholder in (
