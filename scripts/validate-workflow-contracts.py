@@ -27,6 +27,25 @@ inspection = read("inspect-vps.yml")
 mirror = read("mirror-locally-uncensored.yml")
 if 'workflows: ["reconcile-vps", "inspect-vps", "Mirror locally-uncensored into private repository"]' not in recovery or "types: [completed]" not in recovery:
     fail("Recovery controller must run after master reconciliation, scheduled inspection, and the independent mirror schedule heartbeat.")
+if "repository_dispatch:" not in recovery or "types: [tce-schedule-heartbeat]" not in recovery:
+    fail("Recovery controller must accept the authenticated cross-repository TCE schedule heartbeat.")
+for required in (
+    "github.event.action == 'tce-schedule-heartbeat'",
+    "github.event.client_payload.source_repository == 'phanthienquoc/TCE-dashboard'",
+    "github.event.client_payload.source_event == 'schedule'",
+    "github.event.client_payload.source_workflow_path == '.github/workflows/wf-06-tce-healthcheck.yml'",
+    "github.event.client_payload.source_workflow_path == '.github/workflows/wf-07-tce-integration-check.yml'",
+    "github.event.client_payload.source_workflow_path == '.github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml'",
+    "- name: Validate external TCE schedule heartbeat payload",
+    "SOURCE_RUN_ID: ${{ github.event.client_payload.source_run_id }}",
+    "SOURCE_HEAD_SHA: ${{ github.event.client_payload.source_head_sha }}",
+    "HEARTBEAT_RUN_ID: ${{ github.event.client_payload.heartbeat_run_id }}",
+    "HEARTBEAT_HEAD_SHA: ${{ github.event.client_payload.heartbeat_head_sha }}",
+    "phanthienquoc/TCE-dashboard",
+    "TCE heartbeat SHAs must be full commit IDs",
+):
+    if required not in recovery:
+        fail(f"External TCE schedule heartbeat contract is missing: {required}")
 if not re.search(r"(?m)^  push:\n    branches: \[master\]\n    paths:", recovery):
     fail("Recovery controller must bootstrap from deployment-relevant master pushes.")
 for required_path in (
