@@ -189,7 +189,7 @@ if "microfe" not in reconcile:
 
 # Scheduled reconciliation logic must have a matching schedule trigger.
 if "github.event_name == 'schedule'" in reconcile and not re.search(
-    r"(?m)^\\s*schedule:\\s*$", reconcile
+    r"(?m)^\s*schedule:\s*$", reconcile
 ):
     fail(
         "reconcile-vps.yml references github.event_name == 'schedule' "
