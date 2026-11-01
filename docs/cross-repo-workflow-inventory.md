@@ -27,7 +27,7 @@
 - Cleanup dry-run #41305323263 succeeded with no image removals. Preserve weekly/manual cleanup, dry-run push/schedule, and fail-closed reference handling.
 - TCE master push CI WF-01/WF-02/WF-05/WF-12 passed; latest scheduled WF-06 #41287060151 remains the last observed scheduled healthcheck and returned 503 while TCE/Auth are intentionally stopped. Preserve all TCE cron expressions and market-scan schedule.
 - Media CI #41246414186 remains the latest successful master CI; K3s health is from #41304636230. Authentication CI/release #41033586844/#41040510320 are historical; keep Auth manual-only and preserve open PRs #75/#76 pending migration/environment evidence.
-- Supabase read-only SQL probe at 13:01:18Z passed. Bounded logs query 12:30–13:02Z: 185 edge, 9 PostgREST, 0 HTTP 522, 0 statement-timeout matches.
+- Supabase project status `ACTIVE_HEALTHY`; read-only SQL probe at 14:03:48Z passed. Corrected status-code query 13:00–14:04Z: 382 edge events, 28 PostgREST events, 0 HTTP 522, 0 HTTP 5xx, 0 statement-timeout matches. This is a bounded observation, not a long-term stability claim.
 - Mirror workflow #41292061857 still lacks `Platform-infra-token`; owner-side setup requires a target-repository-scoped `Contents: write` token. Do not substitute unrelated credentials.
 - Preserve all CI/test/security/backup/manual/release/scheduled jobs. No workflow was removed, no production manifest/credential/release flag/database object/desired replica changed, and no duplicate SSH/Compose authority added.
 
