@@ -1,5 +1,21 @@
 # Cross-Repository Workflow Inventory
 
+## Latest workflow inventory review (2026-11-01 18:13 ICT; cleanup normalization merged)
+
+- Current heads: platform-infra `deaf37cdb3a536e06a78336b8ec710356ab2b4d1`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: platform-infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #76 (draft)/#75; none in TCE, StockDividend, or Media.
+- `vps-image-cleanup.yml` is retained as a purposeful production operations workflow. It preserves the weekly Sunday cron `30 3 * * 0` and explicit manual dispatch. A path-scoped master-push smoke now runs after cleanup script/test/workflow changes; push and schedule are forced to `DRY_RUN=true`, while only manual dispatch can honor `dry_run=false`.
+- `scripts/cleanup-k3s-images.sh` now uses the installed restricted CRI wrapper contract (`ps`, `images`, `rmi <full-sha256>`), reads newline-delimited refs safely, normalizes Docker Hub shorthand to canonical CRI names, and rechecks fresh Pod/container/image inventories immediately before deletion. Any unresolved Pod image reference fails closed.
+- Cleanup regression test `scripts/tests/cleanup-k3s-images.test.sh` runs in `validate-github-actions.yml`; it covers GHCR explicit refs, Docker Hub shorthand/canonical names, retention ordering, dry-run non-deletion, and unresolved-ref failure.
+- PR #971 (jq rawfile), #972 (safe push dry-run), #973 (restricted CRI wrapper), and #975 (Docker Hub normalization) are merged. Exact-head lint/manifest checks passed for each; post-merge lint/manifest checks at `deaf37c` passed.
+- Live push dry-run #41300876011 reached the fail-closed guard after successful prerequisites/CRI inventory. Normalization resolved NATS and most Rancher refs; only StockDividend old admin/backend tags and `rancher/klipper-helm` remained unresolved. Exit 3, no image deletion. Do not mark cleanup healthy until these references are understood.
+- `recover-stale-ops.yml` schedule remains unverified; no run observed through 11:12Z after the controller's merge. Reconciliation/inspection schedules remain preserved.
+- TCE WF-06 `*/15 * * * *`, WF-12 watchdog, manual checks, and all market-scan schedules remain unchanged. Latest WF-06 #41287060151 failed because TCE/Auth are intentionally stopped; WF-12 push smoke #41291809063 passed.
+- StockDividend app CI and immutable publisher #41273202852/#41273202844 passed; all three ARM64 digests verified. Production promotion remains disabled. Weekend scraper #41284033242 remains in progress; preserve the scheduled/manual job while reviewing its long runtime.
+- Media CI #41246414186 passed; last full runtime snapshot #41275351280 showed Media/MicroFE 1/1 and matching pinned imageIDs. No fresh full inspection after today's cleanup.
+- Supabase SQL probe passed at 11:08:08Z. Auth CI/release evidence remains historical; keep Auth PR #75/#76 open pending environment/migration safety. Preserve manual-only Auth release.
+- No workflow removed, no second direct SSH/Compose authority added, no production manifest/credential/database/release flag/replica changed, and no image was deleted.
+
 ## Latest workflow inventory review (2026-11-01 18:08 ICT; cleanup workflow safely smoke-tested)
 
 - Current heads: platform-infra `a760e94d8f103e23caec07c095115475664bb627`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
