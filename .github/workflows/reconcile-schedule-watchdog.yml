@@ -97,26 +97,37 @@ jobs:
           conclusion="$(jq -r '.conclusion // "pending"' <<< "$latest")"
           age_seconds=$((reference_epoch - created_epoch))
           age_minutes=$((age_seconds / 60))
-          started_at="$(jq -r '.run_started_at // empty' <<< "$latest")"
-          if [[ -n "$started_at" ]]; then
-            started_epoch="$(jq -r '.run_started_at | fromdateiso8601' <<< "$latest")"
+          run_attempt="$(jq -r '.run_attempt // 1' <<< "$latest")"
+          queue_measurable=true
+          if (( run_attempt > 1 )); then
+            # GitHub keeps created_at from the original run but updates run_started_at
+            # for a re-run attempt. Their difference is not runner queue time.
+            queue_measurable=false
+            queue_seconds=0
+            queue_minutes=0
+            echo "::notice::Reconcile #${run_id} attempt ${run_attempt}: queue not measurable; freshness uses original created_at."
           else
-            # A queued run has not acquired a runner yet; measure its wait to this
-            # watchdog run's GitHub API timestamp, not the hosted runner wall clock.
-            started_epoch="$reference_epoch"
+            started_at="$(jq -r '.run_started_at // empty' <<< "$latest")"
+            if [[ -n "$started_at" ]]; then
+              started_epoch="$(jq -r '.run_started_at | fromdateiso8601' <<< "$latest")"
+            else
+              # A queued run has not acquired a runner yet; measure its wait to this
+              # watchdog run API timestamp, not the hosted runner wall clock.
+              started_epoch="$reference_epoch"
+            fi
+            queue_seconds=$((started_epoch - created_epoch))
+            queue_minutes=$((queue_seconds / 60))
           fi
-          queue_seconds=$((started_epoch - created_epoch))
-          queue_minutes=$((queue_seconds / 60))
 
           if (( age_seconds < 0 )); then
             echo "::error::GitHub returned a future timestamp for scheduled reconcile run #${run_id}: ${created_at}"
             exit 1
           fi
-          if (( queue_seconds < 0 )); then
+          if [[ "$queue_measurable" == true ]] && (( queue_seconds < 0 )); then
             echo "::error::GitHub returned a run_started_at earlier than created_at for scheduled reconcile #${run_id}."
             exit 1
           fi
-          if (( queue_minutes > MAX_QUEUE_MINUTES )); then
+          if [[ "$queue_measurable" == true ]] && (( queue_minutes > MAX_QUEUE_MINUTES )); then
             if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
               echo "::warning::Read-only API smoke succeeded; latest scheduled reconcile runner queue delay exceeds ${MAX_QUEUE_MINUTES}m."
               echo "::warning::Latest run #${run_id}: queue_wait=${queue_minutes}m status=${status}."
@@ -145,7 +156,11 @@ jobs:
           fi
 
           echo "Scheduled reconcile freshness passed for run #${run_id}."
-          echo "age=${age_minutes}m queue_wait=${queue_minutes}m status=${status} conclusion=${conclusion}."
+          if [[ "$queue_measurable" == true ]]; then
+            echo "age=${age_minutes}m queue_wait=${queue_minutes}m status=${status} conclusion=${conclusion}."
+          else
+            echo "age=${age_minutes}m queue_wait=not-measurable (run_attempt=${run_attempt}) status=${status} conclusion=${conclusion}."
+          fi
           echo "Age reference: watchdog run #${GITHUB_RUN_ID} created=${reference_at} (GitHub Actions API clock)."
           echo "Run evidence: ${run_url}"
 
@@ -185,6 +200,11 @@ jobs:
             fi
           fi
 
+          run_attempt="$(jq -r '.run_attempt // 1' <<< "$latest")"
+          if (( run_attempt > 1 )); then
+            echo "::warning::Inspection rerun attempt ${run_attempt}: queue not measurable; created_at is original."
+            exit 0
+          fi
           created_at="$(jq -r '.created_at' <<< "$latest")"
           created_epoch="$(jq -r '.created_at | fromdateiso8601' <<< "$latest")"
           started_at="$(jq -r '.run_started_at // empty' <<< "$latest")"
