@@ -477,16 +477,16 @@ for repository in (
 
 
 # Auth shutdown must be an isolated, allowlisted maintenance operation.
-if "rollout-status-v12-scoped-image-pull-restart" not in bootstrap_script:
+if "rollout-status-v13-permanent-image-pull-restart" not in bootstrap_script:
     fail("Runner bootstrap must publish the versioned scoped image-pull restart policy.")
 if '  scale)' not in bootstrap_script or 'scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform' not in bootstrap_script:
     fail("Runner bootstrap must allow only the exact Auth/Keycloak scale-to-zero command.")
 
-if "rollout-status-v12-scoped-image-pull-restart" not in reconcile:
+if "rollout-status-v13-permanent-image-pull-restart" not in reconcile:
     fail("Production reconciliation must require the v12 scoped image-pull restart runner policy.")
 auth_provision = read("provision-auth-runtime-secret.yml")
-if "rollout-status-v12-scoped-image-pull-restart" not in auth_provision:
-    fail("Standalone Auth secret provisioning must accept the current v12 runner policy.")
+if "rollout-status-v13-permanent-image-pull-restart" not in auth_provision:
+    fail("Standalone Auth secret provisioning must accept the current v13 runner policy.")
 
 restart_step = reconcile.split("- name: Restart target workloads blocked on image pulls", 1)[1].split(
     "- name: Validate TCE release pairing", 1
@@ -505,6 +505,18 @@ if "local selector" not in restart_block or "matchLabels" not in restart_block:
     fail("Runner image-pull recovery must inspect only pods selected by each target Deployment.")
 if 'rollout restart "deployment/$deployment"' not in restart_block:
     fail("Runner image-pull recovery must restart only the Deployment with a blocked image pull.")
+for required in (
+    "waiting_failures",
+    "permanent_failures",
+    "no match for platform in manifest",
+    "manifest unknown",
+    "manifest not found",
+    "ascii_downcase",
+    "Permanent image-pull failure",
+    "Transient image-pull failure",
+):
+    if required not in restart_block:
+        fail(f"Runner image-pull recovery is missing permanent/transient error handling: {required}")
 for required_target in (
     "microfe)","auth-service)","tce-dashboard)","stockdividend)","media-generation)","all)",
 ):
@@ -660,6 +672,11 @@ if 'validate-image-change-contract.py "$BASE_SHA" "$HEAD_SHA"' not in manifest_v
 actions_validation = read("validate-github-actions.yml")
 if "validate-image-change-contract.py --self-test" not in actions_validation:
     fail("Workflow validation must run immutable image-change contract regression fixtures.")
+restart_test = ROOT / "scripts" / "tests" / "restart-blocked-image-pulls.test.sh"
+if not restart_test.is_file():
+    fail("Permanent image-pull restart regression test is missing.")
+if "bash scripts/tests/restart-blocked-image-pulls.test.sh" not in actions_validation:
+    fail("Workflow validation must execute permanent/transient image-pull restart regression tests.")
 
 # A merge of the watchdog itself must exercise the read-only API path immediately.
 # This push-only smoke mode may warn about stale/missing schedule data, but normal
