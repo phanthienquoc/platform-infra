@@ -43,6 +43,22 @@ for required in (
     "HEARTBEAT_HEAD_SHA: ${{ github.event.client_payload.heartbeat_head_sha }}",
     "phanthienquoc/TCE-dashboard",
     "TCE heartbeat SHAs must be full commit IDs",
+    "fetch_tce_run()",
+    "api.github.com/repos/$SOURCE_REPOSITORY/actions/runs/$1",
+    "source_run_path",
+    "source_run_event",
+    "source_run_branch",
+    "source_run_sha",
+    'source_run_event == "schedule"',
+    'source_run_branch == "master"',
+    'source_run_sha == "$SOURCE_HEAD_SHA"',
+    "Direct WF-12 schedule heartbeat must identify the same source and heartbeat run.",
+    "WF-06/WF-07 heartbeat source must be completed before forwarding.",
+    "heartbeat_run_path",
+    'heartbeat_run_path == ".github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml"',
+    'heartbeat_run_event == "workflow_run"',
+    'heartbeat_run_event == "schedule"',
+    'heartbeat_run_sha == "$HEARTBEAT_HEAD_SHA"',
 ):
     if required not in recovery:
         fail(f"External TCE schedule heartbeat contract is missing: {required}")
