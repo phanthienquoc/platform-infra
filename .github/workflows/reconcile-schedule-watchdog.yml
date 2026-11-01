@@ -105,7 +105,7 @@ jobs:
             queue_measurable=false
             queue_seconds=0
             queue_minutes=0
-            echo "::notice::Queue wait for scheduled reconcile #${run_id} is not measurable on rerun attempt ${run_attempt}; freshness still uses the original scheduled created_at."
+            echo "::notice::Reconcile #${run_id} rerun attempt ${run_attempt}: queue unavailable; freshness uses original created_at."
           else
             started_at="$(jq -r '.run_started_at // empty' <<< "$latest")"
             if [[ -n "$started_at" ]]; then
@@ -202,7 +202,7 @@ jobs:
 
           run_attempt="$(jq -r '.run_attempt // 1' <<< "$latest")"
           if (( run_attempt > 1 )); then
-            echo "::warning::Inspection runner queue is not measurable for rerun attempt ${run_attempt}; created_at is the original workflow creation timestamp."
+            echo "::warning::Inspection rerun attempt ${run_attempt}: queue unavailable; created_at is the original workflow creation time."
             exit 0
           fi
           created_at="$(jq -r '.created_at' <<< "$latest")"
