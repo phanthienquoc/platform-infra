@@ -26,26 +26,27 @@ cat > "$tmp/bin/sudo" <<'SH'
 set -euo pipefail
 exec "$@"
 SH
-cat > "$tmp/bin/platform-kubectl" <<SH
+cat > "$tmp/bin/platform-kubectl" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
 if [[ "$*" == "get pods -A -o json" ]]; then
-  cat "$tmp/pods.json"
+  cat "$MOCK_FIXTURE_DIR/pods.json"
 else
   echo "unexpected kubectl arguments: $*" >&2
   exit 64
 fi
 SH
-cat > "$tmp/bin/platform-crictl" <<SH
+cat > "$tmp/bin/platform-crictl" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
 case "$*" in
-  "ps -a -o json") cat "$tmp/containers.json" ;;
-  "images -o json") cat "$tmp/images.json" ;;
+  "ps -a -o json") cat "$MOCK_FIXTURE_DIR/containers.json" ;;
+  "images -o json") cat "$MOCK_FIXTURE_DIR/images.json" ;;
   *) echo "unexpected CRI arguments: $*" >&2; exit 64 ;;
 esac
 SH
 chmod +x "$tmp/bin/sudo" "$tmp/bin/platform-kubectl" "$tmp/bin/platform-crictl"
+export MOCK_FIXTURE_DIR="$tmp"
 
 output="$(
   PATH="$tmp/bin:$PATH" \
