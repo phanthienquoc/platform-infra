@@ -1,3 +1,19 @@
+## Latest workflow inventory review (2026-11-01 18:08 ICT; cleanup workflow safely smoke-tested)
+
+- Current heads: platform-infra `a760e94d8f103e23caec07c095115475664bb627`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: platform-infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #76 (draft)/#75; none in TCE, StockDividend, or Media.
+- Platform Infra PR #971 fixed jq handling of newline-delimited Pod image refs with `--rawfile`, added a mocked cleanup regression test, and wired it into `validate-github-actions.yml`. Exact-head lint #41300193718 and manifest validation #41300193747 passed.
+- Platform Infra PR #972 added a path-scoped master-push dry-run to the existing `vps-image-cleanup` workflow. Push and schedule are forced to `DRY_RUN=true`; only manual `workflow_dispatch` can set false. Weekly Sunday cron `30 3 * * 0`, manual inputs, production environment, runner labels, and concurrency are preserved. Exact-head lint #41300278177 and manifest validation #41300278090 passed.
+- Platform Infra PR #973 aligned the cleanup script with the installed `platform-crictl` allowlist: call `ps`, `images`, and `rmi <full-sha256>` without forwarding low-level JSON flags. Exact-head lint #41300385289 and manifest validation #41300385307 passed.
+- Post-merge validation at master `a760e94`: workflow lint #41300425015 and manifest validation #41300425064 succeeded.
+- Live cleanup dry-run #41300425017 executed on the platform K3s runner with `DRY_RUN=true`. Prerequisites and CRI inventory passed, then the fail-closed reference check refused cleanup because several Pod refs were not resolvable to local CRI image IDs (including StockDividend old admin/backend tags and Docker Hub/Rancher system image refs). Exit 3; no deletion. Investigate CRI tag normalization before changing this safety guard.
+- `recover-stale-ops.yml` is a new recovery controller with cron `10,25,40,55 * * * *`, but no run was observed in the latest 100 Actions runs through 11:08Z. Do not claim recovery dispatch occurred. Existing reconciliation/watchdog/inspection schedules remain preserved.
+- TCE WF-06 cron `*/15 * * * *`, WF-12 monitoring, manual checks, and all TCE market-scan schedules remain unchanged. Latest WF-06 #41287060151 failed public checks because TCE/Auth are intentionally stopped; WF-12 push smoke #41291809063 passed.
+- StockDividend app-owned CI and immutable publisher #41273202852/#41273202844 passed; Scraper/Admin/Backend ARM64 digests verified. Production promotion remains disabled. Weekend scraper #41284033242 remains in progress; preserve the purposeful scheduled/manual workflow.
+- Media CI #41246414186 passed; latest full runtime snapshot #41275351280 showed Media and MicroFE workloads 1/1 with matching digest imageIDs. No fresh full inspection after cleanup smoke.
+- Supabase SQL probe succeeded at 11:08:08Z. Auth CI/release evidence is historical; keep Auth PR #75/#76 open pending integration target/environment reconciliation. Preserve manual-only Auth release.
+- No workflow removed. No duplicate direct SSH/Compose authority added. No production manifest, credential, database, release flag, or K3s desired replica changed.
+
 # Cross-Repository Workflow Inventory
 
 ## Latest workflow inventory review (2026-11-01 13:11 ICT; Auth smoke path correction merged)
