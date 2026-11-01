@@ -46,7 +46,7 @@ case "${1:-}" in
     ;;
   policy-version)
     [[ "$#" -eq 1 ]] || exit 2
-    echo "platform-kubectl policy: rollout-status-v12-scoped-image-pull-restart"
+    echo "platform-kubectl policy: rollout-status-v13-permanent-image-pull-guard"
     exit 0
     ;;
   reconcile-ghcr-pull)
@@ -224,20 +224,40 @@ case "${1:-}" in
       local namespace="$1"
       local deployment="$2"
       local selector
+      local pods_json
       local waiting_reasons
+      local permanent_errors
 
       selector="$("${KUBECTL[@]}" -n "$namespace" get deployment "$deployment" -o json |
-        jq -r '.spec.selector.matchLabels // {} | to_entries | map("\(.key)=\(.value)") | join(",")')"
+        jq -r '.spec.selector.matchLabels // {} | to_entries | map("\\(.key)=\\(.value)") | join(",")')"
       [[ -n "$selector" ]] || {
         echo "platform-kubectl: deployment $namespace/$deployment has no matchLabels selector" >&2
         return 1
       }
 
-      waiting_reasons="$("${KUBECTL[@]}" -n "$namespace" get pods -l "$selector" -o json |
-        jq -r '[.items[]? | ((.status.containerStatuses // []) + (.status.initContainerStatuses // []))[]? | .state.waiting.reason? // empty] | unique | join(",")')"
+      pods_json="$("${KUBECTL[@]}" -n "$namespace" get pods -l "$selector" -o json)"
+      waiting_reasons="$(jq -r '[.items[]? | ((.status.containerStatuses // []) + (.status.initContainerStatuses // []))[]? | .state.waiting.reason? // empty] | unique | join(",")' <<< "$pods_json")"
+      permanent_errors="$(jq -r '
+        [
+          .items[]?
+          | ((.status.containerStatuses // []) + (.status.initContainerStatuses // []))[]?
+          | select(
+              (.state.waiting.reason? // "") == "ImagePullBackOff"
+              or (.state.waiting.reason? // "") == "ErrImagePull"
+            )
+          | .state.waiting.message? // empty
+          | select(test("no match for platform in manifest|manifest unknown|manifest not found|manifest does not exist|not found.*manifest|manifest.*not found"; "i"))
+        ] | unique | .[]
+      ' <<< "$pods_json")"
+
+      if [[ -n "$permanent_errors" ]]; then
+        echo "Permanent image reference/platform failure detected for $namespace/$deployment; skipping rollout restart."
+        printf '%s\n' "$permanent_errors" | sed 's/^/  /'
+        return 0
+      fi
 
       if [[ ",$waiting_reasons," == *",ImagePullBackOff,"* || ",$waiting_reasons," == *",ErrImagePull,"* ]]; then
-        echo "Image pull failure detected for $namespace/$deployment; restarting only that deployment."
+        echo "Retryable image-pull failure detected for $namespace/$deployment; restarting only that deployment."
         "${KUBECTL[@]}" -n "$namespace" rollout restart "deployment/$deployment"
       else
         echo "No image-pull failures for $namespace/$deployment."
