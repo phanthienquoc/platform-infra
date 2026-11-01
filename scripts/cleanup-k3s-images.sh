@@ -89,7 +89,32 @@ resolve_pod_image_ids() {
   cut -f2 "$map_file" | sort -u > "$local_refs"
 
   : > "$output_file"
-  while IFS=  [[ "$missing_refs" -eq 0 ]] || return 3
+  while read -r phase ref; do
+    [[ -n "$ref" ]] || continue
+    normalized="$(canonical_image_ref "$ref")"
+    if ! grep -Fxq "$normalized" "$local_refs"; then
+      case "$phase" in
+        Succeeded|Failed)
+          # Terminal Pods may retain their original spec after containerd has
+          # garbage-collected the image. Existing CRI containers are protected
+          # separately through container-image-ids.txt, including exited ones.
+          echo "Ignoring unresolved image reference for terminal Pod phase=$phase; no local CRI image matched: $ref (normalized=$normalized)" >&2
+          continue
+          ;;
+        *)
+          echo "Cannot resolve non-terminal Pod image reference; refusing cleanup: phase=$phase ref=$ref (normalized=$normalized)" >&2
+          missing_refs=1
+          continue
+          ;;
+      esac
+    fi
+    awk -F '\\t' -v ref="$normalized" '$2 == ref { print $1 }' "$map_file" >> "$output_file"
+  done < "$refs_file"
+
+  rm -f "$refs_file" "$raw_map" "$map_file" "$local_refs"
+  [[ "$missing_refs" -eq 0 ]] || return 3
+  sort -u -o "$output_file" "$output_file"
+}
   sort -u -o "$output_file" "$output_file"
 }
 
