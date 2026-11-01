@@ -105,7 +105,7 @@ jobs:
             queue_measurable=false
             queue_seconds=0
             queue_minutes=0
-            echo "::notice::Reconcile #${run_id} rerun attempt ${run_attempt}: queue unavailable; freshness uses original created_at."
+            echo "::notice::Reconcile #${run_id} attempt ${run_attempt}: queue not measurable; freshness uses original created_at."
           else
             started_at="$(jq -r '.run_started_at // empty' <<< "$latest")"
             if [[ -n "$started_at" ]]; then
