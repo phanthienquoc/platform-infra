@@ -46,7 +46,7 @@ case "${1:-}" in
     ;;
   policy-version)
     [[ "$#" -eq 1 ]] || exit 2
-    echo "platform-kubectl policy: rollout-status-v11-auth-shutdown"
+    echo "platform-kubectl policy: rollout-status-v12-scoped-image-pull-restart"
     exit 0
     ;;
   reconcile-ghcr-pull)
@@ -215,21 +215,73 @@ case "${1:-}" in
     exit 0
     ;;
   restart-blocked-image-pulls)
-    [[ "$#" -eq 1 ]] || exit 2
+    [[ "$#" -eq 2 ]] || {
+      echo "platform-kubectl: restart-blocked-image-pulls requires exactly one application scope" >&2
+      exit 2
+    }
+
     restart_if_blocked() {
       local namespace="$1"
-      shift
-      local blocked
-      blocked="$("${KUBECTL[@]}" -n "$namespace" get pods -o jsonpath='{range .items[*]}{.status.containerStatuses[*].state.waiting.reason}{"\n"}{end}' 2>/dev/null | grep -E '(ImagePullBackOff|ErrImagePull)' || true)"
-      if [[ -n "$blocked" ]]; then
-        echo "Image pull failures detected in $namespace; restarting fixed production workloads."
-        "${KUBECTL[@]}" -n "$namespace" rollout restart "$@"
+      local deployment="$2"
+      local selector
+      local waiting_reasons
+
+      selector="$("${KUBECTL[@]}" -n "$namespace" get deployment "$deployment" -o json |
+        jq -r '.spec.selector.matchLabels // {} | to_entries | map("\(.key)=\(.value)") | join(",")')"
+      [[ -n "$selector" ]] || {
+        echo "platform-kubectl: deployment $namespace/$deployment has no matchLabels selector" >&2
+        return 1
+      }
+
+      waiting_reasons="$("${KUBECTL[@]}" -n "$namespace" get pods -l "$selector" -o json |
+        jq -r '[.items[]? | ((.status.containerStatuses // []) + (.status.initContainerStatuses // []))[]? | .state.waiting.reason? // empty] | unique | join(",")')"
+
+      if [[ ",$waiting_reasons," == *",ImagePullBackOff,"* || ",$waiting_reasons," == *",ErrImagePull,"* ]]; then
+        echo "Image pull failure detected for $namespace/$deployment; restarting only that deployment."
+        "${KUBECTL[@]}" -n "$namespace" rollout restart "deployment/$deployment"
       else
-        echo "No image-pull failures in $namespace."
+        echo "No image-pull failures for $namespace/$deployment."
       fi
     }
-    restart_if_blocked microfe-platform deployment/microfe-auth deployment/microfe-shell deployment/microfe-ws
-    restart_if_blocked stock-prod deployment/stock-admin deployment/stock-backend
+
+    case "$2" in
+      microfe)
+        restart_if_blocked microfe-platform microfe-shell
+        restart_if_blocked microfe-platform microfe-ws
+        ;;
+      auth-service)
+        restart_if_blocked microfe-platform microfe-auth
+        ;;
+      tce-dashboard)
+        restart_if_blocked tce-prod tce-service
+        restart_if_blocked tce-prod tce-frontend
+        ;;
+      stockdividend)
+        restart_if_blocked stock-prod stock-admin
+        restart_if_blocked stock-prod stock-backend
+        restart_if_blocked stock-prod stock-frontend
+        ;;
+      media-generation)
+        restart_if_blocked media-prod media-generation
+        restart_if_blocked media-prod media-generation-frontend
+        ;;
+      all)
+        restart_if_blocked microfe-platform microfe-auth
+        restart_if_blocked microfe-platform microfe-shell
+        restart_if_blocked microfe-platform microfe-ws
+        restart_if_blocked tce-prod tce-service
+        restart_if_blocked tce-prod tce-frontend
+        restart_if_blocked stock-prod stock-admin
+        restart_if_blocked stock-prod stock-backend
+        restart_if_blocked stock-prod stock-frontend
+        restart_if_blocked media-prod media-generation
+        restart_if_blocked media-prod media-generation-frontend
+        ;;
+      *)
+        echo "platform-kubectl: unsupported image-pull restart scope '$2'" >&2
+        exit 2
+        ;;
+    esac
     exit 0
     ;;
   logs)
@@ -313,7 +365,7 @@ echo "platform-kubectl: command is not allowlisted" >&2
 exit 2
 EOF
 chmod 0755 /usr/local/sbin/platform-kubectl
-echo "platform-kubectl policy: rollout-status-v11-auth-shutdown"
+echo "platform-kubectl policy: rollout-status-v12-scoped-image-pull-restart"
 cat >/usr/local/sbin/platform-crictl <<'EOF'
 #!/usr/bin/env bash
 # Root-owned restricted CRI interface for the platform cleanup helper.
