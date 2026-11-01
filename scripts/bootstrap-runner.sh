@@ -46,7 +46,7 @@ case "${1:-}" in
     ;;
   policy-version)
     [[ "$#" -eq 1 ]] || exit 2
-    echo "platform-kubectl policy: rollout-status-v12-scoped-image-pull-restart"
+    echo "platform-kubectl policy: rollout-status-v13-scoped-image-pull-restart-cooldown"
     exit 0
     ;;
   reconcile-ghcr-pull)
@@ -224,20 +224,36 @@ case "${1:-}" in
       local namespace="$1"
       local deployment="$2"
       local selector
+      local pods_json
       local waiting_reasons
+      local newest_pod_epoch
+      local now_epoch
+      local pod_age_seconds
+      local restart_cooldown_seconds=1800
 
-      selector="$("${KUBECTL[@]}" -n "$namespace" get deployment "$deployment" -o json |
+      selector="$(${KUBECTL[@]} -n "$namespace" get deployment "$deployment" -o json |
         jq -r '.spec.selector.matchLabels // {} | to_entries | map("\(.key)=\(.value)") | join(",")')"
       [[ -n "$selector" ]] || {
         echo "platform-kubectl: deployment $namespace/$deployment has no matchLabels selector" >&2
         return 1
       }
 
-      waiting_reasons="$("${KUBECTL[@]}" -n "$namespace" get pods -l "$selector" -o json |
-        jq -r '[.items[]? | ((.status.containerStatuses // []) + (.status.initContainerStatuses // []))[]? | .state.waiting.reason? // empty] | unique | join(",")')"
+      pods_json="$(${KUBECTL[@]} -n "$namespace" get pods -l "$selector" -o json)"
+      waiting_reasons="$(jq -r '[.items[]? | ((.status.containerStatuses // []) + (.status.initContainerStatuses // []))[]? | .state.waiting.reason? // empty] | unique | join(",")' <<<"$pods_json")"
 
       if [[ ",$waiting_reasons," == *",ImagePullBackOff,"* || ",$waiting_reasons," == *",ErrImagePull,"* ]]; then
-        echo "Image pull failure detected for $namespace/$deployment; restarting only that deployment."
+        newest_pod_epoch="$(jq -r '[.items[]? | .metadata.creationTimestamp? | select(type == "string") | fromdateiso8601] | max // 0' <<<"$pods_json")"
+        now_epoch="$(date -u +%s)"
+        if [[ ! "$newest_pod_epoch" =~ ^[0-9]+$ ]] || (( newest_pod_epoch <= 0 )); then
+          echo "Unable to determine pod age for $namespace/$deployment; skipping restart to avoid churn."
+          return 0
+        fi
+        pod_age_seconds=$((now_epoch - newest_pod_epoch))
+        if (( pod_age_seconds < restart_cooldown_seconds )); then
+          echo "Image pull failure detected for $namespace/$deployment, but a pod was created ${pod_age_seconds}s ago; suppressing restart for ${restart_cooldown_seconds}s cooldown."
+          return 0
+        fi
+        echo "Image pull failure detected for $namespace/$deployment; cooldown elapsed, restarting only that deployment."
         "${KUBECTL[@]}" -n "$namespace" rollout restart "deployment/$deployment"
       else
         echo "No image-pull failures for $namespace/$deployment."
