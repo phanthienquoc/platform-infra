@@ -1,3 +1,5 @@
+# Cross-Repository Workflow Inventory
+
 ## Latest workflow inventory review (2026-11-01 18:08 ICT; cleanup workflow safely smoke-tested)
 
 - Current heads: platform-infra `a760e94d8f103e23caec07c095115475664bb627`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
@@ -13,9 +15,6 @@
 - Media CI #41246414186 passed; latest full runtime snapshot #41275351280 showed Media and MicroFE workloads 1/1 with matching digest imageIDs. No fresh full inspection after cleanup smoke.
 - Supabase SQL probe succeeded at 11:08:08Z. Auth CI/release evidence is historical; keep Auth PR #75/#76 open pending integration target/environment reconciliation. Preserve manual-only Auth release.
 - No workflow removed. No duplicate direct SSH/Compose authority added. No production manifest, credential, database, release flag, or K3s desired replica changed.
-
-# Cross-Repository Workflow Inventory
-
 ## Latest workflow inventory review (2026-11-01 13:11 ICT; Auth smoke path correction merged)
 
 - Current review baseline heads: platform-infra `2de34aa036752fd07e1b54479e47099e4e970460`; TCE Dashboard `48a8c86497f55b0454ea20fda0567d27f7b9718b`; StockDividend `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
