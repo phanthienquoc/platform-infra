@@ -23,7 +23,6 @@ def fail(message: str) -> None:
 reconcile = read("reconcile-vps.yml")
 promotion = read("gitops-image-promotion.yml")
 inspection = read("inspect-vps.yml")
-watchdog = read("reconcile-schedule-watchdog.yml")
 manifest_validation = read("validate-manifests.yml")
 
 # Production MicroFE manifests must never accept the old placeholder tags.
@@ -440,6 +439,7 @@ for step_name in (
 
 
 # A read-only watchdog detects missing scheduled reconcile events independently.
+watchdog = read("reconcile-schedule-watchdog.yml")
 def scheduled_crons(workflow: str) -> list[str]:
     return re.findall(r'(?m)^ *- *cron: *"([^"]+)" *
 if "workflow_run:" not in watchdog or "      - inspect-vps" not in watchdog or "      - reconcile-vps" not in watchdog:
