@@ -30,8 +30,8 @@ jobs:
         run: |
           set -euo pipefail
           current_run="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")"
-          reference_at="$(jq -r '.created_at // empty' <<< "$current_run")"
-          reference_epoch="$(jq -r 'if .created_at then (.created_at | fromdateiso8601) else empty end' <<< "$current_run")"
+          reference_at="$(jq -r '.run_started_at // .created_at // empty' <<< "$current_run")"
+          reference_epoch="$(jq -r 'if (.run_started_at // .created_at) then ((.run_started_at // .created_at) | fromdateiso8601) else empty end' <<< "$current_run")"
           [[ -n "$reference_at" && -n "$reference_epoch" ]] || {
             echo "::error::Unable to resolve current recovery run timestamp from the Actions API."
             exit 1
@@ -55,8 +55,8 @@ jobs:
             exit 1
           }
 
-          runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" -F branch=master -F per_page=20)"
-          latest="$(jq -c '.workflow_runs | sort_by(.created_at) | last // empty' <<< "$runs")"
+          runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" -F branch=master -F per_page=100)"
+          latest="$(jq -c '.workflow_runs | sort_by(.updated_at // .run_started_at // .created_at) | last // empty' <<< "$runs")"
           if [[ -z "$latest" ]]; then
             age_seconds=$((MAX_RECONCILE_AGE_MINUTES * 60 + 1))
             latest_id="none"
@@ -95,7 +95,7 @@ jobs:
 
           dispatched_run=""
           for attempt in $(seq 1 6); do
-            response="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" -f event=workflow_dispatch -F branch=master -F per_page=20)"
+            response="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" -f event=workflow_dispatch -F branch=master -F per_page=100)"
             dispatched_run="$(jq -c --arg started "$REFERENCE_AT" \
               '[.workflow_runs[] | select(.event == "workflow_dispatch" and .head_branch == "master" and .created_at >= $started)] | sort_by(.created_at) | last // empty' \
               <<< "$response")"
