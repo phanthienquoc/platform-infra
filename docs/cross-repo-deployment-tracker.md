@@ -1,18 +1,18 @@
 # Cross-Repository Production Deployment Tracker
 
-## Latest automation review (2026-11-01 16:10 UTC; independent schedule heartbeat merged; recovery-to-inspection runtime verified)
+## Latest automation review (2026-11-01 16:14 UTC; mirror secret naming corrected; recovery-to-inspection runtime verified)
 
 This review re-inspected all five repositories, open PRs, latest workflow runs/checks, the deployment tracker, recovery logs, and the fresh K3s snapshot. It merged a schedule-heartbeat fallback, proved the completed-source reconciliation handoff end-to-end, and obtained a new read-only VPS inspection. Production remains blocked only at the StockDividend application lane among the currently enabled application checks; no image promotion was performed.
 
 ### Current repository state
 
-- `platform-infra`: `92f85ff46a30c4297e7a8660c4fa665b1ac12888`.
+- `platform-infra` code head after PR #1001: `b36d5be236d51cd0d659affa454fc73c98d42e48`.
 - `TCE-dashboard`: `49fe5841cce460df2a7be6d8846b34a57b6be152`.
 - `stockdividend`: `f5c04475eb4e67811c66b350d60541b21b8262c7`.
 - `media-generation`: `d8e695d772ab2dc0da5c15cc428ee78ac6537518`.
 - `phanthienquoc-authentication`: `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
 - Open PRs: Platform Infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #75/#76; none in TCE Dashboard, StockDividend, or Media Generation.
-- Platform Infra PR #998 and inspection PR #999 are merged. No workflow was removed.
+- Platform Infra PRs #998, #999, #1000, and #1001 are merged. No workflow was removed.
 
 ### Recovery and independent schedule heartbeat
 
@@ -22,8 +22,14 @@ This review re-inspected all five repositories, open PRs, latest workflow runs/c
 - Reconciliation #41324521466: shared repository/GHCR preflight, Auth runtime Secret verification, shared pull-credential reconciliation, targeted blocked-image restart, and cluster verification passed. No GitOps drift; production manifest apply and image-change guard were skipped. Media, MicroFE, TCE, and Auth lanes passed; Keycloak was skipped. StockDividend failed because the old admin/backend tags still have no ARM64 manifest. Overall run conclusion is FAILURE due to StockDividend.
 - The post-reconciliation recovery handoff was exercised on the new code: [recovery #41324707002](https://github.com/phanthienquoc/platform-infra/actions/runs/41324707002) verified and awaited source reconciliation completion, resolved the API reference clock after source completion, observed reconciliation age 0m and avoided a duplicate apply, then observed inspection age 112m and dispatched read-only inspection.
 - The inspection dispatch was verified against master SHA `41bc069ba7eb68815800700cf9ae510db5544308`: [inspection #41324734578](https://github.com/phanthienquoc/platform-infra/actions/runs/41324734578). Its generated snapshot passed exact-head validation [#41324798596](https://github.com/phanthienquoc/platform-infra/actions/runs/41324798596) and PR #999 was squash-merged as `92f85ff46a30c4297e7a8660c4fa665b1ac12888`.
-- The mirror schedule is the only recent Platform schedule observed to be delivered: [#41323952888](https://github.com/phanthienquoc/platform-infra/actions/runs/41323952888), event schedule at 15:59:10Z, but it failed because `Platform-infra-token` is absent. The new mirror heartbeat is merged but has not yet been observed on a post-merge mirror completion. The existing recovery push path is runtime-verified.
+- The latest observed mirror schedule [#41323952888](https://github.com/phanthienquoc/platform-infra/actions/runs/41323952888), 15:59:10Z, failed because the workflow referenced `Platform-infra-token`, a hyphenated name that GitHub does not permit for Actions secrets (names allow only alphanumeric characters and underscores). PR #1001 merged as `b36d5be236d51cd0d659affa454fc73c98d42e48` and corrected the workflow to `PLATFORM_INFRA_MIRROR_TOKEN`, added a regression assertion, and updated credential docs. Exact-head checks [#41325166696](https://github.com/phanthienquoc/platform-infra/actions/runs/41325166696) and [#41325166651](https://github.com/phanthienquoc/platform-infra/actions/runs/41325166651) passed; post-merge workflow lint [#41325213365](https://github.com/phanthienquoc/platform-infra/actions/runs/41325213365) passed. The secret value is still not configured or verifiable; the next scheduled mirror completion is needed to verify the corrected reference. The mirror heartbeat is merged but its post-merge `workflow_run` trigger is not yet runtime-verified.
 - Normal scheduled Platform reconciliation remains stale: latest scheduled run [#41300948892](https://github.com/phanthienquoc/platform-infra/actions/runs/41300948892) at 11:13:47Z. Latest scheduled inspection [#41301947264](https://github.com/phanthienquoc/platform-infra/actions/runs/41301947264) at 11:27:15Z. Latest scheduled watchdog [#41301007488](https://github.com/phanthienquoc/platform-infra/actions/runs/41301007488) at 11:14:36Z. No scheduled `recover-stale-ops` run is present in the inspected schedule history.
+
+### Mirror credential naming correction
+
+- GitHub Actions secret names permit only alphanumeric characters and underscores; hyphens are invalid. The previous `Platform-infra-token` reference could never resolve to a validly named secret.
+- PR #1001 changed the mirror workflow to `secrets.PLATFORM_INFRA_MIRROR_TOKEN`, added a regression assertion, and corrected `docs/credentials.md` / `docs/credentials-key.md`. The value remains an external configuration dependency, not something the workflow or connector can create.
+- Required configuration: a Platform Infra repository Actions secret (or an organization secret granted only to Platform Infra) named `PLATFORM_INFRA_MIRROR_TOKEN`, with a token scoped only to `phanthienquoc/locally-uncensored-private` and `Contents: write`. Do not reuse `GHCR_READ_TOKEN`, `PLATFORM_INFRA_TOKEN`, or `PLATFORM_INFRA_DISPATCH_TOKEN`.
 
 ### Fresh VPS/K3s inspection
 
@@ -52,7 +58,7 @@ This review re-inspected all five repositories, open PRs, latest workflow runs/c
 1. Observe the next completed scheduled mirror run to verify the newly merged mirror-to-recovery/watchdog trigger at runtime.
 2. Keep monitoring normal Platform schedule delivery; the latest scheduled reconcile/inspection/watchdog events remain stale.
 3. Keep StockDividend promotion disabled until explicit authorization; then use the already-published paired immutable digests and verify all three workloads by runtime imageID.
-4. Configure `Platform-infra-token` with target-repository-only `Contents: write` permission for the mirror job. Do not substitute GHCR or application dispatch tokens.
+4. Configure `PLATFORM_INFRA_MIRROR_TOKEN` as a Platform Infra repository Actions secret (or a Platform-Infra-only organization secret), using a token with only destination-repository `Contents: write`. Do not substitute GHCR or application dispatch tokens.
 5. Keep TCE/Auth scale-to-zero and all market-scan schedules unchanged.
 6. Do not apply the pending OS package updates or reboot the VPS without an explicit maintenance window.
 
