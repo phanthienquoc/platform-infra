@@ -231,14 +231,14 @@ case "${1:-}" in
       local pod_age_seconds
       local restart_cooldown_seconds=1800
 
-      selector="$(${KUBECTL[@]} -n "$namespace" get deployment "$deployment" -o json |
+      selector="$("${KUBECTL[@]}" -n "$namespace" get deployment "$deployment" -o json |
         jq -r '.spec.selector.matchLabels // {} | to_entries | map("\(.key)=\(.value)") | join(",")')"
       [[ -n "$selector" ]] || {
         echo "platform-kubectl: deployment $namespace/$deployment has no matchLabels selector" >&2
         return 1
       }
 
-      pods_json="$(${KUBECTL[@]} -n "$namespace" get pods -l "$selector" -o json)"
+      pods_json="$("${KUBECTL[@]}" -n "$namespace" get pods -l "$selector" -o json)"
       waiting_reasons="$(jq -r '[.items[]? | ((.status.containerStatuses // []) + (.status.initContainerStatuses // []))[]? | .state.waiting.reason? // empty] | unique | join(",")' <<<"$pods_json")"
 
       if [[ ",$waiting_reasons," == *",ImagePullBackOff,"* || ",$waiting_reasons," == *",ErrImagePull,"* ]]; then
