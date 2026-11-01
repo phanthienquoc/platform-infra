@@ -306,6 +306,11 @@ if "secrets.GHCR_READ_TOKEN || github.token" in promotion:
 if promotion.count("GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}") < 2:
     fail("Both GitOps promotion paths must use canonical GHCR_READ_TOKEN.")
 
+# Registry reads use the dedicated GHCR_READ_TOKEN, never the workflow GITHUB_TOKEN.
+for workflow_name, workflow in (("reconcile-vps.yml", reconcile), ("gitops-image-promotion.yml", promotion)):
+    if re.search(r"(?m)^\\s+packages:\\s+(?:read|write)\\s*$", workflow):
+        fail(f"{workflow_name} must not grant GITHUB_TOKEN package permissions; GHCR reads use GHCR_READ_TOKEN.")
+
 # Promotion must validate package-level authorization and the exact immutable tag/digest before GitOps mutation.
 if 'TARGET_APP=microfe GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" bash scripts/validate-ghcr-pull-access.sh' not in promotion:
     fail("MicroFE promotion must validate GHCR package pull access before registry login.")
