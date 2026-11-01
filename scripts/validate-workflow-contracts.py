@@ -263,7 +263,7 @@ if "contains embedded whitespace or quotes" not in ghcr_probe:
 # GHCR pulls use one platform-owned credential across production namespaces.
 bootstrap_script = (ROOT / "scripts" / "bootstrap-runner.sh").read_text(encoding="utf-8")
 ghcr_step = reconcile.split("- name: Bootstrap GHCR pull credentials", 1)[1].split(
-    "- name: Restart workloads blocked on image pulls", 1
+    "- name: Restart target workloads blocked on image pulls", 1
 )[0]
 if "${{ secrets.GHCR_READ_TOKEN }}" not in ghcr_step:
     fail("reconcile-vps.yml must use the canonical GHCR_READ_TOKEN secret.")
@@ -335,10 +335,57 @@ for repository in (
 
 
 # Auth shutdown must be an isolated, allowlisted maintenance operation.
-if "rollout-status-v11-auth-shutdown" not in bootstrap_script:
-    fail("Runner bootstrap must publish the versioned Auth shutdown allowlist policy.")
+if "rollout-status-v12-scoped-image-pull-restart" not in bootstrap_script:
+    fail("Runner bootstrap must publish the versioned scoped image-pull restart policy.")
 if '  scale)' not in bootstrap_script or 'scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform' not in bootstrap_script:
     fail("Runner bootstrap must allow only the exact Auth/Keycloak scale-to-zero command.")
+
+if "rollout-status-v12-scoped-image-pull-restart" not in reconcile:
+    fail("Production reconciliation must require the v12 scoped image-pull restart runner policy.")
+auth_provision = read("provision-auth-runtime-secret.yml")
+if "rollout-status-v12-scoped-image-pull-restart" not in auth_provision:
+    fail("Standalone Auth secret provisioning must accept the current v12 runner policy.")
+
+restart_step = reconcile.split("- name: Restart target workloads blocked on image pulls", 1)[1].split(
+    "- name: Validate TCE release pairing", 1
+)[0]
+if 'restart-blocked-image-pulls "$TARGET_APP"' not in restart_step:
+    fail("Reconciliation must pass the resolved target app to image-pull recovery.")
+if "restart-blocked-image-pulls\n" in restart_step:
+    fail("Reconciliation must not invoke image-pull recovery without an explicit scope.")
+
+restart_block = bootstrap_script.split("  restart-blocked-image-pulls)", 1)[1].split(
+    "  logs)", 1
+)[0]
+if '[[ "$#" -eq 2 ]]' not in restart_block or "unsupported image-pull restart scope" not in restart_block:
+    fail("Runner image-pull recovery must accept exactly one allowlisted scope.")
+if "local selector" not in restart_block or "matchLabels" not in restart_block:
+    fail("Runner image-pull recovery must inspect only pods selected by each target Deployment.")
+if 'rollout restart "deployment/$deployment"' not in restart_block:
+    fail("Runner image-pull recovery must restart only the Deployment with a blocked image pull.")
+for required_target in (
+    "microfe)","auth-service)","tce-dashboard)","stockdividend)","media-generation)","all)",
+):
+    if required_target not in restart_block:
+        fail(f"Runner image-pull recovery is missing an explicit target mapping: {required_target}")
+for required_deployment in (
+    "microfe-platform microfe-shell",
+    "microfe-platform microfe-ws",
+    "microfe-platform microfe-auth",
+    "tce-prod tce-service",
+    "tce-prod tce-frontend",
+    "stock-prod stock-admin",
+    "stock-prod stock-backend",
+    "stock-prod stock-frontend",
+    "media-prod media-generation",
+    "media-prod media-generation-frontend",
+):
+    if required_deployment not in restart_block:
+        fail(f"Runner image-pull recovery is missing a production Deployment mapping: {required_deployment}")
+
+runner_bootstrap = read("bootstrap-runner.yml")
+if '      - "scripts/bootstrap-runner.sh"' not in runner_bootstrap:
+    fail("A runner helper change must trigger the approved VPS runner bootstrap workflow.")
 if "platform/keycloak/**" not in reconcile:
     fail("Keycloak manifest changes must trigger the shared reconcile workflow.")
 if "name: Resolve push deployment scope" not in reconcile:
@@ -380,7 +427,7 @@ if 'scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-pl
 for step_name in (
     "Validate GHCR pull access before mutating cluster credentials",
     "Bootstrap GHCR pull credentials",
-    "Restart workloads blocked on image pulls",
+    "Restart target workloads blocked on image pulls",
 ):
     start = reconcile.find(f"- name: {step_name}")
     if start < 0:
