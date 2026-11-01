@@ -9,4 +9,11 @@ resources:
 - shell
 - ws-gateway/deployment.yaml
 
-# trigger immutable MicroFE publish through the VPS reconciler
+# Immutable MicroFE image pair published by TCE-dashboard commit e6940ff911ea63338fb4f66eb903bcdf6c9825a8.
+images:
+- name: ghcr.io/phanthienquoc/microfe-shell
+  newName: ghcr.io/phanthienquoc/microfe-shell
+  digest: sha256:ae64acc032ce13d046ab78c9628b5b0b308f812b67ddfab7503d91e5a3ed8dcd
+- name: ghcr.io/phanthienquoc/microfe-ws
+  newName: ghcr.io/phanthienquoc/microfe-ws
+  digest: sha256:416bc16ade0becf398b0554571f6813985c55dffaf742042a7edef10ca2ea16d
