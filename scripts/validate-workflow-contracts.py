@@ -409,4 +409,18 @@ if '::error::No scheduled reconcile-vps run within ${MAX_AGE_MINUTES} minutes.' 
     fail("Scheduled/manual watchdog runs must still fail closed when reconciliation history is stale.")
 
 
+
+# The read-only watchdog must distinguish a disabled reconciliation workflow from
+# an active workflow whose scheduled run history is stale or missing.
+workflow_state_step = watchdog.find("name: Verify reconcile-vps workflow is enabled")
+latest_run_step = watchdog.find("name: Inspect latest scheduled reconcile run")
+if workflow_state_step < 0 or latest_run_step < 0 or workflow_state_step > latest_run_step:
+    fail("The watchdog must verify reconcile-vps is enabled before evaluating schedule freshness.")
+if '"repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml"' not in watchdog:
+    fail("The watchdog must query reconcile-vps workflow metadata through the Actions API.")
+if 'state="$(jq -r \'.state // empty\' <<< "$workflow")"' not in watchdog:
+    fail("The watchdog must inspect the workflow enabled state returned by GitHub.")
+if 'if [[ "$state" != "active" ]]; then' not in watchdog or "scheduled events cannot be relied on" not in watchdog:
+    fail("The watchdog must fail closed with an explicit diagnostic when reconcile-vps is disabled.")
+
 print("Workflow contract validation passed.")

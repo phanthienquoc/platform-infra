@@ -37,6 +37,21 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       MAX_AGE_MINUTES: "45"
     steps:
+      - name: Verify reconcile-vps workflow is enabled
+        shell: bash
+        run: |
+          set -euo pipefail
+          workflow="$(gh api \
+            -X GET \
+            -H "Accept: application/vnd.github+json" \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml")"
+          state="$(jq -r '.state // empty' <<< "$workflow")"
+          if [[ "$state" != "active" ]]; then
+            echo "::error::reconcile-vps workflow is not active (state=${state:-missing}); scheduled events cannot be relied on."
+            exit 1
+          fi
+          echo "reconcile-vps workflow state: active"
+
       - name: Inspect latest scheduled reconcile run
         shell: bash
         run: |
