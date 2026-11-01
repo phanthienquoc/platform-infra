@@ -427,6 +427,17 @@ for path_contract in (
         fail(f"Push deployment scope resolver is missing path mapping: {path_contract}")
 if "Unclassified production-trigger path" not in push_scope_contract:
     fail("Unknown push paths must fail closed instead of silently reconciling every application.")
+for ignored_path_contract in (
+    ".github/workflows/*",
+    "scripts/validate-*.py",
+    "scripts/tests/*",
+    "docs/*",
+    "debug/vps-latest.md",
+):
+    if ignored_path_contract not in push_scope_contract:
+        fail(f"Push scope resolver must ignore non-deployment metadata path: {ignored_path_contract}")
+if "assert_failure .github/workflows/validate-manifests.yml" not in push_scope_contract:
+    fail("Ignored metadata-only changes must not silently select a production deployment scope.")
 if "KEYCLOAK_REPLICAS_OVERRIDE" not in push_scope_contract or "auth-shutdown" not in push_scope_contract:
     fail("Keycloak-only pushes must retain the isolated replica-aware Auth shutdown/Keycloak rollout contract.")
 if "name: Verify Auth and Keycloak shutdown state" not in reconcile:
