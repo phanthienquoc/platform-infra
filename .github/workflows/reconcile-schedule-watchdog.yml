@@ -149,6 +149,7 @@ jobs:
           echo "Run evidence: ${run_url}"
 
       - name: Report latest scheduled inspection runner queue delay
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
@@ -164,10 +165,28 @@ jobs:
             exit 0
           fi
 
+          # The freshness step normally exports this value. Fetch it again when that
+          # step failed early (disabled workflow or empty reconcile history), so queue
+          # telemetry still runs after the enforcement failure.
+          reference_epoch="${WATCHDOG_REFERENCE_EPOCH:-}"
+          if [[ -z "$reference_epoch" ]]; then
+            current_run="$(gh api \
+              -X GET \
+              -H "Accept: application/vnd.github+json" \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")" || {
+                echo "::warning::Unable to fetch watchdog run metadata; inspection queue telemetry is unavailable."
+                exit 0
+              }
+            reference_epoch="$(jq -r 'if .created_at then (.created_at | fromdateiso8601) else empty end' <<< "$current_run")"
+            if [[ -z "$reference_epoch" ]]; then
+              echo "::warning::Watchdog run metadata has no usable created_at; inspection queue telemetry is unavailable."
+              exit 0
+            fi
+          fi
+
           created_at="$(jq -r '.created_at' <<< "$latest")"
           created_epoch="$(jq -r '.created_at | fromdateiso8601' <<< "$latest")"
           started_at="$(jq -r '.run_started_at // empty' <<< "$latest")"
-          reference_epoch="${WATCHDOG_REFERENCE_EPOCH:?missing GitHub API clock reference from freshness step}"
           if [[ -n "$started_at" ]]; then
             started_epoch="$(jq -r '.run_started_at | fromdateiso8601' <<< "$latest")"
           else
