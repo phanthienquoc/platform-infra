@@ -1,3 +1,11 @@
+## Post-merge verification (2026-11-02 05:00 ICT / 2026-11-01 22:00 UTC)
+
+- Platform Infra PR #1016 merged as `41d6a2b93334d08f20201edf5cfcf9d155c74c00`; exact-head validation #41354811426 and post-merge validation #41354880764 succeeded. Current Platform master is `41d6a2b93334d08f20201edf5cfcf9d155c74c00`.
+- Supabase read-only SQL probe at 22:00:13Z passed; bounded 20:55–21:55Z logs: Edge 359, PostgREST 28, HTTP 5xx 0, HTTP 522 0.
+- Issue #1015 tracks the confirmed permanent image-pull restart loop; no privileged runner helper change was deployed.
+- No post-merge scheduled TCE heartbeat or correlated Platform repository_dispatch is yet verified. Preserve all TCE schedules and market-scan cadence.
+- Mirror secret `PLATFORM_INFRA_MIRROR_TOKEN` is still missing; StockDividend release remains held.
+
 ## Latest automation review (2026-11-02 04:55 ICT / 2026-11-01 21:55 UTC)
 
 - Default-branch heads: Platform Infra `628201da74d4bdd85dbc4418760f97e5d078cfac`; TCE Dashboard `d011fbb4099f5f9e24068878ac4e035b369e8ace`; StockDividend `f5c04475eb4e67811c66b350d60541b21b8262c7`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
