@@ -106,8 +106,9 @@ jobs:
               echo "::warning::Latest run #${run_id}: queue_wait=${queue_minutes}m status=${status}."
               echo "::warning::Run evidence: ${run_url}"
             else
-              echo "::error::Scheduled reconcile #${run_id} waited ${queue_minutes}m for a runner, exceeding the ${MAX_QUEUE_MINUTES}m queue budget."
-              echo "::error::created_at=${created_at}, run_started_at=${started_at:-not-started}, status=${status}."
+              echo "::error::Scheduled reconcile #${run_id} waited ${queue_minutes}m for a runner."
+              echo "::error::Queue budget=${MAX_QUEUE_MINUTES}m; status=${status}."
+              echo "::error::created_at=${created_at}, run_started_at=${started_at:-not-started}."
               echo "::error::Run evidence: ${run_url}"
               exit 1
             fi
@@ -166,7 +167,8 @@ jobs:
             echo "::warning::Inspection run #${run_id} has an invalid negative queue duration."
             exit 0
           fi
-          echo "Latest scheduled inspect-vps run #${run_id}: queue_wait=${queue_minutes}m status=${status} created=${created_at} started=${started_at:-not-started}."
+          echo "Latest scheduled inspect-vps run #${run_id}: queue_wait=${queue_minutes}m status=${status}."
+          echo "created_at=${created_at} started_at=${started_at:-not-started}."
           if (( queue_minutes > MAX_QUEUE_MINUTES )); then
             echo "::warning::Self-hosted inspection runner queue delay exceeds ${MAX_QUEUE_MINUTES}m."
             echo "::warning::Run evidence: ${run_url}"
