@@ -412,3 +412,37 @@ Confirmed retirement: `.github/workflows/wf-platform-infra-release.yml` was remo
 - TCE PR #1007 merged the API-clock reference fix. Post-merge WF-12 push smoke #41287452389 passed, measuring WF-06 run #41287060151 at 5 minutes old with 0-minute queue. WF-06 public checks still return 503 while TCE/Auth are intentionally stopped. WF-01 image build #41287452305 completed SUCCESS at 09:09:35Z; WF-02 and WF-05 passed.
 - StockDividend weekend scraper #41284033242 remains in progress at its scraper step; preserve this purposeful scheduled job and await a real conclusion. Its immutable ARM64 image publisher #41273202844 passed for all three images, while production promotion remains disabled.
 - Preserve Platform reconcile/watchdog/inspection cron declarations, TCE WF-06/WF-12 cron declarations, and the separate TCE market-scan schedule. No workflow removed or schedule altered. Application/GitOps ownership and read-only monitoring permissions remain unchanged.
+
+
+## Cross-repo deployment review — 2026-11-01
+
+### Platform Infra operations workflows
+
+- `reconcile-vps.yml`: remains the sole GitOps apply/reconciliation authority. Existing cron declarations are unchanged.
+- `reconcile-schedule-watchdog.yml`: read-only Actions API monitor. Reconciliation freshness budget 45m; runner queue budget 15m; inspection freshness budget 75m for the 30m inspection cadence; inspection queue telemetry 15m. Uses the watchdog run's GitHub API `created_at` as the reference clock. For `run_attempt > 1`, queue duration is explicitly not measurable from run-level timestamps; freshness remains tied to the original scheduled `created_at`.
+- `inspect-vps.yml`: scheduled read-only inspection. The watchdog now independently checks that the workflow is active and that scheduled inspection events remain fresh.
+- Push-triggered watchdog smoke remains warning-only; scheduled/manual/fallback enforcement remains fail-closed. Permissions remain read-only (`actions: read`, `contents: read`).
+- PR #965 added inspection schedule freshness; PR #966 made reconciliation and inspection queue telemetry rerun-aware. Both are merged and exact-head/post-merge validations passed.
+
+### TCE Dashboard operations workflows
+
+- WF-06 retains its existing 15-minute schedule and four independent public health endpoints.
+- WF-12 remains a read-only monitor with a 25-minute WF-06 freshness budget and 15-minute queue budget; it uses GitHub Actions API timestamps and now treats queue time as not measurable for rerun attempts while preserving original-event freshness.
+- PR #1008 merged the rerun-aware queue correction. WF-02/WF-05 exact-head checks and post-merge WF-02/WF-05/WF-12 smoke succeeded.
+- No TCE market-scan schedule changes.
+
+### Application publisher and dispatch contract
+
+- StockDividend application repo owns build/test and immutable GHCR publication. Publisher run #41273202844 verified Scraper/Admin/Backend SHA-256 digests and linux/arm64 manifests.
+- The publisher constructs one `stockdividend-images-published` event with `app`, full source `commit`, `backend_digest`, and `admin_digest`. Platform Infra consumes the same event, validates the full commit and both SHA-256 digests, and pins the pair atomically in one GitOps promotion.
+- Static producer/consumer contract inspection passed. Dispatch was not executed because `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=false`; this hold remains authoritative.
+- The weekend scraper is a purposeful data job, not a second deployment authority. It remains scheduled/manual and was still running in #41284033242 at the last observation; do not remove it without a demonstrated failure or redundancy.
+
+### Current operational evidence
+
+- Platform scheduled reconciliation and inspection histories remain stale even though both workflows report `active`. The post-merge watchdog smoke #41291879618 passed in warning-only mode and reported original scheduled-event ages of 468m and 414m respectively. Rerun attempt 2 queue times were correctly marked not measurable.
+- Read-only health rerun of #41260761381 attempt 2: MicroFE and Media health gates passed; TCE/Auth were accepted as intentionally scaled to zero; StockDividend failed on old tag `12d63b4` without an ARM64 manifest.
+- Supabase SQL probe at 09:09:08Z succeeded; 09:00–09:08Z edge/PostgREST log window had 0 HTTP 522.
+- Runtime digest evidence remains available for Media and MicroFE from the prior inspection; a fresh full inspection is still required.
+
+Preserve CI, tests, security, backups, manual release, and purposeful scheduled data jobs. No duplicate direct SSH/Compose deployment authority was added.
