@@ -1,6 +1,12 @@
 name: vps-image-cleanup
 
 on:
+  push:
+    branches: [master]
+    paths:
+      - "scripts/cleanup-k3s-images.sh"
+      - "scripts/tests/cleanup-k3s-images.test.sh"
+      - ".github/workflows/vps-image-cleanup.yml"
   workflow_dispatch:
     inputs:
       keep_unused_images:
@@ -46,7 +52,7 @@ jobs:
       - name: Dry-run or clean unused K3s images
         env:
           KEEP_UNUSED_IMAGES: "${{ inputs.keep_unused_images || '10' }}"
-          DRY_RUN: "${{ github.event_name == 'schedule' && 'true' || (inputs.dry_run == true && 'true' || 'false') }}"
+          DRY_RUN: "${{ github.event_name != 'workflow_dispatch' && 'true' || (inputs.dry_run == true && 'true' || 'false') }}"
         run: |
           set -euo pipefail
           scripts/cleanup-k3s-images.sh
