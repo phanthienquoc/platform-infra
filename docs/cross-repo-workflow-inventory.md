@@ -1,5 +1,18 @@
 # Cross-Repository Workflow Inventory
 
+## Latest workflow inventory review (2026-11-01 13:11 ICT; Auth smoke path correction merged)
+
+- Current review baseline heads: platform-infra `2de34aa036752fd07e1b54479e47099e4e970460`; TCE Dashboard `48a8c86497f55b0454ea20fda0567d27f7b9718b`; StockDividend `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: platform-infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #76 (draft)/#75; none in TCE, StockDividend, or Media. Platform-infra PRs #955/#956/#957 merged.
+- Platform-infra PR #957 aligns manual Auth smoke paths with application routing: `/api/health`, `/api/ready`, and unauthenticated `/auth/me` (401). Regression test added and included in the existing validation workflow. Exact-head checks #41279697716/#41279697827 and post-merge checks #41279747450/#41279747357 all succeeded.
+- Platform-infra PR #956 exact-head #41279613899 and post-merge #41279710882 succeeded.
+- TCE PR #1005 exact-head and post-merge WF-01/WF-02/WF-05 checks succeeded; scheduled WF-07 #41279469909 succeeded. WF-06 remains unscheduled since #41261234620 at 01:28:29Z despite WF-07 schedule delivery at 06:06:31Z. New four-lane matrix not yet exercised. WF-06 `*/15` schedule unchanged; TCE market-scan schedule untouched.
+- Platform-infra reconciliation schedule remains stale: latest reconcile #41260761381 (01:21:35Z) failed; watchdog #41264226448 (02:12:35Z) failed; inspection #41264393955 queue delay 106m46s. Push smoke #41275653339 passed and reported workflow active, but no later scheduled reconcile/watchdog/inspection through 06:10Z.
+- Supabase: project `gtqovpusfyyvxpeezxlo` ACTIVE_HEALTHY; SQL probes at 05:59:45Z and 06:10:49Z succeeded; branch FUNCTIONS_DEPLOYED; 84/84 migration-version parity. Auth PR #75 remains unmerged due conflicting production/non-production classification and unavailable authoritative integration target binding; PR #76 remains draft. Auth release manual-only.
+- StockDividend publisher #41273202844 succeeded and verified immutable ARM64 images for Scraper/Admin/Backend; promotion false and dispatch skipped. Production still has old image references and failed admin/backend rollout.
+- Media/MicroFE snapshot #41275351280 at 05:02:36Z: four workloads 1/1 and runtime imageIDs match pinned digests. TCE/Auth/Keycloak 0/0 by operator request.
+- Preserve CI/test/security, backup, manual, release, and scheduled workflows. No workflow removed; no second direct SSH/Compose deployment authority added. Reconcile cron `7,22,37,52 * * * *`; watchdog `12,27,42,57 * * * *`; inspection `2,32 * * * *`.
+
 ## Latest workflow inventory review (2026-11-01 13:08 ICT; post-merge TCE and tracker checks verified)
 
 - Current heads: platform-infra `de9099c88a3df05def9ab87ca09b987f90767ed0`; TCE Dashboard `48a8c86497f55b0454ea20fda0567d27f7b9718b`; StockDividend `a6f55ee2e511ab5910c825e56803bd82fe9a0f62`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
