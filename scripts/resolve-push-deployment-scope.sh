@@ -38,6 +38,10 @@ resolve_scope() {
       environments/prod/*|platform/cert-manager/*|platform/k3s-debug-logs/*|scripts/reconcile-vps.sh|scripts/guard-reconcile-images.sh|scripts/validate-ghcr-pull-access.sh|scripts/verify-workload-health.sh)
         cluster_wide=1
         ;;
+      .github/workflows/*|scripts/validate-*.py|scripts/tests/*|docs/*|debug/vps-latest.md)
+        # CI, documentation, and inspection snapshots may accompany a manifest change
+        # but do not introduce a production workload scope of their own.
+        ;;
       *)
         fail "Unclassified production-trigger path '$path'; refusing broad push reconciliation."
         return 1
@@ -111,6 +115,8 @@ self_test() {
   assert_scope tce-dashboard apps/tce-dashboard/overlays/prod/kustomization.yaml
   assert_scope stockdividend apps/stockdividend/overlays/prod/kustomization.yaml
   assert_scope media-generation apps/media-generation/overlays/prod/kustomization.yaml
+  assert_scope media-generation apps/media-generation/overlays/prod/kustomization.yaml .github/workflows/validate-manifests.yml scripts/validate-workflow-contracts.py docs/cross-repo-deployment-tracker.md debug/vps-latest.md
+  assert_failure .github/workflows/validate-manifests.yml scripts/validate-workflow-contracts.py docs/cross-repo-deployment-tracker.md debug/vps-latest.md
   assert_scope all apps/tce-dashboard/kustomization.yaml apps/media-generation/kustomization.yaml
   assert_scope all environments/prod/kustomization.yaml
   assert_scope all scripts/verify-workload-health.sh
