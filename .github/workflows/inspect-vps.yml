@@ -9,8 +9,7 @@ on:
       - "scripts/inspect-vps.sh"
       - ".github/workflows/inspect-vps.yml"
   schedule:
-    - cron: "15 * * * *"
-    - cron: "30 * * * *"
+    - cron: "2,32 * * * *"
 
 permissions:
   actions: write
