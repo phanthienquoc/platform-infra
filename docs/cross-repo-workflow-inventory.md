@@ -1,5 +1,20 @@
 # Cross-Repository Workflow Inventory
 
+
+## Latest workflow inventory review (2026-11-01 14:05 UTC; StockDividend ARM64 publication complete)
+
+- Current master heads: platform-infra `988f88a30b0fd1039ee78674cfdc7b9735e44dea`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `1559097da834652e2f6dfbd5a8d012a526f0133b`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: platform-infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #76/#75; StockDividend #23; no TCE or Media PRs.
+- StockDividend master CI #41309267914 and publisher #41309267904 succeeded on full source SHA `1559097da834652e2f6dfbd5a8d012a526f0133b`. Verified native ARM64 registry digests: Scraper `sha256:a227b5d235c7518a7d4a7106099ebfe18e59164f922db6a1689f7702c03ad55d`; Admin `sha256:9c55955ec3cb2d6daceaa7419865c10ac552e54c48d42f412179ae48fdafcf58`; Backend `sha256:1ffc7ed921742b4d5004038afd50e7086f3646947ea07e8a07fc2a6fa49acce1`. Promotion gate remained disabled and both handoff/dispatch jobs were skipped. No GitOps promotion occurred.
+- Weekend scraper #41284033242 was cancelled at 13:15:44Z after six hours; it used pre-fix SHA `a6f55ee`. Preserve the weekend schedule/manual trigger. MongoDB per-page checkpoints allow subsequent runs to skip pages already recorded; cancellation cause is not established by summary alone.
+- StockDividend PR #23 removes duplicate collection initialization and duplicate per-page checkpoint lookup. Exact-head CI #41314185812 was queued at 14:02:41Z; merge remains blocked until every required check passes on the exact PR head.
+- Platform master validation #41309372167 succeeded at 13:03:12Z. Latest scheduled reconcile #41300948892 failed at StockDividend health (11:13:47Z); latest scheduled inspection #41301947264 succeeded at 11:27:15Z; watchdog #41301007488 failed at 11:14:36Z. No newer Platform schedule/recovery-controller runtime event observed through 14:05Z. PR #986 workflow_run fallback remains unverified.
+- TCE WF-07 schedule #41311225433 succeeded at 13:26Z. WF-06 last scheduled run #41287060151 at 09:01:02Z failed public health while TCE/Auth are intentionally stopped. Preserve WF-06/WF-12 cron and market-scan schedule.
+- Media CI #41246414186 and Authentication CI/release #41033586844/#41040510320 are historical successes; no new app runs observed. Keep Auth manual-only and preserve PRs #75/#76 pending migration/environment evidence.
+- Latest K3s snapshot #41304636230 is push-triggered at 12:03:24Z: node Ready/ARM64, disk 54%, GitOps drift clean, CRI inventories present; Media/MicroFE 1/1; StockDividend Admin/Backend blocked on old non-ARM64 `12d63b4`; TCE/Auth/Keycloak 0/0 intentionally. Cleanup dry-run #41305323263 passed with no removals. No newer inspection.
+- Mirror workflow #41292061857 still lacks `Platform-infra-token`; owner-side setup requires a target-repository-scoped `Contents: write` token. Do not substitute unrelated credentials.
+- No workflow was removed; preserve CI, tests, security, backup, manual/release, scheduled scraper, and TCE market-scan jobs. No production manifest, secret, credential, release flag, database object, or desired replica changed.
+
 ## Latest workflow inventory review (2026-11-01 13:02 UTC; StockDividend scraper navigation fix merged)
 
 - Current master heads: platform-infra `2ca13b13f8aeb9a6035d928af08eee8259c1681d`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `1559097da834652e2f6dfbd5a8d012a526f0133b`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
