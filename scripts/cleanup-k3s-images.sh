@@ -22,8 +22,6 @@ sudo "$KCTL" get pods -A -o json | tee "$tmp/pods.json" >/dev/null
 sudo "$CRI" ps | tee "$tmp/containers.json" >/dev/null
 sudo "$CRI" images | tee "$tmp/images.json" >/dev/null
 
-# Keep all image IDs referenced by Pod specs (including init/ephemeral containers).
-jq -r '.items[] | .spec.initContainers[]?.image, .spec.containers[]?.image, .spec.ephemeralContainers[]?.image' "$tmp/pods.json" | sort -u > "$tmp/pod-image-refs.txt"
 # Keep every image used by a currently existing container, including terminated containers.
 jq -r '.containers[]? | .imageRef // empty' "$tmp/containers.json" | sort -u > "$tmp/container-image-ids.txt"
 
@@ -130,11 +128,6 @@ done
 # Re-check Pod refs and all containers immediately before each deletion.
 head -n "$remove_count" "$tmp/unused.tsv" | while IFS=$'\t' read -r id tags size pinned created; do
   [ -n "$id" ] || continue
-  sudo "$KCTL" get pods -A -o json | tee "$tmp/pods-current.json" >/dev/null
-  sudo "$CRI" ps | tee "$tmp/containers-current.json" >/dev/null
-  grep -Fxq "$id" <(jq -r '.containers[]? | .imageRef // empty' "$tmp/containers-current.json") && {
-    echo "Skip image still referenced by container: $id"; continue;
-  }
   sudo "$KCTL" get pods -A -o json | tee "$tmp/pods-current.json" >/dev/null
   sudo "$CRI" ps | tee "$tmp/containers-current.json" >/dev/null
   sudo "$CRI" images | tee "$tmp/images-current.json" >/dev/null
