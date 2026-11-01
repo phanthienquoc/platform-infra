@@ -39,6 +39,34 @@ for required_path in (
 ):
     if required_path not in recovery:
         fail(f"Recovery push bootstrap is missing deployment path filter: {required_path}")
+
+for required in (
+    "source_run_id:",
+    "source_head_sha:",
+    "SOURCE_RUN_ID: ${{ inputs.source_run_id }}",
+    "SOURCE_HEAD_SHA: ${{ inputs.source_head_sha }}",
+    '.path // empty',
+    'source_status="$(jq -r '.status // empty'',
+    'source_status" == "completed"',
+):
+    if required not in recovery:
+        fail(f"Recovery controller is missing completed-source-run verification: {required}")
+
+if "  notify-recovery-controller:" not in reconcile:
+    fail("Reconciliation must notify the recovery controller after its deployment lanes finish.")
+recovery_notify = reconcile.split("  notify-recovery-controller:", 1)[1]
+for required in (
+    "needs:",
+    "- deployment-lane-summary",
+    "needs.reconcile.outputs.mode == 'apply'",
+    "actions: write",
+    "gh workflow run recover-stale-ops.yml",
+    "SOURCE_RUN_ID: ${{ github.run_id }}",
+    "SOURCE_HEAD_SHA: ${{ github.sha }}",
+    '.path == ".github/workflows/recover-stale-ops.yml"',
+):
+    if required not in recovery_notify:
+        fail(f"Post-reconciliation recovery dispatch is missing: {required}")
 if "github.event.workflow_run.head_branch == 'master'" not in recovery:
     fail("Recovery controller must ignore non-master workflow completion events.")
 if "github.event.workflow_run.name == 'reconcile-vps'" not in recovery:
