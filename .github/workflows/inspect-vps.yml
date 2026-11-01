@@ -179,7 +179,7 @@ jobs:
             else
               api_message="$(jq -r '.message // empty' "$merge_response" 2>/dev/null || true)"
               [[ -n "$api_message" ]] || api_message="GitHub returned no JSON error message."
-              echo "::error::GitHub rejected inspection squash merge (HTTP $merge_http_status): $api_message. PR state=\${after_merge_state:-unknown}, head=\${after_merge_head:-unknown}; leaving it open." >&2
+              echo "::error::GitHub rejected inspection squash merge (HTTP $merge_http_status): $api_message. PR state=${after_merge_state:-unknown}, head=${after_merge_head:-unknown}; leaving it open." >&2
               exit 1
             fi
           else
