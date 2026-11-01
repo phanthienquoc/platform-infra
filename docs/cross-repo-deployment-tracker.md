@@ -1,3 +1,5 @@
+# Cross-Repository Production Deployment Tracker
+
 ## Latest automation review (2026-11-01 18:08 ICT; K3s cleanup fix merged; live dry-run safely blocked)
 
 Last reviewed: 2026-11-01 18:08 ICT. Cross-repo code validation is green for the latest cleanup changes, but production remains **NOT HEALTHY/UNVERIFIED**. TCE/Auth/Keycloak remain intentionally stopped, StockDividend still references old production images, and scheduled reconciliation recovery has not yet produced a runtime run.
@@ -19,9 +21,6 @@ Last reviewed: 2026-11-01 18:08 ICT. Cross-repo code validation is green for the
 - No production manifests, runtime credentials, database objects, release flags, or K3s desired replicas were changed. No image was deleted. No workflow was removed and no second direct SSH/Compose deployment authority was introduced.
 
 Next actions: (1) inspect CRI tag/digest inventory and normalize Docker Hub references without weakening fail-closed behavior; (2) verify the next scheduled recovery-controller event and reconcile-vps/inspect-vps run correlation; (3) obtain a fresh full K3s inspection; (4) keep StockDividend promotion held pending explicit authorization; (5) monitor the long-running weekend scraper and determine a justified timeout.
-
-# Cross-Repository Production Deployment Tracker
-
 ## Latest automation review (2026-11-01 13:11 ICT; Auth smoke contract corrected)
 
 Last reviewed: 2026-11-01 13:11 ICT. Cross-repo validation is green for the latest TCE and platform-infra changes, but production remains **NOT HEALTHY/UNVERIFIED**: TCE/Auth are intentionally stopped, StockDividend still runs old production images, and the scheduled reconciliation gap remains.
