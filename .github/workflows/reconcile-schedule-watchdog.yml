@@ -3,7 +3,7 @@ run-name: Reconcile Schedule Freshness Watchdog — ${{ github.event_name }}
 
 'on':
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "12,27,42,57 * * * *"
   workflow_dispatch:
   # Exercise the read-only GitHub API path after a watchdog change lands.
   # Push runs are diagnostic smoke tests; scheduled/manual/fallback runs enforce freshness.

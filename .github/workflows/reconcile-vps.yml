@@ -36,7 +36,7 @@ run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target
     types:
       - gitops-promoted-ready
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "7,22,37,52 * * * *"
   push:
     branches: [master]
     paths:
