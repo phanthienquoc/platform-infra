@@ -28,10 +28,12 @@ jq -r '.items[] | .spec.initContainers[]?.image, .spec.containers[]?.image, .spe
 jq -r '.containers[]? | .imageRef // empty' "$tmp/containers.json" | sort -u > "$tmp/container-image-ids.txt"
 
 # Resolve Pod image refs (tags and digests) to immutable local IDs.
-jq -r --slurpfile refs "$tmp/pod-image-refs.txt" '
+# Pod refs are newline-delimited plain text; --rawfile avoids treating them as JSON.
+jq -r --rawfile refs "$tmp/pod-image-refs.txt" '
+  ($refs | split("\n") | map(select(length > 0))) as $pod_refs |
   .images[]? |
-  select(any(.repoTags[]?; . as $tag | $refs[0][] == $tag) or
-         any(.repoDigests[]?; . as $digest | $refs[0][] == $digest)) |
+  select(any(.repoTags[]?; . as $tag | $pod_refs | index($tag) != null) or
+         any(.repoDigests[]?; . as $digest | $pod_refs | index($digest) != null)) |
   .id
 ' "$tmp/images.json" | sort -u > "$tmp/pod-image-ids.txt"
 # Fail closed when a Pod spec reference cannot be mapped to a local image ID.
