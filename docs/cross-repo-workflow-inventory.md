@@ -1,3 +1,18 @@
+## Workflow inventory update — 2026-11-02 10:01 ICT / 03:01 UTC
+
+- **Platform Infra:** current master `b5de43fe32ca688dce0f9f062f8743322746301b`; automated read-only inspection PR #1027 merged after exact-head validation #41378367760. Fresh inspection run #41378301376 succeeded and updated `debug/vps-latest.md`. Native scheduled reconciliation/inspection/watchdog have not delivered a new scheduled interval after #41369624425/#41370072870; later repository_dispatch/workflow_dispatch recoveries are fallback, not native cron evidence.
+- **Reconcile authority:** `.github/workflows/reconcile-vps.yml` remains the only production GitOps apply authority. Latest TCE heartbeat-triggered receiver #41378091682 validated WF-06 source run #41378060687 and WF-12 forwarder #41378080124 against the TCE Actions API, then dispatched reconciliation #41378106989 with `allow_image_changes=false`. Shared preflight succeeded/no drift; application health failed only for StockDividend.
+- **Runner helper:** `bootstrap-runner.yml` remains the sole installer. Live policy v13 was verified during reconciliation #41378106989; permanent ARM64 manifest pull errors for Stock Admin/Backend explicitly skipped rollout restart. Do not add another SSH/helper installation path.
+- **Inspection authority:** `.github/workflows/inspect-vps.yml` remains read-only and owns K3s/VPS runtime evidence. PR #1027 is an automated inspection snapshot only; no production manifests changed.
+- **TCE app workflows:** WF-06 is now public endpoint smoke only, with no VPS SSH or Docker/Compose inspection. Its latest scheduled run #41378060687 returned HTTP 503 for all four public endpoints because TCE/Auth are intentionally stopped; keep expected HTTP 200 checks strict so the stopped public service remains visible as unhealthy. WF-12 #41378080124 successfully forwarded the scheduled WF-06 heartbeat to Platform; Platform receiver #41378091682 validated it. WF-07 backup #41356061914 and integration #41355068024 remain the latest identified scheduled runs. Preserve all TCE cron declarations and market-scan schedule.
+- **StockDividend:** app-owned CI and immutable GHCR publication remain the app repository's responsibility; latest available CI/publisher #41314359022/#41314359012 passed on master `f5c04475`. Production Admin/Backend still reference ARM64-incompatible `12d63b4`; platform health gate must remain failing, and `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=false`. No promotion without explicit authorization.
+- **Media Generation:** latest available CI #41246414186 passed on master `d8e695d7`; current K3s inspection shows backend/frontend 1/1 with pinned runtime image IDs. No new Media release.
+- **Authentication:** master `ceb2688d`; open PR #75/#76 remain subject to production Supabase integration side-effect review. PR #76 CI #41329425940 passed; no migration or activation. Do not infer current Supabase health from older probes.
+- **Mirror workflow:** scheduled run #41368359234 failed because secret `PLATFORM_INFRA_MIRROR_TOKEN` is absent. Required scope: destination-only `Contents: write` for `phanthienquoc/locally-uncensored-private`. Do not substitute GHCR or dispatch credentials.
+- Preserve useful CI/build/test/security, backup, manual/release, maintenance and scheduled workflows. Do not create a second direct SSH/Compose deployment authority. Keep app-owned builds/tests/immutable GHCR publication separate from Platform-owned manifests/shared pull credentials/GitOps/rollout/health verification.
+
+---
+
 ## Follow-up verification — 2026-11-02 07:00 ICT / 2026-11-02 00:00 UTC
 
 - Platform PR #1020 merged as `b28d1f4e454cec8e521619b4fec33a9b3433a55c`; exact-head validation #41364647902 and post-merge validation #41364681389 passed.
