@@ -30,7 +30,7 @@ MOCK
 chmod +x "$tmp_dir/bin/curl"
 
 sample_sha=0123456789abcdef0123456789abcdef01234567
-sample_run_id=41246414186
+sample_run_id=41158598649
 sample_repo=phanthienquoc/media-generation
 sample_path=.github/workflows/wf-03-media-production-deploy.yml
 sample_api_url="https://api.github.com/repos/$sample_repo/actions/runs/$sample_run_id"
