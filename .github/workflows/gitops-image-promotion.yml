@@ -36,7 +36,7 @@ permissions:
   contents: write
   pull-requests: write
 concurrency:
-  group: gitops-image-promotion-${{ github.event.client_payload.app || inputs.app }}-${{ github.event.client_payload.component || inputs.component }}
+  group: gitops-image-promotion-${{ github.event.client_payload.app || inputs.app }}-${{ github.event.client_payload.component || inputs.component || github.event.client_payload.release }}
   cancel-in-progress: false
 
 jobs:
@@ -219,63 +219,169 @@ jobs:
             -f 'client_payload[component]=release' \
             -f "client_payload[release]=$RELEASE"
 
-  fanout-tce-release:
+  promote-tce-digests:
     if: github.event_name == 'repository_dispatch' && github.event.action == 'tce-release-requested'
-    name: Fan out TCE release
+    name: Promote TCE web/service digests atomically
     runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
     steps:
-      - name: Validate release contract
+      - name: Checkout infrastructure
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          persist-credentials: true
+
+      - name: Install pinned kubectl for TCE manifest render
+        env:
+          KUBECTL_VERSION: v1.36.3
+        run: |
+          set -euo pipefail
+          case "$(uname -m)" in
+            x86_64) kubectl_arch=amd64 ;;
+            aarch64|arm64) kubectl_arch=arm64 ;;
+            *) echo "Unsupported runner architecture: $(uname -m)" >&2; exit 1 ;;
+          esac
+          curl -fsSLo kubectl "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${kubectl_arch}/kubectl"
+          curl -fsSLo kubectl.sha256 "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${kubectl_arch}/kubectl.sha256"
+          echo "$(cat kubectl.sha256)  kubectl" | sha256sum --check
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+          kubectl version --client=true
+
+      - name: Validate TCE release payload and publisher provenance
         env:
           APP: ${{ github.event.client_payload.app }}
           RELEASE: ${{ github.event.client_payload.release }}
-          SOURCE_RUN_ID: ${{ github.event.client_payload.source_run_id }}
-          SOURCE_WORKFLOW_PATH: ${{ github.event.client_payload.source_workflow_path }}
-          SOURCE_EVENT: ${{ github.event.client_payload.source_event }}
-          SOURCE_HEAD_SHA: ${{ github.event.client_payload.source_head_sha }}
-        run: |
-          set -euo pipefail
-          test "$APP" = "tce-dashboard" || { echo "::error::Unsupported release application: $APP"; exit 1; }
-          [[ "$RELEASE" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}$ ]] || {
-            echo "::error::TCE release must be prod-v<semver>-<git-sha>"
-            exit 1
-          }
-          [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]] || { echo "::error::TCE source run ID must be numeric"; exit 1; }
-          [[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/wf-03-tce-production-deploy.yml" ]] || { echo "::error::TCE source workflow path is not approved"; exit 1; }
-          [[ "$SOURCE_EVENT" == "workflow_dispatch" ]] || { echo "::error::TCE source event must be workflow_dispatch"; exit 1; }
-          [[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::TCE source head must be a full 40-character SHA"; exit 1; }
-          [[ "$RELEASE" == *-"${SOURCE_HEAD_SHA:0:7}" ]] || { echo "::error::TCE release tag does not match source SHA prefix"; exit 1; }
-
-      - name: Verify TCE publisher run provenance
-        env:
+          WEB_DIGEST: ${{ github.event.client_payload.web_digest }}
+          SERVICE_DIGEST: ${{ github.event.client_payload.service_digest }}
           SOURCE_RUN_ID: ${{ github.event.client_payload.source_run_id }}
           SOURCE_WORKFLOW_PATH: ${{ github.event.client_payload.source_workflow_path }}
           SOURCE_EVENT: ${{ github.event.client_payload.source_event }}
           SOURCE_HEAD_SHA: ${{ github.event.client_payload.source_head_sha }}
           SOURCE_COMMIT: ${{ github.event.client_payload.source_head_sha }}
-          RELEASE: ${{ github.event.client_payload.release }}
-        run: bash scripts/verify-tce-publisher-run.sh
+        run: |
+          set -euo pipefail
+          test "$APP" = "tce-dashboard" || { echo "::error::Unsupported TCE release application: $APP"; exit 1; }
+          [[ "$RELEASE" =~ ^prod-v[0-9]+[.][0-9]+[.][0-9]+-[0-9a-f]{40}$ ]] || {
+            echo "::error::TCE release must use a full-SHA prod-v<semver>-<sha> tag."
+            exit 1
+          }
+          [[ "$WEB_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::Invalid TCE web digest."; exit 1; }
+          [[ "$SERVICE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::Invalid TCE service digest."; exit 1; }
+          [[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ && "$RELEASE" == *-"$SOURCE_HEAD_SHA" ]] || {
+            echo "::error::TCE release tag does not match the full publisher source SHA."
+            exit 1
+          }
+          bash scripts/verify-tce-publisher-run.sh
 
-      - name: Dispatch both TCE image promotions
+      - name: Validate TCE GHCR pull access
         env:
-          GH_TOKEN: ${{ github.token }}
+          GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}
+          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+        run: TARGET_APP=tce-dashboard GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" bash scripts/validate-ghcr-pull-access.sh
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ vars.GHCR_USERNAME || github.repository_owner }}
+          password: ${{ secrets.GHCR_READ_TOKEN }}
+
+      - name: Set up Buildx for registry tag/digest correlation
+        uses: docker/setup-buildx-action@v3
+
+      - name: Verify TCE tag-to-digest mapping and exact ARM64 manifests
+        env:
           RELEASE: ${{ github.event.client_payload.release }}
+          WEB_DIGEST: ${{ github.event.client_payload.web_digest }}
+          SERVICE_DIGEST: ${{ github.event.client_payload.service_digest }}
+          GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}
+          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
         run: |
           set -euo pipefail
           for component in web service; do
-            gh api --method POST \
-              -H "Accept: application/vnd.github+json" \
-              "/repos/${GITHUB_REPOSITORY}/dispatches" \
-              -f event_type="image-published" \
-              -f "client_payload[app]=tce-dashboard" \
-              -f "client_payload[component]=$component" \
-              -f "client_payload[tag]=$RELEASE"
-            echo "Dispatched TCE $component promotion for $RELEASE"
+            image="ghcr.io/phanthienquoc/tce-dashboard/$component"
+            expected_var="${component^^}_DIGEST"
+            expected="${!expected_var}"
+            inspect="$(docker buildx imagetools inspect "$image:$RELEASE")"
+            tag_digest="$(awk '/^Digest:/ {print $2; exit}' <<< "$inspect")"
+            [[ "$tag_digest" == "$expected" ]] || {
+              echo "::error::TCE $component release tag resolves to $tag_digest, not the attested $expected."
+              exit 1
+            }
+            grep -Eq 'Platform: linux/arm64|linux/arm64' <<< "$inspect" || {
+              echo "::error::TCE $component release tag has no linux/arm64 descriptor."
+              exit 1
+            }
+            GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$image@$expected" bash scripts/validate-ghcr-image-reference.sh
           done
+
+      - name: Update TCE production image digests as one pair
+        env:
+          WEB_DIGEST: ${{ github.event.client_payload.web_digest }}
+          SERVICE_DIGEST: ${{ github.event.client_payload.service_digest }}
+        run: |
+          set -euo pipefail
+          python3 scripts/promote-tce-image-digests.py --file apps/tce-dashboard/overlays/prod/kustomization.yaml --web-digest "$WEB_DIGEST" --service-digest "$SERVICE_DIGEST"
+          kubectl kustomize apps/tce-dashboard/overlays/prod > /tmp/tce-rendered.yaml
+          grep -Fq "image: ghcr.io/phanthienquoc/tce-dashboard/web@$WEB_DIGEST" /tmp/tce-rendered.yaml
+          grep -Fq "image: ghcr.io/phanthienquoc/tce-dashboard/service@$SERVICE_DIGEST" /tmp/tce-rendered.yaml
+
+      - name: Scope TCE promotion changes
+        run: |
+          set -euo pipefail
+          test "$(git diff --name-only)" = 'apps/tce-dashboard/overlays/prod/kustomization.yaml' || {
+            echo '::error::TCE paired promotion must change only its production Kustomize overlay.'
+            git diff --name-only
+            exit 1
+          }
+
+      - name: Create TCE paired digest promotion PR
+        id: promotion
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676  # v7
+        with:
+          token: ${{ github.token }}
+          branch: automation/promote-tce-dashboard-${{ github.event.client_payload.source_head_sha }}
+          delete-branch: true
+          title: 'chore: promote TCE digest pair ${{ github.event.client_payload.release }}'
+          commit-message: 'chore: promote TCE digest pair ${{ github.event.client_payload.release }}'
+          body: |
+            Automated atomic TCE web/service digest promotion.
+
+            - Release: ${{ github.event.client_payload.release }}
+            - Web digest: ${{ github.event.client_payload.web_digest }}
+            - Service digest: ${{ github.event.client_payload.service_digest }}
+            - Publisher run: ${{ github.event.client_payload.source_run_id }}
+            - Source commit: ${{ github.event.client_payload.source_head_sha }}
+
+      - name: Validate exact TCE promotion PR head
+        id: validate-pr-checks
+        if: steps.promotion.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.promotion.outputs.pull-request-number }}
+          PR_HEAD_SHA: ${{ steps.promotion.outputs.pull-request-head-sha }}
+          PR_BRANCH: ${{ steps.promotion.outputs.pull-request-branch }}
+          REPOSITORY: ${{ github.repository }}
+        run: bash scripts/validate-promotion-pr.sh
+
+      - name: Merge TCE paired digest promotion PR
+        if: steps.promotion.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.promotion.outputs.pull-request-number }}
+          HEAD_SHA: ${{ steps.validate-pr-checks.outputs.head_sha }}
+        run: |
+          set -euo pipefail
+          test -n "$HEAD_SHA" || { echo '::error::Verified TCE promotion PR head SHA is missing.'; exit 1; }
+          gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --squash --delete-branch --match-head-commit "$HEAD_SHA"
 
   coordinate-tce-release:
     if: github.event_name == 'repository_dispatch' && github.event.action == 'tce-release-requested'
     name: Coordinate TCE release
-    needs: fanout-tce-release
+    needs: promote-tce-digests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout infrastructure
@@ -287,18 +393,27 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE: ${{ github.event.client_payload.release }}
+          WEB_DIGEST: ${{ github.event.client_payload.web_digest }}
+          SERVICE_DIGEST: ${{ github.event.client_payload.service_digest }}
         run: |
           set -euo pipefail
           FILE="apps/tce-dashboard/overlays/prod/kustomization.yaml"
           MAX_ATTEMPTS=60
           for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
             git fetch --no-tags origin master
-            WEB_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/tce-dashboard\/web$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
-            SERVICE_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/tce-dashboard\/service$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
+            read_digest() {
+              git show "origin/master:$FILE" | awk -v target="$1" '
+                $0 == "- name: " target { in_image=1; next }
+                in_image && /^- name:/ { exit }
+                in_image && /^[[:space:]]+digest:/ { print $2; exit }
+              '
+            }
+            WEB_DIGEST_ON_MASTER="$(read_digest ghcr.io/phanthienquoc/tce-dashboard/web)"
+            SERVICE_DIGEST_ON_MASTER="$(read_digest ghcr.io/phanthienquoc/tce-dashboard/service)"
             echo "Coordinator attempt $attempt/$MAX_ATTEMPTS"
-            echo "TCE GitOps web tag: $WEB_TAG"
-            echo "TCE GitOps service tag: $SERVICE_TAG"
-            if [ "$WEB_TAG" = "$RELEASE" ] && [ "$SERVICE_TAG" = "$RELEASE" ]; then
+            echo "TCE GitOps web digest: $WEB_DIGEST_ON_MASTER"
+            echo "TCE GitOps service digest: $SERVICE_DIGEST_ON_MASTER"
+            if [ "$WEB_DIGEST_ON_MASTER" = "$WEB_DIGEST" ] && [ "$SERVICE_DIGEST_ON_MASTER" = "$SERVICE_DIGEST" ]; then
               echo "TCE release $RELEASE converged on GitOps master."
               gh api --method POST -H "Accept: application/vnd.github+json" \
                 "/repos/${GITHUB_REPOSITORY}/dispatches" \
