@@ -1687,3 +1687,16 @@ No production manifest, image, credential, database, replica, release flag, depl
 ### StockDividend Docker action follow-up completed
 - PR #26 merged at 60918c2f2c50e5e52d071fe36ba72b1e78a485a2 after exact-head CI #41517727670 SUCCESS. CI-only Buildx actions now use Node24 immutable pins (setup-buildx v4.4.1, build-push v7.4.0); push=false retained. Post-merge CI #41518048674 queued at update time; no publisher run.
 - Production StockDividend deploy/publisher workflow remains untouched; no GHCR publication or promotion.
+
+
+## 2026-11-03 03:58 ICT — release workflow Node24 pins and publisher path guard
+
+- StockDividend PR #27 merged at `fc10f56eadba769fe102da6465bee27c9e14f9a9`; exact-head CI #41524373731 passed all five jobs. Production publisher actions are now immutable Node24 pins (checkout v7.0.1, setup-buildx v4.4.1, login v4.7.0, metadata v6.2.0, build-push v7.4.0).
+- PR #27 also changed `scripts/validate-production-release-contract.sh`, which was not in publisher `paths-ignore`; merge triggered Build and Publish Images #41524676740. Its release gate output was `release_enabled=false`; promotion handoff skipped; build-and-push was still running (Scraper step active, Admin/Backend pending). No GitOps dispatch observed. Verify final digest/run conclusion.
+- StockDividend PR #28 adds the validator path to `paths-ignore` and asserts it, preventing future contract-only edits from publishing unchanged images. Preserve master source pushes and workflow_dispatch.
+- TCE PR #1015 pins manual-only WF-03 checkout/artifact/Docker actions to Node24; stale Buildx v3 assertion was fixed. Exact head `3f04b73deb8b84a99cf45d26bea5a7768b7ee7a5`; WF-01P and WF-02 passed, WF-05 still running.
+- Auth PR #84 pins manual-only release checkout/setup-node/Docker actions to Node24; exact head `351c598132cfea05b41a054e673adf8293a63d69`; auth-service-ci running, Supabase Preview skipped. No release dispatch.
+- Verified upstream Node24 commits: checkout 3d3c42e5..., setup-node 949feb24..., upload-artifact cf430e03..., download-artifact 9000827c..., login-action 81c6f93d..., metadata-action dc802804..., setup-buildx f87e5991..., build-push c3c9e263....
+- Native schedules unchanged: Platform mirror #41499146752 FAIL, inspection #41498271871 PASS, reconciliation #41491502003 FAIL, watchdog #41491160810 FAIL, recovery #41482540454 PASS; TCE WF-06 #41516575222 HTTP503, WF-12 #41511665345 freshness failure, WF-07 #41476258191 PASS. No cron changes.
+- K3s snapshot #41515885354: node Ready/K3s 1.36.3; Media/MicroFE/NATS healthy; Stock Admin/new Backend image-pull failure on `12d63b4`; old Backend/legacy Frontend 1/1; TCE/Auth/Keycloak 0/0 intentional.
+- Preserve `reconcile-vps.yml` as sole production apply authority. No DB migration, production manifest change, promotion, shared GHCR credential change or reboot. TCE market-scan schedule unchanged.
