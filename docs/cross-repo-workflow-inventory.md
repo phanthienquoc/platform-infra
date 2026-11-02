@@ -1676,3 +1676,10 @@ No production manifest, image, credential, database, replica, release flag, depl
 - PR #1085 push side effects were recorded: reconcile #41515916117 (no GitOps drift/apply, Auth runtime Secret provisioned, shared pull Secrets unchanged, Stock lane failure); Provision OIDC client #41515885560 failed HTTP503 before admin mutation; verify #41515885382 HTTP503; cleanup #41515885582 dry-run removed 0; inspection #41515885354 created snapshot #1086. PR #1087 hardening now prevents these workflow-only self-trigger paths.
 - Current master heads: Platform 33358a2f; TCE 76a4b9a1; StockDividend ba16a62e; Media 648e7daa; Authentication b76a19d8. Open PRs: Platform #544/#541/#539; Auth #75/#76; none in TCE/StockDividend/Media.
 - Remaining owner blockers: StockDividend Actions-read token unverified and release authorization absent; mirror token missing; Auth Supabase integration/migration gate unresolved. Stock Admin/Backend still lack ARM64 manifests for production tag 12d63b4.
+
+## 2026-11-03 03:17 ICT — StockDividend CI Docker actions Node 24 follow-up
+
+- StockDividend CI logs showed Node20 deprecation warning for docker/build-push-action@v6 and docker/setup-buildx-action@v3. Open PR #26 pins CI-only actions to Node24 releases: build-push-action v7.4.0 SHA c3c9e263c25d99ce0380d002d59b67737d91b0dc; setup-buildx-action v4.4.1 SHA f87e5991a6d7451dcb8d9637bfbc97413f497069. push=false remains; production deploy/publisher untouched.
+- PR #26 exact-head CI #41517727670 is still in progress; do not merge until all required jobs complete SUCCESS.
+- Post-merge CI after the cross-repo checkout pin: TCE WF-01/WF-02/WF-05 all SUCCESS; StockDividend CI SUCCESS with no publisher run; Media CI SUCCESS; Authentication service/web CI SUCCESS. No release workflows were triggered.
+- Current open PRs: Platform #544/#541/#539; StockDividend #26; Authentication #75/#76; none in TCE/Media.
