@@ -1581,3 +1581,12 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Media, MicroFE Shell/WS and NATS 1/1 with digest-pinned imageIDs. Stock Admin and new Backend remain ImagePullBackOff on non-ARM64 tag 12d63b4; old Backend replica and unmanaged legacy frontend remain Running. TCE/Auth/Keycloak 0/0 intentionally.
 - StockDividend publisher remains successful but production release disabled pending protected Actions-read credential and explicit authorization. Mirror remains blocked by destination-only Contents:write token.
 - Auth production integration/migration gate remains open. No database mutation.
+
+
+## 2026-11-02 19:10 UTC / 2026-11-03 02:10 ICT — stale historical queue guard merged
+
+- PR #1076 merged to Platform master at `778746152bee482fdea24ad9ab88b1cdee03d4ad` from exact head `34786d328f8e136ab2e1c709435df84b3d015783`.
+- Required exact-head checks: validate-manifests #41506862664 SUCCESS; validate-github-actions #41506862858 SUCCESS.
+- `verify-reconcile-lane-queue.py` now receives parent reconciliation creation time and MAX_AGE_MINUTES. Once the parent scheduled reconciliation is stale (>45m), completed/already-assigned historical queue delays are not re-failed on every later watchdog event; still-queued/unassigned lanes remain enforced at 15m. Fresh reconciliation runs continue enforcing completed assignment delay.
+- Regression tests cover both stale completed and stale unassigned cases. Post-merge validate/lint and push smoke runs #41507316295/#41507316523/#41507316907/#41507316109 were queued at this update and remain unverified until completion.
+- Runtime exercise of the stale-parent guard awaits the next watchdog invocation. Preserve the existing cron expressions and all TCE market-scan schedules.
