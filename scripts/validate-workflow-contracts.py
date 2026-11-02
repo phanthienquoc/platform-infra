@@ -297,13 +297,13 @@ if promotion.index("Verify StockDividend publisher run provenance") > promotion.
 stockdividend_provenance = (ROOT / "scripts" / "verify-stockdividend-publisher-run.sh").read_text(encoding="utf-8")
 for required in (
     "phanthienquoc/stockdividend/actions/runs/$SOURCE_RUN_ID",
-    'repository == "phanthienquoc/stockdividend"',
-    'head_repository == "phanthienquoc/stockdividend"',
-    'workflow_path == "$SOURCE_WORKFLOW_PATH"',
-    'event == "$SOURCE_EVENT"',
-    'branch == "master"',
-    'head_sha == "$SOURCE_HEAD_SHA"',
-    'conclusion" == "success"',
+    '"$repository" == "phanthienquoc/stockdividend"',
+    '"$head_repository" == "phanthienquoc/stockdividend"',
+    '"$workflow_path" == "$SOURCE_WORKFLOW_PATH"',
+    '"$event" == "$SOURCE_EVENT"',
+    '"$branch" == "master"',
+    '"$head_sha" == "$SOURCE_HEAD_SHA"',
+    '"$conclusion" == "success"',
 ):
     if required not in stockdividend_provenance:
         fail(f"StockDividend source-run verifier is missing required metadata guard: {required}")
