@@ -140,13 +140,13 @@ jobs:
           expected="platform-kubectl policy: rollout-status-v14-stockdividend-managed-workloads"
           for attempt in $(seq 1 24); do
             if policy="$(sudo /usr/local/sbin/platform-kubectl policy-version 2>/dev/null)" && [[ "$policy" == "$expected" ]]; then
-              echo "Permanent-error-aware scoped image-pull restart runner policy is ready."
+              echo "Runner policy v14 (managed StockDividend workloads) is ready."
               exit 0
             fi
-            echo "Waiting for runner bootstrap policy v13 (attempt $attempt/24)..."
+            echo "Waiting for runner bootstrap policy v14 (attempt $attempt/24)..."
             sleep 5
           done
-          echo "Runner policy is not updated to permanent-error-aware image-pull restart v13; refusing production apply." >&2
+          echo "Runner policy is not updated to managed-workload v14; refusing production apply." >&2
           exit 1
       - name: Validate GHCR pull access before mutating cluster credentials
         if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app != 'keycloak' && steps.scope.outputs.target_app != 'auth-shutdown' }}
