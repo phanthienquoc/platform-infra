@@ -5,6 +5,7 @@ ROOT="${GITHUB_WORKSPACE:-$(pwd)}"
 cd "$ROOT"
 
 manifest="apps/tce-dashboard/overlays/prod/kustomization.yaml"
+python3 scripts/resolve-tce-gitops-image-refs.py --file "$manifest" --validate-pair
 desired_web_ref="$(python3 scripts/resolve-tce-gitops-image-refs.py --file "$manifest" --component web)"
 desired_service_ref="$(python3 scripts/resolve-tce-gitops-image-refs.py --file "$manifest" --component service)"
 
