@@ -2876,3 +2876,38 @@ No production manifest, image reference, GHCR credential, database object, relea
 - `PLATFORM_INFRA_MIRROR_TOKEN` remains missing; required scope is destination-only Contents:write for `phanthienquoc/locally-uncensored-private`.
 - Auth #75/#76 remain gated on Supabase production integration side effects and migration provenance/drift. No database migration or mutation was run.
 - No production manifest, image reference, GHCR credential, database object, release flag, desired replica, workflow authority or cron expression changed. No StockDividend promotion/restart, VPS reboot, package upgrade or image cleanup occurred. TCE market-scan schedule unchanged. Production remains NOT HEALTHY/UNVERIFIED.
+
+
+## 2026-11-02 18:08 UTC — queue watchdog merged and push smoke verified
+
+### Repository state and merge evidence
+- Platform Infra master before this tracker PR: `e1981cb9a89d32c8ea3b212b00a9eef0b6cb1895` (PR #1072). TCE Dashboard: `afad281fa57b2846446a152b6f5cf3c2600ee51d`; StockDividend: `38220ddfef2db7128482547f72b7f06211e9c9bc`; Media Generation: `0d4fc2ac15834c20357fd2420b732e6411fd8930`; Authentication: `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- PR #1072 [detect stalled scheduled deployment lanes](https://github.com/phanthienquoc/platform-infra/pull/1072) was squash-merged at exact head `35c336cc7f0ebdcebfce6911764adaf150467597`; merge commit `e1981cb9a89d32c8ea3b212b00a9eef0b6cb1895`.
+- Exact-head checks: [validate #41497308517](https://github.com/phanthienquoc/platform-infra/actions/runs/41497308517) SUCCESS; [lint #41497308596](https://github.com/phanthienquoc/platform-infra/actions/runs/41497308596) SUCCESS.
+- Post-merge checks: [validate-manifests #41497619290](https://github.com/phanthienquoc/platform-infra/actions/runs/41497619290) SUCCESS; [validate-github-actions #41497619531](https://github.com/phanthienquoc/platform-infra/actions/runs/41497619531) SUCCESS.
+
+### First runtime exercise of the downstream lane queue watchdog
+- Post-merge push smoke [#41497619396](https://github.com/phanthienquoc/platform-infra/actions/runs/41497619396) completed SUCCESS. The new `Verify scheduled reconciliation deployment-lane runner assignment` step executed on master and reported the historical queue breach without failing the push smoke:
+  - MicroFE job 125435773880: 31m, runner id 2.
+  - TCE Dashboard job 125435774162: 32m, runner id 2.
+  - Media Generation job 125435774301: 32m, runner id 2.
+- The same push smoke emitted the expected warn-only diagnostic that native inspection #41407411326 was 631 minutes old. This confirms push mode is diagnostic/warn-only while preserving the stale-schedule evidence.
+- Post-merge recovery push [#41497619299](https://github.com/phanthienquoc/platform-infra/actions/runs/41497619299) completed SUCCESS; it was a push smoke with no source event and did not authorize a production dispatch.
+- This is the first runtime exercise of the new queue verifier. A post-merge scheduled/manual/workflow_run enforcement event has not yet been observed; those modes are configured to fail when the 15-minute lane queue budget is exceeded.
+
+### Fresh K3s evidence
+- Latest full inspection [#41496768387](https://github.com/phanthienquoc/platform-infra/actions/runs/41496768387) completed SUCCESS at 18:03:51Z and its automated snapshot PR #1073 merged as `fc4b951949c12e90bbf5e0e3ba0e1adb6112b080`. Snapshot generated at 18:02:38Z; this was workflow_dispatch recovery, not a native inspection cron tick.
+- Node `tce-k3s-01` Ready, ARM64, K3s `v1.36.3+k3s1`, K3s containerd `2.3.2-k3s2`, Docker 29.1.3, disk 55%, ~19 GiB available RAM. Both Platform and Media runner services were active in the snapshot.
+- Media backend/frontend, MicroFE Shell/WS and NATS are 1/1 Running with digest-pinned runtime images. Stock Admin two Pods and new Backend Pod remain ErrImagePull/ImagePullBackOff on tag `12d63b4` with no ARM64 manifest; old Backend replica remains 1/1 and legacy Stock Frontend remains unmanaged 1/1.
+- TCE frontend/service, Auth and Keycloak remain 0/0 intentionally. Public OIDC probes return 503 while Keycloak is stopped. Host still reports `restart_required=yes`; containerd.io package 2.4.2-3 is available but no package upgrade/reboot was performed.
+
+### Current open PRs and owner gates
+- Platform open PRs: #544, #541, #539 (draft); #1072 is merged. Authentication open PRs: #75 and #76. No open PRs in TCE, StockDividend or Media.
+- StockDividend production release remains disabled. `STOCKDIVIDEND_ACTIONS_READ_TOKEN` still requires owner configuration with StockDividend-only Actions:read and explicit release authorization.
+- `PLATFORM_INFRA_MIRROR_TOKEN` remains missing; required scope is destination-only Contents:write on `phanthienquoc/locally-uncensored-private`.
+- Auth production integration/migration gate remains open; no Supabase migration or database mutation was run.
+
+### Native schedules and safety
+- Latest native Platform reconciliation remains #41491502003 (17:28:27Z, completed failure on StockDividend health); latest native watchdog #41491160810 (17:26:13Z, failure on stale inspection); latest native recovery #41482540454 (16:32:54Z, success); latest native inspection remains #41407411326 (07:36:38Z). Recovery/manual inspection is not native inspection schedule evidence.
+- TCE latest native WF-07 #41476258191 SUCCESS; WF-06 #41424898130 strict HTTP 200 failure with 503 endpoints; direct WF-12 #41419694332 freshness failure. Preserve all TCE cron expressions and market-scan schedule.
+- No production manifest, image, GHCR credential, database, release flag, desired replica, workflow authority or cron expression changed. No StockDividend promotion/restart, VPS reboot, package upgrade or image cleanup occurred. Production remains NOT HEALTHY/UNVERIFIED.
