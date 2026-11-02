@@ -477,15 +477,15 @@ for repository in (
 
 
 # Auth shutdown must be an isolated, allowlisted maintenance operation.
-if "rollout-status-v13-permanent-image-pull-restart" not in bootstrap_script:
+if "rollout-status-v14-stockdividend-managed-workloads" not in bootstrap_script:
     fail("Runner bootstrap must publish the versioned scoped image-pull restart policy.")
 if '  scale)' not in bootstrap_script or 'scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform' not in bootstrap_script:
     fail("Runner bootstrap must allow only the exact Auth/Keycloak scale-to-zero command.")
 
-if "rollout-status-v13-permanent-image-pull-restart" not in reconcile:
+if "rollout-status-v14-stockdividend-managed-workloads" not in reconcile:
     fail("Production reconciliation must require the v12 scoped image-pull restart runner policy.")
 auth_provision = read("provision-auth-runtime-secret.yml")
-if "rollout-status-v13-permanent-image-pull-restart" not in auth_provision:
+if "rollout-status-v14-stockdividend-managed-workloads" not in auth_provision:
     fail("Standalone Auth secret provisioning must accept the current v13 runner policy.")
 
 restart_step = reconcile.split("- name: Restart target workloads blocked on image pulls", 1)[1].split(
@@ -530,12 +530,29 @@ for required_deployment in (
     "tce-prod tce-frontend",
     "stock-prod stock-admin",
     "stock-prod stock-backend",
-    "stock-prod stock-frontend",
     "media-prod media-generation",
     "media-prod media-generation-frontend",
 ):
     if required_deployment not in restart_block:
         fail(f"Runner image-pull recovery is missing a production Deployment mapping: {required_deployment}")
+
+# StockDividend's current source tree and production Kustomize/Ingress own only
+# Admin and Backend. Keep the legacy stock-frontend Pod untouched, but exclude
+# that unowned Deployment from rollout, restart, rollback, and health authorities.
+health_gate = (ROOT / "scripts" / "verify-workload-health.sh").read_text(encoding="utf-8")
+runner_script_content = (ROOT / "scripts" / "bootstrap-runner.sh").read_text(encoding="utf-8")
+readiness_script_content = (ROOT / "scripts" / "validate-recovery-readiness.sh").read_text(encoding="utf-8")
+stockdividend_readme = (ROOT / "apps" / "stockdividend" / "README.md").read_text(encoding="utf-8")
+if 'app in (stock-admin,stock-backend)' not in health_gate:
+    fail("StockDividend health checks must be scoped to the GitOps-owned Admin and Backend pods.")
+if "deployment/stock-frontend" in reconcile:
+    fail("The StockDividend rollout lane must not wait for the unowned legacy stock-frontend Deployment.")
+if "stock-prod stock-frontend" in runner_script_content or "deployment/stock-frontend" in runner_script_content:
+    fail("Runner image-pull recovery must not restart or expose rollout authority for legacy stock-frontend.")
+if "deployment/stock-frontend stock-prod" in readiness_script_content:
+    fail("Recovery readiness must not require rollback history for the unowned legacy stock-frontend Deployment.")
+if "stock-frontend" not in stockdividend_readme or "legacy" not in stockdividend_readme.lower():
+    fail("StockDividend runtime documentation must identify the legacy stock-frontend ownership boundary.")
 
 runner_bootstrap = read("bootstrap-runner.yml")
 if '      - "scripts/bootstrap-runner.sh"' not in runner_bootstrap:
