@@ -28,7 +28,6 @@ echo
 echo "== Rollback history =="
 for target in \
   "deployment/stock-backend stock-prod" \
-  "deployment/stock-frontend stock-prod" \
   "deployment/stock-admin stock-prod" \
   "deployment/tce-service tce-prod" \
   "deployment/tce-frontend tce-prod"; do
