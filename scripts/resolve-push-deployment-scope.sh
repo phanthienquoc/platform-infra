@@ -38,7 +38,7 @@ resolve_scope() {
       environments/prod/*|platform/cert-manager/*|platform/k3s-debug-logs/*|scripts/reconcile-vps.sh|scripts/guard-reconcile-images.sh|scripts/validate-ghcr-pull-access.sh|scripts/verify-workload-health.sh)
         cluster_wide=1
         ;;
-      .github/workflows/*|scripts/validate-*.py|scripts/tests/*|docs/*|debug/vps-latest.md)
+      .github/workflows/*|scripts/bootstrap-runner.sh|scripts/validate-*.py|scripts/tests/*|docs/*|debug/vps-latest.md)
         # CI, documentation, and inspection snapshots may accompany a manifest change
         # but do not introduce a production workload scope of their own.
         ;;
@@ -120,6 +120,9 @@ self_test() {
   assert_scope all apps/tce-dashboard/kustomization.yaml apps/media-generation/kustomization.yaml
   assert_scope all environments/prod/kustomization.yaml
   assert_scope all scripts/verify-workload-health.sh
+  assert_scope stockdividend apps/stockdividend/base/kustomization.yaml scripts/bootstrap-runner.sh
+  assert_scope all scripts/verify-workload-health.sh scripts/bootstrap-runner.sh
+  assert_failure scripts/bootstrap-runner.sh
   local keycloak_zero keycloak_one
   keycloak_zero="$(KEYCLOAK_REPLICAS_OVERRIDE=0 resolve_scope platform/keycloak/deployment.yaml)"
   keycloak_one="$(KEYCLOAK_REPLICAS_OVERRIDE=1 resolve_scope platform/keycloak/deployment.yaml)"
