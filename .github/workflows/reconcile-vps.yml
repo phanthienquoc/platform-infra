@@ -786,25 +786,26 @@ jobs:
             --ref master \
             -f "source_run_id=$SOURCE_RUN_ID" \
             -f "source_head_sha=$SOURCE_HEAD_SHA"
+          expected_display_title="Recover Stale Scheduled Ops — workflow_dispatch / source #$SOURCE_RUN_ID"
           for attempt in $(seq 1 6); do
             runs="$(
               gh api -X GET \
                 "repos/${GITHUB_REPOSITORY}/actions/workflows/recover-stale-ops.yml/runs" \
                 -F event=workflow_dispatch -F branch=master -F per_page=100
             )"
-            dispatched_run="$(jq -c --arg started "$started_at" --arg sha "$SOURCE_HEAD_SHA" '
+            dispatched_run="$(jq -c --arg started "$started_at" --arg source_run "$SOURCE_RUN_ID" '
               [.workflow_runs[] | select(
                 .event == "workflow_dispatch"
                 and .path == ".github/workflows/recover-stale-ops.yml"
                 and .head_branch == "master"
-                and .head_sha == $sha
+                and .display_title == ("Recover Stale Scheduled Ops — workflow_dispatch / source #" + $source_run)
                 and .created_at >= $started
               )] | sort_by(.created_at) | last // empty
             ' <<< "$runs")"
             if [[ -n "$dispatched_run" ]]; then
               run_id="$(jq -r '.id' <<< "$dispatched_run")"
               run_url="$(jq -r '.html_url' <<< "$dispatched_run")"
-              echo "Verified post-reconciliation recovery dispatch: #$run_id $run_url"
+              echo "Verified post-reconciliation recovery dispatch for source #$SOURCE_RUN_ID: #$run_id $run_url ($expected_display_title)"
               exit 0
             fi
             echo "Waiting for recovery controller dispatch correlation (attempt $attempt/6)."
