@@ -95,7 +95,84 @@ write_waiting_fixture transient stock-backend ErrImagePull "connection reset by 
 : > "$MOCK_RESTART_LOG"
 transient_output="$(run_helper transient 2>&1)"
 grep -Fq "Transient image-pull failure" <<< "$transient_output"
-expected_restarts=
+expected_restarts="$(cat "$MOCK_RESTART_LOG")"
+[[ "$actual_restarts" == "$expected_restarts" ]] || {
+  echo "Transient failures did not restart exactly the selected StockDividend Deployments." >&2
+  printf 'expected:\n%s\nactual:\n%s\n' "$expected_restarts" "$actual_restarts" >&2
+  exit 1
+}
+
+# A Deployment with mixed permanent and transient Pod errors is fail-closed:
+# restarting it would still create Pods for the permanent bad image reference.
+cat > "$MOCK_FIXTURE_DIR/mixed-stock-admin.json" <<'JSON'
+{"items":[{"status":{"containerStatuses":[
+  {"name":"permanent","state":{"waiting":{"reason":"ImagePullBackOff","message":"no match for platform in manifest"}}},
+  {"name":"transient","state":{"waiting":{"reason":"ErrImagePull","message":"connection reset by peer"}}}
+]}}]}
+JSON
+write_empty_fixture mixed stock-backend
+: > "$MOCK_RESTART_LOG"
+mixed_output="$(run_helper mixed 2>&1)"
+grep -Fq "skipping rollout restart" <<< "$mixed_output"
+[[ ! -s "$MOCK_RESTART_LOG" ]] || {
+  echo "Mixed permanent/transient errors unexpectedly triggered a rollout restart." >&2
+  cat "$MOCK_RESTART_LOG" >&2
+  exit 1
+}
+
+# Non-image-pull waiting reasons must not trigger this recovery path.
+write_waiting_fixture unrelated stock-admin CrashLoopBackOff "application process exited"
+write_empty_fixture unrelated stock-backend
+: > "$MOCK_RESTART_LOG"
+unrelated_output="$(run_helper unrelated 2>&1)"
+grep -Fq "No image-pull failures for stock-prod/stock-admin" <<< "$unrelated_output"
+[[ ! -s "$MOCK_RESTART_LOG" ]] || {
+  echo "A non-image-pull failure unexpectedly triggered a rollout restart." >&2
+  cat "$MOCK_RESTART_LOG" >&2
+  exit 1
+}
+
+echo "Permanent/transient image-pull restart regression tests passed."
+stock-prod/stock-admin\nstock-prod/stock-backend'
+actual_restarts="$(cat "$MOCK_RESTART_LOG")"
+[[ "$actual_restarts" == "$expected_restarts" ]] || {
+  echo "Transient failures did not restart exactly the selected StockDividend Deployments." >&2
+  printf 'expected:\n%s\nactual:\n%s\n' "$expected_restarts" "$actual_restarts" >&2
+  exit 1
+}
+
+# A Deployment with mixed permanent and transient Pod errors is fail-closed:
+# restarting it would still create Pods for the permanent bad image reference.
+cat > "$MOCK_FIXTURE_DIR/mixed-stock-admin.json" <<'JSON'
+{"items":[{"status":{"containerStatuses":[
+  {"name":"permanent","state":{"waiting":{"reason":"ImagePullBackOff","message":"no match for platform in manifest"}}},
+  {"name":"transient","state":{"waiting":{"reason":"ErrImagePull","message":"connection reset by peer"}}}
+]}}]}
+JSON
+write_empty_fixture mixed stock-backend
+: > "$MOCK_RESTART_LOG"
+mixed_output="$(run_helper mixed 2>&1)"
+grep -Fq "skipping rollout restart" <<< "$mixed_output"
+[[ ! -s "$MOCK_RESTART_LOG" ]] || {
+  echo "Mixed permanent/transient errors unexpectedly triggered a rollout restart." >&2
+  cat "$MOCK_RESTART_LOG" >&2
+  exit 1
+}
+
+# Non-image-pull waiting reasons must not trigger this recovery path.
+write_waiting_fixture unrelated stock-admin CrashLoopBackOff "application process exited"
+write_empty_fixture unrelated stock-backend
+: > "$MOCK_RESTART_LOG"
+unrelated_output="$(run_helper unrelated 2>&1)"
+grep -Fq "No image-pull failures for stock-prod/stock-admin" <<< "$unrelated_output"
+[[ ! -s "$MOCK_RESTART_LOG" ]] || {
+  echo "A non-image-pull failure unexpectedly triggered a rollout restart." >&2
+  cat "$MOCK_RESTART_LOG" >&2
+  exit 1
+}
+
+echo "Permanent/transient image-pull restart regression tests passed."
+stock-prod/stock-admin\nstock-prod/stock-backend'
 actual_restarts="$(cat "$MOCK_RESTART_LOG")"
 [[ "$actual_restarts" == "$expected_restarts" ]] || {
   echo "Transient failures did not restart exactly the selected StockDividend Deployments." >&2
