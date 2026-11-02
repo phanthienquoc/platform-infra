@@ -1180,3 +1180,11 @@ No direct SSH/Compose deployment authority was added. The proposed WF-06 cleanup
 - Media CI #41246414186 passed; last inspected backend/frontend were 1/1 and digest-pinned. Auth master CI #41033586844 and release #41040510320 passed; PR #75/#76 CI passed but remain gated on Supabase production side effects and migration provenance/drift.
 - Preserve CI/test/security, build/publish, backup, cleanup, manual/read-only, release, maintenance, mirror, recovery, watchdog and scheduled data workflows. reconcile-vps.yml is the only GitOps apply authority; inspect-vps.yml read-only; recovery/watchdog observe/dispatch only; bootstrap remains sole runner-helper installer. No duplicate direct SSH/Compose authority.
 - No production manifest, image reference, GHCR credential, database object, release flag, desired replica, or schedule was changed. TCE market-scan schedule unchanged.
+
+
+## Post-merge follow-up — PR #1056 (2026-11-02 19:08 ICT / 12:08 UTC)
+
+- PR #1056 merged by squash at b21273aca77193bd804a11b81247d05e10be3a7d from exact validated head 2fd73e4d033bf64b4dfe511384d7c555f74bbf5d.
+- Exact-head validate-manifests #41442121813 and post-merge validate-manifests #41442209197 both completed SUCCESS.
+- Schedule-run actor metadata for the latest observed Platform and TCE scheduled events is phanthienquoc for both actor and triggering_actor. No evidence of actor deprovisioning was found; scheduler-side delivery remains unresolved.
+- Documentation-only change. No production workflow, manifest, image, credential, release flag, database object, desired replica or cron expression changed. TCE market-scan schedule unchanged.

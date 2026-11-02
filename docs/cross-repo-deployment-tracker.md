@@ -2313,7 +2313,7 @@ No production manifests, image references, GHCR pull credentials, database objec
 - Current default-branch heads verified from Git refs: Platform Infra 4f6b7c9e97915112dc7da2029af862b147c4422b; TCE Dashboard a5e8866d2ba28936d57b31ce6a067186c7204369; StockDividend 38220ddfef2db7128482547f72b7f06211e9c9bc; Media Generation d8e695d772ab2dc0da5c15cc428ee78ac6537518; Authentication ceb2688d6277b10f1bfe7652223d1d295b7e49d9.
 - Open PRs: Platform #795/#749/#648/#544/#541/#539; Authentication #75/#76; no open PRs in TCE, StockDividend or Media. Platform #544/#541/#539 and Authentication #76 are drafts.
 - Current-head PR-triggered workflow runs all completed successfully: Platform #795 #40970075264, #749 #40316261650, #648 #39546799280, #544 #38575430454, #541 #38567431761, #539 #38548718033; Authentication #75 #40446492086 and #76 #41329425940. These CI results do not waive draft, production-side-effect, or migration-provenance gates.
-- PR #1055 is merged. It recorded #1054's post-merge evidence. Current Platform master is merge commit 4f6b7c9e97915112dc7da2029af862b147c4422b; master validation #41433739946 completed SUCCESS on that SHA. No PR is merged in this review window.
+- PR #1055 is merged. It recorded #1054's post-merge evidence. Current Platform master is merge commit 4f6b7c9e97915112dc7da2029af862b147c4422b; master validation #41433739946 completed SUCCESS on that SHA. PR #1056 was subsequently merged by squash after exact-head validation; see the post-merge follow-up below.
 
 ### Native schedule delivery — exact event classification
 - Platform latest native schedule events remain: inspection #41407411326 (07:36:38Z, SUCCESS); reconciliation #41407522742 (07:37:40Z, FAILURE only in StockDividend workload health); watchdog #41406983213 (07:32:45Z, FAILURE because scheduled reconcile/inspection were stale); mirror #41407613563 (07:38:31Z, FAILURE because PLATFORM_INFRA_MIRROR_TOKEN is empty); scheduled recovery #41400302676 (06:30:13Z, SUCCESS). No newer native Platform event=schedule runs were returned through 12:03Z. Ages at review: inspection ~266m, reconciliation ~265m, watchdog ~270m, mirror ~264m, scheduled recovery ~333m.
@@ -2344,3 +2344,12 @@ No production manifests, image references, GHCR pull credentials, database objec
 5. Keep Auth #75/#76 gated pending production integration side-effect and migration provenance review. Schedule a maintenance window before host OS/containerd updates.
 
 No production manifest, image reference, GHCR pull credential, database object, release flag, desired replica, workflow authority, or cron expression changed. reconcile-vps.yml remains the sole GitOps apply authority; inspect-vps.yml remains read-only; recovery/watchdog only observe and dispatch. No direct SSH/Compose deployment authority was added. TCE market-scan schedule unchanged.
+
+
+## Post-merge follow-up — PR #1056 (2026-11-02 19:08 ICT / 12:08 UTC)
+
+- PR #1056 was squash-merged after exact-head validation. Validated head: 2fd73e4d033bf64b4dfe511384d7c555f74bbf5d; merge commit/current Platform master: b21273aca77193bd804a11b81247d05e10be3a7d.
+- Exact-head validation #41442121813 completed SUCCESS. Post-merge validation #41442209197 completed SUCCESS on the merge SHA. The validation job passed image-change contract self-tests, production Kustomize render, Auth rendered GitOps contract, YAML structure, secret policy, immutable image policy, isolated Keycloak render and network-boundary checks. Changed-image validation was not required for this documentation-only PR.
+- The PR changed only docs/cross-repo-deployment-tracker.md and docs/cross-repo-workflow-inventory.md. No production workflow, manifest, image, credential, release gate, database object, desired replica, or schedule changed.
+- Rechecked scheduled-run actor metadata: latest observed Platform inspection/reconciliation schedule runs #41407411326/#41407522742 and TCE WF-06/WF-12 schedule runs #41424898130/#41419694332 all report actor and triggering_actor phanthienquoc. This reduces uncertainty around actor deprovisioning for those observed events but does not explain why later scheduled events were not created. Preserve the scheduler-delivery diagnosis as unresolved.
+- TCE market-scan schedule unchanged.
