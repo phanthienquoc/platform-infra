@@ -26,6 +26,12 @@ CRI=/usr/local/sbin/platform-crictl
   systemctl list-units --type=service --all | grep -Ei "actions.runner|github" || true
   echo "runner_service: $(systemctl is-active actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service 2>/dev/null || true)"
   echo "runner_service_enabled: $(systemctl is-enabled actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service 2>/dev/null || true)"
+  runner_policy="$(sudo "$KCTL" policy-version 2>&1 || true)"
+  if [[ -n "$runner_policy" ]]; then
+    printf 'runner_policy: %s\n' "$runner_policy"
+  else
+    echo "runner_policy: unavailable"
+  fi
   echo; echo "## Docker"; docker --version 2>/dev/null || true; docker info --format "Server={{.ServerVersion}} RootDir={{.DockerRootDir}}" 2>/dev/null || true; docker system df 2>/dev/null || true
   echo; echo "## Updates"; apt list --upgradable 2>/dev/null | sed -n "1,80p" || true; echo "restart_required: $(test -f /var/run/reboot-required && echo yes || echo no)"
   echo; echo "## K3s"; sudo "$KCTL" version || true; sudo "$KCTL" get nodes -o wide || true; sudo "$KCTL" get namespaces || true
