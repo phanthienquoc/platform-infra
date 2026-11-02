@@ -2961,3 +2961,40 @@ No production manifests, image references, shared GHCR pull credentials, databas
 - The new guard has not yet been exercised by a subsequent scheduled/manual/workflow_run watchdog invocation. The next watchdog event should still fail stale reconciliation freshness, but should no longer re-fail only the same expired completed lane delays. A still-unassigned lane remains a failure.
 
 Current PR #1077 is this tracker/inventory refresh; its head will be revalidated after this append. No production manifest, image, secret, database, replica, release flag, cron or deployment authority changed.
+
+
+## 2026-11-02 19:12 UTC / 2026-11-03 02:12 ICT — automatic fallback reconciliation after #1076 merge
+
+### Dispatch and shared reconciliation
+- Recovery push #41507316109 completed SUCCESS after #1076 merged. It observed latest master reconciliation activity #41491502003 age 67m (>20m fallback budget) and dispatched the existing GitOps authority.
+- Exact dispatch correlation: reconciliation #41507349624, event=workflow_dispatch, ref=master, SHA `778746152bee482fdea24ad9ab88b1cdee03d4ad`, `mode=apply`, `allow_image_changes=false`, `target_app=all`.
+- Shared reconcile job #125489936246 completed SUCCESS on runner `platform-k3s-01`, policy v14. GHCR pull-access preflight passed for all currently referenced private packages.
+- Auth runtime Secret was provisioned from the protected Platform Environment and verified; secret values were suppressed in logs. Shared `ghcr-pull` Secrets were unchanged in each production namespace; service-account/deployment patches reported no change.
+- `restart-blocked-image-pulls` ran under v14. Stock Admin and Backend were classified as permanent `no match for platform in manifest` errors and rollout restarts were skipped. No Pod restart occurred (observed restart counts remained 0).
+- Kustomize/Kubernetes diff reported no drift. Production manifest apply was skipped. Post-reconciliation node/pod verification succeeded.
+
+### Deployment lane results
+| Lane | Runner assignment delay | Result |
+|---|---:|---|
+| MicroFE Shell / WS | 15s | SUCCESS |
+| Media Generation | 2s | SUCCESS |
+| StockDividend | 29s | FAILURE — Admin/Backend health |
+| TCE Dashboard | 47s | SUCCESS |
+| Auth | 64s | SUCCESS |
+| Keycloak SSO | skipped | Intentional scale-to-zero |
+
+The deployment-lane summary/final gate failed only because StockDividend health failed. The run's final inspection-recovery trigger was still completing at the evidence point; no fresh full inspection after #41498271871 was yet available. The fallback run is `workflow_dispatch`, not a native cron tick.
+
+### StockDividend exact health evidence
+- Admin Pods `stock-admin-5864bcb497-6b6hm` and `stock-admin-59cddb87b7-qgkjr`: ImagePullBackOff.
+- New Backend Pod `stock-backend-6bc874575d-xcg2j`: ImagePullBackOff.
+- All three use `12d63b4`; GHCR returns `no match for platform in manifest` on the ARM64 K3s node. Old Backend replica remains 1/1. No promotion or rollout restart.
+- TCE GitOps release pairing passed at `prod-v0.1.0-e75e338`; no image changes were allowed.
+
+### Post-merge evidence and queue-guard runtime boundary
+- #1076 exact-head checks: validate-manifests #41506862664 SUCCESS and validate-github-actions #41506862858 SUCCESS.
+- #1076 post-merge: validate-manifests #41507316523 SUCCESS; validate-github-actions #41507316295 SUCCESS; watchdog push smoke #41507316907 SUCCESS; recovery push #41507316109 SUCCESS.
+- The watchdog's push smoke is warning-only. The new stale-parent queue guard is covered by offline regression tests; this fallback reconciliation is `workflow_dispatch`, and the watchdog only enforces queue checks for scheduled-source workflow_run events. Runtime exercise of the new guard still awaits a later native scheduled reconciliation/watchdog cycle.
+- PR #1077 current documentation head at this evidence point: `fe0cf9cb91bda7e318d0c9ae10d138d412fba7fc`; validate-manifests #41507377407 SUCCESS. It remains open until final exact-head validation after this evidence update.
+
+No production manifests or image references changed; no app image promotion occurred. GHCR pull Secrets were unchanged. Auth runtime Secret provisioning was an explicit side effect of the existing recovery-triggered `target_app=all` reconcile, with values suppressed and verification successful. No DB migration or database mutation. TCE market-scan cron unchanged.
