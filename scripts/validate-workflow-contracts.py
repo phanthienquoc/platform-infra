@@ -483,10 +483,10 @@ if '  scale)' not in bootstrap_script or 'scale deployment/microfe-auth deployme
     fail("Runner bootstrap must allow only the exact Auth/Keycloak scale-to-zero command.")
 
 if "rollout-status-v14-stockdividend-managed-workloads" not in reconcile:
-    fail("Production reconciliation must require the v12 scoped image-pull restart runner policy.")
+    fail("Production reconciliation must require the current v14 managed-workload runner policy.")
 auth_provision = read("provision-auth-runtime-secret.yml")
 if "rollout-status-v14-stockdividend-managed-workloads" not in auth_provision:
-    fail("Standalone Auth secret provisioning must accept the current v13 runner policy.")
+    fail("Standalone Auth secret provisioning must accept the current v14 runner policy.")
 
 restart_step = reconcile.split("- name: Restart target workloads blocked on image pulls", 1)[1].split(
     "- name: Validate TCE release pairing", 1
