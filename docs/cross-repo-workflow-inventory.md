@@ -1406,3 +1406,37 @@ Platform PR #1069 merged as `492e0377dccdec09e7fe1daeb0a98b825b10a3e0`.
 - Keep Auth production merge/integration gate until Supabase side-effect and migration provenance/drift are resolved.
 
 No production manifest, image reference, shared pull credential, database object, desired replica, cron expression or workflow authority was changed by this inventory update. Preserve TCE market-scan schedules.
+
+
+## 2026-11-02 16:55 UTC — workflow ownership and latest runtime evidence
+
+### Cross-repository ownership (reconfirmed)
+- `phanthienquoc/platform-infra`: sole owner of production manifests, shared GHCR pull credentials, GitOps promotion/reconciliation, K3s rollout, workload health, read-only inspection and stale-operations recovery.
+- `phanthienquoc/TCE-dashboard`: owns app CI/tests and WF-03 native ARM64 paired web/service GHCR publication with full-SHA provenance. WF-06 remains strict public HTTP 200 health assertion; WF-07 is the independent integration schedule; WF-12 is the freshness watchdog and heartbeat forwarder.
+- `phanthienquoc/stockdividend`: owns CI and native ARM64 Scraper/Admin/Backend immutable publication with publisher run provenance. Platform owns paired Admin/Backend GitOps promotion and rollout.
+- `phanthienquoc/media-generation`: owns CI and paired frontend/backend immutable GHCR publication with source-run provenance. Platform owns production manifests and rollout.
+- `phanthienquoc/phanthienquoc-authentication`: owns Auth CI/tests and controlled image publication. Production identity, Supabase migration and Keycloak lifecycle remain separately gated.
+
+### Platform workflow authority
+- `gitops-image-promotion.yml`: validates publisher provenance and immutable GHCR manifests, creates scoped GitOps PRs, verifies exact PR heads, and only dispatches reconciliation after required digest pairs converge on master. StockDividend paired Admin/Backend digest convergence is guarded by `scripts/verify-stockdividend-gitops-digests.py` and regression tests; this gate has not yet been exercised by a new authorized StockDividend release.
+- `reconcile-vps.yml`: remains the sole production apply authority. App repositories do not gain SSH, Compose, kubectl apply or production manifest ownership.
+- `inspect-vps.yml`: read-only host/K3s snapshot with exact-head validation before inspection PR merge.
+- `recover-stale-ops.yml`: scheduled stale-delivery controller, workflow_run fallback and authenticated TCE heartbeat receiver. Only event=schedule counts as its native cron delivery; its dispatches do not count as native reconciliation/inspection ticks.
+- `validate-manifests.yml` and `validate-github-actions.yml`: retain rendered-manifest, security, immutable-image, workflow-contract and regression validation.
+- `mirror-locally-uncensored.yml`: purposeful scheduled mirror; still blocked by missing destination Contents:write token. Preserve the job.
+- Preserve all app CI/test/security, backup, cleanup, manual, release and scheduled workflows. No duplicate SSH/Compose deployment authority is permitted.
+
+### Current run evidence
+- Native scheduled recovery [#41482540454](https://github.com/phanthienquoc/platform-infra/actions/runs/41482540454) (16:32:54Z) SUCCESS; both stale reconciliation and inspection recovery steps completed. It dispatched reconciliation because the native reconciliation cadence was stale.
+- Fallback reconciliation [#41482572380](https://github.com/phanthienquoc/platform-infra/actions/runs/41482572380) (16:33:06Z, workflow_dispatch) shared job SUCCESS; MicroFE, Media, Auth and TCE lanes SUCCESS; StockDividend health lane FAILURE. No GitOps drift; apply skipped; image changes disabled.
+- Recovery [#41482991444](https://github.com/phanthienquoc/platform-infra/actions/runs/41482991444) (16:35:38Z, workflow_dispatch) SUCCESS. It verified the reconciliation age 0m and inspection age 35m at 16:35:50Z, and avoided duplicate dispatch.
+- StockDividend health log: Admin Pods and new Backend Pod fail pulling legacy `12d63b4` because the manifest has no ARM64 platform; runner v14 suppresses restart for permanent image-pull errors.
+- Latest full K3s inspection [#41476912329](https://github.com/phanthienquoc/platform-infra/actions/runs/41476912329) generated 15:58:58Z; still within the 75-minute freshness budget at 16:55Z. Node Ready, K3s 1.36.3, ARM64, disk 55%, ~19 GiB available RAM; Media/MicroFE/NATS 1/1; Stock Admin/new Backend pull failures; TCE/Auth/Keycloak 0/0 intentional; `restart_required=yes`.
+- Latest app CI/publication remains: TCE WF-01 #41466743923, WF-02 #41466743801, WF-05 #41466743773 SUCCESS; StockDividend CI #41397317588 and publisher #41397317600 SUCCESS; Media CI #41460906654 SUCCESS; Auth PR CI #41329425940 SUCCESS. No new application release was dispatched.
+- Open PR inventory: Platform #544/#541/#539 (draft); Authentication #75/#76; none in TCE, StockDividend or Media. Platform master is `16719f6251826bb78d0c5efd996cb13ce86eb685`; TCE `afad281fa57b2846446a152b6f5cf3c2600ee51d`; StockDividend `38220ddfef2db7128482547f72b7f06211e9c9bc`; Media `0d4fc2ac15834c20357fd2420b732e6411fd8930`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+
+### Schedule semantics and blockers
+- Native scheduled recovery is alive, but this does not prove native reconcile/inspection cadence: latest native reconcile #41407522742 and inspection #41407411326 remain stale; latest watchdog #41406983213 and mirror #41407613563 remain stale/blocked.
+- TCE latest native WF-07 #41476258191 SUCCESS; WF-06 #41424898130 returns HTTP 503 at all strict public endpoints while TCE/Auth are intentionally stopped; direct scheduled WF-12 #41419694332 is stale. Workflow_run forwarding/heartbeats are not cron ticks. Keep every TCE cron and market-scan schedule unchanged.
+- Owner-only secrets: `STOCKDIVIDEND_ACTIONS_READ_TOKEN` (StockDividend-only Actions:read) and `PLATFORM_INFRA_MIRROR_TOKEN` (destination-only Contents:write). Do not substitute credentials or write secret values to Git.
+- StockDividend production release remains disabled pending explicit authorization. Auth production integration/migration provenance gate remains open. No production manifest, image, database, replica, credential or schedule mutation occurred.
