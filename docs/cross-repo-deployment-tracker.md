@@ -2297,3 +2297,11 @@ No production manifests, image references, GHCR pull credentials, database objec
 3. Keep StockDividend release disabled until explicit authorization. Then verify publisher provenance, promote paired immutable Admin/Backend digests through Platform Infra and verify live imageIDs/readiness.
 4. Continue observing native Platform reconcile/inspection/watchdog and TCE WF-06/WF-12 scheduled events; keep schedule events separate from recovery/dispatch events.
 5. Keep Auth PR #75/#76 gated until production Supabase integration side effects and migration provenance are reviewed. Plan a maintenance window before VPS OS/containerd changes.
+
+
+## Post-merge follow-up — PR #1054 (2026-11-02 18:02 ICT / 11:02 UTC)
+
+- PR [#1054](https://github.com/phanthienquoc/platform-infra/pull/1054) was squash-merged after re-fetching the PR and confirming exact head `43dab98ea5b68dffb99ba6663262c15d97a37d11`, base master `4e777cb00dc3290f4a8daf372b1c6619553e5c01`, open state and successful required check. Merge commit/current Platform Infra master: `d2b78091cf1978cfa4982b2225659881328e4d83`.
+- Exact-head PR validation [#41433478071](https://github.com/phanthienquoc/platform-infra/actions/runs/41433478071) completed SUCCESS. Post-merge validation [#41433569946](https://github.com/phanthienquoc/platform-infra/actions/runs/41433569946) also completed SUCCESS on the merge SHA. Shell validation, production manifest render, Auth rendered contract, YAML, secret, immutable image, isolated Keycloak and network-boundary steps all passed; changed-image validation was skipped because the PR was documentation-only.
+- A fresh schedule-filtered Actions query after merge still returned no native Platform schedule event newer than inspection #41407411326 (07:36:38Z), reconcile #41407522742 (07:37:40Z), watchdog #41406983213 (07:32:45Z), mirror #41407613563 (07:38:31Z), or scheduled recovery #41400302676 (06:30:13Z). TCE schedule-filtered history still shows WF-06 #41424898130 (09:57:51Z), direct WF-12 #41419694332 (09:19:29Z), and WF-07 #41397768048 (06:05:28Z) as the latest native events. WF-12 workflow_run forwarder #41424938817 and Platform receiver #41424970499 remain non-schedule follow-on events.
+- No production manifests, images, credentials, database objects, release flags, desired replicas, or cron expressions changed. TCE market-scan schedule unchanged.

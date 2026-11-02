@@ -1157,3 +1157,11 @@ No direct SSH/Compose deployment authority was added. The proposed WF-06 cleanup
 - **Mirror:** #41407613563 failed before Git operations because `PLATFORM_INFRA_MIRROR_TOKEN` is empty/missing. Owner action: destination-only Contents:write for `phanthienquoc/locally-uncensored-private`. Preserve the hourly/manual full-ref mirror workflow.
 - **Media/Auth:** Media CI #41246414186 passed; backend/frontend 1/1 and digest-pinned. Auth master CI #41033586844 and manual release #41040510320 passed; PR #75/#76 current-head CI passed, but retain production Supabase side-effect and migration provenance/drift gates. No database mutation.
 - Preserve useful CI/test/security, build/publish, backup, manual read-only, release, maintenance, cleanup, mirror and scheduled jobs. `reconcile-vps.yml` remains the sole GitOps apply authority; `inspect-vps.yml` read-only; recovery/watchdog observe/dispatch only; runner bootstrap remains sole helper installation authority. No direct SSH/Compose deployment authority added. No production manifest, credential, release gate, desired replica or schedule change.
+
+
+## Post-merge follow-up — PR #1054 (2026-11-02 18:02 ICT / 11:02 UTC)
+
+- Documentation PR #1054 merged as `d2b78091cf1978cfa4982b2225659881328e4d83` from exact head `43dab98ea5b68dffb99ba6663262c15d97a37d11`. Exact-head validation #41433478071 and post-merge validation #41433569946 both passed.
+- Re-queried native schedule events after merge: no newer Platform inspection/reconcile/watchdog/mirror/recovery schedule runs; latest remain #41407411326/#41407522742/#41406983213/#41407613563/#41400302676. TCE latest direct scheduled WF-06/WF-12/WF-07 remain #41424898130/#41419694332/#41397768048. Do not count workflow_run, repository_dispatch or workflow_dispatch as cron delivery.
+- WF-06 still runs strict HTTP 200 public checks and currently fails HTTP 503 while TCE/Auth are intentionally scale-to-zero. WF-12 workflow_run #41424938817 forwarded the WF-06 schedule heartbeat successfully and Platform receiver #41424970499 validated it; sustained schedule cadence is not proven.
+- No production workflow, manifest, credential, release gate, desired replica, or cron expression changed. TCE market-scan schedule unchanged.
