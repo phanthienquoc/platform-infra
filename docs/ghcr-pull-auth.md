@@ -17,6 +17,14 @@ Because `ghcr-pull` is shared across production namespaces, every non-Keycloak a
 
 The workflow intentionally does **not** fall back to `GITHUB_TOKEN` for Kubernetes pulls. A workflow token that cannot read another repository's private package must fail fast rather than silently creating a Kubernetes secret that returns 401/403. The package preflight obtains a scoped bearer token and probes each package's Registry V2 `tags/list` endpoint. Promotion then uses `scripts/validate-ghcr-image-reference.sh` to request the exact tag or digest from `manifests/<reference>` with a package-scoped bearer token. This avoids relying on Docker's registry-wide `/v2/` login challenge, which can be denied even when scoped package reads succeed.
 
+The exact-reference validator also independently requires **linux/arm64** support before promotion:
+
+- For an OCI/Docker image index, at least one descriptor must declare `os=linux` and `architecture=arm64`.
+- For a single-platform OCI/Docker manifest, Platform Infra fetches the referenced config blob and requires `os=linux` and `architecture=arm64`.
+- Unknown manifest shapes, missing config blobs, inaccessible references, or an incompatible architecture fail closed before a GitOps promotion PR is created.
+
+App repositories still own build/test and immutable publication verification. Platform Infra repeats the architecture check independently because it owns production manifest mutation and the K3s node is ARM64.
+
 Never print or commit token values. The workflow passes the credential through stdin to the root-owned, allowlisted `platform-kubectl reconcile-ghcr-pull` command.
 
 ## Kubernetes contract
