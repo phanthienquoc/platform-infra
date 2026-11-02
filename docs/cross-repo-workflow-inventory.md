@@ -1700,3 +1700,10 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Native schedules unchanged: Platform mirror #41499146752 FAIL, inspection #41498271871 PASS, reconciliation #41491502003 FAIL, watchdog #41491160810 FAIL, recovery #41482540454 PASS; TCE WF-06 #41516575222 HTTP503, WF-12 #41511665345 freshness failure, WF-07 #41476258191 PASS. No cron changes.
 - K3s snapshot #41515885354: node Ready/K3s 1.36.3; Media/MicroFE/NATS healthy; Stock Admin/new Backend image-pull failure on `12d63b4`; old Backend/legacy Frontend 1/1; TCE/Auth/Keycloak 0/0 intentional.
 - Preserve `reconcile-vps.yml` as sole production apply authority. No DB migration, production manifest change, promotion, shared GHCR credential change or reboot. TCE market-scan schedule unchanged.
+
+
+### 2026-11-03 03:58 ICT merge follow-up
+- TCE PR #1015 merged at `84119b25816d19347f8a0bc6f239914e686ff424`; exact-head WF-01P/WF-02/WF-05 all SUCCESS. Post-merge WF-01/WF-02/WF-05 runs #41524985099/#41524985162/#41524985123 were in progress. WF-03 remains manual-only; no publisher run.
+- Auth PR #84 merged at `897bc7b921c7d34a3c19c945cb3d4f1affcdd6c6`; exact-head auth-service-ci #41524582582 SUCCESS, Supabase Preview SKIPPED. Post-merge auth-service-ci #41524996404 queued. Release remains manual-only; no dispatch.
+- StockDividend PR #27 merged at `fc10f56eadba769fe102da6465bee27c9e14f9a9`; publisher #41524676740 was triggered because the validator script was not in `paths-ignore`. Gate output false and promotion handoff skipped; build-and-push still running. PR #28 now excludes that helper path and asserts the exclusion.
+- Open PRs: Platform #544/#541/#539/#1091; StockDividend #28; Auth #75/#76; TCE/Media none.
