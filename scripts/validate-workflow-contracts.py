@@ -277,6 +277,40 @@ if "stockdividend/release" not in promotion or "digest: {digest}" not in promoti
 if "EVENT_COMMIT" not in promotion or "EVENT_BACKEND_DIGEST" not in promotion or "EVENT_ADMIN_DIGEST" not in promotion:
     fail("StockDividend promotion must resolve source commit and both image digests from the dispatch payload.")
 
+# StockDividend handoffs must be tied to a real, successful publisher Actions run.
+for required in (
+    "EVENT_SOURCE_RUN_ID",
+    "EVENT_SOURCE_WORKFLOW_PATH",
+    "EVENT_SOURCE_EVENT",
+    "EVENT_SOURCE_HEAD_SHA",
+    'SOURCE_RUN_ID="$EVENT_SOURCE_RUN_ID"',
+    'SOURCE_WORKFLOW_PATH="$EVENT_SOURCE_WORKFLOW_PATH"',
+    'SOURCE_EVENT="$EVENT_SOURCE_EVENT"',
+    'SOURCE_HEAD_SHA="$EVENT_SOURCE_HEAD_SHA"',
+    "Verify StockDividend publisher run provenance",
+    "bash scripts/verify-stockdividend-publisher-run.sh",
+):
+    if required not in promotion:
+        fail(f"StockDividend promotion is missing source-run provenance contract: {required}")
+if promotion.index("Verify StockDividend publisher run provenance") > promotion.index("Validate promoted image in GHCR"):
+    fail("StockDividend source-run provenance must pass before any promoted image is read or GitOps PR is created.")
+stockdividend_provenance = (ROOT / "scripts" / "verify-stockdividend-publisher-run.sh").read_text(encoding="utf-8")
+for required in (
+    "phanthienquoc/stockdividend/actions/runs/$SOURCE_RUN_ID",
+    '"$repository" == "phanthienquoc/stockdividend"',
+    '"$head_repository" == "phanthienquoc/stockdividend"',
+    '"$workflow_path" == "$SOURCE_WORKFLOW_PATH"',
+    '"$event" == "$SOURCE_EVENT"',
+    '"$branch" == "master"',
+    '"$head_sha" == "$SOURCE_HEAD_SHA"',
+    '"$conclusion" == "success"',
+):
+    if required not in stockdividend_provenance:
+        fail(f"StockDividend source-run verifier is missing required metadata guard: {required}")
+if "scripts/tests/verify-stockdividend-publisher-run.test.sh" not in (ROOT / ".github" / "workflows" / "validate-github-actions.yml").read_text(encoding="utf-8"):
+    fail("StockDividend source-run provenance regression tests must run in validate-github-actions.")
+
+
 # Media Generation publishes one paired digest event and promotion pins both images atomically.
 if "media-images-published" not in promotion:
     fail("GitOps promotion must consume the paired Media digest event.")
