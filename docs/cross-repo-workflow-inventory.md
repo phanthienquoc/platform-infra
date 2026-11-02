@@ -1523,3 +1523,31 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Mirror remains blocked by destination-only Contents:write token.
 - Auth production integration/migration review remains gated; no database changes.
 - Keep TCE market-scan schedule unchanged.
+
+
+## 2026-11-02 18:08 UTC — downstream lane queue watchdog merged and exercised
+
+### Workflow contract now on master
+- Platform Infra master before this tracker PR: `e1981cb9a89d32c8ea3b212b00a9eef0b6cb1895`.
+- PR #1072 merged at exact head `35c336cc7f0ebdcebfce6911764adaf150467597`, merge `e1981cb9a89d32c8ea3b212b00a9eef0b6cb1895`.
+- New helper: `scripts/verify-reconcile-lane-queue.py`.
+- `reconcile-schedule-watchdog.yml` now queries the latest scheduled reconcile run's `/jobs` API and checks:
+  - currently queued/waiting deployment lanes against the watchdog's GitHub API timestamp;
+  - historical `started_at - created_at` runner-assignment delay for completed/in-progress lanes;
+  - only named `Deploy lane — …` jobs; skipped jobs and reruns with non-comparable original timestamps are excluded.
+- Existing 15-minute queue budget is reused. Scheduled/manual/fallback/workflow_run enforcement fails on breach; post-merge push smoke emits warnings only. The job remains read-only, with `actions: read`, `contents: read` and checkout `persist-credentials: false`.
+- Offline regression suite covers healthy/short queue, queued over budget, completed delayed start, assigned-but-not-started, unrelated jobs, reruns and push warn-only. `validate-workflow-contracts.py` enforces helper presence, workflow wiring and regression execution.
+- No cron expression, production apply authority, recovery authority, manifest, image or credential changed.
+
+### CI and runtime evidence
+- Exact-head #1072 checks: validate #41497308517 PASS; lint #41497308596 PASS.
+- Post-merge: validate-manifests #41497619290 PASS; validate-github-actions #41497619531 PASS.
+- Push watchdog smoke #41497619396 PASS. It detected the actual historical lane delays: MicroFE 31m, TCE 32m, Media 32m. It emitted warnings (not failures) as required for push smoke. It also warned that native inspection was 631m stale.
+- Recovery push smoke #41497619299 PASS with no production dispatch.
+- Scheduled/manual/workflow_run enforcement has not yet been exercised after merge; the next such event should fail if a lane still exceeds the 15-minute budget.
+
+### Ownership and production status
+- Platform remains sole owner of manifests, shared GHCR pull credentials, GitOps promotion/reconciliation, K3s rollout/health and recovery. App repositories continue to own tests/builds and immutable GHCR publication.
+- Latest inspection #41496768387 (workflow_dispatch) merged as PR #1073/#commit fc4b951. Node Ready, K3s 1.36.3+k3s1, disk 55%, ~19 GiB available RAM, Platform/Media runner services active. Media/MicroFE/NATS healthy; Stock Admin/new Backend still fail ARM64 image pull on `12d63b4`; old Backend and legacy Frontend remain Running. TCE/Auth/Keycloak are intentionally 0/0.
+- Native Platform inspect/reconcile cadence remains stale; recovery dispatches do not count as native schedule ticks. TCE WF-06/WF-12 remain stale/failing; WF-07 last observed native tick passed. Do not alter TCE market-scan schedule.
+- StockDividend release remains disabled pending owner token and explicit authorization; mirror token remains missing; Auth production integration/migration gate remains open.
