@@ -1,3 +1,19 @@
+## Workflow inventory update — 2026-11-02 16:17 ICT / 09:17 UTC
+
+- Current master heads: Platform Infra 5402ae607b3917f6586ccfeda72427fb0c127a29; TCE a5e8866d2ba28936d57b31ce6a067186c7204369; StockDividend 38220ddfef2db7128482547f72b7f06211e9c9bc; Media d8e695d772ab2dc0da5c15cc428ee78ac6537518; Authentication ceb2688d6277b10f1bfe7652223d1d295b7e49d9.
+- Open PRs: Platform #795/#749/#648/#544/#541/#539; Authentication #75/#76; none in TCE, StockDividend or Media. Platform #538 is closed as superseded by #1048; #1048 is merged.
+- Platform #1048 adds scripts/validate-auth-gitops-contract.py and wires it into validate-manifests after Kustomize render. The offline contract validates Auth Ingress -> Service -> Deployment, port 80 -> 4010, immutable image tag, Secret refs, JWT issuer/audience and probes. One positive/eight negative self-test cases passed.
+- Exact-head #1048 checks passed: #41418804556, #41418804603, #41418804667. Post-merge #41418913629, #41418913666 and #41418913493 passed. No production resource or release state changed.
+- Post-merge push recovery #41418913434 passed and dispatched reconciliation #41418939586 with allow_image_changes=false. Shared reconciliation passed with no drift; apply was skipped. TCE, Media, MicroFE and Auth lanes passed; StockDividend health failed; Keycloak was skipped. The final lane summary was still queued at 09:17Z.
+- Runner v14 was verified live in #41418939586. Permanent ARM64 image-pull errors for Stock Admin/Backend were detected and rollout restarts skipped. Current failing tag remains 12d63b4.
+- Latest K3s inspection snapshot remains #41407411326 (07:36:46Z); stale against the 75-minute budget. Fresh post-reconciliation inspection required. Node Ready ARM64, K3s v1.36.3+k3s1, disk 55%, available RAM 19 GiB, runner policy v14, restart_required=yes.
+- Latest native Platform scheduled events remain inspection #41407411326, reconcile #41407522742, watchdog #41406983213, mirror #41407613563, recovery #41400302676. Watchdog measured inspection queue wait 0m while event age was 393m; no later native scheduled event appeared in the inspected history. Recovery push is not native cron delivery.
+- TCE WF-07 scheduled #41397768048 succeeded and WF-12 forwarded a valid Platform heartbeat via #41397785851/#41397794672. WF-06 #41378060687 remains a public-health failure (four endpoints 503 while TCE/Auth are intentionally stopped); WF-12 schedule #41374853407 failed its WF-06 freshness check. No cron expression changed.
+- StockDividend publisher #41397317600 and CI #41397317588 passed with immutable linux/arm64 digests: Scraper e637c3f643d863783e98e9184bbdcf60f24665ca94892e698fa8c814c1d572f5; Admin 18a850987ed20bad0c255e56fe14583260cf4b5302a7fdd6128b2c3440e5785d; Backend 5288e7f287a3511c8a67e662f4121d3661e84f52168cb2c22acadd3d3d0e2849. Release gate remains false/unset.
+- Owner-only credentials: STOCKDIVIDEND_ACTIONS_READ_TOKEN (StockDividend Actions:read only) and PLATFORM_INFRA_MIRROR_TOKEN (destination Contents:write only). Mirror run #41407613563 confirms the latter is missing.
+- Media CI #41246414186 passed. Auth CI #41329425940 passed, but PR #75/#76 remain gated on Supabase production integration and migration-drift/provenance review.
+- Preserve CI, security, manual read-only, release and backup workflows. No duplicate SSH/Compose deployment authority introduced. No production manifests, GHCR pull credentials, database objects, release flags, desired replicas or schedules changed. TCE market-scan schedule unchanged.
+
 ## Workflow inventory update — 2026-11-02 13:06 ICT / 06:06 UTC
 
 - **Current master heads:** Platform Infra `4a1c1de761bcd1a14b1cae904f5b79414babb1c6`; TCE `a5e8866d2ba28936d57b31ce6a067186c7204369`; StockDividend `38220ddfef2db7128482547f72b7f06211e9c9bc`; Media `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
