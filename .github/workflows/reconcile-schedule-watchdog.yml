@@ -256,6 +256,11 @@ jobs:
           run_id="$(jq -r '.id' <<< "$latest")"
           run_attempt="$(jq -r '.run_attempt // 1' <<< "$latest")"
           run_url="$(jq -r '.html_url' <<< "$latest")"
+          reconcile_created_at="$(jq -r '.created_at // empty' <<< "$latest")"
+          if [[ -z "$reconcile_created_at" ]]; then
+            echo "::error::Latest scheduled reconciliation #${run_id} has no created_at timestamp."
+            exit 1
+          fi
           if (( run_attempt > 1 )); then
             echo "::notice::Reconcile #${run_id} is a rerun; deployment-lane queue age is not inferred from the original attempt."
             exit 0
@@ -283,6 +288,8 @@ jobs:
           python3 scripts/verify-reconcile-lane-queue.py \
             --reference-epoch "$reference_epoch" \
             --max-queue-minutes "$MAX_QUEUE_MINUTES" \
+            --reconcile-created-at "$reconcile_created_at" \
+            --max-reconcile-age-minutes "$MAX_AGE_MINUTES" \
             --event "$GITHUB_EVENT_NAME" <<< "$jobs"
 
       - name: Verify scheduled inspection delivery

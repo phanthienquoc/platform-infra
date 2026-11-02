@@ -1015,7 +1015,10 @@ if lane_queue_step < 0 or "if: always()" not in watchdog[lane_queue_step:]:
 for required in (
     "actions/runs/${run_id}/jobs",
     "MAX_QUEUE_MINUTES",
+    "MAX_AGE_MINUTES",
     "WATCHDOG_REFERENCE_EPOCH",
+    '--reconcile-created-at "$reconcile_created_at"',
+    '--max-reconcile-age-minutes "$MAX_AGE_MINUTES"',
     "verify-reconcile-lane-queue.py",
     "persist-credentials: false",
 ):
@@ -1024,5 +1027,9 @@ for required in (
 lane_queue_contract = lane_queue_script.read_text(encoding="utf-8")
 if 'startswith("Deploy lane — ")' not in lane_queue_contract or 'job.get("runner_id")' not in lane_queue_contract:
     fail("The deployment-lane queue verifier must inspect only named deployment lanes without an assigned runner.")
+if "stale_reconcile" not in lane_queue_contract or 'status in ("in_progress", "completed") and runner_id > 0' not in lane_queue_contract:
+    fail("The deployment-lane queue verifier must avoid re-failing historical assigned delays after the parent reconciliation is stale.")
+if "Still-queued unassigned lanes remain actionable." not in lane_queue_contract:
+    fail("Stale reconciliation handling must continue enforcing currently unassigned deployment lanes.")
 
 print("Workflow contract validation passed.")
