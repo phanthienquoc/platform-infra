@@ -73,6 +73,10 @@ for namespace in "${namespaces[@]}"; do
       ;;
   esac
 
+  if [ "$namespace" = "stock-prod" ]; then
+    scale_down_rows="$(printf '%s\n' "$scale_down_rows" | awk -F'|' '$1 == "stock-admin" || $1 == "stock-backend"')"
+  fi
+
   scale_down_count=0
   scale_down_all_zero=1
   scale_down_converged=1
@@ -97,10 +101,6 @@ for namespace in "${namespaces[@]}"; do
       scale_down_converged=0
     fi
   done <<< "$scale_down_rows"
-
-  if [ "$namespace" = "stock-prod" ]; then
-    scale_down_rows="$(printf '%s\n' "$scale_down_rows" | awk -F'|' '$1 == "stock-admin" || $1 == "stock-backend"')"
-  fi
 
   if [ "$scale_down_count" -gt 0 ] && [ "$scale_down_all_zero" -eq 1 ]; then
     if [ "$scale_down_converged" -ne 1 ]; then
