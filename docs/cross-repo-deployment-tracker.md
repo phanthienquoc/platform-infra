@@ -2397,3 +2397,56 @@ No production manifest, image reference, GHCR pull credential, database object, 
 - PR #1058 changed only `docs/cross-repo-deployment-tracker.md` and `docs/cross-repo-workflow-inventory.md`. No production workflow, manifest, image, credential, release gate, database object, desired replica, or cron expression changed.
 - Current Platform Infra master at this verification is `73bfe6e63699352e73007d1e00300efd2dd2eed2`. Remaining open Platform PRs: #544/#541/#539; Authentication #75/#76. TCE, StockDividend and Media have no open PRs.
 - The latest native schedule and runtime evidence remains as documented in the preceding section; this documentation PR does not create new runtime or cron evidence. TCE market-scan schedule unchanged.
+
+
+## Cross-repo run — Media publisher provenance and post-merge reconciliation (2026-11-02 21:25 ICT / 14:25Z)
+
+### Implementation merged
+
+- Media Generation PR [#67](https://github.com/phanthienquoc/media-generation/pull/67) merged by squash as \`0d4fc2ac15834c20357fd2420b732e6411fd8930\` from exact head \`76b3ba5e65a312b59ced816c5f4f945de0926ae5\`.
+- Platform Infra PR [#1060](https://github.com/phanthienquoc/platform-infra/pull/1060) merged by squash as \`abe384ba89e09669a3273141d76815d44409cc5c\` from exact head \`ab2543997c87d30278fc63f88580330cbf64a338\`. Merge order was producer first, consumer second.
+- Media producer now includes \`source_run_id\`, \`source_workflow_path\`, \`source_event\`, and \`source_head_sha\` in the paired frontend/backend digest dispatch. It restricts source events to master \`push\` or \`workflow_dispatch\` and binds the release tag to the full source SHA.
+- Platform consumer validates those fields and verifies the public Media Actions run metadata (repository, head repository, workflow path, event, master branch, full SHA, completed status and successful conclusion) before GHCR validation or GitOps PR creation.
+- Media is public, so the consumer reads the public Actions run API without a cross-repository PAT. The verifier fails closed if the public run cannot be read or any identity field differs. If Media becomes private, a dedicated Actions-read credential must be designed before promotion resumes.
+- Media exact-head CI #41460676531 SUCCESS; post-merge master CI #41460906654 SUCCESS.
+- Platform exact-head \`validate-github-actions\` #41460750901 and \`validate-manifests\` #41460750395 SUCCESS; post-merge #41460929753 and #41460929860 SUCCESS.
+- These changes did not trigger a Media release or a GitOps image promotion. The Media branch push CI run #41460669268 is an older non-master push run and remained pending; current master post-merge CI #41460906654 is the relevant passing evidence.
+
+### Current repository state
+
+| Repository | Master HEAD | Open PRs |
+|---|---|---|
+| platform-infra | \`abe384ba89e09669a3273141d76815d44409cc5c\` | #544, #541, #539 (draft) |
+| TCE-dashboard | \`a5e8866d2ba28936d57b31ce6a067186c7204369\` | none |
+| stockdividend | \`38220ddfef2db7128482547f72b7f06211e9c9bc\` | none |
+| media-generation | \`0d4fc2ac15834c20357fd2420b732e6411fd8930\` | none |
+| phanthienquoc-authentication | \`ceb2688d6277b10f1bfe7652223d1d295b7e49d9\` | #75, #76 |
+
+Authentication PR #75/#76 remain gated on production Supabase integration side-effect and migration provenance/drift review. Their CI success is not a production integration pass.
+
+### Post-merge reconciliation and fresh K3s evidence
+
+- Post-merge recovery on Platform master dispatched [reconciliation #41460962292](https://github.com/phanthienquoc/platform-infra/actions/runs/41460962292) with \`target_app=all\`, \`mode=apply\`, and \`allow_image_changes=false\`.
+- Shared reconciliation job SUCCESS: runner policy v14 ready; GHCR pull preflight SUCCESS; Auth runtime Secret provisioning and shared GHCR pull-credential bootstrap steps SUCCESS; Media paired digest references resolved; Kubernetes preflight reported \`drift=false\`; production manifest apply, image-change guard, post-apply drift check, and notifications were correctly skipped. The logs do not distinguish whether Secret/credential bootstrap changed values or confirmed them unchanged; no values were exposed.
+- Fresh read-only node/pod listing at 14:20:40Z: node \`tce-k3s-01\` Ready, K3s \`v1.36.3+k3s1\`, Ubuntu 22.04.5 ARM64, containerd \`2.3.2-k3s2\`.
+- Media backend/frontend: 1/1; MicroFE Shell/WS and NATS: 1/1.
+- Auth lane: SUCCESS (runtime Secret verified, rollout intentionally skipped, HTTPS and workload health passed). TCE lane: SUCCESS (desired/live image tags match; workload health correctly accepted intentional scale-to-zero). Keycloak lane: skipped.
+- StockDividend remains the only failed lane. Two Admin Pods and the new Backend Pod are \`ImagePullBackOff\` on \`12d63b4\` with \`no match for platform in manifest\`; the old Backend replica and unmanaged legacy Frontend remain Running. Permanent v14 image-pull policy skipped rollout restart; failing Pods showed restart count 0.
+- Overall reconciliation #41460962292 concluded FAILURE solely because StockDividend workload health failed. This is not a shared preflight or GitOps drift failure.
+- A recovery-triggered read-only inspection #41461378005 was started after reconciliation because the previous full inspection was stale. At the time of this tracker update it was still in progress; do not treat it as completed or as a native schedule event.
+
+### Native schedule status (kept separate from fallback dispatches)
+
+- Platform latest observed native schedule runs remain: watchdog #41406983213 (failure), inspection #41407411326 (success), reconciliation #41407522742 (Stock health failure), mirror #41407613563 (missing token), recovery #41400302676 (success). No newer native Platform schedule event was present in the Actions run history at this update.
+- TCE latest observed native schedule runs remain: WF-06 #41424898130 (scheduled tick, strict public HTTP checks failed 503), WF-12 direct schedule #41419694332 (freshness failure), WF-07 #41397768048 (success). WF-06 workflow_run forwarder #41424938817 and Platform receiver #41424970499 had authenticated successfully, but fallback/receiver runs are not native cron ticks.
+- Preserve all cron expressions, strict HTTP 200 public health assertions, and the TCE market-scan schedule.
+
+### Owner blockers and next actions
+
+1. Keep StockDividend release disabled (\`STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=false\`) until explicit authorization. Owner must configure \`STOCKDIVIDEND_ACTIONS_READ_TOKEN\` (Actions:read only on StockDividend) before the private publisher-run provenance check can execute.
+2. Owner must configure \`PLATFORM_INFRA_MIRROR_TOKEN\` with destination-only Contents:write on \`phanthienquoc/locally-uncensored-private\`; latest mirror schedule #41407613563 failed before Git operations.
+3. After explicit StockDividend authorization and provenance credential setup, use paired immutable ARM64 digests through Platform-owned promotion, then verify production imageID and rollout. Do not update manifests manually or enable release by default.
+4. Complete recovery-triggered inspection #41461378005 and continue observing native Platform/TCE schedule delivery separately from dispatch/workflow_run fallbacks.
+5. Keep Auth #75/#76 gated pending side-effect and migration review; schedule host OS/containerd maintenance separately.
+
+No production manifest or image reference changed in this run; no database migration, release promotion, desired-replica change, or cron change occurred. Secret/pull-credential reconciliation steps ran successfully, but whether values changed versus were already current is not established by the logs. \`reconcile-vps.yml\` remains the sole production GitOps apply authority; \`inspect-vps.yml\` remains read-only; recovery/watchdog only observe and dispatch. No direct SSH/Compose deployment authority was added. TCE market-scan schedule unchanged.
