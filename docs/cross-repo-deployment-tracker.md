@@ -3013,3 +3013,11 @@ No production manifests or image references changed; no app image promotion occu
 - Owner actions remain `STOCKDIVIDEND_ACTIONS_READ_TOKEN` and `PLATFORM_INFRA_MIRROR_TOKEN`; no credential can be created by the automation without owner-provided secret values. StockDividend release remains disabled and no promotion was dispatched.
 
 Production remains NOT HEALTHY/UNVERIFIED. No image promotion, production manifest apply, DB migration, VPS reboot or package upgrade occurred. The only observed secret operation in fallback reconciliation was Auth runtime Secret provision/verification; values were suppressed. TCE market-scan schedule unchanged.
+
+
+## 2026-11-03 02:16 ICT — recovery push scope hardening proposed in #1080
+
+- The #1076 monitor-only change exposed that the recovery controller's broad `scripts/**` push filter dispatched a production `target_app=all` reconciliation for read-only queue-monitor and CI-validator changes. The fallback was safe (no manifest drift; shared GHCR Secret unchanged; Auth runtime Secret provisioned/verified; permanent StockDividend image errors were not restarted), but this was unnecessary production activity.
+- PR #1080 narrows the push bootstrap: retain deployment-affecting `reconcile-vps.yml`, `inspect-vps.yml`, `apps/**`, `platform/**`, `environments/prod/**` and remaining `scripts/**`; exclude only the recovery controller itself plus four read-only helpers (`verify-reconcile-lane-queue.py`, `validate-workflow-contracts.py`, `validate-network-boundaries.sh`, `validate-auth-gitops-contract.py`).
+- Schedule, workflow_dispatch, workflow_run and TCE repository_dispatch recovery paths remain intact. This does not change the sole production apply authority or any cron expression.
+- Static workflow contract validation now requires the deployment path positives and exact read-only exclusions, and rejects self-triggering recovery-controller edits.
