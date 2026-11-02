@@ -3192,3 +3192,35 @@ All TCE market-scan cron expressions remain unchanged. Production remains NOT HE
 - CI now pins setup-buildx-action v4.4.1 SHA f87e5991a6d7451dcb8d9637bfbc97413f497069 and build-push-action v7.4.0 SHA c3c9e263c25d99ce0380d002d59b67737d91b0dc (both Node24). Scraper build uses push=false; no image publication.
 - Post-merge StockDividend CI #41518048674 was queued at this update; verify its final conclusion. Production deploy/publisher workflow remains unchanged and latest publisher remains #41397317600.
 - StockDividend master is now 60918c2f2c50e5e52d071fe36ba72b1e78a485a2; no open StockDividend PRs. Current open PRs: Platform #544/#541/#539; Authentication #75/#76; none in TCE/Media/StockDividend.
+
+
+## 2026-11-03 03:58 ICT — production publisher Node24 pins and trigger-scope follow-up
+
+### Repository heads and open PRs
+- Platform Infra master: `45d2102b43db5c7aa10b5193a85ead9936ce5f18`; open #544/#541/#539 (current-head `validate` SUCCESS; remain draft for Keycloak/Supabase decision gates).
+- TCE Dashboard master: `76a4b9a1e8e6b4201e7bfa5cde833c77fb4e9152`; open #1015 for manual WF-03 Node24 pins. Exact head `3f04b73deb8b84a99cf45d26bea5a7768b7ee7a5`; after correcting a stale validator assertion that required Buildx v3, WF-01P #41524635208 and WF-02 #41524635203 passed; WF-05 #41524635234 was still running.
+- StockDividend master: `fc10f56eadba769fe102da6465bee27c9e14f9a9`; PR #27 merged from exact head `a5a4bed49130385c4cc2e0c7650d5cacc211a07d`. Exact-head CI #41524373731 passed all five jobs. PR #28 is open to exclude `scripts/validate-production-release-contract.sh` from publisher push triggers; exact head `9e166bfc85f7363da1eed2baac895d0735754f29`, checks not yet reported.
+- Media Generation master: `648e7daacaea3d61b78545630c7067722723c1b8`; no open PRs; latest CI #41517278671 SUCCESS.
+- Authentication master: `b76a19d88b84991ab61cd7c530ebcbc2206688be`; open #75/#76 (validation PASS, Supabase Preview SKIPPED; production integration/migration gate remains open) and #84 for manual release Node24 pins. #84 exact head `351c598132cfea05b41a054e673adf8293a63d69`; auth-service-ci #41524582582 was in progress; Supabase Preview SKIPPED.
+
+### Verified Node24 action releases
+- checkout v7.0.1 `3d3c42e5aac5ba805825da76410c181273ba90b1`; setup-node v7.1.0 `949feb2413d6458794dcd2491c4babbbce0c15c1`.
+- upload-artifact v7.0.2 `cf430e030ddbb5b0abf93d22962f4752f3646cd9`; download-artifact v8.0.2 `9000827ccba6bdab643e8b6fd33ac0654aef8333`.
+- login-action v4.7.0 `81c6f93d4bc991e510b342a00b419b3bb4efc5c6`; metadata-action v6.2.0 `dc802804100637a589fabce1cb79ff13a1411302`.
+- setup-buildx-action v4.4.1 `f87e5991a6d7451dcb8d9637bfbc97413f497069`; build-push-action v7.4.0 `c3c9e263c25d99ce0380d002d59b67737d91b0dc`.
+- Each official `action.yml` was checked and declares `runs.using: node24`. StockDividend #27 applies these pins to the production publisher; TCE #1015 updates manual WF-03; Auth #84 updates manual release. TCE WF-03 and Auth release remain workflow_dispatch-only; no release workflow was dispatched.
+
+### StockDividend PR #27 post-merge publication side effect
+- PR #27 changed both `.github/workflows/deploy.yml` and `scripts/validate-production-release-contract.sh`. The publisher's `paths-ignore` excluded `.github/**`, docs and Markdown, but not the validator script. Merge `fc10f56...` therefore triggered publisher run #41524676740. This was an observed trigger side effect, not a release request.
+- Run #41524676740: master guard SUCCESS; production-release-hold SUCCESS with `RELEASE_ENABLED` empty and output `release_enabled=false`; promotion handoff SKIPPED; `build-and-push` remained in progress (Scraper build/push active; Admin/Backend pending). No Platform dispatch or GitOps promotion observed. Verify final run conclusion and image digests before claiming completion.
+- PR #28 adds the exact validator path to `paths-ignore` and enforces that exclusion in the release contract, preventing future contract-only changes from republishing unchanged application images while preserving app-source pushes and manual dispatch.
+
+### Schedule and runtime evidence
+- Platform native schedules: mirror #41499146752 FAILURE (missing destination token), inspection #41498271871 SUCCESS, reconciliation #41491502003 FAILURE (StockDividend health), watchdog #41491160810 FAILURE, recovery #41482540454 SUCCESS. Dispatch/push/workflow_run events are not native schedule ticks.
+- TCE native schedules: WF-06 #41516575222 FAILURE (strict public probes HTTP 503), WF-12 #41511665345 FAILURE (WF-06 freshness), WF-07 #41476258191 SUCCESS. Sustained WF-06/WF-12 cadence is not proven; cron unchanged.
+- Latest full K3s snapshot #41515885354 / snapshot #1086: node Ready ARM64, K3s 1.36.3, disk 55%, ~19 GiB available RAM; Media/MicroFE/NATS healthy; Stock Admin and new Backend Pods ImagePullBackOff on old tag `12d63b4` without ARM64 manifest; old Backend and unmanaged legacy Frontend 1/1; TCE/Auth/Keycloak 0/0 intentionally.
+- Owner blockers: `PLATFORM_INFRA_MIRROR_TOKEN` missing; `STOCKDIVIDEND_ACTIONS_READ_TOKEN` not verified; StockDividend production release disabled without explicit authorization; Auth production integration/migration gate open.
+
+### Safety
+- No cron expressions changed; TCE market-scan schedule unchanged. No GitOps promotion or production image reference change occurred. StockDividend app-owned image publication from #27 merge is in progress, but the promotion gate is false and handoff validation skipped.
+- No database migration, shared GHCR pull credential change, desired replica change, workload restart or VPS reboot. App repositories own CI/build/immutable GHCR publication; Platform owns manifests, shared pull credentials, digest promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains sole production apply authority.
