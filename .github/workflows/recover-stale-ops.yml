@@ -10,11 +10,15 @@ run-name: "Recover Stale Scheduled Ops — ${{ github.event_name }} / source ${{
     paths:
       - ".github/workflows/reconcile-vps.yml"
       - ".github/workflows/inspect-vps.yml"
-      - ".github/workflows/recover-stale-ops.yml"
       - "apps/**"
       - "platform/**"
       - "environments/prod/**"
       - "scripts/**"
+      # Read-only CI/watchdog helpers must not trigger a production reconcile.
+      - "!scripts/verify-reconcile-lane-queue.py"
+      - "!scripts/validate-workflow-contracts.py"
+      - "!scripts/validate-network-boundaries.sh"
+      - "!scripts/validate-auth-gitops-contract.py"
   workflow_dispatch:
     inputs:
       source_run_id:
