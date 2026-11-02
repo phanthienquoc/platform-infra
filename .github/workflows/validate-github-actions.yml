@@ -70,6 +70,7 @@ jobs:
           bash scripts/tests/cleanup-k3s-images.test.sh
           bash scripts/tests/restart-blocked-image-pulls.test.sh
           bash scripts/tests/verify-stockdividend-publisher-run.test.sh
+          bash scripts/tests/verify-media-publisher-run.test.sh
           bash scripts/tests/inspect-vps-cri-contract.test.sh
           bash scripts/guard-reconcile-images.sh --self-test
 

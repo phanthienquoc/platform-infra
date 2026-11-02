@@ -441,10 +441,18 @@ jobs:
             SOURCE_COMMIT="$EVENT_COMMIT"
             FRONTEND_DIGEST="$EVENT_FRONTEND_DIGEST"
             BACKEND_DIGEST="$EVENT_BACKEND_DIGEST"
+            SOURCE_RUN_ID="$EVENT_SOURCE_RUN_ID"
+            SOURCE_WORKFLOW_PATH="$EVENT_SOURCE_WORKFLOW_PATH"
+            SOURCE_EVENT="$EVENT_SOURCE_EVENT"
+            SOURCE_HEAD_SHA="$EVENT_SOURCE_HEAD_SHA"
             [[ "$APP" == "media-generation" ]] || { echo "::error::Media digest event has invalid app"; exit 1; }
             [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Media source commit must be a full 40-character SHA"; exit 1; }
             [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{40}$ ]] || { echo "::error::Media release must contain the full source SHA"; exit 1; }
             [[ "$TAG" == *-"$SOURCE_COMMIT" ]] || { echo "::error::Media release tag does not match the source commit"; exit 1; }
+            [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]] || { echo "::error::Media source run ID must be numeric"; exit 1; }
+            [[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/wf-03-media-production-deploy.yml" ]] || { echo "::error::Media source workflow path is not approved"; exit 1; }
+            [[ "$SOURCE_EVENT" == "push" || "$SOURCE_EVENT" == "workflow_dispatch" ]] || { echo "::error::Media source event must be push or workflow_dispatch"; exit 1; }
+            [[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ && "$SOURCE_HEAD_SHA" == "$SOURCE_COMMIT" ]] || { echo "::error::Media source SHA must match the immutable image commit"; exit 1; }
             [[ "$FRONTEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::Invalid Media frontend digest"; exit 1; }
             [[ "$BACKEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::Invalid Media backend digest"; exit 1; }
           else
@@ -524,6 +532,15 @@ jobs:
           SOURCE_COMMIT: ${{ steps.input.outputs.source_commit }}
         run: bash scripts/verify-stockdividend-publisher-run.sh
 
+      - name: Verify Media publisher run provenance
+        if: ${{ github.event_name == 'repository_dispatch' && github.event.action == 'media-images-published' }}
+        env:
+          SOURCE_RUN_ID: ${{ steps.input.outputs.source_run_id }}
+          SOURCE_WORKFLOW_PATH: ${{ steps.input.outputs.source_workflow_path }}
+          SOURCE_EVENT: ${{ steps.input.outputs.source_event }}
+          SOURCE_HEAD_SHA: ${{ steps.input.outputs.source_head_sha }}
+          SOURCE_COMMIT: ${{ steps.input.outputs.source_commit }}
+        run: bash scripts/verify-media-publisher-run.sh
       - name: Validate promoted image in GHCR
         env:
           GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}

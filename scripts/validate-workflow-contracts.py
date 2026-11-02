@@ -316,7 +316,7 @@ if "STOCKDIVIDEND_ACTIONS_READ_TOKEN" not in (ROOT / "docs" / "credentials.md").
     fail("The private StockDividend Actions read token must be documented in both credential inventories.")
 
 
-# Media Generation publishes one paired digest event and promotion pins both images atomically.
+# Media Generation publishes a paired digest event tied to a real, successful publisher Actions run.
 if "media-images-published" not in promotion:
     fail("GitOps promotion must consume the paired Media digest event.")
 if "EVENT_FRONTEND_DIGEST" not in promotion or "EVENT_BACKEND_DIGEST" not in promotion:
@@ -329,6 +329,41 @@ if '[[ "$BACKEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]' not in promotion:
     fail("Media backend digest must be validated before GHCR access.")
 if '[[ "$TAG" == *-"$SOURCE_COMMIT" ]]' not in promotion:
     fail("Media release label must correlate to its full source commit SHA.")
+for required in (
+    "EVENT_SOURCE_RUN_ID",
+    "EVENT_SOURCE_WORKFLOW_PATH",
+    "EVENT_SOURCE_EVENT",
+    "EVENT_SOURCE_HEAD_SHA",
+    'SOURCE_RUN_ID="$EVENT_SOURCE_RUN_ID"',
+    'SOURCE_WORKFLOW_PATH="$EVENT_SOURCE_WORKFLOW_PATH"',
+    'SOURCE_EVENT="$EVENT_SOURCE_EVENT"',
+    'SOURCE_HEAD_SHA="$EVENT_SOURCE_HEAD_SHA"',
+    '[[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/wf-03-media-production-deploy.yml" ]]',
+    '[[ "$SOURCE_EVENT" == "push" || "$SOURCE_EVENT" == "workflow_dispatch" ]]',
+    "Verify Media publisher run provenance",
+    "bash scripts/verify-media-publisher-run.sh",
+):
+    if required not in promotion:
+        fail(f"Media promotion is missing source-run provenance contract: {required}")
+if promotion.index("Verify Media publisher run provenance") > promotion.index("Validate promoted image in GHCR"):
+    fail("Media source-run provenance must pass before any promoted image is read or GitOps PR is created.")
+media_provenance = (ROOT / "scripts" / "verify-media-publisher-run.sh").read_text(encoding="utf-8")
+for required in (
+    "https://api.github.com/repos/phanthienquoc/media-generation/actions/runs/$SOURCE_RUN_ID",
+    '"$repository" == "phanthienquoc/media-generation"',
+    '"$head_repository" == "phanthienquoc/media-generation"',
+    '"$workflow_path" == "$SOURCE_WORKFLOW_PATH"',
+    '"$event" == "$SOURCE_EVENT"',
+    '"$branch" == "master"',
+    '"$head_sha" == "$SOURCE_HEAD_SHA"',
+    '"$conclusion" == "success"',
+):
+    if required not in media_provenance:
+        fail(f"Media source-run verifier is missing required metadata guard: {required}")
+if "Authorization" in media_provenance:
+    fail("Public Media source-run verification must not introduce a cross-repository credential.")
+if "scripts/tests/verify-media-publisher-run.test.sh" not in (ROOT / ".github" / "workflows" / "validate-github-actions.yml").read_text(encoding="utf-8"):
+    fail("Media source-run provenance regression tests must run in validate-github-actions.")
 if "MEDIA_FRONTEND_REF" not in reconcile or "MEDIA_BACKEND_REF" not in reconcile:
     fail("Shared reconciliation must resolve both Media image references.")
 if "digest:sha256:[0-9a-f]{64}" not in reconcile:
