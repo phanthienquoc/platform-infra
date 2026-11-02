@@ -250,7 +250,7 @@ jobs:
           sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
           kubectl version --client=true
 
-      - name: Validate TCE release payload and publisher provenance
+      - name: Verify TCE release payload and publisher provenance
         env:
           APP: ${{ github.event.client_payload.app }}
           RELEASE: ${{ github.event.client_payload.release }}
