@@ -146,6 +146,11 @@ for required in ("### Pod imageID evidence", "containerStatuses", "initContainer
     if required not in inspection_script:
         fail(f"VPS inspection is missing runtime image identity evidence: {required}")
 
+# The fresh VPS snapshot must expose the installed allowlisted runner policy.
+for required in ('sudo "$KCTL" policy-version', "runner_policy:"):
+    if required not in inspection_script:
+        fail(f"VPS inspection is missing live runner policy evidence: {required}")
+
 # Production MicroFE manifests must never accept the old placeholder tags.
 for placeholder in (
     "ghcr.io/phanthienquoc/microfe-shell:0.1.0",
