@@ -12,10 +12,10 @@ cat > "$tmp_dir/bin/curl" <<'MOCK'
 set -euo pipefail
 cat >/dev/null
 args=("$@")
-url="${args[${#${args[@]}-1]}"
+url="${args[${#args[@]}-1]}"
 scope=""
 auth_header=""
-for ((i=0; i<${#${args[@]}; i++)); do
+for ((i=0; i<${#args[@]}; i++)); do
   case "${args[$i]}" in
     --data-urlencode)
       i=$((i+1))
