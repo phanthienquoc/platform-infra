@@ -8,7 +8,6 @@ run-name: "Recover Stale Scheduled Ops — ${{ github.event_name }} / source ${{
   push:
     branches: [master]
     paths:
-      - ".github/workflows/reconcile-vps.yml"
       - "apps/**"
       - "platform/**"
       - "environments/prod/**"
