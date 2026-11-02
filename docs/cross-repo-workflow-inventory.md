@@ -1730,3 +1730,12 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Verified immutable ARM64 publisher digests: scraper `sha256:83c989df5d156d0a70de4a268a0ce35b9313dda7b1d1170da97ccd8058dd2e9b`; admin `sha256:d0d6f037c1d2801018a36921360bfee3852ee7d14e3b33ee2e0fd790dddf6ec1`; backend `sha256:1f8d5a6161da3774578a6f9d2c1e04b4efd624a516e66ab941ebddaa964233a0`. Artifacts are not promoted; production manifest remains unchanged.
 - StockDividend #28 merged at `3b68bad71b9c3832c1ee2a6de0ce085d9ac758f9`; all exact-head jobs passed and its merge triggered CI only, not the publisher.
 - Media #70 PR CI #41525436728 SUCCESS; separate push CI #41525425598 still running.
+
+
+### 2026-11-03 03:58 ICT final merge evidence
+- Media #70 merged at `763fdcd1463fe4d95c81c93d1e7ae010f2cd0cd3`; exact-head PR and push CI runs #41525436728/#41525425598 SUCCESS; post-merge Media CI #41525798015 queued. No production publisher run after merge due existing path exclusions.
+- StockDividend #28 merged at `3b68bad71b9c3832c1ee2a6de0ce085d9ac758f9`; all five exact-head checks and post-merge CI #41525480316 SUCCESS; no publisher run from that merge.
+- StockDividend publisher #41524676740 SUCCESS published verified ARM64 digests: scraper 83c989df..., admin d0d6f037..., backend 1f8d5a61.... Promotion gate false; handoff and atomic promotion skipped; no Platform dispatch. Production manifests remain unchanged.
+- TCE #1015 merged at `84119b25816d19347f8a0bc6f239914e686ff424`; all exact-head and post-merge WF-01/WF-02/WF-05 checks SUCCESS.
+- Auth #84 merged at `897bc7b921c7d34a3c19c945cb3d4f1affcdd6c6`; validate and post-merge auth-service-ci SUCCESS; Supabase Preview SKIPPED.
+- Open PRs: Platform #544/#541/#539/#1092; Auth #75/#76; none in TCE/StockDividend/Media.
