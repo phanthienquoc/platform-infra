@@ -99,10 +99,18 @@ for required in (
     "gh workflow run recover-stale-ops.yml",
     "SOURCE_RUN_ID: ${{ github.run_id }}",
     "SOURCE_HEAD_SHA: ${{ github.sha }}",
+    '--arg source_run "$SOURCE_RUN_ID"',
+    '.display_title == ("Recover Stale Scheduled Ops — workflow_dispatch / source #" + $source_run)',
+    "expected_display_title=",
     '.path == ".github/workflows/recover-stale-ops.yml"',
 ):
     if required not in recovery_notify:
         fail(f"Post-reconciliation recovery dispatch is missing: {required}")
+if "inputs.source_run_id" not in recovery or "format(' / source #{0}', inputs.source_run_id)" not in recovery:
+    fail("Recovery workflow run-name must expose the exact source run id for dispatch correlation.")
+if 'and .head_sha == $sha' in recovery_notify:
+    fail("Post-reconciliation recovery correlation must not compare the recovery workflow SHA to the source reconciliation SHA; master may advance between dispatch and run creation.")
+
 if "github.event.workflow_run.head_branch == 'master'" not in recovery:
     fail("Recovery controller must ignore non-master workflow completion events.")
 if "run-name: Reconcile VPS —" not in reconcile:
