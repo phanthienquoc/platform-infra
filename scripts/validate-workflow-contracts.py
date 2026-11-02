@@ -296,6 +296,8 @@ if promotion.index("Verify StockDividend publisher run provenance") > promotion.
     fail("StockDividend source-run provenance must pass before any promoted image is read or GitOps PR is created.")
 stockdividend_provenance = (ROOT / "scripts" / "verify-stockdividend-publisher-run.sh").read_text(encoding="utf-8")
 for required in (
+    "STOCKDIVIDEND_ACTIONS_READ_TOKEN",
+    'GH_TOKEN="$STOCKDIVIDEND_ACTIONS_READ_TOKEN" gh api "repos/phanthienquoc/stockdividend/actions/runs/$SOURCE_RUN_ID"',
     "phanthienquoc/stockdividend/actions/runs/$SOURCE_RUN_ID",
     '"$repository" == "phanthienquoc/stockdividend"',
     '"$head_repository" == "phanthienquoc/stockdividend"',
