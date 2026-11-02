@@ -40,6 +40,11 @@ jobs:
       MAX_QUEUE_MINUTES: "15"
       MAX_INSPECTION_AGE_MINUTES: "75"
     steps:
+      - name: Checkout read-only queue verifier
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          persist-credentials: false
+
       - name: Verify reconcile-vps workflow is enabled
         shell: bash
         run: |
@@ -230,6 +235,55 @@ jobs:
             echo "::warning::Self-hosted inspection runner queue delay exceeds ${MAX_QUEUE_MINUTES}m."
             echo "::warning::Run evidence: ${run_url}"
           fi
+
+      - name: Verify scheduled reconciliation deployment-lane runner assignment
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          response="$(gh api \
+            -X GET \
+            -H "Accept: application/vnd.github+json" \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" \
+            -f event=schedule \
+            -F per_page=1)"
+          latest="$(jq -c '.workflow_runs | sort_by(.created_at) | last // empty' <<< "$response")"
+          if [[ -z "$latest" ]]; then
+            echo "::warning::No scheduled reconciliation run is available for deployment-lane queue diagnostics."
+            exit 0
+          fi
+
+          run_id="$(jq -r '.id' <<< "$latest")"
+          run_attempt="$(jq -r '.run_attempt // 1' <<< "$latest")"
+          run_url="$(jq -r '.html_url' <<< "$latest")"
+          if (( run_attempt > 1 )); then
+            echo "::notice::Reconcile #${run_id} is a rerun; deployment-lane queue age is not inferred from the original attempt."
+            exit 0
+          fi
+
+          jobs="$(gh api \
+            -X GET \
+            -H "Accept: application/vnd.github+json" \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs" \
+            -F per_page=100)"
+          reference_epoch="${WATCHDOG_REFERENCE_EPOCH:-}"
+          if [[ -z "$reference_epoch" ]]; then
+            current_run="$(gh api \
+              -X GET \
+              -H "Accept: application/vnd.github+json" \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")"
+            reference_epoch="$(jq -r 'if .created_at then (.created_at | fromdateiso8601) else empty end' <<< "$current_run")"
+          fi
+          [[ "$reference_epoch" =~ ^[0-9]+$ ]] || {
+            echo "::error::Unable to obtain GitHub API reference time for deployment-lane queue diagnostics."
+            exit 1
+          }
+
+          echo "Inspecting deployment-lane runner assignment for reconcile #${run_id}: ${run_url}"
+          python3 scripts/verify-reconcile-lane-queue.py \
+            --reference-epoch "$reference_epoch" \
+            --max-queue-minutes "$MAX_QUEUE_MINUTES" \
+            --event "$GITHUB_EVENT_NAME" <<< "$jobs"
 
       - name: Verify scheduled inspection delivery
         if: always()

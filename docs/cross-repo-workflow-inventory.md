@@ -1473,3 +1473,23 @@ No production manifest, image reference, shared pull credential, database object
 5. Keep TCE WF-06/WF-07/WF-12 and market-scan cron declarations unchanged.
 
 No production manifest, image, credential, database, replica, release flag, deployment authority or cron expression changed. TCE market-scan schedule unchanged.
+
+
+## 2026-11-02 18:04 UTC — downstream runner queue SLA and watchdog implementation
+
+### Repository ownership and current heads
+- Platform Infra master `4c9429484a5fe2ff1b98222504e0b2ad63dbbece`; TCE Dashboard `afad281fa57b2846446a152b6f5cf3c2600ee51d`; StockDividend `38220ddfef2db7128482547f72b7f06211e9c9bc`; Media Generation `0d4fc2ac15834c20357fd2420b732e6411fd8930`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: Platform #1072/#544/#541/#539; Authentication #75/#76; none in TCE, StockDividend or Media. #1071 is merged.
+- PR #1072 adds a read-only downstream queue verifier and regression cases; head `2a0c2850612ff2071e0f62ab6d3efeb8a2c2c84f`; validate/lint checks were queued when recorded. It must not be merged until both checks pass at the final head.
+
+### Evidence and queue contract
+- Native reconciliation #41491502003 (17:28:27Z) completed at 18:02:05Z. Shared reconcile and Auth succeeded; StockDividend failed its workload health gate on the permanent ARM64-incompatible tag `12d63b4`.
+- MicroFE/TCE/Media self-hosted deployment jobs waited 31m41s, 32m03s and 32m21s respectively before runner `platform-k3s-01` (runner id 2) picked them up. They subsequently completed successfully. This is confirmed runner queue delay, not proof of a permanently offline runner.
+- Existing watchdog #41491160810 only detected stale inspection age (589m) and did not observe downstream lane assignment delays. PR #1072 extends the watchdog to query the latest scheduled reconcile run's `/jobs` endpoint and detect both queued unassigned jobs and completed jobs whose `started_at - created_at` exceeds the 15-minute budget.
+- The verifier uses the watchdog's GitHub API `created_at` as reference clock; scheduled/manual/fallback enforcement fails on a breach, while post-merge push smoke warns only. Rerun attempts are not measured against original timestamps. It has no production write permissions and does not dispatch workflows.
+- Preserve the existing 15-minute watchdog cron offset, reconciliation cron, inspection cron, recovery cron and all TCE schedules. TCE market-scan schedule unchanged.
+
+### Runtime and safety
+- Recovery #41496719058 and read-only inspection #41496768387 were still in progress at the evidence time; the latter is workflow_dispatch, not native schedule evidence.
+- StockDividend release remains disabled pending owner Actions-read credential and explicit authorization. Mirror remains blocked by destination-only token. Auth remains gated on Supabase side-effect and migration review.
+- No manifest, image, secret, database, replica, schedule, or deployment authority was changed by the queue-monitoring implementation.

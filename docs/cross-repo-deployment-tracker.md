@@ -2804,3 +2804,42 @@ No production manifest, image reference, shared pull credential, database object
 - Auth PRs remain gated on Supabase production integration side effects and migration provenance/drift. No database mutation or migration was run.
 
 No production manifest, image reference, GHCR credential, database object, release flag, desired replica, workflow authority or cron expression changed. No StockDividend promotion/restart, VPS reboot or image cleanup occurred. TCE market-scan schedule unchanged. Production remains NOT HEALTHY/UNVERIFIED: StockDividend Admin/new Backend are not ready, TCE/Auth public endpoints return 503 while intentionally stopped, and three scheduled downstream deployment lanes remain unassigned/queued.
+
+
+## 2026-11-02 18:04 UTC — confirmed downstream lane queue delay and watchdog contract
+
+### Repository and PR state
+- Platform Infra master: `4c9429484a5fe2ff1b98222504e0b2ad63dbbece` after documentation PR #1071 merged. TCE Dashboard: `afad281fa57b2846446a152b6f5cf3c2600ee51d`; StockDividend: `38220ddfef2db7128482547f72b7f06211e9c9bc`; Media Generation: `0d4fc2ac15834c20357fd2420b732e6411fd8930`; Authentication: `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: Platform #1072, #544, #541, #539; Authentication #75/#76; none in TCE, StockDividend or Media.
+- PR #1071 merged as `4c9429484a5fe2ff1b98222504e0b2ad63dbbece`. Exact-head validation #41496501101 and post-merge validation #41496770179 both SUCCESS.
+- PR #1072 implements downstream deployment-lane queue monitoring. Current head `2a0c2850612ff2071e0f62ab6d3efeb8a2c2c84f`; its validate/lint checks #41496891854/#41496891864 are queued at this evidence time. Do not merge until both required checks pass on the final head.
+
+### Native scheduled reconciliation #41491502003 — final queue evidence
+- Native scheduled run [#41491502003](https://github.com/phanthienquoc/platform-infra/actions/runs/41491502003) arrived at 17:28:27Z on pre-#1071 master SHA `16719f6251826bb78d0c5efd996cb13ce86eb685` and completed at 18:02:05Z with overall FAILURE because the StockDividend lane failed.
+- Shared reconciliation job SUCCESS; runner v14, GHCR pull access, shared credentials, Auth runtime Secret and GitOps diff passed. No drift, so production apply was skipped with `allow_image_changes=false`.
+- Auth lane completed SUCCESS at 17:29:27Z; StockDividend lane failed at 17:29:46Z on permanent `no match for platform in manifest` for Admin/Backend tag `12d63b4`.
+- The three remaining managed lanes eventually acquired runner id 2 (`platform-k3s-01`) but exceeded the existing 15-minute queue budget:
+  - MicroFE job 125435773880: created 17:29:10Z, started 18:00:51Z — 31m41s.
+  - TCE job 125435774162: created 17:29:10Z, started 18:01:13Z — 32m03s.
+  - Media job 125435774301: created 17:29:10Z, started 18:01:31Z — 32m21s.
+- This confirms a long runner-assignment delay, not a permanently offline runner. At 17:58Z the three jobs were still queued with `runner_id=0`; by 18:01Z they had been assigned and completed successfully. The overall final gate remained failed only because StockDividend health failed.
+- The live listing in the reconcile log showed node `tce-k3s-01` Ready, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2; Media/MicroFE/NATS 1/1; Stock Admin Pods and new Backend Pod ImagePullBackOff; old Backend and unmanaged legacy Frontend Running. TCE/Auth/Keycloak remained intentionally stopped.
+
+### Watchdog gap and implementation in PR #1072
+- Scheduled watchdog #41491160810 at 17:26:13Z failed because native inspection #41407411326 was 589 minutes old. Its workflow-active check passed.
+- Existing watchdog measured only top-level workflow queue and inspection queue. It did not measure the delay from a downstream deployment-lane job's `created_at` to `started_at`, so it could not report the 31–32 minute lane queue after those jobs eventually completed.
+- PR #1072 adds `scripts/verify-reconcile-lane-queue.py`, a read-only Actions jobs API check, and offline regression cases. It checks both still-queued unassigned lanes and historical runner-assignment delay on completed/in-progress lanes; reruns are explicitly treated as unmeasurable rather than compared to original timestamps. Scheduled/manual/fallback enforcement fails beyond the existing 15-minute budget; push smoke only warns.
+- No cron, recovery authority, deployment lane, production mutation or token permission is changed by this contract. The PR is still under CI validation.
+
+### Recovery and inspection
+- Post-reconciliation recovery [#41496719058](https://github.com/phanthienquoc/platform-infra/actions/runs/41496719058) was in progress at the evidence time.
+- Recovery-triggered inspection [#41496768387](https://github.com/phanthienquoc/platform-infra/actions/runs/41496768387) was in progress. It is a workflow_dispatch inspection, not a native inspect-vps schedule tick.
+- Latest native scheduled inspection remains #41407411326. Native reconciliation has one resumed tick (#41491502003); sustained cadence is not yet established.
+
+### Remaining blockers
+- StockDividend Admin and new Backend still fail ARM64 image pull on production tag `12d63b4`; paired digest promotion remains disabled pending `STOCKDIVIDEND_ACTIONS_READ_TOKEN` and explicit owner authorization.
+- `PLATFORM_INFRA_MIRROR_TOKEN` remains missing; require destination-only Contents:write on `phanthienquoc/locally-uncensored-private`.
+- TCE WF-06 remains strict HTTP 200 and currently fails with HTTP 503 while TCE/Auth are intentionally scale-to-zero. WF-07 #41476258191 is the latest observed native schedule success; WF-06 #41424898130 and direct WF-12 #41419694332 remain stale/failing.
+- Auth #75/#76 remain gated on Supabase production integration side effects and migration provenance/drift. No database mutation was run.
+
+No production manifest, image reference, GHCR credential, database object, release flag, desired replica, deployment authority or cron expression changed. No StockDividend promotion/restart, VPS reboot or image cleanup occurred. TCE market-scan schedule unchanged. Production remains NOT HEALTHY/UNVERIFIED.

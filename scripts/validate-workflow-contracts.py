@@ -1002,4 +1002,27 @@ if "python3 scripts/validate-auth-gitops-contract.py /tmp/platform-infra-rendere
 if manifest_validation.find("name: Render production manifests") > manifest_validation.find("name: Validate rendered Auth GitOps contract"):
     fail("Auth GitOps contract validation must run after production manifests are rendered.")
 
+# The watchdog must inspect downstream deployment-lane jobs, not only the top-level
+# workflow run queue. This catches a single VPS runner that stops accepting later lanes.
+lane_queue_script = ROOT / "scripts" / "verify-reconcile-lane-queue.py"
+if not lane_queue_script.is_file():
+    fail("The read-only deployment-lane queue verifier is missing.")
+if "python3 scripts/verify-reconcile-lane-queue.py --self-test" not in actions_validation:
+    fail("Workflow validation must execute deployment-lane queue regression fixtures.")
+lane_queue_step = watchdog.find("name: Verify scheduled reconciliation deployment-lane runner assignment")
+if lane_queue_step < 0 or "if: always()" not in watchdog[lane_queue_step:]:
+    fail("Deployment-lane queue diagnostics must run even when schedule freshness fails.")
+for required in (
+    "actions/runs/${run_id}/jobs",
+    "MAX_QUEUE_MINUTES",
+    "WATCHDOG_REFERENCE_EPOCH",
+    "verify-reconcile-lane-queue.py",
+    "persist-credentials: false",
+):
+    if required not in watchdog:
+        fail(f"Deployment-lane queue watchdog contract is missing: {required}")
+lane_queue_contract = lane_queue_script.read_text(encoding="utf-8")
+if 'startswith("Deploy lane — ")' not in lane_queue_contract or 'job.get("runner_id")' not in lane_queue_contract:
+    fail("The deployment-lane queue verifier must inspect only named deployment lanes without an assigned runner.")
+
 print("Workflow contract validation passed.")
