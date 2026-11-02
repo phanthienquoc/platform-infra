@@ -2,12 +2,8 @@
 name: Provision TCE OIDC client
 
 "on":
+  # Privileged Keycloak realm/client provisioning is intentionally manual-only.
   workflow_dispatch:
-  push:
-    branches: [master]
-    paths:
-      - ".github/workflows/provision-keycloak-tce-client.yml"
-      - "scripts/verify-keycloak-tce-client.py"
 
 permissions:
   contents: read

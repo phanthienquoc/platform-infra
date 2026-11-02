@@ -25,6 +25,16 @@ promotion = read("gitops-image-promotion.yml")
 recovery = read("recover-stale-ops.yml")
 inspection = read("inspect-vps.yml")
 mirror = read("mirror-locally-uncensored.yml")
+provision = read("provision-keycloak-tce-client.yml")
+cleanup = read("vps-image-cleanup.yml")
+
+if not re.search(r"(?m)^  workflow_dispatch:", provision):
+    fail("Keycloak provisioning must retain its explicit manual workflow_dispatch entry point.")
+if re.search(r"(?m)^  push:", provision):
+    fail("Privileged Keycloak realm/client provisioning must not run automatically on push; use the manual production workflow.")
+cleanup_push_paths = cleanup.split("  push:", 1)[1].split("  workflow_dispatch:", 1)[0]
+if '".github/workflows/vps-image-cleanup.yml"' in cleanup_push_paths:
+    fail("Editing the image-cleanup workflow itself must not start a cleanup job; script/test pushes remain dry-run only.")
 if 'workflows: ["reconcile-vps", "inspect-vps", "Mirror locally-uncensored into private repository"]' not in recovery or "types: [completed]" not in recovery:
     fail("Recovery controller must run after master reconciliation, scheduled inspection, and the independent mirror schedule heartbeat.")
 if "repository_dispatch:" not in recovery or "types: [tce-schedule-heartbeat]" not in recovery:
@@ -65,7 +75,6 @@ for required in (
 if not re.search(r"(?m)^  push:\n    branches: \[master\]\n    paths:", recovery):
     fail("Recovery controller must bootstrap from deployment-relevant master pushes.")
 for required_path in (
-    '.github/workflows/reconcile-vps.yml',
     'apps/**',
     'platform/**',
     'environments/prod/**',
@@ -75,6 +84,8 @@ for required_path in (
         fail(f"Recovery push bootstrap is missing deployment path filter: {required_path}")
 
 recovery_push_paths = recovery.split("  push:", 1)[1].split("  workflow_dispatch:", 1)[0]
+if '".github/workflows/reconcile-vps.yml"' in recovery_push_paths:
+    fail("Changes to the production apply workflow must be validated but must not auto-dispatch production reconciliation.")
 if '".github/workflows/recover-stale-ops.yml"' in recovery_push_paths:
     fail("Editing the recovery controller itself must not trigger a production reconciliation.")
 if '".github/workflows/inspect-vps.yml"' in recovery_push_paths:
