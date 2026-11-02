@@ -484,6 +484,17 @@ if '  scale)' not in bootstrap_script or 'scale deployment/microfe-auth deployme
 
 if "rollout-status-v14-stockdividend-managed-workloads" not in reconcile:
     fail("Production reconciliation must require the current v14 managed-workload runner policy.")
+
+# Keep operator-facing diagnostics aligned with the enforced runner policy version.
+for required in (
+    "Runner policy v14 (managed StockDividend workloads) is ready.",
+    "Waiting for runner bootstrap policy v14",
+    "Runner policy is not updated to managed-workload v14",
+):
+    if required not in reconcile:
+        fail(f"Reconciliation diagnostics are missing the current v14 policy label: {required}")
+if "runner bootstrap policy v13" in reconcile or "image-pull restart v13" in reconcile:
+    fail("Reconciliation diagnostics must not report the retired v13 runner policy after v14 is required.")
 auth_provision = read("provision-auth-runtime-secret.yml")
 if "rollout-status-v14-stockdividend-managed-workloads" not in auth_provision:
     fail("Standalone Auth secret provisioning must accept the current v14 runner policy.")
