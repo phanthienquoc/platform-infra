@@ -1,5 +1,5 @@
 name: Recover Stale Scheduled Ops
-run-name: Recover Stale Scheduled Ops — ${{ github.event_name }}
+run-name: "Recover Stale Scheduled Ops — ${{ github.event_name }} / source ${{ inputs.source_run_id || 'none' }}"
 
 'on':
   schedule:
