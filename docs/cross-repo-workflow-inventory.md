@@ -1683,3 +1683,7 @@ No production manifest, image, credential, database, replica, release flag, depl
 - PR #26 exact-head CI #41517727670 is still in progress; do not merge until all required jobs complete SUCCESS.
 - Post-merge CI after the cross-repo checkout pin: TCE WF-01/WF-02/WF-05 all SUCCESS; StockDividend CI SUCCESS with no publisher run; Media CI SUCCESS; Authentication service/web CI SUCCESS. No release workflows were triggered.
 - Current open PRs: Platform #544/#541/#539; StockDividend #26; Authentication #75/#76; none in TCE/Media.
+
+### StockDividend Docker action follow-up completed
+- PR #26 merged at 60918c2f2c50e5e52d071fe36ba72b1e78a485a2 after exact-head CI #41517727670 SUCCESS. CI-only Buildx actions now use Node24 immutable pins (setup-buildx v4.4.1, build-push v7.4.0); push=false retained. Post-merge CI #41518048674 queued at update time; no publisher run.
+- Production StockDividend deploy/publisher workflow remains untouched; no GHCR publication or promotion.
