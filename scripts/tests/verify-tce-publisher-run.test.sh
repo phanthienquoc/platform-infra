@@ -33,7 +33,10 @@ sample_sha=0123456789abcdef0123456789abcdef01234567
 sample_run_id=123456789
 sample_repo=phanthienquoc/TCE-dashboard
 sample_path=.github/workflows/wf-03-tce-production-deploy.yml
-sample_release="prod-v1.2.3-${sample_sha:0:7}"
+sample_release="prod-v1.2.3-$sample_sha"
+sample_web_digest="sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+sample_service_digest="sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+export WEB_DIGEST="$sample_web_digest" SERVICE_DIGEST="$sample_service_digest"
 sample_api_url="https://api.github.com/repos/$sample_repo/actions/runs/$sample_run_id"
 
 make_run() {
@@ -140,4 +143,13 @@ if PATH="$tmp_dir/bin:$PATH" MOCK_CURL_COUNT_FILE="$tmp_dir/count" MOCK_CURL_RES
   exit 1
 fi
 
-echo "TCE publisher-run provenance contract tests passed."
+if PATH="$tmp_dir/bin:$PATH" MOCK_CURL_COUNT_FILE="$tmp_dir/count" MOCK_CURL_RESPONSE_FILE="$tmp_dir/response.json" \
+  SOURCE_RUN_ID="$sample_run_id" SOURCE_WORKFLOW_PATH="$sample_path" SOURCE_EVENT=workflow_dispatch \
+  SOURCE_HEAD_SHA="$sample_sha" SOURCE_COMMIT="$sample_sha" RELEASE="$sample_release" \
+  WEB_DIGEST=sha256:bad SERVICE_DIGEST="$sample_service_digest" \
+  bash "$validator" >/dev/null 2>&1; then
+  echo "Expected malformed TCE web digest to fail before API access." >&2
+  exit 1
+fi
+
+echo "TCE publisher-run provenance and digest contract tests passed."
