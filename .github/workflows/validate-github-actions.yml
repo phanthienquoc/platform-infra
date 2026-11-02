@@ -73,6 +73,7 @@ jobs:
           bash scripts/tests/verify-media-publisher-run.test.sh
           bash scripts/tests/verify-tce-publisher-run.test.sh
           python3 scripts/promote-tce-image-digests.py --self-test
+          python3 scripts/resolve-tce-gitops-image-refs.py --self-test
           bash scripts/tests/inspect-vps-cri-contract.test.sh
           bash scripts/guard-reconcile-images.sh --self-test
 
