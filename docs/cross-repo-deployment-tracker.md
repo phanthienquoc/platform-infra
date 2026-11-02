@@ -2388,3 +2388,12 @@ No production manifest, image reference, GHCR pull credential, database object, 
 5. Keep Auth PRs gated on production side-effect and migration provenance review; schedule a maintenance window before host OS/containerd updates.
 
 No production manifest, image reference, GHCR pull credential, database object, release flag, desired replica, or cron expression changed. `reconcile-vps.yml` remains the sole GitOps apply authority; `inspect-vps.yml` remains read-only; recovery/watchdog only observe and dispatch. No direct SSH/Compose deployment authority was added. TCE market-scan schedule unchanged.
+
+
+## Post-merge verification — PR #1058 (2026-11-02)
+
+- PR #1058 merged by squash as `73bfe6e63699352e73007d1e00300efd2dd2eed2` from exact validated head `60330bc4195ed8093dfda28a21acfebf64bbd422`.
+- Exact-head `validate-manifests` run #41450382752 completed SUCCESS. Post-merge `validate-manifests` run #41450454704 completed SUCCESS on the merge commit. All substantive checks passed: immutable image-change contract self-tests, shell validation, production Kustomize render, Auth rendered contract, YAML structure, secret policy, immutable image policy, isolated Keycloak manifests and network boundaries.
+- PR #1058 changed only `docs/cross-repo-deployment-tracker.md` and `docs/cross-repo-workflow-inventory.md`. No production workflow, manifest, image, credential, release gate, database object, desired replica, or cron expression changed.
+- Current Platform Infra master at this verification is `73bfe6e63699352e73007d1e00300efd2dd2eed2`. Remaining open Platform PRs: #544/#541/#539; Authentication #75/#76. TCE, StockDividend and Media have no open PRs.
+- The latest native schedule and runtime evidence remains as documented in the preceding section; this documentation PR does not create new runtime or cron evidence. TCE market-scan schedule unchanged.
