@@ -118,7 +118,7 @@ if PATH="$tmp_dir/bin:$PATH" STOCKDIVIDEND_ACTIONS_READ_TOKEN=test-token \
   exit 1
 fi
 
-if PATH="$tmp_dir/bin:$PATH" STOCKDIVIDEND_ACTIONS_READ_TOKEN= \
+if PATH="$tmp_dir/bin:$PATH" STOCKDIVIDEND_ACTIONS_READ_TOKEN='' \
   SOURCE_RUN_ID="$sample_run_id" SOURCE_WORKFLOW_PATH="$sample_path" SOURCE_EVENT=push \
   SOURCE_HEAD_SHA="$sample_sha" SOURCE_COMMIT="$sample_sha" \
   bash "$validator" >/dev/null 2>&1; then
