@@ -1,3 +1,37 @@
+## Runtime verification update — 2026-11-02 17:01 ICT / 10:01 UTC
+
+### Repository state, open PRs and current checks
+- Platform Infra master: `8a83c8cafc041accca2663e29bbde8aaabd4721f`; TCE Dashboard: `a5e8866d2ba28936d57b31ce6a067186c7204369`; StockDividend: `38220ddfef2db7128482547f72b7f06211e9c9bc`; Media Generation: `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication: `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: Platform #795/#749/#648/#544/#541/#539; Authentication #75/#76; none in TCE, StockDividend or Media. Platform #544/#541/#539 and Auth #76 are drafts. Platform #538 is closed as superseded.
+- Current-head PR workflow checks were re-read for every open PR: Platform #795/#749/#648/#544/#541/#539 each have `validate-manifests` SUCCESS; Auth #75/#76 each have `auth-service-ci` SUCCESS. PRs remain open for their documented scope/authorization reasons; green CI alone does not clear the Auth production side-effect gate.
+
+### Latest Platform runtime and schedule evidence
+- Latest reconciliation is #41424991858 (workflow_dispatch, 09:58:33Z), FAILURE only at the StockDividend workload health lane. Shared reconciliation job succeeded: runner v14 policy, GHCR pull access, shared credentials, runtime Secret checks and no-drift preflight passed; production apply was correctly skipped with `allow_image_changes=false`.
+- The StockDividend health job log at 09:59:16Z reports two `stock-admin` Pods and one new `stock-backend` Pod in `ImagePullBackOff`, all pulling tag `12d63b4` with `no match for platform in manifest`. The existing Backend replica remains Running 1/1 and legacy Frontend remains Running 1/1 but unmanaged. Health gate correctly fails; no restart or promotion occurred.
+- Recovery controller #41425271774 (workflow_dispatch, 10:00:39Z) succeeded and verified source reconciliation #41424991858. Its log found reconciliation age 0m and latest inspection #41419270996 age 42m, both within recovery thresholds, so it correctly dispatched neither duplicate reconciliation nor inspection. This is not native cron evidence.
+- Latest native Platform schedule-filtered runs remain: inspection #41407411326 (07:36:38Z, SUCCESS), reconciliation #41407522742 (07:37:40Z, FAILURE only StockDividend health), watchdog #41406983213 (07:32:45Z, FAILURE due stale pre-run state), mirror #41407613563 (07:38:31Z, FAILURE missing token), recovery #41400302676 (06:30:13Z, SUCCESS). No later native Platform schedule tick is present through 10:01Z. Recovery/workflow_dispatch/repository_dispatch/workflow_run events must not be counted as native schedule delivery.
+- Latest inspection snapshot #41419270996 generated `debug/vps-latest.md` at 09:16:30Z. Node was Ready/ARM64, K3s v1.36.3+k3s1, disk 55%, ~19 GiB available, runner policy v14 live, GitOps drift clean, and `restart_required=yes` due pending OS/Docker/containerd maintenance. A later live Pod listing in reconciliation #41424991858 confirms Media backend/frontend, MicroFE Shell/WS and NATS 1/1; Stock Admin two Pods and new Backend Pod ImagePullBackOff; old Backend and unmanaged legacy Frontend 1/1; TCE/Auth/Keycloak 0/0. No reboot or upgrade.
+
+### TCE schedule and heartbeat — one WF-06 tick resumed
+- New scheduled WF-06 run #41424898130 at 09:57:51Z on master SHA `a5e8866d2ba28936d57b31ce6a067186c7204369`. All four strict public checks failed with HTTP 503 where HTTP 200 is required: `https://tce.mrcute.space/`, `https://tce.mrcute.space/api/health`, `https://auth.mrcute.space/api/health`, and `https://auth.mrcute.space/api/ready`. The public health contract remains strict; TCE/Auth are intentionally scale-to-zero, so do not convert these checks to 503 success.
+- WF-12 forwarder #41424938817 (event=workflow_run) completed SUCCESS. Its WF-06 schedule-freshness verification passed after the new WF-06 scheduled run; the Platform heartbeat job also succeeded. The payload log confirms source repository `phanthienquoc/TCE-dashboard`, source path `.github/workflows/wf-06-tce-healthcheck.yml`, event=schedule, source run ID 41424898130, heartbeat run ID 41424938817, master branch and matching full SHA.
+- Platform receiver/recovery #41424970499 (repository_dispatch) succeeded. This confirms one authenticated heartbeat after the WF-06 scheduled tick, not a direct WF-12 cron tick. Latest direct scheduled WF-12 remains #41419694332 at 09:19:29Z; latest scheduled WF-07 integration remains #41397768048 at 06:05:28Z.
+- WF-06 schedule delivery has resumed for one observed tick after the long gap, but all public endpoints remain unhealthy. WF-12 workflow_run forwarding and receiver are working. Do not claim sustained TCE cadence. Keep WF-06/WF-07/WF-12 cron declarations and all market-scan schedules unchanged.
+
+### Application CI, publication and credential gates
+- StockDividend master CI #41397317588 and immutable publisher #41397317600 both SUCCESS on master `38220ddf`; the three full-SHA Scraper/Admin/Backend images were previously verified `linux/arm64`. No newer publication was observed. Production release remains disabled/unset; no source dispatch, provenance verification, GitOps PR or promotion occurred.
+- `STOCKDIVIDEND_ACTIONS_READ_TOKEN` remains an owner-configured protected production Environment secret; presence is not observable and must not be assumed. Explicit production release authorization is also absent.
+- Mirror schedule #41407613563 failed before Git operations because `PLATFORM_INFRA_MIRROR_TOKEN` is missing/empty. Require destination-only `Contents: write` for `phanthienquoc/locally-uncensored-private`; do not substitute GHCR or app-release tokens.
+- Media master CI #41246414186 passed; latest runtime evidence remains digest-pinned and 1/1. Authentication master CI #41033586844 and PR #75/#76 current-head CI passed. Keep Auth PRs gated on Supabase production integration side effects and migration provenance/drift review; no database mutation or current Supabase health claim.
+
+### Next actions and safety
+1. Owner: configure `STOCKDIVIDEND_ACTIONS_READ_TOKEN` (StockDividend-only Actions read) and `PLATFORM_INFRA_MIRROR_TOKEN` (destination-only Contents write); verify presence without exposing values.
+2. Keep StockDividend release disabled until explicit authorization. Then verify the private publisher run, promote paired immutable Admin/Backend digests through Platform Infra, and verify live runtime imageIDs/readiness.
+3. Continue observing native Platform reconcile/inspection/watchdog and TCE WF-06/WF-12 schedule events. Keep native cron evidence separate from recovery/dispatch events.
+4. Keep Auth PR #75/#76 gated on production integration/migration review. Plan a maintenance window before any VPS reboot/upgrade.
+
+No production manifests, image references, GHCR pull credentials, database objects, release-enable variables, desired replicas or cron expressions changed. No StockDividend promotion, workload restart, image deletion or VPS reboot occurred. TCE market-scan schedule unchanged. Production remains NOT HEALTHY/UNVERIFIED because StockDividend Admin/Backend are not ready and public TCE/Auth endpoints return HTTP 503 while intentionally stopped.
+
 ## Schedule delivery follow-up — 2026-11-02 16:22 ICT / 09:22 UTC
 
 ### TCE WF-12 native schedule resumed for one observed tick
