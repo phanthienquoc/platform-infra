@@ -3368,3 +3368,32 @@ All TCE market-scan cron expressions remain unchanged. Production remains NOT HE
 - Opened Authentication PR #86 on dedicated branch `fix/auth-web-ci-use-install-without-ephemeral-lock-20261103` to explicitly include optional dependencies in both npm lock generation and `npm ci`. This is a validation-only workflow change; it does not change app dependencies, runtime, publisher, Supabase, database, credentials or production deployment.
 - Updated this tracker and the workflow inventory on a dedicated Platform branch to record current heads, open PRs, Auth web CI failure/root evidence, PR #86 pending checks, schedule freshness, stale K3s snapshot and release/credential gates.
 - No production manifest/image reference, shared GHCR pull credential, database object, release flag, desired replica, schedule, or runtime Secret was changed. No workflow dispatch, image promotion, migration, Pod restart, image deletion, VPS reboot or OS/containerd upgrade occurred. `reconcile-vps.yml` remains the sole production apply authority. TCE market-scan schedule unchanged.
+
+
+## 2026-11-03 06:08 ICT — Auth web CI fix merged; post-merge checks running
+
+### Merge and exact-head evidence
+- Authentication PR #86 merged by squash at `1f39b18d9dd286da9dde32a79c4da269b19d5cfd` from exact head `ddb554801bda48be5f5114a6b798e965a3183069`. It changes only `.github/workflows/web-ci.yml`.
+- Root failure was master auth-web-ci #41533191601, job #125578374218: `npm ci` returned EUSAGE because the dynamically generated lock omitted optional package `@tailwindcss/oxide-wasm32-wasi`. PR #86 explicitly added `--include=optional` to both lock generation and `npm ci`.
+- Exact-head PR runs #41542677868 (auth-web-ci) and #41542677119 (auth-service-ci) both completed SUCCESS. Auth web steps verified: generated lock, clean install, tests, typecheck, lint, Next build and frontend container build all PASS. Auth service tests/typecheck/build/container build and manual-only release action contract PASS.
+- Post-merge master runs #41542942080 (auth-web-ci) and #41542941957 (auth-service-ci) were still IN_PROGRESS at the container-build step when inspected. Do not claim post-merge CI complete until both runs report SUCCESS.
+- Supabase Preview was SKIPPED on PR #86; it is a workflow integration context, not a failed check. PR #86 contains no Supabase, migration, runtime, release or production deployment change.
+- Platform Infra PR #1099 merged by squash at `ae3971c907c27f166b435c29ea60cee28f225f38`. Exact-head validate-manifests #41542838607 SUCCESS; post-merge validate-manifests #41542962452 SUCCESS. The tracker and workflow inventory now include the Auth web CI failure/remediation evidence.
+
+### Current five-repository state
+- Master heads: Platform Infra `ae3971c907c27f166b435c29ea60cee28f225f38`; TCE Dashboard `5d299bea8ba482876ccaa291c68b0ee3f829350c`; StockDividend `efdb0844e868367d29bbeb5393430cd73d6b6f38`; Media Generation `763fdcd1463fe4d95c81c93d1e7ae010f2cd0cd3`; Authentication `1f39b18d9dd286da9dde32a79c4da269b19d5cfd`.
+- Open PRs: Platform #544/#541/#539 (draft Keycloak/identity decision records); Authentication #75/#76; none in TCE, StockDividend or Media.
+- Auth #75/#76 exact-head `validate` checks remain SUCCESS, Supabase Preview SKIPPED. Keep #75 gated: owner-provided evidence says Supabase GitHub Deploy to production is ON for master while migration ledger/provenance remains unresolved. No merge or migration.
+- Latest master CI observed: TCE WF-01 #41533998356, WF-02 #41533998448, WF-05 #41533998355 SUCCESS; StockDividend CI #41534109312 SUCCESS; Media CI #41525798015 SUCCESS; Auth service #41542941957 and web #41542942080 post-merge still running at container build.
+- Platform latest post-merge validation #41542962452 SUCCESS. No production reconciliation was triggered by docs-only PR #1099.
+
+### Runtime, schedules and release gates remain unchanged
+- Latest native Platform schedule evidence: inspection #41498271871 SUCCESS (2026-11-02 18:11:59Z); recovery #41482540454 SUCCESS (16:32:54Z); reconciliation #41491502003 FAILURE due StockDividend health (17:28:27Z); watchdog #41491160810 FAILURE/stale (17:26:13Z); mirror #41499146752 FAILURE due missing token (18:17:26Z). No newer native schedule event was present in the inspected 50-run history.
+- Latest TCE native schedules: WF-06 #41516575222 FAILURE on strict HTTP 200 probes (public endpoints returned 503 while TCE/Auth are intentionally scale-to-zero); WF-12 #41511665345 freshness failure; WF-07 #41476258191 SUCCESS. No consecutive cadence recovery established. Do not alter cron or public health assertions.
+- Latest full K3s snapshot remains #41515885354 and is stale: node Ready/ARM64, K3s v1.36.3+k3s1, disk 55%, ~19 GiB available RAM; Media/MicroFE/NATS healthy; Stock Admin and new Backend pods ImagePullBackOff on old tag `12d63b4`; old Backend and unmanaged legacy Frontend 1/1; TCE/Auth/Keycloak 0/0. No fresh inspection/rollout evidence in this update.
+- StockDividend publisher #41524676740 verified immutable linux/arm64 digests (Scraper `83c989df...`, Admin `d0d6f037...`, Backend `1f8d5a61...`). Production overlay still uses `12d63b4`; release remains false/unset and no Platform dispatch/promotion occurred.
+- Owner blockers unchanged: `PLATFORM_INFRA_MIRROR_TOKEN` (destination-only Contents:write for `phanthienquoc/locally-uncensored-private`); `STOCKDIVIDEND_ACTIONS_READ_TOKEN` (StockDividend-only Actions:read; presence not observable); explicit StockDividend production release authorization.
+
+### Safety
+- No production manifest/image reference, shared GHCR pull credential, database object, release flag, desired replica, cron expression, runtime Secret, or VPS package was changed.
+- No image promotion, migration, Pod restart, image deletion, VPS reboot, or OS/containerd upgrade. `reconcile-vps.yml` remains the sole production apply authority. TCE market-scan schedule unchanged.
