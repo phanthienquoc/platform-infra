@@ -3054,3 +3054,33 @@ Production remains NOT HEALTHY/UNVERIFIED. No image promotion, production manife
 - TCE latest push CI: WF-01 #41466743923, WF-02 #41466743801, WF-05 #41466743773 all SUCCESS. Media CI #41460906654 SUCCESS. Authentication PR #75/#76 remain open because Supabase integration target/effect and migration provenance are not authoritatively resolved; no migration or database write occurred.
 
 Production remains NOT HEALTHY/UNVERIFIED due StockDividend Admin/Backend image architecture failure and stopped TCE/Auth/Keycloak services. No image promotion, production manifest apply, database migration, VPS reboot or OS/containerd upgrade occurred in the latest reconciliation/inspection. Auth runtime Secret provisioning in #41511708072 is the only observed secret side effect; values were suppressed. TCE market-scan schedule unchanged.
+
+## 2026-11-02 20:01 UTC / 2026-11-03 03:01 ICT — read-only VPS inspection excluded from production recovery push
+
+### PR #1080 and #1083 merge evidence
+- PR #1080 narrowed the recovery push bootstrap to deployment-relevant changes and excluded the recovery controller plus four read-only CI/watchdog helpers. Exact head 73067d7262ef975cf5af9d651a6426236ab256b9; exact-head validate-manifests #41508539722 and validate-github-actions #41508539234 SUCCESS; squash merge dc92d4060a30bef1955fd9738a26c5c79cf80a03. Post-merge #41514856470 and #41514856736 both completed SUCCESS.
+- PR #1082 refreshed this tracker/inventory and merged at df70d70be2069b523bd08d33f91ca328034103e4; exact-head #41515024252 SUCCESS and post-merge #41515242910 SUCCESS.
+- PR #1083 closed a remaining read-only path gap: .github/workflows/inspect-vps.yml and scripts/inspect-vps.sh no longer trigger production reconciliation from the recovery push filter. The inspection workflow's own push/schedule snapshot refresh remains intact, and scheduled inspection completion remains an authenticated workflow_run recovery signal. The workflow contract validator asserts both read-only exclusions while retaining deployment-relevant paths.
+- PR #1083 exact head 4b29dfb5b5d5a1441a67bfb89238f096a0514707; exact-head #41515191104 (validate-manifests) and #41515191110 (validate-github-actions) both SUCCESS; squash merge c1529192344351a1e773e6d6ec772d373772d46c.
+- Post-merge #41515316595 (validate-manifests) and #41515316604 (validate-github-actions) were still in progress at this update; update the record after they complete. The latest run list after #1083 showed only these validation workflows, with no recovery push or production reconciliation caused by the read-only trigger-scope change.
+
+### Current five-repository inventory
+- Platform Infra master: c1529192344351a1e773e6d6ec772d373772d46c; open PRs #544, #541 and #539.
+- TCE Dashboard master: afad281fa57b2846446a152b6f5cf3c2600ee51d; no open PRs.
+- StockDividend master: 38220ddfef2db7128482547f72b7f06211e9c9bc; no open PRs.
+- Media Generation master: 0d4fc2ac15834c20357fd2420b732e6411fd8930; no open PRs.
+- Authentication master: ceb2688d6277b10f1bfe7652223d1d295b7e49d9; open PRs #75 and #76. Both remain gated on Supabase production integration side-effect and migration provenance/drift evidence; no migration or DB write was run.
+
+### Schedule delivery evidence (native schedule events only)
+- Platform inspection #41498271871 SUCCESS; reconciliation #41491502003 FAILURE on StockDividend health; schedule watchdog #41491160810 FAILURE on stale inspection; recovery #41482540454 SUCCESS; mirror #41499146752 FAILURE because PLATFORM_INFRA_MIRROR_TOKEN is missing.
+- A newer manual inspection #41512091554 completed SUCCESS at 19:40:16Z and generated snapshot #1081 at 19:40:25Z. It is not a native schedule tick.
+- TCE WF-12 #41511665345 (schedule) failed because latest scheduled WF-06 #41424898130 was 579 minutes old versus a 25-minute budget; WF-12's Platform heartbeat job succeeded. WF-07 #41476258191 SUCCESS. WF-06 remains strict HTTP 200 and failed on 503 while TCE/Auth are intentionally scale-to-zero. Do not count workflow_run, repository_dispatch or workflow_dispatch as native cron delivery.
+- Keep all cron expressions unchanged, especially TCE market-scan schedules.
+
+### Runtime and release gates
+- Snapshot #1081: node tce-k3s-01 Ready, ARM64, K3s 1.36.3+k3s1, disk 55%, about 19 GiB available RAM. Media, MicroFE Shell/WS and NATS 1/1. Stock Admin Pods and new Backend Pod remain ImagePullBackOff on tag 12d63b4 with no match for platform in manifest; old Backend and unmanaged legacy frontend remain 1/1. TCE/Auth/Keycloak remain 0/0 intentionally. Pending OS/Docker/containerd maintenance remains untouched.
+- Manual reconciliation #41511708072: shared reconcile job succeeded; GHCR access passed; Auth runtime Secret provisioned/verified from protected Environment with values suppressed; shared GHCR pull Secrets unchanged; runner v14 skipped permanent StockDividend restarts; GitOps diff clean and manifest apply skipped. MicroFE, Media, TCE and Auth lanes succeeded; StockDividend health failed; Keycloak skipped. Recovery #41512035335 SUCCESS.
+- StockDividend CI #41397317588 and immutable publisher #41397317600 SUCCESS; no new release/promotion. STOCKDIVIDEND_ACTIONS_READ_TOKEN remains unverified; PLATFORM_INFRA_MIRROR_TOKEN is missing. Explicit release authorization remains required.
+- TCE WF-01 #41466743923, WF-02 #41466743801 and WF-05 #41466743773 SUCCESS; Media CI #41460906654 SUCCESS; Authentication CI #41329425940 SUCCESS. These do not override runtime health or Auth's production integration gate.
+
+Production remains NOT HEALTHY/UNVERIFIED due StockDividend Admin/Backend image architecture failure and stopped TCE/Auth/Keycloak services. No image promotion, DB migration, VPS reboot or OS/containerd upgrade occurred in the latest reconciliation/inspection. Auth runtime Secret provisioning in #41511708072 is the only observed secret side effect; values were suppressed. TCE market-scan schedule unchanged.
