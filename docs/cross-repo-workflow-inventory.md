@@ -1612,3 +1612,10 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Fallback #41507349624 used master SHA `778746152bee482fdea24ad9ab88b1cdee03d4ad`, `mode=apply`, `allow_image_changes=false`, `target_app=all`; shared diff clean and apply skipped. MicroFE/Media/TCE/Auth lanes SUCCESS; StockDividend FAILURE on ARM64 manifest mismatch; Keycloak skipped. Recovery #41507694544 SUCCESS.
 - Preserve app-owned CI/build/immutable GHCR publication, Platform-owned manifests/pull credentials/promotion/reconciliation/health, and `reconcile-vps.yml` as sole apply authority. No SSH/Compose duplicate authority or workflow removal.
 - Platform/TCE native schedule cadence remains incomplete; mirror token is missing. StockDividend paired release remains gated by Actions-read credential and explicit authorization. Auth production integration/migration gate remains open. TCE market-scan cron unchanged.
+
+
+## 2026-11-03 02:16 ICT — recovery push trigger narrowed to deployment-relevant changes
+
+- PR #1080 changes only the recovery controller's master-push path filter and its static contract validator, plus tracker/inventory documentation.
+- Keep automatic push recovery for production-affecting workflow/app/platform/overlay/script changes. Exclude the recovery controller itself and exact read-only CI/watchdog helpers so a monitoring/validator edit cannot trigger a full production reconciliation.
+- Scheduled, manual, workflow_run and authenticated TCE-heartbeat triggers remain unchanged. No cron, release workflow, production manifest or deployment authority is removed.
