@@ -71,6 +71,7 @@ jobs:
           bash scripts/tests/restart-blocked-image-pulls.test.sh
           bash scripts/tests/verify-stockdividend-publisher-run.test.sh
           bash scripts/tests/verify-media-publisher-run.test.sh
+          bash scripts/tests/verify-tce-publisher-run.test.sh
           bash scripts/tests/inspect-vps-cri-contract.test.sh
           bash scripts/guard-reconcile-images.sh --self-test
 
