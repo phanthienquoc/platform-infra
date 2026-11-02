@@ -1675,3 +1675,68 @@ No production manifests, runtime credentials, release flags, database objects, o
 5. Continue Auth production integration side-effect review; do not merge PR #75/#76 based only on migration version-set alignment or historical CI.
 
 No production manifests, runtime credentials, release flags, database objects, or K3s desired replicas changed in this review. No workload was restarted and no image was deleted. TCE remains scale-to-zero; Auth/Keycloak remain stopped. Production remains **NOT HEALTHY/UNVERIFIED** because StockDividend Admin/Backend are not ready.
+
+
+## Cross-repo operations review — 2026-11-02 08:00 ICT (runner v13 suppression and fresh inspection verified)
+
+### Repository heads and open PR inventory
+
+- Current master heads at review: Platform Infra `4ab19043a110f2328609a58066dce52e15c8009c`; TCE Dashboard `d011fbb4099f5f9e24068878ac4e035b369e8ace`; StockDividend `f5c04475eb4e67811c66b350d60541b21b8262c7`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: Platform Infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #75/#76; none in TCE Dashboard, StockDividend, or Media Generation. Inspection PR #1023 was exact-head validated and squash-merged at head `a2a8668dbaec1f50b242571ce00fa66cf2eb0c36`, merge commit `4ab19043a110f2328609a58066dce52e15c8009c`.
+- Platform #1023 exact-head manifest validation [#41370136730](https://github.com/phanthienquoc/platform-infra/actions/runs/41370136730) passed. Scheduled inspection [#41370072870](https://github.com/phanthienquoc/platform-infra/actions/runs/41370072870) completed successfully and produced the current `debug/vps-latest.md` snapshot at 2026-11-02 00:59:35Z.
+
+### Runner policy v13 — permanent image-pull restart suppression verified on runtime
+
+- Runner bootstrap [#41360807367](https://github.com/phanthienquoc/platform-infra/actions/runs/41360807367) completed successfully on 2026-11-01 23:10:38Z and logged the installed policy identifier `rollout-status-v13-permanent-image-pull-restart`.
+- Scheduled reconciliation [#41369624425](https://github.com/phanthienquoc/platform-infra/actions/runs/41369624425), 2026-11-02 00:54:06Z, passed the live `platform-kubectl policy-version` gate with that exact v13 identifier.
+- The reconciliation runner invoked `platform-kubectl restart-blocked-image-pulls all`; logs explicitly reported “Permanent image-pull failure … skipping rollout restart” for Stock Admin and Stock Backend because the old `12d63b4` images return `no match for platform in manifest`. No restart was issued for either permanent architecture failure.
+- The following inspection snapshot at 00:59:35Z confirms the same failing Pod identities remained in place with restart counts 0 and ages increased (Admin 113m/136m; new Backend 113m). This is runtime evidence that v13 suppression is active, not merely a code/CI assertion.
+- Reconciliation shared preflight, repository verification, GHCR access, Auth runtime Secret, shared pull credentials, and cluster verification passed. Media, MicroFE, Auth and TCE lanes passed their configured state checks. StockDividend health remains the sole failed application lane. Manifest apply and image-change guard were skipped because no manifest drift was detected; no image promotion occurred.
+
+### Native Platform schedule and recovery
+
+- Native scheduled reconciliation [#41369624425](https://github.com/phanthienquoc/platform-infra/actions/runs/41369624425) was delivered at 00:54:06Z; its overall failure is attributable to StockDividend readiness, not missed schedule delivery.
+- Scheduled freshness watchdog [#41369864119](https://github.com/phanthienquoc/platform-infra/actions/runs/41369864119) failed at 00:56:52Z because the latest scheduled inspection then available was #41351555469 (215m old). This watchdog ran before the next scheduled inspection arrived; it correctly reported the stale interval rather than hiding it.
+- Scheduled inspection [#41370072870](https://github.com/phanthienquoc/platform-infra/actions/runs/41370072870) succeeded at 00:59:28Z and merged inspection PR #1023 after exact-head validation.
+- Post-inspection recovery [#41370192192](https://github.com/phanthienquoc/platform-infra/actions/runs/41370192192) and workflow-run freshness watchdog [#41370192224](https://github.com/phanthienquoc/platform-infra/actions/runs/41370192224) both succeeded at 01:00:48Z. The watchdog's inspection freshness check passed after the new scheduled inspection.
+- This proves another native reconcile/inspection delivery pair and successful post-inspection recovery. It does not yet establish multiple consecutive stable cron intervals; continue monitoring without changing schedule declarations.
+
+### Fresh K3s snapshot
+
+- Snapshot generated 2026-11-02 00:59:35Z: node `tce-k3s-01` Ready, ARM64, K3s `v1.36.3+k3s1`, Ubuntu 22.04.5 LTS, root disk 55%, available memory about 19Gi. Host still reports `restart_required=yes` due pending OS/Docker/containerd updates; do not reboot or upgrade without a maintenance window.
+- Media backend/frontend and MicroFE Shell/WS plus NATS are 1/1. TCE workloads are 0/0; Auth `microfe-auth` and Keycloak are 0/0 in this snapshot. Public OIDC probes return HTTP 503 while Keycloak remains stopped.
+- Stock Admin has two 0/1 Pods and new Stock Backend has one 0/1 Pod using `12d63b4`; old Backend and Frontend replicas remain 1/1 on their prior image. The failure is explicitly `no match for platform in manifest` on ARM64. Restart counts remain 0; runner v13 suppression is working. Do not weaken the StockDividend health gate or change production image references without release authorization.
+
+### TCE → Platform cross-repository heartbeat runtime
+
+Three accepted receiver chains are recorded:
+
+1. Scheduled WF-07 integration #41355068024 → WF-12 workflow_run #41355080288 → Platform repository_dispatch receiver #41355088547 → reconciliation #41355101409.
+2. Scheduled WF-12 #41358488421 → Platform repository_dispatch receiver #41358495488 → reconciliation #41358507981.
+3. Scheduled WF-06 #41360343131 → WF-12 workflow_run #41360361422 → Platform repository_dispatch receiver #41360370906 → reconciliation #41360385108.
+
+- Platform receiver validation succeeded for all three chains after verifying source repository, workflow path, event, master branch, run ID, and full SHA against GitHub Actions API metadata. Reconciliation remains Platform-owned and uses `allow_image_changes=false`; TCE does not receive deployment authority.
+- WF-06 #41360343131 concluded failure because the TCE public endpoints returned HTTP 503 while TCE is intentionally scale-to-zero. WF-12 still forwarded the scheduled source event and Platform accepted it. Do not classify this as application health success.
+- Latest observed scheduled TCE runs remain WF-06 #41360343131 (23:05:18Z), WF-07 integration #41355068024 (22:02:34Z), WF-07 backup #41356061914 (22:13:43Z), and WF-12 direct schedule #41358488421 (22:42:38Z). No newer scheduled TCE event was present at this review. The heartbeat contract is runtime-verified; native TCE cron cadence and TCE application health remain separate observations.
+- Preserve all WF-06/WF-07/WF-12 declarations and the TCE market-scan schedule unchanged.
+
+### Application publication and release status
+
+- StockDividend CI #41314359022 and immutable ARM64 publisher #41314359012 passed on `f5c04475`. Scraper digest: `2146540a30d972af2d41688b6dc6640353f7552da86f740a092e85c082e7fd4f`; Admin: `488cd38462ac66b36258cc84296fe0d2d1f9cb029c9cb53c3b93f49dfe19f621`; Backend: `a3ec6f8c95bfb0184d97228cba25f433d942720aad728fef7716e8f5b6282c94`. Native ARM64 and immutable manifest checks passed. `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=false`; promotion and dispatch remain disabled.
+- Media master `d8e695d7`; CI #41246414186 passed. Latest inspection shows Media backend/frontend healthy 1/1 with pinned runtime imageIDs.
+- Authentication master `ceb2688d`; master CI #41033586844 and manual release #41040510320 passed. PR #75 remains open at head `a8e8a1d99e86a679b8d2ea7c7e7fa91302ffcc05` with exact-head CI #40446492086 successful; PR #76 remains draft at `f19cacb0bf2b454b3152bd3a501f6f88d0a14a58` with CI #41329425940 successful. Both remain gated by the Supabase production integration side-effect review; do not merge based on CI alone.
+
+### Mirror credential and remaining owner action
+
+- Scheduled mirror [#41368359234](https://github.com/phanthienquoc/platform-infra/actions/runs/41368359234) failed at preflight because `PLATFORM_INFRA_MIRROR_TOKEN` was empty/missing. The log confirms no Git clone/push was reached.
+- Configure `PLATFORM_INFRA_MIRROR_TOKEN` as a Platform Infra Actions secret (or organization secret restricted to Platform Infra), scoped only to `phanthienquoc/locally-uncensored-private` with `Contents: write`. Do not substitute GHCR or application handoff credentials.
+
+### Next actions
+
+1. Configure the destination-only mirror token and verify a subsequent scheduled mirror push.
+2. Continue observing multiple consecutive native Platform reconcile/inspection intervals; current evidence proves another delivery pair but not stable cadence.
+3. Keep StockDividend production release disabled until explicit authorization; then promote the paired immutable Admin/Backend digests through Platform Infra and verify rollout/imageIDs.
+4. Keep TCE/Auth/Keycloak desired state unchanged until separately authorized; preserve TCE market-scan and healthcheck schedules.
+5. Continue Auth production integration side-effect review before merging #75/#76.
+
+No production manifests, release flags, GHCR pull credentials, database objects, K3s desired replicas, or cron declarations changed in this review. No workload was restarted, no image was deleted, and no production promotion occurred. TCE and Auth/Keycloak remain stopped as intended. Production remains **NOT HEALTHY/UNVERIFIED** because StockDividend Admin/Backend are not ready.
