@@ -1313,3 +1313,37 @@ Preserve useful CI/test/security, build/publish, backup, cleanup, manual/read-on
 - Platform post-merge validation #41462989569 and #41462989629 PASS.
 - Platform recovery push #41462989681 SUCCESS and explicitly skipped fallback dispatch because reconciliation #41460962292 and inspection #41461378005 were fresh.
 - No new native schedule tick observed; do not count post-merge/recovery runs as cron delivery.
+
+
+## 2026-11-02 15:01 UTC — TCE paired digest release and reconciliation compatibility
+
+### TCE producer: `TCE-dashboard/.github/workflows/wf-03-tce-production-deploy.yml`
+
+- Release labels now end in the full 40-character source commit SHA.
+- Buildx registry inspection resolves the web and service manifest digests after push and checks both expose `linux/arm64`.
+- `tce-release-requested` carries `web_digest`, `service_digest`, `source_run_id`, `source_workflow_path`, `source_event` and `source_head_sha`.
+- Producer acknowledgement matches the exact Platform Image Promotion display title/release, not any recent promotion run.
+- WF-01 and WF-01P enforce this contract. Master post-merge WF-01/WF-02/WF-05 all passed on `afad281fa57b2846446a152b6f5cf3c2600ee51d`.
+
+### Platform consumer: `platform-infra/.github/workflows/gitops-image-promotion.yml`
+
+- `promote-tce-digests` handles `tce-release-requested` and verifies full-SHA release metadata and source publisher provenance first.
+- GHCR tag resolution must equal each attested digest; the exact digest references are separately checked by `scripts/validate-ghcr-image-reference.sh` for ARM64.
+- Web/service are promoted together through `scripts/promote-tce-image-digests.py` in one exact-head PR. The coordinator waits until both digests are on master before dispatching the shared GitOps reconciliation.
+- The changed-image contract rejects new TCE tag references. The current legacy tag pair remains renderable until the next authorized digest promotion.
+- Concurrency key includes the TCE release label to serialize/reconcile the paired release event.
+
+### Runtime compatibility: TCE release and live-image checks
+
+- `scripts/resolve-tce-gitops-image-refs.py` is the single parser for paired legacy tags or paired SHA-256 digests.
+- `scripts/verify-tce-gitops-release.sh` validates both references and rejects mixed modes, malformed/duplicate/missing fields and mismatched legacy tags.
+- `scripts/verify-tce-gitops-images.sh` validates the pair and compares live Deployment image references using tag or digest syntax.
+- `validate-github-actions.yml` runs resolver self-tests; `validate-workflow-contracts.py` asserts both runtime scripts use the resolver.
+- `reconcile-vps.yml` remains the sole production apply authority. No app repository gains SSH, Compose, kubectl apply or production manifest ownership.
+
+### Validation
+
+- TCE producer PR #1013: exact-head WF-01P/WF-02/WF-05 PASS; post-merge WF-01/WF-02/WF-05 PASS.
+- Platform consumer PR #1065: exact-head validate-github-actions/validate-manifests/keycloak-ci PASS; post-merge all three PASS.
+- Platform runtime compatibility PR #1066: exact-head validate-github-actions/validate-manifests PASS; post-merge both PASS.
+- Runtime compatibility changes were code/tests only; no TCE release was published or promoted.
