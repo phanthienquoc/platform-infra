@@ -1748,3 +1748,13 @@ No production manifest, image, credential, database, replica, release flag, depl
 - StockDividend publisher #41524676740 SUCCESS published ARM64 immutable artifacts (scraper 83c989df..., admin d0d6f037..., backend 1f8d5a61...). Promotion gate false; handoff and atomic promotion skipped; no Platform dispatch. #28's validator path exclusion prevented a new publisher run.
 - Native Platform/TCE schedule history remains as recorded in the tracker; no cron changes. TCE market-scan schedule unchanged.
 - Preserve `reconcile-vps.yml` as sole production apply authority; no database migrations, production manifest changes, image promotions, credential mutations or VPS reboot.
+
+
+## 2026-11-03 03:58 ICT — setup-node runtime migration inventory
+- Remaining `actions/setup-node@v4` references were found in TCE WF-01P/WF-02 format/WF-11 mobile/WF-02 backend CI, StockDividend CI and Authentication service/web CI. Dedicated PRs #1016, #29 and #85 replace them with immutable Node24 setup-node v7.1.0 SHA `949feb2413d6458794dcd2491c4babbbce0c15c1`, preserving application Node versions and build/test commands.
+- PR #1016 exact head `ee6ca523c434e2d90ab06387f89611c8be88c772`: CI in progress.
+- PR #29 exact head `3e0ce3306fcf1f6d8c39c2f3d84a06aa8fb85d63`: CI in progress; only CI workflow path changed, production publisher not triggered.
+- PR #85 exact head `0561e3f112e1d78cc7a44af696ab5d2249b94e2c`: service/web CI in progress; Preview skipped.
+- Release publishers in TCE #1015, StockDividend #27, Media #70 and Auth #84 now use verified immutable Node24 action releases. TCE/Auth release workflows remain manual-only. Media/Stock publisher path filters prevent CI/contract-only changes from publishing.
+- Platform current master `773ae46ba87894fd3f00fc3cf2375375285d0e02`; open PRs #544/#541/#539 plus this tracker PR. TCE #1016; StockDividend #29; Media none; Auth #75/#76/#85.
+- Preserve sole production apply authority `reconcile-vps.yml`; no direct SSH/Compose authority. No release dispatch, GitOps promotion, DB migration, cron change or VPS reboot. TCE market-scan schedule unchanged.
