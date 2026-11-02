@@ -1220,3 +1220,70 @@ Preserve useful CI/test/security, build/publish, backup, cleanup, manual/read-on
 - Exact-head run #41450382752 and post-merge run #41450454704 both completed SUCCESS. All manifest, image, secret, Auth, Keycloak and network-boundary validation steps passed; changed-image validation was correctly skipped for this documentation-only PR.
 - The PR changed only the deployment tracker and workflow inventory. No production workflow/manifest/credential/image/replica/schedule was changed.
 - Current Platform open PRs: #544/#541/#539. Authentication: #75/#76. No open PRs in TCE, StockDividend or Media. TCE market-scan schedule unchanged.
+
+
+## Media publisher provenance contract — merged 2026-11-02
+
+- Producer: `phanthienquoc/media-generation/.github/workflows/wf-03-media-production-deploy.yml`.
+  - App repository owns frontend/backend build, GHCR publication, immutable digest resolution and ARM64 verification.
+  - Paired `media-images-published` payload now contains `app`, `commit`, `release`, `frontend_digest`, `backend_digest`, `source_run_id`, `source_workflow_path`, `source_event`, and `source_head_sha`.
+  - Source event is limited to `push` or `workflow_dispatch`; source branch is master; release tag ends in the full 40-character source SHA.
+  - Producer PR #67 exact-head CI #41460676531 PASS; merge commit `0d4fc2ac15834c20357fd2420b732e6411fd8930`; post-merge master CI #41460906654 PASS.
+- Consumer: `platform-infra/.github/workflows/gitops-image-promotion.yml`.
+  - Resolves and validates all four provenance fields before promotion.
+  - Runs `scripts/verify-media-publisher-run.sh` before GHCR image validation or GitOps PR creation.
+  - Verifier reads the public Media Actions run endpoint without a cross-repository credential and checks exact run ID, repository, head repository, workflow path, event, master branch, full head SHA, completed status and successful conclusion.
+  - Regression tests: `scripts/tests/verify-media-publisher-run.test.sh`; executed by `validate-github-actions.yml`.
+  - Static workflow contract validation asserts the provenance step precedes GHCR validation and no cross-repo credential is introduced.
+  - Platform PR #1060 exact-head #41460750901 (workflow/lint/contracts) and #41460750395 (manifest render/contracts) PASS; merge commit `abe384ba89e09669a3273141d76815d44409cc5c`; post-merge #41460929753/#41460929860 PASS.
+- Merge order was producer #67 first, consumer #1060 second. Legacy Media payloads without provenance are rejected by the consumer.
+- No new Media Actions token is required while the source repository remains public. If visibility changes to private, fail closed and add a dedicated read-only credential before release.
+- No Media release was dispatched by these workflow-only changes; no production image or manifest changed.
+
+## Runtime evidence — reconciliation #41460962292 (2026-11-02 14:20Z)
+
+- Invocation: post-merge recovery `workflow_dispatch`, `target_app=all`, `mode=apply`, `allow_image_changes=false`.
+- Shared preflight SUCCESS, runner v14 ready, GHCR access PASS, Auth Secret/pull-credential bootstrap steps PASS, Media digest refs resolved, drift false, manifest apply skipped.
+- Node Ready, K3s v1.36.3+k3s1, Ubuntu 22.04.5 ARM64, containerd 2.3.2-k3s2.
+- Media, MicroFE and NATS healthy; Auth lane PASS with rollout intentionally skipped; TCE GitOps image pair and scale-to-zero health PASS; Keycloak skipped.
+- StockDividend Admin and new Backend remain ImagePullBackOff on old tag 12d63b4 due missing linux/arm64 manifest. Runner v14 skipped restart. StockDividend health lane failed; final gate failed only for StockDividend.
+- Read-only inspection #41461378005 completed SUCCESS; inspection PR #1061 exact-head validated by #41461496570 and squash-merged at `08b8b52891e7037e28cc6926648125a85c77db1a`. It is workflow_dispatch recovery evidence, not a native schedule.
+
+## Native schedule evidence at 2026-11-02 14:25Z
+
+- Platform native schedule last observed: inspection #41407411326, reconciliation #41407522742, watchdog #41406983213, mirror #41407613563, recovery #41400302676. No newer schedule event observed.
+- TCE native schedule last observed: WF-06 #41424898130, WF-12 #41419694332, WF-07 #41397768048. WF-06 forwarder #41424938817 and Platform receiver #41424970499 are workflow_run/fallback evidence, not cron delivery.
+- Do not alter any cron expression, strict HTTP 200 checks or TCE market-scan schedule.
+
+## Current repository and owner-action inventory — 2026-11-02 14:25Z
+
+- Platform Infra master `08b8b52891e7037e28cc6926648125a85c77db1a`; open draft PRs #544/#541/#539.
+- TCE Dashboard master `a5e8866d2ba28936d57b31ce6a067186c7204369`; no open PRs.
+- StockDividend master `38220ddfef2db7128482547f72b7f06211e9c9bc`; no open PRs.
+- Media Generation master `0d4fc2ac15834c20357fd2420b732e6411fd8930`; no open PRs.
+- Authentication master `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`; open PRs #75/#76 remain gated on production side effects and migration provenance.
+- StockDividend production release remains disabled pending explicit authorization and `STOCKDIVIDEND_ACTIONS_READ_TOKEN`.
+- Mirror requires `PLATFORM_INFRA_MIRROR_TOKEN` with destination-only Contents:write.
+- Preserve all CI/test/security, backup, cleanup, manual/read-only, release and scheduled workflows. No duplicate SSH/Compose deployment authority. TCE market-scan schedule unchanged.
+
+
+## Read-only VPS inspection contract and latest evidence — 2026-11-02
+
+- `.github/workflows/inspect-vps.yml` remains read-only and writes only `debug/vps-latest.md` through an exact-head inspection PR.
+- Recovery-triggered inspection [#41461378005](https://github.com/phanthienquoc/platform-infra/actions/runs/41461378005) SUCCESS; generated at 2026-11-02T14:22:54Z. Inspection PR #1061 exact head `0bf22ec5f13b3e4bd5eada3169300181628f3f6f`, exact manifest validation #41461496570 PASS, squash merge commit `08b8b52891e7037e28cc6926648125a85c77db1a`.
+- Node Ready; K3s v1.36.3+k3s1; containerd 2.3.2-k3s2; Ubuntu 22.04.5 ARM64; Docker 29.1.3; 19 GiB RAM available; disk 55%, pressure normal.
+- Platform and Media runner services active/enabled; runner policy v14 installed.
+- OS/containerd/Docker updates remain pending and `restart_required=yes`; no maintenance/reboot occurred.
+- Media backend/frontend, MicroFE Shell/WS and NATS are healthy with runtime imageIDs recorded. Media backend digest is `sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d`; frontend digest is `sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a`.
+- Stock Admin two Pods and new Backend Pod remain ImagePullBackOff on `12d63b4`, no imageID, no restart loop; old Backend `23b2878` and unmanaged legacy Frontend remain Running.
+- TCE frontend/service and microfe-auth/Keycloak remain 0/0 intentionally.
+- Docker image inventory reported 5.773 GB reclaimable, but disk pressure is normal; no cleanup was run.
+- This inspection was a recovery `workflow_dispatch`, not native schedule delivery. No production manifest, image, replica, credential value, database object or cron expression was changed by the inspection.
+
+## Latest Platform state after inspection merge
+
+- Platform master: `08b8b52891e7037e28cc6926648125a85c77db1a`.
+- Open Platform PRs: #544/#541/#539 (draft).
+- Media PR #67 and Platform PR #1060 are merged; their publisher provenance contract is now active.
+- Reconciliation #41460962292 final gate failed only on StockDividend; Auth, MicroFE, Media and TCE lanes passed; Keycloak skipped.
+- Native Platform and TCE schedule history remains stale as recorded above. Recovery/inspection dispatches must not be counted as cron ticks.
