@@ -2450,3 +2450,40 @@ Authentication PR #75/#76 remain gated on production Supabase integration side-e
 5. Keep Auth #75/#76 gated pending side-effect and migration review; schedule host OS/containerd maintenance separately.
 
 No production manifest or image reference changed in this run; no database migration, release promotion, desired-replica change, or cron change occurred. Secret/pull-credential reconciliation steps ran successfully, but whether values changed versus were already current is not established by the logs. \`reconcile-vps.yml\` remains the sole production GitOps apply authority; \`inspect-vps.yml\` remains read-only; recovery/watchdog only observe and dispatch. No direct SSH/Compose deployment authority was added. TCE market-scan schedule unchanged.
+
+
+## Fresh read-only VPS inspection — 2026-11-02 14:22:54Z / 21:22:54 ICT
+
+- Recovery inspection run [#41461378005](https://github.com/phanthienquoc/platform-infra/actions/runs/41461378005) completed SUCCESS. It was a recovery-triggered \`workflow_dispatch\`, not a native schedule tick.
+- Generated snapshot was committed through inspection PR [#1061](https://github.com/phanthienquoc/platform-infra/pull/1061), exact head \`0bf22ec5f13b3e4bd5eada3169300181628f3f6f\`, validated by [#41461496570](https://github.com/phanthienquoc/platform-infra/actions/runs/41461496570) and squash-merged at \`08b8b52891e7037e28cc6926648125a85c77db1a\`.
+- Host: Ubuntu 22.04.5 LTS, ARM64, kernel \`6.8.0-1049-oracle\`; K3s \`v1.36.3+k3s1\`; containerd \`2.3.2-k3s2\`; Docker \`29.1.3\`.
+- Resources: 23 GiB RAM, 19 GiB available; root disk 45 GiB total, 25 GiB used, 21 GiB available (55%); disk pressure normal; uptime about 185 days.
+- Runner services for Platform Infra and Media Generation were active/enabled; runner policy v14 remained installed.
+- Docker inventory: 20 images, 11 active, 9.195 GB; 5.773 GB reported reclaimable. No image cleanup was run because disk pressure is normal and the inventory alone does not establish every candidate is safe to delete.
+- OS package updates include containerd 2.4.2 and Docker 29.9.2; \`restart_required=yes\`. No package upgrade, containerd upgrade, Docker upgrade or reboot was performed.
+
+### Fresh workload and immutable image evidence
+
+| Namespace / workload | Ready | Runtime image evidence |
+|---|---:|---|
+| media-prod / media-generation backend | 1/1 | \`backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d\` |
+| media-prod / media-generation frontend | 1/1 | \`frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a\` |
+| microfe-platform / shell | 1/1 | digest-pinned imageID recorded |
+| microfe-platform / ws | 1/1 | digest-pinned imageID recorded |
+| microfe-platform / NATS | 1/1 | imageID recorded |
+| stock-prod / Admin | 0/1 Deployment; two Pods 0/1 | \`admin:12d63b4\`, no imageID, ImagePullBackOff |
+| stock-prod / Backend old replica | 1/1 | \`backend:23b2878\`, imageID \`sha256:bcf5f7b1b660b5b93cd9d9f4f041db7e9166c89b084412fa4f66e8e4d9a43ad1\` |
+| stock-prod / Backend new Pod | 0/1 | \`backend:12d63b4\`, no imageID, ImagePullBackOff |
+| stock-prod / Frontend legacy | 1/1 | \`user:23b2878\`, imageID \`sha256:bca44dd31869a4874a795c6e6ace51f9362731770f3ac9ca1ee8f3e608d6bf99\` |
+| tce-prod / frontend and service | 0/0 | intentionally scaled to zero |
+| microfe-platform / microfe-auth and Keycloak | 0/0 | intentionally scaled to zero |
+
+The three failing StockDividend Pods report \`no match for platform in manifest\`; their restart counts remain 0. The old Backend replica and legacy Frontend are not proof that the new Admin/Backend images are healthy.
+
+The inspection confirms the earlier reconciliation result: Media and MicroFE are healthy, TCE/Auth/Keycloak remain stopped by design, and StockDividend Admin/Backend are the outstanding runtime failure. Keep runner v14 permanent-error suppression enabled. Do not promote, restart, delete cached images, or change replicas without the required release authorization.
+
+### Inspection merge and current Platform head
+
+- Inspection PR #1061 was generated from a read-only snapshot, exact-head validated, and squash-merged by the inspection workflow. Current Platform master is \`08b8b52891e7037e28cc6926648125a85c77db1a\`.
+- PR #1061 changed only \`debug/vps-latest.md\`; no production manifest was changed.
+- Exact inspection manifest validation #41461496570 passed. Post-merge manifest validation #41461496570 is the same exact-head run because the inspection workflow validates the snapshot before merge; no separate post-merge push run was observed in the latest run list.
