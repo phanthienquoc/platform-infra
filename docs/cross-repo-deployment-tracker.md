@@ -1,3 +1,49 @@
+## Runtime verification update — 2026-11-02 11:03 ICT / 04:03 UTC
+
+### Repository heads and open PRs
+- Platform Infra master: `f43983096cd2b698f01d8d990258e6e7b592a061`.
+- TCE Dashboard: `a5e8866d2ba28936d57b31ce6a067186c7204369`.
+- StockDividend: `f5c04475eb4e67811c66b350d60541b21b8262c7`.
+- Media Generation: `d8e695d772ab2dc0da5c15cc428ee78ac6537518`.
+- Authentication: `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: Platform #795/#749/#648/#544/#541/#539/#538; Authentication #75/#76; none in TCE, StockDividend, or Media.
+- Platform PR #741 merged as `b1336c62c3d17cc0e8094909f4f5f42a6590f063`; PR #1032 merged as `b6e4c41bea1459343a608ac08b0338c9718b16bd`; inspection PR #1033 merged as `f43983096cd2b698f01d8d990258e6e7b592a061`.
+
+### Runner v14 and post-install reconciliation
+- Existing bootstrap run [#41381590010](https://github.com/phanthienquoc/platform-infra/actions/runs/41381590010) verified the live VPS policy `rollout-status-v14-stockdividend-managed-workloads`; `bootstrap-runner.yml` remains the only helper installer.
+- Reconciliation [#41385997750](https://github.com/phanthienquoc/platform-infra/actions/runs/41385997750) ran after v14 installation from master SHA `b6e4c41b...`, event `workflow_dispatch`, `mode=apply`, `target_app=all`, `allow_image_changes=false`. The log explicitly confirmed `Runner policy v14 (managed StockDividend workloads) is ready.`
+- Shared GHCR preflight/credential reconciliation succeeded. Kubernetes diff reported no manifest drift, so manifest apply and post-apply drift verification were correctly skipped. No image change was allowed.
+- The v14 helper detected permanent ARM64 manifest failures for `stock-admin` and `stock-backend` and skipped rollout restart for both. Pod restart counts remained zero. Exact error: `no match for platform in manifest`.
+- Deployment lanes: Media PASS; TCE PASS (intentionally scaled to zero); MicroFE PASS; Auth PASS (Auth secret exists and service is intentionally scaled to zero); Keycloak SKIPPED; StockDividend FAIL. Final gate failure is isolated to StockDividend Admin/Backend readiness. This is successful v14 suppression/reconciliation evidence, not a healthy production rollout.
+- Recovery [#41386187542](https://github.com/phanthienquoc/platform-infra/actions/runs/41386187542) succeeded and dispatched read-only inspection [#41386215251](https://github.com/phanthienquoc/platform-infra/actions/runs/41386215251).
+
+### Fresh K3s inspection
+- Inspection [#41386215251](https://github.com/phanthienquoc/platform-infra/actions/runs/41386215251) completed successfully. Snapshot PR #1033 used exact head `6b3eed4f2db6519246c98ad2b2537c17b5706c4e`, passed exact-head manifest validation [#41386278979](https://github.com/phanthienquoc/platform-infra/actions/runs/41386278979), and squash-merged as `f43983096cd2b698f01d8d990258e6e7b592a061`.
+- Snapshot generated at 2026-11-02T04:02:21Z: node `tce-k3s-01` Ready/ARM64, K3s `v1.36.3+k3s1`, disk 55%, about 19 GiB available, GitOps drift clean, `restart_required=yes` due pending OS/Docker/containerd updates.
+- Media backend/frontend, MicroFE Shell/WS and NATS are 1/1. Stock Admin has two ImagePullBackOff Pods on `12d63b4`; new Stock Backend Pod is ImagePullBackOff on `12d63b4`; old Backend and legacy Frontend remain 1/1. TCE, Auth and Keycloak remain 0/0 as requested. Public OIDC probes return 503 while Keycloak is intentionally stopped. No reboot or package upgrade.
+
+### Native schedule delivery
+- Latest schedule-filtered Platform runs remain reconciliation #41369624425 (00:54Z), watchdog #41369864119 (00:56Z), and inspection #41370072870 (00:59Z). No later native scheduled event was observed by 04:03Z. Workflow-dispatch recovery #41385997750/#41386187542 and inspection #41386215251 are fallback evidence, not native cron cadence.
+- Latest scheduled TCE WF-06 remains #41378060687 (02:30Z, four public endpoints HTTP 503 because TCE/Auth are intentionally stopped); latest scheduled WF-12 remains #41374853407 (01:54Z). WF-07 backup/integration remain #41356061914/#41355068024. No new scheduled TCE event after the WF-06 public-only cleanup merge. Keep all schedules and the TCE market-scan cadence unchanged.
+- The last verified TCE heartbeat chain remains WF-06 #41378060687 → WF-12 #41378080124 → Platform receiver #41378091682. Receiver validation passed, but this predates the latest TCE master cleanup and does not prove a new post-merge heartbeat.
+- Scheduled mirror #41368359234 still fails because `PLATFORM_INFRA_MIRROR_TOKEN` is absent. Required scope: destination-only `Contents: write` for `phanthienquoc/locally-uncensored-private`; do not substitute GHCR or dispatch tokens.
+
+### App publication and release holds
+- StockDividend CI/publisher [#41314359022](https://github.com/phanthienquoc/stockdividend/actions/runs/41314359022) / [#41314359012](https://github.com/phanthienquoc/stockdividend/actions/runs/41314359012) passed for source SHA `f5c04475eb4e67811c66b350d60541b21b8262c7`. Publisher logs verified linux/arm64 and immutable digests:
+  - Scraper: `sha256:2146540a30d972af2d41688b6dc6640353f7552da86f740a092e85c082e7fd4f`
+  - Admin: `sha256:488cd38462ac66b36258cc84296fe0d2d1f9cb029c9cb53c3b93f49dfe19f621`
+  - Backend: `sha256:a3ec6f8c95bfb0184d97228cba25f433d942720aad728fef7716e8f5b6282c94`
+- The StockDividend release-handoff validation and atomic promotion dispatch were SKIPPED because `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=false`. Production still references incompatible tag `12d63b4`; no promotion or manifest change is authorized.
+- Media latest CI remains #41246414186 (PASS); production runtime references are digest-pinned (backend `sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d`, frontend `sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a`). No new Media publication.
+- Authentication PR #75/#76 remain open. PR #75 still has a production Supabase GitHub-integration side-effect gate; PR #76 remains a documentation-only migration-drift plan. No migration, database mutation, Auth activation or Keycloak activation was performed.
+
+### Workflow ownership and safety
+- PR #741 added `.github/workflows/vps-manual-operations.yml`: manual-only, master-only, production-environment, `contents: read`, five-minute read-only host/service/K3s summary using the existing `platform-kubectl` allowlist. It adds no SSH, Docker/Compose or deployment authority and complements `inspect-vps.yml`.
+- PR #1032 corrected stale v13 operator-facing messages in `reconcile-vps.yml` and added a validator preventing future policy-version diagnostic drift. Exact-head checks #41385919562/#41385919535/#41385919367 and post-merge checks #41385986820/#41385986795/#41385986726 all passed.
+- No production manifest, image reference, release flag, GHCR credential, database object, desired replica or cron schedule was changed. `reconcile-vps.yml` remains the sole GitOps apply authority; `inspect-vps.yml` remains read-only; `bootstrap-runner.yml` remains the only runner-helper installer. Production remains **NOT HEALTHY/UNVERIFIED** because StockDividend Admin/Backend are not Ready.
+
+---
+
 ## Runtime verification update — 2026-11-02 10:13 ICT / 03:13 UTC
 
 ### Repository heads and PR inventory
