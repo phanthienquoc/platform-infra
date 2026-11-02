@@ -95,12 +95,15 @@ write_waiting_fixture transient stock-backend ErrImagePull "connection reset by 
 : > "$MOCK_RESTART_LOG"
 transient_output="$(run_helper transient 2>&1)"
 grep -Fq "Transient image-pull failure" <<< "$transient_output"
-expected_restarts=
-[[ "$actual_restarts" == "$expected_restarts" ]] || {
-  echo "Transient failures did not restart exactly the selected StockDividend Deployments." >&2
-  printf 'expected:\n%s\nactual:\n%s\n' "$expected_restarts" "$actual_restarts" >&2
+actual_restarts="$(cat "$MOCK_RESTART_LOG")"
+actual_restart_count="$(wc -l < "$MOCK_RESTART_LOG")"
+[[ "$actual_restart_count" -eq 2 ]] || {
+  echo "Transient failures did not restart exactly two managed StockDividend Deployments." >&2
+  printf 'actual:\n%s\n' "$actual_restarts" >&2
   exit 1
 }
+grep -Fxq "stock-prod/stock-admin" <<< "$actual_restarts"
+grep -Fxq "stock-prod/stock-backend" <<< "$actual_restarts"
 
 # A Deployment with mixed permanent and transient Pod errors is fail-closed:
 # restarting it would still create Pods for the permanent bad image reference.
