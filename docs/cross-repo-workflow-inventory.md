@@ -1739,3 +1739,12 @@ No production manifest, image, credential, database, replica, release flag, depl
 - TCE #1015 merged at `84119b25816d19347f8a0bc6f239914e686ff424`; all exact-head and post-merge WF-01/WF-02/WF-05 checks SUCCESS.
 - Auth #84 merged at `897bc7b921c7d34a3c19c945cb3d4f1affcdd6c6`; validate and post-merge auth-service-ci SUCCESS; Supabase Preview SKIPPED.
 - Open PRs: Platform #544/#541/#539/#1092; Auth #75/#76; none in TCE/StockDividend/Media.
+
+
+## 2026-11-03 03:58 ICT — final PR and workflow inventory correction
+- Platform PR #1093 merged at `1d16ef3ad47eb0944aa3435619664259d1a62928`; exact-head validation #41525955931 SUCCESS; post-merge validation #41526024719 was in progress.
+- Open PRs: Platform #544/#541/#539; Auth #75/#76; none in TCE, StockDividend or Media. Cross-repo docs PRs #1091/#1092 closed as superseded; #1093 merged.
+- TCE #1015 and Auth #84 merged with exact-head/post-merge CI success; Media #70 merged with PR/push/post-merge CI success; StockDividend #28 merged with all five checks and post-merge CI success.
+- StockDividend publisher #41524676740 SUCCESS published ARM64 immutable artifacts (scraper 83c989df..., admin d0d6f037..., backend 1f8d5a61...). Promotion gate false; handoff and atomic promotion skipped; no Platform dispatch. #28's validator path exclusion prevented a new publisher run.
+- Native Platform/TCE schedule history remains as recorded in the tracker; no cron changes. TCE market-scan schedule unchanged.
+- Preserve `reconcile-vps.yml` as sole production apply authority; no database migrations, production manifest changes, image promotions, credential mutations or VPS reboot.
