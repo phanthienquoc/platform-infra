@@ -1287,3 +1287,29 @@ Preserve useful CI/test/security, build/publish, backup, cleanup, manual/read-on
 - Media PR #67 and Platform PR #1060 are merged; their publisher provenance contract is now active.
 - Reconciliation #41460962292 final gate failed only on StockDividend; Auth, MicroFE, Media and TCE lanes passed; Keycloak skipped.
 - Native Platform and TCE schedule history remains stale as recorded above. Recovery/inspection dispatches must not be counted as cron ticks.
+
+## TCE publisher provenance contract — merged 2026-11-02
+
+- Producer: `TCE-dashboard/.github/workflows/wf-03-tce-production-deploy.yml`.
+  - TCE remains responsible for native ARM64 image builds and GHCR publication.
+  - `tce-release-requested` payload now includes `app`, `release`, `source_run_id`, `source_workflow_path`, `source_event`, and `source_head_sha`.
+  - Source event is restricted to `workflow_dispatch` from master; full source SHA is attested and the existing 7-character release-tag suffix is checked against it.
+  - `scripts/validate-tce-release-contract.sh` runs in WF-01P PR CI, WF-01 master verification and WF-03 before dispatch.
+  - PR #1012 exact-head checks #41462785094 (WF-01P), #41462785167 (WF-02) and #41462785008 (WF-05) PASS; merge commit `3c987231ffc1cfafebcb25d2d140e7f499081310`.
+- Consumer: `platform-infra/.github/workflows/gitops-image-promotion.yml`.
+  - `fanout-tce-release` validates the four source fields and runs `scripts/verify-tce-publisher-run.sh` before either image promotion dispatch.
+  - Verifier checks exact run ID, repository, head repository, workflow path, event, master branch, full SHA, completed status and successful conclusion using the public TCE Actions API.
+  - Regression tests: `scripts/tests/verify-tce-publisher-run.test.sh`, executed by `validate-github-actions.yml`.
+  - Static workflow contract validation ensures provenance verification precedes both image-promotion dispatches and no cross-repository credential is introduced.
+  - PR #1063 exact-head #41462823605 (workflow/lint/contracts) and #41462823627 (manifest render/contracts) PASS; merge commit `41c453c0a1b6df2c69de1d9f51c061e2f5266a27`; post-merge #41462989569/#41462989629 PASS.
+- Merge order: TCE producer PR #1012 first, Platform consumer PR #1063 second. Legacy `tce-release-requested` payloads without provenance are rejected.
+- TCE is public, so no TCE Actions-read PAT is required. Existing TCE `PLATFORM_INFRA_TOKEN` remains only for producer-side Platform dispatch/run correlation. If TCE becomes private, fail closed and configure a dedicated Actions:read credential before release.
+- No TCE release was dispatched by these changes. The existing 7-character SHA-derived tag remains; digest-pinned TCE production manifest migration is a separate follow-up.
+
+## TCE provenance post-merge runtime status — 2026-11-02 14:40Z
+
+- TCE post-merge WF-02 #41462961803 PASS; WF-05 #41462961759 PASS.
+- WF-01 master build #41462961881 passed `Validate TCE production release contract` and `Verify required repository secrets`; ARM64 frontend image build was still in progress at the time of inventory update.
+- Platform post-merge validation #41462989569 and #41462989629 PASS.
+- Platform recovery push #41462989681 SUCCESS and explicitly skipped fallback dispatch because reconciliation #41460962292 and inspection #41461378005 were fresh.
+- No new native schedule tick observed; do not count post-merge/recovery runs as cron delivery.
