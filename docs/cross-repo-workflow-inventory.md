@@ -1723,3 +1723,10 @@ No production manifest, image, credential, database, replica, release flag, depl
 - TCE #1015 merged at `84119b25816d19347f8a0bc6f239914e686ff424`; exact-head checks all PASS; post-merge WF-05/WF-02 PASS and WF-01 still running.
 - Auth #84 merged at `897bc7b921c7d34a3c19c945cb3d4f1affcdd6c6`; exact-head validation PASS, Preview skipped; post-merge auth-service CI PASS. #75/#76 remain open.
 - Open PRs: Platform #544/#541/#539/#1091; Media #70; Auth #75/#76; none in TCE/StockDividend.
+
+
+### 2026-11-03 03:58 ICT — StockDividend publication outcome
+- StockDividend publisher #41524676740 completed SUCCESS on `fc10f56eadba769fe102da6465bee27c9e14f9a9`; release_enabled=false, promotion handoff SKIPPED, atomic promotion job SKIPPED, no Platform repository_dispatch.
+- Verified immutable ARM64 publisher digests: scraper `sha256:83c989df5d156d0a70de4a268a0ce35b9313dda7b1d1170da97ccd8058dd2e9b`; admin `sha256:d0d6f037c1d2801018a36921360bfee3852ee7d14e3b33ee2e0fd790dddf6ec1`; backend `sha256:1f8d5a6161da3774578a6f9d2c1e04b4efd624a516e66ab941ebddaa964233a0`. Artifacts are not promoted; production manifest remains unchanged.
+- StockDividend #28 merged at `3b68bad71b9c3832c1ee2a6de0ce085d9ac758f9`; all exact-head jobs passed and its merge triggered CI only, not the publisher.
+- Media #70 PR CI #41525436728 SUCCESS; separate push CI #41525425598 still running.
