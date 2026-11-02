@@ -1758,3 +1758,15 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Release publishers in TCE #1015, StockDividend #27, Media #70 and Auth #84 now use verified immutable Node24 action releases. TCE/Auth release workflows remain manual-only. Media/Stock publisher path filters prevent CI/contract-only changes from publishing.
 - Platform current master `773ae46ba87894fd3f00fc3cf2375375285d0e02`; open PRs #544/#541/#539 plus this tracker PR. TCE #1016; StockDividend #29; Media none; Auth #75/#76/#85.
 - Preserve sole production apply authority `reconcile-vps.yml`; no direct SSH/Compose authority. No release dispatch, GitOps promotion, DB migration, cron change or VPS reboot. TCE market-scan schedule unchanged.
+
+## 2026-11-03 04:57 ICT — Node24 CI migration completed
+
+- TCE PR #1016 merged at `2beeedc5a875e0017dbdd0c49e432b3803bbe33d`; exact-head WF-11 #41526244453, WF-02 #41526244889, WF-01P #41526244499 and WF-05 #41526244527 all SUCCESS.
+- StockDividend PR #29 merged at `3d67cbb6bacda7d8c46a7f484129091a8fe3af6e`; exact-head CI #41526269593 SUCCESS.
+- Authentication PR #85 merged at `bf5ac54a2c48ad4c439d2c1241aca08c4960bc18`; exact-head auth-service-ci #41526295672 and auth-web-ci #41526295607 SUCCESS. Supabase Preview SKIPPED and not counted as production integration evidence.
+- Node24 setup-node CI migration is complete for all three remaining application repositories. Publisher workflows across TCE, StockDividend, Media and Auth were previously migrated to immutable Node24 action commits. Application Node versions, package managers, caches, build/test commands and release triggers were preserved.
+- Current open PRs: Platform #544/#541/#539 (draft); Authentication #75/#76; none in TCE, StockDividend or Media.
+- StockDividend immutable ARM64 artifacts from publisher #41524676740 remain unpromoted: scraper `83c989df...`, admin `d0d6f037...`, backend `1f8d5a61...`. Release gate false; no Platform dispatch; GitOps production image references unchanged.
+- Latest available K3s snapshot #41515885354 is stale. It records Stock Admin/new Backend ImagePullBackOff on old tag `12d63b4`, while Media/MicroFE/NATS were healthy and TCE/Auth/Keycloak remained intentionally 0/0.
+- Platform native inspection/reconciliation/watchdog/mirror and TCE WF-06/WF-12 schedules remain without proven consecutive cadence recovery. WF-07 and Platform recovery have successful isolated schedule evidence. Do not change any cron expression or TCE market-scan schedule.
+- Preserve `reconcile-vps.yml` as the only production apply authority. No direct SSH/Compose deployment authority added. No release dispatch, GitOps promotion, DB migration, secret mutation, replica change or VPS reboot.
