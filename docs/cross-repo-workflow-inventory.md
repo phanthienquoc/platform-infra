@@ -1789,3 +1789,13 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Current open PRs: Platform #544/#541/#539 (draft); Authentication #75/#76. TCE, StockDividend and Media have no open PRs. Tracker PR #1096 remains open and needs base/mergeability re-check.
 - StockDividend production overlay still uses old Admin/Backend tag `12d63b4`; newly published ARM64 digests remain unpromoted. K3s snapshot #41515885354 remains stale. Native schedule cadence is not proven consecutive.
 - No production release, GitOps promotion, DB migration, credential mutation, replica change, VPS maintenance or cron change. `reconcile-vps.yml` remains sole production apply authority; TCE market-scan schedule unchanged.
+
+## 2026-11-03 05:25 ICT — post-merge state refresh
+
+- Platform tracker PR #1096 merged at `a362c9a6e4e001b1a1309afd7eeee4ed099c0e13`; docs-only and no PR-triggered workflow run/status contexts surfaced.
+- Current master heads: Platform `a362c9a6e4e001b1a1309afd7eeee4ed099c0e13`; TCE `5d299bea8ba482876ccaa291c68b0ee3f829350c`; StockDividend `efdb0844e868367d29bbeb5393430cd73d6b6f38`; Media `763fdcd1463fe4d95c81c93d1e7ae010f2cd0cd3`; Auth `bf5ac54a2c48ad4c439d2c1241aca08c4960bc18`.
+- Open PRs: Platform #544/#541/#539 (draft); Auth #75/#76; none in TCE, StockDividend or Media.
+- Node24 action migration follow-ups merged: Platform #1097 (manifest/workflow validation PASS), TCE #1017 (WF-02/WF-05/WF-08B/WF-11 PASS), StockDividend #30 (all five CI jobs PASS). Exact immutable action metadata at selected commits declares Node24.
+- StockDividend production overlay still references Admin/Backend tag `12d63b4`; new ARM64 digests are unpromoted and release remains disabled. Scraper schedule `0 1 * * 0,6` unchanged.
+- K3s evidence remains stale at #41515885354; Stock Admin/new Backend image pull failures persist in last verified snapshot. Native Platform/TCE schedule cadence is not proven consecutive. No cron change.
+- No production promotion, DB migration, credential mutation, replica change, VPS maintenance or cron modification. Preserve `reconcile-vps.yml` as sole production apply authority and keep TCE market-scan schedule unchanged.
