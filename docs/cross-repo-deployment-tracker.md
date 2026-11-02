@@ -2949,3 +2949,15 @@ No production manifest, image reference, GHCR credential, database object, relea
 - Owner-only secrets remain: `STOCKDIVIDEND_ACTIONS_READ_TOKEN` (StockDividend-only Actions:read in protected Platform production Environment) and `PLATFORM_INFRA_MIRROR_TOKEN` (destination-only Contents:write for `phanthienquoc/locally-uncensored-private`). Do not substitute GHCR or app-release credentials.
 
 No production manifests, image references, shared GHCR pull credentials, database objects, release flags, desired replicas, deployment authorities or cron expressions changed. No StockDividend promotion/restart, VPS reboot, package upgrade or image cleanup occurred. TCE market-scan schedule unchanged. Production remains NOT HEALTHY/UNVERIFIED.
+
+
+## 2026-11-02 19:10 UTC / 2026-11-03 02:10 ICT — PR #1076 merged; stale historical queue re-failure guard is on master
+
+- Platform PR #1076 was squash-merged after exact-head verification. Head: `34786d328f8e136ab2e1c709435df84b3d015783`; merge commit/current master: `778746152bee482fdea24ad9ab88b1cdee03d4ad`.
+- Exact-head required checks both completed SUCCESS: `validate-manifests` #41506862664 and `validate-github-actions` #41506862858. PR head was re-read as unchanged and mergeable immediately before merge.
+- The merged helper now receives the parent scheduled reconciliation's `created_at` and the same 45-minute freshness budget as the primary watchdog gate. For stale parent runs, completed/already-assigned historical lane delays are skipped to avoid repeatedly failing the same old event; currently queued/unassigned lanes still enforce the 15-minute SLA. Fresh parent runs continue enforcing completed assignment delays.
+- Offline regression coverage now includes stale parent + completed historical delay (no repeat failure) and stale parent + still-unassigned lane (must fail). Static workflow contract validation enforces the new arguments and guard.
+- Post-merge checks were created and queued at the evidence time: `validate-github-actions` #41507316295, `validate-manifests` #41507316523, watchdog push smoke #41507316907 and recovery push smoke #41507316109. Their conclusions are not yet available; do not claim post-merge success until they complete.
+- The new guard has not yet been exercised by a subsequent scheduled/manual/workflow_run watchdog invocation. The next watchdog event should still fail stale reconciliation freshness, but should no longer re-fail only the same expired completed lane delays. A still-unassigned lane remains a failure.
+
+Current PR #1077 is this tracker/inventory refresh; its head will be revalidated after this append. No production manifest, image, secret, database, replica, release flag, cron or deployment authority changed.
