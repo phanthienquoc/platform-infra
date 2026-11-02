@@ -955,3 +955,11 @@ Preserve CI, tests, security, backups, manual release, and purposeful scheduled 
 - Application state: StockDividend immutable ARM64 publisher/CI remain successful, but production release remains disabled. Media CI remains successful and last inspected runtime was healthy. Authentication #75/#76 remain open pending production integration side-effect review. Mirror remains blocked by missing PLATFORM_INFRA_MIRROR_TOKEN.
 
 No direct SSH/Compose deployment authority was added. The proposed WF-06 cleanup removes only a redundant informational read-only SSH probe from the application health workflow; Platform Infra retains the sole K3s/VPS inspection path.
+
+
+### Follow-up — TCE WF-06 boundary PR merged (2026-11-02 09:05 ICT)
+
+- TCE PR #1011 was merged by squash at 2026-11-02 02:05:27Z. Validated head: a2da2271c24794d1d88286c9c11b129205dbb47f; merge commit / new TCE master: a5e8866d2ba28936d57b31ce6a067186c7204369.
+- Exact-head Prettier run #41375696971 passed, including the WF-06/WF-12 contract validator. Exact-head Backend unit tests #41375696882 passed, including backend build and unit tests. The merge was performed only after re-fetching the PR and confirming its head was unchanged.
+- Post-merge WF-01 build #41375826672, WF-02 #41375826954, and WF-05 #41375826811 were still in progress at this follow-up. No post-merge success is claimed yet.
+- WF-06 retains its 15-minute schedule, manual dispatch and four public endpoint checks, but no longer requires VPS_SSH_PRIVATE_KEY or performs legacy Docker/port inspection. Platform Infra remains the read-only VPS/K3s inspection authority. WF-12 and all TCE schedule declarations, including market-scan, are unchanged.
