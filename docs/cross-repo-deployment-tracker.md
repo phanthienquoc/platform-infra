@@ -2016,3 +2016,46 @@ No production manifests, runtime credentials, release flags, database objects, K
 - TCE PR #1011 remains merged at a5e8866d2ba28936d57b31ce6a067186c7204369. Exact-head Prettier/contract validation #41375696971 and Backend build/unit tests #41375696882 passed. Post-merge WF-02 #41375826954 and WF-05 #41375826811 passed. Post-merge WF-01 Build Verify #41375826672 was still building the frontend image at this review; do not claim full post-merge build completion until it concludes.
 - No post-merge scheduled WF-06/WF-07/WF-12 event has yet been observed after TCE master advanced to a5e8866d. The next scheduled event must be checked separately from push-triggered CI.
 - Current Platform master at branch creation: 9c1b4c09844190102c66ca2a62c2423946be5ab8. TCE master: a5e8866d2ba28936d57b31ce6a067186c7204369. StockDividend, Media and Authentication heads remain f5c04475, d8e695d7 and ceb2688d respectively.
+
+
+## Runtime verification update — 2026-11-02 13:55 ICT / 06:55 UTC
+
+### Current repository state and open PRs
+- Platform Infra master: ba61586003986886e3f6ebf95471080b1be96cf1 (latest automated inspection snapshot PR #1043 merged at 06:33:41Z; its single-file change updates debug/vps-latest.md).
+- TCE Dashboard master: a5e8866d2ba28936d57b31ce6a067186c7204369.
+- StockDividend master: 38220ddfef2db7128482547f72b7f06211e9c9bc.
+- Media Generation master: d8e695d772ab2dc0da5c15cc428ee78ac6537518.
+- Authentication master: ceb2688d6277b10f1bfe7652223d1d295b7e49d9.
+- Open PRs: Platform #795/#749/#648/#544/#541/#539/#538; Authentication #75/#76; none in TCE, StockDividend or Media. No new deployment PR is open in the five repositories.
+
+### Latest Platform runs and scheduled-delivery distinction
+- Latest Platform workflow runs observed: manifest validation #41400630157 (success, automated inspection branch); read-only inspection #41400552231 (success, master); recovery #41400522412 (success, source reconciliation #41400322459); reconciliation #41400322459 (failure only at StockDividend lane); scheduled recovery #41400302676 (success).
+- Scheduled recovery #41400302676 ran at 06:30:13Z, detected that the latest master reconciliation #41397421456 was 26 minutes old (freshness budget 20 minutes), and dispatched the existing GitOps authority with ref=master, mode=apply, allow_image_changes=false, target_app=all. It correlated the exact workflow_dispatch run #41400322459 successfully. Recovery is a native scheduled event for the recovery controller, but the resulting reconciliation is a fallback workflow_dispatch, not a native schedule event for reconcile-vps.yml.
+- Latest schedule-filtered Platform events remain: recovery #41400302676 at 06:30:13Z; inspection #41370072870 at 00:59:28Z; freshness watchdog #41369864119 at 00:56:52Z; reconciliation #41369624425 at 00:54:06Z; mirror #41368359234 at 00:39:54Z. Thus the recovery schedule is delivering, while native reconciliation/inspection/watchdog/mirror delivery remains stale. Do not count the fallback reconciliation or the later inspection dispatch as native schedule delivery.
+- Reconciliation #41400322459 passed repository/scope verification, runner policy v14, GHCR preflight, Auth runtime Secret, shared pull credentials, TCE pairing, Media digest resolution, and cluster verification. No manifest drift was detected, so apply was correctly skipped with allow_image_changes=false. Media, MicroFE, TCE and Auth lanes passed; Keycloak was skipped; StockDividend alone failed the managed Admin/Backend health gate. The failure is not a shared infrastructure or GitOps drift failure.
+- Recovery #41400522412 verified the source reconciliation #41400322459 and completed successfully. Fresh read-only inspection #41400552231 completed successfully; automated snapshot PR #1043 was merged as ba61586003986886e3f6ebf95471080b1be96cf1. Manifest validation #41400630157 passed on the automated inspection branch.
+
+### Latest K3s evidence — snapshot #41400552231
+- Snapshot generated at 2026-11-02T06:32:37Z. Node tce-k3s-01 is Ready/ARM64 on K3s v1.36.3+k3s1; disk 55% (about 21 GiB available), memory about 19 GiB available; runner service active/enabled; live runner policy is rollout-status-v14-stockdividend-managed-workloads; GitOps drift clean.
+- Media backend/frontend, MicroFE Shell/WS and NATS are 1/1. Stock Admin has two ImagePullBackOff Pods; the new Stock Backend Pod is ImagePullBackOff; the old Backend replica and unmanaged legacy Stock Frontend remain 1/1. TCE, Auth and Keycloak remain 0/0 by design.
+- Stock Admin/Backend failures still reference tag 12d63b4 and report no match for platform in manifest; restart counts remain 0. Runner v14 correctly suppresses restarts for permanent architecture errors. This does not make StockDividend healthy and does not authorize changing production image references.
+- Host reports restart_required=yes due pending Ubuntu/Docker/containerd updates. No reboot or package upgrade was performed.
+
+### TCE schedule and heartbeat evidence
+- Latest schedule-filtered TCE run: WF-07 integration #41397768048 at 06:05:28Z, success. Latest scheduled WF-06 remains #41378060687 at 02:30:05Z, failure (public endpoints unavailable while TCE/Auth are intentionally stopped). Latest direct scheduled WF-12 remains #41374853407 at 01:54:04Z, failure.
+- Latest WF-12 workflow_run forwarder #41397785851 at 06:05:39Z had two independent jobs: authenticated Notify Platform Infra succeeded; Verify WF-06 schedule delivery failed because the latest scheduled WF-06 run was stale. Platform receiver #41397794672 had already validated the source repository, allowlisted WF-07 workflow path, schedule event, source/heartbeat run IDs and full SHAs. This proves the heartbeat receiver path, not a fresh WF-06 schedule delivery.
+- WF-06 remains public-only; its */15 * * * * schedule and WF-12 7,22,37,52 * * * * schedule were not changed. The TCE market-scan schedule is unchanged.
+
+### App CI/publication, release gates and credentials
+- StockDividend CI #41397317588 and publisher #41397317600 passed. Publisher run #41397317600 verified the three immutable full-SHA image tags as linux/arm64: Scraper sha256:e637c3f643d863783e98e9184bbdcf60f24665ca94892e698fa8c814c1d572f5, Admin sha256:18a850987ed20bad0c255e56fe14583260cf4b5302a7fdd6128b2c3440e5785d, Backend sha256:5288e7f287a3511c8a67e662f4121d3661e84f52168cb2c22acadd3d3d0e2849. The production release gate remains empty/unset and evaluates false; no producer dispatch, Platform provenance verification, GitOps PR or production promotion occurred.
+- STOCKDIVIDEND_ACTIONS_READ_TOKEN is documented as a protected production Environment secret restricted to StockDividend Actions: read. Secret presence is not observable through this audit and must not be assumed. Owner must configure and verify presence without exposing its value before enabling the release gate.
+- PLATFORM_INFRA_MIRROR_TOKEN remains missing/empty in the latest recorded scheduled mirror #41368359234. Owner action: destination-only Contents: write for phanthienquoc/locally-uncensored-private, restricted to Platform Infra. Do not substitute GHCR, app-dispatch or StockDividend Actions-read credentials.
+- Media master CI #41246414186 passed; latest inspected Media backend/frontend were 1/1 and digest-pinned. Authentication PR #75/#76 remain open; latest known PR CI #41329425940 passed, but production Supabase integration side-effect and migration-drift reviews remain merge gates. No fresh Supabase health claim or database mutation is made in this update.
+
+### Next actions
+1. Owner: configure STOCKDIVIDEND_ACTIONS_READ_TOKEN (StockDividend-only Actions read) and PLATFORM_INFRA_MIRROR_TOKEN (destination-only Contents write) in their documented scopes; verify presence without exposing values.
+2. Keep StockDividend production release disabled until explicit authorization. After authorization and source-token configuration, verify the private publisher run, promote paired immutable Admin/Backend digests through Platform Infra, then inspect runtime imageIDs and readiness.
+3. Continue observing native Platform reconciliation/inspection/watchdog and TCE WF-06/WF-12 schedule delivery. The recovery cron is delivering, but fallback dispatches do not satisfy native reconcile/inspection cadence.
+4. Keep Auth PR #75/#76 gated on production integration and migration-drift review. Schedule VPS OS maintenance before any reboot/upgrade.
+
+No production manifests, image references, GHCR pull credentials, database objects, release-enable variables, desired replicas, or cron expressions changed. No StockDividend promotion, workload restart, image deletion, or VPS reboot occurred. TCE market-scan schedule unchanged. Production remains NOT HEALTHY/UNVERIFIED because StockDividend Admin/Backend are not ready and native Platform reconciliation/inspection delivery remains stale.
