@@ -48,6 +48,14 @@ esac
 for namespace in "${namespaces[@]}"; do
   echo "Checking workload health in namespace: $namespace"
 
+  namespace_label_selector="$label_selector"
+  if [ "$namespace" = "stock-prod" ]; then
+    # The current StockDividend app source, Kustomize base, and production Ingress
+    # own only Admin and Backend. The old stock-frontend Deployment is legacy
+    # cluster residue: keep it running, but do not gate or restart it here.
+    namespace_label_selector='app in (stock-admin,stock-backend)'
+  fi
+
   # An explicit zero-replica Deployment is a supported maintenance state.
   # Verify the Deployment controller converged and no active pods remain before
   # skipping pod-readiness checks; never treat an unready scale-down as success.
@@ -64,6 +72,10 @@ for namespace in "${namespaces[@]}"; do
       scale_down_rows="$(printf '%s\n' "$scale_down_rows" | awk -F'|' '$1 == "microfe-shell" || $1 == "microfe-ws"')"
       ;;
   esac
+
+  if [ "$namespace" = "stock-prod" ]; then
+    scale_down_rows="$(printf '%s\n' "$scale_down_rows" | awk -F'|' '$1 == "stock-admin" || $1 == "stock-backend"')"
+  fi
 
   scale_down_count=0
   scale_down_all_zero=1
@@ -95,8 +107,8 @@ for namespace in "${namespaces[@]}"; do
       continue
     fi
 
-    if [ -n "$label_selector" ]; then
-      scale_down_pods="$("${kubectl_bin[@]}" get pods -n "$namespace" -l "$label_selector" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"\n"}{end}')"
+    if [ -n "$namespace_label_selector" ]; then
+      scale_down_pods="$("${kubectl_bin[@]}" get pods -n "$namespace" -l "$namespace_label_selector" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"\n"}{end}')"
     else
       scale_down_pods="$("${kubectl_bin[@]}" get pods -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"\n"}{end}')"
     fi
@@ -118,8 +130,8 @@ for namespace in "${namespaces[@]}"; do
     continue
   fi
 
-  if [ -n "$label_selector" ]; then
-    rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -l "$label_selector" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"|"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{":"}{.state.waiting.message}{" [container="}{.name}{", image="}{.image}{", imageID="}{.imageID}{", last="}{.lastState.terminated.reason}{"/"}{.lastState.terminated.exitCode}{"] "}{end}{"\n"}{end}')"
+  if [ -n "$namespace_label_selector" ]; then
+    rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -l "$namespace_label_selector" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"|"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{":"}{.state.waiting.message}{" [container="}{.name}{", image="}{.image}{", imageID="}{.imageID}{", last="}{.lastState.terminated.reason}{"/"}{.lastState.terminated.exitCode}{"] "}{end}{"\n"}{end}')"
   else
     rows="$("${kubectl_bin[@]}" get pods -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.deletionTimestamp}{"|"}{.status.phase}{"|"}{range .status.containerStatuses[*]}{.ready}{":"}{.state.waiting.reason}{":"}{.state.terminated.reason}{":"}{.state.waiting.message}{" [container="}{.name}{", image="}{.image}{", imageID="}{.imageID}{", last="}{.lastState.terminated.reason}{"/"}{.lastState.terminated.exitCode}{"] "}{end}{"\n"}{end}')"
   fi
@@ -184,6 +196,10 @@ for namespace in "${namespaces[@]}"; do
       deployment_rows="$(printf '%s\n' "$deployment_rows" | awk -F'|' '$1 == "microfe-shell" || $1 == "microfe-ws"')"
       ;;
   esac
+
+  if [ "$namespace" = "stock-prod" ]; then
+    deployment_rows="$(printf '%s\n' "$deployment_rows" | awk -F'|' '$1 == "stock-admin" || $1 == "stock-backend"')"
+  fi
 
   if [ -z "$deployment_rows" ]; then
     echo "::error::No deployments found in namespace $namespace for target $TARGET_APP." >&2

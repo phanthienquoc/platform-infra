@@ -137,7 +137,7 @@ jobs:
         if: ${{ env.RECONCILE_MODE == 'apply' }}
         run: |
           set -euo pipefail
-          expected="platform-kubectl policy: rollout-status-v13-permanent-image-pull-restart"
+          expected="platform-kubectl policy: rollout-status-v14-stockdividend-managed-workloads"
           for attempt in $(seq 1 24); do
             if policy="$(sudo /usr/local/sbin/platform-kubectl policy-version 2>/dev/null)" && [[ "$policy" == "$expected" ]]; then
               echo "Permanent-error-aware scoped image-pull restart runner policy is ready."
@@ -655,7 +655,6 @@ jobs:
           rc=0
           sudo /usr/local/sbin/platform-kubectl rollout status deployment/stock-admin -n stock-prod --timeout=180s || rc=1
           sudo /usr/local/sbin/platform-kubectl rollout status deployment/stock-backend -n stock-prod --timeout=180s || rc=1
-          sudo /usr/local/sbin/platform-kubectl rollout status deployment/stock-frontend -n stock-prod --timeout=180s || rc=1
           exit "$rc"
       - name: Verify StockDividend workload health
         env:

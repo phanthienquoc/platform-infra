@@ -12,16 +12,24 @@ set -euo pipefail
 
 action="${1:-}"
 resource="${2:-}"
+namespace=""
 deployment_selector=""
+pod_selector=""
 shift 2
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    -n|-o)
+    -n)
+      namespace="${2:-}"
+      shift 2
+      ;;
+    -o)
       shift 2
       ;;
     -l)
       if [ "$resource" = "deployments" ]; then
         deployment_selector="${2:-}"
+      else
+        pod_selector="${2:-}"
       fi
       shift 2
       ;;
@@ -37,6 +45,20 @@ case "$resource" in
     case "$HEALTH_GATE_TEST_SCENARIO" in
       healthy)
         printf 'pod-1||Running|true:: \n'
+        ;;
+      legacy-stock-frontend)
+        [[ "$namespace" == "stock-prod" ]] || exit 3
+        [[ "$pod_selector" == "app in (stock-admin,stock-backend)" ]] || {
+          echo "StockDividend pod health must be scoped to Admin and Backend, got: $pod_selector" >&2
+          exit 4
+        }
+        printf 'stock-admin-abc||Running|true:: \n'
+        printf 'stock-backend-abc||Running|true:: \n'
+        ;;
+      scaled-down-stockdividend-legacy-frontend)
+        [[ "$namespace" == "stock-prod" ]] || exit 3
+        [[ "$pod_selector" == "app in (stock-admin,stock-backend)" ]] || exit 4
+        exit 0
         ;;
       terminating-only)
         printf 'pod-1|2026-10-30T13:00:00Z|Running|true:: \n'
@@ -62,7 +84,10 @@ case "$resource" in
     case "$HEALTH_GATE_TEST_SCENARIO" in
       healthy)
         case "$TARGET_APP" in
-          stockdividend) printf 'stock-admin|1|1|1\n' ;;
+          stockdividend)
+            printf 'stock-admin|1|1|1\n'
+            printf 'stock-backend|1|1|1\n'
+            ;;
           auth-service) printf 'microfe-auth|1|1|1\n' ;;
           keycloak) printf 'keycloak|1|1|1\n' ;;
           microfe)
@@ -75,6 +100,18 @@ case "$resource" in
             ;;
           *) exit 3 ;;
         esac
+        ;;
+      legacy-stock-frontend)
+        [ "$TARGET_APP" = "stockdividend" ] || exit 3
+        printf 'stock-admin|1|1|1\n'
+        printf 'stock-backend|1|1|1\n'
+        printf 'stock-frontend|1|1|0\n'
+        ;;
+      scaled-down-stockdividend-legacy-frontend)
+        [ "$TARGET_APP" = "stockdividend" ] || exit 3
+        printf 'stock-admin|0|0|0\n'
+        printf 'stock-backend|0|0|0\n'
+        printf 'stock-frontend|1|1|0\n'
         ;;
       scaled-down)
         [ "$TARGET_APP" = "tce-dashboard" ] || exit 3
@@ -142,6 +179,8 @@ run_case() {
 }
 
 run_case healthy 0 stockdividend
+run_case legacy-stock-frontend 0 stockdividend
+run_case scaled-down-stockdividend-legacy-frontend 0 stockdividend
 run_case terminating-only 1 stockdividend
 run_case image-pull 1 stockdividend
 run_case no-pods 1 stockdividend
