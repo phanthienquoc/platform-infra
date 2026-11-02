@@ -786,7 +786,7 @@ jobs:
             --ref master \
             -f "source_run_id=$SOURCE_RUN_ID" \
             -f "source_head_sha=$SOURCE_HEAD_SHA"
-          expected_display_title="Recover Stale Scheduled Ops — workflow_dispatch / source #$SOURCE_RUN_ID"
+          expected_display_title="Recover Stale Scheduled Ops — workflow_dispatch / source $SOURCE_RUN_ID"
           for attempt in $(seq 1 6); do
             runs="$(
               gh api -X GET \
@@ -798,7 +798,7 @@ jobs:
                 .event == "workflow_dispatch"
                 and .path == ".github/workflows/recover-stale-ops.yml"
                 and .head_branch == "master"
-                and .display_title == ("Recover Stale Scheduled Ops — workflow_dispatch / source #" + $source_run)
+                and .display_title == ("Recover Stale Scheduled Ops — workflow_dispatch / source " + $source_run)
                 and .created_at >= $started
               )] | sort_by(.created_at) | last // empty
             ' <<< "$runs")"
