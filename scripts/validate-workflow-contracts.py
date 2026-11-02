@@ -294,8 +294,11 @@ for required in (
 ):
     if required not in stockdividend_readiness:
         fail(f"StockDividend paired digest convergence gate is missing: {required}")
-if stockdividend_readiness.index("Verify StockDividend") if "Verify StockDividend" in stockdividend_readiness else -1:
-    pass
+merge_promotion_index = promotion.index("      - name: Merge promotion PR")
+readiness_index = promotion.index("      - name: Determine release readiness")
+reconciliation_dispatch_index = promotion.index("      - name: Trigger VPS reconciliation")
+if not merge_promotion_index < readiness_index < reconciliation_dispatch_index:
+    fail("StockDividend digest convergence must be verified after the promotion PR merge and before reconciliation dispatch.")
 if "python3 scripts/verify-stockdividend-gitops-digests.py --self-test" not in read("validate-github-actions.yml"):
     fail("StockDividend GitOps digest-pair regression tests must run in validate-github-actions.")
 if "ready=true" not in stockdividend_readiness or "git fetch --no-tags origin master" not in stockdividend_readiness:
