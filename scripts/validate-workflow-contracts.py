@@ -410,39 +410,56 @@ if "run-name:" not in reconcile or "github.event.client_payload.app" not in reco
 if "microfe" not in reconcile:
     fail("reconcile-vps.yml must retain MicroFE deployment scope support.")
 
-# TCE release fanout must verify the exact public publisher run before emitting image promotions.
-tce_fanout = promotion.split("  fanout-tce-release:", 1)[1].split("  coordinate-tce-release:", 1)[0]
+# TCE release must promote the verified web/service digest pair atomically.
+tce_promotion = promotion.split("  promote-tce-digests:", 1)[1].split(
+    "  coordinate-tce-release:", 1
+)[0]
 for required in (
-    "github.event.client_payload.source_run_id",
-    "github.event.client_payload.source_workflow_path",
-    "github.event.client_payload.source_event",
-    "github.event.client_payload.source_head_sha",
-    '[[ "$SOURCE_EVENT" == "workflow_dispatch" ]]' ,
-    '[[ "$RELEASE" == *-"${SOURCE_HEAD_SHA:0:7}" ]]' ,
-    "Verify TCE publisher run provenance",
+    "github.event.action == 'tce-release-requested'",
+    "github.event.client_payload.web_digest",
+    "github.event.client_payload.service_digest",
+    "Verify TCE release payload and publisher provenance",
     "bash scripts/verify-tce-publisher-run.sh",
+    "TARGET_APP=tce-dashboard",
+    "docker buildx imagetools inspect",
+    "scripts/validate-ghcr-image-reference.sh",
+    "apps/tce-dashboard/overlays/prod/kustomization.yaml",
+    "scripts/promote-tce-image-digests.py",
+    "Create TCE paired digest promotion PR",
+    "Merge TCE paired digest promotion PR",
 ):
-    if required not in tce_fanout:
-        fail(f"TCE release fanout is missing source-run provenance contract: {required}")
-if tce_fanout.index("Verify TCE publisher run provenance") > tce_fanout.index("Dispatch both TCE image promotions"):
-    fail("TCE publisher provenance must pass before either image promotion is dispatched.")
+    if required not in tce_promotion:
+        fail(f"TCE digest promotion is missing required contract: {required}")
+if tce_promotion.index("Verify TCE release payload and publisher provenance") > tce_promotion.index("Validate TCE GHCR pull access"):
+    fail("TCE publisher provenance must pass before GHCR access or image promotion.")
+if tce_promotion.index("Verify TCE tag-to-digest mapping") > tce_promotion.index("Update TCE production image digests"):
+    fail("TCE registry tag/digest correlation must pass before GitOps mutation.")
+if "needs: promote-tce-digests" not in promotion.split("  coordinate-tce-release:", 1)[1].split("  fanout-media-release:", 1)[0]:
+    fail("TCE release coordinator must wait for the atomic digest promotion job.")
+if "WEB_DIGEST_ON_MASTER" not in promotion or "SERVICE_DIGEST_ON_MASTER" not in promotion:
+    fail("TCE coordinator must verify both promoted digests on master before reconciliation.")
 tce_provenance = (ROOT / "scripts" / "verify-tce-publisher-run.sh").read_text(encoding="utf-8")
 for required in (
     "https://api.github.com/repos/phanthienquoc/TCE-dashboard/actions/runs/$SOURCE_RUN_ID",
-    '"$repository" == "phanthienquoc/TCE-dashboard"' ,
-    '"$head_repository" == "phanthienquoc/TCE-dashboard"' ,
-    '"$workflow_path" == "$SOURCE_WORKFLOW_PATH"' ,
-    '"$event" == "$SOURCE_EVENT"' ,
-    '"$branch" == "master"' ,
-    '"$head_sha" == "$SOURCE_HEAD_SHA"' ,
-    '"$conclusion" == "success"' ,
+    '"$repository" == "phanthienquoc/TCE-dashboard"',
+    '"$head_repository" == "phanthienquoc/TCE-dashboard"',
+    '"$workflow_path" == "$SOURCE_WORKFLOW_PATH"',
+    '"$event" == "$SOURCE_EVENT"',
+    '"$branch" == "master"',
+    '"$head_sha" == "$SOURCE_HEAD_SHA"',
+    '"$conclusion" == "success"',
+    '[[ "$WEB_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]',
+    '[[ "$SERVICE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]',
 ):
     if required not in tce_provenance:
-        fail(f"TCE source-run verifier is missing required metadata guard: {required}")
+        fail(f"TCE source-run verifier is missing required provenance/digest guard: {required}")
 if "Authorization" in tce_provenance:
     fail("Public TCE source-run verification must not introduce a cross-repository credential.")
 if "scripts/tests/verify-tce-publisher-run.test.sh" not in (ROOT / ".github" / "workflows" / "validate-github-actions.yml").read_text(encoding="utf-8"):
     fail("TCE source-run provenance regression tests must run in validate-github-actions.")
+if "promote-tce-image-digests.py --self-test" not in (ROOT / ".github" / "workflows" / "validate-github-actions.yml").read_text(encoding="utf-8"):
+    fail("TCE paired digest promotion script self-tests must run in validate-github-actions.")
+
 # Scheduled reconciliation logic must have a matching schedule trigger.
 if "github.event_name == 'schedule'" in reconcile and not re.search(
     r"(?m)^\s*schedule:\s*$", reconcile
