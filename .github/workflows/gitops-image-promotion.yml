@@ -912,13 +912,44 @@ jobs:
           COMPONENT: ${{ steps.input.outputs.component }}
           RELEASE: ${{ steps.input.outputs.tag }}
           BACKEND_DIGEST: ${{ steps.input.outputs.backend_digest }}
+          ADMIN_DIGEST: ${{ steps.input.outputs.admin_digest }}
           FRONTEND_DIGEST: ${{ steps.input.outputs.frontend_digest }}
         run: |
           set -euo pipefail
 
-          if [ "$APP" = "stockdividend" ] || [ "$APP" = "auth-service" ]; then
+          if [ "$APP" = "auth-service" ]; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
             exit 0
+          fi
+
+          if [ "$APP" = "stockdividend" ]; then
+            # Paired digest releases must be visible together on GitOps master before
+            # the shared reconciliation is dispatched. Single-component manual
+            # full-SHA promotions retain their existing explicit workflow path.
+            if [ "$COMPONENT" != "release" ]; then
+              echo "ready=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            FILE="apps/stockdividend/overlays/prod/kustomization.yaml"
+            for attempt in $(seq 1 12); do
+              git fetch --no-tags origin master
+              if git show "origin/master:$FILE" > /tmp/stockdividend-gitops-kustomization.yaml 2>/dev/null &&
+                python3 scripts/verify-stockdividend-gitops-digests.py \
+                  --file /tmp/stockdividend-gitops-kustomization.yaml \
+                  --backend-digest "$BACKEND_DIGEST" \
+                  --admin-digest "$ADMIN_DIGEST" \
+                  --quiet; then
+                echo "Verified StockDividend backend/admin digest pair on GitOps master for $RELEASE."
+                echo "ready=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              echo "Waiting for the exact StockDividend digest pair on GitOps master (attempt $attempt/12)."
+              sleep 5
+            done
+
+            echo "::error::StockDividend paired digests did not converge on GitOps master; refusing reconciliation dispatch."
+            exit 1
           fi
 
           FILE="apps/media-generation/overlays/prod/kustomization.yaml"
