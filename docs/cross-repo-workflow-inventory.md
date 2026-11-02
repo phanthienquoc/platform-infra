@@ -1551,3 +1551,52 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Latest inspection #41496768387 (workflow_dispatch) merged as PR #1073/#commit fc4b951. Node Ready, K3s 1.36.3+k3s1, disk 55%, ~19 GiB available RAM, Platform/Media runner services active. Media/MicroFE/NATS healthy; Stock Admin/new Backend still fail ARM64 image pull on `12d63b4`; old Backend and legacy Frontend remain Running. TCE/Auth/Keycloak are intentionally 0/0.
 - Native Platform inspect/reconcile cadence remains stale; recovery dispatches do not count as native schedule ticks. TCE WF-06/WF-12 remain stale/failing; WF-07 last observed native tick passed. Do not alter TCE market-scan schedule.
 - StockDividend release remains disabled pending owner token and explicit authorization; mirror token remains missing; Auth production integration/migration gate remains open.
+
+
+## 2026-11-02 19:04 UTC / 2026-11-03 02:04 ICT — watchdog queue semantics and latest runtime evidence
+
+### Ownership and workflow authority
+- Platform Infra remains sole owner of production manifests, shared GHCR pull credentials, GitOps promotion/reconciliation, K3s rollout/health, inspection and stale-operations recovery.
+- App repositories own CI/tests and immutable GHCR publication. They do not own production SSH, Compose, kubectl apply or production manifest changes.
+- `reconcile-vps.yml` remains the sole production apply authority. `inspect-vps.yml` remains read-only. The watchdog and recovery workflows only inspect GitHub Actions history and dispatch the existing authorized workflows under their current policy.
+- Preserve all CI/test/security, backup/cleanup, manual/release and purposeful scheduled jobs. No duplicate direct SSH/Compose authority was introduced.
+
+### Queue watchdog follow-up
+- The downstream lane queue verifier from PR #1072 is active on master. It measures only named `Deploy lane — …` jobs and enforces a 15m runner-assignment budget.
+- Latest workflow_run watchdog #41499180006 exposed a repeat-failure edge: the same completed lane delays from stale reconciliation #41491502003 (31–32m) were re-enforced on later watchdog events even though reconciliation freshness had already failed at 49m (>45m).
+- PR #1076 adds a parent-run freshness boundary. Fresh reconciliation runs continue to enforce completed runner-assignment delays; when the parent is stale, completed/already-assigned historical delays are not re-failed, but currently queued/unassigned lanes remain actionable. The reconciliation freshness gate continues to fail the stale schedule.
+- PR #1076 exact head: `34786d328f8e136ab2e1c709435df84b3d015783`; validate-manifests #41506862664 SUCCESS; validate-github-actions #41506862858 was in progress at this evidence point. Keep unmerged until both pass on the exact head.
+
+### Schedule event semantics — latest observations
+- Native Platform inspection resumed: #41498271871 (event=schedule, SUCCESS, 18:11:59Z).
+- Native Platform reconciliation is still stale: #41491502003 (event=schedule, 17:28:27Z, FAILURE due StockDividend).
+- Native Platform watchdog schedule latest: #41491160810 (event=schedule, 17:26:13Z, FAILURE due then-stale inspection). #41499180006 is workflow_run, not cron.
+- Native Platform recovery schedule latest: #41482540454 (event=schedule, 16:32:54Z, SUCCESS). #41499180093 is workflow_run.
+- Native mirror schedule #41499146752 failed because the destination mirror token is empty/missing.
+- TCE native schedules: WF-07 #41476258191 SUCCESS; WF-06 #41424898130 strict public HTTP 200 checks FAIL with 503 while intentionally stopped; WF-12 #41419694332 freshness FAIL. WF-12 workflow_run #41476296496 has a successful heartbeat job but failed WF-06 freshness; do not count it as a native schedule.
+- Keep every existing cron expression unchanged, especially all TCE market-scan schedules.
+
+### Runtime state and release holds
+- Fresh scheduled inspection #41498271871 / snapshot #1075: node Ready, ARM64, K3s 1.36.3+k3s1, disk 55%, ~19 GiB available RAM; Platform/Media runners active; restart_required=yes due pending OS/Docker/containerd updates.
+- Media, MicroFE Shell/WS and NATS 1/1 with digest-pinned imageIDs. Stock Admin and new Backend remain ImagePullBackOff on non-ARM64 tag 12d63b4; old Backend replica and unmanaged legacy frontend remain Running. TCE/Auth/Keycloak 0/0 intentionally.
+- StockDividend publisher remains successful but production release disabled pending protected Actions-read credential and explicit authorization. Mirror remains blocked by destination-only Contents:write token.
+- Auth production integration/migration gate remains open. No database mutation.
+
+
+## 2026-11-02 19:10 UTC / 2026-11-03 02:10 ICT — stale historical queue guard merged
+
+- PR #1076 merged to Platform master at `778746152bee482fdea24ad9ab88b1cdee03d4ad` from exact head `34786d328f8e136ab2e1c709435df84b3d015783`.
+- Required exact-head checks: validate-manifests #41506862664 SUCCESS; validate-github-actions #41506862858 SUCCESS.
+- `verify-reconcile-lane-queue.py` now receives parent reconciliation creation time and MAX_AGE_MINUTES. Once the parent scheduled reconciliation is stale (>45m), completed/already-assigned historical queue delays are not re-failed on every later watchdog event; still-queued/unassigned lanes remain enforced at 15m. Fresh reconciliation runs continue enforcing completed assignment delay.
+- Regression tests cover both stale completed and stale unassigned cases. Post-merge validate/lint and push smoke runs #41507316295/#41507316523/#41507316907/#41507316109 were queued at this update and remain unverified until completion.
+- Runtime exercise of the stale-parent guard awaits the next watchdog invocation. Preserve the existing cron expressions and all TCE market-scan schedules.
+
+
+## 2026-11-02 19:12 UTC / 2026-11-03 02:12 ICT — fallback reconciliation and lane results
+
+- The post-merge recovery push #41507316109 observed the last native reconciliation stale by 67m and dispatched the sole production apply authority with exact payload: master SHA `778746152bee482fdea24ad9ab88b1cdee03d4ad`, `mode=apply`, `allow_image_changes=false`, `target_app=all`.
+- Shared reconcile job succeeded: GHCR access preflight passed; Auth runtime Secret was provisioned/verified with values suppressed; shared `ghcr-pull` Secrets were unchanged; service-account/deployment patches reported no change; runner v14 skipped permanent StockDividend image-pull restarts; no GitOps drift, so production manifest apply was skipped.
+- Lane results: MicroFE 15s queue SUCCESS; Media 2s SUCCESS; StockDividend 29s queue FAILURE on three non-ARM64 `12d63b4` Pods; TCE 47s SUCCESS; Auth 64s SUCCESS; Keycloak skipped. All observed runner assignment delays were below the 15m queue budget. The final gate failed only for StockDividend.
+- This fallback event is workflow_dispatch, not native schedule delivery. The new stale-parent queue guard has not yet been exercised by a scheduled-source workflow_run. Next native scheduled reconciliation/watchdog cycle remains the runtime verification point.
+- #1076 exact-head and post-merge manifest/workflow validations all PASS. PR #1077 documentation head `fe0cf9cb91bda7e318d0c9ae10d138d412fba7fc` had validate-manifests #41507377407 SUCCESS before this additional evidence update; revalidate the final head before merge.
+- No app image promotion, manifest apply, Pod restart or DB mutation. TCE market-scan cron unchanged.

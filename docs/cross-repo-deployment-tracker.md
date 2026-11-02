@@ -2911,3 +2911,90 @@ No production manifest, image reference, GHCR credential, database object, relea
 - Latest native Platform reconciliation remains #41491502003 (17:28:27Z, completed failure on StockDividend health); latest native watchdog #41491160810 (17:26:13Z, failure on stale inspection); latest native recovery #41482540454 (16:32:54Z, success); latest native inspection remains #41407411326 (07:36:38Z). Recovery/manual inspection is not native inspection schedule evidence.
 - TCE latest native WF-07 #41476258191 SUCCESS; WF-06 #41424898130 strict HTTP 200 failure with 503 endpoints; direct WF-12 #41419694332 freshness failure. Preserve all TCE cron expressions and market-scan schedule.
 - No production manifest, image, GHCR credential, database, release flag, desired replica, workflow authority or cron expression changed. No StockDividend promotion/restart, VPS reboot, package upgrade or image cleanup occurred. Production remains NOT HEALTHY/UNVERIFIED.
+
+
+## 2026-11-02 19:04 UTC / 2026-11-03 02:04 ICT — native inspection resumed; watchdog historical queue regression isolated
+
+### Repository state and open PRs
+- Current master heads: Platform Infra `7238fdfd3f5c17fefc63534fe4dc08094809aa8b`; TCE Dashboard `afad281fa57b2846446a152b6f5cf3c2600ee51d`; StockDividend `38220ddfef2db7128482547f72b7f06211e9c9bc`; Media Generation `0d4fc2ac15834c20357fd2420b732e6411fd8930`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: Platform #544/#541/#539 (draft) and new #1076; Authentication #75/#76; none in TCE, StockDividend or Media.
+- Platform #1076 branch `fix/watchdog-ignore-expired-historical-lane-queue-20261103`, exact head `34786d328f8e136ab2e1c709435df84b3d015783`, base master `7238fdfd3f5c17fefc63534fe4dc08094809aa8b`. Exact-head `validate-manifests` #41506862664 completed SUCCESS; `validate-github-actions` #41506862858 was still in progress at the time of this update. Do not merge until both required checks complete successfully on this exact head.
+
+### Watchdog regression found and fix proposed in #1076
+- Latest workflow_run watchdog #41499180006 failed at 18:17:38Z. Its inspection freshness check passed against the newly resumed native inspection #41498271871 (age 5m), but reconciliation freshness failed because latest native reconcile #41491502003 was 49m old (>45m). The deployment-lane queue step also re-failed the same historical completed/assigned delays from #41491502003: MicroFE 31m, TCE 32m and Media 32m.
+- The parent reconciliation is already stale and its primary freshness gate reports that failure. Re-evaluating completed runner-assignment delays on every later workflow_run caused a permanent repeated watchdog failure for the same old run.
+- PR #1076 adds parent reconciliation age to the read-only queue verifier. For a stale parent (>45m), completed/already-assigned historical lane delays are not re-enforced; a lane still queued/unassigned remains actionable and still fails beyond the 15m queue budget. Fresh parent runs continue enforcing completed runner-assignment delays. The existing stale-reconciliation freshness check remains authoritative.
+- Added two regression cases: stale parent + completed historical delay returns non-repeating result; stale parent + still-unassigned lane continues to fail. Workflow contract validation requires both timestamps/budgets to be wired. No cron or deployment authority changes.
+
+### Native schedule evidence
+- Platform native inspection #41498271871 at 18:11:59Z completed SUCCESS on master. This is a new native scheduled inspection tick; it supersedes the earlier stale inspection evidence.
+- Latest native reconciliation remains #41491502003 at 17:28:27Z, overall FAILURE due StockDividend health; no later native reconciliation schedule event was present in the latest 100-run history.
+- Latest native watchdog schedule remains #41491160810 at 17:26:13Z, FAILURE due stale inspection at that time. Later watchdog #41499180006 is event=workflow_run, not native cron.
+- Latest native recovery schedule remains #41482540454 at 16:32:54Z, SUCCESS. Later recovery #41499180093 is event=workflow_run and must not be counted as a native recovery tick.
+- Mirror native schedule #41499146752 at 18:17:26Z failed before Git operations because `PLATFORM_INFRA_MIRROR_TOKEN` was empty/missing.
+- TCE latest native schedule evidence: WF-07 #41476258191 at 15:54:51Z SUCCESS; WF-06 #41424898130 at 09:57:51Z FAILURE because four public endpoints returned HTTP 503 instead of strict HTTP 200 while TCE/Auth are intentionally scale-to-zero; direct WF-12 #41419694332 at 09:19:29Z failed WF-06 freshness. WF-12 workflow_run #41476296496 also failed freshness, while its Platform heartbeat job succeeded. Do not count workflow_run forwarding as a cron tick.
+
+### Fresh K3s evidence
+- Scheduled inspection #41498271871 generated `debug/vps-latest.md` at 2026-11-02T18:12:07Z and its automated snapshot PR #1075 merged as `7238fdfd3f5c17fefc63534fe4dc08094809aa8b`.
+- Node `tce-k3s-01` Ready, ARM64, K3s `v1.36.3+k3s1`, containerd `2.3.2-k3s2`, Docker `29.1.3`, disk 55%, ~19 GiB available memory. Platform and Media runner services were active. Host reports `restart_required=yes`; pending Ubuntu/Docker/containerd upgrades remain uninstalled.
+- Media backend/frontend, MicroFE Shell/WS and NATS are 1/1 Running with digest-pinned runtime imageIDs.
+- Stock Admin is 0/1 with two Pods in ImagePullBackOff. New Stock Backend Pod is ImagePullBackOff; old Backend replica remains 1/1. Admin/Backend still reference `12d63b4`, whose manifest lacks ARM64; error is `no match for platform in manifest`. Legacy Stock Frontend remains 1/1 unmanaged.
+- TCE frontend/service, Auth and Keycloak remain 0/0 intentionally. Do not interpret public 503 responses as healthy.
+
+### Application CI and release/credential gates
+- Latest TCE master app checks remain WF-01 #41466743923, WF-02 #41466743801, WF-05 #41466743773 SUCCESS. TCE schedule failures are separate from build/test CI.
+- StockDividend CI #41397317588 and immutable publisher #41397317600 SUCCESS on master; no newer publication observed. Production release remains disabled; no promotion was dispatched.
+- Media CI #41460906654 SUCCESS; latest runtime images remain digest-pinned and healthy in the inspection snapshot.
+- Auth PR #75/#76 CI remains SUCCESS, but production integration side effects and migration provenance/drift are still not cleared. No migration or database mutation.
+- Owner-only secrets remain: `STOCKDIVIDEND_ACTIONS_READ_TOKEN` (StockDividend-only Actions:read in protected Platform production Environment) and `PLATFORM_INFRA_MIRROR_TOKEN` (destination-only Contents:write for `phanthienquoc/locally-uncensored-private`). Do not substitute GHCR or app-release credentials.
+
+No production manifests, image references, shared GHCR pull credentials, database objects, release flags, desired replicas, deployment authorities or cron expressions changed. No StockDividend promotion/restart, VPS reboot, package upgrade or image cleanup occurred. TCE market-scan schedule unchanged. Production remains NOT HEALTHY/UNVERIFIED.
+
+
+## 2026-11-02 19:10 UTC / 2026-11-03 02:10 ICT — PR #1076 merged; stale historical queue re-failure guard is on master
+
+- Platform PR #1076 was squash-merged after exact-head verification. Head: `34786d328f8e136ab2e1c709435df84b3d015783`; merge commit/current master: `778746152bee482fdea24ad9ab88b1cdee03d4ad`.
+- Exact-head required checks both completed SUCCESS: `validate-manifests` #41506862664 and `validate-github-actions` #41506862858. PR head was re-read as unchanged and mergeable immediately before merge.
+- The merged helper now receives the parent scheduled reconciliation's `created_at` and the same 45-minute freshness budget as the primary watchdog gate. For stale parent runs, completed/already-assigned historical lane delays are skipped to avoid repeatedly failing the same old event; currently queued/unassigned lanes still enforce the 15-minute SLA. Fresh parent runs continue enforcing completed assignment delays.
+- Offline regression coverage now includes stale parent + completed historical delay (no repeat failure) and stale parent + still-unassigned lane (must fail). Static workflow contract validation enforces the new arguments and guard.
+- Post-merge checks were created and queued at the evidence time: `validate-github-actions` #41507316295, `validate-manifests` #41507316523, watchdog push smoke #41507316907 and recovery push smoke #41507316109. Their conclusions are not yet available; do not claim post-merge success until they complete.
+- The new guard has not yet been exercised by a subsequent scheduled/manual/workflow_run watchdog invocation. The next watchdog event should still fail stale reconciliation freshness, but should no longer re-fail only the same expired completed lane delays. A still-unassigned lane remains a failure.
+
+Current PR #1077 is this tracker/inventory refresh; its head will be revalidated after this append. No production manifest, image, secret, database, replica, release flag, cron or deployment authority changed.
+
+
+## 2026-11-02 19:12 UTC / 2026-11-03 02:12 ICT — automatic fallback reconciliation after #1076 merge
+
+### Dispatch and shared reconciliation
+- Recovery push #41507316109 completed SUCCESS after #1076 merged. It observed latest master reconciliation activity #41491502003 age 67m (>20m fallback budget) and dispatched the existing GitOps authority.
+- Exact dispatch correlation: reconciliation #41507349624, event=workflow_dispatch, ref=master, SHA `778746152bee482fdea24ad9ab88b1cdee03d4ad`, `mode=apply`, `allow_image_changes=false`, `target_app=all`.
+- Shared reconcile job #125489936246 completed SUCCESS on runner `platform-k3s-01`, policy v14. GHCR pull-access preflight passed for all currently referenced private packages.
+- Auth runtime Secret was provisioned from the protected Platform Environment and verified; secret values were suppressed in logs. Shared `ghcr-pull` Secrets were unchanged in each production namespace; service-account/deployment patches reported no change.
+- `restart-blocked-image-pulls` ran under v14. Stock Admin and Backend were classified as permanent `no match for platform in manifest` errors and rollout restarts were skipped. No Pod restart occurred (observed restart counts remained 0).
+- Kustomize/Kubernetes diff reported no drift. Production manifest apply was skipped. Post-reconciliation node/pod verification succeeded.
+
+### Deployment lane results
+| Lane | Runner assignment delay | Result |
+|---|---:|---|
+| MicroFE Shell / WS | 15s | SUCCESS |
+| Media Generation | 2s | SUCCESS |
+| StockDividend | 29s | FAILURE — Admin/Backend health |
+| TCE Dashboard | 47s | SUCCESS |
+| Auth | 64s | SUCCESS |
+| Keycloak SSO | skipped | Intentional scale-to-zero |
+
+The deployment-lane summary/final gate failed only because StockDividend health failed. The run's final inspection-recovery trigger was still completing at the evidence point; no fresh full inspection after #41498271871 was yet available. The fallback run is `workflow_dispatch`, not a native cron tick.
+
+### StockDividend exact health evidence
+- Admin Pods `stock-admin-5864bcb497-6b6hm` and `stock-admin-59cddb87b7-qgkjr`: ImagePullBackOff.
+- New Backend Pod `stock-backend-6bc874575d-xcg2j`: ImagePullBackOff.
+- All three use `12d63b4`; GHCR returns `no match for platform in manifest` on the ARM64 K3s node. Old Backend replica remains 1/1. No promotion or rollout restart.
+- TCE GitOps release pairing passed at `prod-v0.1.0-e75e338`; no image changes were allowed.
+
+### Post-merge evidence and queue-guard runtime boundary
+- #1076 exact-head checks: validate-manifests #41506862664 SUCCESS and validate-github-actions #41506862858 SUCCESS.
+- #1076 post-merge: validate-manifests #41507316523 SUCCESS; validate-github-actions #41507316295 SUCCESS; watchdog push smoke #41507316907 SUCCESS; recovery push #41507316109 SUCCESS.
+- The watchdog's push smoke is warning-only. The new stale-parent queue guard is covered by offline regression tests; this fallback reconciliation is `workflow_dispatch`, and the watchdog only enforces queue checks for scheduled-source workflow_run events. Runtime exercise of the new guard still awaits a later native scheduled reconciliation/watchdog cycle.
+- PR #1077 current documentation head at this evidence point: `fe0cf9cb91bda7e318d0c9ae10d138d412fba7fc`; validate-manifests #41507377407 SUCCESS. It remains open until final exact-head validation after this evidence update.
+
+No production manifests or image references changed; no app image promotion occurred. GHCR pull Secrets were unchanged. Auth runtime Secret provisioning was an explicit side effect of the existing recovery-triggered `target_app=all` reconcile, with values suppressed and verification successful. No DB migration or database mutation. TCE market-scan cron unchanged.
