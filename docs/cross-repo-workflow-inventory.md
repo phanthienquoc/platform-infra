@@ -1811,3 +1811,13 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Latest K3s snapshot #41515885354 is stale: node Ready/ARM64, Media/MicroFE/NATS healthy, Stock Admin/new Backend ImagePullBackOff on `12d63b4`, old Backend and unmanaged legacy Frontend 1/1, TCE/Auth/Keycloak 0/0.
 - Owner actions: configure `PLATFORM_INFRA_MIRROR_TOKEN` (destination-only Contents:write); verify `STOCKDIVIDEND_ACTIONS_READ_TOKEN` (StockDividend-only Actions:read); provide explicit StockDividend release authorization.
 - No production promotion, image-reference/credential/DB/replica/schedule change, migration, restart, image deletion, VPS reboot or maintenance occurred. Preserve `reconcile-vps.yml` as sole apply authority and leave all cron expressions, including TCE market-scan, unchanged.
+
+
+## 2026-11-03 06:08 ICT — Auth web CI repair merged
+- Auth PR #86 merged at `1f39b18d9dd286da9dde32a79c4da269b19d5cfd`. It fixes master auth-web-ci #41533191601, where `npm ci` failed because the ephemeral lock omitted `@tailwindcss/oxide-wasm32-wasi`. Explicit `--include=optional` on lock generation and clean install fixed exact-head auth-web-ci #41542677868; auth-service-ci #41542677119 also passed. Both exact-head PR runs include test/typecheck/lint/build/container validation.
+- Post-merge master auth-web-ci #41542942080 and auth-service-ci #41542941957 were still running at container build when inspected; do not claim post-merge completion.
+- Platform tracker PR #1099 merged at `ae3971c907c27f166b435c29ea60cee28f225f38`; exact-head validation #41542838607 and post-merge #41542962452 SUCCESS.
+- Current open PRs: Platform #544/#541/#539 (draft); Auth #75/#76; none in TCE, StockDividend or Media.
+- TCE/StockDividend/Media latest master CI runs remained SUCCESS. StockDividend ARM64 digests remain unpromoted; release disabled.
+- Native Platform/TCE schedule cadence and K3s snapshot remain stale as detailed in the readiness tracker. Mirror token and StockDividend Actions-read token remain owner blockers; explicit release authorization absent.
+- No production apply, promotion, database migration, credential mutation, desired-replica change, schedule change, image deletion, Pod restart or VPS maintenance. Preserve `reconcile-vps.yml` as sole apply authority; TCE market-scan schedule unchanged.
