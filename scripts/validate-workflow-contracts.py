@@ -460,6 +460,27 @@ if "scripts/tests/verify-tce-publisher-run.test.sh" not in (ROOT / ".github" / "
 if "promote-tce-image-digests.py --self-test" not in (ROOT / ".github" / "workflows" / "validate-github-actions.yml").read_text(encoding="utf-8"):
     fail("TCE paired digest promotion script self-tests must run in validate-github-actions.")
 
+# TCE reconciliation and live image verification must support both legacy tag pairs and digest pairs.
+tce_ref_resolver = (ROOT / "scripts" / "resolve-tce-gitops-image-refs.py").read_text(encoding="utf-8")
+for required in (
+    'IMAGES = {',
+    'newTag:',
+    'digest:',
+    'TCE web/service references must both be tags or both be digests',
+    'TCE legacy web/service tags must be identical',
+    'sha256:[0-9a-f]{64}',
+):
+    if required not in tce_ref_resolver:
+        fail(f"TCE GitOps image-reference resolver is missing: {required}")
+for script_path in ("verify-tce-gitops-release.sh", "verify-tce-gitops-images.sh"):
+    script_text = (ROOT / "scripts" / script_path).read_text(encoding="utf-8")
+    if "resolve-tce-gitops-image-refs.py" not in script_text:
+        fail(f"{script_path} must use the shared tag/digest-aware TCE reference resolver.")
+    if "--validate-pair" not in script_text:
+        fail(f"{script_path} must reject mixed TCE tag/digest release pairs.")
+if "resolve-tce-gitops-image-refs.py --self-test" not in (ROOT / ".github" / "workflows" / "validate-github-actions.yml").read_text(encoding="utf-8"):
+    fail("TCE tag/digest resolver regression tests must run in validate-github-actions.")
+
 # Scheduled reconciliation logic must have a matching schedule trigger.
 if "github.event_name == 'schedule'" in reconcile and not re.search(
     r"(?m)^\s*schedule:\s*$", reconcile
