@@ -3090,3 +3090,42 @@ Production remains NOT HEALTHY/UNVERIFIED due StockDividend Admin/Backend image 
 - Post-merge validate-manifests #41515316595 completed SUCCESS on merge commit c1529192344351a1e773e6d6ec772d373772d46c.
 - Post-merge validate-github-actions #41515316604 completed SUCCESS on the same merge commit.
 - The post-merge run list contained only these two validation workflows; no recovery push, workflow_run recovery, or production reconciliation was triggered by the read-only inspection exclusion change.
+
+## 2026-11-02 20:10 UTC / 2026-11-03 03:10 ICT — Node 24 checkout upgrade, workflow side-effect hardening and TCE heartbeat recovery
+
+### PR #1085 — immutable Node 24 checkout pin
+- Squash merge: 4715d7d0e091f67cdbef091b40bf5afe71fe8859; exact PR head 97bc52c7f9213d571f1b5230c61e8a98ec9b6532.
+- Exact-head checks all SUCCESS: validate-manifests #41515782082, validate-github-actions #41515782174, SSO auto-onboarding #41515781776 (manifest reconcile job skipped), keycloak-ci #41515781964. Post-merge validate-manifests #41515885218 and validate-github-actions #41515885331 SUCCESS.
+- Updated all 17 Platform Infra workflow references from checkout v4 SHA 11d5960a326750d5838078e36cf38b85af677262 to immutable actions/checkout v7.0.1 SHA 3d3c42e5aac5ba805825da76410c181273ba90b1. Official v7.0.1 action.yml declares node24; all 17 current-master files were re-read and verified to contain the new SHA and no old SHA. App repositories still have v4 references; review their path triggers before applying a similar upgrade.
+
+### PR #1085 post-merge push side effects — exact outcomes
+- Push triggered recovery #41515885392 because reconcile-vps.yml was in the recovery push paths. Recovery dispatched existing apply authority #41515916117 with ref=master, mode=apply, target_app=all, allow_image_changes=false. This was an unnecessary production dispatch caused by a checkout-only workflow edit; PR #1087 below removes that workflow-only trigger.
+- Provision TCE OIDC client #41515885560 failed at the master-realm token endpoint with HTTP 503 before any Admin REST realm/client request; no Keycloak realm/client mutation occurred. Read-only verification #41515885382 failed HTTP 503.
+- vps-image-cleanup #41515885582 SUCCESS with DRY_RUN=true, unused_images=8, retain=10, remove=0; no image deletion.
+- inspect-vps #41515885354 SUCCESS and generated inspection snapshot #1086 (debug snapshot time 2026-11-02T20:05:04Z). SSO auto-onboarding #41515885210 SUCCESS with manifest reconciliation skipped; keycloak-ci #41515885393 SUCCESS; watchdog push #41515885578 SUCCESS.
+
+### PR #1087 — prevent workflow-only edits from invoking privileged production actions
+- Squash merge: 35074857c1b3be1ec6db71045ea30219cdea09fd; exact PR head 5a9ad12f6adefd5a9178cfbfc2433fd30b1141d5.
+- Exact-head validate-github-actions #41516145651 and validate-manifests #41516145661 SUCCESS. Post-merge validate-github-actions #41516319517 and validate-manifests #41516319576 SUCCESS.
+- Recovery push no longer includes reconcile-vps.yml itself; its workflow changes remain CI-validated, while manifest/app/platform/deployment-script paths still trigger recovery. Scheduled, manual, workflow_run and authenticated TCE repository_dispatch recovery paths remain.
+- Keycloak realm/client provisioning is now explicit workflow_dispatch only; its automatic push trigger is removed. Read-only verifier remains. Image cleanup no longer self-triggers on its workflow file; script/test push remains dry-run, manual cleanup remains available, and the purposeful schedule remains.
+- The #1087 merge itself triggered only manifest/workflow validation; no recovery push or production reconciliation followed it.
+
+### Reconciliation caused by PR #1085 (completed; not healthy overall)
+- Run #41515916117 completed FAILURE at final deployment-lane gate. Shared reconciliation succeeded: GHCR read access verified for all nine private production packages; Auth runtime Secret provisioned and verified from protected Environment with values suppressed; shared ghcr-pull Secrets unchanged in production namespaces; v14 skipped permanent StockDividend image-pull restarts; TCE release pair and Media digest references validated; preflight drift=false and production manifest apply correctly skipped; no image changes allowed; no TCE release-start event published.
+- Auth, TCE, MicroFE Shell/WS and Media lanes SUCCESS; Keycloak lane SKIPPED; StockDividend lane FAILURE. Stock Admin and new Backend Pods remain ImagePullBackOff on tag 12d63b4 with no match for platform in manifest. Existing Backend replica remains 1/1. The Auth runtime Secret provisioning is an observed production Secret side effect; values were never logged. No database migration, image promotion, manifest apply or workload restart for permanent architecture failures.
+- Post-reconciliation recovery #41516621099 SUCCESS; it verified the source reconciliation, found reconciliation age 0m and inspection age 3m, and did not dispatch duplicate reconciliation or inspection.
+
+### TCE schedule evidence — one new native WF-06 delivery
+- Native WF-06 schedule #41516575222 was created 2026-11-02T20:09:18Z on master SHA afad281fa57b2846446a152b6f5cf3c2600ee51d. This is a new native scheduled tick after the previous stale period. All four strict public probes still returned HTTP 503 (TCE web, TCE API, Auth liveness and Auth readiness; expected 200 because TCE/Auth are intentionally 0/0). Schedule delivery and public health are separate signals; do not weaken the HTTP 200 assertions.
+- WF-12 workflow_run #41516610495 SUCCESS: verified WF-06 is enabled, latest schedule run #41516575222 age=0m and queue=0m, then forwarded authenticated heartbeat. Platform receiver #41516627460 SUCCESS: verified exact source workflow path, schedule event, source run ID, full SHA and heartbeat run ID; latest reconciliation age=0m and inspection age=3m, so no fallback dispatch was needed.
+- WF-12's latest direct native schedule remains #41511665345 (2026-11-02T19:37:29Z), which failed freshness before the new WF-06 tick. WF-07 latest native schedule #41476258191 SUCCESS. One new WF-06 tick plus successful workflow_run/receiver correlation is positive recovery evidence, but consecutive cadence is not yet proven. Preserve every cron expression and TCE market-scan schedule.
+
+### Current runtime and cross-repo inventory
+- Latest full read-only K3s snapshot #1086 generated 2026-11-02T20:05:04Z: node tce-k3s-01 Ready, ARM64, K3s 1.36.3+k3s1, disk 55%, about 19 GiB available RAM. Media backend/frontend, MicroFE Shell/WS and NATS 1/1. Stock Admin Pods and new Backend Pod ImagePullBackOff on 12d63b4; old Backend and unmanaged legacy frontend 1/1. microfe-auth and Keycloak 0/0; TCE frontend/service 0/0 intentionally. Pending OS/Docker/containerd maintenance remains untouched.
+- Platform Infra master 35074857c1b3be1ec6db71045ea30219cdea09fd; open PRs #544/#541/#539. TCE master afad281fa57b2846446a152b6f5cf3c2600ee51d; no open PRs. StockDividend master 38220ddfef2db7128482547f72b7f06211e9c9bc; no open PRs. Media master 0d4fc2ac15834c20357fd2420b732e6411fd8930; no open PRs. Authentication master ceb2688d6277b10f1bfe7652223d1d295b7e49d9; open PRs #75/#76.
+- Latest app-owned evidence unchanged: TCE WF-01 #41466743923, WF-02 #41466743801, WF-05 #41466743773 SUCCESS; StockDividend CI #41397317588 and immutable publisher #41397317600 SUCCESS; Media CI #41460906654 SUCCESS; Authentication CI #41329425940 SUCCESS. No new app release or production promotion.
+- Owner blockers remain: STOCKDIVIDEND_ACTIONS_READ_TOKEN unverified; PLATFORM_INFRA_MIRROR_TOKEN missing. StockDividend production release remains disabled/unpromoted pending valid provenance access and explicit authorization. Auth PRs remain gated on Supabase production integration side effects and migration provenance/drift.
+- Platform native schedules remain stale: inspect #41498271871, reconciliation #41491502003, watchdog #41491160810, recovery #41482540454, mirror #41499146752. Manual inspection/recovery/push runs are not native cron ticks.
+
+Production remains NOT HEALTHY/UNVERIFIED. StockDividend ARM64 image-pull failure remains the only failed active deployment lane in #41515916117; TCE/Auth/Keycloak remain intentionally stopped. No TCE market-scan schedule changes.
