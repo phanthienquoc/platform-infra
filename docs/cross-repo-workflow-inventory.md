@@ -963,3 +963,11 @@ No direct SSH/Compose deployment authority was added. The proposed WF-06 cleanup
 - Exact-head Prettier run #41375696971 passed, including the WF-06/WF-12 contract validator. Exact-head Backend unit tests #41375696882 passed, including backend build and unit tests. The merge was performed only after re-fetching the PR and confirming its head was unchanged.
 - Post-merge WF-01 build #41375826672, WF-02 #41375826954, and WF-05 #41375826811 were still in progress at this follow-up. No post-merge success is claimed yet.
 - WF-06 retains its 15-minute schedule, manual dispatch and four public endpoint checks, but no longer requires VPS_SSH_PRIVATE_KEY or performs legacy Docker/port inspection. Platform Infra remains the read-only VPS/K3s inspection authority. WF-12 and all TCE schedule declarations, including market-scan, are unchanged.
+
+
+### Follow-up — post-merge validation status (2026-11-02 09:08 ICT)
+
+- Platform PR #1025 merged by squash at 02:06:28Z, merge commit 9c1b4c09844190102c66ca2a62c2423946be5ab8. Exact-head manifest validation #41375873258 passed; post-merge manifest validation #41375916620 also passed.
+- TCE PR #1011 remains merged at a5e8866d2ba28936d57b31ce6a067186c7204369. Exact-head Prettier/contract validation #41375696971 and Backend build/unit tests #41375696882 passed. Post-merge WF-02 #41375826954 and WF-05 #41375826811 passed. Post-merge WF-01 Build Verify #41375826672 was still building the frontend image at this review; do not claim full post-merge build completion until it concludes.
+- No post-merge scheduled WF-06/WF-07/WF-12 event has yet been observed after TCE master advanced to a5e8866d. The next scheduled event must be checked separately from push-triggered CI.
+- Current Platform master at branch creation: 9c1b4c09844190102c66ca2a62c2423946be5ab8. TCE master: a5e8866d2ba28936d57b31ce6a067186c7204369. StockDividend, Media and Authentication heads remain f5c04475, d8e695d7 and ceb2688d respectively.
