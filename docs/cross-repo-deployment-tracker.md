@@ -3166,3 +3166,29 @@ Production remains NOT HEALTHY/UNVERIFIED. StockDividend ARM64 image-pull failur
 - Auth production integration/migration gate remains open. TCE/Auth/Keycloak intentionally stopped; public 503s remain expected under current desired state.
 
 Production remains NOT HEALTHY/UNVERIFIED due StockDividend ARM64 image-pull failure and intentionally stopped services. No image promotion, database migration, manifest apply or VPS maintenance occurred. TCE market-scan schedule unchanged.
+## 2026-11-02 20:17 UTC / 2026-11-03 03:17 ICT — StockDividend Docker action Node 24 follow-up
+
+- StockDividend CI #41517044412 passed after checkout v7 pin, but its logs emitted the GitHub runner warning that docker/build-push-action@v6 and docker/setup-buildx-action@v3 target Node 20 and are being forced to Node 24.
+- Open StockDividend PR #26 (branch chore/ci-docker-actions-node24-20261103, exact head b96eddb21ef8e76e47214e5d5c394e3863bb0fd0) updates only CI workflow actions: setup-buildx-action v4.4.1 SHA f87e5991a6d7451dcb8d9637bfbc97413f497069 and build-push-action v7.4.0 SHA c3c9e263c25d99ce0380d002d59b67737d91b0dc. Both official action.yml files declare node24. CI retains push=false; no GHCR publication.
+- Exact-head StockDividend CI #41517727670 is still in progress. Backend Go tests/build, scraper syntax/navigation validation, release-hold contract and admin build have passed; scraper container build without publishing remains in progress. Do not merge until the exact-head run completes SUCCESS.
+- StockDividend production deploy/publisher workflow remains unchanged (still v6/v3 action pins); do not update it until its own push/release trigger is reviewed and the workflow self-edit path cannot publish unintentionally.
+
+### Post-merge application CI after the 26-workflow checkout rollout
+- TCE PR #1014 merge commit 76a4b9a1e8e6b4201e7bfa5cde833c77fb4e9152: exact-head WF-01P #41517007456, WF-05 #41517007487, WF-11 #41517007413 and WF-02 #41517007363 all SUCCESS; post-merge WF-01 #41517196734, WF-02 #41517196613 and WF-05 #41517196596 all SUCCESS. No WF-03 release or WF-08b image publication run was triggered.
+- StockDividend PR #25 merge commit ba16a62e8eb2374fe98a92d53739763aaf69dd16: exact-head CI #41517044412 SUCCESS; post-merge CI #41517378004 SUCCESS. No GHCR publisher run was triggered; latest publisher remains #41397317600.
+- Media PR #68 merge commit 648e7daacaea3d61b78545630c7067722723c1b8: exact-head #41517076554 and post-merge #41517278671 SUCCESS.
+- Authentication PR #83 merge commit b76a19d88b84991ab61cd7c530ebcbc2206688be: exact-head auth-service-ci #41517131273 and auth-web-ci #41517131277 SUCCESS; post-merge #41517481286 and #41517482354 SUCCESS. Auth release workflow was not triggered.
+
+### Current open PR inventory
+- Platform Infra: #544, #541, #539.
+- StockDividend: #26 (CI-only Node24 Docker action follow-up; validation in progress).
+- Authentication: #75 and #76 (production Supabase integration/migration provenance gate remains unresolved).
+- TCE Dashboard and Media Generation: no open PRs.
+
+All TCE market-scan cron expressions remain unchanged. Production remains NOT HEALTHY/UNVERIFIED due StockDividend ARM64 image-pull failure; no app release or production image promotion occurred.
+## 2026-11-03 03:18 ICT — StockDividend Docker action PR #26 merged
+
+- PR #26 exact head b96eddb21ef8e76e47214e5d5c394e3863bb0fd0; StockDividend CI #41517727670 completed SUCCESS; squash merge 60918c2f2c50e5e52d071fe36ba72b1e78a485a2.
+- CI now pins setup-buildx-action v4.4.1 SHA f87e5991a6d7451dcb8d9637bfbc97413f497069 and build-push-action v7.4.0 SHA c3c9e263c25d99ce0380d002d59b67737d91b0dc (both Node24). Scraper build uses push=false; no image publication.
+- Post-merge StockDividend CI #41518048674 was queued at this update; verify its final conclusion. Production deploy/publisher workflow remains unchanged and latest publisher remains #41397317600.
+- StockDividend master is now 60918c2f2c50e5e52d071fe36ba72b1e78a485a2; no open StockDividend PRs. Current open PRs: Platform #544/#541/#539; Authentication #75/#76; none in TCE/Media/StockDividend.
