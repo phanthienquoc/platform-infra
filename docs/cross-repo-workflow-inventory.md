@@ -1590,3 +1590,13 @@ No production manifest, image, credential, database, replica, release flag, depl
 - `verify-reconcile-lane-queue.py` now receives parent reconciliation creation time and MAX_AGE_MINUTES. Once the parent scheduled reconciliation is stale (>45m), completed/already-assigned historical queue delays are not re-failed on every later watchdog event; still-queued/unassigned lanes remain enforced at 15m. Fresh reconciliation runs continue enforcing completed assignment delay.
 - Regression tests cover both stale completed and stale unassigned cases. Post-merge validate/lint and push smoke runs #41507316295/#41507316523/#41507316907/#41507316109 were queued at this update and remain unverified until completion.
 - Runtime exercise of the stale-parent guard awaits the next watchdog invocation. Preserve the existing cron expressions and all TCE market-scan schedules.
+
+
+## 2026-11-02 19:12 UTC / 2026-11-03 02:12 ICT — fallback reconciliation and lane results
+
+- The post-merge recovery push #41507316109 observed the last native reconciliation stale by 67m and dispatched the sole production apply authority with exact payload: master SHA `778746152bee482fdea24ad9ab88b1cdee03d4ad`, `mode=apply`, `allow_image_changes=false`, `target_app=all`.
+- Shared reconcile job succeeded: GHCR access preflight passed; Auth runtime Secret was provisioned/verified with values suppressed; shared `ghcr-pull` Secrets were unchanged; service-account/deployment patches reported no change; runner v14 skipped permanent StockDividend image-pull restarts; no GitOps drift, so production manifest apply was skipped.
+- Lane results: MicroFE 15s queue SUCCESS; Media 2s SUCCESS; StockDividend 29s queue FAILURE on three non-ARM64 `12d63b4` Pods; TCE 47s SUCCESS; Auth 64s SUCCESS; Keycloak skipped. All observed runner assignment delays were below the 15m queue budget. The final gate failed only for StockDividend.
+- This fallback event is workflow_dispatch, not native schedule delivery. The new stale-parent queue guard has not yet been exercised by a scheduled-source workflow_run. Next native scheduled reconciliation/watchdog cycle remains the runtime verification point.
+- #1076 exact-head and post-merge manifest/workflow validations all PASS. PR #1077 documentation head `fe0cf9cb91bda7e318d0c9ae10d138d412fba7fc` had validate-manifests #41507377407 SUCCESS before this additional evidence update; revalidate the final head before merge.
+- No app image promotion, manifest apply, Pod restart or DB mutation. TCE market-scan cron unchanged.
