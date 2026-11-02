@@ -288,6 +288,7 @@ for required in (
     'SOURCE_EVENT="$EVENT_SOURCE_EVENT"',
     'SOURCE_HEAD_SHA="$EVENT_SOURCE_HEAD_SHA"',
     "Verify StockDividend publisher run provenance",
+    "STOCKDIVIDEND_ACTIONS_READ_TOKEN: ${{ secrets.STOCKDIVIDEND_ACTIONS_READ_TOKEN }}",
     "bash scripts/verify-stockdividend-publisher-run.sh",
 ):
     if required not in promotion:
@@ -311,6 +312,8 @@ for required in (
         fail(f"StockDividend source-run verifier is missing required metadata guard: {required}")
 if "scripts/tests/verify-stockdividend-publisher-run.test.sh" not in (ROOT / ".github" / "workflows" / "validate-github-actions.yml").read_text(encoding="utf-8"):
     fail("StockDividend source-run provenance regression tests must run in validate-github-actions.")
+if "STOCKDIVIDEND_ACTIONS_READ_TOKEN" not in (ROOT / "docs" / "credentials.md").read_text(encoding="utf-8") or "STOCKDIVIDEND_ACTIONS_READ_TOKEN" not in (ROOT / "docs" / "credentials-key.md").read_text(encoding="utf-8"):
+    fail("The private StockDividend Actions read token must be documented in both credential inventories.")
 
 
 # Media Generation publishes one paired digest event and promotion pins both images atomically.
