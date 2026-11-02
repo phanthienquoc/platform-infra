@@ -64,6 +64,15 @@ jobs:
       - name: Render production manifests
         run: kubectl kustomize environments/prod > /tmp/platform-infra-rendered.yaml
 
+      - name: Validate Auth GitOps contract validator
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/validate-auth-gitops-contract.py
+          python3 scripts/validate-auth-gitops-contract.py --self-test
+
+      - name: Validate rendered Auth GitOps contract
+        run: python3 scripts/validate-auth-gitops-contract.py /tmp/platform-infra-rendered.yaml
+
       - name: Validate rendered YAML structure
         run: |
           set -euo pipefail
