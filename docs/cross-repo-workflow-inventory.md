@@ -1493,3 +1493,33 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Recovery #41496719058 and read-only inspection #41496768387 were still in progress at the evidence time; the latter is workflow_dispatch, not native schedule evidence.
 - StockDividend release remains disabled pending owner Actions-read credential and explicit authorization. Mirror remains blocked by destination-only token. Auth remains gated on Supabase side-effect and migration review.
 - No manifest, image, secret, database, replica, schedule, or deployment authority was changed by the queue-monitoring implementation.
+
+
+## 2026-11-02 18:06 UTC — fresh inspection evidence and queue-monitoring follow-up
+
+### Latest Platform master and PR state
+- Platform Infra master `fc4b951949c12e90bbf5e0e3ba0e1adb6112b080` (automated inspection PR #1073 merged). TCE `afad281fa57b2846446a152b6f5cf3c2600ee51d`; StockDividend `38220ddfef2db7128482547f72b7f06211e9c9bc`; Media `0d4fc2ac15834c20357fd2420b732e6411fd8930`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs: Platform #1072/#544/#541/#539; Authentication #75/#76; none in TCE, StockDividend or Media. #1072 is rebased onto current master at head `c10e34d2bb70706716c024988d2f98bb73529b27`; required checks must pass at this exact head before merge.
+
+### Read-only inspection and runner evidence
+- Fresh inspection #41496768387 completed SUCCESS and its snapshot PR #1073 merged as `fc4b951`.
+- Node `tce-k3s-01` Ready, ARM64, K3s 1.36.3+k3s1, K3s containerd 2.3.2-k3s2, Docker 29.1.3, disk 55%, ~19 GiB available RAM. Host says `restart_required=yes`; containerd.io package 2.4.2-3 is available but not installed.
+- Platform and Media runner services were active in the snapshot. This confirms the runner service was present after the previous delay, but does not establish why GitHub assigned the later lanes 31–32 minutes after job creation.
+- Media/MicroFE/NATS healthy 1/1 with digest-pinned imageIDs. Stock Admin two Pods and new Backend Pod remain image-pull failures on `12d63b4`; old Backend replica and unmanaged legacy Frontend remain Running. TCE/Auth/Keycloak are intentionally 0/0; OIDC probes return 503 while Keycloak is stopped.
+
+### Recovery and native schedule semantics
+- Recovery #41496719058 succeeded, found reconcile activity fresh and inspection activity 121m old, and dispatched read-only inspection #41496768387. This is workflow_dispatch evidence, not native inspection cron.
+- Watchdog #41496751519 ran before that inspection completed and failed on 625m native inspection age. The fallback inspection then completed and merged; this ordering explains the failure without claiming the fallback failed.
+- Native inspection latest remains #41407411326; native reconcile latest #41491502003; native watchdog latest #41491160810; native recovery latest #41482540454. Only event=schedule counts as native delivery.
+- TCE latest native WF-07 #41476258191 SUCCESS; WF-06 #41424898130 HTTP 503; direct WF-12 #41419694332 stale. Preserve strict HTTP 200 and all cron schedules.
+
+### Queue contract
+- Reconciliation #41491502003 recorded 31m41s MicroFE, 32m03s TCE and 32m21s Media runner assignment delays; each eventually ran on runner id 2. StockDividend remained the only failed deployment lane.
+- PR #1072 adds a read-only job-level queue verifier for both queued/unassigned jobs and completed jobs with `started_at - created_at` beyond 15 minutes. It uses the watchdog GitHub API reference timestamp, fails scheduled/manual/fallback enforcement, and keeps post-merge push smoke warn-only. Regression tests and static workflow assertions are included.
+- No direct SSH/Compose authority, production mutation, cron edit, runner restart or credential change was introduced.
+
+### Owner gates
+- StockDividend production promotion remains disabled pending Actions:read token and explicit authorization.
+- Mirror remains blocked by destination-only Contents:write token.
+- Auth production integration/migration review remains gated; no database changes.
+- Keep TCE market-scan schedule unchanged.
