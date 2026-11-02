@@ -942,3 +942,24 @@ Preserve CI, tests, security, backups, manual release, and purposeful scheduled 
 - **Mirror:** scheduled run #41368359234 failed before Git operations because `PLATFORM_INFRA_MIRROR_TOKEN` was empty/missing. Preserve the scheduled/manual mirror workflow; require destination-only Contents:write for `phanthienquoc/locally-uncensored-private`.
 - **Open PR inventory:** Platform Infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #75/#76; no open PRs in TCE Dashboard, StockDividend, or Media Generation.
 - Preserve CI, tests, security, backup, manual/release, maintenance, cleanup, and scheduled data workflows. `reconcile-vps.yml` remains the only GitOps apply authority; `inspect-vps.yml` remains read-only; recovery/watchdogs only dispatch/observe. No direct SSH/Compose authority, image promotion, manifest mutation, credential mutation, database write, or market-scan schedule change occurred.
+
+
+## Workflow inventory review — 2026-11-02 09:02 ICT
+
+- TCE heartbeat: scheduled WF-12 #41374853407 failed only its WF-06 freshness check but successfully sent the independent Platform heartbeat. Platform receiver #41374862392 passed external source-run metadata validation and triggered reconciliation #41374875325. Post-reconciliation recovery #41375036768 succeeded. This is a verified cross-repo fallback chain; it is not evidence that native Platform cron delivery resumed.
+- Platform native schedules: latest scheduled reconciliation #41369624425 (00:54:06Z), latest scheduled inspection #41370072870 (00:59:28Z). The later #41374875325 reconciliation was workflow_dispatch. Keep cron expressions unchanged and continue distinguishing schedule from repository_dispatch/workflow_run/workflow_dispatch.
+- Platform reconciliation: #41374875325 passed shared preflight, v13 policy gate, GHCR access, runtime Secret, shared pull credentials, scoped helper and cluster verification. MicroFE/TCE/Auth/Media lanes passed; StockDividend alone failed on old Admin/Backend image 12d63b4 without ARM64 manifest. No manifest apply/image promotion.
+- Runner v13: #41369624425 logged permanent image-pull restart suppression for Stock Admin and Backend. Inspection #41370072870 showed the same failing pods with restart count 0. Bootstrap remains the only runner-helper installation authority.
+- TCE WF-06 PR #1011 removes the informational legacy SSH/Docker/port probe while retaining the 15-minute schedule, manual dispatch and four public endpoint smoke checks. Workflow token permissions are empty. Contract tests now forbid VPS SSH/Docker/legacy port probes in WF-06. Prettier passed; Backend unit tests were still running at review. Do not merge until exact-head required checks pass. WF-12 and its TCE-to-Platform heartbeat contract are unchanged.
+- Preserve: WF-06 schedule and public smoke; WF-07 backup/integration; WF-12 watchdog/heartbeat; TCE cleanup, audit, safe-setup and bootstrap jobs; Platform reconcile, read-only inspection, recovery/watchdogs, mirror, security and maintenance workflows. No TCE market-scan schedule changed.
+- Application state: StockDividend immutable ARM64 publisher/CI remain successful, but production release remains disabled. Media CI remains successful and last inspected runtime was healthy. Authentication #75/#76 remain open pending production integration side-effect review. Mirror remains blocked by missing PLATFORM_INFRA_MIRROR_TOKEN.
+
+No direct SSH/Compose deployment authority was added. The proposed WF-06 cleanup removes only a redundant informational read-only SSH probe from the application health workflow; Platform Infra retains the sole K3s/VPS inspection path.
+
+
+### Follow-up — TCE WF-06 boundary PR merged (2026-11-02 09:05 ICT)
+
+- TCE PR #1011 was merged by squash at 2026-11-02 02:05:27Z. Validated head: a2da2271c24794d1d88286c9c11b129205dbb47f; merge commit / new TCE master: a5e8866d2ba28936d57b31ce6a067186c7204369.
+- Exact-head Prettier run #41375696971 passed, including the WF-06/WF-12 contract validator. Exact-head Backend unit tests #41375696882 passed, including backend build and unit tests. The merge was performed only after re-fetching the PR and confirming its head was unchanged.
+- Post-merge WF-01 build #41375826672, WF-02 #41375826954, and WF-05 #41375826811 were still in progress at this follow-up. No post-merge success is claimed yet.
+- WF-06 retains its 15-minute schedule, manual dispatch and four public endpoint checks, but no longer requires VPS_SSH_PRIVATE_KEY or performs legacy Docker/port inspection. Platform Infra remains the read-only VPS/K3s inspection authority. WF-12 and all TCE schedule declarations, including market-scan, are unchanged.
