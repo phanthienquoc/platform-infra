@@ -857,4 +857,16 @@ if "Platform-infra-token" in mirror or "secrets.PLATFORM_INFRA_TOKEN" in mirror 
 if "Missing PLATFORM_INFRA_MIRROR_TOKEN secret" not in mirror or "git push --mirror" not in mirror:
     fail("The mirror workflow must fail clearly when its destination-scoped credential is absent and preserve full-ref mirroring.")
 
+
+# Auth must be validated from the effective production render, not raw source YAML.
+auth_contract = ROOT / "scripts" / "validate-auth-gitops-contract.py"
+if not auth_contract.is_file():
+    fail("Rendered Auth GitOps contract validator is missing.")
+if "python3 scripts/validate-auth-gitops-contract.py --self-test" not in manifest_validation:
+    fail("Manifest validation must execute Auth GitOps contract regression tests.")
+if "python3 scripts/validate-auth-gitops-contract.py /tmp/platform-infra-rendered.yaml" not in manifest_validation:
+    fail("Manifest validation must validate the rendered Auth GitOps resources.")
+if manifest_validation.find("name: Render production manifests") > manifest_validation.find("name: Validate rendered Auth GitOps contract"):
+    fail("Auth GitOps contract validation must run after production manifests are rendered.")
+
 print("Workflow contract validation passed.")
