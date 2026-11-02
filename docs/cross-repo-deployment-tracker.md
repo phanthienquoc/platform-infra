@@ -2105,3 +2105,11 @@ No production manifests, image references, GHCR pull credentials, database objec
 4. Keep Auth PR #75/#76 gated on production integration and migration-drift review; plan a maintenance window before any VPS reboot/upgrade.
 
 No production manifests, image references, GHCR pull credentials, database objects, release-enable variables, desired replicas or cron expressions changed. No StockDividend promotion, workload restart, image deletion or VPS reboot occurred. TCE market-scan schedule unchanged. Production remains NOT HEALTHY/UNVERIFIED because StockDividend Admin/Backend are not ready and native schedule cadence is not yet proven stable.
+
+
+## Follow-up — PR #1046 merged and post-merge validation (2026-11-02 15:18 ICT / 08:18 UTC)
+
+- PR [#1046](https://github.com/phanthienquoc/platform-infra/pull/1046) was squash-merged after re-fetching the PR and verifying exact head `2e40f4c137aa910dbf083459ac2fd7693beec78a` remained unchanged. Merge commit/current Platform master: `9c4f4d1ccac7485b1e656fb23af7081d9d148afa`.
+- Exact-head manifest validation #41411976727 passed. Post-merge validation #41412028919 also passed on the merge commit; manifest render, YAML structure, secret policy, immutable image policy, isolated Keycloak manifests and network-boundary checks all passed. Changed production-image validation was correctly skipped because the PR only changed documentation.
+- A repeat schedule-filtered query at 08:18Z showed no newer native schedule runs than those recorded in the 15:15 ICT review: Platform inspection #41407411326, reconcile #41407522742, watchdog #41406983213 and mirror #41407613563; TCE WF-07 #41397768048, WF-06 #41378060687 and direct WF-12 #41374853407. Native Platform inspection/reconcile each delivered at least one event, but subsequent expected ticks were still absent; cadence is not proven stable. TCE WF-06/WF-12 remain stale.
+- No production manifests, image references, secrets, database objects, release flags, replicas or cron expressions changed. TCE market-scan schedule remains unchanged.
