@@ -1265,3 +1265,25 @@ Preserve useful CI/test/security, build/publish, backup, cleanup, manual/read-on
 - StockDividend production release remains disabled pending explicit authorization and \`STOCKDIVIDEND_ACTIONS_READ_TOKEN\`.
 - Mirror requires \`PLATFORM_INFRA_MIRROR_TOKEN\` with destination-only Contents:write.
 - Preserve all CI/test/security, backup, cleanup, manual/read-only, release and scheduled workflows. No duplicate SSH/Compose deployment authority. TCE market-scan schedule unchanged.
+
+
+## Read-only VPS inspection contract and latest evidence — 2026-11-02
+
+- \`.github/workflows/inspect-vps.yml\` remains read-only and writes only \`debug/vps-latest.md\` through an exact-head inspection PR.
+- Recovery-triggered inspection [#41461378005](https://github.com/phanthienquoc/platform-infra/actions/runs/41461378005) SUCCESS; generated at 2026-11-02T14:22:54Z. Inspection PR #1061 exact head \`0bf22ec5f13b3e4bd5eada3169300181628f3f6f\`, exact manifest validation #41461496570 PASS, squash merge commit \`08b8b52891e7037e28cc6926648125a85c77db1a\`.
+- Node Ready; K3s v1.36.3+k3s1; containerd 2.3.2-k3s2; Ubuntu 22.04.5 ARM64; Docker 29.1.3; 19 GiB RAM available; disk 55%, pressure normal.
+- Platform and Media runner services active/enabled; runner policy v14 installed.
+- OS/containerd/Docker updates remain pending and \`restart_required=yes\`; no maintenance/reboot occurred.
+- Media backend/frontend, MicroFE Shell/WS and NATS are healthy with runtime imageIDs recorded. Media backend digest is \`sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d\`; frontend digest is \`sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a\`.
+- Stock Admin two Pods and new Backend Pod remain ImagePullBackOff on \`12d63b4\`, no imageID, no restart loop; old Backend \`23b2878\` and unmanaged legacy Frontend remain Running.
+- TCE frontend/service and microfe-auth/Keycloak remain 0/0 intentionally.
+- Docker image inventory reported 5.773 GB reclaimable, but disk pressure is normal; no cleanup was run.
+- This inspection was a recovery \`workflow_dispatch\`, not native schedule delivery. No production manifest, image, replica, credential value, database object or cron expression was changed by the inspection.
+
+## Latest Platform state after inspection merge
+
+- Platform master: \`08b8b52891e7037e28cc6926648125a85c77db1a\`.
+- Open Platform PRs: #544/#541/#539 (draft).
+- Media PR #67 and Platform PR #1060 are merged; their publisher provenance contract is now active.
+- Reconciliation #41460962292 final gate failed only on StockDividend; Auth, MicroFE, Media and TCE lanes passed; Keycloak skipped.
+- Native Platform and TCE schedule history remains stale as recorded above. Recovery/inspection dispatches must not be counted as cron ticks.
