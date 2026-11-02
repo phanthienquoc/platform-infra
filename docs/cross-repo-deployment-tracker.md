@@ -2533,3 +2533,92 @@ Authentication PRs remain gated on production Supabase integration side-effect a
 - Continue monitoring native schedules separately from fallback dispatches. Do not alter cron expressions or the TCE market-scan schedule.
 
 No production manifest, image reference, desired replica, database object or cron expression changed in this run. No TCE/Media/Stock release event was dispatched. `reconcile-vps.yml` remains the sole production GitOps apply authority; recovery/watchdog only observe and dispatch; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
+## 2026-11-02 15:01 UTC — TCE paired digest release and runtime contract
+
+### Repository heads and open pull requests
+
+| Repository | Master SHA | Open PRs |
+|---|---|---:|
+| `phanthienquoc/platform-infra` | `0148a24be26f73661a63c5e620589c8351fa044a` | 3 |
+| `phanthienquoc/TCE-dashboard` | `afad281fa57b2846446a152b6f5cf3c2600ee51d` | 0 |
+| `phanthienquoc/stockdividend` | `38220ddfef2db7128482547f72b7f06211e9c9bc` | 0 |
+| `phanthienquoc/media-generation` | `0d4fc2ac15834c20357fd2420b732e6411fd8930` | 0 |
+| `phanthienquoc/phanthienquoc-authentication` | `ceb2688d6277b10f1bfe7652223d1d295b7e49d9` | 2 |
+
+Platform Infra draft PRs: #544, #541, #539. Authentication PRs: #75 and #76. Their current-head CI is successful, but Auth production integration side-effect and migration provenance gates remain unresolved; do not merge or run migrations on CI success alone.
+
+### TCE digest-pinned producer/consumer contract — merged
+
+- TCE producer PR [#1013](https://github.com/phanthienquoc/TCE-dashboard/pull/1013) merged as `afad281fa57b2846446a152b6f5cf3c2600ee51d`.
+- Platform consumer PR [#1065](https://github.com/phanthienquoc/platform-infra/pull/1065) merged as `f30e99d6e6bea69878d5f754886edc8a0a82b54a`.
+- Platform runtime compatibility PR [#1066](https://github.com/phanthienquoc/platform-infra/pull/1066) merged as `0148a24be26f73661a63c5e620589c8351fa044a`.
+
+TCE producer now uses a full 40-character source SHA in the release tag, resolves web and service GHCR digests after push, verifies each published manifest includes `linux/arm64`, and sends both digests with the source-run provenance fields in `tce-release-requested`.
+
+Platform's `promote-tce-digests` consumer verifies the source Actions run, full-SHA release label, tag-to-digest mapping, exact GHCR digest references and ARM64 support before changing GitOps. It writes both web/service `digest:` fields atomically in one production-overlay PR, validates the exact PR head and required checks, squash-merges only at that head, then waits for both digests on master before dispatching the shared reconciliation authority.
+
+The new `scripts/promote-tce-image-digests.py` updater has offline positive/negative self-tests. The changed-image contract now rejects tag-based TCE production image changes; the manifest renderer still accepts the existing legacy tag pair until the next authorized digest release.
+
+### TCE reconciliation compatibility — merged
+
+PR #1066 adds `scripts/resolve-tce-gitops-image-refs.py`, which validates either:
+- a matching legacy web/service release-tag pair; or
+- a pair of valid SHA-256 digests.
+
+It rejects mixed tag/digest modes, mismatched legacy tags, malformed digests, duplicate fields and missing image entries. Both `scripts/verify-tce-gitops-release.sh` and `scripts/verify-tce-gitops-images.sh` use the resolver; the live-image verifier compares each Deployment image reference using the correct `:` tag or `@` digest form. The resolver's offline regression suite is part of `validate-github-actions`.
+
+### Exact validation evidence
+
+TCE PR #1013:
+- Exact-head: [WF-01P #41466541874](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41466541874), [WF-02 #41466541852](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41466541852), [WF-05 #41466542203](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41466542203) — all PASS.
+- Post-merge: [WF-01 #41466743923](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41466743923), [WF-02 #41466743801](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41466743801), [WF-05 #41466743773](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41466743773) — all PASS.
+
+Platform PR #1065:
+- Exact-head: [validate-github-actions #41466595948](https://github.com/phanthienquoc/platform-infra/actions/runs/41466595948), [validate-manifests #41466595980](https://github.com/phanthienquoc/platform-infra/actions/runs/41466595980), [keycloak-ci #41466595987](https://github.com/phanthienquoc/platform-infra/actions/runs/41466595987) — all PASS.
+- Post-merge: #41466755119, #41466755095, #41466755140 — all PASS.
+
+Platform PR #1066:
+- Exact-head: [validate-github-actions #41467334737](https://github.com/phanthienquoc/platform-infra/actions/runs/41467334737) and [validate-manifests #41467335156](https://github.com/phanthienquoc/platform-infra/actions/runs/41467335156) — both PASS.
+- Post-merge: [validate-github-actions #41467457291](https://github.com/phanthienquoc/platform-infra/actions/runs/41467457291) and [validate-manifests #41467457506](https://github.com/phanthienquoc/platform-infra/actions/runs/41467457506) — both PASS.
+- Post-merge recovery push #41467457616 completed successfully.
+
+The first TCE producer validation attempt failed because its static validator expected two literal output lines rather than the shared component loop. The validator was corrected to assert the actual component-digest output. The first Platform consumer validation attempt failed on a static step-name mismatch; the assertion and step name were aligned. The final exact-head and post-merge runs listed above passed.
+
+### Production/runtime evidence — no TCE release dispatched
+
+No TCE WF-03 production release was run by these PRs. No TCE images were published by the PRs, no production image reference or replica count was changed, and the existing production TCE overlay remains on the legacy paired tag `prod-v0.1.0-e75e338`. The new digest-pinned promotion path is ready for the next authorized TCE release, but has not yet been exercised end-to-end against a new release.
+
+Read-only fallback reconciliation [#41466779792](https://github.com/phanthienquoc/platform-infra/actions/runs/41466779792) was dispatched with `mode=apply`, `allow_image_changes=false`, `target_app=all`. Shared preflight, GHCR access, runtime Secret verification and runner policy passed; no GitOps drift was found and manifest apply was skipped. Application lanes: TCE, Auth, MicroFE and Media PASS; Keycloak skipped; StockDividend failed. Recovery controller [#41467121585](https://github.com/phanthienquoc/platform-infra/actions/runs/41467121585) verified the completed source run and did not dispatch duplicate operations because inspection freshness was within the 75-minute budget.
+
+Pod evidence from reconciliation #41466779792:
+- Media backend/frontend, MicroFE Shell/WS and NATS: 1/1 Running.
+- Stock Admin: two Pods ImagePullBackOff; Stock Backend: new Pod ErrImagePull while old replica remains 1/1; Stock Frontend legacy remains 1/1 unmanaged.
+- TCE and Auth: 0/0 intentionally stopped; Keycloak skipped/0/0.
+- Stock Admin/Backend image tag `12d63b4` still fails with `no match for platform in manifest`. Runner v14 correctly skipped rollout restart for these permanent ARM64 image-pull failures.
+
+Latest full inspection remains [#41461378005](https://github.com/phanthienquoc/platform-infra/actions/runs/41461378005), generated 2026-11-02T14:24:30Z: node `tce-k3s-01` Ready, K3s `v1.36.3+k3s1`, disk 55%, available memory 19 GiB. No reboot or OS/containerd upgrade was performed.
+
+### Native schedule freshness
+
+Latest observed native scheduled events:
+- Platform: inspection #41407411326 (07:36:38Z, success); reconciliation #41407522742 (07:37:40Z, Stock lane failure); watchdog #41406983213 (07:32:45Z, failure); mirror #41407613563 (07:38:31Z, missing token); recovery #41400302676 (06:30:13Z, success).
+- TCE: WF-06 #41424898130 (09:57:51Z, HTTP 503 health failure); WF-12 #41419694332 (09:19:29Z, freshness failure); WF-07 #41397768048 (06:05:28Z, success).
+
+The later recovery, push and workflow_run events are not counted as native cron deliveries. Platform and TCE native cadence remains stale/unverified. No cron expression or TCE market-scan schedule was changed.
+
+### Owner-action blockers
+
+- `PLATFORM_INFRA_MIRROR_TOKEN` remains missing; mirror run #41407613563 failed before Git operations. Required scope: destination-only Contents write for `phanthienquoc/locally-uncensored-private`.
+- `STOCKDIVIDEND_ACTIONS_READ_TOKEN` presence in the protected Platform production Environment remains unverified. Required scope: Actions read only on private `phanthienquoc/stockdividend`.
+- `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=false`; no paired StockDividend digest promotion is authorized.
+- Auth PR #75/#76 remain gated on production integration side-effect and migration-drift/provenance review.
+
+### Next actions
+
+1. Wait for/inspect the next fresh Platform reconciliation and full inspection; do not treat recovery dispatches as native schedule delivery.
+2. Keep TCE digest promotion disabled until an authorized WF-03 release is run; then verify publisher run, tag-to-digest equality, ARM64 digests, atomic manifest PR, reconciliation and live image references.
+3. Obtain the two owner credentials before mirror or private StockDividend provenance work.
+4. Keep StockDividend production image promotion on hold until explicit authorization; the current Admin/Backend Pods remain unhealthy.
+5. Continue Auth side-effect/migration review without running database mutations.
+6. Preserve all current TCE market-scan cron expressions.
