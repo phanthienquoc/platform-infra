@@ -1758,3 +1758,34 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Release publishers in TCE #1015, StockDividend #27, Media #70 and Auth #84 now use verified immutable Node24 action releases. TCE/Auth release workflows remain manual-only. Media/Stock publisher path filters prevent CI/contract-only changes from publishing.
 - Platform current master `773ae46ba87894fd3f00fc3cf2375375285d0e02`; open PRs #544/#541/#539 plus this tracker PR. TCE #1016; StockDividend #29; Media none; Auth #75/#76/#85.
 - Preserve sole production apply authority `reconcile-vps.yml`; no direct SSH/Compose authority. No release dispatch, GitOps promotion, DB migration, cron change or VPS reboot. TCE market-scan schedule unchanged.
+
+## 2026-11-03 04:57 ICT — Node24 CI migration completed
+
+- TCE PR #1016 merged at `2beeedc5a875e0017dbdd0c49e432b3803bbe33d`; exact-head WF-11 #41526244453, WF-02 #41526244889, WF-01P #41526244499 and WF-05 #41526244527 all SUCCESS.
+- StockDividend PR #29 merged at `3d67cbb6bacda7d8c46a7f484129091a8fe3af6e`; exact-head CI #41526269593 SUCCESS.
+- Authentication PR #85 merged at `bf5ac54a2c48ad4c439d2c1241aca08c4960bc18`; exact-head auth-service-ci #41526295672 and auth-web-ci #41526295607 SUCCESS. Supabase Preview SKIPPED and not counted as production integration evidence.
+- Node24 setup-node CI migration is complete for all three remaining application repositories. Publisher workflows across TCE, StockDividend, Media and Auth were previously migrated to immutable Node24 action commits. Application Node versions, package managers, caches, build/test commands and release triggers were preserved.
+- Current open PRs: Platform #544/#541/#539 (draft); Authentication #75/#76; none in TCE, StockDividend or Media.
+- StockDividend immutable ARM64 artifacts from publisher #41524676740 remain unpromoted: scraper `83c989df...`, admin `d0d6f037...`, backend `1f8d5a61...`. Release gate false; no Platform dispatch; GitOps production image references unchanged.
+- Latest available K3s snapshot #41515885354 is stale. It records Stock Admin/new Backend ImagePullBackOff on old tag `12d63b4`, while Media/MicroFE/NATS were healthy and TCE/Auth/Keycloak remained intentionally 0/0.
+- Platform native inspection/reconciliation/watchdog/mirror and TCE WF-06/WF-12 schedules remain without proven consecutive cadence recovery. WF-07 and Platform recovery have successful isolated schedule evidence. Do not change any cron expression or TCE market-scan schedule.
+- Preserve `reconcile-vps.yml` as the only production apply authority. No direct SSH/Compose deployment authority added. No release dispatch, GitOps promotion, DB migration, secret mutation, replica change or VPS reboot.
+
+## 2026-11-03 05:05 ICT — remaining Node24 workflow pins
+
+- TCE PR #1017 merged at `5d299bea8ba482876ccaa291c68b0ee3f829350c`. Exact-head WF-02 #41533787129, WF-05 #41533787740, WF-08B #41533787314 and WF-11 #41533787316 all SUCCESS. WF-08B release handoff, image publication and dispatch jobs were skipped for the PR event.
+- StockDividend PR #30 merged at `efdb0844e868367d29bbeb5393430cd73d6b6f38`. Exact-head CI #41533796010 SUCCESS across all five jobs; scraper image build remained push=false. Weekend schedule `0 1 * * 0,6` unchanged.
+- Platform PR #1097 remains open. Exact-head action validation #41533921909 SUCCESS after fixing yamllint comment spacing. Exact-head manifest validation #41533921800 is still running at network-boundary validation; no merge until SUCCESS.
+- Current open PRs: Platform #1097/#544/#541/#539; Auth #75/#76; none in TCE, StockDividend or Media. Tracker PR #1096 is open separately.
+- Node24 action runtime migration is complete for TCE artifact upload/download, TCE manual safe-setup checkout, StockDividend Python/Go and weekend scraper actions. Platform GitOps image-promotion checkout/login/Buildx pins remain pending #1097.
+- No release dispatch, GHCR publication, GitOps promotion, DB migration, credential mutation, replica change, VPS reboot or cron change. Preserve `reconcile-vps.yml` as the sole production apply authority; TCE market-scan schedule unchanged.
+
+## 2026-11-03 05:15 ICT — Node24 action pins merged
+
+- Platform #1097 merged at `60cbeb5ae2d4ea2deb5643503c20f0811a02cdcf`; exact-head workflow and manifest validations #41533921909/#41533921800 SUCCESS after correcting yamllint comment spacing.
+- TCE #1017 merged at `5d299bea8ba482876ccaa291c68b0ee3f829350c`; exact-head WF-02/WF-05/WF-08B/WF-11 SUCCESS. MicroFE image publication and Platform dispatch jobs were skipped on PR.
+- StockDividend #30 merged at `efdb0844e868367d29bbeb5393430cd73d6b6f38`; exact-head CI #41533796010 SUCCESS across all five jobs. Production publisher ignores `.github/**`; weekend scraper cron remains `0 1 * * 0,6`.
+- Verified the immutable upstream action metadata at the pinned commits: checkout, artifact upload/download, Docker login/Buildx, setup-python and setup-go all declare Node24 runtime.
+- Current open PRs: Platform #544/#541/#539 (draft); Authentication #75/#76. TCE, StockDividend and Media have no open PRs. Tracker PR #1096 remains open and needs base/mergeability re-check.
+- StockDividend production overlay still uses old Admin/Backend tag `12d63b4`; newly published ARM64 digests remain unpromoted. K3s snapshot #41515885354 remains stale. Native schedule cadence is not proven consecutive.
+- No production release, GitOps promotion, DB migration, credential mutation, replica change, VPS maintenance or cron change. `reconcile-vps.yml` remains sole production apply authority; TCE market-scan schedule unchanged.
