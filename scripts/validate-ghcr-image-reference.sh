@@ -58,16 +58,48 @@ if ! bearer_token="$(printf '%s' "$token_response" | jq -er '.token // .access_t
   exit 1
 fi
 unset token_response
+trap 'unset bearer_token' EXIT
 
 manifest_url="https://ghcr.io/v2/${package}/manifests/${selector}"
-if ! curl --fail --silent --show-error --connect-timeout 10 --max-time 20 \
+manifest_json=""
+if ! manifest_json="$(curl --fail --silent --show-error --connect-timeout 10 --max-time 20 --retry 2 --retry-delay 1 \
   -H "Authorization: Bearer $bearer_token" \
   -H "Accept: application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.docker.distribution.manifest.v2+json" \
-  "$manifest_url" >/dev/null; then
+  "$manifest_url")"; then
   echo "::error::Cannot read exact GHCR manifest $GHCR_IMAGE_REFERENCE. Verify the immutable tag/digest exists and the PAT owner can pull this package; no GitOps mutation should proceed." >&2
-  unset bearer_token
   exit 1
 fi
-unset bearer_token
 
-echo "Verified exact GHCR manifest: $GHCR_IMAGE_REFERENCE"
+# Multi-platform indexes expose architecture on each manifest descriptor.
+if jq -e '.manifests | type == "array"' <<< "$manifest_json" >/dev/null 2>&1; then
+  if ! jq -e '[.manifests[]? | select(.platform.os == "linux" and .platform.architecture == "arm64")] | length > 0' <<< "$manifest_json" >/dev/null; then
+    platforms="$(jq -r '[.manifests[]? | select(.platform != null) | "\(.platform.os // "unknown")/\(.platform.architecture // "unknown")"] | unique | join(", ")' <<< "$manifest_json")"
+    echo "::error::GHCR image $GHCR_IMAGE_REFERENCE does not publish linux/arm64 in its manifest index (found: ${platforms:-no platform descriptors})." >&2
+    exit 1
+  fi
+  echo "Verified exact GHCR manifest: $GHCR_IMAGE_REFERENCE (linux/arm64 manifest index)."
+else
+  # Single-platform OCI/Docker manifests store OS and architecture in the config blob.
+  config_digest="$(jq -er '.config.digest // empty' <<< "$manifest_json" 2>/dev/null || true)"
+  if [[ ! "$config_digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+    echo "::error::GHCR manifest for $GHCR_IMAGE_REFERENCE is neither an image index nor a valid single-image manifest." >&2
+    exit 1
+  fi
+
+  config_json=""
+  if ! config_json="$(curl --fail --silent --show-error --connect-timeout 10 --max-time 20 --retry 2 --retry-delay 1 \
+    -H "Authorization: Bearer $bearer_token" \
+    -H "Accept: application/vnd.oci.image.config.v1+json, application/vnd.docker.container.image.v1+json" \
+    "https://ghcr.io/v2/$package/blobs/$config_digest")"; then
+    echo "::error::Could not read the image config for $GHCR_IMAGE_REFERENCE; refusing to infer its platform." >&2
+    exit 1
+  fi
+
+  image_os="$(jq -r '.os // empty' <<< "$config_json")"
+  image_arch="$(jq -r '.architecture // empty' <<< "$config_json")"
+  if [[ "$image_os" != "linux" || "$image_arch" != "arm64" ]]; then
+    echo "::error::GHCR image $GHCR_IMAGE_REFERENCE does not support linux/arm64 (resolved config: ${image_os:-unknown}/${image_arch:-unknown})." >&2
+    exit 1
+  fi
+  echo "Verified exact GHCR manifest: $GHCR_IMAGE_REFERENCE (single-image config linux/arm64)."
+fi

@@ -435,6 +435,21 @@ if 'GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE
     fail("MicroFE promotion must verify each exact immutable image digest through Registry V2.")
 if 'GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$IMAGE" bash scripts/validate-ghcr-image-reference.sh' not in promotion:
     fail("Application promotion must verify the exact immutable tag through Registry V2.")
+
+ghcr_image_validator = (ROOT / "scripts" / "validate-ghcr-image-reference.sh").read_text(encoding="utf-8")
+for required in (
+    ".manifests[]?",
+    ".platform.os == \"linux\"",
+    ".platform.architecture == \"arm64\"",
+    ".config.digest",
+    "/blobs/",
+    ".architecture",
+    ".os",
+):
+    if required not in ghcr_image_validator:
+        fail(f"Exact GHCR image validation must enforce linux/arm64 support: {required}")
+if "validate-ghcr-image-platform.test.sh" not in github_actions:
+    fail("GitHub Actions validation must run the exact GHCR linux/arm64 platform regression tests.")
 if "github.event.action || github.event_name" not in promotion:
     fail("GitOps promotion run names must identify dispatch events that omit app/component fields.")
 
