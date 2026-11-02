@@ -67,7 +67,6 @@ if not re.search(r"(?m)^  push:\n    branches: \[master\]\n    paths:", recovery
 for required_path in (
     '.github/workflows/reconcile-vps.yml',
     '.github/workflows/inspect-vps.yml',
-    '.github/workflows/recover-stale-ops.yml',
     'apps/**',
     'platform/**',
     'environments/prod/**',
@@ -75,6 +74,18 @@ for required_path in (
 ):
     if required_path not in recovery:
         fail(f"Recovery push bootstrap is missing deployment path filter: {required_path}")
+
+recovery_push_paths = recovery.split("  push:", 1)[1].split("  workflow_dispatch:", 1)[0]
+if '".github/workflows/recover-stale-ops.yml"' in recovery_push_paths:
+    fail("Editing the recovery controller itself must not trigger a production reconciliation.")
+for excluded_path in (
+    "scripts/verify-reconcile-lane-queue.py",
+    "scripts/validate-workflow-contracts.py",
+    "scripts/validate-network-boundaries.sh",
+    "scripts/validate-auth-gitops-contract.py",
+):
+    if f'"!{excluded_path}"' not in recovery_push_paths:
+        fail(f"Recovery push must exclude read-only CI/watchdog helper: {excluded_path}")
 
 for required in (
     "source_run_id:",
