@@ -476,6 +476,8 @@ for script_path in ("verify-tce-gitops-release.sh", "verify-tce-gitops-images.sh
     script_text = (ROOT / "scripts" / script_path).read_text(encoding="utf-8")
     if "resolve-tce-gitops-image-refs.py" not in script_text:
         fail(f"{script_path} must use the shared tag/digest-aware TCE reference resolver.")
+    if "--validate-pair" not in script_text:
+        fail(f"{script_path} must reject mixed TCE tag/digest release pairs.")
 if "resolve-tce-gitops-image-refs.py --self-test" not in (ROOT / ".github" / "workflows" / "validate-github-actions.yml").read_text(encoding="utf-8"):
     fail("TCE tag/digest resolver regression tests must run in validate-github-actions.")
 
