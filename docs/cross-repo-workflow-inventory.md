@@ -1,3 +1,19 @@
+## Follow-up verification — 2026-11-02 07:00 ICT / 2026-11-02 00:00 UTC
+
+- Platform PR #1020 merged as `b28d1f4e454cec8e521619b4fec33a9b3433a55c`; exact-head validation #41364647902 and post-merge validation #41364681389 passed.
+- Cross-repo TCE heartbeat has now been correlated across three successful chains:
+  - WF-07 scheduled source #41355068024 → WF-12 workflow_run #41355080288 → Platform repository_dispatch #41355088547 → reconciliation #41355101409.
+  - Direct WF-12 schedule #41358488421 → Platform repository_dispatch #41358495488 → reconciliation #41358507981.
+  - WF-06 scheduled source #41360343131 → WF-12 workflow_run #41360361422 → Platform repository_dispatch #41360370906 → reconciliation #41360385108.
+- Each Platform receiver validation job succeeded after Actions API verification of source/heartbeat run identity, workflow path, event, branch, and full SHA. Each existing reconciliation completed shared operations and inspection recovery; StockDividend was the only failing application lane. These events validate heartbeat and fallback recovery, not a healthy production rollout.
+- The heartbeat contract is verified across three source patterns, but continuous native Platform cron delivery is still unproven. Latest native Platform schedule events remain reconciliation #41351121366 and inspection #41351555469. TCE WF-12 scheduled run #41358488421 had a failing WF-06 freshness check while its heartbeat dispatch job succeeded.
+- Runner policy v13 was installed by the existing bootstrap run #41360807367. A post-v13 reconciliation exercising permanent image-pull restart suppression is still pending.
+- Current Platform Infra master: `b28d1f4e454cec8e521619b4fec33a9b3433a55c`. Other repository heads unchanged: TCE `d011fbb4099f5f9e24068878ac4e035b369e8ace`; StockDividend `f5c04475eb4e67811c66b350d60541b21b8262c7`; Media `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open PRs remain Platform #795/#749/#741/#648/#544/#541/#539/#538 and Authentication #75/#76; none in TCE, StockDividend, or Media.
+- Preserve the single authority split: app repos own builds/tests/immutable GHCR publication; Platform owns production manifests, shared pull credentials, GitOps/reconciliation/health; TCE heartbeat has no deployment authority. No SSH/Compose authority or TCE cron change.
+
+---
+
 ## Runtime verification update — 2026-11-02 06:55 ICT / 2026-11-01 23:55 UTC
 
 - **Runner policy v13 installed:** post-merge existing bootstrap workflow [#41360807367](https://github.com/phanthienquoc/platform-infra/actions/runs/41360807367) completed SUCCESS on master SHA `15c46d1093321a5a5b7570686d9222edfdf564f3`. Its log printed `platform-kubectl policy: rollout-status-v13-permanent-image-pull-restart`; the final runner-service and allowlisted-reconciliation-capability verification step passed. Do not keep the prior "installation pending" status. A post-v13 reconciliation exercising the new permanent-image-pull branch is still pending.
