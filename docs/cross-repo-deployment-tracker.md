@@ -1740,3 +1740,48 @@ Three accepted receiver chains are recorded:
 5. Continue Auth production integration side-effect review before merging #75/#76.
 
 No production manifests, release flags, GHCR pull credentials, database objects, K3s desired replicas, or cron declarations changed in this review. No workload was restarted, no image was deleted, and no production promotion occurred. TCE and Auth/Keycloak remain stopped as intended. Production remains **NOT HEALTHY/UNVERIFIED** because StockDividend Admin/Backend are not ready.
+
+
+## Cross-repo operations review — 2026-11-02 09:02 ICT
+
+### Current repository heads and open PRs
+
+- Platform Infra master: e43d4c92ac52ed1f34c2806b7e3babcf468c63a4; TCE Dashboard: d011fbb4099f5f9e24068878ac4e035b369e8ace; StockDividend: f5c04475eb4e67811c66b350d60541b21b8262c7; Media Generation: d8e695d772ab2dc0da5c15cc428ee78ac6537518; Authentication: ceb2688d6277b10f1bfe7652223d1d295b7e49d9.
+- Open PRs: Platform Infra #795/#749/#741/#648/#544/#541/#539/#538; TCE Dashboard #1011 (new public-smoke-only WF-06 cleanup, validation in progress); Authentication #75/#76; none in StockDividend or Media.
+
+### Latest Platform recovery and reconciliation evidence
+
+- TCE scheduled WF-12 #41374853407 ran at 2026-11-02 01:54:04Z. Its read-only schedule-delivery job failed because the latest scheduled WF-06 run was stale, but its independent “Notify Platform Infra — TCE schedule heartbeat” job succeeded.
+- Platform repository_dispatch receiver #41374862392 completed successfully. The “Validate external TCE schedule heartbeat payload” step passed after validating the source run and heartbeat run metadata against the TCE Actions API.
+- Receiver-triggered reconciliation #41374875325 completed with shared reconcile job success: repository/scope verification, runner policy v13 gate, GHCR pull preflight, Auth runtime Secret, shared GHCR pull credentials, targeted image-pull restart helper, TCE pairing, and cluster verification all passed. MicroFE, TCE, Auth and Media lanes passed. StockDividend was the sole failed lane because Admin/Backend still reference the non-ARM64 12d63b4 images. Manifest apply and image-change guard were skipped; no promotion occurred.
+- Post-reconciliation recovery #41375036768 completed successfully. At that point the new reconciliation was fresh and the latest scheduled inspection #41370072870 was still within the 75-minute inspection budget, so no duplicate operation was required.
+- The native Platform schedule remains stale: latest scheduled reconciliation #41369624425 at 00:54:06Z and latest scheduled inspection #41370072870 at 00:59:28Z. Later reconciliation #41374875325 was workflow_dispatch, not native schedule. Keep native cron-delivery evidence distinct from TCE heartbeat fallback and workflow_run recovery.
+
+### TCE healthcheck boundary cleanup — PR #1011
+
+- PR #1011 (https://github.com/phanthienquoc/TCE-dashboard/pull/1011), branch chore/wf06-remove-legacy-vps-ssh-check, head a2da2271c24794d1d88286c9c11b129205dbb47f, removes the informational legacy SSH/Docker/port probe from WF-06. It retains the */15 * * * * schedule, manual workflow_dispatch, and all four public HTTP 200 smoke checks; sets workflow token permissions to {}; and strengthens the contract validator to forbid reintroducing direct VPS SSH/Docker inspection in WF-06.
+- Rationale: Platform Infra inspect-vps.yml is the single read-only K3s/VPS runtime inspection path and captures pod readiness, imageIDs, CRI containers, failure events and GitOps drift. The removed WF-06 job only printed legacy Docker/port diagnostics, did not assert a health condition, and required a long-lived VPS key while disabling host-key verification. Other purposeful TCE backup, cleanup, audit, safe-setup and bootstrap workflows remain untouched.
+- Exact-head checks at review: Prettier read-only check succeeded; Backend unit tests were still in progress; push-only auto-format job was skipped. Do not merge until Backend unit tests and all required checks pass and the current PR head remains unchanged.
+
+### K3s and application state
+
+- Latest inspection remains #41370072870 (2026-11-02 00:59:28Z), snapshot generated 00:59:35Z. Node tce-k3s-01 Ready, ARM64, K3s v1.36.3+k3s1, disk 55%, available memory about 19Gi, GitOps drift clean; host still reports pending restart-required OS/Docker/containerd updates. No reboot/package upgrade.
+- Media backend/frontend, MicroFE Shell/WS and NATS are 1/1. Stock Admin pods and new Stock Backend remain ImagePullBackOff due no match for platform in manifest; old Backend and Frontend replicas remain 1/1. TCE, Auth and Keycloak are at intentional 0 replicas in this snapshot.
+- Runner v13 remains installed and live. Scheduled reconciliation #41369624425 explicitly logged “Permanent image-pull failure … skipping rollout restart” for Stock Admin and Backend; the subsequent inspection showed unchanged pod identities and restart counts 0. Reconciliation #41374875325 passed the v13 policy gate and completed the scoped helper without clearing the StockDividend health failure.
+
+### Application CI/publication and remaining blockers
+
+- StockDividend master publisher #41314359012 and CI #41314359022 passed; the previously verified immutable native ARM64 Scraper/Admin/Backend digests remain recorded above. Production release gate remains false; do not promote without explicit authorization.
+- Media master CI #41246414186 passed; last inspection showed backend/frontend 1/1 with digest-pinned imageIDs.
+- Authentication PR #75/#76 remain open. PR #76 CI #41329425940 passed; PR #75 CI #40446492086 passed. Both remain gated by production Supabase integration side-effect review; no merge/migration is authorized by CI alone.
+- Mirror scheduled run #41368359234 remains the latest recorded post-secret-name-fix failure because PLATFORM_INFRA_MIRROR_TOKEN was missing/empty. Configure it as a Platform Infra Actions secret (or org secret restricted to Platform Infra), destination-only Contents: write on phanthienquoc/locally-uncensored-private; do not substitute GHCR or app handoff tokens.
+
+### Next actions
+
+1. Complete TCE PR #1011 exact-head Backend unit tests; if all required checks pass, re-fetch the PR and merge only the unchanged head with squash.
+2. Continue observing native Platform reconcile/inspection cron delivery; do not count TCE heartbeat dispatches as native schedule runs.
+3. Configure the destination-only mirror token and verify a post-fix scheduled mirror push.
+4. Keep StockDividend production release disabled until explicit authorization; then promote paired immutable Admin/Backend digests through Platform Infra and verify runtime imageIDs/readiness.
+5. Keep Auth PR #75/#76 gated on production integration side-effect review.
+
+No production manifests, runtime credentials, release flags, database objects, K3s desired replicas, or schedule expressions changed in this review. No image promotion, workload restart, image deletion, or VPS reboot occurred. TCE market-scan schedule unchanged. Production remains NOT HEALTHY/UNVERIFIED because StockDividend Admin/Backend are not ready.
