@@ -2487,3 +2487,49 @@ The inspection confirms the earlier reconciliation result: Media and MicroFE are
 - Inspection PR #1061 was generated from a read-only snapshot, exact-head validated, and squash-merged by the inspection workflow. Current Platform master is `08b8b52891e7037e28cc6926648125a85c77db1a`.
 - PR #1061 changed only `debug/vps-latest.md`; no production manifest was changed.
 - Exact inspection manifest validation #41461496570 passed. Post-merge manifest validation #41461496570 is the same exact-head run because the inspection workflow validates the snapshot before merge; no separate post-merge push run was observed in the latest run list.
+
+## Cross-repo run — TCE publisher provenance and post-merge validation (2026-11-02 21:40 ICT / 14:40Z)
+
+### TCE producer and Platform consumer contract merged
+
+- TCE Dashboard PR [#1012](https://github.com/phanthienquoc/TCE-dashboard/pull/1012) merged by squash from exact head `2a874a2a24985d59072f136b48b0e13770aaa3ff` as `3c987231ffc1cfafebcb25d2d140e7f499081310`.
+- TCE exact-head checks: WF-01P #41462785094 PASS; WF-02 #41462785167 PASS; WF-05 #41462785008 PASS.
+- Platform Infra PR [#1063](https://github.com/phanthienquoc/platform-infra/pull/1063) merged by squash from exact head `e52da0796bf38ebb9fe824765e0f3f2c60138ebd` as `41c453c0a1b6df2c69de1d9f51c061e2f5266a27`.
+- Platform exact-head checks: `validate-github-actions` #41462823605 PASS; `validate-manifests` #41462823627 PASS. Post-merge checks #41462989569 and #41462989629 PASS.
+- TCE producer `.github/workflows/wf-03-tce-production-deploy.yml` now sends `source_run_id`, `source_workflow_path`, `source_event`, and `source_head_sha` in `tce-release-requested`. Source is restricted to the existing manual `workflow_dispatch` from master; the release tag's 7-character SHA suffix must match the full source SHA prefix.
+- TCE's `scripts/validate-tce-release-contract.sh` runs in WF-01P PR CI, WF-01 master build verification, and WF-03 immediately before dispatch. It checks payload fields and ensures the app release workflow does not become an SSH/Compose/kubectl deployment authority.
+- Platform `fanout-tce-release` validates the payload and runs `scripts/verify-tce-publisher-run.sh` before dispatching either web or service image promotion. The verifier checks exact run ID, repository/head repository, workflow path, `workflow_dispatch` event, master branch, full SHA, completed status and successful conclusion against the public TCE Actions API.
+- TCE is public, so no cross-repository Actions token is added. Existing `PLATFORM_INFRA_TOKEN` remains the producer-side credential for dispatching to and reading Platform Infra workflow runs; Platform's consumer does not use it to read TCE run metadata.
+- The TCE producer still uses a SHA-derived 7-character tag suffix, now tied to the full source SHA by provenance. This PR does not migrate TCE production manifests to digest-pinned references; that remains a separate contract improvement and no production image reference was changed.
+- TCE PR checks passed; post-merge WF-02 #41462961803 PASS and WF-05 #41462961759 PASS. Post-merge WF-01 #41462961881 had passed the new contract validator and required-secret check, but the ARM64 frontend image build was still in progress at this update.
+- No TCE WF-03 release was dispatched; no new TCE images were published and no TCE GitOps promotion was created.
+
+### Current repositories and open PRs
+
+| Repository | Master HEAD | Open PRs |
+|---|---|---|
+| platform-infra | `41c453c0a1b6df2c69de1d9f51c061e2f5266a27` | #544, #541, #539 (draft) |
+| TCE-dashboard | `3c987231ffc1cfafebcb25d2d140e7f499081310` | none |
+| stockdividend | `38220ddfef2db7128482547f72b7f06211e9c9bc` | none |
+| media-generation | `0d4fc2ac15834c20357fd2420b732e6411fd8930` | none |
+| phanthienquoc-authentication | `ceb2688d6277b10f1bfe7652223d1d295b7e49d9` | #75, #76 |
+
+Authentication PRs remain gated on production Supabase integration side-effect and migration provenance/drift review. CI success is not a production integration pass.
+
+### Latest recovery and runtime evidence
+
+- Platform post-merge recovery push [#41462989681](https://github.com/phanthienquoc/platform-infra/actions/runs/41462989681) SUCCESS. Its log confirms latest reconciliation #41460962292 was 10 minutes old and latest inspection #41461378005 was 8 minutes old, so it did not dispatch duplicate reconciliation or inspection.
+- Latest production reconciliation remains #41460962292: shared preflight PASS, runner v14 ready, GHCR access PASS, Auth Secret and shared pull-credential bootstrap steps PASS, drift false, production manifest apply skipped. Auth, MicroFE, Media and TCE lanes PASS; Keycloak skipped; StockDividend alone failed.
+- Latest full read-only K3s snapshot remains inspection #41461378005 (2026-11-02T14:22:54Z), merged through inspection PR #1061. Node Ready, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2, 19 GiB RAM available, disk 55% with normal pressure, runner v14 active.
+- Media backend/frontend, MicroFE Shell/WS and NATS are healthy. TCE frontend/service and Auth/Keycloak remain intentionally 0/0. Stock Admin two Pods and the new Backend Pod remain ImagePullBackOff on `12d63b4` with `no match for platform in manifest`; old Backend and unmanaged legacy Frontend remain Running. Permanent v14 policy skips restart for these failures.
+- No fresh reconciliation or full inspection was dispatched by recovery push #41462989681 because both were within their freshness windows.
+
+### Native schedule and owner blockers
+
+- Platform native scheduled runs remain watchdog #41406983213 (failure), inspection #41407411326 (success), reconciliation #41407522742 (Stock health failure), mirror #41407613563 (missing token), recovery #41400302676 (success).
+- TCE native scheduled runs remain WF-06 #41424898130 (strict public HTTP checks failed 503), WF-12 #41419694332 (freshness failure), WF-07 #41397768048 (success). WF-06 forwarder #41424938817 and Platform receiver #41424970499 are workflow_run/fallback evidence, not native cron delivery.
+- StockDividend release remains disabled (`STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=false`). Owner must configure `STOCKDIVIDEND_ACTIONS_READ_TOKEN` (Actions:read only on StockDividend) and explicitly authorize paired digest promotion.
+- Mirror still requires `PLATFORM_INFRA_MIRROR_TOKEN` with destination-only Contents:write on `phanthienquoc/locally-uncensored-private`.
+- Continue monitoring native schedules separately from fallback dispatches. Do not alter cron expressions or the TCE market-scan schedule.
+
+No production manifest, image reference, desired replica, database object or cron expression changed in this run. No TCE/Media/Stock release event was dispatched. `reconcile-vps.yml` remains the sole production GitOps apply authority; recovery/watchdog only observe and dispatch; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
