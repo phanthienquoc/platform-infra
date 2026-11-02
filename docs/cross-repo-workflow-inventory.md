@@ -1347,3 +1347,62 @@ Preserve useful CI/test/security, build/publish, backup, cleanup, manual/read-on
 - Platform consumer PR #1065: exact-head validate-github-actions/validate-manifests/keycloak-ci PASS; post-merge all three PASS.
 - Platform runtime compatibility PR #1066: exact-head validate-github-actions/validate-manifests PASS; post-merge both PASS.
 - Runtime compatibility changes were code/tests only; no TCE release was published or promoted.
+
+
+## 2026-11-02 16:03 UTC — current workflow ownership and evidence
+
+### New Platform contract: StockDividend paired digest convergence
+
+Platform PR #1069 merged as `492e0377dccdec09e7fe1daeb0a98b825b10a3e0`.
+
+- `gitops-image-promotion.yml` now waits for the exact backend/admin digest pair to be visible together in the production StockDividend Kustomize overlay on master before dispatching shared reconciliation.
+- `scripts/verify-stockdividend-gitops-digests.py` is an offline, dependency-free verifier with positive/negative self-tests.
+- `validate-github-actions.yml` runs the self-test; `validate-workflow-contracts.py` checks the readiness gate and step ordering.
+- Exact-head PR checks #41477608011/#41477608062 and post-merge checks #41477716689/#41477716663 all PASS. Recovery push #41477716817 SUCCESS.
+- The gate is not yet runtime-exercised by a new StockDividend release. It does not enable release, supply credentials or mutate production by itself.
+
+### Repository ownership / latest master state
+
+| Repository | Master SHA | Deployment responsibility | Open PRs |
+|---|---|---|---|
+| `platform-infra` | `492e0377dccdec09e7fe1daeb0a98b825b10a3e0` | Production manifests, shared GHCR pull credentials, GitOps promotion/reconciliation, K3s rollout and health | #544/#541/#539 draft |
+| `TCE-dashboard` | `afad281fa57b2846446a152b6f5cf3c2600ee51d` | App CI/tests, WF-03 native ARM64 builds, immutable GHCR digest publication, authenticated release handoff | None |
+| `stockdividend` | `38220ddfef2db7128482547f72b7f06211e9c9bc` | App CI, native ARM64 Scraper/Admin/Backend builds, immutable full-SHA tags and paired backend/admin digest handoff | None |
+| `media-generation` | `0d4fc2ac15834c20357fd2420b732e6411fd8930` | App CI and paired backend/frontend immutable digest publication with publisher provenance | None |
+| `phanthienquoc-authentication` | `ceb2688d6277b10f1bfe7652223d1d295b7e49d9` | Auth CI/tests and controlled auth image publication; production identity/DB lifecycle remains gated | #75 open, #76 draft |
+
+### Workflow inventory — preserve current authority boundaries
+
+- Platform `gitops-image-promotion.yml`: verifies source provenance and exact GHCR manifests; creates scoped manifest PRs; checks exact PR head before squash merge; dispatches reconciliation only after required image references converge.
+- Platform `reconcile-vps.yml`: sole production apply authority. App repositories do not gain SSH, Compose, kubectl apply or production-manifest ownership.
+- Platform `inspect-vps.yml`: read-only K3s/host snapshot; inspection PRs are exact-head validated before merge.
+- Platform `recover-stale-ops.yml`: fallback controller and authenticated TCE heartbeat receiver. Its workflow_dispatch/repository_dispatch/push runs are not native schedule ticks.
+- Platform `validate-manifests.yml` and `validate-github-actions.yml`: render/manifest, secret, immutable-image, workflow and regression checks. Both post-merge checks for #1069 passed.
+- Platform `mirror-locally-uncensored.yml`: purposeful scheduled mirror; remains blocked only by missing destination token.
+- TCE WF-01/WF-02/WF-05: app build, formatting and backend tests. WF-03: native ARM64 production publisher with full-SHA release and paired web/service digests. WF-06: public health assertion (expected HTTP 200). WF-07: independent third-party integration check. WF-12: WF-06 freshness watchdog plus authenticated Platform heartbeat. No cron changes.
+- StockDividend `.github/workflows/deploy.yml`: native ARM64 build and immutable full-SHA publication; verifies Admin/Backend ARM64 manifests before dispatching the paired digest event with source-run provenance. Promotion remains release-gated.
+- Media `wf-03-media-production-deploy.yml`: app-owned native ARM64 build/publication and paired digest provenance. Platform owns manifest promotion and rollout.
+- Auth `auth-service-ci` and `auth-service-release`: app-owned tests/build. Supabase production integration and migration state are separate gates; skipped Preview checks are not counted as PASS.
+
+### Latest workflow evidence
+
+- Platform inspection #41476912329 succeeded (workflow_dispatch) and its exact-head snapshot PR #1068 merged at `94a781d7135db0c732dace628a3eaddd1be7c464`; validation #41477034011 PASS.
+- Platform reconciliation #41476348795 failed only on StockDividend Pod health. Runner v14 correctly suppressed restart for permanent `no match for platform in manifest` errors. Recovery #41476822106 and fresh inspection #41476912329 succeeded.
+- Platform #1069 exact-head checks #41477608011/#41477608062 and post-merge #41477716689/#41477716663 PASS.
+- TCE WF-07 scheduled #41476258191 PASS. WF-12 workflow_run #41476296496 had a stale WF-06 check but successfully dispatched its independent heartbeat; Platform receiver #41476320175 validated the payload.
+- StockDividend latest CI #41397317588 and publisher #41397317600 PASS. Media latest CI #41460906654 PASS. Auth #75/#76 validation PASS; Supabase Preview SKIPPED.
+
+### Schedule and runtime status
+
+- Platform native schedule latest: inspection #41407411326 (07:36:38Z), reconciliation #41407522742 (07:37:40Z), watchdog #41406983213 (07:32:45Z), mirror #41407613563 (07:38:31Z), recovery #41400302676 (06:30:13Z). Later dispatch/push/receiver runs are not cron ticks.
+- TCE native schedule latest: WF-07 #41476258191 (15:54:51Z) success; WF-06 #41424898130 (09:57:51Z) HTTP 503 health failure; direct WF-12 #41419694332 (09:19:29Z) freshness failure. WF-12 workflow_run #41476296496 (15:55:05Z) failed its WF-06 freshness check at 357 minutes while heartbeat dispatch succeeded.
+- Fresh inspection #41476912329 generated 15:58:58Z: node Ready, ARM64, K3s 1.36.3, containerd 2.3.2-k3s2, disk 55%, 19 GiB available memory, runner v14 active. Media/MicroFE/NATS 1/1. Stock Admin two Pods and new Backend Pod fail ARM64 image pull on tag 12d63b4; old Backend and legacy Frontend remain running. TCE/Auth/Keycloak remain 0/0 intentional. Host restart_required=yes; no reboot/upgrade/cleanup.
+
+### Outstanding owner actions
+
+- Configure `STOCKDIVIDEND_ACTIONS_READ_TOKEN` (Actions:read only on StockDividend) in the protected Platform production Environment.
+- Configure `PLATFORM_INFRA_MIRROR_TOKEN` (Contents:write only on the destination mirror repository).
+- Keep StockDividend release flag false until explicit authorization. No promotion was dispatched.
+- Keep Auth production merge/integration gate until Supabase side-effect and migration provenance/drift are resolved.
+
+No production manifest, image reference, shared pull credential, database object, desired replica, cron expression or workflow authority was changed by this inventory update. Preserve TCE market-scan schedules.
