@@ -100,7 +100,7 @@ for required in (
     "SOURCE_RUN_ID: ${{ github.run_id }}",
     "SOURCE_HEAD_SHA: ${{ github.sha }}",
     '--arg source_run "$SOURCE_RUN_ID"',
-    '.display_title == ("Recover Stale Scheduled Ops — workflow_dispatch / source #" + $source_run)',
+    '.display_title == ("Recover Stale Scheduled Ops — workflow_dispatch / source " + $source_run)',
     "expected_display_title=",
     '.path == ".github/workflows/recover-stale-ops.yml"',
 ):
