@@ -3084,3 +3084,9 @@ Production remains NOT HEALTHY/UNVERIFIED due StockDividend Admin/Backend image 
 - TCE WF-01 #41466743923, WF-02 #41466743801 and WF-05 #41466743773 SUCCESS; Media CI #41460906654 SUCCESS; Authentication CI #41329425940 SUCCESS. These do not override runtime health or Auth's production integration gate.
 
 Production remains NOT HEALTHY/UNVERIFIED due StockDividend Admin/Backend image architecture failure and stopped TCE/Auth/Keycloak services. No image promotion, DB migration, VPS reboot or OS/containerd upgrade occurred in the latest reconciliation/inspection. Auth runtime Secret provisioning in #41511708072 is the only observed secret side effect; values were suppressed. TCE market-scan schedule unchanged.
+
+## 2026-11-03 03:04 ICT — PR #1083 post-merge validations completed
+
+- Post-merge validate-manifests #41515316595 completed SUCCESS on merge commit c1529192344351a1e773e6d6ec772d373772d46c.
+- Post-merge validate-github-actions #41515316604 completed SUCCESS on the same merge commit.
+- The post-merge run list contained only these two validation workflows; no recovery push, workflow_run recovery, or production reconciliation was triggered by the read-only inspection exclusion change.
