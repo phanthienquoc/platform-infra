@@ -1188,3 +1188,27 @@ No direct SSH/Compose deployment authority was added. The proposed WF-06 cleanup
 - Exact-head validate-manifests #41442121813 and post-merge validate-manifests #41442209197 both completed SUCCESS.
 - Schedule-run actor metadata for the latest observed Platform and TCE scheduled events is phanthienquoc for both actor and triggering_actor. No evidence of actor deprovisioning was found; scheduler-side delivery remains unresolved.
 - Documentation-only change. No production workflow, manifest, image, credential, release flag, database object, desired replica or cron expression changed. TCE market-scan schedule unchanged.
+
+
+## Workflow inventory follow-up — 2026-11-02 (post-merge repository inspection)
+
+### Repository and PR inventory
+- Platform master: `e1275b3fcbd05294df1ce61251f4377e13fccf31`; TCE: `a5e8866d2ba28936d57b31ce6a067186c7204369`; StockDividend: `38220ddfef2db7128482547f72b7f06211e9c9bc`; Media: `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication: `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Platform #749/#648/#795 merged by squash after exact-head verification; post-merge validation runs #41450146520/#41450175573/#41450197662 all SUCCESS. #749 replaces captured Kubernetes/firewall output with a cautious WireGuard guide; #648 adds repository agent preflight rules; #795 documents the limits of the role smoke test.
+- Remaining open PRs: Platform #544/#541/#539 (draft); Auth #75 (open), #76 (draft). Current-head validate checks are SUCCESS; Auth Supabase Preview checks are SKIPPED. TCE, StockDividend and Media have no open PRs.
+- Latest Platform master check: validate-manifests #41450197662 on `e1275b3`, SUCCESS.
+
+### Workflow ownership and schedule evidence
+- `reconcile-vps.yml` remains the only GitOps apply authority. `inspect-vps.yml` remains read-only and snapshot-producing. Recovery/watchdog workflows only observe, correlate source runs and dispatch the existing authorities. Runner bootstrap remains the sole installer of the `platform-kubectl` helper/policy. No duplicate SSH/Compose deployment authority was introduced.
+- Native Platform schedule runs remain inspection #41407411326, reconciliation #41407522742, watchdog #41406983213, mirror #41407613563 and scheduled recovery #41400302676. No newer native schedule run appeared in the latest 100-run history through the post-merge validation. The latest reconciliation's failure is still isolated to StockDividend health; mirror still fails because its token is absent.
+- TCE latest native schedule runs remain WF-06 #41424898130, direct WF-12 #41419694332 and WF-07 #41397768048. WF-06 created one scheduled tick but failed four strict public HTTP 200 checks with HTTP 503. WF-12 workflow_run #41424938817 forwarded the WF-06 heartbeat; Platform receiver #41424970499 verified source and heartbeat IDs/SHA. Do not count these event types as direct schedule ticks.
+- Official GitHub troubleshooting guidance documents schedule delay/drop under Actions load, default-branch requirements, and associated-actor deprovisioning. Last observed actor is `phanthienquoc`; root cause remains unresolved. Preserve existing cron declarations and strict health assertions; do not alter TCE market-scan schedule.
+
+### Application and production boundaries
+- StockDividend app CI/publisher remain successful on master; three immutable ARM64 digests are already recorded in this inventory. Production still references old tag `12d63b4`, causing Admin/new Backend ImagePullBackOff. Release remains disabled pending explicit authorization and owner configuration of `STOCKDIVIDEND_ACTIONS_READ_TOKEN`.
+- Mirror requires `PLATFORM_INFRA_MIRROR_TOKEN`, destination-only Contents:write on `phanthienquoc/locally-uncensored-private`; latest schedule #41407613563 failed before Git operations.
+- Media last CI #41246414186 passed; last inspected backend/frontend 1/1 and digest-pinned. Auth PR #75/#76 remain blocked by Supabase production side-effect and migration provenance/drift review; no database changes.
+- Latest K3s snapshot #41419270996 is generated 09:16:30Z and is stale at this update. Node Ready/ARM64, K3s v1.36.3+k3s1, disk 55%, ~19 GiB available, runner v14, GitOps drift clean, host restart_required=yes. Last-known workload inventory is unchanged from the deployment tracker; obtain fresh read-only inspection before asserting current health.
+
+### Preservation
+Preserve useful CI/test/security, build/publish, backup, cleanup, manual/read-only, release, maintenance, mirror, recovery, watchdog and scheduled data workflows. No production manifest, image reference, GHCR credential, database object, release flag, desired replica or schedule changed. TCE market-scan schedule unchanged.
