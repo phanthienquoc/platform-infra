@@ -277,6 +277,30 @@ if "stockdividend/release" not in promotion or "digest: {digest}" not in promoti
 if "EVENT_COMMIT" not in promotion or "EVENT_BACKEND_DIGEST" not in promotion or "EVENT_ADMIN_DIGEST" not in promotion:
     fail("StockDividend promotion must resolve source commit and both image digests from the dispatch payload.")
 
+# StockDividend reconciliation dispatch must wait for the exact paired digests on master.
+stockdividend_readiness = promotion.split("      - name: Determine release readiness", 1)[1].split(
+    "      - name: Trigger VPS reconciliation", 1
+)[0]
+for required in (
+    'ADMIN_DIGEST: ${{ steps.input.outputs.admin_digest }}',
+    'if [ "$APP" = "stockdividend" ]; then',
+    'if [ "$COMPONENT" != "release" ]; then',
+    'FILE="apps/stockdividend/overlays/prod/kustomization.yaml"',
+    "git fetch --no-tags origin master",
+    "python3 scripts/verify-stockdividend-gitops-digests.py",
+    '--backend-digest "$BACKEND_DIGEST"',
+    '--admin-digest "$ADMIN_DIGEST"',
+    "refusing reconciliation dispatch",
+):
+    if required not in stockdividend_readiness:
+        fail(f"StockDividend paired digest convergence gate is missing: {required}")
+if stockdividend_readiness.index("Verify StockDividend") if "Verify StockDividend" in stockdividend_readiness else -1:
+    pass
+if "python3 scripts/verify-stockdividend-gitops-digests.py --self-test" not in read("validate-github-actions.yml"):
+    fail("StockDividend GitOps digest-pair regression tests must run in validate-github-actions.")
+if "ready=true" not in stockdividend_readiness or "git fetch --no-tags origin master" not in stockdividend_readiness:
+    fail("StockDividend readiness must be based on the GitOps master digest pair, not only the promotion PR merge response.")
+
 # StockDividend handoffs must be tied to a real, successful publisher Actions run.
 for required in (
     "EVENT_SOURCE_RUN_ID",
