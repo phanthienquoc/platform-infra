@@ -11,6 +11,7 @@ cat > "$tmp_dir/bin/gh" <<'MOCK'
 #!/usr/bin/env bash
 set -euo pipefail
 [[ "${1:-}" == "api" ]] || exit 2
+[[ "${GH_TOKEN:-}" == "test-token" ]] || exit 3
 count=0
 [[ -f "$MOCK_GH_COUNT_FILE" ]] && count="$(cat "$MOCK_GH_COUNT_FILE")"
 count=$((count + 1))
@@ -114,6 +115,14 @@ if PATH="$tmp_dir/bin:$PATH" STOCKDIVIDEND_ACTIONS_READ_TOKEN=test-token \
   SOURCE_HEAD_SHA="$sample_sha" SOURCE_COMMIT="$sample_sha" \
   bash "$validator" >/dev/null 2>&1; then
   echo "Expected unsupported source event to fail before API access." >&2
+  exit 1
+fi
+
+if PATH="$tmp_dir/bin:$PATH" STOCKDIVIDEND_ACTIONS_READ_TOKEN= \
+  SOURCE_RUN_ID="$sample_run_id" SOURCE_WORKFLOW_PATH="$sample_path" SOURCE_EVENT=push \
+  SOURCE_HEAD_SHA="$sample_sha" SOURCE_COMMIT="$sample_sha" \
+  bash "$validator" >/dev/null 2>&1; then
+  echo "Expected missing read-only StockDividend Actions token to fail before API access." >&2
   exit 1
 fi
 
