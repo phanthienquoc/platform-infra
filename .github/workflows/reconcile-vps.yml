@@ -78,7 +78,7 @@ jobs:
       mode: ${{ steps.scope.outputs.mode }}
       drift: ${{ steps.preflight.outputs.drift }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -460,7 +460,7 @@ jobs:
       group: deploy-auth-service
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
       - name: Verify Auth runtime Secret
@@ -492,7 +492,7 @@ jobs:
       group: deploy-microfe
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
       - name: Verify MicroFE Shell and WS rollout
@@ -521,7 +521,7 @@ jobs:
       group: deploy-keycloak
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
       - name: Provision Keycloak runtime Secret
@@ -611,7 +611,7 @@ jobs:
       group: deploy-tce-dashboard
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
       - name: Verify TCE GitOps images
@@ -645,7 +645,7 @@ jobs:
       group: deploy-stockdividend
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
       - name: Verify StockDividend rollout
@@ -674,7 +674,7 @@ jobs:
       group: deploy-media-generation
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
       - name: Verify Media Generation rollout
