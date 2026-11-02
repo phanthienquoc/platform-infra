@@ -27,6 +27,9 @@ MEDIA_TAG = re.compile(
 MEDIA_DIGEST = re.compile(
     r"^ghcr\.io/phanthienquoc/media-generation/(?:backend|frontend)@sha256:[0-9a-f]{64}$"
 )
+TCE_DIGEST = re.compile(
+    r"^ghcr\.io/phanthienquoc/tce-dashboard/(?:web|service)@sha256:[0-9a-f]{64}$"
+)
 MICROFE_TAG = re.compile(
     r"^ghcr\.io/phanthienquoc/microfe-(?:shell|ws):[0-9a-f]{40}$"
 )
@@ -106,6 +109,23 @@ def validate_diff(diff: str) -> tuple[list[str], int]:
                             f"{path}: Media image must use a full source SHA tag or sha256 digest, got {image!r}"
                         )
 
+        if path.startswith("apps/tce-dashboard/"):
+            if line.startswith("newTag:"):
+                tag = scalar(line.split(":", 1)[1])
+                inspected += 1
+                errors.append(f"{path}: TCE production image changes must use registry digests, not tags; got {tag!r}")
+            elif line.startswith("digest:"):
+                digest = scalar(line.split(":", 1)[1])
+                inspected += 1
+                if not DIGEST.fullmatch(digest):
+                    errors.append(f"{path}: TCE image digest must be sha256:<64 lowercase hex>, got {digest!r}")
+            elif line.startswith("image:"):
+                image = scalar(line.split(":", 1)[1])
+                if image.startswith("ghcr.io/phanthienquoc/tce-dashboard/"):
+                    inspected += 1
+                    if not TCE_DIGEST.fullmatch(image):
+                        errors.append(f"{path}: TCE image must use a sha256 digest, got {image!r}")
+
         if path.startswith("platform/microfe/"):
             if line.startswith("newTag:"):
                 tag = scalar(line.split(":", 1)[1])
@@ -180,6 +200,31 @@ def self_test() -> None:
             True,
         ),
         (
+            "valid TCE paired digest promotion",
+            f"+++ b/apps/tce-dashboard/overlays/prod/kustomization.yaml\n+  digest: {digest}\n",
+            True,
+        ),
+        (
+            "invalid TCE full-SHA tag promotion",
+            f"+++ b/apps/tce-dashboard/overlays/prod/kustomization.yaml\n+  newTag: prod-v0.1.0-{sha}\n",
+            False,
+        ),
+        (
+            "invalid TCE abbreviated tag promotion",
+            "+++ b/apps/tce-dashboard/overlays/prod/kustomization.yaml\n+  newTag: prod-v0.1.0-e75e338\n",
+            False,
+        ),
+        (
+            "invalid TCE image tag",
+            "+++ b/apps/tce-dashboard/overlays/prod/kustomization.yaml\n+          image: ghcr.io/phanthienquoc/tce-dashboard/web:prod-v0.1.0-e75e338\n",
+            False,
+        ),
+        (
+            "valid TCE digest image",
+            f"+++ b/apps/tce-dashboard/overlays/prod/kustomization.yaml\n+          image: ghcr.io/phanthienquoc/tce-dashboard/web@{digest}\n",
+            True,
+        ),
+        (
             "valid MicroFE digest promotion",
             f"+++ b/platform/microfe/kustomization.yaml\n+  digest: {digest}\n",
             True,
@@ -234,6 +279,7 @@ def main(argv: list[str]) -> int:
             "--",
             "apps/stockdividend",
             "apps/media-generation",
+            "apps/tce-dashboard",
             "platform/microfe",
         ],
         check=False,
