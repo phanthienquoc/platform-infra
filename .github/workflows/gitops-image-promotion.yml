@@ -516,7 +516,7 @@ jobs:
       - name: Verify StockDividend publisher run provenance
         if: ${{ github.event_name == 'repository_dispatch' && github.event.action == 'stockdividend-images-published' }}
         env:
-          GH_TOKEN: ${{ github.token }}
+          STOCKDIVIDEND_ACTIONS_READ_TOKEN: ${{ secrets.STOCKDIVIDEND_ACTIONS_READ_TOKEN }}
           SOURCE_RUN_ID: ${{ steps.input.outputs.source_run_id }}
           SOURCE_WORKFLOW_PATH: ${{ steps.input.outputs.source_workflow_path }}
           SOURCE_EVENT: ${{ steps.input.outputs.source_event }}

@@ -1,6 +1,6 @@
 # GitHub Credentials Key Inventory
 
-**Audited:** 2026-11-01  
+**Audited:** 2026-11-02  
 **Purpose:** Reusable index of GitHub Actions secret and variable names referenced by workflows across TCE Dashboard, StockDividend, Authentication, and Platform Infra.  
 **Safety:** This document intentionally contains names and usage metadata only. It MUST NOT contain credential values, environment-file contents, generated tokens, or copies of GitHub secret values.
 
@@ -35,6 +35,7 @@ GitHub Actions can resolve secrets/variables from repository, organization, and 
 | `PLATFORM_INFRA_MIRROR_TOKEN` | Platform Infra: `.github/workflows/mirror-locally-uncensored.yml` | Cross-repository mirror write credential for `phanthienquoc/locally-uncensored-private`. Configure as a Platform Infra repository Actions secret (or a Platform-Infra-only organization secret) with destination-repository `Contents: write`. GitHub secret names allow only alphanumeric characters and underscores; the previously documented hyphenated name was invalid. Keep separate from GHCR and application release-handoff tokens. |
 | `PLATFORM_INFRA_DISPATCH_TOKEN` | Media Generation: `wf-03-media-production-deploy.yml`; Authentication: `release.yml` | Cross-repository release handoff token used to dispatch release events to Platform Infra. Media also queries Platform Infra Actions runs to verify the handoff, so its repository secret needs `Contents: write` and `Actions: read` on `phanthienquoc/platform-infra`; Auth needs dispatch permission (`Contents: write`). Same secret name does not imply the repositories use the same token value. Keep it distinct from TCE/StockDividend's `PLATFORM_INFRA_TOKEN` . |
 | `RUNNER_REGISTRATION_PAT` | Platform Infra: `bootstrap-runner.yml` | PAT used to request a short-lived self-hosted runner registration token. Prefer minimal repository/action-runner administration scope; never store the generated short-lived token. |
+| `STOCKDIVIDEND_ACTIONS_READ_TOKEN` | Platform Infra: `gitops-image-promotion.yml` | Read-only Actions API access to attest the publisher run in private `phanthienquoc/stockdividend` before accepting paired image digests. Store in the protected `production` Environment, restrict to the StockDividend repository, and grant `Actions: read` only; do not grant Contents write, Packages, or workflow-dispatch permissions. |
 | `SUPABASE_SERVICE_ROLE_KEY` | TCE Dashboard: `wf-01-tce-build-verify.yml`; Platform Infra: `provision-auth-runtime-secret.yml`, `reconcile-vps.yml` | Privileged Supabase backend credential. Keep server-only; never expose in frontend, logs, artifacts, command output, or this inventory. |
 | `SUPABASE_URL` | TCE Dashboard: `wf-01-tce-build-verify.yml`; Platform Infra: `provision-auth-runtime-secret.yml`, `reconcile-vps.yml` | Supabase project URL used by backend runtime. May be non-secret configuration, but retain the currently configured protected source until environment ownership is verified. |
 | `TELEGRAM_BOT_TOKEN` | Platform Infra: `reconcile-vps.yml` | Telegram bot credential used for infrastructure notifications; referenced via the **secret** context here. |

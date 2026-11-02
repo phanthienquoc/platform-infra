@@ -6,6 +6,7 @@ SOURCE_WORKFLOW_PATH="${SOURCE_WORKFLOW_PATH:-}"
 SOURCE_EVENT="${SOURCE_EVENT:-}"
 SOURCE_HEAD_SHA="${SOURCE_HEAD_SHA:-}"
 SOURCE_COMMIT="${SOURCE_COMMIT:-}"
+STOCKDIVIDEND_ACTIONS_READ_TOKEN="${STOCKDIVIDEND_ACTIONS_READ_TOKEN:-}"
 MAX_ATTEMPTS="${STOCKDIVIDEND_PROVENANCE_MAX_ATTEMPTS:-12}"
 RETRY_DELAY_SECONDS="${STOCKDIVIDEND_PROVENANCE_RETRY_DELAY_SECONDS:-5}"
 
@@ -15,6 +16,7 @@ fail() {
 }
 
 [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]] || fail "StockDividend source run ID must be numeric."
+[[ -n "$STOCKDIVIDEND_ACTIONS_READ_TOKEN" ]] || fail "Configure STOCKDIVIDEND_ACTIONS_READ_TOKEN with Actions: read on the private StockDividend repository."
 [[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/deploy.yml" ]] || fail "StockDividend source workflow path is not approved."
 [[ "$SOURCE_EVENT" == "push" || "$SOURCE_EVENT" == "workflow_dispatch" ]] || fail "StockDividend source event must be push or workflow_dispatch."
 [[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "StockDividend source head must be a full 40-character SHA."
@@ -23,7 +25,7 @@ fail() {
 [[ "$RETRY_DELAY_SECONDS" =~ ^[0-9]+$ ]] || fail "STOCKDIVIDEND_PROVENANCE_RETRY_DELAY_SECONDS must be a non-negative integer."
 
 for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
-  if ! source_run="$(gh api "repos/phanthienquoc/stockdividend/actions/runs/$SOURCE_RUN_ID" 2>/dev/null)"; then
+  if ! source_run="$(GH_TOKEN="$STOCKDIVIDEND_ACTIONS_READ_TOKEN" gh api "repos/phanthienquoc/stockdividend/actions/runs/$SOURCE_RUN_ID" 2>/dev/null)"; then
     if (( attempt == MAX_ATTEMPTS )); then
       fail "Unable to fetch StockDividend source run #$SOURCE_RUN_ID from the GitHub Actions API."
     fi

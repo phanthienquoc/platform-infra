@@ -11,6 +11,7 @@ cat > "$tmp_dir/bin/gh" <<'MOCK'
 #!/usr/bin/env bash
 set -euo pipefail
 [[ "${1:-}" == "api" ]] || exit 2
+[[ "${GH_TOKEN:-}" == "test-token" ]] || exit 3
 count=0
 [[ -f "$MOCK_GH_COUNT_FILE" ]] && count="$(cat "$MOCK_GH_COUNT_FILE")"
 count=$((count + 1))
@@ -52,7 +53,7 @@ make_run() {
 run_validator() {
   rm -f "$tmp_dir/count"
   PATH="$tmp_dir/bin:$PATH" \
-    GH_TOKEN=test-token \
+    STOCKDIVIDEND_ACTIONS_READ_TOKEN=test-token \
     MOCK_GH_COUNT_FILE="$tmp_dir/count" \
     MOCK_GH_RESPONSE_FILE="$tmp_dir/response.json" \
     MOCK_GH_FIRST_RESPONSE="${MOCK_GH_FIRST_RESPONSE:-}" \
@@ -101,7 +102,7 @@ expect_failure "SHA mismatch"
 make_run completed failure > "$tmp_dir/response.json"
 expect_failure "failed publisher conclusion"
 
-if PATH="$tmp_dir/bin:$PATH" GH_TOKEN=test-token \
+if PATH="$tmp_dir/bin:$PATH" STOCKDIVIDEND_ACTIONS_READ_TOKEN=test-token \
   SOURCE_RUN_ID=not-a-run SOURCE_WORKFLOW_PATH="$sample_path" SOURCE_EVENT=push \
   SOURCE_HEAD_SHA="$sample_sha" SOURCE_COMMIT="$sample_sha" \
   bash "$validator" >/dev/null 2>&1; then
@@ -109,11 +110,19 @@ if PATH="$tmp_dir/bin:$PATH" GH_TOKEN=test-token \
   exit 1
 fi
 
-if PATH="$tmp_dir/bin:$PATH" GH_TOKEN=test-token \
+if PATH="$tmp_dir/bin:$PATH" STOCKDIVIDEND_ACTIONS_READ_TOKEN=test-token \
   SOURCE_RUN_ID="$sample_run_id" SOURCE_WORKFLOW_PATH="$sample_path" SOURCE_EVENT=schedule \
   SOURCE_HEAD_SHA="$sample_sha" SOURCE_COMMIT="$sample_sha" \
   bash "$validator" >/dev/null 2>&1; then
   echo "Expected unsupported source event to fail before API access." >&2
+  exit 1
+fi
+
+if PATH="$tmp_dir/bin:$PATH" STOCKDIVIDEND_ACTIONS_READ_TOKEN='' \
+  SOURCE_RUN_ID="$sample_run_id" SOURCE_WORKFLOW_PATH="$sample_path" SOURCE_EVENT=push \
+  SOURCE_HEAD_SHA="$sample_sha" SOURCE_COMMIT="$sample_sha" \
+  bash "$validator" >/dev/null 2>&1; then
+  echo "Expected missing read-only StockDividend Actions token to fail before API access." >&2
   exit 1
 fi
 
