@@ -1,3 +1,13 @@
+## Schedule delivery follow-up — 2026-11-02 16:22 ICT / 09:22 UTC
+
+### TCE WF-12 native schedule resumed for one observed tick
+- New scheduled TCE WF-12 run: #41419694332 at 2026-11-02T09:19:29Z, event=schedule, master SHA a5e8866d2ba28936d57b31ce6a067186c7204369.
+- WF-12 Verify WF-06 schedule delivery failed because the latest scheduled WF-06 run is still #41378060687 at 02:30:05Z, age 409 minutes. The WF-06 workflow-enabled check passed; the failure is missing scheduled-run freshness, not a disabled workflow or runner queue delay (reported queue=0m).
+- WF-12 Notify Platform Infra succeeded. The direct schedule payload identified the same source/heartbeat run ID 41419694332, the approved WF-12 workflow path, event=schedule, master branch and full SHA.
+- Platform receiver #41419728825 completed SUCCESS and independently verified the source run via GitHub Actions API. It correctly did not dispatch duplicate reconciliation/inspection because reconciliation #41418939586 was 3 minutes old and inspection #41419270996 was 1 minute old.
+- This proves one new native WF-12 scheduled delivery and a successful authenticated receiver. It does not yet prove sustained cadence. WF-06 scheduled delivery remains stale; keep its public health assertion and the existing cron unchanged.
+- No TCE market-scan schedule, production replica, manifest, release flag, credential or database state changed.
+
 ## Runtime verification update — 2026-11-02 16:20 ICT / 09:20 UTC
 
 ### Repository state and open PRs
