@@ -1799,3 +1799,15 @@ No production manifest, image, credential, database, replica, release flag, depl
 - StockDividend production overlay still references Admin/Backend tag `12d63b4`; new ARM64 digests are unpromoted and release remains disabled. Scraper schedule `0 1 * * 0,6` unchanged.
 - K3s evidence remains stale at #41515885354; Stock Admin/new Backend image pull failures persist in last verified snapshot. Native Platform/TCE schedule cadence is not proven consecutive. No cron change.
 - No production promotion, DB migration, credential mutation, replica change, VPS maintenance or cron modification. Preserve `reconcile-vps.yml` as sole production apply authority and keep TCE market-scan schedule unchanged.
+
+
+## 2026-11-03 06:03 ICT — cross-repo current state and Auth web CI follow-up
+- Master heads: Platform `f9bbed9d`; TCE `5d299bea`; StockDividend `efdb0844`; Media `763fdcd1`; Auth `bf5ac54a`.
+- Open PRs: Platform #544/#541/#539 (draft); Auth #75/#76/#86; none in TCE, StockDividend or Media.
+- Auth master web CI #41533191601 failed at `npm ci` with EUSAGE because generated lock omitted optional package `@tailwindcss/oxide-wasm32-wasi`. PR #86 explicitly includes optional dependencies; exact-head auth-web-ci #41542677868 and auth-service-ci #41542677119 were still running. No merge yet.
+- Auth #75/#76 validate SUCCESS, but Supabase Preview SKIPPED. #75 remains blocked by production-branch Supabase GitHub integration / unresolved migration provenance; do not merge or migrate.
+- TCE master WF-01/WF-02/WF-05, StockDividend master CI and Media master CI are SUCCESS. StockDividend immutable ARM64 publisher #41524676740 produced scraper/admin/backend digests recorded in the readiness tracker; all remain unpromoted because release is disabled and explicit authorization is absent.
+- Latest native schedules: Platform inspection #41498271871 SUCCESS, recovery #41482540454 SUCCESS, reconciliation #41491502003 FAILURE (Stock health), watchdog #41491160810 FAILURE/stale, mirror #41499146752 FAILURE (missing token). TCE WF-06 #41516575222 FAILURE (HTTP 503), WF-12 #41511665345 freshness FAILURE, WF-07 #41476258191 SUCCESS. No consecutive cadence recovery established.
+- Latest K3s snapshot #41515885354 is stale: node Ready/ARM64, Media/MicroFE/NATS healthy, Stock Admin/new Backend ImagePullBackOff on `12d63b4`, old Backend and unmanaged legacy Frontend 1/1, TCE/Auth/Keycloak 0/0.
+- Owner actions: configure `PLATFORM_INFRA_MIRROR_TOKEN` (destination-only Contents:write); verify `STOCKDIVIDEND_ACTIONS_READ_TOKEN` (StockDividend-only Actions:read); provide explicit StockDividend release authorization.
+- No production promotion, image-reference/credential/DB/replica/schedule change, migration, restart, image deletion, VPS reboot or maintenance occurred. Preserve `reconcile-vps.yml` as sole apply authority and leave all cron expressions, including TCE market-scan, unchanged.
