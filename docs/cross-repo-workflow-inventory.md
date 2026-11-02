@@ -1632,3 +1632,19 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Manual reconciliation #41511708072 shared job SUCCESS but StockDividend lane FAILURE. GHCR access passed, Auth runtime Secret provisioned/verified with values suppressed, shared pull Secrets unchanged, v14 skipped permanent image-pull restarts, GitOps diff clean and apply skipped. Other active lanes passed; recovery #41512035335 SUCCESS.
 - Current masters: Platform `dc92d406...`; TCE `afad281f...`; StockDividend `38220ddf...`; Media `0d4fc2ac...`; Authentication `ceb2688d...`. Open PRs: Platform #544/#541/#539; Auth #75/#76; none in TCE/StockDividend/Media.
 - Owner blockers: `STOCKDIVIDEND_ACTIONS_READ_TOKEN` not verified; `PLATFORM_INFRA_MIRROR_TOKEN` missing. StockDividend release remains disabled and unpromoted. Auth production integration/migration side-effect gate remains open.
+
+## 2026-11-03 03:01 ICT — recovery push excludes read-only inspection changes
+
+- PR #1080 merged at dc92d4060a30bef1955fd9738a26c5c79cf80a03: recovery push no longer self-triggers on its own workflow file and excludes read-only queue/CI validators. Exact-head #41508539722/#41508539234 PASS; post-merge #41514856470/#41514856736 PASS.
+- PR #1082 docs refresh merged at df70d70be2069b523bd08d33f91ca328034103e4; exact-head #41515024252 and post-merge #41515242910 PASS.
+- PR #1083 merged at c1529192344351a1e773e6d6ec772d373772d46c: remove .github/workflows/inspect-vps.yml from production recovery push positives and exclude scripts/inspect-vps.sh from scripts/**. These are read-only inspection paths; inspect-vps.yml continues its own push/schedule snapshot workflow, and scheduled inspection completion remains a recovery heartbeat. Exact-head #41515191104/#41515191110 PASS. Post-merge #41515316595/#41515316604 were in progress at this record; verify final conclusions.
+- The post-merge run list after #1083 contained only manifest/workflow validation runs, with no recovery push or reconcile dispatch from the read-only scope change. This is evidence for this push, not proof of every future path filter case.
+- Preserve reconcile-vps.yml as the sole production apply authority. App repos own CI/tests/builds and immutable GHCR publication; Platform owns manifests, shared pull credentials, promotion/reconciliation, rollout and health. No duplicate SSH/Compose authority. Scheduled, manual, workflow_run and authenticated TCE repository_dispatch recovery paths remain intact. No cron changes.
+- Current native schedule history: Platform inspect #41498271871 PASS; reconcile #41491502003 FAIL (StockDividend); watchdog #41491160810 FAIL (stale inspection); recovery #41482540454 PASS; mirror #41499146752 FAIL (missing destination token). TCE WF-12 #41511665345 FAIL (WF-06 age 579m; heartbeat PASS), WF-07 #41476258191 PASS, WF-06 #41424898130 FAIL (HTTP 503 while stopped).
+- Current master heads: Platform c1529192; TCE afad281f; StockDividend 38220ddf; Media 0d4fc2ac; Auth ceb2688d. Open PRs: Platform #544/#541/#539; Auth #75/#76; none in TCE/StockDividend/Media.
+- Latest runtime snapshot #1081: node Ready, K3s 1.36.3, disk 55%, about 19 GiB RAM; Media/MicroFE/NATS healthy; Stock Admin/new Backend ImagePullBackOff on non-ARM64 12d63b4; old Backend and unmanaged frontend 1/1; TCE/Auth/Keycloak 0/0 intentionally.
+- StockDividend production release remains disabled/unpromoted pending owner Actions-read token and explicit authorization. Mirror token is missing. Auth production integration/migration side-effect gate remains open.
+
+### PR #1083 final post-merge result
+- validate-manifests #41515316595 SUCCESS and validate-github-actions #41515316604 SUCCESS on merge SHA c1529192344351a1e773e6d6ec772d373772d46c.
+- No recovery push or production reconciliation was created by the read-only inspection trigger change; only validation workflows ran.
