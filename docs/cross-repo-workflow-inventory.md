@@ -1212,3 +1212,11 @@ No direct SSH/Compose deployment authority was added. The proposed WF-06 cleanup
 
 ### Preservation
 Preserve useful CI/test/security, build/publish, backup, cleanup, manual/read-only, release, maintenance, mirror, recovery, watchdog and scheduled data workflows. No production manifest, image reference, GHCR credential, database object, release flag, desired replica or schedule changed. TCE market-scan schedule unchanged.
+
+
+## Post-merge verification — PR #1058 (2026-11-02)
+
+- PR #1058 merged as `73bfe6e63699352e73007d1e00300efd2dd2eed2` from exact head `60330bc4195ed8093dfda28a21acfebf64bbd422`.
+- Exact-head run #41450382752 and post-merge run #41450454704 both completed SUCCESS. All manifest, image, secret, Auth, Keycloak and network-boundary validation steps passed; changed-image validation was correctly skipped for this documentation-only PR.
+- The PR changed only the deployment tracker and workflow inventory. No production workflow/manifest/credential/image/replica/schedule was changed.
+- Current Platform open PRs: #544/#541/#539. Authentication: #75/#76. No open PRs in TCE, StockDividend or Media. TCE market-scan schedule unchanged.
