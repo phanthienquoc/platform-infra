@@ -1661,3 +1661,18 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Native Platform schedule history still stale: inspection #41498271871, reconciliation #41491502003, watchdog #41491160810, recovery #41482540454, mirror #41499146752. Manual/dispatch runs do not count as cron delivery.
 - Current master heads: Platform 35074857; TCE afad281f; StockDividend 38220ddf; Media 0d4fc2ac; Authentication ceb2688d. Open PRs: Platform #544/#541/#539; Auth #75/#76; none in TCE/StockDividend/Media.
 - Owner blockers: StockDividend Actions-read token unverified; mirror Contents-write token missing; explicit StockDividend release authorization absent; Auth Supabase integration/migration side-effect gate remains open. No app release or production image promotion.
+
+## 2026-11-03 03:16 ICT — Node 24 checkout pin standardized across CI workflows
+
+- Verified official actions/checkout v7.0.1 SHA 3d3c42e5aac5ba805825da76410c181273ba90b1; action.yml uses node24.
+- Platform Infra #1085 merged 4715d7d0...; 17 workflow refs updated. Exact-head manifest/workflow/SSO/Keycloak checks and post-merge #41515885218/#41515885331 PASS.
+- TCE #1014 merged 76a4b9a1...; five CI/test workflows updated; exact-head WF-01P #41517007456, WF-05 #41517007487, WF-11 #41517007413, WF-02 #41517007363 PASS. Post-merge WF-02/WF-05 PASS; WF-01 #41517196734 still in progress.
+- StockDividend #25 merged ba16a62e...; CI-only checkout pin; exact-head CI #41517044412 PASS; post-merge CI #41517378004 in progress; no image publisher dispatch.
+- Media #68 merged 648e7daa...; CI-only checkout pin; exact-head #41517076554 and post-merge #41517278671 PASS.
+- Authentication #83 merged b76a19d8...; ci.yml/web-ci.yml pins; exact-head #41517131273/#41517131277 PASS; post-merge #41517481286/#41517482354 in progress.
+- 26 workflow references across five repositories now use the immutable Node24 checkout SHA. Deployment/release workflows in app repos were not changed to avoid unintended publisher/deploy triggers.
+- PR #1088 tracker/inventory update merged 33358a2f...; exact-head #41516879912 and post-merge #41517242519 PASS.
+- TCE WF-06 native schedule #41516575222 delivered (age/queue 0m) but public endpoints all HTTP503. WF-12 workflow_run #41516610495 and Platform receiver #41516627460 both SUCCESS with exact source provenance. WF-12 direct schedule #41511665345 remains stale; WF-07 #41476258191 PASS. One tick does not prove consecutive cadence; market-scan cron unchanged.
+- PR #1085 push side effects were recorded: reconcile #41515916117 (no GitOps drift/apply, Auth runtime Secret provisioned, shared pull Secrets unchanged, Stock lane failure); Provision OIDC client #41515885560 failed HTTP503 before admin mutation; verify #41515885382 HTTP503; cleanup #41515885582 dry-run removed 0; inspection #41515885354 created snapshot #1086. PR #1087 hardening now prevents these workflow-only self-trigger paths.
+- Current master heads: Platform 33358a2f; TCE 76a4b9a1; StockDividend ba16a62e; Media 648e7daa; Authentication b76a19d8. Open PRs: Platform #544/#541/#539; Auth #75/#76; none in TCE/StockDividend/Media.
+- Remaining owner blockers: StockDividend Actions-read token unverified and release authorization absent; mirror token missing; Auth Supabase integration/migration gate unresolved. Stock Admin/Backend still lack ARM64 manifests for production tag 12d63b4.
