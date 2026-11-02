@@ -2403,37 +2403,37 @@ No production manifest, image reference, GHCR pull credential, database object, 
 
 ### Implementation merged
 
-- Media Generation PR [#67](https://github.com/phanthienquoc/media-generation/pull/67) merged by squash as \`0d4fc2ac15834c20357fd2420b732e6411fd8930\` from exact head \`76b3ba5e65a312b59ced816c5f4f945de0926ae5\`.
-- Platform Infra PR [#1060](https://github.com/phanthienquoc/platform-infra/pull/1060) merged by squash as \`abe384ba89e09669a3273141d76815d44409cc5c\` from exact head \`ab2543997c87d30278fc63f88580330cbf64a338\`. Merge order was producer first, consumer second.
-- Media producer now includes \`source_run_id\`, \`source_workflow_path\`, \`source_event\`, and \`source_head_sha\` in the paired frontend/backend digest dispatch. It restricts source events to master \`push\` or \`workflow_dispatch\` and binds the release tag to the full source SHA.
+- Media Generation PR [#67](https://github.com/phanthienquoc/media-generation/pull/67) merged by squash as `0d4fc2ac15834c20357fd2420b732e6411fd8930` from exact head `76b3ba5e65a312b59ced816c5f4f945de0926ae5`.
+- Platform Infra PR [#1060](https://github.com/phanthienquoc/platform-infra/pull/1060) merged by squash as `abe384ba89e09669a3273141d76815d44409cc5c` from exact head `ab2543997c87d30278fc63f88580330cbf64a338`. Merge order was producer first, consumer second.
+- Media producer now includes `source_run_id`, `source_workflow_path`, `source_event`, and `source_head_sha` in the paired frontend/backend digest dispatch. It restricts source events to master `push` or `workflow_dispatch` and binds the release tag to the full source SHA.
 - Platform consumer validates those fields and verifies the public Media Actions run metadata (repository, head repository, workflow path, event, master branch, full SHA, completed status and successful conclusion) before GHCR validation or GitOps PR creation.
 - Media is public, so the consumer reads the public Actions run API without a cross-repository PAT. The verifier fails closed if the public run cannot be read or any identity field differs. If Media becomes private, a dedicated Actions-read credential must be designed before promotion resumes.
 - Media exact-head CI #41460676531 SUCCESS; post-merge master CI #41460906654 SUCCESS.
-- Platform exact-head \`validate-github-actions\` #41460750901 and \`validate-manifests\` #41460750395 SUCCESS; post-merge #41460929753 and #41460929860 SUCCESS.
+- Platform exact-head `validate-github-actions` #41460750901 and `validate-manifests` #41460750395 SUCCESS; post-merge #41460929753 and #41460929860 SUCCESS.
 - These changes did not trigger a Media release or a GitOps image promotion. The Media branch push CI run #41460669268 is an older non-master push run and remained pending; current master post-merge CI #41460906654 is the relevant passing evidence.
 
 ### Current repository state
 
 | Repository | Master HEAD | Open PRs |
 |---|---|---|
-| platform-infra | \`abe384ba89e09669a3273141d76815d44409cc5c\` | #544, #541, #539 (draft) |
-| TCE-dashboard | \`a5e8866d2ba28936d57b31ce6a067186c7204369\` | none |
-| stockdividend | \`38220ddfef2db7128482547f72b7f06211e9c9bc\` | none |
-| media-generation | \`0d4fc2ac15834c20357fd2420b732e6411fd8930\` | none |
-| phanthienquoc-authentication | \`ceb2688d6277b10f1bfe7652223d1d295b7e49d9\` | #75, #76 |
+| platform-infra | `08b8b52891e7037e28cc6926648125a85c77db1a` | #544, #541, #539 (draft) |
+| TCE-dashboard | `a5e8866d2ba28936d57b31ce6a067186c7204369` | none |
+| stockdividend | `38220ddfef2db7128482547f72b7f06211e9c9bc` | none |
+| media-generation | `0d4fc2ac15834c20357fd2420b732e6411fd8930` | none |
+| phanthienquoc-authentication | `ceb2688d6277b10f1bfe7652223d1d295b7e49d9` | #75, #76 |
 
 Authentication PR #75/#76 remain gated on production Supabase integration side-effect and migration provenance/drift review. Their CI success is not a production integration pass.
 
 ### Post-merge reconciliation and fresh K3s evidence
 
-- Post-merge recovery on Platform master dispatched [reconciliation #41460962292](https://github.com/phanthienquoc/platform-infra/actions/runs/41460962292) with \`target_app=all\`, \`mode=apply\`, and \`allow_image_changes=false\`.
-- Shared reconciliation job SUCCESS: runner policy v14 ready; GHCR pull preflight SUCCESS; Auth runtime Secret provisioning and shared GHCR pull-credential bootstrap steps SUCCESS; Media paired digest references resolved; Kubernetes preflight reported \`drift=false\`; production manifest apply, image-change guard, post-apply drift check, and notifications were correctly skipped. The logs do not distinguish whether Secret/credential bootstrap changed values or confirmed them unchanged; no values were exposed.
-- Fresh read-only node/pod listing at 14:20:40Z: node \`tce-k3s-01\` Ready, K3s \`v1.36.3+k3s1\`, Ubuntu 22.04.5 ARM64, containerd \`2.3.2-k3s2\`.
+- Post-merge recovery on Platform master dispatched [reconciliation #41460962292](https://github.com/phanthienquoc/platform-infra/actions/runs/41460962292) with `target_app=all`, `mode=apply`, and `allow_image_changes=false`.
+- Shared reconciliation job SUCCESS: runner policy v14 ready; GHCR pull preflight SUCCESS; Auth runtime Secret provisioning and shared GHCR pull-credential bootstrap steps SUCCESS; Media paired digest references resolved; Kubernetes preflight reported `drift=false`; production manifest apply, image-change guard, post-apply drift check, and notifications were correctly skipped. The logs do not distinguish whether Secret/credential bootstrap changed values or confirmed them unchanged; no values were exposed.
+- Fresh read-only node/pod listing at 14:20:40Z: node `tce-k3s-01` Ready, K3s `v1.36.3+k3s1`, Ubuntu 22.04.5 ARM64, containerd `2.3.2-k3s2`.
 - Media backend/frontend: 1/1; MicroFE Shell/WS and NATS: 1/1.
 - Auth lane: SUCCESS (runtime Secret verified, rollout intentionally skipped, HTTPS and workload health passed). TCE lane: SUCCESS (desired/live image tags match; workload health correctly accepted intentional scale-to-zero). Keycloak lane: skipped.
-- StockDividend remains the only failed lane. Two Admin Pods and the new Backend Pod are \`ImagePullBackOff\` on \`12d63b4\` with \`no match for platform in manifest\`; the old Backend replica and unmanaged legacy Frontend remain Running. Permanent v14 image-pull policy skipped rollout restart; failing Pods showed restart count 0.
+- StockDividend remains the only failed lane. Two Admin Pods and the new Backend Pod are `ImagePullBackOff` on `12d63b4` with `no match for platform in manifest`; the old Backend replica and unmanaged legacy Frontend remain Running. Permanent v14 image-pull policy skipped rollout restart; failing Pods showed restart count 0.
 - Overall reconciliation #41460962292 concluded FAILURE solely because StockDividend workload health failed. This is not a shared preflight or GitOps drift failure.
-- A recovery-triggered read-only inspection #41461378005 was started after reconciliation because the previous full inspection was stale. At the time of this tracker update it was still in progress; do not treat it as completed or as a native schedule event.
+- Recovery-triggered read-only inspection [#41461378005](https://github.com/phanthienquoc/platform-infra/actions/runs/41461378005) completed SUCCESS. It generated PR #1061 from exact head `0bf22ec5f13b3e4bd5eada3169300181628f3f6f`, passed exact-head validation #41461496570, and squash-merged at `08b8b52891e7037e28cc6926648125a85c77db1a`. This is workflow_dispatch recovery evidence, not a native schedule event.
 
 ### Native schedule status (kept separate from fallback dispatches)
 
@@ -2443,47 +2443,47 @@ Authentication PR #75/#76 remain gated on production Supabase integration side-e
 
 ### Owner blockers and next actions
 
-1. Keep StockDividend release disabled (\`STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=false\`) until explicit authorization. Owner must configure \`STOCKDIVIDEND_ACTIONS_READ_TOKEN\` (Actions:read only on StockDividend) before the private publisher-run provenance check can execute.
-2. Owner must configure \`PLATFORM_INFRA_MIRROR_TOKEN\` with destination-only Contents:write on \`phanthienquoc/locally-uncensored-private\`; latest mirror schedule #41407613563 failed before Git operations.
+1. Keep StockDividend release disabled (`STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=false`) until explicit authorization. Owner must configure `STOCKDIVIDEND_ACTIONS_READ_TOKEN` (Actions:read only on StockDividend) before the private publisher-run provenance check can execute.
+2. Owner must configure `PLATFORM_INFRA_MIRROR_TOKEN` with destination-only Contents:write on `phanthienquoc/locally-uncensored-private`; latest mirror schedule #41407613563 failed before Git operations.
 3. After explicit StockDividend authorization and provenance credential setup, use paired immutable ARM64 digests through Platform-owned promotion, then verify production imageID and rollout. Do not update manifests manually or enable release by default.
 4. Complete recovery-triggered inspection #41461378005 and continue observing native Platform/TCE schedule delivery separately from dispatch/workflow_run fallbacks.
 5. Keep Auth #75/#76 gated pending side-effect and migration review; schedule host OS/containerd maintenance separately.
 
-No production manifest or image reference changed in this run; no database migration, release promotion, desired-replica change, or cron change occurred. Secret/pull-credential reconciliation steps ran successfully, but whether values changed versus were already current is not established by the logs. \`reconcile-vps.yml\` remains the sole production GitOps apply authority; \`inspect-vps.yml\` remains read-only; recovery/watchdog only observe and dispatch. No direct SSH/Compose deployment authority was added. TCE market-scan schedule unchanged.
+No production manifest or image reference changed in this run; no database migration, release promotion, desired-replica change, or cron change occurred. Secret/pull-credential reconciliation steps ran successfully, but whether values changed versus were already current is not established by the logs. `reconcile-vps.yml` remains the sole production GitOps apply authority; `inspect-vps.yml` remains read-only; recovery/watchdog only observe and dispatch. No direct SSH/Compose deployment authority was added. TCE market-scan schedule unchanged.
 
 
 ## Fresh read-only VPS inspection — 2026-11-02 14:22:54Z / 21:22:54 ICT
 
-- Recovery inspection run [#41461378005](https://github.com/phanthienquoc/platform-infra/actions/runs/41461378005) completed SUCCESS. It was a recovery-triggered \`workflow_dispatch\`, not a native schedule tick.
-- Generated snapshot was committed through inspection PR [#1061](https://github.com/phanthienquoc/platform-infra/pull/1061), exact head \`0bf22ec5f13b3e4bd5eada3169300181628f3f6f\`, validated by [#41461496570](https://github.com/phanthienquoc/platform-infra/actions/runs/41461496570) and squash-merged at \`08b8b52891e7037e28cc6926648125a85c77db1a\`.
-- Host: Ubuntu 22.04.5 LTS, ARM64, kernel \`6.8.0-1049-oracle\`; K3s \`v1.36.3+k3s1\`; containerd \`2.3.2-k3s2\`; Docker \`29.1.3\`.
+- Recovery inspection run [#41461378005](https://github.com/phanthienquoc/platform-infra/actions/runs/41461378005) completed SUCCESS. It was a recovery-triggered `workflow_dispatch`, not a native schedule tick.
+- Generated snapshot was committed through inspection PR [#1061](https://github.com/phanthienquoc/platform-infra/pull/1061), exact head `0bf22ec5f13b3e4bd5eada3169300181628f3f6f`, validated by [#41461496570](https://github.com/phanthienquoc/platform-infra/actions/runs/41461496570) and squash-merged at `08b8b52891e7037e28cc6926648125a85c77db1a`.
+- Host: Ubuntu 22.04.5 LTS, ARM64, kernel `6.8.0-1049-oracle`; K3s `v1.36.3+k3s1`; containerd `2.3.2-k3s2`; Docker `29.1.3`.
 - Resources: 23 GiB RAM, 19 GiB available; root disk 45 GiB total, 25 GiB used, 21 GiB available (55%); disk pressure normal; uptime about 185 days.
 - Runner services for Platform Infra and Media Generation were active/enabled; runner policy v14 remained installed.
 - Docker inventory: 20 images, 11 active, 9.195 GB; 5.773 GB reported reclaimable. No image cleanup was run because disk pressure is normal and the inventory alone does not establish every candidate is safe to delete.
-- OS package updates include containerd 2.4.2 and Docker 29.9.2; \`restart_required=yes\`. No package upgrade, containerd upgrade, Docker upgrade or reboot was performed.
+- OS package updates include containerd 2.4.2 and Docker 29.9.2; `restart_required=yes`. No package upgrade, containerd upgrade, Docker upgrade or reboot was performed.
 
 ### Fresh workload and immutable image evidence
 
 | Namespace / workload | Ready | Runtime image evidence |
 |---|---:|---|
-| media-prod / media-generation backend | 1/1 | \`backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d\` |
-| media-prod / media-generation frontend | 1/1 | \`frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a\` |
+| media-prod / media-generation backend | 1/1 | `backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d` |
+| media-prod / media-generation frontend | 1/1 | `frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a` |
 | microfe-platform / shell | 1/1 | digest-pinned imageID recorded |
 | microfe-platform / ws | 1/1 | digest-pinned imageID recorded |
 | microfe-platform / NATS | 1/1 | imageID recorded |
-| stock-prod / Admin | 0/1 Deployment; two Pods 0/1 | \`admin:12d63b4\`, no imageID, ImagePullBackOff |
-| stock-prod / Backend old replica | 1/1 | \`backend:23b2878\`, imageID \`sha256:bcf5f7b1b660b5b93cd9d9f4f041db7e9166c89b084412fa4f66e8e4d9a43ad1\` |
-| stock-prod / Backend new Pod | 0/1 | \`backend:12d63b4\`, no imageID, ImagePullBackOff |
-| stock-prod / Frontend legacy | 1/1 | \`user:23b2878\`, imageID \`sha256:bca44dd31869a4874a795c6e6ace51f9362731770f3ac9ca1ee8f3e608d6bf99\` |
+| stock-prod / Admin | 0/1 Deployment; two Pods 0/1 | `admin:12d63b4`, no imageID, ImagePullBackOff |
+| stock-prod / Backend old replica | 1/1 | `backend:23b2878`, imageID `sha256:bcf5f7b1b660b5b93cd9d9f4f041db7e9166c89b084412fa4f66e8e4d9a43ad1` |
+| stock-prod / Backend new Pod | 0/1 | `backend:12d63b4`, no imageID, ImagePullBackOff |
+| stock-prod / Frontend legacy | 1/1 | `user:23b2878`, imageID `sha256:bca44dd31869a4874a795c6e6ace51f9362731770f3ac9ca1ee8f3e608d6bf99` |
 | tce-prod / frontend and service | 0/0 | intentionally scaled to zero |
 | microfe-platform / microfe-auth and Keycloak | 0/0 | intentionally scaled to zero |
 
-The three failing StockDividend Pods report \`no match for platform in manifest\`; their restart counts remain 0. The old Backend replica and legacy Frontend are not proof that the new Admin/Backend images are healthy.
+The three failing StockDividend Pods report `no match for platform in manifest`; their restart counts remain 0. The old Backend replica and legacy Frontend are not proof that the new Admin/Backend images are healthy.
 
 The inspection confirms the earlier reconciliation result: Media and MicroFE are healthy, TCE/Auth/Keycloak remain stopped by design, and StockDividend Admin/Backend are the outstanding runtime failure. Keep runner v14 permanent-error suppression enabled. Do not promote, restart, delete cached images, or change replicas without the required release authorization.
 
 ### Inspection merge and current Platform head
 
-- Inspection PR #1061 was generated from a read-only snapshot, exact-head validated, and squash-merged by the inspection workflow. Current Platform master is \`08b8b52891e7037e28cc6926648125a85c77db1a\`.
-- PR #1061 changed only \`debug/vps-latest.md\`; no production manifest was changed.
+- Inspection PR #1061 was generated from a read-only snapshot, exact-head validated, and squash-merged by the inspection workflow. Current Platform master is `08b8b52891e7037e28cc6926648125a85c77db1a`.
+- PR #1061 changed only `debug/vps-latest.md`; no production manifest was changed.
 - Exact inspection manifest validation #41461496570 passed. Post-merge manifest validation #41461496570 is the same exact-head run because the inspection workflow validates the snapshot before merge; no separate post-merge push run was observed in the latest run list.
