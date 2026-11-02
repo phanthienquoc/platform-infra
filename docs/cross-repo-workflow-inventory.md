@@ -1707,3 +1707,10 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Auth PR #84 merged at `897bc7b921c7d34a3c19c945cb3d4f1affcdd6c6`; exact-head auth-service-ci #41524582582 SUCCESS, Supabase Preview SKIPPED. Post-merge auth-service-ci #41524996404 queued. Release remains manual-only; no dispatch.
 - StockDividend PR #27 merged at `fc10f56eadba769fe102da6465bee27c9e14f9a9`; publisher #41524676740 was triggered because the validator script was not in `paths-ignore`. Gate output false and promotion handoff skipped; build-and-push still running. PR #28 now excludes that helper path and asserts the exclusion.
 - Open PRs: Platform #544/#541/#539/#1091; StockDividend #28; Auth #75/#76; TCE/Media none.
+
+
+### 2026-11-03 03:58 ICT follow-up
+- StockDividend PR #28 exact head `9e166bfc85f7363da1eed2baac895d0735754f29`: release-hold contract, Admin build, Backend test/build and Scraper syntax passed; Scraper container build still running. Adds exact validator helper to publisher `paths-ignore`.
+- Media PR #69 exact head `729725534471194c9dabd7081cdea191dc01f012`: Node24 pins for WF-03 publisher and CI setup-node; Media CI #41525201157 in progress. Existing Media release path filters exclude workflow and validator changes.
+- Platform tracker PR #1091 exact head `97523cebce3136f4ec911917304bb198671122aa`; validate #41525056187 SUCCESS.
+- StockDividend publisher #41524676740 remains in progress with promotion gate false and promotion handoff skipped; no Platform dispatch observed.
