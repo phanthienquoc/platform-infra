@@ -1440,3 +1440,36 @@ No production manifest, image reference, shared pull credential, database object
 - TCE latest native WF-07 #41476258191 SUCCESS; WF-06 #41424898130 returns HTTP 503 at all strict public endpoints while TCE/Auth are intentionally stopped; direct scheduled WF-12 #41419694332 is stale. Workflow_run forwarding/heartbeats are not cron ticks. Keep every TCE cron and market-scan schedule unchanged.
 - Owner-only secrets: `STOCKDIVIDEND_ACTIONS_READ_TOKEN` (StockDividend-only Actions:read) and `PLATFORM_INFRA_MIRROR_TOKEN` (destination-only Contents:write). Do not substitute credentials or write secret values to Git.
 - StockDividend production release remains disabled pending explicit authorization. Auth production integration/migration provenance gate remains open. No production manifest, image, database, replica, credential or schedule mutation occurred.
+
+
+## 2026-11-02 17:58 UTC — downstream runner queue visibility gap
+
+### Current repository heads and open PRs
+- Platform Infra master `16719f6251826bb78d0c5efd996cb13ce86eb685`; TCE Dashboard `afad281fa57b2846446a152b6f5cf3c2600ee51d`; StockDividend `38220ddfef2db7128482547f72b7f06211e9c9bc`; Media Generation `0d4fc2ac15834c20357fd2420b732e6411fd8930`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
+- Open Platform PRs: #1071, #544, #541, #539. Open Auth PRs: #75/#76. No open PRs in TCE, StockDividend or Media.
+- Platform PR #1071 exact-head `b22480af63895cb879f9e52dd210a88c9dd677bb` validation #41486648063 SUCCESS before the latest evidence append; rerun is required for the updated head.
+
+### Ownership boundaries remain unchanged
+- Platform Infra remains the sole production manifest, shared GHCR pull credential, GitOps promotion/reconciliation, K3s rollout, health and recovery owner.
+- App repositories own CI/tests and immutable GHCR publication. They do not gain production SSH, Compose, kubectl apply or manifest ownership.
+- Preserve CI/test/security, manual/release, backup/cleanup and purposeful scheduled workflows. Do not remove the mirror workflow while it remains an intentional job blocked only by its destination token.
+
+### New queue evidence
+- Native scheduled reconcile [#41491502003](https://github.com/phanthienquoc/platform-infra/actions/runs/41491502003) arrived at 17:28:27Z and its shared reconcile job completed SUCCESS. Auth lane passed; StockDividend lane failed on permanent ARM64 image errors for tag `12d63b4`.
+- At 17:58Z, the overall run remained queued because MicroFE job 125435773880, TCE job 125435774162 and Media job 125435774301 were still queued with `runner_id=0` and no runner name since 17:29:10Z. The runner's exact cause is not yet established; do not claim it is offline.
+- Watchdog #41491160810 failed because the latest native inspection #41407411326 was 589 minutes old. Existing watchdog reports workflow-level queue timing but misses long-waiting downstream lane jobs. Next implementation: add a read-only job-level queue diagnostic against the latest scheduled reconcile run, using the watchdog's GitHub API reference timestamp and the existing 15-minute queue budget. Fail scheduled/manual enforcement when a targeted lane remains queued without a runner past budget; push smoke should emit warning only. Do not change the schedule or recovery authorities.
+- Native reconciliation has one resumed tick; native inspection cadence remains stale. Recovery #41482540454 is native recovery schedule evidence only, not inspection/reconciliation schedule delivery.
+
+### Schedule and runtime
+- TCE WF-07 #41476258191 is a recent native schedule SUCCESS. WF-06 #41424898130 remains strict HTTP 503 while TCE/Auth are intentionally stopped; direct WF-12 #41419694332 remains latest scheduled tick with stale freshness. Workflow_run forwarding/receiver is not a native cron tick.
+- K3s live pod listing in #41491502003: node Ready; Media/MicroFE/NATS 1/1; Stock Admin two Pods and new Backend Pod ImagePullBackOff; old Backend and legacy Frontend Running. TCE/Auth/Keycloak remain intentionally stopped.
+- No new image release, promotion, manifest apply or replica change occurred.
+
+### Owner actions
+1. Configure `STOCKDIVIDEND_ACTIONS_READ_TOKEN` with StockDividend-only Actions:read in the protected Platform production Environment.
+2. Configure `PLATFORM_INFRA_MIRROR_TOKEN` with destination-only Contents:write on `phanthienquoc/locally-uncensored-private`.
+3. Keep StockDividend release disabled until explicit authorization; then exercise publisher provenance, paired ARM64 digest promotion, exact master convergence, reconciliation and live imageID checks.
+4. Keep Auth production integration/migration gate until side effects and migration provenance are authoritative.
+5. Keep TCE WF-06/WF-07/WF-12 and market-scan cron declarations unchanged.
+
+No production manifest, image, credential, database, replica, release flag, deployment authority or cron expression changed. TCE market-scan schedule unchanged.
