@@ -410,6 +410,39 @@ if "run-name:" not in reconcile or "github.event.client_payload.app" not in reco
 if "microfe" not in reconcile:
     fail("reconcile-vps.yml must retain MicroFE deployment scope support.")
 
+# TCE release fanout must verify the exact public publisher run before emitting image promotions.
+tce_fanout = promotion.split("  fanout-tce-release:", 1)[1].split("  coordinate-tce-release:", 1)[0]
+for required in (
+    "github.event.client_payload.source_run_id",
+    "github.event.client_payload.source_workflow_path",
+    "github.event.client_payload.source_event",
+    "github.event.client_payload.source_head_sha",
+    '[[ "$SOURCE_EVENT" == "workflow_dispatch" ]]' ,
+    '[[ "$RELEASE" == *-"${SOURCE_HEAD_SHA:0:7}" ]]' ,
+    "Verify TCE publisher run provenance",
+    "bash scripts/verify-tce-publisher-run.sh",
+):
+    if required not in tce_fanout:
+        fail(f"TCE release fanout is missing source-run provenance contract: {required}")
+if tce_fanout.index("Verify TCE publisher run provenance") > tce_fanout.index("Dispatch both TCE image promotions"):
+    fail("TCE publisher provenance must pass before either image promotion is dispatched.")
+tce_provenance = (ROOT / "scripts" / "verify-tce-publisher-run.sh").read_text(encoding="utf-8")
+for required in (
+    "https://api.github.com/repos/phanthienquoc/TCE-dashboard/actions/runs/$SOURCE_RUN_ID",
+    '"$repository" == "phanthienquoc/TCE-dashboard"' ,
+    '"$head_repository" == "phanthienquoc/TCE-dashboard"' ,
+    '"$workflow_path" == "$SOURCE_WORKFLOW_PATH"' ,
+    '"$event" == "$SOURCE_EVENT"' ,
+    '"$branch" == "master"' ,
+    '"$head_sha" == "$SOURCE_HEAD_SHA"' ,
+    '"$conclusion" == "success"' ,
+):
+    if required not in tce_provenance:
+        fail(f"TCE source-run verifier is missing required metadata guard: {required}")
+if "Authorization" in tce_provenance:
+    fail("Public TCE source-run verification must not introduce a cross-repository credential.")
+if "scripts/tests/verify-tce-publisher-run.test.sh" not in (ROOT / ".github" / "workflows" / "validate-github-actions.yml").read_text(encoding="utf-8"):
+    fail("TCE source-run provenance regression tests must run in validate-github-actions.")
 # Scheduled reconciliation logic must have a matching schedule trigger.
 if "github.event_name == 'schedule'" in reconcile and not re.search(
     r"(?m)^\s*schedule:\s*$", reconcile
