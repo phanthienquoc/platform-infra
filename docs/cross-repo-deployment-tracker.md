@@ -1785,3 +1785,11 @@ No production manifests, release flags, GHCR pull credentials, database objects,
 5. Keep Auth PR #75/#76 gated on production integration side-effect review.
 
 No production manifests, runtime credentials, release flags, database objects, K3s desired replicas, or schedule expressions changed in this review. No image promotion, workload restart, image deletion, or VPS reboot occurred. TCE market-scan schedule unchanged. Production remains NOT HEALTHY/UNVERIFIED because StockDividend Admin/Backend are not ready.
+
+
+### Follow-up — TCE WF-06 boundary PR merged (2026-11-02 09:05 ICT)
+
+- TCE PR #1011 was merged by squash at 2026-11-02 02:05:27Z. Validated head: a2da2271c24794d1d88286c9c11b129205dbb47f; merge commit / new TCE master: a5e8866d2ba28936d57b31ce6a067186c7204369.
+- Exact-head Prettier run #41375696971 passed, including the WF-06/WF-12 contract validator. Exact-head Backend unit tests #41375696882 passed, including backend build and unit tests. The merge was performed only after re-fetching the PR and confirming its head was unchanged.
+- Post-merge WF-01 build #41375826672, WF-02 #41375826954, and WF-05 #41375826811 were still in progress at this follow-up. No post-merge success is claimed yet.
+- WF-06 retains its 15-minute schedule, manual dispatch and four public endpoint checks, but no longer requires VPS_SSH_PRIVATE_KEY or performs legacy Docker/port inspection. Platform Infra remains the read-only VPS/K3s inspection authority. WF-12 and all TCE schedule declarations, including market-scan, are unchanged.
