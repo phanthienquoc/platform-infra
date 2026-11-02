@@ -48,7 +48,7 @@ if [[ "$url" == https://ghcr.io/v2/*/manifests/* ]]; then
     echo "simulated exact manifest denial" >&2
     exit 22
   fi
-  printf '{"schemaVersion":2}\n'
+  printf '{"schemaVersion":2,"manifests":[{"platform":{"os":"linux","architecture":"arm64"}}]}\n'
   exit 0
 fi
 
