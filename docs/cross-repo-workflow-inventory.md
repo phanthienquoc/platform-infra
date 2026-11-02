@@ -1600,3 +1600,15 @@ No production manifest, image, credential, database, replica, release flag, depl
 - This fallback event is workflow_dispatch, not native schedule delivery. The new stale-parent queue guard has not yet been exercised by a scheduled-source workflow_run. Next native scheduled reconciliation/watchdog cycle remains the runtime verification point.
 - #1076 exact-head and post-merge manifest/workflow validations all PASS. PR #1077 documentation head `fe0cf9cb91bda7e318d0c9ae10d138d412fba7fc` had validate-manifests #41507377407 SUCCESS before this additional evidence update; revalidate the final head before merge.
 - No app image promotion, manifest apply, Pod restart or DB mutation. TCE market-scan cron unchanged.
+
+
+## 2026-11-02 19:14 UTC / 2026-11-03 02:14 ICT — final current-state and validation record
+
+- PR #1077 was closed as superseded; PR #1078 carried the tracker/inventory update onto the current master base and merged at `ab281dc47d8389bc0166ec9349a439e3a271c243`.
+- PR #1078 exact-head validate-manifests #41507844748 SUCCESS; post-merge validate-manifests #41507991465 SUCCESS.
+- Current Platform open PRs: #544/#541/#539 (draft). Authentication open PRs: #75/#76. No open PRs in TCE Dashboard, StockDividend or Media Generation.
+- PR #1076 stale-parent queue guard is merged. It suppresses only completed/already-assigned historical lane delays when the parent scheduled reconciliation is itself stale (>45m); currently unassigned lanes remain enforced at 15m. Exact-head validate-manifests #41506862664 and validate-github-actions #41506862858 PASS; post-merge #41507316523 and #41507316295 PASS; push watchdog/recovery smoke #41507316907/#41507316109 PASS.
+- Runtime guard exercise still pending a later native scheduled reconciliation and its schedule-source watchdog event. The latest fallback #41507349624 was workflow_dispatch and must not be counted as native schedule evidence.
+- Fallback #41507349624 used master SHA `778746152bee482fdea24ad9ab88b1cdee03d4ad`, `mode=apply`, `allow_image_changes=false`, `target_app=all`; shared diff clean and apply skipped. MicroFE/Media/TCE/Auth lanes SUCCESS; StockDividend FAILURE on ARM64 manifest mismatch; Keycloak skipped. Recovery #41507694544 SUCCESS.
+- Preserve app-owned CI/build/immutable GHCR publication, Platform-owned manifests/pull credentials/promotion/reconciliation/health, and `reconcile-vps.yml` as sole apply authority. No SSH/Compose duplicate authority or workflow removal.
+- Platform/TCE native schedule cadence remains incomplete; mirror token is missing. StockDividend paired release remains gated by Actions-read credential and explicit authorization. Auth production integration/migration gate remains open. TCE market-scan cron unchanged.
