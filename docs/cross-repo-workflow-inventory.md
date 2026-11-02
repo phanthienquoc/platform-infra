@@ -1770,3 +1770,12 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Latest available K3s snapshot #41515885354 is stale. It records Stock Admin/new Backend ImagePullBackOff on old tag `12d63b4`, while Media/MicroFE/NATS were healthy and TCE/Auth/Keycloak remained intentionally 0/0.
 - Platform native inspection/reconciliation/watchdog/mirror and TCE WF-06/WF-12 schedules remain without proven consecutive cadence recovery. WF-07 and Platform recovery have successful isolated schedule evidence. Do not change any cron expression or TCE market-scan schedule.
 - Preserve `reconcile-vps.yml` as the only production apply authority. No direct SSH/Compose deployment authority added. No release dispatch, GitOps promotion, DB migration, secret mutation, replica change or VPS reboot.
+
+## 2026-11-03 05:05 ICT — remaining Node24 workflow pins
+
+- TCE PR #1017 merged at `5d299bea8ba482876ccaa291c68b0ee3f829350c`. Exact-head WF-02 #41533787129, WF-05 #41533787740, WF-08B #41533787314 and WF-11 #41533787316 all SUCCESS. WF-08B release handoff, image publication and dispatch jobs were skipped for the PR event.
+- StockDividend PR #30 merged at `efdb0844e868367d29bbeb5393430cd73d6b6f38`. Exact-head CI #41533796010 SUCCESS across all five jobs; scraper image build remained push=false. Weekend schedule `0 1 * * 0,6` unchanged.
+- Platform PR #1097 remains open. Exact-head action validation #41533921909 SUCCESS after fixing yamllint comment spacing. Exact-head manifest validation #41533921800 is still running at network-boundary validation; no merge until SUCCESS.
+- Current open PRs: Platform #1097/#544/#541/#539; Auth #75/#76; none in TCE, StockDividend or Media. Tracker PR #1096 is open separately.
+- Node24 action runtime migration is complete for TCE artifact upload/download, TCE manual safe-setup checkout, StockDividend Python/Go and weekend scraper actions. Platform GitOps image-promotion checkout/login/Buildx pins remain pending #1097.
+- No release dispatch, GHCR publication, GitOps promotion, DB migration, credential mutation, replica change, VPS reboot or cron change. Preserve `reconcile-vps.yml` as the sole production apply authority; TCE market-scan schedule unchanged.
