@@ -3517,3 +3517,32 @@ All TCE market-scan cron expressions remain unchanged. Production remains NOT HE
 - StockDividend master head is now `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`. The backend Dockerfile change is within the app publisher's `backend/**` path and is expected to trigger app-owned ARM64 artifact publication on master. The current GitHub connector query exposes PR-triggered workflow runs but did not return the new master publisher run/digests; do not claim post-merge GHCR publication or ARM64 runtime verification until an exact publisher run and digests are available.
 - No GitOps dispatch or promotion was observed. Production overlay still references old Admin/Backend tag `12d63b4` in the latest Platform master snapshot; Stock Admin and the new Backend Pod remain ImagePullBackOff. Keep production release disabled and require explicit authorization before paired digest promotion.
 - Platform PR #1108 now needs its tracker/inventory/Stock runtime README correction revalidated on the updated exact head before merge.
+
+## 2026-11-03 09:07 ICT / 02:07 UTC — post-merge five-repository heads
+
+### Current master heads and open PRs
+- Platform Infra: `d2051f67f1a82bf06ff940a5aee08c4d4557189b`.
+- TCE Dashboard: `5d299bea8ba482876ccaa291c68b0ee3f829350c`.
+- StockDividend: `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`.
+- Media Generation: `763fdcd1463fe4d95c81c93d1e7ae010f2cd0cd3`.
+- Authentication: `1f39b18d9dd286da9dde32a79c4da269b19d5cfd`.
+- Open PRs: Platform #544/#541/#539 (draft; current mergeability false for #544/#541/#539); Auth #75/#76; no open TCE, StockDividend or Media PRs. StockDividend #31 and Platform #1108 are closed/merged.
+- Auth current-head workflow runs remain #75 #40446492086 SUCCESS and #76 #41329425940 SUCCESS; production Supabase integration/migration provenance gates remain unresolved. Platform draft PR validation runs remain #544 #38575430454, #541 #38567431761, #539 #38548718033 (SUCCESS); drafts are not deployment approvals.
+
+### Merged changes and validation
+- StockDividend PR #31 merged at `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`. Exact-head CI #41563638198 completed SUCCESS across all six jobs. The new backend runtime-image job built a non-publishing amd64 image, verified `/app/migrate` is executable, and verified missing `MONGO_URI` fails before a database connection. No migration was executed.
+- Platform PR #1108 merged at `d2051f67f1a82bf06ff940a5aee08c4d4557189b`; exact-head `validate-manifests` #41563926388 completed SUCCESS. It refreshes tracker/inventory and corrects the StockDividend runtime README.
+- StockDividend master publisher is expected to run because the merged Dockerfile change is under `backend/**`. The current connector's master-commit workflow-run/status query returned no run/status contexts, so the post-merge ARM64 publisher run, three GHCR digests, release-gate output and absence of a dispatch are not independently verified. Do not claim publication or promotion.
+- Production GitOps overlay remains at old Stock Admin/Backend tag `12d63b4` in the latest inspection snapshot. Keep StockDividend release hold; no paired digest promotion or production migration is authorized.
+
+### Runtime and schedule evidence
+- Latest inspection snapshot #1107 generated 2026-11-03T01:11:21Z: node Ready/ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2, Docker 29.1.3, disk 55%, about 19 GiB available RAM, runner services active and policy v14. Media backend/frontend, MicroFE Shell/WS and NATS 1/1. Stock Admin two Pods and new Backend Pod ImagePullBackOff; old Backend and legacy Frontend 1/1. TCE frontend/service, Keycloak and MicroFE Auth 0/0. GitOps drift clean. Inspection source event was not independently exposed; do not count #1107 as a native schedule tick.
+- Last documented native Platform events remain inspection #41498271871, reconciliation #41549849545, watchdog #41550202827, mirror #41499146752 and recovery #41547230804. Later push/dispatch events remain separate from native schedule evidence.
+- Last documented TCE native events remain WF-06 #41516575222 (HTTP 503 strict health probes), WF-07 #41556575907 (SUCCESS), and WF-12 #41511665345 (freshness failure). No consecutive cadence recovery is established.
+
+### Remaining owner gates
+- `PLATFORM_INFRA_MIRROR_TOKEN`: destination-only Contents:write for the private mirror destination.
+- `STOCKDIVIDEND_ACTIONS_READ_TOKEN`: presence unverified; Actions:read only on the private StockDividend repository.
+- Explicit StockDividend production release authorization remains absent.
+- Auth #75/#76 require review of Supabase production integration side effects and migration provenance/drift before any privileged action.
+- No production manifest/image reference, shared GHCR pull credential, database object, desired replica, cron expression, Pod restart, migration or host maintenance changed. `reconcile-vps.yml` remains the sole production apply authority. TCE market-scan schedule unchanged.
