@@ -3851,3 +3851,51 @@ All TCE market-scan cron expressions remain unchanged. Production remains NOT HE
 - TCE master is now `53227425841b6283bebad3bc5c93d509bd8a316a`. Post-merge WF-01 #41608676328, WF-02 #41608676350, WF-05 #41608676512 and WF-12 push smoke #41608676616 were still in progress/queued at the last query; record their conclusions only after completion.
 - The merged WF-12 monitor compares `age_seconds > MAX_AGE_MINUTES * 60` and `queue_seconds > MAX_QUEUE_MINUTES * 60`. Validator regression cases cover exact 25m/15m and one second over. No cron expression changed; WF-06 remains `*/15 * * * *`, WF-12 remains `7,22,37,52 * * * *`, and the TCE market-scan schedule is unchanged.
 - This precision correction does not cure the underlying missing WF-06 schedule delivery: latest observed native WF-06 remains #41565175484 at 02:17:26Z, while WF-12 #41605106319 at 08:41:06Z correctly failed stale delivery (383m age, queue=0m). Its authenticated heartbeat and Platform receiver succeeded. Keep the public HTTP 200 assertions unchanged.
+
+
+## 2026-11-03 — publisher provenance hardening and post-merge reconciliation evidence
+
+### Repository state and merged changes
+- Platform Infra master: `3932c5ecb69a2a9fca20bbe8150e792a7a409993`. PR [#1133](https://github.com/phanthienquoc/platform-infra/pull/1133) merged from exact head `02ab39f5578767d5f502641a444f1c522ce9d0fd` after validate-github-actions #41609421525 and validate-manifests #41609421621 both passed. Post-merge validate-github-actions #41609508582 and validate-manifests #41609508362 also passed.
+- TCE Dashboard master: `53227425841b6283bebad3bc5c93d509bd8a316a`. PR [#1019](https://github.com/phanthienquoc/TCE-dashboard/pull/1019) merged after exact-head WF-05 #41608302212, WF-02 #41608302260, same-SHA push WF-05 #41608285390 and WF-02 #41608285388 all passed. Post-merge WF-01 #41608676328, WF-02 #41608676350, WF-05 #41608676512 and WF-12 push smoke #41608676616 all passed. The push smoke emitted the expected stale-WF-06 warning; it is not a native schedule pass.
+- StockDividend master `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; no open PR. Latest CI #41563856934 and publisher #41563856933 passed.
+- Media Generation master `763fdcd1463fe4d95c81c93d1e7ae010f2cd0cd3`; no open PR. Latest Media CI #41525798015 passed.
+- Authentication master `1f39b18d9dd286da9dde32a79c4da269b19d5cfd`; PR #75 remains ready for review and #76 remains draft. Latest web/service CI #41542942080/#41542941957 passed. Supabase Preview remains SKIPPED on the open migration-related PRs; no production migration was run.
+- Open Platform Infra drafts #544, #541 and #539 remain blocked by Keycloak production database/DNS/credential prerequisites. No other open PRs exist in TCE, StockDividend or Media.
+
+### New source-run provenance contract — Platform PR #1133
+- StockDividend verifier now queries the exact source run's Actions Jobs API and requires completed-success for the master gate, production release gate, ARM64 build/push job, Platform handoff job and atomic digest-dispatch job. It also requires the ARM64 runner, Scraper/Admin/Backend build-and-push steps and immutable ARM64 manifest verification step to succeed.
+- Media verifier now queries the public Actions Jobs API (no cross-repository credential) and requires completed-success for the master gate, release-tag resolver, both native ARM64 build jobs and the paired immutable-image/Platform-dispatch job. Critical build, architecture, export, immutable GHCR digest and Platform notification steps must all succeed.
+- Both mock suites now reject missing/skipped/failed publisher jobs and critical steps. Static workflow contract validation also requires the job-level guards and test invocation.
+- PR #1133 exact-head lint/contract checks passed, and post-merge validation passed. This is receiver-side hardening only; no app publisher or production release was triggered.
+- StockDividend latest publisher #41563856933 completed ARM64 runner/build/push and immutable-manifest verification, but its explicit production release gate left the Platform handoff and dispatch jobs SKIPPED. Therefore no StockDividend production promotion occurred. The new receiver would reject any attempted dispatch tied to that source run because the required handoff/dispatch jobs did not succeed.
+- Media had no new production publisher run in the latest Actions history; its new verifier is covered by passing regression tests, not a fresh end-to-end Media release.
+
+### TCE WF-12 exact-second contract — PR #1019
+- WF-12 now compares elapsed seconds for the 25-minute WF-06 freshness and 15-minute runner queue budgets; exact limits pass, one second over fails. Static and boundary regression tests passed.
+- Latest push smoke #41608676616 completed SUCCESS and logged WF-06 schedule age 411m with queue 0m as a warning in push mode. The latest native WF-06 run remains #41565175484 at 02:17:26Z. Native WF-12 #41605106319 at 08:41:06Z failed the stale WF-06 freshness gate (383m) while its authenticated Platform heartbeat was accepted and Platform recovery #41605120486 succeeded.
+- WF-06 cron remains `*/15 * * * *`; WF-12 cron remains `7,22,37,52 * * * *`. No TCE market-scan schedule was altered.
+
+### Post-merge recovery and K3s reconciliation — run #41609535528
+- Platform push recovery #41609508623 completed SUCCESS and dispatched the existing reconciliation authority with `ref=master`, `mode=apply`, `allow_image_changes=false`, `target_app=all`.
+- Reconciliation #41609535528 completed FAILURE solely because the StockDividend deployment lane failed. The reconcile job itself passed GHCR preflight for all referenced packages, provisioned/verified the Auth runtime Secret in `microfe-platform` (values suppressed), and reconciled shared `ghcr-pull` credentials. Logs explicitly reported `secret/ghcr-pull unchanged` in all relevant namespaces.
+- Blocked-image restart handling reported no pull failures for MicroFE Auth/Shell/WS, TCE service/frontend or Media backend/frontend. It identified Stock Admin and Backend `ImagePullBackOff` as permanent `no match for platform in manifest` errors and correctly skipped rollout restarts.
+- GitOps preflight reported `drift=false`; `Apply production manifests`, workload image-change guard and Auth/Keycloak shutdown steps were skipped. No production image, manifest, replica or database change occurred.
+- Application lanes: MicroFE SUCCESS, Media SUCCESS, TCE Dashboard SUCCESS, Auth SUCCESS, StockDividend FAILURE, Keycloak SKIPPED. Auth lane verified the runtime Secret and TLS certificate; the Auth service is intentionally scaled to zero. Keycloak remains skipped.
+- Stock health logs: two Admin Pods and the new Backend Pod remain ImagePullBackOff on `12d63b4`, each reporting `no match for platform in manifest`. The old Backend and legacy Frontend remain Running. Final gate failed only on StockDividend.
+- Recovery #41609812139 completed SUCCESS after checking the source reconciliation: latest reconciliation age=0m and latest inspection #41603684581 age=46m. It correctly dispatched neither another reconciliation nor a duplicate read-only inspection.
+
+### Latest K3s snapshot and native schedule evidence
+- Latest read-only snapshot remains inspection [#41603684581](https://github.com/phanthienquoc/platform-infra/actions/runs/41603684581), generated `2026-11-03T08:29:49Z`; recovery observed activity timestamp 08:31:02Z. At recovery time it was 46m old, inside the 75m budget.
+- Node `tce-k3s-01`: Ready, ARM64, K3s v1.36.3+k3s1, Ubuntu 22.04.5 LTS, disk 55%, about 19 GiB RAM available, Docker 29.1.3, containerd 2.3.2-k3s2, runner policy v14 active. Host still reports restart required; maintenance is pending a window.
+- Native Platform schedule evidence remains: inspection #41603684581 (08:29:41Z) SUCCESS; recovery #41577147958 (04:16:26Z) SUCCESS but stale; reconciliation #41591224283 (06:39:06Z) FAILURE; watchdog #41591762943 (06:44:09Z) FAILURE; mirror #41560381641 (01:32:25Z) FAILURE due missing `PLATFORM_INFRA_MIRROR_TOKEN`.
+- Native TCE evidence remains: WF-06 #41565175484 (02:17:26Z), WF-12 #41605106319 (08:41:06Z, stale-delivery failure), WF-07 backup #41557498266 PASS and integration #41556575907 PASS. Push/workflow_run/workflow_dispatch fallback runs are not native schedule ticks.
+
+### Remaining owner gates
+1. Configure `PLATFORM_INFRA_MIRROR_TOKEN` with destination-only Contents:write for `phanthienquoc/locally-uncensored-private`.
+2. Verify protected `STOCKDIVIDEND_ACTIONS_READ_TOKEN` presence/scope and obtain explicit production authorization before paired Admin/Backend immutable digest promotion.
+3. Observe consecutive native Platform recovery/reconciliation/watchdog/mirror and TCE WF-06 schedule ticks; preserve all existing cron expressions.
+4. Keep Auth migration and Keycloak activation blocked on migration provenance, Supabase Preview evidence, production DB credentials and DNS.
+5. Schedule VPS OS/containerd/Docker maintenance before applying pending host updates.
+
+`reconcile-vps.yml` remains the sole production apply authority. App repositories continue to own tests/builds and immutable GHCR publication; Platform Infra owns production manifests, shared pull credentials, GitOps promotion/reconciliation and rollout/health verification. TCE market-scan schedule unchanged.
