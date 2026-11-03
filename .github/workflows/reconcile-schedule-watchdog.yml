@@ -39,6 +39,7 @@ jobs:
       MAX_AGE_MINUTES: "45"
       MAX_QUEUE_MINUTES: "15"
       MAX_INSPECTION_AGE_MINUTES: "75"
+      MAX_MIRROR_AGE_MINUTES: "90"
     steps:
       - name: Checkout read-only queue verifier
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -168,6 +169,96 @@ jobs:
             echo "age=${age_minutes}m queue_wait=not-measurable (run_attempt=${run_attempt}) status=${status} conclusion=${conclusion}."
           fi
           echo "Age reference: watchdog run #${GITHUB_RUN_ID} created=${reference_at} (GitHub Actions API clock)."
+          echo "Run evidence: ${run_url}"
+
+      - name: Verify scheduled mirror delivery and result
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          workflow="$(gh api \
+            -X GET \
+            -H "Accept: application/vnd.github+json" \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/mirror-locally-uncensored.yml")"
+          state="$(jq -r '.state // empty' <<< "$workflow")"
+          if [[ "$state" != "active" ]]; then
+            if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+              echo "::warning::Read-only API smoke succeeded; mirror workflow is not active (state=${state:-missing})."
+              exit 0
+            fi
+            echo "::error::Mirror workflow is not active (state=${state:-missing}); scheduled mirroring cannot be relied on."
+            exit 1
+          fi
+
+          response="$(gh api \
+            -X GET \
+            -H "Accept: application/vnd.github+json" \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/mirror-locally-uncensored.yml/runs" \
+            -f event=schedule \
+            -F per_page=1)"
+          latest="$(jq -c '.workflow_runs | sort_by(.created_at) | last // empty' <<< "$response")"
+          if [[ -z "$latest" ]]; then
+            if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+              echo "::warning::Read-only API smoke succeeded, but no scheduled mirror run is present yet."
+              exit 0
+            fi
+            echo "::error::No scheduled mirror run is available in GitHub Actions history."
+            exit 1
+          fi
+
+          current_run="$(gh api \
+            -X GET \
+            -H "Accept: application/vnd.github+json" \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")"
+          reference_epoch="$(jq -r 'if .created_at then (.created_at | fromdateiso8601) else empty end' <<< "$current_run")"
+          if [[ -z "$reference_epoch" ]]; then
+            echo "::error::Unable to obtain the watchdog run timestamp for mirror freshness."
+            exit 1
+          fi
+
+          created_at="$(jq -r '.created_at' <<< "$latest")"
+          created_epoch="$(jq -r '.created_at | fromdateiso8601' <<< "$latest")"
+          run_id="$(jq -r '.id' <<< "$latest")"
+          run_url="$(jq -r '.html_url' <<< "$latest")"
+          status="$(jq -r '.status' <<< "$latest")"
+          conclusion="$(jq -r '.conclusion // "pending"' <<< "$latest")"
+          age_seconds=$((reference_epoch - created_epoch))
+          age_minutes=$((age_seconds / 60))
+
+          if (( age_seconds < 0 )); then
+            echo "::error::GitHub returned a future timestamp for scheduled mirror run #${run_id}: ${created_at}"
+            exit 1
+          fi
+          if (( age_minutes > MAX_MIRROR_AGE_MINUTES )); then
+            if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+              echo "::warning::Read-only API smoke succeeded; scheduled mirror run is stale."
+              echo "::warning::Latest run #${run_id}: created=${created_at}, age=${age_minutes}m."
+              echo "::warning::Run evidence: ${run_url}"
+              exit 0
+            fi
+            echo "::error::No scheduled mirror run within ${MAX_MIRROR_AGE_MINUTES} minutes."
+            echo "::error::Latest run #${run_id}: created=${created_at}, age=${age_minutes}m."
+            echo "::error::Run evidence: ${run_url}"
+            exit 1
+          fi
+
+          if [[ "$status" != "completed" ]]; then
+            echo "::notice::Scheduled mirror run #${run_id} is still ${status}; result will be checked after completion."
+            exit 0
+          fi
+          if [[ "$conclusion" != "success" ]]; then
+            if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+              echo "::warning::Read-only API smoke succeeded; latest scheduled mirror run concluded ${conclusion}."
+              echo "::warning::Run evidence: ${run_url}"
+              exit 0
+            fi
+            echo "::error::Scheduled mirror run #${run_id} failed with conclusion=${conclusion}."
+            echo "::error::Run evidence: ${run_url}"
+            exit 1
+          fi
+
+          echo "Scheduled mirror delivery passed for run #${run_id}."
+          echo "age=${age_minutes}m status=${status} conclusion=${conclusion}."
           echo "Run evidence: ${run_url}"
 
       - name: Report latest scheduled inspection runner queue delay

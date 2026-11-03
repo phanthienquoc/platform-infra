@@ -1016,8 +1016,8 @@ if "bash scripts/tests/restart-blocked-image-pulls.test.sh" not in actions_valid
 # scheduled/manual/fallback invocations must continue to fail closed on stale data.
 if '  push:\n    branches: [master]\n    paths:\n      - ".github/workflows/reconcile-schedule-watchdog.yml"' not in watchdog:
     fail("The watchdog must run a path-scoped post-merge API smoke check on master.")
-if watchdog.count('if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then') != 6:
-    fail("Only the watchdog's empty-history, disabled-workflow, queue-delay, and stale-history guards may be warn-only for push smoke runs.")
+if watchdog.count('if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then') != 10:
+    fail("Only the watchdog's empty-history, disabled-workflow, queue-delay, stale-history, and mirror-result guards may be warn-only for push smoke runs.")
 if '::warning::Read-only API smoke succeeded' not in watchdog:
     fail("The watchdog push smoke must clearly label stale/missing schedule or queue data as a warning, not health success.")
 if '::error::No scheduled reconcile-vps run within ${MAX_AGE_MINUTES} minutes.' not in watchdog:
@@ -1086,6 +1086,29 @@ for required in (
 ):
     if required not in inspection_freshness_block:
         fail(f"Scheduled inspection freshness contract is missing: {required}")
+
+# The independent mirror remains an hourly, destination-scoped workflow and must be monitored.
+if "    - cron: '17 * * * *'" not in mirror:
+    fail("The private mirror workflow must retain its hourly schedule.")
+if 'MAX_MIRROR_AGE_MINUTES: "90"' not in watchdog:
+    fail("The watchdog must enforce a 90-minute freshness budget for the hourly private mirror.")
+mirror_watchdog_step = watchdog.find("name: Verify scheduled mirror delivery and result")
+if mirror_watchdog_step < 0 or "if: always()" not in watchdog[mirror_watchdog_step:]:
+    fail("Scheduled mirror delivery/result verification must run even when another watchdog check fails.")
+mirror_watchdog_block = watchdog[mirror_watchdog_step:]
+for required in (
+    '"repos/${GITHUB_REPOSITORY}/actions/workflows/mirror-locally-uncensored.yml"',
+    '"repos/${GITHUB_REPOSITORY}/actions/workflows/mirror-locally-uncensored.yml/runs"',
+    "event=schedule",
+    "MAX_MIRROR_AGE_MINUTES",
+    "age_minutes > MAX_MIRROR_AGE_MINUTES",
+    '[[ "$conclusion" != "success" ]]',
+    '::error::Scheduled mirror run #${run_id} failed with conclusion=${conclusion}.',
+    '::warning::Read-only API smoke succeeded; latest scheduled mirror run concluded',
+):
+    if required not in mirror_watchdog_block:
+        fail(f"Scheduled mirror watchdog contract is missing: {required}")
+
 
 # GitHub Actions secret names cannot contain hyphens; keep the mirror credential valid and isolated.
 if "MIRROR_TOKEN: ${{ secrets.PLATFORM_INFRA_MIRROR_TOKEN }}" not in mirror:
