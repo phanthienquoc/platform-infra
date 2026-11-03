@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo_root="$(cd "$(dirname "\${BASH_SOURCE[0]}")/../.." && pwd)"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 validator="$repo_root/scripts/verify-auth-publisher-run.sh"
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
@@ -15,7 +15,7 @@ for arg in "$@"; do
     *Authorization*) echo "Unexpected cross-repository credential passed to public Auth API." >&2; exit 4 ;;
   esac
 done
-url="\${!#}"
+url="${!#}"
 if [[ "$url" == "$MOCK_JOBS_API_URL" ]]; then
   cat "$MOCK_JOBS_RESPONSE_FILE"
   exit 0
@@ -25,7 +25,7 @@ count=0
 [[ -f "$MOCK_CURL_COUNT_FILE" ]] && count="$(cat "$MOCK_CURL_COUNT_FILE")"
 count=$((count + 1))
 printf '%s' "$count" > "$MOCK_CURL_COUNT_FILE"
-if [[ "$count" -eq 1 && -n "\${MOCK_CURL_FIRST_RESPONSE:-}" ]]; then
+if [[ "$count" -eq 1 && -n "${MOCK_CURL_FIRST_RESPONSE:-}" ]]; then
   cat "$MOCK_CURL_FIRST_RESPONSE"
 else
   cat "$MOCK_CURL_RESPONSE_FILE"
@@ -42,13 +42,13 @@ sample_api_url="https://api.github.com/repos/$sample_repo/actions/runs/$sample_r
 make_run() {
   local status="$1"
   local conclusion="$2"
-  local repo="\${3:-$sample_repo}"
-  local head_repo="\${4:-$sample_repo}"
-  local path="\${5:-$sample_path}"
-  local event="\${6:-workflow_dispatch}"
-  local branch="\${7:-master}"
-  local sha="\${8:-$sample_sha}"
-  local id="\${9:-$sample_run_id}"
+  local repo="${3:-$sample_repo}"
+  local head_repo="${4:-$sample_repo}"
+  local path="${5:-$sample_path}"
+  local event="${6:-workflow_dispatch}"
+  local branch="${7:-master}"
+  local sha="${8:-$sample_sha}"
+  local id="${9:-$sample_run_id}"
   jq -n \
     --arg id "$id" \
     --arg repo "$repo" \
@@ -83,7 +83,7 @@ run_validator() {
     MOCK_CURL_RESPONSE_FILE="$tmp_dir/response.json" \
     MOCK_JOBS_API_URL="$sample_api_url/jobs?per_page=100" \
     MOCK_JOBS_RESPONSE_FILE="$tmp_dir/jobs.json" \
-    MOCK_CURL_FIRST_RESPONSE="\${MOCK_CURL_FIRST_RESPONSE:-}" \
+    MOCK_CURL_FIRST_RESPONSE="${MOCK_CURL_FIRST_RESPONSE:-}" \
     MOCK_API_URL="$sample_api_url" \
     SOURCE_RUN_ID="$sample_run_id" \
     SOURCE_WORKFLOW_PATH="$sample_path" \
