@@ -3843,3 +3843,11 @@ All TCE market-scan cron expressions remain unchanged. Production remains NOT HE
 5. Schedule a VPS maintenance window before applying pending OS/containerd/Docker updates.
 
 `reconcile-vps.yml` remains the sole production apply authority. App repositories own CI/build and immutable GHCR publication; Platform Infra owns production manifests, shared pull credentials, GitOps promotion/reconciliation and rollout/health verification. No production image promotion, manifest change, database migration, replica change, Stock Pod restart, host maintenance or schedule change occurred. TCE market-scan schedule unchanged.
+
+
+## 2026-11-03 — TCE WF-12 exact-second contract merged
+
+- TCE Dashboard PR [#1019](https://github.com/phanthienquoc/TCE-dashboard/pull/1019) was re-read at exact head `3c8ca1bdc735723b5641fcb4c388b33afe4810da`; PR state was OPEN, base `master`, mergeable=true. All exact-head checks were completed successfully: WF-05 PR #41608302212 SUCCESS, WF-02 PR #41608302260 SUCCESS; same-SHA push runs WF-05 #41608285390 and WF-02 #41608285388 also SUCCESS. Squash merge used the expected head SHA and completed as `53227425841b6283bebad3bc5c93d509bd8a316a`.
+- TCE master is now `53227425841b6283bebad3bc5c93d509bd8a316a`. Post-merge WF-01 #41608676328, WF-02 #41608676350, WF-05 #41608676512 and WF-12 push smoke #41608676616 were still in progress/queued at the last query; record their conclusions only after completion.
+- The merged WF-12 monitor compares `age_seconds > MAX_AGE_MINUTES * 60` and `queue_seconds > MAX_QUEUE_MINUTES * 60`. Validator regression cases cover exact 25m/15m and one second over. No cron expression changed; WF-06 remains `*/15 * * * *`, WF-12 remains `7,22,37,52 * * * *`, and the TCE market-scan schedule is unchanged.
+- This precision correction does not cure the underlying missing WF-06 schedule delivery: latest observed native WF-06 remains #41565175484 at 02:17:26Z, while WF-12 #41605106319 at 08:41:06Z correctly failed stale delivery (383m age, queue=0m). Its authenticated heartbeat and Platform receiver succeeded. Keep the public HTTP 200 assertions unchanged.
