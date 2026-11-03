@@ -57,7 +57,7 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
 
   case "$status" in
     completed)
-      [[ "$conclusion" == "success" ]] || fail "Auth publisher run #$SOURCE_RUN_ID completed with conclusion=\${conclusion:-missing}; refusing GitOps promotion."
+      [[ "$conclusion" == "success" ]] || fail "Auth publisher run #$SOURCE_RUN_ID completed with conclusion=${conclusion:-missing}; refusing GitOps promotion."
 
       jobs_api_url="$API_URL/jobs?per_page=100"
       if ! jobs_response="$(curl --fail-with-body --silent --show-error \
@@ -108,7 +108,7 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
       sleep "$RETRY_DELAY_SECONDS"
       ;;
     *)
-      fail "Auth publisher run #$SOURCE_RUN_ID has unexpected status=\${status:-missing}."
+      fail "Auth publisher run #$SOURCE_RUN_ID has unexpected status=${status:-missing}."
       ;;
   esac
 done
