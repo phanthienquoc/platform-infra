@@ -674,6 +674,7 @@ jobs:
           APP: ${{ steps.input.outputs.app }}
           COMPONENT: ${{ steps.input.outputs.component }}
           TAG: ${{ steps.input.outputs.tag }}
+          SOURCE_COMMIT: ${{ steps.input.outputs.source_commit }}
           BACKEND_DIGEST: ${{ steps.input.outputs.backend_digest }}
           ADMIN_DIGEST: ${{ steps.input.outputs.admin_digest }}
           FRONTEND_DIGEST: ${{ steps.input.outputs.frontend_digest }}
@@ -689,7 +690,25 @@ jobs:
 
           if [[ "$APP" == "auth-service" && "$COMPONENT" == "auth" && -n "$AUTH_DIGEST" ]]; then
             IMAGE="ghcr.io/phanthienquoc/auth-service/auth"
-            GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_EXPECTED_DIGEST="$AUTH_DIGEST" GHCR_IMAGE_REFERENCE="$IMAGE:$TAG" bash scripts/validate-ghcr-image-reference.sh
+            [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || {
+              echo "::error::Auth source commit must be a full 40-character SHA before registry verification."
+              exit 1
+            }
+            [[ "$TAG" =~ ^prod-v[0-9]+[.][0-9]+[.][0-9]+-[0-9a-f]{40}$ ]] || {
+              echo "::error::Auth versioned release tag must use prod-v<semver>-<full-sha>."
+              exit 1
+            }
+            [[ "${TAG##*-}" == "$SOURCE_COMMIT" ]] || {
+              echo "::error::Auth versioned release tag must end with the exact source commit SHA."
+              exit 1
+            }
+            # Independently correlate both producer tags to the dispatch digest.
+            # The source SHA tag and versioned release tag must be immutable aliases
+            # of the same ARM64 image before the digest-only GitOps reference is accepted.
+            for immutable_tag in "$SOURCE_COMMIT" "$TAG"; do
+              echo "Verifying Auth immutable tag-to-digest mapping: $IMAGE:$immutable_tag -> $AUTH_DIGEST"
+              GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_EXPECTED_DIGEST="$AUTH_DIGEST" GHCR_IMAGE_REFERENCE="$IMAGE:$immutable_tag" bash scripts/validate-ghcr-image-reference.sh
+            done
             GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$IMAGE@$AUTH_DIGEST" bash scripts/validate-ghcr-image-reference.sh
           elif [[ "$APP" == "stockdividend" && "$COMPONENT" == "release" ]] || [[ "$APP" == "media-generation" && "$COMPONENT" == "release" ]]; then
             if [[ "$APP" == "stockdividend" ]]; then
