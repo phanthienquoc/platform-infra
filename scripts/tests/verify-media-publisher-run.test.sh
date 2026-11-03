@@ -16,6 +16,10 @@ for arg in "$@"; do
   esac
 done
 url="${!#}"
+if [[ "$url" == "$MOCK_JOBS_API_URL" ]]; then
+  cat "$MOCK_JOBS_RESPONSE_FILE"
+  exit 0
+fi
 [[ "$url" == "$MOCK_API_URL" ]] || exit 5
 count=0
 [[ -f "$MOCK_CURL_COUNT_FILE" ]] && count="$(cat "$MOCK_CURL_COUNT_FILE")"
@@ -58,11 +62,41 @@ make_run() {
     '{id:($id|tonumber),repository:{full_name:$repo},head_repository:{full_name:$head_repo},path:$path,event:$event,head_branch:$branch,head_sha:$sha,status:$status,conclusion:$conclusion}'
 }
 
+make_jobs() {
+  jq -n '{
+    jobs: [
+      {name:"Require master for production release",status:"completed",conclusion:"success"},
+      {name:"Resolve production image tag",status:"completed",conclusion:"success"},
+      {name:"Build frontend (native ARM64)",status:"completed",conclusion:"success",steps:[
+        {name:"Verify native architecture",conclusion:"success"},
+        {name:"Build frontend image",conclusion:"success"},
+        {name:"Verify frontend architecture",conclusion:"success"},
+        {name:"Export and validate frontend image",conclusion:"success"}
+      ]},
+      {name:"Build backend (native ARM64)",status:"completed",conclusion:"success",steps:[
+        {name:"Validate backend inputs",conclusion:"success"},
+        {name:"Verify native architecture",conclusion:"success"},
+        {name:"Build backend image",conclusion:"success"},
+        {name:"Verify backend architecture",conclusion:"success"},
+        {name:"Export and validate backend image",conclusion:"success"}
+      ]},
+      {name:"Publish immutable images and promote platform-infra",status:"completed",conclusion:"success",steps:[
+        {name:"Load and validate exact release images",conclusion:"success"},
+        {name:"Publish exact release images",conclusion:"success"},
+        {name:"Verify immutable registry digests and ARM64 manifests",conclusion:"success"},
+        {name:"Notify platform-infra",conclusion:"success"}
+      ]}
+    ]
+  }'
+}
+
 run_validator() {
   rm -f "$tmp_dir/count"
   PATH="$tmp_dir/bin:$PATH" \
     MOCK_CURL_COUNT_FILE="$tmp_dir/count" \
     MOCK_CURL_RESPONSE_FILE="$tmp_dir/response.json" \
+    MOCK_JOBS_API_URL="$sample_api_url/jobs?per_page=100" \
+    MOCK_JOBS_RESPONSE_FILE="$tmp_dir/jobs.json" \
     MOCK_CURL_FIRST_RESPONSE="${MOCK_CURL_FIRST_RESPONSE:-}" \
     MOCK_API_URL="$sample_api_url" \
     SOURCE_RUN_ID="$sample_run_id" \
@@ -82,6 +116,8 @@ expect_failure() {
     exit 1
   fi
 }
+
+make_jobs > "$tmp_dir/jobs.json"
 
 # A publisher still in progress must be polled until successful completion.
 make_run in_progress "" > "$tmp_dir/in-progress.json"
@@ -111,6 +147,24 @@ make_run completed success "$sample_repo" "$sample_repo" "$sample_path" push mas
 expect_failure "SHA mismatch"
 make_run completed failure > "$tmp_dir/response.json"
 expect_failure "failed publisher conclusion"
+
+# A successful run must still prove both native ARM64 builds and the exact digest/dispatch steps.
+make_jobs > "$tmp_dir/jobs.json"
+jq '(.jobs[] | select(.name == "Publish immutable images and promote platform-infra") | .steps[] | select(.name == "Verify immutable registry digests and ARM64 manifests")).conclusion = "failure"' "$tmp_dir/jobs.json" > "$tmp_dir/jobs-invalid.json"
+mv "$tmp_dir/jobs-invalid.json" "$tmp_dir/jobs.json"
+expect_failure "immutable GHCR digest verification failed"
+
+make_jobs > "$tmp_dir/jobs.json"
+jq '(.jobs[] | select(.name == "Build backend (native ARM64)")).conclusion = "failure"' "$tmp_dir/jobs.json" > "$tmp_dir/jobs-invalid.json"
+mv "$tmp_dir/jobs-invalid.json" "$tmp_dir/jobs.json"
+expect_failure "backend ARM64 build failed"
+
+make_jobs > "$tmp_dir/jobs.json"
+jq 'del(.jobs[] | select(.name == "Publish immutable images and promote platform-infra"))' "$tmp_dir/jobs.json" > "$tmp_dir/jobs-invalid.json"
+mv "$tmp_dir/jobs-invalid.json" "$tmp_dir/jobs.json"
+expect_failure "missing Platform publication/dispatch job"
+
+make_jobs > "$tmp_dir/jobs.json"
 
 # Invalid payload values must fail before any public API request.
 if PATH="$tmp_dir/bin:$PATH" MOCK_CURL_COUNT_FILE="$tmp_dir/count" MOCK_CURL_RESPONSE_FILE="$tmp_dir/response.json" \
