@@ -12,6 +12,7 @@ run-name: >-
     branches: [master]
     paths:
       - "apps/**"
+      - "!apps/**/*.md"
       - "platform/**"
       - "environments/prod/**"
       - "scripts/**"
