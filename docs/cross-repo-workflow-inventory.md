@@ -2078,3 +2078,12 @@ No production manifest, image, credential, database, replica, release flag, depl
 - The production verifier already rejects any required job not completed-success, any required step without success, and missing/duplicate matching evidence. This change closes a regression-test gap; it does not change runtime acceptance behavior.
 - Required validation: `validate-github-actions` and `validate-manifests` on the exact PR head, followed by post-merge validation. Do not claim merged until exact-head checks and merge SHA are confirmed.
 - No workflow, publisher, payload, GitOps manifest, credential, release gate, deployment authority or schedule changed. TCE market-scan schedule unchanged.
+
+
+## 2026-11-03 19:03 ICT / 12:03 UTC — Media provenance regression suite merged and reconciliation rechecked
+
+- Platform PR [#1140](https://github.com/phanthienquoc/platform-infra/pull/1140) merged at `4510198f12d0dc7296252a8cb357d91a02fe26e0`. Exact-head `validate-github-actions` #41632044387 and `validate-manifests` #41632044570 passed; post-merge #41632121961 and #41632121933 passed.
+- `scripts/tests/verify-media-publisher-run.test.sh` now explicitly rejects a skipped production release-gate job, a skipped `Notify platform-infra` step, and duplicate required publication jobs. The verifier already failed closed for these outcomes; PR #1140 adds executable regression coverage.
+- Push recovery #41632121999 dispatched the sole production authority, reconciliation #41632142164. Shared GHCR preflight passed; `ghcr-pull` remained unchanged; Auth runtime Secret was provisioned/verified with values suppressed. GitOps drift was false and manifest apply skipped.
+- Reconciliation's independent lanes: Media, MicroFE, TCE and Auth SUCCESS; Keycloak SKIPPED; StockDividend FAILURE due Admin/Backend `12d63b4` ImagePullBackOff / no ARM64 manifest. Permanent Stock image-pull failures suppressed rollout restart. No image promotion or manifest mutation.
+- Native schedule evidence remains stale/failed; dispatch and workflow_run fallbacks are not native schedule ticks. Preserve CI, security, manual, release, backup and scheduled workflows. `reconcile-vps.yml` remains the only production apply authority. TCE market-scan schedule unchanged.
