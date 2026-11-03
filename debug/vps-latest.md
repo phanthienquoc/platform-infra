@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-11-03T16:29:24+00:00
+Generated: 2026-11-03T17:49:35+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,14 +11,14 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.5Gi       2.9Gi        81Mi        17Gi        19Gi
+Mem:            23Gi       3.6Gi       2.8Gi        82Mi        17Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   25G   21G  55% /
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   25G   21G  55% /
 disk_pressure: normal (55%)
- 16:29:24 up 186 days,  2:19,  0 users,  load average: 0.08, 0.12, 0.15
+ 17:49:35 up 186 days,  3:40,  0 users,  load average: 0.19, 0.17, 0.20
 
 ### Top disk consumers (best-effort, runner-readable paths)
 4.0K	/var/lib/docker
@@ -44,7 +44,7 @@ disk_pressure: normal (55%)
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
 1057701 /opt/media-actions-runner/bin/Runner.Listener run --startuptype service
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-1499964 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+1570312 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
   actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-media-generation.media-generation-k3s-01)
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service           loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
@@ -63,13 +63,16 @@ Build Cache     31        0         519.4MB   154.4MB
 ## Updates
 Listing...
 apparmor/jammy-updates 3.0.4-2ubuntu2.5 arm64 [upgradable from: 3.0.4-2ubuntu2.4]
+bind9-dnsutils/jammy-security 1:9.18.39-0ubuntu0.22.04.8 arm64 [upgradable from: 1:9.18.39-0ubuntu0.22.04.7]
+bind9-host/jammy-security 1:9.18.39-0ubuntu0.22.04.8 arm64 [upgradable from: 1:9.18.39-0ubuntu0.22.04.7]
+bind9-libs/jammy-security 1:9.18.39-0ubuntu0.22.04.8 arm64 [upgradable from: 1:9.18.39-0ubuntu0.22.04.7]
 cloud-init/jammy-updates 26.1-0ubuntu1~22.04.1 all [upgradable from: 25.2-0ubuntu1~22.04.1]
 containerd.io/jammy 2.4.2-3~ubuntu.22.04~jammy arm64 [upgradable from: 2.2.1-1~ubuntu.22.04~jammy]
 docker-buildx-plugin/jammy 0.38.1-1~ubuntu.22.04~jammy arm64 [upgradable from: 0.30.1-1~ubuntu.22.04~jammy]
 docker-ce-cli/jammy 5:29.9.2-1~ubuntu.22.04~jammy arm64 [upgradable from: 5:29.1.3-1~ubuntu.22.04~jammy]
 docker-ce-rootless-extras/jammy 5:29.9.2-1~ubuntu.22.04~jammy arm64 [upgradable from: 5:29.1.3-1~ubuntu.22.04~jammy]
 docker-ce/jammy 5:29.9.2-1~ubuntu.22.04~jammy arm64 [upgradable from: 5:29.1.3-1~ubuntu.22.04~jammy]
-docker-compose-plugin/jammy 5.6.1-1~ubuntu.22.04~jammy arm64 [upgradable from: 5.0.1-1~ubuntu.22.04~jammy]
+docker-compose-plugin/jammy 5.7.0-1~ubuntu.22.04~jammy arm64 [upgradable from: 5.0.1-1~ubuntu.22.04~jammy]
 fwupd/jammy-updates 2.0.20-1ubuntu2~22.04.2 arm64 [upgradable from: 1.7.9-1~22.04.3]
 iproute2/jammy-updates 5.15.0-1ubuntu2.2 arm64 [upgradable from: 5.15.0-1ubuntu2]
 landscape-common/jammy-updates 23.02-0ubuntu1~22.04.7 arm64 [upgradable from: 23.02-0ubuntu1~22.04.6]
@@ -80,6 +83,7 @@ libjcat1/jammy-updates 0.2.3-1~ubuntu0.22.04.1 arm64 [upgradable from: 0.1.9-1]
 libk5crypto3/jammy-updates 1.19.2-2ubuntu0.10 arm64 [upgradable from: 1.19.2-2ubuntu0.8]
 libldap-2.5-0/jammy-updates 2.5.20+dfsg-0ubuntu0.22.04.1 arm64 [upgradable from: 2.5.19+dfsg-0ubuntu0.22.04.1]
 libldap-common/jammy-updates 2.5.20+dfsg-0ubuntu0.22.04.1 all [upgradable from: 2.5.19+dfsg-0ubuntu0.22.04.1]
+libmspack0/jammy-security 0.10.1-2ubuntu0.1 arm64 [upgradable from: 0.10.1-2build2]
 libnetplan0/jammy-updates 0.107.1-3ubuntu0.22.04.5 arm64 [upgradable from: 0.106.1-7ubuntu0.22.04.4]
 libnftables1/jammy-updates 1.0.2-1ubuntu3.1 arm64 [upgradable from: 1.0.2-1ubuntu3]
 libopeniscsiusr/jammy-updates 2.1.5-1ubuntu1.3 arm64 [upgradable from: 2.1.5-1ubuntu1.1]
@@ -131,15 +135,15 @@ kube-system        local-path-provisioner-58d557dc48-jbhhp     1/1     Running  
 kube-system        metrics-server-6dc596dfb8-s2bzm             1/1     Running            0             73d     10.42.0.4     tce-k3s-01   <none>           <none>
 kube-system        svclb-traefik-859779c1-7bwx2                2/2     Running            0             73d     10.42.0.7     tce-k3s-01   <none>           <none>
 kube-system        traefik-59b7647586-gml84                    1/1     Running            0             73d     10.42.0.8     tce-k3s-01   <none>           <none>
-media-prod         media-generation-665d86ff54-4664l           1/1     Running            0             2d12h   10.42.0.155   tce-k3s-01   <none>           <none>
-media-prod         media-generation-frontend-58d8bbc67-lwhhf   1/1     Running            0             2d12h   10.42.0.154   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-shell-7b44b44dfb-ln4sw              1/1     Running            0             2d14h   10.42.0.153   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-ws-5bc979dd77-txd28                 1/1     Running            0             2d14h   10.42.0.152   tce-k3s-01   <none>           <none>
+media-prod         media-generation-665d86ff54-4664l           1/1     Running            0             2d13h   10.42.0.155   tce-k3s-01   <none>           <none>
+media-prod         media-generation-frontend-58d8bbc67-lwhhf   1/1     Running            0             2d13h   10.42.0.154   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-shell-7b44b44dfb-ln4sw              1/1     Running            0             2d15h   10.42.0.153   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-ws-5bc979dd77-txd28                 1/1     Running            0             2d15h   10.42.0.152   tce-k3s-01   <none>           <none>
 microfe-platform   nats-7bc8d9f768-q682m                       1/1     Running            0             25d     10.42.0.178   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-5864bcb497-6b6hm                0/1     ImagePullBackOff   0             41h     10.42.0.182   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-59cddb87b7-qgkjr                0/1     ImagePullBackOff   0             41h     10.42.0.180   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-5864bcb497-6b6hm                0/1     ImagePullBackOff   0             42h     10.42.0.182   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-59cddb87b7-qgkjr                0/1     ImagePullBackOff   0             43h     10.42.0.180   tce-k3s-01   <none>           <none>
 stock-prod         stock-backend-57ccb8ff6-d25jq               1/1     Running            0             45d     10.42.0.55    tce-k3s-01   <none>           <none>
-stock-prod         stock-backend-6bc874575d-xcg2j              0/1     ImagePullBackOff   0             41h     10.42.0.183   tce-k3s-01   <none>           <none>
+stock-prod         stock-backend-6bc874575d-xcg2j              0/1     ImagePullBackOff   0             42h     10.42.0.183   tce-k3s-01   <none>           <none>
 stock-prod         stock-frontend-79c57845df-z747s             1/1     Running            0             45d     10.42.0.56    tce-k3s-01   <none>           <none>
 
 ### Pod imageID evidence
@@ -173,7 +177,7 @@ kube-system        local-path-provisioner      1/1     1            1           
 kube-system        metrics-server              1/1     1            1           73d
 kube-system        traefik                     1/1     1            1           73d
 media-prod         media-generation            1/1     1            1           34d
-media-prod         media-generation-frontend   1/1     1            1           33d
+media-prod         media-generation-frontend   1/1     1            1           34d
 microfe-platform   keycloak                    0/0     0            0           18d
 microfe-platform   microfe-auth                0/0     0            0           28d
 microfe-platform   microfe-shell               1/1     1            1           28d
@@ -209,11 +213,11 @@ ghcr.io/phanthienquoc/auth-service/auth:prod-v1.0.0-ceb2688	ghcr.io/phanthienquo
 ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-58f80a8	ghcr.io/phanthienquoc/media-generation/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d	sha256:9ab2f390fba17564cdffb00b1f300a093d6d615fedd4a53f027e8598cb20ed24	false	87947792
 ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-58f80a8	ghcr.io/phanthienquoc/media-generation/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a	sha256:03138627646b3a17cfafb2a7f01bf02aa5c22f78b63bf07d768db95f0b8c67f8	false	77140058
 	ghcr.io/phanthienquoc/microfe-shell@sha256:40715628ad7572654ce35dab0835aa8b875d1bf9a20e9a13d257a173feac17ec	sha256:e4577fe7033fba879827b7e4df656e13434d7a70757a3400a8909cab95e55206	false	25830438
+	ghcr.io/phanthienquoc/microfe-shell@sha256:ae64acc032ce13d046ab78c9628b5b0b308f812b67ddfab7503d91e5a3ed8dcd	sha256:d6d34a138c9fb485abe5e70cf0b084e2d8cf482474be71ba0397819b2697f059	false	25830437
 	ghcr.io/phanthienquoc/microfe-ws@sha256:416bc16ade0becf398b0554571f6813985c55dffaf742042a7edef10ca2ea16d	sha256:a26e88e61c4420c79b2f23d6ca68b0b67880a3423cb773c48094ac77fc72aa99	false	65079739
+	ghcr.io/phanthienquoc/microfe-ws@sha256:92e6799bed0dcbeedc1c05575b6416e6e16d27beeab627b21cf1cc34b70ee631	sha256:20bce89a7a7eb9d16ebca87519e5c3e914d89d513db6747a27a9096aa73ba8c2	false	64949303
 ghcr.io/phanthienquoc/stockdividend/backend:23b2878		sha256:bcf5f7b1b660b5b93cd9d9f4f041db7e9166c89b084412fa4f66e8e4d9a43ad1	false	14420347
 ghcr.io/phanthienquoc/stockdividend/user:23b2878		sha256:bca44dd31869a4874a795c6e6ace51f9362731770f3ac9ca1ee8f3e608d6bf99	false	66238963
-	ghcr.io/phanthienquoc/microfe-shell@sha256:ae64acc032ce13d046ab78c9628b5b0b308f812b67ddfab7503d91e5a3ed8dcd	sha256:d6d34a138c9fb485abe5e70cf0b084e2d8cf482474be71ba0397819b2697f059	false	25830437
-	ghcr.io/phanthienquoc/microfe-ws@sha256:92e6799bed0dcbeedc1c05575b6416e6e16d27beeab627b21cf1cc34b70ee631	sha256:20bce89a7a7eb9d16ebca87519e5c3e914d89d513db6747a27a9096aa73ba8c2	false	64949303
 ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-48e3842	ghcr.io/phanthienquoc/tce-dashboard/service@sha256:214aee66dadaeb5e5acd7ac03da6d7461f68571ed2ba8ef3ef73384f7f26300a	sha256:924df0921bfdb32ebd65d6d4b05823d3dc80357f9ab4289d9eea991a96778931	false	457622464
 ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-e75e338	ghcr.io/phanthienquoc/tce-dashboard/service@sha256:1dc9d8c2136598a748bbb0aafc615a71aeb3f2a5099c335859536212723f35f0	sha256:d16e4e0a92f04c63bd4777c1b3f967c70da62df6c2f50c796b8daef0cc2e7e09	false	457620530
 ghcr.io/phanthienquoc/tce-dashboard/web:prod-v0.1.0-e75e338	ghcr.io/phanthienquoc/tce-dashboard/web@sha256:0416f01f3cce813ead623403ee354d7e5ff4160d1bfc24c020cfd9387da3ec27	sha256:3f6764e54b88e7d88ceca48e9386d4f5601332efad7b3777610453353edd5e6e	false	75833971
@@ -271,7 +275,7 @@ kube-system        kube-dns                    ClusterIP      10.43.0.10      <n
 kube-system        metrics-server              ClusterIP      10.43.120.41    <none>        443/TCP                      73d
 kube-system        traefik                     LoadBalancer   10.43.213.239   10.0.0.120    80:30225/TCP,443:30415/TCP   73d
 media-prod         media-generation            ClusterIP      10.43.252.95    <none>        3000/TCP                     34d
-media-prod         media-generation-frontend   ClusterIP      10.43.48.52     <none>        80/TCP                       33d
+media-prod         media-generation-frontend   ClusterIP      10.43.48.52     <none>        80/TCP                       34d
 microfe-platform   keycloak                    ClusterIP      10.43.142.95    <none>        80/TCP,9000/TCP              18d
 microfe-platform   microfe-auth                ClusterIP      10.43.83.168    <none>        80/TCP                       28d
 microfe-platform   microfe-shell               ClusterIP      10.43.6.23      <none>        80/TCP                       28d
@@ -286,7 +290,7 @@ tce-prod           tce-service                 ClusterIP      10.43.189.227   <n
 NAMESPACE          NAME                               CLASS     HOSTS                                                          ADDRESS      PORTS     AGE
 media-prod         media                              traefik   media.mrcute.space                                             10.0.0.120   80, 443   34d
 microfe-platform   keycloak-public                    traefik   sso.mrcute.space                                               10.0.0.120   80, 443   18d
-microfe-platform   keycloak-registration-rate-limit   traefik   sso.mrcute.space                                               10.0.0.120   80, 443   6d12h
+microfe-platform   keycloak-registration-rate-limit   traefik   sso.mrcute.space                                               10.0.0.120   80, 443   6d13h
 microfe-platform   microfe-public                     traefik   app.mrcute.space,auth.mrcute.space,ws.mrcute.space             10.0.0.120   80, 443   28d
 stock-prod         stock                              traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   41d
 stock-prod         stock-ingress                      traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   45d
@@ -304,5 +308,5 @@ keycloak   0/0     0            0           18d   keycloak     quay.io/keycloak/
 error: timed out waiting for the condition
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.143355s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.048976s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.143042s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049415s remote_ip=132.226.175.206
