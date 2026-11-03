@@ -2222,3 +2222,15 @@ No production manifest, image, credential, database, replica, release flag, depl
 - **Media:** CI #41617592783 PASS; paired digest publisher E2E pending. **Auth:** master CI #41670642852 PASS; manual publisher not observed; PR #75/#76 remain gated.
 - **K3s:** inspection #41687934519 at 17:49:35Z; node Ready/ARM64, K3s v1.36.3+k3s1, disk 55%, ~19 GiB RAM available, runner services active. Media/MicroFE/NATS healthy; Stock Admin/new Backend ImagePullBackOff; old Backend/legacy Frontend running; TCE/Auth/Keycloak 0/0; OIDC probes 503. Host maintenance pending.
 - **Authority:** app repositories own CI/build/immutable GHCR publication; Platform owns production manifests/shared pull credentials/GitOps promotion/reconciliation/rollout/health. `reconcile-vps.yml` is the sole apply authority. Preserve CI/security/manual/release/scheduled workflows; no direct SSH/Compose authority. TCE market-scan schedule unchanged.
+
+
+## Post-checkpoint workflow contract update — 2026-11-04 02:05 ICT
+
+- Platform master: `5c9db4d61967b40cc598128cf792b67c884f37d1`.
+- PR #1159 merged: StockDividend receiver now verifies each full-SHA Admin/Backend tag maps to the exact payload digest, then separately validates the digest reference for ARM64. Exact-head runs #41700394033 and #41700393711 PASS.
+- PR #1160 merged: readiness tracker/workflow inventory refreshed; docs-only manifest validation #41700759192 PASS.
+- PR #1161 merged: Media receiver now verifies each `prod-v<semver>-<full-sha>` frontend/backend tag maps to the exact payload digest, then validates the digest reference for ARM64. Exact-head runs #41700938762 and #41700938766 PASS.
+- Open PRs: Platform #544/#541/#539 draft; Auth #75 ready/#76 draft; no TCE/StockDividend/Media PRs.
+- Publisher status has not changed: StockDividend #41563856933 build/publish PASS but handoff/dispatch SKIPPED under release hold; Media #41617592783 CI PASS but paired-digest publisher E2E pending; Auth #41670642852 CI PASS but manual publisher not run.
+- Native schedule and K3s evidence remain those in the 01:04 checkpoint; no newer schedule run listing is available from the connected run-reader surface. Do not infer native cadence from dispatch/recovery events.
+- Production ownership remains unchanged: application repos build/test/publish immutable images; Platform owns production manifests, shared pull credentials, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the sole apply authority. Preserve useful CI/security/manual/release/scheduled jobs; no SSH/Compose authority; TCE market-scan schedule unchanged.
