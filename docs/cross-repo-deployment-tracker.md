@@ -4421,3 +4421,40 @@ No production image promotion, GitOps manifest apply, database migration, shared
 - Owner actions remain: configure `PLATFORM_INFRA_MIRROR_TOKEN` with destination-only Contents:write on `phanthienquoc/locally-uncensored-private`; verify `STOCKDIVIDEND_ACTIONS_READ_TOKEN` in the protected production Environment and explicitly authorize the paired Admin/Backend ARM64 release; complete Auth/Supabase review; authorize Media/Auth publisher E2E when ready.
 
 No production image promotion, GitOps manifest apply, database migration, shared GHCR pull-secret mutation, desired replica change, pod restart or host reboot occurred. `reconcile-vps.yml` remains the sole production apply authority. Preserve all useful CI/test/security/manual/release/scheduled workflows and all existing cron expressions. TCE market-scan schedule unchanged.
+
+
+
+## Runtime verification update — 2026-11-04 05:00 ICT / 2026-11-03 22:00 UTC
+
+### Repository heads, PRs and current-head validation
+- Platform Infra master: `ad0dbab3ea1b03eaddbf36062122d544e3a083f4`; TCE Dashboard: `53227425841b6283bebad3bc5c93d509bd8a316a`; StockDividend: `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media Generation: `e4c7d8990aafc7d837e918c9caf39722d623de7c`; Authentication: `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
+- Open PRs: Platform #544/#541/#539 (draft); Authentication #75 (ready) and #76 (draft); no open PRs in TCE Dashboard, StockDividend or Media Generation.
+- Platform PR #1171 merged by squash at exact head `5c93095a063cf6ca367bc5acca56d50e59280b46`, producing master `ad0dbab3ea1b03eaddbf36062122d544e3a083f4`.
+- Exact-head `validate-github-actions` #41727710816 and `validate-manifests` #41727710823 both completed SUCCESS. The first intermediate validation attempt #41727419130 failed ShellCheck on a combined Auth tag conditional; the condition was split into explicit guards and the final exact-head validation passed. The connected run reader did not expose post-merge run/status contexts for the merge SHA; do not claim post-merge CI completion.
+
+### Auth immutable receiver contract — implemented
+- Platform's `.github/workflows/gitops-image-promotion.yml` now validates the Auth dispatch's full 40-character `source_commit` and requires the versioned `prod-v<semver>-<full-sha>` tag to end with that exact SHA.
+- Before accepting the digest-only GitOps image reference, the receiver independently resolves both `ghcr.io/phanthienquoc/auth-service/auth:$SOURCE_COMMIT` and `...:$TAG` with `GHCR_EXPECTED_DIGEST=$AUTH_DIGEST`, then validates `...@sha256:...` and linux/arm64. This removes the previous asymmetry where Platform trusted the producer's own full-SHA-tag check and independently checked only the versioned tag.
+- `scripts/validate-workflow-contracts.py` enforces both immutable tag checks and their ordering before digest-only acceptance. Exact-head lint/ops regression/workflow contract and manifest validations passed.
+- No Auth publisher workflow was dispatched, no image was published, and no Auth digest was promoted. Auth production/Supabase integration gates remain separate.
+
+### Native schedule evidence — do not infer from dispatch
+- Latest verifiable Platform native schedule runs: watchdog #41715283880 (2026-11-03 20:44:07 UTC, FAILURE due stale inspection/recovery/mirror evidence); reconciliation #41714763176 (20:40:42 UTC, FAILURE only in StockDividend workload health); recovery #41703551669 (19:28:20 UTC, SUCCESS); mirror #41687882647 (17:49:06 UTC, FAILURE because `PLATFORM_INFRA_MIRROR_TOKEN` is missing); inspection #41674687948 (16:29:16 UTC, SUCCESS).
+- Watchdog #41715283880 measured inspection #41674687948 at 254m versus the 75m budget and recovery #41703551669 at 75m versus the 45m budget. Its queue verifier passed; the evidence indicates stale/missing native schedule delivery, not a self-hosted runner queue backlog.
+- Mirror #41687882647 failed at the explicit non-empty-secret guard before clone/push. Keep the credential blocked until the owner supplies destination-only `Contents: write` for `phanthienquoc/locally-uncensored-private`.
+- Latest verifiable TCE native schedules remain WF-06 #41685253743 FAILURE (four endpoints returned HTTP 503 instead of 200), WF-12 #41676393032 FAILURE (freshness), and WF-07 #41652078419 SUCCESS. Do not count workflow_dispatch, workflow_run, repository_dispatch or an inspection PR as native schedule proof. No repository-wide run listing is available from the connected run-reader surface.
+- Preserve every cron expression and the TCE market-scan schedule unchanged.
+
+### Fresh read-only K3s/VPS inspection
+- Inspection PR #1170 merged at `ea35db493c11b80eaa091225945b6a379904deab`; its snapshot was generated at 2026-11-03T21:56:36Z. The snapshot is read-only; its trigger type was not established, so it is not counted as native schedule evidence.
+- Node `tce-k3s-01` is Ready/ARM64, Ubuntu 22.04.5, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2, Docker 29.1.3, disk 55%, approximately 19 GiB available RAM. Runner services are active; host `restart_required: yes` because OS/containerd/Docker updates are pending.
+- Media backend/frontend and MicroFE Shell/WS/NATS are 1/1. Stock Admin's two Pods and the new Stock Backend Pod remain `ImagePullBackOff` on tag `12d63b4`, with `no match for platform in manifest` on the ARM64 node. The legacy Backend and Frontend remain 1/1 on `23b2878`.
+- TCE frontend/service, Auth runtime and Keycloak remain 0/0. Public OIDC discovery returns HTTP 503. Do not report these intentionally stopped services as healthy.
+
+### App publishers, blockers and exact next actions
+- StockDividend CI #41563856934 and publisher #41563856933 previously passed, including ARM64 build/publish, but production release enablement was false and Platform handoff/dispatch were SKIPPED. Production Admin/Backend remain on the non-pullable `12d63b4` tag. Owner must verify `STOCKDIVIDEND_ACTIONS_READ_TOKEN` in the protected production Environment and explicitly authorize a paired Admin/Backend ARM64 release before promotion.
+- Media CI #41617592783 passed; paired-digest publisher E2E remains unverified. Auth CI #41670642852 passed; no manual Auth publisher run/dispatch was observed. Keep Auth PR #75 behind authoritative Supabase integration/migration side-effect review and #76 draft for migration provenance/drift review.
+- Owner must configure `PLATFORM_INFRA_MIRROR_TOKEN` with destination-only `Contents: write` for the private mirror. Do not substitute GHCR or app-release tokens.
+- Arrange a maintenance window before OS/containerd/Docker upgrades or reboot. No maintenance was performed.
+
+No production image promotion, GitOps manifest apply, database migration, shared GHCR pull-secret mutation, desired replica change, Pod restart or host reboot occurred in this checkpoint. `reconcile-vps.yml` remains the sole production apply authority; no SSH/Compose deployment authority was added. TCE market-scan schedule unchanged.
