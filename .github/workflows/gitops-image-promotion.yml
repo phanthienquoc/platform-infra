@@ -687,9 +687,15 @@ jobs:
               component="${pair%%:*}"
               digest="${pair#*:}"
               [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::Invalid $component digest"; exit 1; }
-              image="ghcr.io/phanthienquoc/$APP/$component@$digest"
-              echo "Validating $image"
-              GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$image" bash scripts/validate-ghcr-image-reference.sh
+              image="ghcr.io/phanthienquoc/$APP/$component"
+              if [[ "$APP" == "stockdividend" ]]; then
+                tag_reference="$image:$TAG"
+                echo "Verifying StockDividend full-SHA tag-to-digest mapping: $tag_reference -> $digest"
+                GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_EXPECTED_DIGEST="$digest" GHCR_IMAGE_REFERENCE="$tag_reference" bash scripts/validate-ghcr-image-reference.sh
+              fi
+              digest_reference="$image@$digest"
+              echo "Validating exact immutable digest $digest_reference"
+              GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$digest_reference" bash scripts/validate-ghcr-image-reference.sh
             done
           else
             if [ "$APP" = "media-generation" ]; then

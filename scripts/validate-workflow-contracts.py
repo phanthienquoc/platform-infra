@@ -383,6 +383,24 @@ if "stockdividend/release" not in promotion or "digest: {digest}" not in promoti
 if "EVENT_COMMIT" not in promotion or "EVENT_BACKEND_DIGEST" not in promotion or "EVENT_ADMIN_DIGEST" not in promotion:
     fail("StockDividend promotion must resolve source commit and both image digests from the dispatch payload.")
 
+# Independently bind each StockDividend full-SHA registry tag to the digest in
+# the cross-repository dispatch payload before accepting the digest reference.
+stockdividend_ghcr_validation = promotion.split(
+    "      - name: Validate promoted image in GHCR", 1
+)[1].split("      - name: Update Kustomize image tag or paired digests", 1)[0]
+for required in (
+    'if [[ "$APP" == "stockdividend" ]]; then',
+    'tag_reference="$image:$TAG"',
+    'GHCR_EXPECTED_DIGEST="$digest"',
+    'GHCR_IMAGE_REFERENCE="$tag_reference"',
+    'GHCR_IMAGE_REFERENCE="$digest_reference"',
+    "bash scripts/validate-ghcr-image-reference.sh",
+):
+    if required not in stockdividend_ghcr_validation:
+        fail(f"StockDividend GHCR promotion must verify full-SHA tag-to-digest correlation: {required}")
+if stockdividend_ghcr_validation.index('GHCR_IMAGE_REFERENCE="$tag_reference"') > stockdividend_ghcr_validation.index('GHCR_IMAGE_REFERENCE="$digest_reference"'):
+    fail("StockDividend full-SHA tag-to-digest verification must run before digest-reference validation.")
+
 # StockDividend reconciliation dispatch must wait for the exact paired digests on master.
 stockdividend_readiness = promotion.split("      - name: Determine release readiness", 1)[1].split(
     "      - name: Trigger VPS reconciliation", 1
