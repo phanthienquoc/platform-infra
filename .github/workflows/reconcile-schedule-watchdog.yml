@@ -524,7 +524,7 @@ jobs:
             echo "::error::GitHub returned a future timestamp for scheduled recovery run #${run_id}: ${created_at}"
             exit 1
           fi
-          if (( age_minutes > MAX_RECOVERY_AGE_MINUTES )); then
+          if (( age_seconds > MAX_RECOVERY_AGE_MINUTES * 60 )); then
             if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
               echo "::warning::Read-only API smoke succeeded; scheduled recovery controller is stale."
               echo "::warning::Latest run #${run_id}: created=${created_at}, age=${age_minutes}m."
