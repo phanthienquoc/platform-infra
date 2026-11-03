@@ -22,6 +22,8 @@ run-name: >-
       - "!scripts/validate-workflow-contracts.py"
       - "!scripts/validate-network-boundaries.sh"
       - "!scripts/validate-auth-gitops-contract.py"
+      # Scope-resolver edits affect future push routing, not current cluster state.
+      - "!scripts/resolve-push-deployment-scope.sh"
   workflow_dispatch:
     inputs:
       source_run_id:
