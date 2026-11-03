@@ -1090,7 +1090,7 @@ if 'MAX_INSPECTION_AGE_MINUTES: "75"' not in watchdog:
 inspection_freshness_step = watchdog.find("name: Verify scheduled inspection delivery")
 if inspection_freshness_step < 0 or "if: always()" not in watchdog[inspection_freshness_step:]:
     fail("Scheduled inspection freshness must be checked even when reconciliation freshness fails.")
-inspection_freshness_block = watchdog[inspection_freshness_step:]
+inspection_freshness_block = watchdog[inspection_freshness_step:].split("\\n      - name:", 1)[0]
 for required in (
     '"repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml"',
     '"repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs"',
@@ -1099,11 +1099,29 @@ for required in (
     'age_seconds > MAX_INSPECTION_AGE_MINUTES * 60',
     '::error::No scheduled inspect-vps run within ${MAX_INSPECTION_AGE_MINUTES} minutes.',
     '::warning::Read-only API smoke succeeded; scheduled inspect-vps is stale.',
+    'if [[ "$status" != "completed" ]]',
+    'if [[ "$conclusion" != "success" ]]',
+    '::error::Scheduled inspect-vps run #${run_id} failed with conclusion=${conclusion}.',
+    '::warning::Read-only API smoke succeeded; latest scheduled inspect-vps run concluded',
 ):
     if required not in inspection_freshness_block:
         fail(f"Scheduled inspection freshness contract is missing: {required}")
 if "age_minutes > MAX_INSPECTION_AGE_MINUTES" in inspection_freshness_block:
     fail("Scheduled inspection freshness must not truncate elapsed time to whole minutes.")
+
+# A recent failed/cancelled inspection is not fresh evidence and must trigger the read-only fallback.
+inspection_recovery_step = recovery.find("name: Recover missing inspection delivery")
+if inspection_recovery_step < 0:
+    fail("Recovery controller must retain its read-only inspection fallback.")
+inspection_recovery_block = recovery[inspection_recovery_step:].split("\\n      - name:", 1)[0]
+for required in (
+    'conclusion="$(jq -r \' .conclusion // "unknown"\' <<< "$latest")"',
+    'if [[ "$conclusion" != "success" ]]; then',
+    "MAX_INSPECTION_AGE_MINUTES * 60 + 1",
+    "dispatching a read-only fallback.",
+):
+    if required not in inspection_recovery_block:
+        fail(f"Inspection recovery success contract is missing: {required}")
 
 # The independent mirror remains an hourly, destination-scoped workflow and must be monitored.
 if "    - cron: '17 * * * *'" not in mirror:
