@@ -537,7 +537,11 @@ jobs:
             SOURCE_HEAD_SHA="$EVENT_SOURCE_HEAD_SHA"
             [[ "$APP" == "media-generation" ]] || { echo "::error::Media digest event has invalid app"; exit 1; }
             [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Media source commit must be a full 40-character SHA"; exit 1; }
-            [[ "$TAG" =~ ^prod-v[0-9]+[.][0-9]+[.][0-9]+-[0-9a-f]{40}$ && "${TAG##*-}" == "$SOURCE_COMMIT" ]] || {
+            [[ "$TAG" =~ ^prod-v[0-9]+[.][0-9]+[.][0-9]+-[0-9a-f]{40}$ ]] || {
+              echo "::error::Auth versioned release tag must use prod-v<semver>-<full-sha>."
+              exit 1
+            }
+            [[ "${TAG##*-}" == "$SOURCE_COMMIT" ]] || {
               echo "::error::Auth versioned release tag must end with the exact source commit SHA."
               exit 1
             }
