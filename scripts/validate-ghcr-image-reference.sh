@@ -78,7 +78,7 @@ if ! manifest_json="$(curl --dump-header "$headers_file" --fail --silent --show-
 fi
 
 if [[ -n "$GHCR_EXPECTED_DIGEST" ]]; then
-  actual_digest="$(awk 'tolower($1) == "docker-content-digest:" { gsub("\r", "", $2); digest=$2 } END { print digest }' "$headers_file")"
+  actual_digest="$(awk 'tolower($1) == "docker-content-digest:" { print $2 }' "$headers_file" | tr -d '\r' | tail -n1)"
   if [[ "$actual_digest" != "$GHCR_EXPECTED_DIGEST" ]]; then
     echo "::error::GHCR tag $GHCR_IMAGE_REFERENCE resolved to ${actual_digest:-no Docker-Content-Digest header}, expected $GHCR_EXPECTED_DIGEST." >&2
     exit 1
