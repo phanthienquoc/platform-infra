@@ -389,7 +389,7 @@ stockdividend_ghcr_validation = promotion.split(
     "      - name: Validate promoted image in GHCR", 1
 )[1].split("      - name: Update Kustomize image tag or paired digests", 1)[0]
 for required in (
-    'if [[ "$APP" == "stockdividend" ]]; then',
+    'if [[ "$APP" == "stockdividend" || "$APP" == "media-generation" ]]; then',
     'tag_reference="$image:$TAG"',
     'GHCR_EXPECTED_DIGEST="$digest"',
     'GHCR_IMAGE_REFERENCE="$tag_reference"',
@@ -513,6 +513,23 @@ if '[[ "$BACKEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]' not in promotion:
     fail("Media backend digest must be validated before GHCR access.")
 if '[[ "$TAG" == *-"$SOURCE_COMMIT" ]]' not in promotion:
     fail("Media release label must correlate to its full source commit SHA.")
+
+# Media's full-SHA release tag must independently resolve to each digest in
+# the paired dispatch payload before the digest-only reference is accepted.
+media_ghcr_validation = promotion.split(
+    "      - name: Validate promoted image in GHCR", 1
+)[1].split("      - name: Update Kustomize image tag or paired digests", 1)[0]
+for required in (
+    'if [[ "$APP" == "stockdividend" || "$APP" == "media-generation" ]]; then',
+    'tag_reference="$image:$TAG"',
+    'GHCR_EXPECTED_DIGEST="$digest"',
+    'GHCR_IMAGE_REFERENCE="$tag_reference"',
+    'GHCR_IMAGE_REFERENCE="$digest_reference"',
+):
+    if required not in media_ghcr_validation:
+        fail(f"Media GHCR promotion must verify full-SHA release tag-to-digest correlation: {required}")
+if media_ghcr_validation.index('GHCR_IMAGE_REFERENCE="$tag_reference"') > media_ghcr_validation.index('GHCR_IMAGE_REFERENCE="$digest_reference"'):
+    fail("Media release tag-to-digest verification must run before digest-reference validation.")
 for required in (
     "EVENT_SOURCE_RUN_ID",
     "EVENT_SOURCE_WORKFLOW_PATH",
