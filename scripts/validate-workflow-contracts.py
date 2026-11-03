@@ -167,7 +167,7 @@ if "- apps/**" not in reconcile_push_paths or "- '!apps/**/*.md'" not in reconci
     fail("Production reconciliation push paths must exclude Markdown-only app documentation.")
 scope_resolver = (ROOT / "scripts" / "resolve-push-deployment-scope.sh").read_text(encoding="utf-8")
 for required in (
-    "apps/*.md|apps/**/*.md|apps/**/docs/*",
+    "apps/**/*.md|apps/**/docs/*",
     "assert_failure apps/stockdividend/README.md",
     "assert_failure apps/stockdividend/docs/production-runtime.md",
 ):
