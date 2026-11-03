@@ -453,9 +453,22 @@ for required in (
     "Build and push Admin",
     "Build and push Backend",
     "Verify immutable image manifests for ARM64",
+    'verify_step_success "Require master for production image publication" "Reject non-master release refs"',
+    'verify_step_success "Gate production GitOps promotion" "Require explicit production promotion enablement"',
+    'verify_step_success "Validate Platform Infra release handoff before promotion" "Require token and verify Platform Infra repository access"',
+    'verify_step_success "Dispatch atomic StockDividend digest promotion" "Dispatch atomic StockDividend digest promotion"',
 ):
     if required not in stockdividend_provenance:
         fail(f"StockDividend source-run verifier is missing required metadata guard: {required}")
+stockdividend_provenance_tests = (ROOT / "scripts" / "tests" / "verify-stockdividend-publisher-run.test.sh").read_text(encoding="utf-8")
+for required in (
+    'expect_failure "master ref validation step skipped"',
+    'expect_failure "production release gate step skipped"',
+    'expect_failure "Platform Infra access verification step skipped"',
+    'expect_failure "atomic digest dispatch step skipped"',
+):
+    if required not in stockdividend_provenance_tests:
+        fail(f"StockDividend provenance tests are missing skipped-step regression: {required}")
 if "scripts/tests/verify-stockdividend-publisher-run.test.sh" not in (ROOT / ".github" / "workflows" / "validate-github-actions.yml").read_text(encoding="utf-8"):
     fail("StockDividend source-run provenance regression tests must run in validate-github-actions.")
 if "STOCKDIVIDEND_ACTIONS_READ_TOKEN" not in (ROOT / "docs" / "credentials.md").read_text(encoding="utf-8") or "STOCKDIVIDEND_ACTIONS_READ_TOKEN" not in (ROOT / "docs" / "credentials-key.md").read_text(encoding="utf-8"):

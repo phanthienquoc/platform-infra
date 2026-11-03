@@ -57,8 +57,12 @@ make_run() {
 make_jobs() {
   jq -n '{
     jobs: [
-      {name:"Require master for production image publication",status:"completed",conclusion:"success"},
-      {name:"Gate production GitOps promotion",status:"completed",conclusion:"success"},
+      {name:"Require master for production image publication",status:"completed",conclusion:"success",steps:[
+        {name:"Reject non-master release refs",conclusion:"success"}
+      ]},
+      {name:"Gate production GitOps promotion",status:"completed",conclusion:"success",steps:[
+        {name:"Require explicit production promotion enablement",conclusion:"success"}
+      ]},
       {name:"build-and-push",status:"completed",conclusion:"success",steps:[
         {name:"Verify native ARM64 runner",conclusion:"success"},
         {name:"Build and push Scraper",conclusion:"success"},
@@ -66,8 +70,12 @@ make_jobs() {
         {name:"Build and push Backend",conclusion:"success"},
         {name:"Verify immutable image manifests for ARM64",conclusion:"success"}
       ]},
-      {name:"Validate Platform Infra release handoff before promotion",status:"completed",conclusion:"success"},
-      {name:"Dispatch atomic StockDividend digest promotion",status:"completed",conclusion:"success"}
+      {name:"Validate Platform Infra release handoff before promotion",status:"completed",conclusion:"success",steps:[
+        {name:"Require token and verify Platform Infra repository access",conclusion:"success"}
+      ]},
+      {name:"Dispatch atomic StockDividend digest promotion",status:"completed",conclusion:"success",steps:[
+        {name:"Dispatch atomic StockDividend digest promotion",conclusion:"success"}
+      ]}
     ]
   }'
 }
@@ -126,6 +134,27 @@ make_run completed success "$sample_repo" "$sample_path" push master aaaaaaaaaaa
 expect_failure "SHA mismatch"
 make_run completed failure > "$tmp_dir/response.json"
 expect_failure "failed publisher conclusion"
+
+# A successful workflow conclusion is insufficient if any critical release-gate/handoff/dispatch step was skipped.
+make_jobs > "$tmp_dir/jobs.json"
+jq '(.jobs[] | select(.name == "Require master for production image publication") | .steps[] | select(.name == "Reject non-master release refs")).conclusion = "skipped"' "$tmp_dir/jobs.json" > "$tmp_dir/jobs-invalid.json"
+mv "$tmp_dir/jobs-invalid.json" "$tmp_dir/jobs.json"
+expect_failure "master ref validation step skipped"
+
+make_jobs > "$tmp_dir/jobs.json"
+jq '(.jobs[] | select(.name == "Gate production GitOps promotion") | .steps[] | select(.name == "Require explicit production promotion enablement")).conclusion = "skipped"' "$tmp_dir/jobs.json" > "$tmp_dir/jobs-invalid.json"
+mv "$tmp_dir/jobs-invalid.json" "$tmp_dir/jobs.json"
+expect_failure "production release gate step skipped"
+
+make_jobs > "$tmp_dir/jobs.json"
+jq '(.jobs[] | select(.name == "Validate Platform Infra release handoff before promotion") | .steps[] | select(.name == "Require token and verify Platform Infra repository access")).conclusion = "skipped"' "$tmp_dir/jobs.json" > "$tmp_dir/jobs-invalid.json"
+mv "$tmp_dir/jobs-invalid.json" "$tmp_dir/jobs.json"
+expect_failure "Platform Infra access verification step skipped"
+
+make_jobs > "$tmp_dir/jobs.json"
+jq '(.jobs[] | select(.name == "Dispatch atomic StockDividend digest promotion") | .steps[] | select(.name == "Dispatch atomic StockDividend digest promotion")).conclusion = "skipped"' "$tmp_dir/jobs.json" > "$tmp_dir/jobs-invalid.json"
+mv "$tmp_dir/jobs-invalid.json" "$tmp_dir/jobs.json"
+expect_failure "atomic digest dispatch step skipped"
 
 # A successful workflow conclusion is insufficient if any required publish/handoff job or step did not succeed.
 make_jobs > "$tmp_dir/jobs.json"
