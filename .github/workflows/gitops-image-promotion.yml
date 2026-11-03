@@ -537,22 +537,159 @@ jobs:
             SOURCE_HEAD_SHA="$EVENT_SOURCE_HEAD_SHA"
             [[ "$APP" == "media-generation" ]] || { echo "::error::Media digest event has invalid app"; exit 1; }
             [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Media source commit must be a full 40-character SHA"; exit 1; }
-            [[ "$TAG" =~ ^prod-v[0-9]+[.][0-9]+[.][0-9]+-[0-9a-f]{40}$ ]] || {
-              echo "::error::Auth versioned release tag must use prod-v<semver>-<full-sha>."
+            [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{40}$ ]] || { echo "::error::Media release must contain the full source SHA"; exit 1; }
+            [[ "$TAG" == *-"$SOURCE_COMMIT" ]] || { echo "::error::Media release tag does not match the source commit"; exit 1; }
+            [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]] || { echo "::error::Media source run ID must be numeric"; exit 1; }
+            [[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/wf-03-media-production-deploy.yml" ]] || { echo "::error::Media source workflow path is not approved"; exit 1; }
+            [[ "$SOURCE_EVENT" == "push" || "$SOURCE_EVENT" == "workflow_dispatch" ]] || { echo "::error::Media source event must be push or workflow_dispatch"; exit 1; }
+            [[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ && "$SOURCE_HEAD_SHA" == "$SOURCE_COMMIT" ]] || { echo "::error::Media source SHA must match the immutable image commit"; exit 1; }
+            [[ "$FRONTEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::Invalid Media frontend digest"; exit 1; }
+            [[ "$BACKEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::Invalid Media backend digest"; exit 1; }
+          elif [[ "$EVENT_ACTION" == "auth-image-published" ]]; then
+            APP="$EVENT_APP"
+            COMPONENT="$EVENT_COMPONENT"
+            TAG="$EVENT_TAG"
+            SOURCE_COMMIT="$EVENT_COMMIT"
+            AUTH_DIGEST="$EVENT_AUTH_DIGEST"
+            SOURCE_RUN_ID="$EVENT_SOURCE_RUN_ID"
+            SOURCE_WORKFLOW_PATH="$EVENT_SOURCE_WORKFLOW_PATH"
+            SOURCE_EVENT="$EVENT_SOURCE_EVENT"
+            SOURCE_HEAD_SHA="$EVENT_SOURCE_HEAD_SHA"
+            [[ "$APP" == "auth-service" && "$COMPONENT" == "auth" ]] || { echo "::error::Auth digest event target must be auth-service/auth"; exit 1; }
+            [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Auth source commit must be a full 40-character SHA"; exit 1; }
+            [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{40}$ && "$TAG" == *-"$SOURCE_COMMIT" ]] || { echo "::error::Auth release tag must contain the full source SHA"; exit 1; }
+            [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]] || { echo "::error::Auth source run ID must be numeric"; exit 1; }
+            [[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/release.yml" ]] || { echo "::error::Auth source workflow path is not approved"; exit 1; }
+            [[ "$SOURCE_EVENT" == "workflow_dispatch" ]] || { echo "::error::Auth production publisher must originate from workflow_dispatch"; exit 1; }
+            [[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ && "$SOURCE_HEAD_SHA" == "$SOURCE_COMMIT" ]] || { echo "::error::Auth source SHA must match the immutable image commit"; exit 1; }
+            [[ "$AUTH_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::Invalid Auth image digest"; exit 1; }
+          else
+            APP="${EVENT_APP:-$INPUT_APP}"
+            COMPONENT="${EVENT_COMPONENT:-$INPUT_COMPONENT}"
+            TAG="${EVENT_TAG:-$INPUT_TAG}"
+          fi
+
+          case "$APP/$COMPONENT" in
+            stockdividend/backend|stockdividend/admin|stockdividend/release|tce-dashboard/web|tce-dashboard/service|media-generation/backend|media-generation/frontend|media-generation/release|auth-service/auth) ;;
+            *)
+              echo "::error::Unsupported image target: $APP/$COMPONENT"
               exit 1
-            }
-            [[ "${TAG##*-}" == "$SOURCE_COMMIT" ]] || {
-              echo "::error::Auth versioned release tag must end with the exact source commit SHA."
-              exit 1
-            }
-            # Independently correlate both producer tags to the dispatch digest.
-            # The source SHA tag and versioned release tag must be immutable aliases
-            # of the same ARM64 image before the digest-only GitOps reference is accepted.
-            for immutable_tag in "$SOURCE_COMMIT" "$TAG"; do
-              echo "Verifying Auth immutable tag-to-digest mapping: $IMAGE:$immutable_tag -> $AUTH_DIGEST"
-              GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_EXPECTED_DIGEST="$AUTH_DIGEST" GHCR_IMAGE_REFERENCE="$IMAGE:$immutable_tag" bash scripts/validate-ghcr-image-reference.sh
-            done
-            done
+              ;;
+          esac
+
+          case "$APP" in
+            media-generation)
+              if [[ "$COMPONENT" == "release" ]]; then
+                [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{40}$ ]] || {
+                  echo "::error::Media digest promotion must use a full-SHA release tag"
+                  exit 1
+                }
+                [[ "$TAG" == *-"$SOURCE_COMMIT" ]] || {
+                  echo "::error::Media release tag must correlate to the full source commit"
+                  exit 1
+                }
+              else
+                [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}$ ]] || {
+                  echo "::error::media-generation tag must be prod-v<semver>-<git-sha>"
+                  exit 1
+                }
+              fi
+              ;;
+            tce-dashboard)
+              [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}$ ]] || {
+                echo "::error::TCE tag must be prod-v<semver>-<git-sha>"
+                exit 1
+              }
+              ;;
+            auth-service)
+              if [[ "$EVENT_ACTION" == "auth-image-published" ]]; then
+                [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{40}$ && "$TAG" == *-"$SOURCE_COMMIT" ]] || {
+                  echo "::error::Auth digest release must use a full source-SHA tag"
+                  exit 1
+                }
+              else
+                [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,40}$ ]] || {
+                  echo "::error::Auth manual tag must be prod-v<semver>-<git-sha>"
+                  exit 1
+                }
+              fi
+              ;;
+            stockdividend)
+              [[ "$TAG" =~ ^[0-9a-f]{40}$ ]] || {
+                echo "::error::StockDividend tag must be a full 40-character source commit SHA"
+                exit 1
+              }
+              ;;
+          esac
+
+          {
+            echo "app=$APP"
+            echo "component=$COMPONENT"
+            echo "tag=$TAG"
+            echo "backend_digest=$BACKEND_DIGEST"
+            echo "admin_digest=$ADMIN_DIGEST"
+            echo "frontend_digest=$FRONTEND_DIGEST"
+            echo "auth_digest=$AUTH_DIGEST"
+            echo "source_commit=$SOURCE_COMMIT"
+            echo "source_run_id=$SOURCE_RUN_ID"
+            echo "source_workflow_path=$SOURCE_WORKFLOW_PATH"
+            echo "source_event=$SOURCE_EVENT"
+            echo "source_head_sha=$SOURCE_HEAD_SHA"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Verify StockDividend publisher run provenance
+        if: ${{ github.event_name == 'repository_dispatch' && github.event.action == 'stockdividend-images-published' }}
+        env:
+          STOCKDIVIDEND_ACTIONS_READ_TOKEN: ${{ secrets.STOCKDIVIDEND_ACTIONS_READ_TOKEN }}
+          SOURCE_RUN_ID: ${{ steps.input.outputs.source_run_id }}
+          SOURCE_WORKFLOW_PATH: ${{ steps.input.outputs.source_workflow_path }}
+          SOURCE_EVENT: ${{ steps.input.outputs.source_event }}
+          SOURCE_HEAD_SHA: ${{ steps.input.outputs.source_head_sha }}
+          SOURCE_COMMIT: ${{ steps.input.outputs.source_commit }}
+        run: bash scripts/verify-stockdividend-publisher-run.sh
+
+      - name: Verify Media publisher run provenance
+        if: ${{ github.event_name == 'repository_dispatch' && github.event.action == 'media-images-published' }}
+        env:
+          SOURCE_RUN_ID: ${{ steps.input.outputs.source_run_id }}
+          SOURCE_WORKFLOW_PATH: ${{ steps.input.outputs.source_workflow_path }}
+          SOURCE_EVENT: ${{ steps.input.outputs.source_event }}
+          SOURCE_HEAD_SHA: ${{ steps.input.outputs.source_head_sha }}
+          SOURCE_COMMIT: ${{ steps.input.outputs.source_commit }}
+        run: bash scripts/verify-media-publisher-run.sh
+      - name: Verify Auth publisher run provenance
+        if: ${{ github.event_name == 'repository_dispatch' && github.event.action == 'auth-image-published' }}
+        env:
+          SOURCE_RUN_ID: ${{ steps.input.outputs.source_run_id }}
+          SOURCE_WORKFLOW_PATH: ${{ steps.input.outputs.source_workflow_path }}
+          SOURCE_EVENT: ${{ steps.input.outputs.source_event }}
+          SOURCE_HEAD_SHA: ${{ steps.input.outputs.source_head_sha }}
+          SOURCE_COMMIT: ${{ steps.input.outputs.source_commit }}
+        run: bash scripts/verify-auth-publisher-run.sh
+
+      - name: Validate promoted image in GHCR
+        env:
+          GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}
+          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+          APP: ${{ steps.input.outputs.app }}
+          COMPONENT: ${{ steps.input.outputs.component }}
+          TAG: ${{ steps.input.outputs.tag }}
+          BACKEND_DIGEST: ${{ steps.input.outputs.backend_digest }}
+          ADMIN_DIGEST: ${{ steps.input.outputs.admin_digest }}
+          FRONTEND_DIGEST: ${{ steps.input.outputs.frontend_digest }}
+          AUTH_DIGEST: ${{ steps.input.outputs.auth_digest }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$GHCR_USERNAME" || -z "$GHCR_TOKEN" ]]; then
+            echo "::error::Configure GHCR_READ_TOKEN with read:packages access to the promoted private images."
+            exit 1
+          fi
+          TARGET_APP="$APP" GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" bash scripts/validate-ghcr-pull-access.sh
+
+          if [[ "$APP" == "auth-service" && "$COMPONENT" == "auth" && -n "$AUTH_DIGEST" ]]; then
+            IMAGE="ghcr.io/phanthienquoc/auth-service/auth"
+            GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_EXPECTED_DIGEST="$AUTH_DIGEST" GHCR_IMAGE_REFERENCE="$IMAGE:$TAG" bash scripts/validate-ghcr-image-reference.sh
             GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$IMAGE@$AUTH_DIGEST" bash scripts/validate-ghcr-image-reference.sh
           elif [[ "$APP" == "stockdividend" && "$COMPONENT" == "release" ]] || [[ "$APP" == "media-generation" && "$COMPONENT" == "release" ]]; then
             if [[ "$APP" == "stockdividend" ]]; then
