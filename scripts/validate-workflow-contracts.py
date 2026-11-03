@@ -853,7 +853,7 @@ if 'TARGET_APP="$APP" GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" ba
 # Verify the exact tag/digest directly with a package-scoped Registry V2 bearer token instead.
 if "docker login ghcr.io" in promotion or "docker manifest inspect" in promotion:
     fail("Promotion must not depend on registry-wide Docker login for private GHCR reads.")
-if 'GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$image" bash scripts/validate-ghcr-image-reference.sh' not in promotion:
+if 'GHCR_IMAGE_REFERENCE="$image@$expected"' not in promotion or "bash scripts/validate-ghcr-image-reference.sh" not in promotion:
     fail("MicroFE promotion must verify each exact immutable image digest through Registry V2.")
 if 'GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$IMAGE" bash scripts/validate-ghcr-image-reference.sh' not in promotion:
     fail("Application promotion must verify the exact immutable tag through Registry V2.")
