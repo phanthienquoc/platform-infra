@@ -3456,3 +3456,10 @@ All TCE market-scan cron expressions remain unchanged. Production remains NOT HE
 - StockDividend publisher #41524676740 ARM64 digests remain verified: Scraper `sha256:83c989df5d156d0a70de4a268a0ce35b9313dda7b1d1170da97ccd8058dd2e9b`; Admin `sha256:d0d6f037c1d2801018a36921360bfee3852ee7d14e3b33ee2e0fd790dddf6ec1`; Backend `sha256:1f8d5a6161da3774578a6f9d2c1e04b4efd624a516e66ab941ebddaa964233a0`. Production still references `12d63b4`; release flag false/unset and explicit authorization absent.
 - Owner blockers: `PLATFORM_INFRA_MIRROR_TOKEN` (destination-only Contents:write for `phanthienquoc/locally-uncensored-private`); `STOCKDIVIDEND_ACTIONS_READ_TOKEN` (StockDividend-only Actions:read, presence unverified); explicit StockDividend production release authorization.
 - No production image/manifest change, database migration, desired replica change, Pod restart, image deletion, VPS reboot/upgrade or cron change. Auth runtime Secret was provisioned/verified and GHCR pull Secret confirmed unchanged. `reconcile-vps.yml` remains the sole production apply authority. TCE market-scan schedule unchanged.
+
+
+## 2026-11-03 07:07 ICT — latest watchdog and post-merge confirmation
+- PR #1104 merged at `b77a92030f0925dee95ef7600681250b2c6637ed`; post-merge `validate-manifests` #41550385614 SUCCESS. No recovery push or production reconciliation was triggered by the docs-only merge.
+- Latest native Platform watchdog is now #41550202827 (2026-11-03T00:04:44Z), FAILURE. It confirmed scheduled reconciliation #41549849545 was fresh (age 2m) and no deployment lane exceeded the 15-minute queue budget, but latest native scheduled inspection remains #41498271871 (created 2026-11-02T18:11:59Z, age 352m), beyond the 75-minute budget. Push inspection #41549730731 is fresh runtime evidence but is not a native schedule event.
+- Recovery #41550174709 SUCCESS; it verified reconciliation #41549849545 age 0m and inspection #41549730731 age 2m, so no duplicate fallback was dispatched. This confirms fallback delivery is working while native inspection cadence remains stale.
+- No cron changes or production mutation. TCE market-scan schedule unchanged.
