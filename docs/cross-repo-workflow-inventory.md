@@ -1922,3 +1922,12 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Platform receiver contract now pins the `stockdividend-images-published` event and each consumed `client_payload` field (app, commit, backend/admin digests, source run ID, source workflow path, source event, source head SHA), plus full-SHA/tag equality, approved publisher workflow/event and digest formats.
 - StockDividend sender contract self-test passed in master CI #41563856934. The publisher #41563856933 successfully verified ARM64 full-SHA digests, but the release gate output false; handoff validation and promotion dispatch jobs were skipped. Sender/receiver schema is statically validated; no runtime dispatch or promotion occurred.
 - Platform master #673f338 is current. Open PRs remain draft #544/#541/#539 and Auth #75/#76; no open TCE, StockDividend or Media PRs. Production release and migration gates remain closed.
+
+
+## Scheduled private mirror health and ownership
+
+- Platform Infra workflow mirror-locally-uncensored.yml remains an independent hourly mirror job at 17 * * * *. It mirrors refs/history to phanthienquoc/locally-uncensored-private; it is not a production deployment authority.
+- reconcile-schedule-watchdog.yml now checks the mirror workflow state, latest native event=schedule run, 90-minute freshness, and completed success conclusion through read-only GitHub Actions API calls.
+- Push-triggered post-merge smoke treats stale/missing/failed historical mirror evidence as warnings; scheduled/manual/fallback watchdog runs fail closed. workflow_dispatch and push runs never satisfy native schedule freshness.
+- The mirror job uses only PLATFORM_INFRA_MIRROR_TOKEN. Owner configuration: Platform Infra repository Actions secret (or organization secret scoped only to Platform Infra), destination repository restricted to phanthienquoc/locally-uncensored-private with Contents:write. Do not reuse GHCR or application release-handoff credentials.
+- Missing token remains an explicit failure, not a skipped/successful mirror. Latest confirmed native mirror run #41560381641 failed before clone/push because the secret was empty. The schedule remains enabled in YAML; token provisioning is an owner action.
