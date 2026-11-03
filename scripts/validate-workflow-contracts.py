@@ -29,6 +29,18 @@ lane_queue = (ROOT / "scripts" / "verify-reconcile-lane-queue.py").read_text(enc
 provision = read("provision-keycloak-tce-client.yml")
 cleanup = read("vps-image-cleanup.yml")
 
+# Manual reconciliation must be non-mutating unless an operator explicitly
+# selects apply. Scheduled, push and authenticated promotion events keep their
+# existing automatic apply behavior; this contract does not change cron cadence.
+manual_dispatch = reconcile.split("  workflow_dispatch:", 1)[1].split("  repository_dispatch:", 1)[0]
+if not re.search(
+    r"(?ms)^    mode:\\s*\\n        description:.*\\n        required: true\\n        default: plan\\n        type: choice\\s*$",
+    manual_dispatch,
+):
+    fail("Manual reconcile-vps dispatch must default to read-only plan; apply must be an explicit operator choice.")
+if "github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'repository_dispatch') && 'apply'" not in reconcile:
+    fail("Scheduled, push and authenticated GitOps reconciliation must retain their existing automatic apply mode.")
+
 # The promotion workflow defaults to read-only. Grant write scopes only to the
 # jobs that create/merge GitOps PRs or emit the final repository_dispatch.
 top_level_permissions = promotion.split("permissions:\n", 1)[1].split("\nconcurrency:", 1)[0].strip()
