@@ -97,7 +97,7 @@ def evaluate(
         if delay_seconds < 0:
             raise ValueError(f"deployment lane queue timestamp is in the future or inconsistent: {name}")
         delay_minutes = delay_seconds // 60
-        if delay_minutes > max_queue_minutes:
+        if delay_seconds > max_queue_minutes * 60:
             delayed.append(
                 (
                     int(job.get("id") or 0),
@@ -149,6 +149,24 @@ def self_test() -> int:
             {"jobs": [{"id": 2, "name": "Deploy lane — Media Generation", "status": "queued", "runner_id": 0, "created_at": "2026-11-02T16:50:00Z"}]},
             "schedule",
             0,
+        ),
+        (
+            "queued lane exactly at the 15-minute boundary is tolerated",
+            {"jobs": [{"id": 11, "name": "Deploy lane — TCE Dashboard", "status": "queued", "runner_id": 0, "created_at": "2026-11-02T16:45:00Z"}]},
+            "schedule",
+            0,
+        ),
+        (
+            "queued lane 15m01s beyond the budget fails scheduled enforcement",
+            {"jobs": [{"id": 12, "name": "Deploy lane — StockDividend", "status": "queued", "runner_id": 0, "created_at": "2026-11-02T16:44:59Z"}]},
+            "schedule",
+            1,
+        ),
+        (
+            "assigned lane 15m01s beyond the budget fails scheduled enforcement",
+            {"jobs": [{"id": 13, "name": "Deploy lane — Auth", "status": "completed", "runner_id": 7, "created_at": "2026-11-02T16:44:59Z", "started_at": "2026-11-02T17:00:00Z"}]},
+            "schedule",
+            1,
         ),
         (
             "queued lane beyond budget fails scheduled enforcement",

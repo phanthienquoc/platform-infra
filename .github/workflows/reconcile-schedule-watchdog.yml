@@ -136,7 +136,7 @@ jobs:
             echo "::error::GitHub returned a run_started_at earlier than created_at for scheduled reconcile #${run_id}."
             exit 1
           fi
-          if [[ "$queue_measurable" == true ]] && (( queue_minutes > MAX_QUEUE_MINUTES )); then
+          if [[ "$queue_measurable" == true ]] && (( queue_seconds > MAX_QUEUE_MINUTES * 60 )); then
             if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
               echo "::warning::Read-only API smoke succeeded; latest scheduled reconcile runner queue delay exceeds ${MAX_QUEUE_MINUTES}m."
               echo "::warning::Latest run #${run_id}: queue_wait=${queue_minutes}m status=${status}."
@@ -149,7 +149,7 @@ jobs:
               exit 1
             fi
           fi
-          if (( age_minutes > MAX_AGE_MINUTES )); then
+          if (( age_seconds > MAX_AGE_MINUTES * 60 )); then
             if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
               echo "::warning::Read-only API smoke succeeded; latest scheduled reconcile is stale."
               echo "::warning::Latest run #${run_id}: created=${created_at}, age=${age_minutes}m."
@@ -231,7 +231,7 @@ jobs:
             echo "::error::GitHub returned a future timestamp for scheduled mirror run #${run_id}: ${created_at}"
             exit 1
           fi
-          if (( age_minutes > MAX_MIRROR_AGE_MINUTES )); then
+          if (( age_seconds > MAX_MIRROR_AGE_MINUTES * 60 )); then
             if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
               echo "::warning::Read-only API smoke succeeded; scheduled mirror run is stale."
               echo "::warning::Latest run #${run_id}: created=${created_at}, age=${age_minutes}m."
@@ -324,7 +324,7 @@ jobs:
           fi
           echo "Latest scheduled inspect-vps run #${run_id}: queue_wait=${queue_minutes}m status=${status}."
           echo "created_at=${created_at} started_at=${started_at:-not-started}."
-          if (( queue_minutes > MAX_QUEUE_MINUTES )); then
+          if (( queue_seconds > MAX_QUEUE_MINUTES * 60 )); then
             echo "::warning::Self-hosted inspection runner queue delay exceeds ${MAX_QUEUE_MINUTES}m."
             echo "::warning::Run evidence: ${run_url}"
           fi
@@ -446,7 +446,7 @@ jobs:
             echo "::error::GitHub returned a future timestamp for scheduled inspect-vps run #${run_id}: ${created_at}"
             exit 1
           fi
-          if (( age_minutes > MAX_INSPECTION_AGE_MINUTES )); then
+          if (( age_seconds > MAX_INSPECTION_AGE_MINUTES * 60 )); then
             if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
               echo "::warning::Read-only API smoke succeeded; scheduled inspect-vps is stale."
               echo "::warning::Latest run #${run_id}: created=${created_at}, age=${age_minutes}m."

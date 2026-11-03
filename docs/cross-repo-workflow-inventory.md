@@ -1950,3 +1950,14 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Platform PR #1120 merged at \`cf24f57a04ce83fd320c6946dbceeb8ded1cf1c7\`; exact-head and post-merge workflow/manifests checks passed.
 - The recovery-controller watchdog now compares elapsed seconds against \`MAX_RECOVERY_AGE_MINUTES * 60\`; it no longer relies on integer-minute truncation.
 - Post-merge push smoke #41581747151 exercised the check and emitted a warning for native recovery run #41577147958 at 48 minutes old. Push smoke is diagnostic only; scheduled/manual/fallback watchdog runs still fail closed.
+
+
+
+## 2026-11-03 12:56 ICT / 05:56 UTC — exact-second watchdog and queue budget follow-up
+
+- Re-read all five master refs, open PRs, latest master workflow runs, and the deployment tracker. Current heads: Platform `93450578`, TCE `5d299bea`, StockDividend `50ba0dfb`, Media `763fdcd1`, Auth `1f39b18d`.
+- Platform open PRs #544/#541/#539 remain draft/non-mergeable; #1122 adds exact-second freshness and queue enforcement. Auth #75/#76 remain open behind integration/migration side-effect gates. No open TCE, StockDividend or Media PRs.
+- Native schedule history query found no Platform recovery schedule after #41577147958 (04:16:26Z). Latest native inspection #41558049412, reconciliation #41549849545, watchdog #41549659062 and mirror #41560381641 remain stale/failed; mirror failure is missing `PLATFORM_INFRA_MIRROR_TOKEN`. TCE latest native WF-06 #41565175484 and WF-12 #41562429843 failed; WF-07 backup/integration #41557498266/#41556575907 passed. Workflow_run #41565215560 is not a native schedule event.
+- Last K3s snapshot #41570085903 was manual, generated 03:05:43Z; now stale. Stock Admin/new Backend remain ImagePullBackOff on `12d63b4`; other last-observed Media/MicroFE/NATS workloads 1/1. No production promotion or restart.
+- PR #1122 fixes whole-minute truncation in reconciliation/inspection/mirror/recovery freshness checks, both inline runner-queue checks, and the Python deployment-lane queue verifier. Regression fixtures distinguish exactly 15:00 from 15:01 and cover assigned/unassigned queue paths. The contract validator now rejects legacy whole-minute threshold comparisons.
+- Preserve native schedules and all existing CI/security/manual/release/backup jobs. `reconcile-vps.yml` remains the only production apply authority. No cron, image, credential, manifest, database, replica, Pod or host mutation. TCE market-scan schedule unchanged.
