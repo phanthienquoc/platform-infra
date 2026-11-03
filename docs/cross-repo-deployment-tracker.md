@@ -4237,3 +4237,20 @@ Recovery #41650121040 and inspection #41650172429 are workflow_dispatch fallback
 6. Obtain a fresh read-only K3s inspection and schedule VPS/containerd maintenance separately.
 
 No TCE market-scan schedule, production image reference, production manifest, GHCR pull Secret, database object, desired replica or host package was changed by this checkpoint. `reconcile-vps.yml` remains the sole production apply authority; no SSH/Compose deployment authority was added.
+
+
+## Post-merge verification follow-up — 2026-11-03 23:10 ICT / 16:10 UTC
+
+### Auth PR #87 post-merge validation
+- Authentication master is `f978a3f378ee22d4630909c2d182275b21ac9e9a`; post-merge `auth-service-ci` run #41670642852 completed SUCCESS. The job passed package-lock refresh, `npm ci`, tests, typecheck, build, immutable release-contract validation, manual-only release pin validation and container build. This validates the merged producer code; it does not mean an image was published or promoted.
+- Platform Infra PR #1151 (tracker/inventory checkpoint) was squash-merged as `3a3a67651beb497ac6eed5a9ad8b1f365e246041`. Exact-head PR validation #41670920201 and post-merge validation #41671155770 both completed SUCCESS. Platform Infra master is now `3a3a67651beb497ac6eed5a9ad8b1f365e246041`.
+
+### Read-only Supabase audit after the Auth merge
+- The connected Supabase project `gtqovpusfyyvxpeezxlo` reports `ACTIVE_HEALTHY`, PostgreSQL `17.6.1.084`. Read-only migration listing contains 84 versions; latest remains `20261028020259` (`revoke_browser_access_from_tce_data_api`). No new migration version was observed after the Auth PR #87 merge.
+- PR #87 changed only `.github/workflows/ci.yml`, `.github/workflows/release.yml`, `README.md` and `scripts/validate-release-contract.mjs`; it contains no `supabase/migrations` changes. Its Supabase Preview check was SKIPPED. The Auth release workflow is manual-only and no release workflow run or image-published dispatch was observed.
+- Read-only unified-log query for 2026-11-03 16:00–16:10 UTC returned 49 edge-log and 2 PostgREST entries; no matching migration/deploy event was returned by the targeted query. This is limited evidence, not proof that the GitHub production integration did not run. Prior owner-provided evidence says Supabase GitHub integration has Deploy to production enabled on master; retain the integration/migration side-effect gate for PR #75 and future master merges until its behavior is authoritatively verified.
+- No Supabase write, migration apply, branch operation, project setting change or function deployment was performed during this audit.
+
+### Current authorization boundaries
+- Auth producer merge is CI-validated. Do not manually dispatch Auth release, promote its image, activate Auth replicas or apply database migrations without the corresponding explicit release/activation/migration authorization.
+- Auth PR #75 remains open because its own documented gate concerns the connected Supabase production integration and migration drift; PR #76 remains draft. Supabase Preview SKIPPED is not a successful database integration test.
