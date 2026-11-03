@@ -4340,3 +4340,15 @@ No production image promotion, GitOps manifest apply, database migration, shared
 - Arrange a maintenance window before host/containerd/Docker upgrades. Keep strict TCE HTTP 200 assertions and every cron expression unchanged.
 
 No production image promotion, GitOps manifest apply, database migration, shared GHCR pull-secret mutation, desired replica change, Pod restart or host reboot occurred in this run. `reconcile-vps.yml` remains the sole production apply authority; no SSH/Compose deployment authority was added. TCE market-scan schedule unchanged.
+
+
+## Post-checkpoint implementation update — 2026-11-04 02:05 ICT
+
+- Platform master advanced to `5c9db4d61967b40cc598128cf792b67c884f37d1`.
+- **StockDividend receiver contract:** PR #1159 merged as `38d2aba74cd35c95e85337c8b19c0a8309adb0bf`. Exact-head `validate-github-actions` #41700394033 and `validate-manifests` #41700393711 both completed SUCCESS. Platform now resolves the full-source-SHA tag for each Admin/Backend package and requires its Registry V2 `Docker-Content-Digest` to equal the dispatch digest before accepting the digest reference/ARM64 manifest.
+- **Readiness checkpoint:** PR #1160 merged as `a529f503174b86437db84c69cfed968c252b06eb`. Docs-only `validate-manifests` #41700759192 completed SUCCESS.
+- **Media receiver contract:** PR #1161 merged as `5c9db4d61967b40cc598128cf792b67c884f37d1`. Exact-head `validate-github-actions` #41700938762 and `validate-manifests` #41700938766 both completed SUCCESS. Platform now independently resolves both Media `prod-v<semver>-<full-sha>` tags and requires tag-to-digest equality before accepting the digest references/ARM64 manifests.
+- The shared GHCR exact-reference validator already tests mismatched tag digests; `validate-workflow-contracts.py` now protects the StockDividend/Media receiver calls and ordering. No application publisher was dispatched, and no digest was promoted.
+- Remaining state is unchanged: StockDividend release hold is closed until owner authorization and token verification; Mirror token is missing; Auth #75 remains behind Supabase integration/migration side-effect review; Media/Auth production publisher E2E remains unrun; TCE/Auth/Keycloak public endpoints/workloads remain stopped/unhealthy as recorded in the 01:04 evidence.
+- Current open PRs remain Platform #544/#541/#539 (draft) and Auth #75 (ready)/#76 (draft); no open PRs in TCE, StockDividend or Media.
+- No production manifest apply, database migration, shared pull-secret mutation, replica change, Pod restart, host maintenance or cron change occurred. `reconcile-vps.yml` remains the sole production apply authority. TCE market-scan schedule unchanged.
