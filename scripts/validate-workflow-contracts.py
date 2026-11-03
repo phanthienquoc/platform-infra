@@ -1261,6 +1261,28 @@ if not auth_digest_verifier.is_file():
 auth_digest_promoter = ROOT / "scripts" / "promote-auth-image-digest.py"
 if not auth_digest_promoter.is_file():
     fail("Auth digest promotion helper is missing.")
+auth_verifier_text = auth_digest_verifier.read_text(encoding="utf-8")
+for required in (
+    'verify_step_success "Verify auth service" "Run npm install --package-lock-only --ignore-scripts --no-audit --no-fund"',
+    'verify_step_success "Verify auth service" "Run npm ci --ignore-scripts --no-audit --no-fund"',
+    'verify_step_success "Verify auth service" "Run npm test"',
+    'verify_step_success "Verify auth service" "Run npm run typecheck"',
+    'verify_step_success "Verify auth service" "Run npm run build"',
+):
+    if required not in auth_verifier_text:
+        fail(f"Auth publisher provenance must require successful application verification step: {required}")
+auth_verifier_tests = ROOT / "scripts" / "tests" / "verify-auth-publisher-run.test.sh"
+if not auth_verifier_tests.is_file():
+    fail("Auth publisher provenance regression tests are missing.")
+for required in (
+    "Run npm install --package-lock-only --ignore-scripts --no-audit --no-fund",
+    "Run npm ci --ignore-scripts --no-audit --no-fund",
+    "Run npm test",
+    "Run npm run typecheck",
+    "Run npm run build",
+):
+    if required not in auth_verifier_tests.read_text(encoding="utf-8"):
+        fail(f"Auth publisher provenance tests must cover required verification step: {required}")
 for required in (
     "auth-image-published",
     "EVENT_AUTH_DIGEST: ${{ github.event.client_payload.auth_digest }}",
