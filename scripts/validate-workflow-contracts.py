@@ -521,6 +521,34 @@ if 'for digest in "$SHELL_DIGEST" "$WS_DIGEST"; do' not in promotion:
 if 'if [[ -n "${AUTH_DIGEST:-}" ]]; then' not in promotion:
     fail("Legacy auth_digest must be optional so Shell/WS-only releases remain valid.")
 
+microfe_provenance = (ROOT / "scripts" / "verify-tce-microfe-publisher-run.sh").read_text(encoding="utf-8")
+microfe_job = promotion.split("  promote-microfe-digests:", 1)[1].split("  fanout-tce-release:", 1)[0]
+provenance_step = microfe_job.find("name: Verify TCE MicroFE publisher provenance")
+ghcr_step = microfe_job.find("name: Validate promoted MicroFE images in GHCR")
+if provenance_step < 0 or ghcr_step < 0 or provenance_step > ghcr_step:
+    fail("MicroFE source-run provenance must be verified before GHCR digest promotion.")
+for required in (
+    "SOURCE_APP",
+    "SOURCE_REPOSITORY",
+    "SOURCE_RUN_ID",
+    "SOURCE_WORKFLOW_PATH",
+    "SOURCE_EVENT",
+    "SOURCE_HEAD_SHA",
+    "SOURCE_COMMIT",
+    "repository.full_name",
+    "head_repository.full_name",
+    "conclusion",
+    "Build and publish MicroFE WebSocket image",
+    "Build and publish MicroFE Shell image",
+    "Dispatch immutable image promotion and verify production",
+):
+    if required not in microfe_provenance:
+        fail(f"MicroFE source-run provenance verifier is missing required guard: {required}")
+if "Authorization" in microfe_provenance:
+    fail("Public TCE source-run verification must not introduce a cross-repository credential.")
+if "scripts/tests/verify-tce-microfe-publisher-run.test.sh" not in (ROOT / ".github" / "workflows" / "validate-github-actions.yml").read_text(encoding="utf-8"):
+    fail("MicroFE publisher provenance regression tests must run in validate-github-actions.")
+
 # Promotion renders the updated MicroFE Kustomization; do not rely on an ambient runner kubectl.
 microfe_job = promotion.split("  promote-microfe-digests:", 1)[1].split("  fanout-tce-release:", 1)[0]
 kubectl_install_index = microfe_job.find("name: Install pinned kubectl for MicroFE manifest render")
