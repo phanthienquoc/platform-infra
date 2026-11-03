@@ -2087,3 +2087,12 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Push recovery #41632121999 dispatched the sole production authority, reconciliation #41632142164. Shared GHCR preflight passed; `ghcr-pull` remained unchanged; Auth runtime Secret was provisioned/verified with values suppressed. GitOps drift was false and manifest apply skipped.
 - Reconciliation's independent lanes: Media, MicroFE, TCE and Auth SUCCESS; Keycloak SKIPPED; StockDividend FAILURE due Admin/Backend `12d63b4` ImagePullBackOff / no ARM64 manifest. Permanent Stock image-pull failures suppressed rollout restart. No image promotion or manifest mutation.
 - Native schedule evidence remains stale/failed; dispatch and workflow_run fallbacks are not native schedule ticks. Preserve CI, security, manual, release, backup and scheduled workflows. `reconcile-vps.yml` remains the only production apply authority. TCE market-scan schedule unchanged.
+
+
+## 2026-11-03 19:04 ICT / 12:04 UTC — latest K3s inspection evidence
+
+- Inspection #41632477654 is a successful \`workflow_dispatch\` fallback, not a native schedule tick. Inspection PR #1142 merged \`debug/vps-latest.md\` at \`343ce495045afd97c94e861da7f3991b22078510\`; post-merge manifest validation #41632633373 passed.
+- Node Ready/ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2, disk 55%, approximately 19 GiB available RAM, runner policy v14; host restart pending.
+- Media and MicroFE workloads 1/1; TCE/Auth/Keycloak 0/0; OIDC 503. Stock Admin and one new Backend Pod still fail on \`12d63b4\` (no ARM64 manifest); an older Backend and Frontend remain running on \`23b2878\`. Do not treat cached prior images as a new release.
+- Reconciliation #41632142164: no drift, no manifest apply, shared GHCR pull Secret unchanged, Auth runtime Secret provisioned/verified, Stock permanent pull failures not restarted. Media/MicroFE/TCE/Auth lanes passed; Stock lane failed; Keycloak skipped.
+- Keep native schedule evidence separate from fallback dispatches; preserve all existing schedules and workflows. TCE market-scan schedule unchanged.
