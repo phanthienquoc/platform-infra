@@ -25,6 +25,7 @@ promotion = read("gitops-image-promotion.yml")
 recovery = read("recover-stale-ops.yml")
 inspection = read("inspect-vps.yml")
 mirror = read("mirror-locally-uncensored.yml")
+lane_queue = (ROOT / "scripts" / "verify-reconcile-lane-queue.py").read_text(encoding="utf-8")
 provision = read("provision-keycloak-tce-client.yml")
 cleanup = read("vps-image-cleanup.yml")
 
@@ -1048,6 +1049,14 @@ inspection_queue_block = watchdog.split("name: Report latest scheduled inspectio
 for block, label in ((reconcile_queue_block, "reconciliation"), (inspection_queue_block, "inspection")):
     if "run_attempt" not in block or "if (( run_attempt > 1 )); then" not in block or "not measurable" not in block:
         fail(f"The watchdog must avoid inferring {label} runner queue time from a re-run attempt's original created_at.")
+    if "queue_seconds > MAX_QUEUE_MINUTES * 60" not in block:
+        fail(f"The watchdog must compare {label} runner queue budgets in exact seconds.")
+    if "queue_minutes > MAX_QUEUE_MINUTES" in block:
+        fail(f"The watchdog must not truncate {label} runner queue time to whole minutes.")
+if "delay_seconds > max_queue_minutes * 60" not in lane_queue:
+    fail("Deployment-lane queue validation must compare exact elapsed seconds against its budget.")
+if "delay_minutes > max_queue_minutes" in lane_queue:
+    fail("Deployment-lane queue validation must not truncate elapsed time to whole minutes.")
 if "inspect-vps.yml/runs" not in watchdog or "Report latest scheduled inspection runner queue delay" not in watchdog:
     fail("The watchdog must report inspection runner queue delay to distinguish runner backlog from missing schedule events.")
 inspection_queue_step = watchdog.find("name: Report latest scheduled inspection runner queue delay")
@@ -1063,6 +1072,13 @@ if 'actions/runs/${GITHUB_RUN_ID}' not in watchdog:
     fail("The watchdog must fetch its own run metadata as the GitHub API clock reference.")
 if "age_seconds=$((reference_epoch - created_epoch))" not in watchdog:
     fail("Scheduled reconciliation freshness must use the GitHub API reference timestamp.")
+reconcile_freshness_block = watchdog.split("name: Inspect latest scheduled reconcile run", 1)[1].split(
+    "name: Verify scheduled mirror delivery and result", 1
+)[0]
+if "age_seconds > MAX_AGE_MINUTES * 60" not in reconcile_freshness_block:
+    fail("Scheduled reconciliation freshness must compare exact elapsed seconds against its budget.")
+if "age_minutes > MAX_AGE_MINUTES" in reconcile_freshness_block:
+    fail("Scheduled reconciliation freshness must not truncate elapsed time to whole minutes.")
 if "WATCHDOG_REFERENCE_EPOCH=$reference_epoch" not in watchdog or "WATCHDOG_REFERENCE_EPOCH" not in watchdog:
     fail("The watchdog must pass its API reference timestamp to inspection queue diagnostics.")
 if "date -u +%s" in watchdog:
@@ -1080,7 +1096,7 @@ for required in (
     '"repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs"',
     'event=schedule',
     'age_seconds=$((reference_epoch - created_epoch))',
-    'age_minutes > MAX_INSPECTION_AGE_MINUTES',
+    'age_seconds > MAX_INSPECTION_AGE_MINUTES * 60',
     '::error::No scheduled inspect-vps run within ${MAX_INSPECTION_AGE_MINUTES} minutes.',
     '::warning::Read-only API smoke succeeded; scheduled inspect-vps is stale.',
 ):
@@ -1101,7 +1117,7 @@ for required in (
     '"repos/${GITHUB_REPOSITORY}/actions/workflows/mirror-locally-uncensored.yml/runs"',
     "event=schedule",
     "MAX_MIRROR_AGE_MINUTES",
-    "age_minutes > MAX_MIRROR_AGE_MINUTES",
+    "age_seconds > MAX_MIRROR_AGE_MINUTES * 60",
     '[[ "$conclusion" != "success" ]]',
     '::error::Scheduled mirror run #${run_id} failed with conclusion=${conclusion}.',
     '::warning::Read-only API smoke succeeded; latest scheduled mirror run concluded',
