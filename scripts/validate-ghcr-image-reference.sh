@@ -4,6 +4,7 @@ set -euo pipefail
 GHCR_USERNAME="${GHCR_USERNAME:-}"
 GHCR_TOKEN="${GHCR_TOKEN:-}"
 GHCR_IMAGE_REFERENCE="${GHCR_IMAGE_REFERENCE:-}"
+GHCR_EXPECTED_DIGEST="${GHCR_EXPECTED_DIGEST:-}"
 
 if [[ -z "$GHCR_USERNAME" || -z "$GHCR_TOKEN" || -z "$GHCR_IMAGE_REFERENCE" ]]; then
   echo "::error::GHCR_USERNAME, GHCR_TOKEN, and GHCR_IMAGE_REFERENCE are required for exact image verification." >&2
@@ -36,6 +37,11 @@ else
   fi
 fi
 
+if [[ -n "$GHCR_EXPECTED_DIGEST" && ! "$GHCR_EXPECTED_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+  echo "::error::GHCR_EXPECTED_DIGEST must use sha256:<64 lowercase hex>." >&2
+  exit 1
+fi
+
 if [[ ! "$package" =~ ^phanthienquoc/[a-z0-9._/-]+$ || "$package" == *..* || "$package" == *//* || "$package" == */ ]]; then
   echo "::error::GHCR package path is malformed." >&2
   exit 1
@@ -58,16 +64,26 @@ if ! bearer_token="$(printf '%s' "$token_response" | jq -er '.token // .access_t
   exit 1
 fi
 unset token_response
-trap 'unset bearer_token' EXIT
+headers_file="$(mktemp)"
+trap 'unset bearer_token; rm -f "$headers_file"' EXIT
 
 manifest_url="https://ghcr.io/v2/${package}/manifests/${selector}"
 manifest_json=""
-if ! manifest_json="$(curl --fail --silent --show-error --connect-timeout 10 --max-time 20 --retry 2 --retry-delay 1 \
+if ! manifest_json="$(curl --dump-header "$headers_file" --fail --silent --show-error --connect-timeout 10 --max-time 20 --retry 2 --retry-delay 1 \
   -H "Authorization: Bearer $bearer_token" \
   -H "Accept: application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.docker.distribution.manifest.v2+json" \
   "$manifest_url")"; then
   echo "::error::Cannot read exact GHCR manifest $GHCR_IMAGE_REFERENCE. Verify the immutable tag/digest exists and the PAT owner can pull this package; no GitOps mutation should proceed." >&2
   exit 1
+fi
+
+if [[ -n "$GHCR_EXPECTED_DIGEST" ]]; then
+  actual_digest="$(awk 'tolower($1) == "docker-content-digest:" { gsub("\r", "", $2); digest=$2 } END { print digest }' "$headers_file")"
+  if [[ "$actual_digest" != "$GHCR_EXPECTED_DIGEST" ]]; then
+    echo "::error::GHCR tag $GHCR_IMAGE_REFERENCE resolved to ${actual_digest:-no Docker-Content-Digest header}, expected $GHCR_EXPECTED_DIGEST." >&2
+    exit 1
+  fi
+  echo "Verified GHCR tag-to-digest mapping: $GHCR_IMAGE_REFERENCE -> $actual_digest."
 fi
 
 # Multi-platform indexes expose architecture on each manifest descriptor.
