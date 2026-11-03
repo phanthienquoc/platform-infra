@@ -2156,3 +2156,13 @@ No production manifest, image, credential, database, replica, release flag, depl
 
 - Missing destination-only mirror token; StockDividend Actions-read token verification and explicit paired ARM64 production release authorization; Auth Supabase integration side-effect approval; Media paired-digest publisher E2E; TCE/Auth/Keycloak activation and OIDC/DB/DNS prerequisites; host maintenance window.
 - Preserve all CI/test/security workflows and purposeful manual/release/scheduled/backup jobs. `reconcile-vps.yml` is the sole production apply authority; no direct SSH/Compose authority added.
+
+
+## 2026-11-03 22:01 ICT / 15:01 UTC — native schedule and publisher provenance delta
+
+- Current Platform master: `069be27a063decfc243dced2a42b032c9bc8f77b`; current TCE/Stock/Media/Auth master refs and open PRs are recorded in the deployment tracker checkpoint at the same timestamp.
+- Latest scheduled watchdog #41657391305 failed on stale native mirror (#41611280196, 320m), inspection (#41603684581, 379m) and recovery (#41633096574, 161m). Scheduled reconcile #41656213890 was fresh (7m) but its StockDividend health lane failed. workflow_dispatch/workflow_run recovery runs are not native schedule proof.
+- Native TCE WF-07 integration #41652078419 passed; WF-06 #41614307460 and WF-12 #41605106319 remain failed/stale. No schedule expression changed; TCE market-scan schedule unchanged.
+- StockDividend publisher #41563856933 verified ARM64 immutable artifacts for source SHA `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`: scraper `sha256:6b3ee2676268baf8ae2e77f68df3b730d797ea6192541710720d04585e99f8a2`, Admin `sha256:a5c2dbb1a0b6c417891e18256fd4c00a6e14e53a4c34939c12fc1e43c7f3339e`, Backend `sha256:cb0135fc57bc8a2514288105ab35cc59f4cb922555f028dbf97f44c077b76a9a`. Production Kustomize still references `12d63b4`, whose Admin/Backend manifests lack ARM64. The latest publisher's production hold was false and handoff/dispatch skipped; owner authorization remains mandatory.
+- Auth PR #87 remains open with CI PASS and Supabase Preview SKIPPED; merge side-effect approval remains unresolved. Media CI passes but paired-digest publisher E2E remains pending.
+- Preserve the single `reconcile-vps.yml` production apply authority, strict schedule freshness/health checks, and all useful CI/security/manual/release/backup workflows. TCE market-scan schedule unchanged.
