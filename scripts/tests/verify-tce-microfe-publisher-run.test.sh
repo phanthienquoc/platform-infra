@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo_root="$(cd "$(dirname "\${BASH_SOURCE[0]}")/../.." && pwd)"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 validator="$repo_root/scripts/verify-tce-microfe-publisher-run.sh"
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
@@ -15,7 +15,7 @@ for arg in "$@"; do
     Authorization*) echo "Unexpected credential passed to public TCE Actions API." >&2; exit 4 ;;
   esac
 done
-url="\${!#}"
+url="${!#}"
 case "$url" in
   "$MOCK_RUN_URL") cat "$MOCK_RUN_FILE" ;;
   "$MOCK_JOBS_URL") cat "$MOCK_JOBS_FILE" ;;
@@ -34,13 +34,13 @@ sample_jobs_url="$sample_run_url/jobs?per_page=100"
 make_run() {
   local status="$1"
   local conclusion="$2"
-  local repo="\${3:-$sample_repo}"
-  local head_repo="\${4:-$sample_repo}"
-  local path="\${5:-$sample_path}"
-  local event="\${6:-push}"
-  local branch="\${7:-master}"
-  local sha="\${8:-$sample_sha}"
-  local id="\${9:-$sample_run_id}"
+  local repo="${3:-$sample_repo}"
+  local head_repo="${4:-$sample_repo}"
+  local path="${5:-$sample_path}"
+  local event="${6:-push}"
+  local branch="${7:-master}"
+  local sha="${8:-$sample_sha}"
+  local id="${9:-$sample_run_id}"
   jq -n \
     --arg id "$id" \
     --arg repo "$repo" \
@@ -55,9 +55,9 @@ make_run() {
 }
 
 make_jobs() {
-  local build_conclusion="\${1:-success}"
-  local dispatch_status="\${2:-in_progress}"
-  local dispatch_conclusion="\${3:-}"
+  local build_conclusion="${1:-success}"
+  local dispatch_status="${2:-in_progress}"
+  local dispatch_conclusion="${3:-}"
   jq -n \
     --arg build_conclusion "$build_conclusion" \
     --arg dispatch_status "$dispatch_status" \
@@ -78,6 +78,7 @@ run_validator() {
     MOCK_JOBS_FILE="$tmp_dir/jobs.json" \
     MOCK_RUN_URL="$sample_run_url" \
     MOCK_JOBS_URL="$sample_jobs_url" \
+    SOURCE_APP=microfe \
     SOURCE_REPOSITORY="$sample_repo" \
     SOURCE_RUN_ID="$sample_run_id" \
     SOURCE_WORKFLOW_PATH="$sample_path" \
@@ -137,6 +138,13 @@ make_jobs success completed failure > "$tmp_dir/jobs.json"
 expect_failure "failed dispatch verification"
 
 # Invalid payload values must fail before the public API is queried.
+if PATH="$tmp_dir/bin:$PATH" \
+  SOURCE_APP=other SOURCE_REPOSITORY="$sample_repo" SOURCE_RUN_ID="$sample_run_id" SOURCE_WORKFLOW_PATH="$sample_path" \
+  SOURCE_EVENT=push SOURCE_HEAD_SHA="$sample_sha" SOURCE_COMMIT="$sample_sha" \
+  bash "$validator" >/dev/null 2>&1; then
+  echo "Expected invalid MicroFE source app to fail before API access." >&2
+  exit 1
+fi
 if PATH="$tmp_dir/bin:$PATH" \
   SOURCE_REPOSITORY="$sample_repo" SOURCE_RUN_ID=not-a-run SOURCE_WORKFLOW_PATH="$sample_path" \
   SOURCE_EVENT=push SOURCE_HEAD_SHA="$sample_sha" SOURCE_COMMIT="$sample_sha" \
