@@ -1087,6 +1087,29 @@ for required in (
     if required not in inspection_freshness_block:
         fail(f"Scheduled inspection freshness contract is missing: {required}")
 
+# The independent mirror remains an hourly, destination-scoped workflow and must be monitored.
+if "    - cron: '17 * * * *'" not in mirror:
+    fail("The private mirror workflow must retain its hourly schedule.")
+if 'MAX_MIRROR_AGE_MINUTES: "90"' not in watchdog:
+    fail("The watchdog must enforce a 90-minute freshness budget for the hourly private mirror.")
+mirror_watchdog_step = watchdog.find("name: Verify scheduled mirror delivery and result")
+if mirror_watchdog_step < 0 or "if: always()" not in watchdog[mirror_watchdog_step:]:
+    fail("Scheduled mirror delivery/result verification must run even when another watchdog check fails.")
+mirror_watchdog_block = watchdog[mirror_watchdog_step:]
+for required in (
+    '"repos/${GITHUB_REPOSITORY}/actions/workflows/mirror-locally-uncensored.yml"',
+    '"repos/${GITHUB_REPOSITORY}/actions/workflows/mirror-locally-uncensored.yml/runs"',
+    "event=schedule",
+    "MAX_MIRROR_AGE_MINUTES",
+    "age_minutes > MAX_MIRROR_AGE_MINUTES",
+    '[[ "$conclusion" != "success" ]]',
+    '::error::Scheduled mirror run #${run_id} failed with conclusion=${conclusion}.',
+    '::warning::Read-only API smoke succeeded; latest scheduled mirror run concluded',
+):
+    if required not in mirror_watchdog_block:
+        fail(f"Scheduled mirror watchdog contract is missing: {required}")
+
+
 # GitHub Actions secret names cannot contain hyphens; keep the mirror credential valid and isolated.
 if "MIRROR_TOKEN: ${{ secrets.PLATFORM_INFRA_MIRROR_TOKEN }}" not in mirror:
     fail("The mirror workflow must use the valid PLATFORM_INFRA_MIRROR_TOKEN secret name.")
