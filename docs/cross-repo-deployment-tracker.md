@@ -3476,3 +3476,44 @@ All TCE market-scan cron expressions remain unchanged. Production remains NOT HE
 - The repository_dispatch recovery run #41556605772 was displayed as `source none` even though its validated payload identified TCE WF-07 run #41556575907. A follow-up contract changes recovery `run-name` to expose source IDs from manual inputs, repository_dispatch payloads, and workflow_run events, with a static regression assertion. This is audit metadata only; it does not change triggers or recovery decisions.
 - StockDividend ARM64 digests from publisher #41524676740 remain unpromoted; release remains disabled and explicit authorization absent. Mirror token remains missing; StockDividend Actions-read token remains unverified. Auth #75/#76 remain gated on production Supabase integration side effects and migration provenance/drift.
 - No cron, TCE market-scan schedule, production image reference, shared GHCR credential, database object, desired replica, Pod restart, image deletion, or VPS maintenance change. `reconcile-vps.yml` remains the sole production apply authority.
+
+## 2026-11-03 09:00 ICT / 02:00 UTC — cross-repo state and StockDividend backend runtime contract
+
+### Current repository heads and open PRs
+- Master heads: Platform Infra `1f1186bb6ce0b98bc136b54f23711005e4886bef`; TCE Dashboard `5d299bea8ba482876ccaa291c68b0ee3f829350c`; StockDividend `efdb0844e868367d29bbeb5393430cd73d6b6f38`; Media Generation `763fdcd1463fe4d95c81c93d1e7ae010f2cd0cd3`; Authentication `1f39b18d9dd286da9dde32a79c4da269b19d5cfd`.
+- Open PRs: Platform #544/#541/#539 (all drafts); StockDividend #31; Authentication #75/#76; none in TCE Dashboard or Media Generation.
+- Platform draft PR current-head `validate-manifests` runs: #544 #38575430454 SUCCESS; #541 #38567431761 SUCCESS; #539 #38548718033 SUCCESS. They remain drafts and are not deployment approvals.
+- Auth PR current-head `auth-service-ci` runs: #75 #40446492086 SUCCESS; #76 #41329425940 SUCCESS. #75/#76 remain gated by Supabase production integration side effects and migration provenance/drift; green CI does not authorize merge or migration.
+- StockDividend PR #31 exact head `9da4a6aca47a9d853ce9cf877e444e53fbf23779`, branch `fix/backend-image-include-migration-binary-20261103`. CI run #41563638198 is queued/in progress at this update: production-release-hold and scraper syntax validation SUCCESS; backend test/build, backend runtime-image, admin build and scraper image jobs were still running. Do not merge until every required exact-head check is SUCCESS.
+
+### Fresh VPS/K3s snapshot
+- Latest inspection artifact is `debug/vps-latest.md`, generated 2026-11-03T01:11:21Z and committed by Platform commit `1f1186bb6ce0b98bc136b54f23711005e4886bef` (#1107). This is newer than the previously recorded snapshot. The current connector query did not expose the originating Actions event/run ID, so do not count this snapshot as a native scheduled inspection tick without independently verifying its event.
+- Node `tce-k3s-01`: Ready, ARM64, Ubuntu 22.04.5 LTS, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2, Docker 29.1.3; disk 55%, about 19 GiB available memory. Platform and Media self-hosted runner services are active; runner policy v14 is installed.
+- Pod state in this snapshot: Media backend/frontend 1/1; MicroFE Shell/WS and NATS 1/1; Stock Admin two Pods ImagePullBackOff; new Stock Backend Pod ImagePullBackOff; old Backend Pod 1/1; legacy Stock Frontend 1/1. Deployments: Stock Admin 0/1, Stock Backend 1/1, legacy Frontend 1/1; TCE frontend/service 0/0; Keycloak and MicroFE Auth 0/0.
+- Exact Stock pull errors remain `no match for platform in manifest` for Admin/Backend tag `12d63b4`. GitOps drift is clean. No production image reference changed and no rollout was attempted.
+
+### StockDividend backend migration executable — PR #31
+- Platform `apps/stockdividend/README.md` documents that the backend image did not compile the migration source into an executable, blocking an operator-run migration path until the app image is corrected.
+- StockDividend master `backend/Dockerfile` previously copied `cmd/migrate/main.go` into the runtime image as `migrate_src.go`; it did not build an executable. PR #31 builds a static `/app/migrate` executable alongside `/app/main` and copies both into the runtime image.
+- PR #31 adds a CI-only backend image build/load check. It verifies both binaries are executable and invokes `/app/migrate` without `MONGO_URI`, expecting the explicit missing-configuration failure before any database connection. It does not run a migration or mutate a database.
+- Because `backend/**` is in the StockDividend master publisher path, merging PR #31 is expected to trigger app-owned immutable ARM64 publication. The existing `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED` gate remains false/unset; no Platform dispatch or GitOps promotion is authorized by this change.
+
+### Latest documented native schedule history and evidence limits
+- Last verified native Platform events in the tracker: inspection #41498271871; reconciliation #41549849545 (Stock health failure); watchdog #41550202827 (native inspection stale); mirror #41499146752 (missing token); recovery #41547230804 (SUCCESS). Later push/dispatch inspection and reconciliation runs are not native schedule evidence.
+- Last verified TCE native events: WF-07 #41556575907 (SUCCESS); WF-06 #41516575222 (strict public HTTP 200 probes returned 503); WF-12 #41511665345 (WF-06 freshness failure). No consecutive cadence recovery is established.
+- GitHub connector combined-status lookup returned no legacy status contexts for the five master commits; its workflow-run lookup is PR-triggered only. Do not infer that master CI is absent or green from empty results. Keep exact run links and conclusions when available.
+
+### Owner blockers and safety
+- `PLATFORM_INFRA_MIRROR_TOKEN`: owner must configure destination-only Contents:write for `phanthienquoc/locally-uncensored-private`.
+- `STOCKDIVIDEND_ACTIONS_READ_TOKEN`: presence remains unverified; owner must configure StockDividend-only Actions:read before provenance handoff.
+- Explicit StockDividend production release authorization remains absent. Keep release disabled.
+- Auth #75/#76 remain blocked on authoritative Supabase integration target/effect and migration provenance review.
+- No production manifests/image references, shared GHCR pull credentials, database objects, release flags, desired replicas or cron expressions changed. No migration, GitOps promotion, Pod restart, image deletion, VPS reboot or package maintenance occurred. Preserve `reconcile-vps.yml` as the sole production apply authority. TCE market-scan schedule unchanged.
+
+## 2026-11-03 09:05 ICT / 02:05 UTC — StockDividend migration executable PR merged
+
+- StockDividend PR #31 merged by squash at `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`. Exact-head StockDividend CI run #41563638198 completed SUCCESS; all six jobs passed: Backend test/build, Backend runtime image/migration binary, Admin production build, Scraper syntax, Scraper image build, and production release-hold contract.
+- The new backend-image CI job built a non-publishing `linux/amd64` image with `push: false` and `load: true`, verified `/app/main` and `/app/migrate` are executable, then invoked `/app/migrate` without `MONGO_URI` and confirmed the expected missing-configuration failure. This proves packaging and fail-closed precondition behavior in CI; it did not connect to MongoDB or execute a migration.
+- StockDividend master head is now `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`. The backend Dockerfile change is within the app publisher's `backend/**` path and is expected to trigger app-owned ARM64 artifact publication on master. The current GitHub connector query exposes PR-triggered workflow runs but did not return the new master publisher run/digests; do not claim post-merge GHCR publication or ARM64 runtime verification until an exact publisher run and digests are available.
+- No GitOps dispatch or promotion was observed. Production overlay still references old Admin/Backend tag `12d63b4` in the latest Platform master snapshot; Stock Admin and the new Backend Pod remain ImagePullBackOff. Keep production release disabled and require explicit authorization before paired digest promotion.
+- Platform PR #1108 now needs its tracker/inventory/Stock runtime README correction revalidated on the updated exact head before merge.
