@@ -1266,8 +1266,8 @@ if "Platform-infra-token" in mirror or "secrets.PLATFORM_INFRA_TOKEN" in mirror 
 if "Missing PLATFORM_INFRA_MIRROR_TOKEN secret" not in mirror or "git push --mirror" not in mirror:
     fail("The mirror workflow must fail clearly when its destination-scoped credential is absent and preserve full-ref mirroring.")
 
-mirror_credentials = read("docs/credentials.md")
-mirror_credentials_key = read("docs/credentials-key.md")
+mirror_credentials = (ROOT / "docs" / "credentials.md").read_text(encoding="utf-8")
+mirror_credentials_key = (ROOT / "docs" / "credentials-key.md").read_text(encoding="utf-8")
 for required in (
     "`PLATFORM_INFRA_MIRROR_TOKEN`",
     "`phanthienquoc/locally-uncensored-private`",
