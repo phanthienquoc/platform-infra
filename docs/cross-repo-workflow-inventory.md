@@ -1914,3 +1914,11 @@ No production manifest, image, credential, database, replica, release flag, depl
 - **StockDividend immutable publication:** publisher #41563856933 verified ARM64 full-SHA digests for scraper/admin/backend. Release-gate output false, so no runtime event dispatch or promotion. Stock sender payload self-test passed in CI #41563856934; Platform receiver/provenance/digest contract passed in #41570224904. This is static sender/receiver contract evidence, not a runtime handoff.
 - **Other repos:** TCE #41533998356/#41533998448/#41533998355 SUCCESS; Stock CI #41563856934 SUCCESS; Media #41525798015 SUCCESS; Auth web/service #41542942080/#41542941957 SUCCESS. Auth #75/#76 validate PASS, Supabase Preview SKIPPED; keep migration/integration gate.
 - **Owner gates:** mirror destination Contents:write token missing; StockDividend Actions:read token unverified; explicit StockDividend release authorization absent; Auth Supabase/migration provenance pending. Preserve CI/security/manual/release/scheduled workflows and `reconcile-vps.yml` as sole production apply authority. TCE market-scan schedule unchanged.
+
+
+## 2026-11-03 03:12 UTC — StockDividend handoff schema validation
+
+- Platform PR #1115 merged at `673f338179f13188ad0cc07e25918be3a9b6131a`. Exact-head #41570623475 (manifest validation) and #41570623524 (workflow contract/lint) SUCCESS; post-merge #41570702258/#41570702263 SUCCESS.
+- Platform receiver contract now pins the `stockdividend-images-published` event and each consumed `client_payload` field (app, commit, backend/admin digests, source run ID, source workflow path, source event, source head SHA), plus full-SHA/tag equality, approved publisher workflow/event and digest formats.
+- StockDividend sender contract self-test passed in master CI #41563856934. The publisher #41563856933 successfully verified ARM64 full-SHA digests, but the release gate output false; handoff validation and promotion dispatch jobs were skipped. Sender/receiver schema is statically validated; no runtime dispatch or promotion occurred.
+- Platform master #673f338 is current. Open PRs remain draft #544/#541/#539 and Auth #75/#76; no open TCE, StockDividend or Media PRs. Production release and migration gates remain closed.

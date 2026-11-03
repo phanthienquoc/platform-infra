@@ -3632,3 +3632,15 @@ All TCE market-scan cron expressions remain unchanged. Production remains NOT HE
 - Explicit StockDividend production release authorization remains absent; Admin/Backend overlay stays at `12d63b4`.
 - Auth #75/#76 require production Supabase integration/effect and migration provenance review.
 - No image digest promotion, production manifest apply, DB migration, shared GHCR credential rotation, desired replica change, Pod restart, image deletion, VPS reboot or package maintenance occurred. `reconcile-vps.yml` remains sole apply authority; TCE market-scan schedule unchanged.
+
+
+## 2026-11-03 03:12 UTC — StockDividend publisher receiver schema pinned
+
+- Platform PR #1115 merged at `673f338179f13188ad0cc07e25918be3a9b6131a`; exact head `9d077a20029679aad6c159c6d9c36f8920be9902`.
+- Exact-head checks: `validate-manifests` #41570623475 SUCCESS and `validate-github-actions` #41570623524 SUCCESS. Post-merge master checks #41570702258 and #41570702263 both SUCCESS.
+- The Platform workflow contract validator now asserts the exact `stockdividend-images-published` event subscription and all consumed `client_payload` bindings: app, source commit, backend/admin digests, source run ID, source workflow path, source event and source head SHA. It also verifies the receiver's StockDividend branch maps the full source SHA to the immutable tag, requires the approved publisher workflow/event and validates both SHA-256 digests.
+- Sender-side payload shape remains tested by StockDividend `scripts/validate-production-release-contract.sh` in master CI #41563856934. Platform receiver/provenance/digest gates are tested in #41570623524 and post-merge #41570702263. The schema is statically aligned across repositories.
+- Stock publisher run #41563856933 log confirms the release-gate output was `false` (the enable variable was empty); `Validate Platform Infra release handoff before promotion` and `Dispatch atomic StockDividend digest promotion` were SKIPPED. The three ARM64 images were still published and verified. No runtime repository_dispatch or production promotion was exercised.
+- Current master heads: Platform Infra `673f338179f13188ad0cc07e25918be3a9b6131a`; TCE `5d299bea8ba482876ccaa291c68b0ee3f829350c`; StockDividend `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media `763fdcd1463fe4d95c81c93d1e7ae010f2cd0cd3`; Authentication `1f39b18d9dd286da9dde32a79c4da269b19d5cfd`.
+- Open PRs remain Platform #544/#541/#539 (draft, non-mergeable) and Auth #75/#76; no open PRs in TCE, StockDividend or Media. Auth Preview remains SKIPPED; do not infer production integration readiness.
+- No manifest/image ref, release flag, credential, DB, replica, Pod, schedule or host state changed. Runtime dispatch remains gated on explicit StockDividend production authorization. TCE market-scan schedule unchanged.
