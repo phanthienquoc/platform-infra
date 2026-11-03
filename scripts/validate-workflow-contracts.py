@@ -159,6 +159,20 @@ if "github.event.workflow_run.head_branch == 'master'" not in recovery:
     fail("Recovery controller must ignore non-master workflow completion events.")
 if "run-name: Reconcile VPS —" not in reconcile:
     fail("Reconciliation must retain its descriptive dynamic run-name contract.")
+
+# App documentation may live beside production overlays, but must never trigger a
+# production reconciliation or be misclassified as a workload change.
+reconcile_push_paths = reconcile.split("  push:", 1)[1].split("\\n\\npermissions:", 1)[0]
+if "- apps/**" not in reconcile_push_paths or "- '!apps/**/*.md'" not in reconcile_push_paths:
+    fail("Production reconciliation push paths must exclude Markdown-only app documentation.")
+scope_resolver = (ROOT / "scripts" / "resolve-push-deployment-scope.sh").read_text(encoding="utf-8")
+for required in (
+    "apps/**/*.md|apps/**/docs/*",
+    "assert_failure apps/stockdividend/README.md",
+    "assert_failure apps/stockdividend/docs/production-runtime.md",
+):
+    if required not in scope_resolver:
+        fail(f"Push scope resolver must ignore app documentation: {required}")
 if "github.event.workflow_run.name == 'reconcile-vps'" in recovery:
     fail("Recovery must not compare workflow_run.name to the workflow name when reconcile-vps uses a dynamic run-name.")
 if "github.event.workflow.path == '.github/workflows/reconcile-vps.yml'" not in recovery:

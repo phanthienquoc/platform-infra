@@ -17,6 +17,10 @@ resolve_scope() {
   for path in "$@"; do
     [[ -n "$path" ]] || continue
     case "$path" in
+      apps/**/*.md|apps/**/docs/*)
+        # App documentation is not a production workload change, even when a
+        # manifest change in the same commit causes reconciliation to run.
+        ;;
       platform/microfe/*|apps/microfe/*)
         scopes[microfe]=1
         ;;
@@ -115,6 +119,9 @@ self_test() {
   assert_scope tce-dashboard apps/tce-dashboard/overlays/prod/kustomization.yaml
   assert_scope stockdividend apps/stockdividend/overlays/prod/kustomization.yaml
   assert_scope media-generation apps/media-generation/overlays/prod/kustomization.yaml
+  assert_failure apps/stockdividend/README.md
+  assert_failure apps/stockdividend/docs/production-runtime.md
+  assert_scope stockdividend apps/stockdividend/README.md apps/stockdividend/overlays/prod/kustomization.yaml
   assert_scope media-generation apps/media-generation/overlays/prod/kustomization.yaml .github/workflows/validate-manifests.yml scripts/validate-workflow-contracts.py docs/cross-repo-deployment-tracker.md debug/vps-latest.md
   assert_failure .github/workflows/validate-manifests.yml scripts/validate-workflow-contracts.py docs/cross-repo-deployment-tracker.md debug/vps-latest.md
   assert_scope all apps/tce-dashboard/kustomization.yaml apps/media-generation/kustomization.yaml
