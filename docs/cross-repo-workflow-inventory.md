@@ -2212,8 +2212,8 @@ No production manifest, image, credential, database, replica, release flag, depl
 
 ## Workflow inventory runtime update — 2026-11-04 02:05 ICT / 19:05 UTC
 
-- **Repository heads:** Platform `ba7c07c11769a55a5eff61d4ebeb3bf82f8a38dc`; TCE `53227425841b6283bebad3bc5c93d509bd8a316a`; StockDividend `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media `e4c7d8990aafc7d837e918c9caf39722d623de7c`; Auth `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
-- **Open PRs:** Platform #1159 plus draft #544/#541/#539; Auth #75 ready/#76 draft; no open PRs in TCE, StockDividend or Media. Platform PR #1159 checks: workflow contract validation #41700394033 SUCCESS; manifest validation #41700393711 still running at checkpoint.
+- **Repository heads:** Platform `38d2aba74cd35c95e85337c8b19c0a8309adb0bf`; TCE `53227425841b6283bebad3bc5c93d509bd8a316a`; StockDividend `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media `e4c7d8990aafc7d837e918c9caf39722d623de7c`; Auth `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
+- **Open PRs:** Platform #1159 plus draft #544/#541/#539; Auth #75 ready/#76 draft; no open PRs in TCE, StockDividend or Media. Platform PR #1159 exact-head checks #41700394033 (workflow contracts) and #41700393711 (manifest validation) both completed SUCCESS; exact head was squash-merged as `38d2aba74cd35c95e85337c8b19c0a8309adb0bf`.
 - **StockDividend receiver:** Platform #1159 adds independent full-SHA tag-to-digest correlation for both Admin and Backend, then separately validates the exact digest reference for linux/arm64. The shared GHCR validator's existing tag mismatch test is reused; the workflow contract now requires tag validation before digest validation. Producer handoff and promotion remain release-gated.
 - **Platform post-merge validation:** #41690886530 and #41690886564 SUCCESS; latest tracker manifest validation #41691193224 SUCCESS.
 - **Platform native schedules:** mirror #41687882647 FAIL (missing destination-only token); inspection #41674687948 PASS; watchdog #41657391305 FAIL; reconciliation #41656213890 FAIL only StockDividend; recovery #41633096574 PASS. Dispatch inspection #41687934519 is not a native schedule.
