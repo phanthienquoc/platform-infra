@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SOURCE_REPOSITORY="\${SOURCE_REPOSITORY:-}"
-SOURCE_RUN_ID="\${SOURCE_RUN_ID:-}"
-SOURCE_WORKFLOW_PATH="\${SOURCE_WORKFLOW_PATH:-}"
-SOURCE_EVENT="\${SOURCE_EVENT:-}"
-SOURCE_HEAD_SHA="\${SOURCE_HEAD_SHA:-}"
-SOURCE_COMMIT="\${SOURCE_COMMIT:-}"
-MAX_ATTEMPTS="\${TCE_MICROFE_PROVENANCE_MAX_ATTEMPTS:-12}"
-RETRY_DELAY_SECONDS="\${TCE_MICROFE_PROVENANCE_RETRY_DELAY_SECONDS:-5}"
+SOURCE_APP="${SOURCE_APP:-}"
+SOURCE_REPOSITORY="${SOURCE_REPOSITORY:-}"
+SOURCE_RUN_ID="${SOURCE_RUN_ID:-}"
+SOURCE_WORKFLOW_PATH="${SOURCE_WORKFLOW_PATH:-}"
+SOURCE_EVENT="${SOURCE_EVENT:-}"
+SOURCE_HEAD_SHA="${SOURCE_HEAD_SHA:-}"
+SOURCE_COMMIT="${SOURCE_COMMIT:-}"
+MAX_ATTEMPTS="${TCE_MICROFE_PROVENANCE_MAX_ATTEMPTS:-12}"
+RETRY_DELAY_SECONDS="${TCE_MICROFE_PROVENANCE_RETRY_DELAY_SECONDS:-5}"
 
 fail() {
   echo "::error::$*" >&2
   exit 1
 }
 
+[[ "$SOURCE_APP" == "microfe" ]] || fail "MicroFE publisher app is not approved."
 [[ "$SOURCE_REPOSITORY" == "phanthienquoc/TCE-dashboard" ]] || fail "MicroFE publisher repository is not approved."
 [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]] || fail "MicroFE publisher run ID must be numeric."
 [[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/wf-08b-tce-microfe-build-publish.yml" ]] || fail "MicroFE publisher workflow path is not approved."
@@ -73,12 +75,12 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
       ;;
     in_progress|completed) ;;
     *)
-      fail "MicroFE source run #$SOURCE_RUN_ID has unexpected status=\${status:-missing}."
+      fail "MicroFE source run #$SOURCE_RUN_ID has unexpected status=${status:-missing}."
       ;;
   esac
 
   if [[ "$status" == "completed" && "$conclusion" != "success" ]]; then
-    fail "MicroFE publisher run #$SOURCE_RUN_ID completed with conclusion=\${conclusion:-missing}; refusing GitOps promotion."
+    fail "MicroFE publisher run #$SOURCE_RUN_ID completed with conclusion=${conclusion:-missing}; refusing GitOps promotion."
   fi
 
   if ! jobs_json="$(fetch_json "$API_BASE/jobs?per_page=100" 2>/dev/null)"; then
@@ -94,7 +96,7 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
     "Build and publish MicroFE Shell image"
   )
   jobs_ready=true
-  for job_name in "\${required_jobs[@]}"; do
+  for job_name in "${required_jobs[@]}"; do
     job="$(jq -c --arg name "$job_name" '[.jobs[] | select(.name == $name)] | last // {}' <<< "$jobs_json")"
     job_status="$(jq -r '.status // empty' <<< "$job")"
     job_conclusion="$(jq -r '.conclusion // empty' <<< "$job")"
