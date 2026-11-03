@@ -115,6 +115,7 @@ jobs:
 
       - name: Verify TCE MicroFE publisher provenance
         env:
+          SOURCE_APP: ${{ github.event.client_payload.app }}
           SOURCE_REPOSITORY: ${{ github.event.client_payload.source_repository }}
           SOURCE_RUN_ID: ${{ github.event.client_payload.source_run_id }}
           SOURCE_WORKFLOW_PATH: ${{ github.event.client_payload.source_workflow_path }}
