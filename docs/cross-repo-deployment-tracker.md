@@ -3942,3 +3942,36 @@ All TCE market-scan cron expressions remain unchanged. Production remains NOT HE
 6. Schedule host maintenance before applying pending OS/containerd/Docker updates.
 
 No code or production manifests were changed in this checkpoint. No image promotion, database migration, replica change, Stock Pod restart, host maintenance or schedule change occurred. `reconcile-vps.yml` remains the sole production apply authority. TCE market-scan schedule unchanged.
+
+
+## 2026-11-03 18:56 ICT / 11:56 UTC — current cross-repo evidence and Media provenance regression coverage
+
+### Repository refs, open PRs and latest validation
+
+- Platform Infra master: `4ac566e82254bf51a313a5578f924f0f08ef8147`; latest master `validate-manifests` #41624495514 SUCCESS. New test-only PR [#1140](https://github.com/phanthienquoc/platform-infra/pull/1140) is open from dedicated branch `test/media-provenance-skipped-dispatch-regressions-2026-11-03-1856-ict`; exact head `57faededb9e30a8063d1db57d2792c9a6df0ba38`. It adds negative fixtures for a skipped Media production gate, skipped Platform dispatch step, and duplicate required publication job. Checks are pending at this checkpoint.
+- Existing Platform drafts #544 (Keycloak activation status), #541 (Keycloak Supabase production DB), and #539 (central identity ADR) remain open and authorization/credential-gated.
+- TCE Dashboard master: `53227425841b6283bebad3bc5c93d509bd8a316a`; WF-01 #41608676328, WF-02 #41608676350 and WF-05 #41608676512 SUCCESS. No open PRs.
+- StockDividend master: `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; CI #41563856934 and immutable publisher #41563856933 SUCCESS. Release gate remains false/unset; production handoff and digest dispatch were skipped. No open PRs.
+- Media Generation master: `e4c7d8990aafc7d837e918c9caf39722d623de7c`; post-merge CI #41617592783 SUCCESS. No new production publisher run has exercised the paired-digest event after the contract merge. No open PRs.
+- Authentication master: `1f39b18d9dd286da9dde32a79c4da269b19d5cfd`; web #41542942080 and service #41542941957 SUCCESS. PR #75 remains open/non-draft; #76 remains draft. Migration provenance and production side-effect gate remain unresolved.
+
+### Native schedule evidence — only event=schedule counts
+
+- Platform mirror #41611280196 (09:28:17Z) FAILURE because `PLATFORM_INFRA_MIRROR_TOKEN` is empty; inspection #41603684581 (08:29:41Z) SUCCESS; reconciliation #41591224283 (06:39:06Z) FAILURE at StockDividend health; watchdog #41591762943 (06:44:09Z) FAILURE due stale/missing evidence; recovery #41577147958 (04:16:26Z) SUCCESS. No newer native Platform schedule event appears in the queried schedule history through 11:56Z.
+- Later Platform fallbacks are not native schedule proof: inspection #41614707823 (workflow_dispatch, 09:53:40Z) SUCCESS; reconciliation #41614373680 (workflow_dispatch, 09:51:10Z) FAILURE; recovery #41614666622 (workflow_dispatch, 09:53:22Z) SUCCESS.
+- TCE WF-06 #41614307460 (09:50:40Z) is the latest native run and failed its four strict public HTTP 200 checks. WF-12 #41605106319 (08:41:06Z) is the latest native schedule and failed because WF-06 delivery was stale. WF-12 #41614338174 is a successful `workflow_run` forwarder, not a native schedule. WF-07 integration #41556575907 and backup #41557498266 passed.
+- TCE/Auth are still scale-to-zero by prior operator direction; keep strict HTTP 200 checks. Do not infer public service health or reactivate workloads without authorization. All TCE market-scan schedules remain unchanged.
+
+### Runtime and deployment state
+
+- Latest known read-only K3s inspection is #41614707823, generated 09:53:49Z by `workflow_dispatch`; at 11:56Z it is stale (>2 hours) and is not native inspection schedule evidence. It recorded node `tce-k3s-01` Ready/ARM64, K3s v1.36.3+k3s1, disk 55%, about 19 GiB available RAM, runner policy v14 and pending host restart/updates.
+- Last inspected workload state: Media frontend/backend and MicroFE Shell/WS/NATS 1/1; Stock Admin two Pods and new Backend Pod ImagePullBackOff on tag `12d63b4` with no ARM64 manifest; old Stock Backend and legacy Frontend running; TCE/Auth/Keycloak 0/0. Reconciliation #41614373680 failed at StockDividend; GitOps drift was clean and apply skipped.
+- Owner actions remain: configure destination-only `PLATFORM_INFRA_MIRROR_TOKEN`; verify protected `STOCKDIVIDEND_ACTIONS_READ_TOKEN`; obtain explicit StockDividend production release authorization; run an authorized Media publisher for paired-digest E2E; resolve Auth/Keycloak protected DB/DNS/migration prerequisites; schedule host maintenance.
+
+### Media publisher provenance test hardening — PR #1140
+
+- `scripts/verify-media-publisher-run.sh` already requires exact source run identity, master/full SHA, five required publisher jobs and successful native ARM64 build, immutable digest and Platform notification steps.
+- The existing test suite did not explicitly exercise skipped-job/skipped-step outcomes, despite the verifier's fail-closed implementation. PR #1140 adds those negative fixtures and a duplicate required-job fixture so an overall-success run cannot mask a skipped release gate or dispatch step.
+- Test-only change. No workflow, dispatch payload, publisher, release gate, image, manifest, credential, database, replica, Pod, host or schedule changed. Await exact-head and post-merge checks before marking this test coverage merged.
+
+`reconcile-vps.yml` remains the sole production apply authority. App repositories own tests/builds and immutable GHCR publication; Platform Infra owns production manifests, shared GHCR pull credentials, GitOps promotion/reconciliation and rollout/health verification. TCE market-scan schedule unchanged.
