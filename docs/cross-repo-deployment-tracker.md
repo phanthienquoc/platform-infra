@@ -4202,3 +4202,38 @@ Recovery #41650121040 and inspection #41650172429 are workflow_dispatch fallback
 4. Run authorized Media paired-digest publisher E2E.
 5. Continue observing native Platform/TCE schedule delivery separately from fallback dispatches; do not relax freshness thresholds or alter TCE market-scan schedules.
 6. Obtain a fresh read-only K3s inspection; keep host maintenance/reboot in a separate approved maintenance window.
+
+
+## Runtime verification update — 2026-11-03 23:06 ICT / 16:06 UTC
+
+### Repository heads and pull requests
+- Platform Infra master: `fcad6b471f2abf643b8c738a21f9ba502bec1c84`; TCE Dashboard: `53227425841b6283bebad3bc5c93d509bd8a316a`; StockDividend: `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media Generation: `e4c7d8990aafc7d837e918c9caf39722d623de7c`; Authentication: `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
+- Platform open PRs: #544, #541, #539 (draft). Authentication open PRs: #76 and #75. TCE, StockDividend and Media have no open PRs.
+- Authentication PR #87 was squash-merged at the exact inspected head `580ceca91466e998616982059db1befa0bb181eb`; merge commit `f978a3f378ee22d4630909c2d182275b21ac9e9a`. It changed only CI/release workflow, README and a release-contract validator; no migration or Supabase schema files changed. The PR `auth-service-ci` validate job passed, and Supabase Preview was skipped. The post-merge master CI run #41670642852 was still in progress at the time of this checkpoint; do not claim post-merge CI success until it completes.
+
+### Auth immutable release contract
+- PR #87 adds manual-only master release, full 40-character SHA and versioned full-SHA tags, Buildx provenance/SBOM, digest equality verification for both GHCR tags, and `linux/arm64` manifest verification before dispatch.
+- The dispatch event is `auth-image-published` with full source commit, release tag, registry digest and source run/workflow/event/head provenance. Platform Infra receiver #1145 is already merged and independently verifies source run/job/step provenance and tag-to-digest mapping before proposing a digest-only Auth Kustomize promotion.
+- No Auth release was run, no image was published, and no repository_dispatch was sent. Merge does not authorize production activation or database migration. Auth PR #75/#76 remain open for their separate HTTP lifecycle and migration-drift scopes.
+
+### Latest CI, publication and schedule evidence
+- Platform Infra latest master validation #41660206785 passed on `fcad6b47`. Latest scheduled reconciliation #41656213890 failed only in StockDividend health; shared reconcile, Auth, MicroFE, Media and TCE lanes passed; Keycloak was skipped. GitOps drift was clean and production manifest apply was skipped with `allow_image_changes=false`.
+- Platform watchdog native schedule #41657391305 failed because mirror, inspection and recovery native schedule evidence was stale. Mirror's last scheduled run #41611280196 failed for missing/empty `PLATFORM_INFRA_MIRROR_TOKEN`. Read-only inspection #41650172429 was a workflow_dispatch run, not native schedule proof. Recovery #41656612489 was workflow_run, not native schedule proof.
+- TCE WF-07 native schedule #41652078419 passed. WF-06 native schedule #41614307460 failed all four public endpoint checks (TCE web, TCE API, Auth readiness, Auth liveness); WF-12 run #41652113481 failed its WF-06 schedule-freshness check while its authenticated Platform heartbeat step succeeded. Do not weaken HTTP 200 assertions while TCE/Auth remain intentionally stopped.
+- StockDividend CI #41563856934 and publisher #41563856933 passed on master `50ba0dfb`. The native ARM64 publisher built Scraper/Admin/Backend and verified immutable ARM64 manifests. Production handoff and digest-promotion jobs were skipped because explicit production release enablement/authorization was absent. Production Kustomize still references Admin/Backend tag `12d63b4`, which fails ARM64 pulls; do not promote without owner authorization.
+- Media CI #41617592783 passed on master `e4c7d899`; paired-digest publisher E2E remains unobserved. No production release was run.
+
+### K3s / production evidence
+- Latest read-only inspection is #41650172429 (workflow_dispatch, 2026-11-03 14:04:51Z); latest live reconciliation is #41656213890 (schedule, 14:41:42Z). The K3s node was Ready/ARM64, K3s v1.36.3+k3s1, disk 55%, about 19 GiB available RAM, runner policy v14. Host restart remains required for pending OS/containerd/Docker maintenance; no maintenance or reboot was performed.
+- Reconciliation live lanes: Media, MicroFE and TCE passed; Auth lane passed with Auth workload still scaled to zero; StockDividend failed due Admin and new Backend ImagePullBackOff on `12d63b4`; older Backend replica remains running; Keycloak skipped. Overall production is NOT HEALTHY.
+- GHCR pull preflight passed; shared pull Secret unchanged. Auth runtime Secret was provisioned/verified by the reconciliation. No image promotion, manifest apply, database migration, desired replica change, Pod restart or host reboot occurred.
+
+### Exact next actions
+1. Confirm completion and result of Auth post-merge CI #41670642852. Only after it passes, record the producer merge as CI-validated; do not run manual Auth release without release authorization.
+2. Owner supplies destination-only `PLATFORM_INFRA_MIRROR_TOKEN` for `phanthienquoc/locally-uncensored-private` (Contents:write only).
+3. Owner verifies `STOCKDIVIDEND_ACTIONS_READ_TOKEN` and explicitly authorizes paired Admin/Backend ARM64 digest promotion; keep production release disabled until then.
+4. Run authorized Media paired-digest publisher E2E when release is approved.
+5. Continue separating native schedule ticks from workflow_dispatch/workflow_run/repository_dispatch fallback evidence. Keep all cron expressions, especially TCE market-scan schedule, unchanged.
+6. Obtain a fresh read-only K3s inspection and schedule VPS/containerd maintenance separately.
+
+No TCE market-scan schedule, production image reference, production manifest, GHCR pull Secret, database object, desired replica or host package was changed by this checkpoint. `reconcile-vps.yml` remains the sole production apply authority; no SSH/Compose deployment authority was added.
