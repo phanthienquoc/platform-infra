@@ -1944,3 +1944,9 @@ No production manifest, image, credential, database, replica, release flag, depl
 - PR #1119 added a read-only native schedule/result check for \`recover-stale-ops.yml\`; exact-head and post-merge validation passed, and the post-merge push smoke executed the new step.
 - Follow-up uses elapsed seconds for the 45-minute threshold rather than integer-minute truncation. This prevents a run at 45m35s from being treated as within a 45-minute budget.
 - Native schedule history remains distinct from push, workflow_dispatch, repository_dispatch and workflow_run events. No cron expression or production deployment authority changes.
+
+
+## 2026-11-03 — PR #1120 exact freshness boundary merged
+- Platform PR #1120 merged at \`cf24f57a04ce83fd320c6946dbceeb8ded1cf1c7\`; exact-head and post-merge workflow/manifests checks passed.
+- The recovery-controller watchdog now compares elapsed seconds against \`MAX_RECOVERY_AGE_MINUTES * 60\`; it no longer relies on integer-minute truncation.
+- Post-merge push smoke #41581747151 exercised the check and emitted a warning for native recovery run #41577147958 at 48 minutes old. Push smoke is diagnostic only; scheduled/manual/fallback watchdog runs still fail closed.
