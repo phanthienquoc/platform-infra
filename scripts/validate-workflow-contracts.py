@@ -29,6 +29,47 @@ lane_queue = (ROOT / "scripts" / "verify-reconcile-lane-queue.py").read_text(enc
 provision = read("provision-keycloak-tce-client.yml")
 cleanup = read("vps-image-cleanup.yml")
 
+# The promotion workflow defaults to read-only. Grant write scopes only to the
+# jobs that create/merge GitOps PRs or emit the final repository_dispatch.
+top_level_permissions = promotion.split("permissions:\\n", 1)[1].split("\\nconcurrency:", 1)[0].strip()
+if top_level_permissions != "contents: read":
+    fail("GitOps promotion must default GITHUB_TOKEN to contents:read only.")
+
+def promotion_job_block(job_name: str) -> str:
+    marker = f"  {job_name}:\\n"
+    if marker not in promotion:
+        fail(f"GitOps promotion is missing job {job_name}.")
+    tail = promotion.split(marker, 1)[1]
+    next_job = re.search(r"(?m)^  [A-Za-z0-9_-]+:\\s*$", tail)
+    return tail[:next_job.start()] if next_job else tail
+
+guard_job = promotion_job_block("reject-non-master-manual-run")
+if not re.search(r"(?m)^    permissions: \\{\\}\\s*$", guard_job):
+    fail("The non-master manual rejection job must have no GITHUB_TOKEN permissions.")
+
+coordinator_job = promotion_job_block("coordinate-tce-release")
+coordinator_permissions = re.search(
+    r"(?ms)^    permissions:\\n(?P<body>(?:^      [a-z-]+: [a-z]+\\n)+)",
+    coordinator_job,
+)
+if coordinator_permissions is None or coordinator_permissions.group("body").strip() != "contents: write":
+    fail("The TCE release coordinator may write repository dispatches but must not receive Actions or pull-request write scopes.")
+
+for job_name in ("promote-microfe-digests", "promote-tce-digests", "promote"):
+    job = promotion_job_block(job_name)
+    permissions = re.search(
+        r"(?ms)^    permissions:\\n(?P<body>(?:^      [a-z-]+: [a-z]+\\n)+)",
+        job,
+    )
+    expected = {"actions": "write", "contents": "write", "pull-requests": "write"}
+    actual = {}
+    if permissions is not None:
+        for line in permissions.group("body").splitlines():
+            key, value = line.strip().split(":", 1)
+            actual[key] = value.strip()
+    if actual != expected:
+        fail(f"GitOps PR promotion job {job_name} must explicitly retain only its required Actions/Contents/Pull requests write scopes.")
+
 # Automated inspection and GitOps promotion PRs must use the verified Node24 action release.
 create_pull_request_pin = "peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1"
 legacy_create_pull_request_pin = "peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676"
