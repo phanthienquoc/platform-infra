@@ -528,6 +528,7 @@ ghcr_step = microfe_job.find("name: Validate promoted MicroFE images in GHCR")
 if provenance_step < 0 or ghcr_step < 0 or provenance_step > ghcr_step:
     fail("MicroFE source-run provenance must be verified before GHCR digest promotion.")
 for required in (
+    "SOURCE_APP",
     "SOURCE_REPOSITORY",
     "SOURCE_RUN_ID",
     "SOURCE_WORKFLOW_PATH",
