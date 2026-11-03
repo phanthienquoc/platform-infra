@@ -389,7 +389,8 @@ jobs:
             fi
             conclusion="$(jq -r '.conclusion // "unknown"' <<< "$latest")"
             if [[ "$conclusion" != "success" ]]; then
-              echo "::warning::Latest master inspection #$latest_id completed with conclusion=$conclusion; dispatching a read-only fallback."
+              echo "::warning::Latest master inspection #$latest_id completed with conclusion=$conclusion."
+              echo "::warning::dispatching a read-only fallback."
               age_seconds=$((MAX_INSPECTION_AGE_MINUTES * 60 + 1))
             else
               activity_at="$(jq -r '.updated_at // .run_started_at // .created_at' <<< "$latest")"
