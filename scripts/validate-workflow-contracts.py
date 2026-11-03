@@ -140,7 +140,17 @@ for required in (
 ):
     if required not in recovery_notify:
         fail(f"Post-reconciliation recovery dispatch is missing: {required}")
-if "inputs.source_run_id || github.event.client_payload.source_run_id || github.event.workflow_run.id || 'none'" not in recovery or " / source " not in recovery.splitlines()[1]:
+run_name = " ".join(recovery.split("run-name:", 1)[1].split("'on':", 1)[0].split())
+if not all(
+    source in run_name
+    for source in (
+        "inputs.source_run_id",
+        "github.event.client_payload.source_run_id",
+        "github.event.workflow_run.id",
+        "'none'",
+        " / source ",
+    )
+):
     fail("Recovery workflow run-name must expose the exact source run id for workflow_dispatch, repository_dispatch, and workflow_run correlation.")
 if 'and .head_sha == $sha' in recovery_notify:
     fail("Post-reconciliation recovery correlation must not compare the recovery workflow SHA to the source reconciliation SHA; master may advance between dispatch and run creation.")
