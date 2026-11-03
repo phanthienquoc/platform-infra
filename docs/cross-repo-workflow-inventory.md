@@ -2016,3 +2016,17 @@ No production manifest, image, credential, database, replica, release flag, depl
 - The app-owned WF-12 read-only watchdog now compares elapsed seconds against the 25-minute WF-06 freshness budget and 15-minute runner queue budget. The contract validator rejects whole-minute comparisons and tests exact 25m/15m boundaries against 25m01s/15m01s.
 - No WF-06/WF-12 cron expression changed; no market-scan schedule changed. WF-12 retains Actions read-only and its existing authenticated Platform heartbeat only.
 - Post-merge WF-01/WF-02/WF-05 and WF-12 push smoke were queued/in progress at the recorded checkpoint; update the tracker after those runs complete.
+
+
+## StockDividend and Media source-run job-level provenance — merged
+
+- Platform PR #1133 added exact source-run Jobs API verification to both app publisher receivers.
+- StockDividend requires successful master/release gates, native ARM64 build-and-push, all three image build steps, immutable ARM64 manifest verification, release handoff and atomic digest-dispatch jobs. A completed-success workflow run with skipped handoff/dispatch is rejected.
+- Media requires successful master gate, release tag resolution, native ARM64 frontend/backend build jobs, architecture/export validation, immutable GHCR digest/ARM64 manifest verification and Platform notification. It uses the public Actions API without a cross-repository token.
+- Regression suites exercise missing, skipped and failed jobs/steps; static workflow contract validation enforces the guards. PR #1133 and post-merge validations passed.
+- StockDividend latest publisher run #41563856933 had ARM64 build/manifest verification pass but production handoff/dispatch were skipped because the explicit release gate remained closed. No promotion occurred. Media verifier has regression evidence but no new real publisher dispatch in this checkpoint.
+
+## TCE WF-12 exact-second budget — merged
+
+- TCE PR #1019 merged as `53227425841b6283bebad3bc5c93d509bd8a316a`. Exact-second 25m freshness and 15m queue checks plus one-second-over regressions passed. Post-merge WF-01/WF-02/WF-05/WF-12 push smoke all passed.
+- Latest WF-12 push smoke #41608676616 still warned that native WF-06 schedule delivery was stale (411m; queue 0m). This is not a native schedule pass. WF-06 and WF-12 cron expressions and all market-scan schedules are unchanged.
