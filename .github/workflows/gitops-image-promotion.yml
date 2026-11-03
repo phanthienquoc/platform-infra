@@ -32,8 +32,7 @@ on:
       - stockdividend-images-published
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 concurrency:
   group: gitops-image-promotion-${{ github.event.client_payload.app || inputs.app }}-${{ github.event.client_payload.component || inputs.component || github.event.client_payload.release }}
   cancel-in-progress: false
@@ -43,6 +42,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/master'
     name: Reject manual promotion outside master
     runs-on: ubuntu-latest
+    permissions: {}
     steps:
       - name: Fail closed for non-master manual promotion
         run: |
@@ -405,6 +405,8 @@ jobs:
     name: Coordinate TCE release
     needs: promote-tce-digests
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout infrastructure
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
