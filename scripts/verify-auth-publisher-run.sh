@@ -91,6 +91,11 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
       }
 
       verify_job_success "Verify auth service"
+      verify_step_success "Verify auth service" "Run npm install --package-lock-only --ignore-scripts --no-audit --no-fund"
+      verify_step_success "Verify auth service" "Run npm ci --ignore-scripts --no-audit --no-fund"
+      verify_step_success "Verify auth service" "Run npm test"
+      verify_step_success "Verify auth service" "Run npm run typecheck"
+      verify_step_success "Verify auth service" "Run npm run build"
       verify_job_success "Build and publish ARM64 image with version and SHA tags"
       verify_step_success "Build and publish ARM64 image with version and SHA tags" "Validate release and promotion contract"
       verify_step_success "Build and publish ARM64 image with version and SHA tags" "Build and publish image"
