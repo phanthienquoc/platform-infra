@@ -4308,10 +4308,10 @@ No production image promotion, GitOps manifest apply, database migration, shared
 ## Runtime verification update — 2026-11-04 02:05 ICT / 19:05 UTC
 
 ### Repository heads, open PRs and current-head checks
-- Platform Infra master: `ba7c07c11769a55a5eff61d4ebeb3bf82f8a38dc`; TCE Dashboard: `53227425841b6283bebad3bc5c93d509bd8a316a`; StockDividend: `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media Generation: `e4c7d8990aafc7d837e918c9caf39722d623de7c`; Authentication: `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
+- Platform Infra master: `38d2aba74cd35c95e85337c8b19c0a8309adb0bf`; TCE Dashboard: `53227425841b6283bebad3bc5c93d509bd8a316a`; StockDividend: `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media Generation: `e4c7d8990aafc7d837e918c9caf39722d623de7c`; Authentication: `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
 - Open PRs: Platform #1159 plus draft #544/#541/#539; Authentication #75 (ready) and #76 (draft); none in TCE, StockDividend or Media.
 - Platform #544/#541/#539 exact-head `validate-manifests` runs #38575430454/#38567431761/#38548718033 completed SUCCESS. Auth #75/#76 exact-head `auth-service-ci` runs #40446492086/#41329425940 completed SUCCESS.
-- New Platform PR #1159, branch `fix/stockdividend-tag-digest-correlation-2026-11-04`, head `0cf20767d6f7a1327338fc8874b57fc10d70790a`: `validate-github-actions` #41700394033 completed SUCCESS; `validate-manifests` #41700393711 was still in progress at the time of this checkpoint. Do not merge until the latter completes successfully and the exact PR head is re-read.
+- Platform PR #1159, branch `fix/stockdividend-tag-digest-correlation-2026-11-04`, head `0cf20767d6f7a1327338fc8874b57fc10d70790a`, passed both exact-head checks: `validate-github-actions` #41700394033 and `validate-manifests` #41700393711. After re-reading the exact head and confirming both jobs completed SUCCESS, it was squash-merged as `38d2aba74cd35c95e85337c8b19c0a8309adb0bf`.
 
 ### New StockDividend receiver contract
 - Platform PR #1159 independently verifies each StockDividend full-source-SHA tag against the exact backend/admin digest supplied by `stockdividend-images-published`: `<package>:$TAG` must return the payload's `GHCR_EXPECTED_DIGEST` before the digest reference is separately validated for `linux/arm64`.
