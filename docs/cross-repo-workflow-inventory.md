@@ -2000,3 +2000,19 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Platform then validates both immutable digests against GHCR, updates only `platform/microfe/kustomization.yaml`, validates/merges the exact-head GitOps PR, and triggers the existing targeted `reconcile-vps.yml` authority. No separate MicroFE reconciliation workflow is permitted.
 - The public TCE Actions API is read-only and needs no cross-repository credential on the Platform consumer. TCE's `PLATFORM_INFRA_TOKEN` needs `Contents: write` plus `Actions: read` on Platform Infra because the producer polls promotion/reconciliation runs; StockDividend's separate secret needs only `Contents: write` for its current dispatch flow.
 - Historical TCE WF-08B run #41154490073 (2026-10-31) built and published both images successfully, then failed because the Platform promotion workflow revision at that time required an empty `PLATFORM_INFRA_AUTOMATION_TOKEN`. Current `gitops-image-promotion.yml` uses its workflow-scoped `GITHUB_TOKEN` with explicit permissions; the obsolete automation PAT is not required and must not be reintroduced.
+
+
+## TCE WF-12 exact-second schedule-delivery contract — PR #1019 (in review)
+
+- App-owned `.github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml` remains a read-only observer of WF-06 native schedule delivery and its runner queue. It does not deploy or inspect K3s.
+- Follow-up PR [TCE Dashboard #1019](https://github.com/phanthienquoc/TCE-dashboard/pull/1019) replaces whole-minute-truncated comparisons with exact elapsed-second checks: 25-minute schedule freshness and 15-minute runner queue. Its contract validator rejects the legacy comparisons and tests exact 25m/15m boundaries versus one second over.
+- Existing WF-06 and WF-12 cron expressions are unchanged. No TCE market-scan schedule is changed. WF-12 keeps Actions read-only and continues to forward only its existing authenticated schedule heartbeat to Platform Infra.
+- At inventory update time, exact PR-head WF-05 and WF-02 runs passed; a same-SHA push-triggered WF-05 run was still in progress. Do not mark this follow-up merged until the current head and all relevant checks are re-verified.
+
+
+## TCE WF-12 exact-second schedule-delivery contract — merged
+
+- TCE Dashboard PR [#1019](https://github.com/phanthienquoc/TCE-dashboard/pull/1019) merged at `53227425841b6283bebad3bc5c93d509bd8a316a` after exact-head WF-05/WF-02 PR and same-SHA push checks passed.
+- The app-owned WF-12 read-only watchdog now compares elapsed seconds against the 25-minute WF-06 freshness budget and 15-minute runner queue budget. The contract validator rejects whole-minute comparisons and tests exact 25m/15m boundaries against 25m01s/15m01s.
+- No WF-06/WF-12 cron expression changed; no market-scan schedule changed. WF-12 retains Actions read-only and its existing authenticated Platform heartbeat only.
+- Post-merge WF-01/WF-02/WF-05 and WF-12 push smoke were queued/in progress at the recorded checkpoint; update the tracker after those runs complete.
