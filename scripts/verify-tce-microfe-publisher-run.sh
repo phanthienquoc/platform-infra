@@ -88,15 +88,9 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
     continue
   fi
 
-  required_jobs=(
-    "Test MicroFE Auth"
-    "Test MicroFE WebSocket"
-    "Validate Platform Infra release handoff credential"
-    "Build and publish MicroFE WebSocket image"
-    "Build and publish MicroFE Shell image"
-  )
   jobs_ready=true
-  for job_name in "${required_jobs[@]}"; do
+  while IFS= read -r job_name; do
+    [[ -n "$job_name" ]] || continue
     job="$(jq -c --arg name "$job_name" '[.jobs[] | select(.name == $name)] | last // {}' <<< "$jobs_json")"
     job_status="$(jq -r '.status // empty' <<< "$job")"
     job_conclusion="$(jq -r '.conclusion // empty' <<< "$job")"
@@ -104,7 +98,13 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
       jobs_ready=false
       break
     fi
-  done
+  done <<'REQUIRED_JOBS'
+Test MicroFE Auth
+Test MicroFE WebSocket
+Validate Platform Infra release handoff credential
+Build and publish MicroFE WebSocket image
+Build and publish MicroFE Shell image
+REQUIRED_JOBS
 
   [[ "$jobs_ready" == "true" ]] || {
     retry_or_fail "Required MicroFE test/build/publish jobs are not all completed successfully for run #$SOURCE_RUN_ID" "$attempt"
