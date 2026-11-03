@@ -1254,6 +1254,33 @@ if "Missing PLATFORM_INFRA_MIRROR_TOKEN secret" not in mirror or "git push --mir
     fail("The mirror workflow must fail clearly when its destination-scoped credential is absent and preserve full-ref mirroring.")
 
 
+# Canonical Auth release handoff must prove the exact publisher run and pin the registry digest.
+auth_digest_verifier = ROOT / "scripts" / "verify-auth-publisher-run.sh"
+if not auth_digest_verifier.is_file():
+    fail("Auth publisher provenance verifier is missing.")
+auth_digest_promoter = ROOT / "scripts" / "promote-auth-image-digest.py"
+if not auth_digest_promoter.is_file():
+    fail("Auth digest promotion helper is missing.")
+for required in (
+    "auth-image-published",
+    "EVENT_AUTH_DIGEST: ${{ github.event.client_payload.auth_digest }}",
+    'SOURCE_WORKFLOW_PATH="$EVENT_SOURCE_WORKFLOW_PATH"',
+    '[[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/release.yml" ]]',
+    '[[ "$SOURCE_EVENT" == "workflow_dispatch" ]]',
+    "run: bash scripts/verify-auth-publisher-run.sh",
+    "GHCR_EXPECTED_DIGEST",
+    "promote-auth-image-digest.py",
+):
+    if required not in promotion:
+        fail(f"Auth immutable digest promotion contract is missing: {required}")
+if "bash scripts/tests/verify-auth-publisher-run.test.sh" not in actions_validation:
+    fail("Workflow validation must execute Auth publisher provenance regression tests.")
+if "python3 scripts/promote-auth-image-digest.py --self-test" not in manifest_validation:
+    fail("Manifest validation must execute Auth digest promotion helper regression tests.")
+ghcr_reference_validator = ROOT / "scripts" / "validate-ghcr-image-reference.sh"
+if "GHCR_EXPECTED_DIGEST" not in ghcr_reference_validator.read_text(encoding="utf-8"):
+    fail("GHCR reference validation must support tag-to-digest correlation.")
+
 # Auth must be validated from the effective production render, not raw source YAML.
 auth_contract = ROOT / "scripts" / "validate-auth-gitops-contract.py"
 if not auth_contract.is_file():
