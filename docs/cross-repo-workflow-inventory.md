@@ -1938,3 +1938,9 @@ No production manifest, image, credential, database, replica, release flag, depl
 - `reconcile-schedule-watchdog.yml` now observes the recovery workflow's native `event=schedule` history, active state, 45-minute freshness budget and completed SUCCESS conclusion. It also runs after native scheduled recovery completions.
 - Push smoke is warning-only for stale/missing historical recovery evidence; scheduled/manual/fallback watchdog invocations fail closed. Dispatch/workflow_run/push runs do not count as native schedule delivery.
 - This adds observability only. It does not add a deployment authority, alter recovery behavior, or change any cron expression.
+
+
+## 2026-11-03 — exact recovery freshness boundary
+- PR #1119 added a read-only native schedule/result check for \`recover-stale-ops.yml\`; exact-head and post-merge validation passed, and the post-merge push smoke executed the new step.
+- Follow-up uses elapsed seconds for the 45-minute threshold rather than integer-minute truncation. This prevents a run at 45m35s from being treated as within a 45-minute budget.
+- Native schedule history remains distinct from push, workflow_dispatch, repository_dispatch and workflow_run events. No cron expression or production deployment authority changes.
