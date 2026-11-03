@@ -1016,8 +1016,8 @@ if "bash scripts/tests/restart-blocked-image-pulls.test.sh" not in actions_valid
 # scheduled/manual/fallback invocations must continue to fail closed on stale data.
 if '  push:\n    branches: [master]\n    paths:\n      - ".github/workflows/reconcile-schedule-watchdog.yml"' not in watchdog:
     fail("The watchdog must run a path-scoped post-merge API smoke check on master.")
-if watchdog.count('if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then') != 10:
-    fail("Only the watchdog's empty-history, disabled-workflow, queue-delay, stale-history, and mirror-result guards may be warn-only for push smoke runs.")
+if watchdog.count('if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then') != 14:
+    fail("Only the watchdog's empty-history, disabled-workflow, queue-delay, stale-history, mirror-result, and recovery-result guards may be warn-only for push smoke runs.")
 if '::warning::Read-only API smoke succeeded' not in watchdog:
     fail("The watchdog push smoke must clearly label stale/missing schedule or queue data as a warning, not health success.")
 if '::error::No scheduled reconcile-vps run within ${MAX_AGE_MINUTES} minutes.' not in watchdog:
@@ -1108,6 +1108,33 @@ for required in (
 ):
     if required not in mirror_watchdog_block:
         fail(f"Scheduled mirror watchdog contract is missing: {required}")
+
+
+
+# The recovery controller is a separate scheduled safety net and must be monitored too.
+if "      - Recover Stale Scheduled Ops" not in watchdog:
+    fail("The watchdog must run after native scheduled recovery-controller completions.")
+if "github.event.workflow_run.event == 'schedule'" not in watchdog:
+    fail("Workflow-run watchdog invocations must only follow native scheduled source workflows.")
+if 'MAX_RECOVERY_AGE_MINUTES: "45"' not in watchdog:
+    fail("The watchdog must enforce a 45-minute freshness budget for the 15-minute recovery schedule.")
+recovery_watchdog_step = watchdog.find("name: Verify scheduled recovery controller delivery and result")
+if recovery_watchdog_step < 0 or "if: always()" not in watchdog[recovery_watchdog_step:]:
+    fail("Recovery-controller delivery/result verification must run even when another watchdog check fails.")
+recovery_watchdog_block = watchdog[recovery_watchdog_step:]
+for required in (
+    '"repos/${GITHUB_REPOSITORY}/actions/workflows/recover-stale-ops.yml"',
+    '"repos/${GITHUB_REPOSITORY}/actions/workflows/recover-stale-ops.yml/runs"',
+    "event=schedule",
+    "branch=master",
+    "MAX_RECOVERY_AGE_MINUTES",
+    "age_minutes > MAX_RECOVERY_AGE_MINUTES",
+    '[[ "$conclusion" != "success" ]]',
+    '::error::Scheduled recovery-controller run #${run_id} failed with conclusion=${conclusion}.',
+    '::warning::Read-only API smoke succeeded; latest scheduled recovery-controller run concluded',
+):
+    if required not in recovery_watchdog_block:
+        fail(f"Scheduled recovery-controller watchdog contract is missing: {required}")
 
 
 # GitHub Actions secret names cannot contain hyphens; keep the mirror credential valid and isolated.
