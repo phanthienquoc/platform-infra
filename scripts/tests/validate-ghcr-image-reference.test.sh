@@ -69,8 +69,8 @@ scope_log="$tmp_dir/scopes.log"
 manifest_log="$tmp_dir/manifests.log"
 : > "$scope_log"
 : > "$manifest_log"
-image="ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-abcdef123456789"
-expected_url="https://ghcr.io/v2/phanthienquoc/media-generation/frontend/manifests/prod-v0.3.0-abcdef123456789"
+image="ghcr.io/phanthienquoc/microfe-shell:0123456789abcdef0123456789abcdef01234567"
+expected_url="https://ghcr.io/v2/phanthienquoc/microfe-shell/manifests/0123456789abcdef0123456789abcdef01234567"
 expected_digest="sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 if ! env PATH="$tmp_dir/bin:$PATH" GHCR_TEST_SCOPE_LOG="$scope_log" GHCR_TEST_MANIFEST_LOG="$manifest_log" GHCR_TEST_MANIFEST_DIGEST="$expected_digest" GHCR_USERNAME=test-user GHCR_TOKEN=test-only-secret GHCR_IMAGE_REFERENCE="$image" GHCR_EXPECTED_DIGEST="$expected_digest" bash "$validator" >"$tmp_dir/success.log" 2>&1; then
   cat "$tmp_dir/success.log" >&2
