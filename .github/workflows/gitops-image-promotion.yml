@@ -129,6 +129,7 @@ jobs:
           GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
           SHELL_DIGEST: ${{ steps.digests.outputs.shell_digest }}
           WS_DIGEST: ${{ steps.digests.outputs.ws_digest }}
+          SOURCE_COMMIT: ${{ steps.digests.outputs.source_commit }}
         run: |
           set -euo pipefail
           if [[ -z "$GHCR_USERNAME" || -z "$GHCR_TOKEN" ]]; then
@@ -136,8 +137,19 @@ jobs:
             exit 1
           fi
           TARGET_APP=microfe GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" bash scripts/validate-ghcr-pull-access.sh
-          for image in "ghcr.io/phanthienquoc/microfe-shell@$SHELL_DIGEST" "ghcr.io/phanthienquoc/microfe-ws@$WS_DIGEST"; do
-            GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$image" bash scripts/validate-ghcr-image-reference.sh
+          # The TCE producer publishes each image under the immutable full source SHA.
+          # Correlate that tag to the dispatch digest before accepting the digest ref.
+          for component in shell ws; do
+            image="ghcr.io/phanthienquoc/microfe-$component"
+            digest_var="${component^^}_DIGEST"
+            expected="${!digest_var}"
+            GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" \
+              GHCR_EXPECTED_DIGEST="$expected" \
+              GHCR_IMAGE_REFERENCE="$image:$SOURCE_COMMIT" \
+              bash scripts/validate-ghcr-image-reference.sh
+            GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" \
+              GHCR_IMAGE_REFERENCE="$image@$expected" \
+              bash scripts/validate-ghcr-image-reference.sh
           done
 
       - name: Update MicroFE Kustomize image digests

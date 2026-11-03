@@ -634,6 +634,26 @@ for required in (
         fail(f"MicroFE source-run provenance verifier is missing required guard: {required}")
 if "Authorization" in microfe_provenance:
     fail("Public TCE source-run verification must not introduce a cross-repository credential.")
+
+microfe_ghcr_validation = microfe_job.split(
+    "name: Validate promoted MicroFE images in GHCR", 1
+)[1].split("name: Update MicroFE Kustomize image digests", 1)[0]
+for required in (
+    "SOURCE_COMMIT: ${{ steps.digests.outputs.source_commit }}",
+    "for component in shell ws; do",
+    'image="ghcr.io/phanthienquoc/microfe-$component"',
+    'digest_var="${component^^}_DIGEST"',
+    'expected="${!digest_var}"',
+    'GHCR_EXPECTED_DIGEST="$expected"',
+    'GHCR_IMAGE_REFERENCE="$image:$SOURCE_COMMIT"',
+    'GHCR_IMAGE_REFERENCE="$image@$expected"',
+    "bash scripts/validate-ghcr-image-reference.sh",
+):
+    if required not in microfe_ghcr_validation:
+        fail(f"MicroFE receiver is missing full-SHA tag-to-digest validation: {required}")
+if microfe_ghcr_validation.index('GHCR_IMAGE_REFERENCE="$image:$SOURCE_COMMIT"') > microfe_ghcr_validation.index('GHCR_IMAGE_REFERENCE="$image@$expected"'):
+    fail("MicroFE full-SHA tag-to-digest verification must run before digest-reference validation.")
+
 if "scripts/tests/verify-tce-microfe-publisher-run.test.sh" not in (ROOT / ".github" / "workflows" / "validate-github-actions.yml").read_text(encoding="utf-8"):
     fail("MicroFE publisher provenance regression tests must run in validate-github-actions.")
 
@@ -833,7 +853,7 @@ if 'TARGET_APP="$APP" GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" ba
 # Verify the exact tag/digest directly with a package-scoped Registry V2 bearer token instead.
 if "docker login ghcr.io" in promotion or "docker manifest inspect" in promotion:
     fail("Promotion must not depend on registry-wide Docker login for private GHCR reads.")
-if 'GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$image" bash scripts/validate-ghcr-image-reference.sh' not in promotion:
+if 'GHCR_IMAGE_REFERENCE="$image@$expected"' not in promotion or "bash scripts/validate-ghcr-image-reference.sh" not in promotion:
     fail("MicroFE promotion must verify each exact immutable image digest through Registry V2.")
 if 'GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$IMAGE" bash scripts/validate-ghcr-image-reference.sh' not in promotion:
     fail("Application promotion must verify the exact immutable tag through Registry V2.")
