@@ -1128,7 +1128,7 @@ for required in (
     "event=schedule",
     "branch=master",
     "MAX_RECOVERY_AGE_MINUTES",
-    "age_minutes > MAX_RECOVERY_AGE_MINUTES",
+    "age_seconds > MAX_RECOVERY_AGE_MINUTES * 60",
     '[[ "$conclusion" != "success" ]]',
     '::error::Scheduled recovery-controller run #${run_id} failed with conclusion=${conclusion}.',
     '::warning::Read-only API smoke succeeded; latest scheduled recovery-controller run concluded',
