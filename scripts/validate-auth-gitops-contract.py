@@ -14,8 +14,8 @@ import yaml
 
 NAMESPACE = "microfe-platform"
 IMAGE_PATTERN = re.compile(
-    r"^ghcr\.io/phanthienquoc/auth-service/auth:"
-    r"(?:prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,40}|[0-9a-f]{7,64})$"
+    r"^ghcr\.io/phanthienquoc/auth-service/auth"
+    r"(?::(?:prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,40}|[0-9a-f]{7,64})|@sha256:[0-9a-f]{64})$"
 )
 REQUIRED_SECRET_KEYS = (
     "SUPABASE_URL",
@@ -209,6 +209,12 @@ def self_test() -> None:
     image = validate(baseline)
     if not IMAGE_PATTERN.fullmatch(image):
         fail("self-test fixture image unexpectedly failed immutable-tag validation")
+
+    digest_docs = copy.deepcopy(baseline)
+    digest_image = "ghcr.io/phanthienquoc/auth-service/auth@sha256:" + "a" * 64
+    digest_docs[2]["spec"]["template"]["spec"]["containers"][0]["image"] = digest_image
+    if validate(digest_docs) != digest_image:
+        fail("self-test rejected a digest-pinned Auth image")
 
     cases = [
         (
