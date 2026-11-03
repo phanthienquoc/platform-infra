@@ -1869,3 +1869,11 @@ No production manifest, image, credential, database, replica, release flag, depl
 - **K3s snapshot #1107:** Node Ready/ARM64, K3s 1.36.3+k3s1, Docker 29.1.3, containerd 2.3.2-k3s2, disk 55%, ~19 GiB available RAM, runner services active/policy v14. Media, MicroFE Shell/WS and NATS are 1/1; Stock Admin two Pods and new Backend Pod are ImagePullBackOff on old tag `12d63b4`; old Backend and legacy Frontend are 1/1; TCE/Auth/Keycloak-related workloads remain 0/0. No rollout or maintenance.
 - **Owner gates:** mirror token (destination-only Contents:write), StockDividend Actions-read token (presence unverified), explicit StockDividend release authorization, and Auth Supabase integration/migration provenance review remain outstanding.
 - Preserve CI/test/security, backup, manual, release and scheduled workflows. No duplicate SSH/Compose deployment authority. No credential, database, production image, manifest, replica, cron or maintenance change. `reconcile-vps.yml` remains sole apply authority.
+
+## 2026-11-03 09:05 ICT / 02:05 UTC — StockDividend migration image contract merged
+
+- StockDividend PR #31 merged at `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`. Exact-head CI run #41563638198 completed SUCCESS across all six jobs, including the new backend runtime-image/migration-binary job.
+- The new CI job builds a non-publishing amd64 backend image, verifies executable `/app/main` and `/app/migrate`, and verifies that migration exits on missing `MONGO_URI` before any database connection. It does not run a migration.
+- The backend Dockerfile now compiles the migration command as a static executable; it no longer copies the Go source file into the runtime image. The master publisher's `backend/**` path should start an app-owned ARM64 publication after merge. No post-merge publisher run/digests were returned by the current connector query, so publication remains unverified.
+- The publisher's production release hold remains in place. No Platform repository_dispatch, GitOps PR, manifest promotion, or production migration was observed. Do not infer a release from the successful CI image build.
+- Platform runtime README now distinguishes the source/Dockerfile fix and CI evidence from production ARM64 publication, promotion, and separately authorized migration execution.
