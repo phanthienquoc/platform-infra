@@ -2104,3 +2104,13 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Watchdog #41633130972 failed because native reconcile, mirror and inspection schedules remain stale; the mirror's latest native run #41611280196 failed due missing \`PLATFORM_INFRA_MIRROR_TOKEN\`. Workflow enabled checks passed.
 - Native recovery is fresh; native reconcile/inspection/mirror are not. TCE WF-06/WF-12 native runs remain stale/failed. Fallback \`workflow_dispatch\` and \`workflow_run\` events are not schedule proof.
 - No schedule definitions changed. Keep strict health assertions, all CI/security/manual/release/backup workflows, and the sole \`reconcile-vps.yml\` production apply authority. TCE market-scan schedule unchanged.
+
+
+## 2026-11-03 20:15 ICT / 13:15 UTC — Auth immutable digest publisher contract
+
+- **Application owner:** `phanthienquoc/phanthienquoc-authentication` owns Auth service source, tests, Dockerfile, manual-only release publisher, and immutable GHCR image publication.
+- **Platform owner:** `phanthienquoc/platform-infra/.github/workflows/gitops-image-promotion.yml` receives `auth-image-published`; it validates full source SHA and public Actions run provenance, confirms the versioned GHCR tag maps to the supplied digest and has linux/arm64, then creates a narrowly scoped GitOps PR that pins the Auth image by digest.
+- Platform verifier: `scripts/verify-auth-publisher-run.sh`; digest manifest helper: `scripts/promote-auth-image-digest.py`; registry tag/digest correlation: `scripts/validate-ghcr-image-reference.sh` with `GHCR_EXPECTED_DIGEST`.
+- Regression coverage: `scripts/tests/verify-auth-publisher-run.test.sh`, `scripts/tests/validate-ghcr-image-reference.test.sh`, and the Auth digest promotion helper self-test are included in Platform CI.
+- Producer implementation is proposed in Auth PR [#87](https://github.com/phanthienquoc/phanthienquoc-authentication/pull/87), still open. Its exact-head Auth CI passed, but Supabase Preview was skipped. Do not merge until the Supabase-on-master side effect gate is explicitly resolved. Do not trigger the manual Auth publisher while this producer PR is unmerged.
+- No workflow was removed. Existing CI, security, manual/release and scheduled jobs remain purposeful. `reconcile-vps.yml` is still the sole production apply authority; no direct SSH/Compose deployment authority was added. TCE market-scan schedule unchanged.
