@@ -94,6 +94,8 @@ for required_path in (
         fail(f"Recovery push bootstrap is missing deployment path filter: {required_path}")
 
 recovery_push_paths = recovery.split("  push:", 1)[1].split("  workflow_dispatch:", 1)[0]
+if '"!apps/**/*.md"' not in recovery_push_paths:
+    fail("Recovery push must exclude Markdown-only app documentation from production bootstrap.")
 if '".github/workflows/reconcile-vps.yml"' in recovery_push_paths:
     fail("Changes to the production apply workflow must be validated but must not auto-dispatch production reconciliation.")
 if '".github/workflows/recover-stale-ops.yml"' in recovery_push_paths:
