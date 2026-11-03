@@ -113,6 +113,16 @@ jobs:
             echo "release=$EXPECTED_RELEASE"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Verify TCE MicroFE publisher provenance
+        env:
+          SOURCE_REPOSITORY: ${{ github.event.client_payload.source_repository }}
+          SOURCE_RUN_ID: ${{ github.event.client_payload.source_run_id }}
+          SOURCE_WORKFLOW_PATH: ${{ github.event.client_payload.source_workflow_path }}
+          SOURCE_EVENT: ${{ github.event.client_payload.source_event }}
+          SOURCE_HEAD_SHA: ${{ github.event.client_payload.source_head_sha }}
+          SOURCE_COMMIT: ${{ steps.digests.outputs.source_commit }}
+        run: bash scripts/verify-tce-microfe-publisher-run.sh
+
       - name: Validate promoted MicroFE images in GHCR
         env:
           GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}
