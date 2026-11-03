@@ -4039,3 +4039,15 @@ No code or production manifests were changed in this checkpoint. No image promot
 5. Keep Auth/Keycloak off until explicit activation plus DB/DNS/migration prerequisites; schedule host maintenance before applying updates.
 
 TCE market-scan schedule unchanged. \`reconcile-vps.yml\` remains the sole production apply authority.
+
+
+## 2026-11-03 19:08 ICT / 12:08 UTC — native recovery tick resumed; watchdog still red
+
+- Platform PR #1143 merged at \`a5d6d77b2754736c9ad301dbbfd1560d7862e7f7\`; post-merge \`validate-manifests\` #41633017723 SUCCESS. Platform open drafts remain #544/#541/#539.
+- A new native scheduled recovery-controller tick [#41633096574](https://github.com/phanthienquoc/platform-infra/actions/runs/41633096574) completed SUCCESS at 12:07:39Z. It verified the most recent reconciliation #41632142164 (age 4m) and inspection #41632477654 (age 3m) were recent, so no duplicate fallback dispatch was needed.
+- The resulting watchdog [#41633130972](https://github.com/phanthienquoc/platform-infra/actions/runs/41633130972) (event=workflow_run, not a native schedule) completed FAILURE. Exact findings: no native scheduled reconciliation within 45m (latest #41591224283, 06:39:06Z); no native scheduled mirror within 90m (latest #41611280196, 09:28:17Z, 159m old, missing \`PLATFORM_INFRA_MIRROR_TOKEN\`); no native scheduled inspection within 75m (latest #41603684581, 08:29:41Z, 218m old). Workflow enabled checks passed. Native recovery is the only schedule lane with a fresh delivery in this checkpoint.
+- Latest inspection remains #41632477654 (workflow_dispatch fallback) and latest reconciliation remains #41632142164 (workflow_dispatch fallback). The recovery tick did not dispatch another reconciliation/inspection because those fallbacks were fresh; do not count them as native schedule delivery.
+- TCE native WF-06 #41614307460 (09:50:40Z) and WF-12 #41605106319 (08:41:06Z) remain the latest schedule events and failed. Preserve strict HTTP 200 assertions and all cron expressions, including market-scan schedules.
+- No new production mutation occurred in recovery #41633096574. Stock Admin/Backend ARM64 failure, GHCR mirror token owner action, Media paired-digest E2E and Auth/Keycloak activation gates remain as recorded above.
+
+Next action: owner configures destination-only \`PLATFORM_INFRA_MIRROR_TOKEN\`; then continue observing native reconcile/inspection/mirror ticks separately from fallback dispatches. TCE market-scan schedule unchanged.
