@@ -2030,3 +2030,43 @@ No production manifest, image, credential, database, replica, release flag, depl
 
 - TCE PR #1019 merged as `53227425841b6283bebad3bc5c93d509bd8a316a`. Exact-second 25m freshness and 15m queue checks plus one-second-over regressions passed. Post-merge WF-01/WF-02/WF-05/WF-12 push smoke all passed.
 - Latest WF-12 push smoke #41608676616 still warned that native WF-06 schedule delivery was stale (411m; queue 0m). This is not a native schedule pass. WF-06 and WF-12 cron expressions and all market-scan schedules are unchanged.
+
+
+## 2026-11-03 17:56 ICT / 10:56 UTC — current cross-repo workflow evidence
+
+### Master refs and latest application validation
+
+| Repository | Master SHA | Latest relevant result |
+|---|---|---|
+| Platform Infra | `ee779f525021f69c9df9df0c66e01948cede345f` | `validate-github-actions` #41616987207 PASS; `validate-manifests` #41617368068 PASS |
+| TCE Dashboard | `53227425841b6283bebad3bc5c93d509bd8a316a` | WF-01 #41608676328, WF-02 #41608676350, WF-05 #41608676512 PASS |
+| StockDividend | `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec` | CI #41563856934 and ARM64 publisher #41563856933 PASS; production handoff/dispatch skipped because release gate=false |
+| Media Generation | `e4c7d8990aafc7d837e918c9caf39722d623de7c` | CI #41617592783 PASS; paired-digest publisher E2E still pending |
+| Authentication | `1f39b18d9dd286da9dde32a79c4da269b19d5cfd` | Web #41542942080 and service #41542941957 PASS; migration side-effect gate remains unresolved |
+
+### Native schedule inventory (fallback events do not count)
+
+| Workflow | Latest native event | Result / finding |
+|---|---|---|
+| Platform mirror | #41611280196, 09:28:17Z | FAIL — `PLATFORM_INFRA_MIRROR_TOKEN` empty |
+| Platform inspection | #41603684581, 08:29:41Z | PASS; later #41614707823 was workflow_dispatch only |
+| Platform reconciliation | #41591224283, 06:39:06Z | FAIL — StockDividend lane |
+| Platform watchdog | #41591762943, 06:44:09Z | FAIL — stale schedule evidence |
+| Platform recovery | #41577147958, 04:16:26Z | PASS but stale; later dispatch/workflow_run events are not native |
+| TCE WF-06 | #41614307460, 09:50:40Z | FAIL — four public endpoints HTTP 503 |
+| TCE WF-12 | #41605106319, 08:41:06Z | FAIL — WF-06 native delivery stale; later workflow_run #41614338174 is not a schedule tick |
+| TCE WF-07 integration | #41556575907, 00:58:19Z | PASS |
+| TCE WF-07 backup | #41557498266, 01:06:20Z | PASS |
+| StockDividend weekend scraper | #41284033242, 2026-11-01 | CANCELLED; not a production publisher |
+| Media / Authentication | No scheduled deployment run in queried history | No native schedule evidence |
+
+### Runtime and promotion ownership
+
+- Latest read-only K3s snapshot is `debug/vps-latest.md`, generated 09:53:49Z by inspection #41614707823. It records Node Ready, ARM64, K3s v1.36.3+k3s1, disk 55%, about 19 GiB available RAM, runner policy v14, and pending host restart/updates.
+- Media and MicroFE workloads were 1/1 Running. Stock Admin and new Backend remained ImagePullBackOff on `12d63b4`; old Backend and Frontend were Running. TCE frontend/service and Keycloak/Auth were 0/0. GitOps drift was clean.
+- Platform reconciliation #41614373680 (workflow_dispatch) completed with StockDividend FAILURE; MicroFE, Auth, TCE and Media lanes succeeded, Keycloak was skipped, and manifest apply was skipped because no drift was detected.
+- Media legacy `media-release-requested` tag-only fan-out has been retired by Platform PR #1137; Media PR #71 adds a producer regression test. New production contract is one `media-images-published` event carrying both immutable digests and source-run provenance. A real post-merge publisher dispatch is still required to prove end-to-end handoff.
+- StockDividend's explicit release gate remains false. Never promote its paired Admin/Backend digests until protected Actions-read credential verification and production authorization are complete.
+- TCE WF-06 remains public-smoke-only with expected HTTP 200; its strict assertion is retained. TCE/Auth are currently scale-to-zero, matching the prior operator direction. Do not reclassify HTTP 503 as healthy or alter their schedule to suppress evidence.
+- TCE WF-06 cron remains `*/15 * * * *`; WF-12 remains `7,22,37,52 * * * *`. TCE's app-side `validate-wf-06-healthcheck-contract.sh` explicitly pins both expressions. Market-scan schedules were not changed.
+- `reconcile-vps.yml` remains the only production apply authority. App repositories own tests/builds and immutable GHCR publication; Platform Infra owns production manifests, shared GHCR pull credentials, GitOps promotion/reconciliation and rollout/health verification. Preserve purposeful CI, security, backup, manual, release and scheduled workflows.
