@@ -3546,3 +3546,43 @@ All TCE market-scan cron expressions remain unchanged. Production remains NOT HE
 - Explicit StockDividend production release authorization remains absent.
 - Auth #75/#76 require review of Supabase production integration side effects and migration provenance/drift before any privileged action.
 - No production manifest/image reference, shared GHCR pull credential, database object, desired replica, cron expression, Pod restart, migration or host maintenance changed. `reconcile-vps.yml` remains the sole production apply authority. TCE market-scan schedule unchanged.
+
+
+## 2026-11-03 03:03 UTC — StockDividend ARM64 publication and docs-safe reconciliation trigger
+
+### Repository state and open PRs
+- Current master heads: Platform Infra `f4fd705444b92ce28a5498280ffc9e4d6a971db0`; TCE Dashboard `5d299bea8ba482876ccaa291c68b0ee3f829350c`; StockDividend `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media Generation `763fdcd1463fe4d95c81c93d1e7ae010f2cd0cd3`; Authentication `1f39b18d9dd286da9dde32a79c4da269b19d5cfd`.
+- Open PRs: Platform #544/#541/#539 (all draft; validation passes but none is an approval to activate Keycloak); Authentication #75 (non-draft) and #76 (draft); no open PRs in TCE, StockDividend or Media.
+- Auth #75/#76 latest head checks: `validate` SUCCESS; `Supabase Preview` SKIPPED. Keep merge/migration side-effect gates until production integration target and migration provenance are resolved.
+- Latest application master CI: StockDividend CI #41563856934 SUCCESS; Media CI #41525798015 SUCCESS; Auth web #41542942080 and service #41542941957 SUCCESS; TCE WF-01 #41533998356, WF-02 #41533998448 and backend tests #41533998355 SUCCESS.
+
+### StockDividend immutable ARM64 publication — verified
+- App-owned master publisher [#41563856933](https://github.com/phanthienquoc/stockdividend/actions/runs/41563856933) completed SUCCESS on native ARM64 for source SHA `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`.
+- The publisher verified the full-SHA image tag and `linux/arm64` manifest for each component:
+  - Scraper: `sha256:6b3ee2676268baf8ae2e77f68df3b730d797ea6192541710720d04585e99f8a2`.
+  - Admin: `sha256:a5c2dbb1a0b6c417891e18256fd4c00a6e14e53a4c34939c12fc1e43c7f3339e`.
+  - Backend: `sha256:cb0135fc57bc8a2514288105ab35cc59f4cb922555f028dbf97f44c077b76a9a`.
+- Publisher job evidence: native ARM64 runner check PASS; all three image builds/pushes PASS; registry manifest/digest verification PASS. Production release-gate output was `false`; Platform handoff validation and atomic promotion-dispatch jobs were SKIPPED. No StockDividend promotion dispatch was produced by this run.
+- This closes the post-merge publication evidence gap from the prior tracker entry. It does **not** close production promotion or rollout. The production overlay remains Admin/Backend tag `12d63b4`; do not change it without explicit release authorization. The Stock lane in Platform reconciliation #41563976954 later confirmed two Admin Pods and the new Backend Pod still fail to pull that tag with `no match for platform in manifest`.
+- StockDividend PR #31 migration binary fix remains CI-only with no migration execution. The newly published backend image contains the executable, but database migration remains a separate operator procedure requiring explicit authorization.
+
+### Platform PR #1110 — docs-only pushes no longer invoke production reconciliation
+- PR #1110 merged at `f4fd705444b92ce28a5498280ffc9e4d6a971db0`; exact PR head `9af2fad7d8e05372ef16ccb3782634c001cfa173`.
+- Exact-head checks: validate #41569698092 SUCCESS; Keycloak manifest/boundary validation #41569698093 SUCCESS; lint #41569697954 SUCCESS. The first lint attempt caught overlapping Bash case globs (SC2221/SC2222); the redundant glob was removed and the final exact-head run passed.
+- Root cause: Platform PR #1108 changed only `apps/stockdividend/README.md` under the app tree plus tracker documents. Broad `apps/**` push filtering triggered push-auto reconciliation #41563976954, and the resolver matched `apps/stockdividend/*` before the generic documentation case, incorrectly assigning the StockDividend lane. The lane correctly failed closed on the existing production image-pull error.
+- Fix: `reconcile-vps.yml` now excludes Markdown-only paths under `apps/**`; `resolve-push-deployment-scope.sh` ignores app Markdown/docs paths before app-scope matching; regression fixtures prove docs-only changes do not resolve to an app and docs accompanying a real manifest change preserve the app scope. The cross-workflow validator enforces this contract.
+- This is a trigger/scope correction only. `reconcile-vps.yml` remains the sole production apply authority; production manifests, image refs, credentials, database, replicas and release flags are unchanged.
+
+### Latest runtime and scheduled evidence
+- Latest verified K3s snapshot remains `debug/vps-latest.md` generated `2026-11-03T01:11:21Z`, from native scheduled inspection [#41558049412](https://github.com/phanthienquoc/platform-infra/actions/runs/41558049412) (event=`schedule`, SUCCESS). At the latest query around 03:03 UTC this snapshot was over the 75-minute inspection freshness budget; no later native inspection schedule run was returned. Do not treat push/dispatch/manual inspection as a schedule tick.
+- Snapshot: node Ready/ARM64, K3s v1.36.3+k3s1, Docker 29.1.3, containerd 2.3.2-k3s2, disk 55%, ~19 GiB available RAM, runners active/policy v14. Media, MicroFE Shell/WS and NATS 1/1. Stock Admin Pods remain ImagePullBackOff; old Backend and legacy Frontend were 1/1 in the snapshot. Later Stock lane #41563976954 also observed the new Backend Pod ImagePullBackOff. TCE/Auth/Keycloak remain scale-to-zero in the last snapshot. OS/containerd/Docker updates are pending with `restart_required=yes`; no maintenance was performed.
+- Platform latest recovery [#41565226339](https://github.com/phanthienquoc/platform-infra/actions/runs/41565226339) was a `repository_dispatch` heartbeat response and SUCCESS; its source was TCE WF-06 scheduled run #41565175484. It is not a native Platform schedule tick.
+- Latest native Platform history in the current Actions query: inspection #41558049412 SUCCESS; mirror #41560381641 FAILURE (missing destination mirror credential); reconciliation #41549849545 FAILURE (StockDividend health); watchdog #41549659062 FAILURE (stale inspection); recovery #41547230804 SUCCESS. Later push/dispatch/workflow_run events must remain classified separately.
+- Latest TCE native runs: WF-06 #41565175484 FAILURE (four strict public endpoint checks); WF-07 #41557498266 SUCCESS; WF-12 schedule #41562429843 FAILURE (freshness). WF-12 workflow_run #41565215560 SUCCESS after WF-06, but it does not replace a native WF-12 schedule tick. Keep all TCE cron expressions and the market-scan schedule unchanged.
+
+### Owner gates and safety
+- `PLATFORM_INFRA_MIRROR_TOKEN`: owner must configure destination-only Contents:write for the private mirror destination.
+- `STOCKDIVIDEND_ACTIONS_READ_TOKEN`: presence remains unverified; owner must configure StockDividend-only Actions:read before provenance handoff.
+- Explicit StockDividend production release authorization remains absent; the publisher release gate correctly remained false.
+- Auth #75/#76 require production Supabase integration/effect and migration provenance review.
+- No production image reference/digest promotion, GitOps manifest apply, database migration, shared GHCR credential rotation, desired replica change, Pod restart, image deletion, VPS reboot or package maintenance occurred. Preserve `reconcile-vps.yml` as sole apply authority and leave the TCE market-scan schedule unchanged.
