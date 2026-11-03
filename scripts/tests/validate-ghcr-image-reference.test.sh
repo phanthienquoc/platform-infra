@@ -77,7 +77,7 @@ if ! env PATH="$tmp_dir/bin:$PATH" GHCR_TEST_SCOPE_LOG="$scope_log" GHCR_TEST_MA
   echo "Expected exact GHCR manifest validation to pass." >&2
   exit 1
 fi
-grep -Fxq 'repository:phanthienquoc/media-generation/frontend:pull' "$scope_log"
+grep -Fxq 'repository:phanthienquoc/microfe-shell:pull' "$scope_log"
 grep -Fxq "$expected_url" "$manifest_log"
 grep -Fq "Verified GHCR tag-to-digest mapping: $image -> $expected_digest." "$tmp_dir/success.log"
 if grep -q 'test-only-secret\|test-only-scoped-token' "$tmp_dir/success.log"; then
