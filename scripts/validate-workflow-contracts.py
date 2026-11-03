@@ -33,10 +33,13 @@ cleanup = read("vps-image-cleanup.yml")
 # selects apply. Scheduled, push and authenticated promotion events keep their
 # existing automatic apply behavior; this contract does not change cron cadence.
 manual_dispatch = reconcile.split("  workflow_dispatch:", 1)[1].split("  repository_dispatch:", 1)[0]
-if not re.search(
-    r"(?ms)^    mode:\\s*\\n        description:.*\\n        required: true\\n        default: plan\\n        type: choice\\s*$",
-    manual_dispatch,
-):
+expected_manual_mode = """      mode:
+        description: "Reconciliation mode (manual dispatch defaults to read-only plan; choose apply explicitly)"
+        required: true
+        default: plan
+        type: choice
+"""
+if expected_manual_mode not in manual_dispatch:
     fail("Manual reconcile-vps dispatch must default to read-only plan; apply must be an explicit operator choice.")
 if "github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'repository_dispatch') && 'apply'" not in reconcile:
     fail("Scheduled, push and authenticated GitOps reconciliation must retain their existing automatic apply mode.")
