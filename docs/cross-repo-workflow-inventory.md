@@ -1934,7 +1934,7 @@ No production manifest, image, credential, database, replica, release flag, depl
 
 
 ## 2026-11-03 — recovery-controller schedule is now part of the watchdog inventory
-- \`recover-stale-ops.yml\` remains the independent 15-minute recovery controller at \`10,25,40,55 * * * *\`; it validates source run provenance and dispatches only the existing \`reconcile-vps.yml\` apply authority or read-only \`inspect-vps.yml\` fallback.
-- \`reconcile-schedule-watchdog.yml\` now observes the recovery workflow's native \`event=schedule\` history, active state, 45-minute freshness budget and completed SUCCESS conclusion. It also runs after native scheduled recovery completions.
+- `recover-stale-ops.yml` remains the independent 15-minute recovery controller at `10,25,40,55 * * * *`; it validates source run provenance and dispatches only the existing `reconcile-vps.yml` apply authority or read-only `inspect-vps.yml` fallback.
+- `reconcile-schedule-watchdog.yml` now observes the recovery workflow's native `event=schedule` history, active state, 45-minute freshness budget and completed SUCCESS conclusion. It also runs after native scheduled recovery completions.
 - Push smoke is warning-only for stale/missing historical recovery evidence; scheduled/manual/fallback watchdog invocations fail closed. Dispatch/workflow_run/push runs do not count as native schedule delivery.
 - This adds observability only. It does not add a deployment authority, alter recovery behavior, or change any cron expression.
