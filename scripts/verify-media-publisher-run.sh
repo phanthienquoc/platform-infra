@@ -58,6 +58,60 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   case "$status" in
     completed)
       [[ "$conclusion" == "success" ]] || fail "Media publisher run #$SOURCE_RUN_ID completed with conclusion=${conclusion:-missing}; refusing GitOps promotion."
+
+      # Verify both native ARM64 builds, immutable GHCR publication/digest inspection,
+      # and the Platform handoff in this exact source Actions run.
+      jobs_api_url="$API_URL/jobs?per_page=100"
+      if ! jobs_response="$(curl --fail-with-body --silent --show-error \
+        --connect-timeout 5 --max-time 15 \
+        -H "Accept: application/vnd.github+json" \
+        -H "X-GitHub-Api-Version: 2022-11-28" \
+        "$jobs_api_url" 2>/dev/null)"; then
+        fail "Unable to fetch Media source run #$SOURCE_RUN_ID job evidence from the public GitHub Actions API."
+      fi
+
+      verify_job_success() {
+        local expected_name="$1"
+        local job
+        job="$(jq -c --arg name "$expected_name" '[.jobs[]? | select(.name == $name)] | if length == 1 then .[0] else empty end' <<< "$jobs_response")"
+        [[ -n "$job" ]] || fail "Media publisher run #$SOURCE_RUN_ID is missing required job: $expected_name."
+        local job_status job_conclusion
+        job_status="$(jq -r '.status // empty' <<< "$job")"
+        job_conclusion="$(jq -r '.conclusion // empty' <<< "$job")"
+        [[ "$job_status" == "completed" && "$job_conclusion" == "success" ]] || fail "Media publisher job '$expected_name' is not completed-success (status=$job_status conclusion=$job_conclusion)."
+      }
+
+      verify_step_success() {
+        local job_name="$1"
+        local expected_step="$2"
+        local step
+        step="$(jq -c --arg job "$job_name" --arg name "$expected_step" '[.jobs[]? | select(.name == $job) | .steps[]? | select(.name == $name)] | if length == 1 then .[0] else empty end' <<< "$jobs_response")"
+        [[ -n "$step" ]] || fail "Media publisher run #$SOURCE_RUN_ID is missing required step '$expected_step' in job '$job_name'."
+        local step_conclusion
+        step_conclusion="$(jq -r '.conclusion // empty' <<< "$step")"
+        [[ "$step_conclusion" == "success" ]] || fail "Media publisher step '$expected_step' in '$job_name' did not succeed (conclusion=$step_conclusion)."
+      }
+
+      verify_job_success "Require master for production release"
+      verify_job_success "Resolve production image tag"
+      verify_job_success "Build frontend (native ARM64)"
+      verify_job_success "Build backend (native ARM64)"
+      verify_job_success "Publish immutable images and promote platform-infra"
+      verify_step_success "Build frontend (native ARM64)" "Verify native architecture"
+      verify_step_success "Build frontend (native ARM64)" "Build frontend image"
+      verify_step_success "Build frontend (native ARM64)" "Verify frontend architecture"
+      verify_step_success "Build frontend (native ARM64)" "Export and validate frontend image"
+      verify_step_success "Build backend (native ARM64)" "Validate backend inputs"
+      verify_step_success "Build backend (native ARM64)" "Verify native architecture"
+      verify_step_success "Build backend (native ARM64)" "Build backend image"
+      verify_step_success "Build backend (native ARM64)" "Verify backend architecture"
+      verify_step_success "Build backend (native ARM64)" "Export and validate backend image"
+      verify_step_success "Publish immutable images and promote platform-infra" "Load and validate exact release images"
+      verify_step_success "Publish immutable images and promote platform-infra" "Publish exact release images"
+      verify_step_success "Publish immutable images and promote platform-infra" "Verify immutable registry digests and ARM64 manifests"
+      verify_step_success "Publish immutable images and promote platform-infra" "Notify platform-infra"
+
+      echo "Verified successful Media publisher run #$SOURCE_RUN_ID: workflow=$workflow_path event=$event branch=$branch sha=$head_sha; native ARM64 builds, immutable GHCR digest checks and Platform dispatch succeeded."
       echo "Verified successful Media publisher run #$SOURCE_RUN_ID: workflow=$workflow_path event=$event branch=$branch sha=$head_sha."
       exit 0
       ;;
