@@ -6,9 +6,9 @@ run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target
   workflow_dispatch:
     inputs:
       mode:
-        description: "Reconciliation mode"
+        description: "Reconciliation mode (manual dispatch defaults to read-only plan; choose apply explicitly)"
         required: true
-        default: apply
+        default: plan
         type: choice
         options:
           - plan
