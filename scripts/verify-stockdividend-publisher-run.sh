@@ -54,6 +54,46 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   case "$status" in
     completed)
       [[ "$conclusion" == "success" ]] || fail "StockDividend publisher run #$SOURCE_RUN_ID completed with conclusion=${conclusion:-missing}; refusing GitOps promotion."
+
+      # A successful workflow conclusion alone is not proof that the publisher actually
+      # built ARM64 images and executed the authorized digest-dispatch job. Verify the
+      # required source jobs and critical steps through the Actions Jobs API.
+      jobs_response="$(GH_TOKEN="$STOCKDIVIDEND_ACTIONS_READ_TOKEN" gh api "repos/phanthienquoc/stockdividend/actions/runs/$SOURCE_RUN_ID/jobs?per_page=100")"
+
+      verify_job_success() {
+        local expected_name="$1"
+        local job
+        job="$(jq -c --arg name "$expected_name" '[.jobs[]? | select(.name == $name)] | if length == 1 then .[0] else empty end' <<< "$jobs_response")"
+        [[ -n "$job" ]] || fail "StockDividend publisher run #$SOURCE_RUN_ID is missing required job: $expected_name."
+        local job_status job_conclusion
+        job_status="$(jq -r '.status // empty' <<< "$job")"
+        job_conclusion="$(jq -r '.conclusion // empty' <<< "$job")"
+        [[ "$job_status" == "completed" && "$job_conclusion" == "success" ]] || fail "StockDividend publisher job '$expected_name' is not completed-success (status=$job_status conclusion=$job_conclusion)."
+      }
+
+      verify_step_success() {
+        local job_name="$1"
+        local expected_step="$2"
+        local step
+        step="$(jq -c --arg job "$job_name" --arg name "$expected_step" '[.jobs[]? | select(.name == $job) | .steps[]? | select(.name == $name)] | if length == 1 then .[0] else empty end' <<< "$jobs_response")"
+        [[ -n "$step" ]] || fail "StockDividend publisher run #$SOURCE_RUN_ID is missing required step '$expected_step' in job '$job_name'."
+        local step_conclusion
+        step_conclusion="$(jq -r '.conclusion // empty' <<< "$step")"
+        [[ "$step_conclusion" == "success" ]] || fail "StockDividend publisher step '$expected_step' in '$job_name' did not succeed (conclusion=$step_conclusion)."
+      }
+
+      verify_job_success "Require master for production image publication"
+      verify_job_success "Gate production GitOps promotion"
+      verify_job_success "build-and-push"
+      verify_job_success "Validate Platform Infra release handoff before promotion"
+      verify_job_success "Dispatch atomic StockDividend digest promotion"
+      verify_step_success "build-and-push" "Verify native ARM64 runner"
+      verify_step_success "build-and-push" "Build and push Scraper"
+      verify_step_success "build-and-push" "Build and push Admin"
+      verify_step_success "build-and-push" "Build and push Backend"
+      verify_step_success "build-and-push" "Verify immutable image manifests for ARM64"
+
+      echo "Verified StockDividend publisher run #$SOURCE_RUN_ID: workflow=$workflow_path event=$event branch=$branch sha=$head_sha; required ARM64 build, registry-manifest, handoff and dispatch jobs succeeded."
       echo "Verified successful StockDividend publisher run #$SOURCE_RUN_ID: workflow=$workflow_path event=$event branch=$branch sha=$head_sha."
       exit 0
       ;;

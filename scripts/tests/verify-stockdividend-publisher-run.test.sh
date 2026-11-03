@@ -12,6 +12,10 @@ cat > "$tmp_dir/bin/gh" <<'MOCK'
 set -euo pipefail
 [[ "${1:-}" == "api" ]] || exit 2
 [[ "${GH_TOKEN:-}" == "test-token" ]] || exit 3
+if [[ "$*" == *"/jobs?per_page=100"* ]]; then
+  cat "$MOCK_GH_JOBS_RESPONSE_FILE"
+  exit 0
+fi
 count=0
 [[ -f "$MOCK_GH_COUNT_FILE" ]] && count="$(cat "$MOCK_GH_COUNT_FILE")"
 count=$((count + 1))
@@ -50,12 +54,31 @@ make_run() {
     '{id:($id|tonumber),repository:{full_name:$repo},head_repository:{full_name:$repo},path:$path,event:$event,head_branch:$branch,head_sha:$sha,status:$status,conclusion:$conclusion}'
 }
 
+make_jobs() {
+  jq -n '{
+    jobs: [
+      {name:"Require master for production image publication",status:"completed",conclusion:"success"},
+      {name:"Gate production GitOps promotion",status:"completed",conclusion:"success"},
+      {name:"build-and-push",status:"completed",conclusion:"success",steps:[
+        {name:"Verify native ARM64 runner",conclusion:"success"},
+        {name:"Build and push Scraper",conclusion:"success"},
+        {name:"Build and push Admin",conclusion:"success"},
+        {name:"Build and push Backend",conclusion:"success"},
+        {name:"Verify immutable image manifests for ARM64",conclusion:"success"}
+      ]},
+      {name:"Validate Platform Infra release handoff before promotion",status:"completed",conclusion:"success"},
+      {name:"Dispatch atomic StockDividend digest promotion",status:"completed",conclusion:"success"}
+    ]
+  }'
+}
+
 run_validator() {
   rm -f "$tmp_dir/count"
   PATH="$tmp_dir/bin:$PATH" \
     STOCKDIVIDEND_ACTIONS_READ_TOKEN=test-token \
     MOCK_GH_COUNT_FILE="$tmp_dir/count" \
     MOCK_GH_RESPONSE_FILE="$tmp_dir/response.json" \
+    MOCK_GH_JOBS_RESPONSE_FILE="$tmp_dir/jobs.json" \
     MOCK_GH_FIRST_RESPONSE="${MOCK_GH_FIRST_RESPONSE:-}" \
     SOURCE_RUN_ID="$sample_run_id" \
     SOURCE_WORKFLOW_PATH="$sample_path" \
@@ -74,6 +97,8 @@ expect_failure() {
     exit 1
   fi
 }
+
+make_jobs > "$tmp_dir/jobs.json"
 
 # A source run that is still in progress must be polled until its successful completion.
 make_run in_progress "" > "$tmp_dir/in-progress.json"
@@ -101,6 +126,24 @@ make_run completed success "$sample_repo" "$sample_path" push master aaaaaaaaaaa
 expect_failure "SHA mismatch"
 make_run completed failure > "$tmp_dir/response.json"
 expect_failure "failed publisher conclusion"
+
+# A successful workflow conclusion is insufficient if any required publish/handoff job or step did not succeed.
+make_jobs > "$tmp_dir/jobs.json"
+jq '(.jobs[] | select(.name == "Dispatch atomic StockDividend digest promotion")).conclusion = "skipped"' "$tmp_dir/jobs.json" > "$tmp_dir/jobs-invalid.json"
+mv "$tmp_dir/jobs-invalid.json" "$tmp_dir/jobs.json"
+expect_failure "release dispatch job skipped"
+
+make_jobs > "$tmp_dir/jobs.json"
+jq '(.jobs[] | select(.name == "build-and-push") | .steps[] | select(.name == "Verify immutable image manifests for ARM64")).conclusion = "failure"' "$tmp_dir/jobs.json" > "$tmp_dir/jobs-invalid.json"
+mv "$tmp_dir/jobs-invalid.json" "$tmp_dir/jobs.json"
+expect_failure "ARM64 immutable manifest verification failed"
+
+make_jobs > "$tmp_dir/jobs.json"
+jq 'del(.jobs[] | select(.name == "Validate Platform Infra release handoff before promotion"))' "$tmp_dir/jobs.json" > "$tmp_dir/jobs-invalid.json"
+mv "$tmp_dir/jobs-invalid.json" "$tmp_dir/jobs.json"
+expect_failure "missing release handoff job"
+
+make_jobs > "$tmp_dir/jobs.json"
 
 if PATH="$tmp_dir/bin:$PATH" STOCKDIVIDEND_ACTIONS_READ_TOKEN=test-token \
   SOURCE_RUN_ID=not-a-run SOURCE_WORKFLOW_PATH="$sample_path" SOURCE_EVENT=push \
