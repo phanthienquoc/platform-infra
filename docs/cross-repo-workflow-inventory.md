@@ -2317,3 +2317,23 @@ No production manifest, image, credential, database, replica, release flag, depl
 5. Arrange a maintenance window before OS/containerd/Docker upgrades or reboot.
 
 No production image promotion, GitOps manifest apply, database migration, shared GHCR pull-secret mutation, desired replica change, Stock Pod restart or host reboot occurred in this run. `reconcile-vps.yml` remains the sole production apply authority; no SSH/Compose deployment authority was added. TCE market-scan schedule unchanged.
+
+
+## Post-merge follow-up — 2026-11-04 06:05 ICT / 2026-11-03 23:05 UTC
+
+- Platform PR [#1173](https://github.com/phanthienquoc/platform-infra/pull/1173) was squash-merged at exact head `2bd04f7c076d1111d8a2eb128defff4887c4f303`, producing master `82676fb9b70865ccd908f0528ee5b790d68a3535`.
+- The manual `reconcile-vps.yml` `workflow_dispatch.mode` now defaults to `plan`; an operator must explicitly select `apply` for a manual production apply. The validator enforces the default and preserves automatic apply for schedule, master push and authenticated `gitops-promoted-ready` repository_dispatch events.
+- Exact-head PR checks all passed: `validate-manifests` #41736051679, `keycloak-ci` #41736051739 and `validate-github-actions` #41736051742.
+- Post-merge master checks all passed: `validate-manifests` #41736157434, `keycloak-ci` #41736157416 and `validate-github-actions` #41736157474.
+- The 06:00 ICT deployment checkpoint remains an accurate pre-merge snapshot; this follow-up records the completed merge and post-merge evidence.
+
+### Current production status remains blocked
+- Latest Platform reconciliation #41731497864 is a manual `workflow_dispatch` (not a native schedule), with `mode=apply`, `target_app=all`, `ALLOW_IMAGE_CHANGES=false`, shared preflight SUCCESS and no GitOps drift. Manifest apply was skipped. The StockDividend health lane failed on two Admin Pods and one new Backend Pod pulling `12d63b4` with `no match for platform in manifest`; Media, MicroFE, Auth and TCE lanes passed; Keycloak was skipped. The restart helper explicitly skipped the permanent Stock image-pull failures; no Stock Pod restart occurred.
+- Recovery #41731787383 succeeded as a workflow_dispatch fallback and confirmed the native inspection activity was fresh. It is not native schedule evidence.
+- Latest native Platform inspection #41726305748 (21:56:27Z) succeeded. Latest native reconcile #41714763176 (20:40:42Z) and watchdog #41715283880 (20:44:07Z) failed as recorded in the 06:00 checkpoint; recovery #41703551669 (19:28:20Z) passed; mirror #41687882647 (17:49:06Z) failed because `PLATFORM_INFRA_MIRROR_TOKEN` is absent.
+- Latest native TCE WF-06 #41731424392 (22:30:44Z) arrived but failed all four public endpoint checks with HTTP 503. WF-12 native schedule #41727501039 (22:04:27Z) failed freshness at that time; its later workflow_run follow-up #41731461425 succeeded but is not a native schedule tick. WF-07 #41652078419 passed.
+- K3s snapshot remains generated at 21:56:36Z: node Ready/ARM64, K3s v1.36.3+k3s1, disk 55%, ~19 GiB RAM available, runner policy v14, host restart required. Media/MicroFE/NATS 1/1; Stock Admin/new Backend ImagePullBackOff; old Backend/Frontend 1/1; TCE/Auth/Keycloak 0/0.
+- Open PRs remain Platform #544/#541/#539 (draft) and Auth #75 (ready)/#76 (draft). Auth validation passes but Supabase Preview is skipped; production integration/migration review remains a gate.
+- Owner actions remain unchanged: provide destination-only Mirror token, verify Stock protected Actions-read token and authorize paired ARM64 release, complete Auth/Supabase review, and arrange host maintenance window.
+
+No production image promotion, manifest apply, database migration, shared pull-secret mutation, replica change, Pod restart or host reboot occurred. `reconcile-vps.yml` remains the sole production apply authority. No direct SSH/Compose deployment authority or cron change was introduced; TCE market-scan schedule unchanged.
