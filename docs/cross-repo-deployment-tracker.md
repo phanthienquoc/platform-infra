@@ -4385,3 +4385,39 @@ No production image promotion, GitOps manifest apply, database migration, shared
 5. Arrange a maintenance window before host/containerd/Docker upgrades or reboot. Do not change any cron expression or TCE market-scan schedule.
 
 No production image promotion, GitOps manifest apply, database migration, shared GHCR pull-secret mutation, desired replica change, Pod restart or host reboot occurred in this checkpoint. `reconcile-vps.yml` remains the sole production apply authority; no SSH/Compose deployment authority was added. TCE market-scan schedule unchanged.
+
+## Runtime verification update — 2026-11-04 04:02 ICT / 2026-11-03 21:02 UTC
+
+### Repository heads and open PRs
+- Platform Infra master: `e4171bb42a8cfd535b990e44511942da4532a369`; TCE Dashboard: `53227425841b6283bebad3bc5c93d509bd8a316a`; StockDividend: `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media Generation: `e4c7d8990aafc7d837e918c9caf39722d623de7c`; Authentication: `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
+- Open PRs: Platform #544/#541/#539 (all draft); Authentication #75 (ready) and #76 (draft); none in TCE, StockDividend or Media.
+- Platform PR #1168 merged from dedicated branch `security/gitops-promotion-job-scoped-permissions-20261104-0358-ict` at exact head `d07a5d890e356dce87d7030d4720022af52ad7e7`. Squash merge: `e4171bb42a8cfd535b990e44511942da4532a369`.
+
+### GitOps promotion token permissions — implemented and verified
+- `.github/workflows/gitops-image-promotion.yml` now defaults the workflow GITHUB_TOKEN to `contents: read`.
+- The non-master manual-rejection job has `permissions: {}`.
+- The TCE release coordinator has only `contents: write`, needed for the final repository_dispatch after verifying the paired digests on master.
+- The three jobs that create/validate/merge GitOps promotion PRs explicitly retain `actions: write`, `contents: write`, and `pull-requests: write`. No package permission is granted; private GHCR reads continue to use the separate `GHCR_READ_TOKEN`.
+- `scripts/validate-workflow-contracts.py` now enforces the workflow default, the empty guard permissions, the coordinator's narrow scope, and the exact write scopes of each promotion job.
+- Exact-head PR checks: validate #41718044443 PASS; lint #41718044445 PASS. Post-merge checks: validate-manifests #41718148057 PASS; validate-github-actions #41718148134 PASS.
+- No production promotion, dispatch, manifest mutation, credential mutation or cluster operation was triggered by this permissions-only change.
+
+### Latest native schedule evidence
+- Platform reconciliation #41714763176: `schedule`, 2026-11-03 20:40:42 UTC, FAILURE only at the StockDividend workload-health lane. Shared reconciliation succeeded; `allow_image_changes=false`; no drift, so manifest apply was skipped. Media, MicroFE and TCE lanes passed. Auth lane passed its TLS check and intentional scale-to-zero health contract (no active Auth pods); Keycloak lane skipped.
+- Platform watchdog #41715283880: `schedule`, 20:44:07 UTC, FAILURE due stale native schedule evidence. Its log measured Mirror #41687882647 age 175m (budget 90m), inspection #41674687948 age 254m (budget 75m), and recovery #41703551669 age 75m (budget 45m). Inspection runner queue wait was 0m and no reconciliation deployment lane exceeded the 15m queue budget; evidence points to missing/stale schedule delivery, not a runner queue backlog.
+- Latest native Platform schedule runs: watchdog #41715283880 FAIL; reconciliation #41714763176 FAIL only StockDividend; recovery #41703551669 PASS; mirror #41687882647 FAIL because `PLATFORM_INFRA_MIRROR_TOKEN` is missing; inspection #41674687948 PASS. Recovery #41715097490 was `workflow_run`, not native schedule evidence.
+- Latest native TCE schedule runs: WF-06 #41685253743 FAIL (four public HTTP endpoints return 503 instead of required 200); WF-12 #41676393032 FAIL (freshness); WF-07 integration #41652078419 PASS. Do not count workflow_run/dispatch fallbacks as native schedule delivery.
+
+### Production and K3s evidence
+- Scheduled reconciliation #41714763176 reports Stock Admin's two pods and the new Stock Backend pod in `ImagePullBackOff` for tag `12d63b4`, with `no match for platform in manifest`. Existing Backend and legacy Frontend remain 1/1. Stock lane correctly failed; no restart was used to mask the permanent ARM64 manifest error.
+- Latest read-only inspection snapshot #41703987821 (workflow_dispatch, generated 2026-11-03 19:31:16 UTC; not a native schedule tick): node `tce-k3s-01` Ready/ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2, disk 55%, approximately 19 GiB available RAM, runner policy v14 and both runner services active. `restart_required: yes` due pending OS/Docker/containerd updates.
+- Snapshot workload state: Media backend/frontend, MicroFE Shell/WS and NATS 1/1; Stock Admin two pods and new Backend pod ImagePullBackOff; old Backend and legacy Frontend 1/1; TCE, Auth and Keycloak 0/0. Auth TLS certificate verification passed in the latest reconciliation, but Auth remains intentionally scaled to zero and is not an active service-health claim.
+- No host upgrade/reboot or pod restart occurred.
+
+### Application CI, publishers and owner gates
+- StockDividend CI #41563856934 and publisher #41563856933 passed on master; the publisher built/published native ARM64 images, but production release remains disabled and Platform handoff/atomic dispatch were skipped. The production overlay still uses Admin/Backend tag `12d63b4`.
+- Media CI #41617592783 passed; no paired-digest publisher E2E run was verified.
+- Authentication master CI #41670642852 passed. PR #75 head `a8e8a1d99e86a679b8d2ea7c7e7fa91302ffcc05` has validation PASS and Supabase Preview SKIPPED; production integration/migration side-effect review remains required. No manual Auth publisher run or dispatch was observed.
+- Owner actions remain: configure `PLATFORM_INFRA_MIRROR_TOKEN` with destination-only Contents:write on `phanthienquoc/locally-uncensored-private`; verify `STOCKDIVIDEND_ACTIONS_READ_TOKEN` in the protected production Environment and explicitly authorize the paired Admin/Backend ARM64 release; complete Auth/Supabase review; authorize Media/Auth publisher E2E when ready.
+
+No production image promotion, GitOps manifest apply, database migration, shared GHCR pull-secret mutation, desired replica change, pod restart or host reboot occurred. `reconcile-vps.yml` remains the sole production apply authority. Preserve all useful CI/test/security/manual/release/scheduled workflows and all existing cron expressions. TCE market-scan schedule unchanged.
