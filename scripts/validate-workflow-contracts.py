@@ -31,25 +31,27 @@ cleanup = read("vps-image-cleanup.yml")
 
 # The promotion workflow defaults to read-only. Grant write scopes only to the
 # jobs that create/merge GitOps PRs or emit the final repository_dispatch.
-top_level_permissions = promotion.split("permissions:\\n", 1)[1].split("\\nconcurrency:", 1)[0].strip()
+top_level_permissions = promotion.split("permissions:\n", 1)[1].split("\nconcurrency:", 1)[0].strip()
 if top_level_permissions != "contents: read":
     fail("GitOps promotion must default GITHUB_TOKEN to contents:read only.")
 
+
 def promotion_job_block(job_name: str) -> str:
-    marker = f"  {job_name}:\\n"
+    marker = f"  {job_name}:\n"
     if marker not in promotion:
         fail(f"GitOps promotion is missing job {job_name}.")
     tail = promotion.split(marker, 1)[1]
-    next_job = re.search(r"(?m)^  [A-Za-z0-9_-]+:\\s*$", tail)
+    next_job = re.search(r"(?m)^  [A-Za-z0-9_-]+:\s*$", tail)
     return tail[:next_job.start()] if next_job else tail
 
+
 guard_job = promotion_job_block("reject-non-master-manual-run")
-if not re.search(r"(?m)^    permissions: \\{\\}\\s*$", guard_job):
+if not re.search(r"(?m)^    permissions: \{\}\s*$", guard_job):
     fail("The non-master manual rejection job must have no GITHUB_TOKEN permissions.")
 
 coordinator_job = promotion_job_block("coordinate-tce-release")
 coordinator_permissions = re.search(
-    r"(?ms)^    permissions:\\n(?P<body>(?:^      [a-z-]+: [a-z]+\\n)+)",
+    r"(?ms)^    permissions:\n(?P<body>(?:^      [a-z-]+: [a-z]+\n)+)",
     coordinator_job,
 )
 if coordinator_permissions is None or coordinator_permissions.group("body").strip() != "contents: write":
@@ -58,7 +60,7 @@ if coordinator_permissions is None or coordinator_permissions.group("body").stri
 for job_name in ("promote-microfe-digests", "promote-tce-digests", "promote"):
     job = promotion_job_block(job_name)
     permissions = re.search(
-        r"(?ms)^    permissions:\\n(?P<body>(?:^      [a-z-]+: [a-z]+\\n)+)",
+        r"(?ms)^    permissions:\n(?P<body>(?:^      [a-z-]+: [a-z]+\n)+)",
         job,
     )
     expected = {"actions": "write", "contents": "write", "pull-requests": "write"}
