@@ -28,6 +28,16 @@ mirror = read("mirror-locally-uncensored.yml")
 provision = read("provision-keycloak-tce-client.yml")
 cleanup = read("vps-image-cleanup.yml")
 
+# Automated inspection and GitOps promotion PRs must use the verified Node24 action release.
+create_pull_request_pin = "peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1"
+legacy_create_pull_request_pin = "peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676"
+if inspection.count(create_pull_request_pin) != 1:
+    fail("VPS inspection PR creation must use peter-evans/create-pull-request v8.1.1 pinned to its immutable Node24 commit.")
+if promotion.count(create_pull_request_pin) != 3:
+    fail("All three GitOps promotion PR creation paths must use peter-evans/create-pull-request v8.1.1 pinned to its immutable Node24 commit.")
+if legacy_create_pull_request_pin in inspection or legacy_create_pull_request_pin in promotion:
+    fail("A legacy Node20 peter-evans/create-pull-request pin remains in a production workflow.")
+
 if not re.search(r"(?m)^  workflow_dispatch:", provision):
     fail("Keycloak provisioning must retain its explicit manual workflow_dispatch entry point.")
 if re.search(r"(?m)^  push:", provision):
