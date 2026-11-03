@@ -3709,9 +3709,9 @@ All TCE market-scan cron expressions remain unchanged. Production remains NOT HE
 
 ### Repository state, PRs and latest master workflow evidence
 - Master heads: Platform Infra `93450578e22fcd76dfb21ad19e4e040236c5ca87`; TCE Dashboard `5d299bea8ba482876ccaa291c68b0ee3f829350c`; StockDividend `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media Generation `763fdcd1463fe4d95c81c93d1e7ae010f2cd0cd3`; Authentication `1f39b18d9dd286da9dde32a79c4da269b19d5cfd`.
-- Open PRs: Platform #544/#541/#539 (draft, non-mergeable) plus #1122 (exact-second watchdog/queue contract); Authentication #75/#76; none in TCE, StockDividend or Media. Auth #75/#76 remain gated on Supabase integration side effects and migration provenance despite their latest known CI success.
+- Open PRs: Platform #544/#541/#539 (draft, non-mergeable); Authentication #75/#76; none in TCE, StockDividend or Media. Platform #1122 is merged. Auth #75/#76 remain gated on Supabase integration side effects and migration provenance despite their latest known CI success.
 - Latest master application checks: TCE build/format/backend tests #41533998356/#41533998448/#41533998355 SUCCESS; StockDividend CI #41563856934 and immutable publisher #41563856933 SUCCESS; Media CI #41525798015 SUCCESS; Auth web/service #41542942080/#41542941957 SUCCESS. Stock publisher verified full-SHA ARM64 manifests, but release gate remained false and Platform handoff/promotion were skipped.
-- Platform master validation #41581928282 SUCCESS on 93450578. The latest exact-head checks for PR #1122 were initially queued as #41587168201 (validate-github-actions) and #41587168291 (validate-manifests); re-check the final PR head before merge.
+- Platform master validation #41581928282 SUCCESS on 93450578. PR #1122 final exact head `4f96c0ba43265b1150b09bcbbeb40d7e137e1fe8` passed `validate-github-actions` #41587318389 and `validate-manifests` #41587318505. It was squash-merged as `d402cd9d24333e6a574e6e7aeb698eb0b03c409c` only after re-reading the current PR head and mergeable state. Post-merge master checks passed: `validate-github-actions` #41587385946, `validate-manifests` #41587385921, and read-only watchdog push smoke #41587385922. The smoke emitted warnings for stale inspection/recovery history; it did not report schedule health or trigger production apply.
 
 ### Native schedule evidence — queried 2026-11-03 05:56 UTC
 - Platform native recovery: #41577147958, 04:16:26Z, SUCCESS. No later event=schedule recovery run appeared in the Actions API history. Latest native inspection #41558049412 (01:11:13Z, SUCCESS), reconciliation #41549849545 (00:01:55Z, FAILURE), watchdog #41549659062 (00:00:28Z, FAILURE), and mirror #41560381641 (01:32:25Z, FAILURE).
@@ -3722,7 +3722,7 @@ All TCE market-scan cron expressions remain unchanged. Production remains NOT HE
 ### Precision defect found and PR #1122
 - The watchdog already used exact seconds for recovery-controller freshness, but reconciliation (45m), inspection (75m), mirror (90m), and inline runner queue budgets still compared floored whole-minute values. The Python deployment-lane queue verifier had the same 15m01s blind spot.
 - PR [#1122](https://github.com/phanthienquoc/platform-infra/pull/1122), branch `fix/ops-exact-seconds-watchdog-budgets-2026-11-03`, now compares all freshness and queue budgets in seconds. It adds 15-minute exact-boundary and 15m01s over-budget fixtures for unassigned and assigned lanes, and extends the workflow contract validator to reject truncated-minute comparisons.
-- Exact-head CI is required after the final documentation commit. No production workflow was dispatched and no production state changed.
+- Exact-head and post-merge validation are complete. The watchdog push smoke ran read-only; no production workflow was dispatched and no production state changed.
 
 ### Owner gates and safety
 - `PLATFORM_INFRA_MIRROR_TOKEN` remains missing; `STOCKDIVIDEND_ACTIONS_READ_TOKEN` presence remains unverified; explicit StockDividend production release authorization remains absent.
