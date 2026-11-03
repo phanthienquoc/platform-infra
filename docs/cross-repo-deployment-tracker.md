@@ -4051,3 +4051,31 @@ TCE market-scan schedule unchanged. \`reconcile-vps.yml\` remains the sole produ
 - No new production mutation occurred in recovery #41633096574. Stock Admin/Backend ARM64 failure, GHCR mirror token owner action, Media paired-digest E2E and Auth/Keycloak activation gates remain as recorded above.
 
 Next action: owner configures destination-only \`PLATFORM_INFRA_MIRROR_TOKEN\`; then continue observing native reconcile/inspection/mirror ticks separately from fallback dispatches. TCE market-scan schedule unchanged.
+
+
+## 2026-11-03 20:15 ICT / 13:15 UTC — Auth digest-pinned release handoff and fresh reconciliation
+
+### Auth publisher / Platform receiver contract
+
+- Platform PR [#1145](https://github.com/phanthienquoc/platform-infra/pull/1145) was squash-merged at `900d01e8303ee1fc6be7097f242baf751d9edbf7`. Exact-head `validate-manifests`, `validate-github-actions`, and Keycloak boundary checks passed; post-merge runs [#41642374390](https://github.com/phanthienquoc/platform-infra/actions/runs/41642374390), [#41642374367](https://github.com/phanthienquoc/platform-infra/actions/runs/41642374367), and [#41642374506](https://github.com/phanthienquoc/platform-infra/actions/runs/41642374506) all passed.
+- The receiver now accepts `auth-image-published`, validates full source SHA, source run ID/workflow/event/head SHA, verifies the exact public Auth Actions run and required jobs/steps, correlates the versioned GHCR tag to the supplied `sha256` digest, verifies linux/arm64, and pins only the Auth image entry by digest in `platform/auth-service/kustomization.yaml`.
+- Auth producer PR [#87](https://github.com/phanthienquoc/phanthienquoc-authentication/pull/87) remains open on dedicated branch `feat/auth-release-digest-handoff-2026-11-03-1956-ict`. Exact PR-head Auth CI [#41642031980](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41642031980) passed; Supabase Preview was skipped. The producer changes to manual-only full-SHA tags, digest/ARM64 verification, and the provenance-rich `auth-image-published` payload.
+- Do not merge Auth PR #87 until the connected Supabase-on-master side effect is authoritatively understood and explicitly approved. No Auth production publisher was dispatched. Platform receiver is ready, but producer E2E remains pending.
+
+### Latest reconciliation evidence
+
+- Platform push recovery [#41642374477](https://github.com/phanthienquoc/platform-infra/actions/runs/41642374477) completed SUCCESS and dispatched the sole production authority, [reconciliation #41642401236](https://github.com/phanthienquoc/platform-infra/actions/runs/41642401236), with `ref=master`, exact SHA `900d01e8303ee1fc6be7097f242baf751d9edbf7`, `mode=apply`, `allow_image_changes=false`, `target_app=all`.
+- Shared reconciliation preflight passed; GitOps drift was false and manifest apply was correctly skipped. Shared `ghcr-pull` remained unchanged. Auth runtime Secret was provisioned and verified in `microfe-platform`; all values were suppressed. No image promotion, database migration, manifest apply, replica change, or host maintenance occurred.
+- The permanent Stock Admin/Backend `12d63b4` ImagePullBackOff / `no match for platform in manifest` errors were explicitly not restarted. Stock health lane failed; Media, Auth, TCE, and MicroFE lanes passed; Keycloak was skipped. The overall reconciliation final gate therefore failed on StockDividend.
+- Fresh cluster snapshot from reconciliation logs at 13:13:49Z: node `tce-k3s-01` Ready/ARM64; Media backend/frontend 1/1; MicroFE Shell/WS/NATS 1/1; Stock Admin 0/1 x2; Stock Backend old Pod 1/1 and new `12d63b4` Pod 0/1; Stock Frontend 1/1. TCE/Auth/Keycloak remain 0/0. The TCE and Auth lane passes reflect intentional scale-to-zero, not active public endpoint health.
+- Post-reconciliation recovery controller [#41642700789](https://github.com/phanthienquoc/platform-infra/actions/runs/41642700789) was dispatched to handle stale inspection fallback; its completion and any inspection dispatch must be verified separately.
+
+### Native schedule and owner gates
+
+- Latest native Platform recovery schedule remains [#41633096574](https://github.com/phanthienquoc/platform-infra/actions/runs/41633096574) at 12:07:39Z. The newer recovery #41642374477 was a push event and #41642700789 is workflow_dispatch; neither counts as native schedule delivery.
+- Latest native inspection remains #41603684581 (08:29:41Z), native reconciliation #41591224283 (06:39:06Z), native watchdog #41591762943 (06:44Z), and native mirror #41611280196 (09:28:17Z). Mirror still requires owner-provided `PLATFORM_INFRA_MIRROR_TOKEN`.
+- TCE native WF-06 #41614307460 (09:50:40Z) and WF-12 #41605106319 (08:41:06Z) remain stale/failed. Preserve strict HTTP 200 assertions and every cron expression, including TCE market-scan schedules.
+- Owner must verify `STOCKDIVIDEND_ACTIONS_READ_TOKEN` and explicitly authorize a paired ARM64 StockDividend release before promotion. Stock production release gate remains closed.
+- Keep Auth/Keycloak disabled until Supabase DB, DNS, migration provenance, and explicit activation prerequisites are satisfied. Host restart/OS/containerd maintenance remains a separate maintenance-window task.
+
+`reconcile-vps.yml` remains the only production apply authority. App repositories own tests/builds and immutable GHCR publication; Platform Infra owns production manifests, shared pull credentials, GitOps promotion/reconciliation and rollout/health verification. TCE market-scan schedule unchanged.
