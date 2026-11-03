@@ -2114,3 +2114,45 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Regression coverage: `scripts/tests/verify-auth-publisher-run.test.sh`, `scripts/tests/validate-ghcr-image-reference.test.sh`, and the Auth digest promotion helper self-test are included in Platform CI.
 - Producer implementation is proposed in Auth PR [#87](https://github.com/phanthienquoc/phanthienquoc-authentication/pull/87), still open. Its exact-head Auth CI passed, but Supabase Preview was skipped. Do not merge until the Supabase-on-master side effect gate is explicitly resolved. Do not trigger the manual Auth publisher while this producer PR is unmerged.
 - No workflow was removed. Existing CI, security, manual/release and scheduled jobs remain purposeful. `reconcile-vps.yml` is still the sole production apply authority; no direct SSH/Compose deployment authority was added. TCE market-scan schedule unchanged.
+
+
+## 2026-11-03 14:06 UTC — Auth verifier hardening, reconciliation and inspection inventory
+
+### Current repository refs
+
+| Repository | Master SHA | Latest app-owned validation / release evidence |
+|---|---|---|
+| Platform Infra | `0fdded730fb5658e4056fa22df4a6e68f3a2c43a` | #1147 Auth verifier hardening merged; post-merge manifest/workflow checks PASS |
+| TCE Dashboard | `53227425841b6283bebad3bc5c93d509bd8a316a` | WF-01 #41608676328, WF-02 #41608676350, WF-05 #41608676512 PASS; WF-06/WF-12 native schedules failed |
+| StockDividend | `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec` | CI #41563856934 and immutable ARM64 publisher #41563856933 PASS; production handoff skipped while release gate=false |
+| Media Generation | `e4c7d8990aafc7d837e918c9caf39722d623de7c` | CI #41617592783 PASS; no post-merge paired-digest production publisher run |
+| Authentication | `1f39b18d9dd286da9dde32a79c4da269b19d5cfd` | PR #87 exact-head CI #41642031980 PASS; Supabase Preview skipped and merge side-effect gate unresolved |
+
+### New Platform change
+
+- PR #1147 merged as `8b9e028c8b9d166805c505f91b264fb7a61f5daf`.
+- Auth source-run verification now checks five critical `Verify auth service` steps individually: package-lock refresh, `npm ci`, tests, typecheck and build. Each skipped-step case has a negative fixture; static contract validation enforces the checks.
+- Exact PR-head runs #41649669578 (`validate-manifests`) and #41649669519 (`validate-github-actions`) passed. Post-merge runs #41649784222 and #41649784381 passed.
+- No Auth release, publisher dispatch, GHCR publication, or GitOps image promotion occurred.
+
+### Production authority and lane results
+
+- Recovery push #41649784133 dispatched `reconcile-vps.yml` run #41649818474 with `mode=apply`, `allow_image_changes=false`, `target_app=all`, source master SHA `8b9e028c8b9d166805c505f91b264fb7a61f5daf`.
+- Shared reconciliation job passed; GHCR preflight verified Auth, Media backend/frontend, MicroFE Shell/WS, StockDividend Admin/Backend and TCE web/service. Auth runtime Secret was provisioned/verified with values suppressed; shared `ghcr-pull` remained unchanged.
+- GitOps drift clean; manifest apply skipped. Permanent Stock Admin/Backend `12d63b4` image-pull failures were not restarted because the image has no ARM64 manifest.
+- Lane outcomes: Stock FAILURE; Media/Auth/MicroFE/TCE SUCCESS; Keycloak SKIPPED. TCE/Auth success corresponds to 0/0 workloads, not active service health.
+- Reconciliation failure triggered recovery #41650121040 and read-only inspection #41650172429. Inspection PR #1148 merged at `0fdded730fb5658e4056fa22df4a6e68f3a2c43a`; exact-head manifest check #41650296622 passed.
+
+### Runtime and schedule inventory
+
+- Latest snapshot `debug/vps-latest.md` generated 14:04:59Z: K3s node Ready/ARM64, v1.36.3+k3s1, containerd 2.3.2-k3s2, disk 55%, approximately 19 GiB available RAM. Both self-hosted runners active.
+- Host has pending containerd 2.4.2 and Docker 29.9.2 updates; `restart_required: yes`. Maintenance/reboot not performed.
+- Media and MicroFE/NATS 1/1. Stock Admin two Pods and new Backend Pod 0/1 ImagePullBackOff; old Backend and Frontend 1/1. TCE/Auth/Keycloak 0/0; public OIDC 503. GitOps drift clean.
+- Native Platform schedule latest: recovery #41633096574 PASS (12:07:39Z); mirror #41611280196 FAIL missing `PLATFORM_INFRA_MIRROR_TOKEN` (09:28:17Z); inspection #41603684581 PASS (08:29:41Z); watchdog #41591762943 FAIL (06:44:09Z); reconcile #41591224283 FAIL (06:39:06Z).
+- Native TCE schedule latest: WF-06 #41614307460 FAIL (09:50:40Z), WF-12 #41605106319 FAIL (08:41:06Z); WF-07 integration #41556575907 and backup #41557498266 PASS. Workflow_run and workflow_dispatch fallbacks are not schedule evidence.
+- No schedule definitions changed. TCE market-scan schedule unchanged.
+
+### Owner gates and authority
+
+- Missing destination-only mirror token; StockDividend Actions-read token verification and explicit paired ARM64 production release authorization; Auth Supabase integration side-effect approval; Media paired-digest publisher E2E; TCE/Auth/Keycloak activation and OIDC/DB/DNS prerequisites; host maintenance window.
+- Preserve all CI/test/security workflows and purposeful manual/release/scheduled/backup jobs. `reconcile-vps.yml` is the sole production apply authority; no direct SSH/Compose authority added.
