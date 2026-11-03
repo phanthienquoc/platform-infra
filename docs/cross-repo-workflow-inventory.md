@@ -2188,3 +2188,11 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Platform Infra tracker/inventory PR #1151 merged as `3a3a67651beb497ac6eed5a9ad8b1f365e246041`; exact-head #41670920201 and post-merge #41671155770 validations passed.
 - Read-only Supabase check: project `gtqovpusfyyvxpeezxlo` ACTIVE_HEALTHY; 84 migration versions, latest `20261028020259`, no new version after PR #87. The PR did not change migration files and Supabase Preview was skipped. A targeted 16:00–16:10 UTC log query returned no migration/deploy event, but this does not prove the owner-configured Deploy-to-production integration did not execute. Keep Auth PR #75 and future master merges behind authoritative integration/migration review.
 - No database write, migration apply, project setting mutation, release publish, image promotion, replica activation or Supabase branch operation was performed.
+
+
+## 2026-11-03 23:59 ICT / 16:59 UTC — StockDividend publisher critical-step provenance
+
+- Platform PR #1154 merged at `351bbb5884b3c879a5213022e76decd30e32e70f`. The StockDividend source-run verifier now checks successful completion of the master-ref guard, production release-enable gate, Platform Infra token/access check and atomic digest-dispatch step by exact job/step name. Existing ARM64 runner, Scraper/Admin/Backend build-and-push and immutable manifest checks remain mandatory.
+- Four negative fixtures reject skipped critical steps even when the parent job is successful. Static workflow validation requires each verifier assertion and test fixture. Exact-head `validate-github-actions` #41680365526 and `validate-manifests` #41680365295 passed; post-merge checks are not asserted without run evidence.
+- Current master refs/open PRs, K3s snapshot, StockDividend release hold, mirror token gate, Auth Supabase side-effect gate, Media E2E status and native schedule evidence are recorded in [the deployment readiness checkpoint](cross-repo-deployment-checkpoints/2026-11-03-2359-ict.md).
+- Preserve all CI/test/security/backup/manual/release/scheduled workflows. `reconcile-vps.yml` remains the only production apply authority. Do not add SSH/Compose deployment paths or alter any cron expression; TCE market-scan schedule unchanged.
