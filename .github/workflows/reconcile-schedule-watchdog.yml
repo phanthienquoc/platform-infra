@@ -461,6 +461,21 @@ jobs:
             exit 1
           fi
 
+          if [[ "$status" != "completed" ]]; then
+            echo "::notice::Scheduled inspection run #${run_id} is still ${status}; completion has not been verified."
+            exit 0
+          fi
+          if [[ "$conclusion" != "success" ]]; then
+            if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+              echo "::warning::Read-only API smoke succeeded; latest scheduled inspect-vps run concluded ${conclusion}."
+              echo "::warning::Run evidence: ${run_url}"
+              exit 0
+            fi
+            echo "::error::Scheduled inspect-vps run #${run_id} failed with conclusion=${conclusion}."
+            echo "::error::Run evidence: ${run_url}"
+            exit 1
+          fi
+
           echo "Scheduled inspection delivery passed for run #${run_id}."
           echo "age=${age_minutes}m status=${status} conclusion=${conclusion}."
           echo "Run evidence: ${run_url}"
