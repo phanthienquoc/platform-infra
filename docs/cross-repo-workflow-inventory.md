@@ -1931,3 +1931,10 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Push-triggered post-merge smoke treats stale/missing/failed historical mirror evidence as warnings; scheduled/manual/fallback watchdog runs fail closed. workflow_dispatch and push runs never satisfy native schedule freshness.
 - The mirror job uses only PLATFORM_INFRA_MIRROR_TOKEN. Owner configuration: Platform Infra repository Actions secret (or organization secret scoped only to Platform Infra), destination repository restricted to phanthienquoc/locally-uncensored-private with Contents:write. Do not reuse GHCR or application release-handoff credentials.
 - Missing token remains an explicit failure, not a skipped/successful mirror. Latest confirmed native mirror run #41560381641 failed before clone/push because the secret was empty. The schedule remains enabled in YAML; token provisioning is an owner action.
+
+
+## 2026-11-03 — recovery-controller schedule is now part of the watchdog inventory
+- `recover-stale-ops.yml` remains the independent 15-minute recovery controller at `10,25,40,55 * * * *`; it validates source run provenance and dispatches only the existing `reconcile-vps.yml` apply authority or read-only `inspect-vps.yml` fallback.
+- `reconcile-schedule-watchdog.yml` now observes the recovery workflow's native `event=schedule` history, active state, 45-minute freshness budget and completed SUCCESS conclusion. It also runs after native scheduled recovery completions.
+- Push smoke is warning-only for stale/missing historical recovery evidence; scheduled/manual/fallback watchdog invocations fail closed. Dispatch/workflow_run/push runs do not count as native schedule delivery.
+- This adds observability only. It does not add a deployment authority, alter recovery behavior, or change any cron expression.
