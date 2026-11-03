@@ -1102,6 +1102,8 @@ for required in (
 ):
     if required not in inspection_freshness_block:
         fail(f"Scheduled inspection freshness contract is missing: {required}")
+if "age_minutes > MAX_INSPECTION_AGE_MINUTES" in inspection_freshness_block:
+    fail("Scheduled inspection freshness must not truncate elapsed time to whole minutes.")
 
 # The independent mirror remains an hourly, destination-scoped workflow and must be monitored.
 if "    - cron: '17 * * * *'" not in mirror:
@@ -1124,6 +1126,8 @@ for required in (
 ):
     if required not in mirror_watchdog_block:
         fail(f"Scheduled mirror watchdog contract is missing: {required}")
+if "age_minutes > MAX_MIRROR_AGE_MINUTES" in mirror_watchdog_block:
+    fail("Scheduled mirror freshness must not truncate elapsed time to whole minutes.")
 
 
 
@@ -1151,6 +1155,8 @@ for required in (
 ):
     if required not in recovery_watchdog_block:
         fail(f"Scheduled recovery-controller watchdog contract is missing: {required}")
+if "age_minutes > MAX_RECOVERY_AGE_MINUTES" in recovery_watchdog_block:
+    fail("Scheduled recovery freshness must not truncate elapsed time to whole minutes.")
 
 
 # GitHub Actions secret names cannot contain hyphens; keep the mirror credential valid and isolated.
