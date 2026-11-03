@@ -3397,3 +3397,33 @@ All TCE market-scan cron expressions remain unchanged. Production remains NOT HE
 ### Safety
 - No production manifest/image reference, shared GHCR pull credential, database object, release flag, desired replica, cron expression, runtime Secret, or VPS package was changed.
 - No image promotion, migration, Pod restart, image deletion, VPS reboot, or OS/containerd upgrade. `reconcile-vps.yml` remains the sole production apply authority. TCE market-scan schedule unchanged.
+
+
+## 2026-11-03 06:58 ICT — fresh runtime inspection and remaining Node20 action migration
+
+### Repository state and open PRs
+- Current master heads observed: Platform Infra `1edb289d17afbf62feed3cfd069343941d53025c`; TCE Dashboard `5d299bea8ba482876ccaa291c68b0ee3f829350c`; StockDividend `efdb0844e868367d29bbeb5393430cd73d6b6f38`; Media Generation `763fdcd1463fe4d95c81c93d1e7ae010f2cd0cd3`; Authentication `1f39b18d9dd286da9dde32a79c4da269b19d5cfd`.
+- Open PRs before this follow-up: Platform #544/#541/#539 (draft Keycloak/identity decisions); Authentication #75/#76; none in TCE, StockDividend or Media. Inspection PR #1101 was created by inspect-vps on branch `automation/vps-inspection`, exact-head manifest validation #41547706568 passed, and the workflow squash-merged it at Platform master `1edb289d17afbf62feed3cfd069343941d53025c`.
+- Latest master application CI observed: TCE WF-01 #41533998356, WF-02 #41533998448, WF-05 #41533998355 SUCCESS; StockDividend CI #41534109312 SUCCESS; Media CI #41525798015 SUCCESS; Auth web #41542942080 and Auth service #41542941957 SUCCESS.
+
+### Fresh K3s and reconciliation evidence
+- Scheduled recovery #41547230804 (event=schedule, 2026-11-02 23:40:30Z) succeeded. It found latest master reconciliation #41515916117 was 210 minutes old, then dispatched the existing sole apply authority `reconcile-vps.yml` on master with `mode=apply`, `allow_image_changes=false`, `target_app=all`. Exact dispatch correlation produced reconciliation #41547248939.
+- Reconciliation #41547248939 shared job succeeded; TCE, Media, Auth and MicroFE lanes succeeded; Keycloak was skipped. StockDividend lane failed only because two Admin Pods and one new Backend Pod pull legacy tag `12d63b4` with `no match for platform in manifest`; old Backend and unmanaged legacy Frontend remain Running 1/1. Health gate correctly failed. No image promotion or manifest change occurred.
+- Recovery #41547565460 verified the source reconciliation and completed SUCCESS.
+- Fresh read-only inspection #41547614220 completed SUCCESS. It created inspection PR #1101, exact-head `validate-manifests` #41547706568 passed, and #1101 was squash-merged at exact validated head `1f1bb847dfae65beb7667267aab9847de62887c7` into merge commit `1edb289d17afbf62feed3cfd069343941d53025c`.
+- Snapshot `debug/vps-latest.md` generated 2026-11-02T23:43:46Z: node `tce-k3s-01` Ready/ARM64, K3s v1.36.3+k3s1, disk 55%, about 19 GiB available RAM, Docker 29.1.3, K3s containerd runtime 2.3.2-k3s2, runner services active and runner policy v14. Media, MicroFE Shell/WS and NATS Pods were 1/1; Stock Admin (two Pods) and new Backend Pod remained ImagePullBackOff on `12d63b4`; old Backend and legacy Frontend remained 1/1. `restart_required=yes`; containerd.io 2.4.2-3 and Docker packages are pending. No maintenance/reboot was run.
+
+### Native schedule evidence
+- Platform native schedule history: recovery #41547230804 SUCCESS; latest mirror #41499146752 FAILURE (missing `PLATFORM_INFRA_MIRROR_TOKEN`); latest inspection #41498271871 SUCCESS; latest scheduled reconciliation #41491502003 FAILURE (StockDividend health); latest watchdog #41491160810 FAILURE (stale). The later inspection #41547614220 and reconciliation #41547248939 are workflow_dispatch and must not be counted as native schedule ticks.
+- TCE native schedule history: WF-06 #41516575222 FAILURE on strict public HTTP 200 probes (HTTP 503); WF-12 #41511665345 FAILURE on WF-06 freshness; WF-07 #41476258191 SUCCESS. No consecutive cadence recovery established. Keep all cron declarations and public HTTP 200 assertions unchanged.
+
+### Remaining Node20 action warning and proposed fix
+- Latest inspection logs emitted a Node20 deprecation warning for `peter-evans/create-pull-request` pinned at `22a9089034f40e5a961c8808d113e2c98fb63676`. Repository code search found exactly four production workflow references: one in `.github/workflows/inspect-vps.yml` and three in `.github/workflows/gitops-image-promotion.yml`.
+- Verified upstream release `peter-evans/create-pull-request v8.1.1`, immutable commit `5f6978faf089d4d20b00c7766989d076bb2fc7f1`, and upstream `action.yml` declares `runs.using: node24`. Its required outputs (`pull-request-number`, `pull-request-head-sha`, `pull-request-branch`) remain present.
+- Dedicated branch `chore/platform-create-pull-request-node24-20261103` updates all four references to the verified v8.1.1 immutable commit and adds static contract assertions requiring one inspection pin, three promotion pins, and no legacy Node20 SHA. CI validation is pending; no workflow dispatch or production action was run.
+
+### Release, credential and safety gates
+- StockDividend publisher #41524676740 remains the latest verified ARM64 publication: Scraper `sha256:83c989df5d156d0a70de4a268a0ce35b9313dda7b1d1170da97ccd8058dd2e9b`, Admin `sha256:d0d6f037c1d2801018a36921360bfee3852ee7d14e3b33ee2e0fd790dddf6ec1`, Backend `sha256:1f8d5a6161da3774578a6f9d2c1e04b4efd624a516e66ab941ebddaa964233a0`. Production still references `12d63b4`; release remains false/unset and no promotion was authorized.
+- Owner blockers: `PLATFORM_INFRA_MIRROR_TOKEN` (destination-only Contents:write for `phanthienquoc/locally-uncensored-private`); `STOCKDIVIDEND_ACTIONS_READ_TOKEN` (StockDividend-only Actions:read, presence unverified); explicit StockDividend production release authorization.
+- Auth #75/#76 remain open: green validation does not clear Supabase production integration side effects or migration provenance/drift gates. No migration or integration toggle.
+- No production image/manifest change, shared GHCR credential mutation, DB mutation, desired replica change, Pod restart, image deletion, VPS reboot/upgrade or cron change occurred. `reconcile-vps.yml` remains the sole production apply authority. TCE market-scan schedule unchanged.
