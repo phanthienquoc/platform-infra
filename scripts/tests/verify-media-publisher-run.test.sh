@@ -166,6 +166,26 @@ expect_failure "missing Platform publication/dispatch job"
 
 make_jobs > "$tmp_dir/jobs.json"
 
+# A skipped release gate must be rejected even if the overall workflow run says success.
+make_jobs > "$tmp_dir/jobs.json"
+jq '(.jobs[] | select(.name == "Require master for production release")).conclusion = "skipped"' "$tmp_dir/jobs.json" > "$tmp_dir/jobs-invalid.json"
+mv "$tmp_dir/jobs-invalid.json" "$tmp_dir/jobs.json"
+expect_failure "skipped production release gate job"
+
+# A skipped Platform notification means no proven dispatch, so promotion must be rejected.
+make_jobs > "$tmp_dir/jobs.json"
+jq '(.jobs[] | select(.name == "Publish immutable images and promote platform-infra") | .steps[] | select(.name == "Notify platform-infra")).conclusion = "skipped"' "$tmp_dir/jobs.json" > "$tmp_dir/jobs-invalid.json"
+mv "$tmp_dir/jobs-invalid.json" "$tmp_dir/jobs.json"
+expect_failure "skipped Platform dispatch step"
+
+# Duplicate required jobs are ambiguous evidence and must fail closed.
+make_jobs > "$tmp_dir/jobs.json"
+jq '.jobs += [.jobs[] | select(.name == "Publish immutable images and promote platform-infra")]' "$tmp_dir/jobs.json" > "$tmp_dir/jobs-invalid.json"
+mv "$tmp_dir/jobs-invalid.json" "$tmp_dir/jobs.json"
+expect_failure "duplicate Platform publication job"
+
+make_jobs > "$tmp_dir/jobs.json"
+
 # Invalid payload values must fail before any public API request.
 if PATH="$tmp_dir/bin:$PATH" MOCK_CURL_COUNT_FILE="$tmp_dir/count" MOCK_CURL_RESPONSE_FILE="$tmp_dir/response.json" \
   SOURCE_RUN_ID=not-a-run SOURCE_WORKFLOW_PATH="$sample_path" SOURCE_EVENT=push \
