@@ -387,14 +387,20 @@ jobs:
               echo "Inspection run #$latest_id is $status; avoiding a duplicate dispatch."
               exit 0
             fi
-            activity_at="$(jq -r '.updated_at // .run_started_at // .created_at' <<< "$latest")"
-            activity_epoch="$(jq -r '(.updated_at // .run_started_at // .created_at) | fromdateiso8601' <<< "$latest")"
-            age_seconds=$((REFERENCE_EPOCH - activity_epoch))
-            (( age_seconds >= 0 )) || {
-              echo "::error::Inspection activity timestamp is newer than the recovery API clock."
-              exit 1
-            }
-            echo "Latest master inspection run #$latest_id: last_activity=$activity_at, age=$((age_seconds / 60))m."
+            conclusion="$(jq -r '.conclusion // "unknown"' <<< "$latest")"
+            if [[ "$conclusion" != "success" ]]; then
+              echo "::warning::Latest master inspection #$latest_id completed with conclusion=$conclusion; dispatching a read-only fallback."
+              age_seconds=$((MAX_INSPECTION_AGE_MINUTES * 60 + 1))
+            else
+              activity_at="$(jq -r '.updated_at // .run_started_at // .created_at' <<< "$latest")"
+              activity_epoch="$(jq -r '(.updated_at // .run_started_at // .created_at) | fromdateiso8601' <<< "$latest")"
+              age_seconds=$((REFERENCE_EPOCH - activity_epoch))
+              (( age_seconds >= 0 )) || {
+                echo "::error::Inspection activity timestamp is newer than the recovery API clock."
+                exit 1
+              }
+              echo "Latest master inspection run #$latest_id: last_activity=$activity_at, age=$((age_seconds / 60))m."
+            fi
           fi
 
           if (( age_seconds <= MAX_INSPECTION_AGE_MINUTES * 60 )); then
