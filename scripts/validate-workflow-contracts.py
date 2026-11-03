@@ -1433,6 +1433,26 @@ ghcr_reference_validator = ROOT / "scripts" / "validate-ghcr-image-reference.sh"
 if "GHCR_EXPECTED_DIGEST" not in ghcr_reference_validator.read_text(encoding="utf-8"):
     fail("GHCR reference validation must support tag-to-digest correlation.")
 
+# Canonical Auth release promotion must independently correlate both immutable
+# producer tags (full source SHA and versioned full-SHA tag) to the dispatch digest.
+auth_ghcr_validation = promotion.split(
+    "name: Validate promoted image in GHCR", 1
+)[1].split("name: Update Kustomize image tag or paired digests", 1)[0]
+for required in (
+    "SOURCE_COMMIT: ${{ steps.input.outputs.source_commit }}",
+    '[[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]',
+    '[[ "$TAG" =~ ^prod-v[0-9]+[.][0-9]+[.][0-9]+-[0-9a-f]{40}$ ]]',
+    '"${TAG##*-}" == "$SOURCE_COMMIT"',
+    'for immutable_tag in "$SOURCE_COMMIT" "$TAG"; do',
+    'GHCR_EXPECTED_DIGEST="$AUTH_DIGEST"',
+    'GHCR_IMAGE_REFERENCE="$IMAGE:$immutable_tag"',
+    'GHCR_IMAGE_REFERENCE="$IMAGE@$AUTH_DIGEST"',
+):
+    if required not in auth_ghcr_validation:
+        fail(f"Auth receiver must verify both immutable tags against the dispatched digest: {required}")
+if auth_ghcr_validation.index('GHCR_IMAGE_REFERENCE="$IMAGE:$immutable_tag"') > auth_ghcr_validation.index('GHCR_IMAGE_REFERENCE="$IMAGE@$AUTH_DIGEST"'):
+    fail("Auth full-SHA and versioned tags must be correlated before the digest-only reference is accepted.")
+
 # Auth must be validated from the effective production render, not raw source YAML.
 auth_contract = ROOT / "scripts" / "validate-auth-gitops-contract.py"
 if not auth_contract.is_file():
