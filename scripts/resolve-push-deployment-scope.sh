@@ -17,7 +17,7 @@ resolve_scope() {
   for path in "$@"; do
     [[ -n "$path" ]] || continue
     case "$path" in
-      apps/*.md|apps/**/*.md|apps/**/docs/*)
+      apps/**/*.md|apps/**/docs/*)
         # App documentation is not a production workload change, even when a
         # manifest change in the same commit causes reconciliation to run.
         ;;
