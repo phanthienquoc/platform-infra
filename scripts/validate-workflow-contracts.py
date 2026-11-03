@@ -325,6 +325,50 @@ if "`PLATFORM_INFRA_AUTOMATION_TOKEN`" in credentials_key:
 # StockDividend publishes a paired, digest-only promotion payload after all ARM64 images verify.
 if "stockdividend-images-published" not in promotion:
     fail("GitOps promotion must consume the atomic StockDividend digest event.")
+
+# Pin the receiver side of the cross-repository publisher payload contract. The
+# StockDividend repository self-test validates the sender's jq payload shape.
+stock_dispatch_types = promotion.split("  repository_dispatch:", 1)[1].split(
+    "  workflow_dispatch:", 1
+)[0]
+if "- stockdividend-images-published" not in stock_dispatch_types:
+    fail("GitOps promotion must subscribe to the exact StockDividend publisher event type.")
+for required in (
+    "EVENT_ACTION: ${{ github.event.action }}",
+    "EVENT_APP: ${{ github.event.client_payload.app }}",
+    "EVENT_COMMIT: ${{ github.event.client_payload.commit }}",
+    "EVENT_BACKEND_DIGEST: ${{ github.event.client_payload.backend_digest }}",
+    "EVENT_ADMIN_DIGEST: ${{ github.event.client_payload.admin_digest }}",
+    "EVENT_SOURCE_RUN_ID: ${{ github.event.client_payload.source_run_id }}",
+    "EVENT_SOURCE_WORKFLOW_PATH: ${{ github.event.client_payload.source_workflow_path }}",
+    "EVENT_SOURCE_EVENT: ${{ github.event.client_payload.source_event }}",
+    "EVENT_SOURCE_HEAD_SHA: ${{ github.event.client_payload.source_head_sha }}",
+):
+    if required not in promotion:
+        fail(f"StockDividend publisher payload receiver is missing binding: {required}")
+stock_event_block = promotion.split(
+    'if [[ "$EVENT_ACTION" == "stockdividend-images-published" ]]; then', 1
+)[1].split('elif [[ "$EVENT_ACTION" == "media-images-published" ]]; then', 1)[0]
+for required in (
+    'APP="$EVENT_APP"',
+    'COMPONENT="release"',
+    'TAG="$EVENT_COMMIT"',
+    'SOURCE_COMMIT="$EVENT_COMMIT"',
+    'BACKEND_DIGEST="$EVENT_BACKEND_DIGEST"',
+    'ADMIN_DIGEST="$EVENT_ADMIN_DIGEST"',
+    'SOURCE_RUN_ID="$EVENT_SOURCE_RUN_ID"',
+    'SOURCE_WORKFLOW_PATH="$EVENT_SOURCE_WORKFLOW_PATH"',
+    'SOURCE_EVENT="$EVENT_SOURCE_EVENT"',
+    'SOURCE_HEAD_SHA="$EVENT_SOURCE_HEAD_SHA"',
+    '[[ "$APP" == "stockdividend" ]]',
+    '[[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/deploy.yml" ]]',
+    '[[ "$SOURCE_EVENT" == "push" || "$SOURCE_EVENT" == "workflow_dispatch" ]]',
+    '[[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ && "$SOURCE_HEAD_SHA" == "$TAG" && "$SOURCE_HEAD_SHA" == "$SOURCE_COMMIT" ]]',
+    '[[ "$BACKEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]',
+    '[[ "$ADMIN_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]',
+):
+    if required not in stock_event_block:
+        fail(f"StockDividend publisher payload receiver is missing validation: {required}")
 if "EVENT_BACKEND_DIGEST" not in promotion or "EVENT_ADMIN_DIGEST" not in promotion:
     fail("StockDividend atomic promotion must consume backend and admin digests.")
 if '[[ "$BACKEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]' not in promotion:
