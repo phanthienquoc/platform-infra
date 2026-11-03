@@ -2070,3 +2070,11 @@ No production manifest, image, credential, database, replica, release flag, depl
 - TCE WF-06 remains public-smoke-only with expected HTTP 200; its strict assertion is retained. TCE/Auth are currently scale-to-zero, matching the prior operator direction. Do not reclassify HTTP 503 as healthy or alter their schedule to suppress evidence.
 - TCE WF-06 cron remains `*/15 * * * *`; WF-12 remains `7,22,37,52 * * * *`. TCE's app-side `validate-wf-06-healthcheck-contract.sh` explicitly pins both expressions. Market-scan schedules were not changed.
 - `reconcile-vps.yml` remains the only production apply authority. App repositories own tests/builds and immutable GHCR publication; Platform Infra owns production manifests, shared GHCR pull credentials, GitOps promotion/reconciliation and rollout/health verification. Preserve purposeful CI, security, backup, manual, release and scheduled workflows.
+
+
+## 2026-11-03 18:56 ICT / 11:56 UTC — Media publisher provenance regression coverage
+
+- Platform PR [#1140](https://github.com/phanthienquoc/platform-infra/pull/1140), dedicated branch `test/media-provenance-skipped-dispatch-regressions-2026-11-03-1856-ict`, adds negative tests for a skipped Media production-release gate job, a skipped `Notify platform-infra` step, and duplicate required publication jobs.
+- The production verifier already rejects any required job not completed-success, any required step without success, and missing/duplicate matching evidence. This change closes a regression-test gap; it does not change runtime acceptance behavior.
+- Required validation: `validate-github-actions` and `validate-manifests` on the exact PR head, followed by post-merge validation. Do not claim merged until exact-head checks and merge SHA are confirmed.
+- No workflow, publisher, payload, GitOps manifest, credential, release gate, deployment authority or schedule changed. TCE market-scan schedule unchanged.
