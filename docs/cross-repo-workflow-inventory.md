@@ -2096,3 +2096,11 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Media and MicroFE workloads 1/1; TCE/Auth/Keycloak 0/0; OIDC 503. Stock Admin and one new Backend Pod still fail on \`12d63b4\` (no ARM64 manifest); an older Backend and Frontend remain running on \`23b2878\`. Do not treat cached prior images as a new release.
 - Reconciliation #41632142164: no drift, no manifest apply, shared GHCR pull Secret unchanged, Auth runtime Secret provisioned/verified, Stock permanent pull failures not restarted. Media/MicroFE/TCE/Auth lanes passed; Stock lane failed; Keycloak skipped.
 - Keep native schedule evidence separate from fallback dispatches; preserve all existing schedules and workflows. TCE market-scan schedule unchanged.
+
+
+## 2026-11-03 19:08 ICT / 12:08 UTC — native schedule delivery checkpoint
+
+- Native Platform recovery tick #41633096574 passed. It observed fresh fallback reconciliation #41632142164 and inspection #41632477654 and correctly avoided duplicate dispatches.
+- Watchdog #41633130972 failed because native reconcile, mirror and inspection schedules remain stale; the mirror's latest native run #41611280196 failed due missing \`PLATFORM_INFRA_MIRROR_TOKEN\`. Workflow enabled checks passed.
+- Native recovery is fresh; native reconcile/inspection/mirror are not. TCE WF-06/WF-12 native runs remain stale/failed. Fallback \`workflow_dispatch\` and \`workflow_run\` events are not schedule proof.
+- No schedule definitions changed. Keep strict health assertions, all CI/security/manual/release/backup workflows, and the sole \`reconcile-vps.yml\` production apply authority. TCE market-scan schedule unchanged.
