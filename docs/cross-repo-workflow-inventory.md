@@ -1970,3 +1970,11 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Post-merge master validation passed: `validate-github-actions` [#41587385946](https://github.com/phanthienquoc/platform-infra/actions/runs/41587385946), `validate-manifests` [#41587385921](https://github.com/phanthienquoc/platform-infra/actions/runs/41587385921). Read-only watchdog push smoke [#41587385922](https://github.com/phanthienquoc/platform-infra/actions/runs/41587385922) also passed; it executed all schedule freshness checks and warned that inspection/recovery history was stale.
 - Freshness budgets for reconciliation (45m), inspection (75m), mirror (90m) and recovery (45m) now compare elapsed seconds. Reconciliation/inspection inline queue checks and the Python deployment-lane queue verifier enforce the 15-minute budget in seconds. Regression fixtures cover exactly 15m and 15m01s for unassigned and assigned lanes; the static workflow validator rejects legacy minute-truncated comparisons.
 - This is observability/contract hardening only. No schedule, production manifest, image, credential, database, replica, Pod, host or deployment authority changed. TCE market-scan schedule unchanged.
+
+
+## 2026-11-03 — inspection completion is part of the deployment evidence contract
+
+- `inspect-vps.yml` native schedule freshness is not sufficient by itself: the latest scheduled run must be completed with conclusion=success before the watchdog reports inspection delivery healthy.
+- A recent in-progress inspection is reported as pending, not as completed health evidence. A recent completed failure/cancellation fails scheduled/manual watchdog runs; push-triggered post-merge smoke reports a warning only.
+- Recovery checks the latest master inspection run's conclusion as well as its age. A completed non-success run is treated as stale immediately and triggers the existing read-only inspection fallback. In-progress runs continue to suppress duplicate dispatches.
+- Manual `workflow_dispatch` inspection can refresh the runtime snapshot but never counts as native event=schedule delivery. No cron expression or production apply authority changes.
