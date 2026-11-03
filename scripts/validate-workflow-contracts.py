@@ -463,6 +463,13 @@ if "STOCKDIVIDEND_ACTIONS_READ_TOKEN" not in (ROOT / "docs" / "credentials.md").
 
 
 # Media Generation publishes a paired digest event tied to a real, successful publisher Actions run.
+
+if "media-release-requested" in promotion:
+    fail("Legacy Media tag-only dispatch is retired; only the paired digest event is accepted.")
+for obsolete in ("  fanout-media-release:", "  coordinate-media-release:"):
+    if obsolete in promotion:
+        fail(f"Obsolete Media tag-only promotion job remains: {obsolete.strip()}")
+
 if "media-images-published" not in promotion:
     fail("GitOps promotion must consume the paired Media digest event.")
 if "EVENT_FRONTEND_DIGEST" not in promotion or "EVENT_BACKEND_DIGEST" not in promotion:
