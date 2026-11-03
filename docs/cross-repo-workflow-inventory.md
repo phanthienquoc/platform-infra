@@ -1847,3 +1847,12 @@ No production manifest, image, credential, database, replica, release flag, depl
 - Platform docs PR #1104 merged at `b77a92030f0925dee95ef7600681250b2c6637ed`; post-merge validate-manifests #41550385614 SUCCESS. Docs-only merge did not trigger recovery or production reconciliation.
 - Latest native watchdog #41550202827 FAILURE: scheduled reconciliation #41549849545 age 2m, no lane queue over 15m; native inspect-vps remains #41498271871 at 352m (>75m). Push inspection #41549730731 is not counted as native schedule.
 - Recovery #41550174709 SUCCESS and skipped duplicate fallback because latest reconciliation/inspection activity was fresh. Native inspection schedule still requires consecutive scheduled ticks; no cron or TCE market-scan schedule changed.
+
+
+## 2026-11-03 08:01 ICT — recovery source-run audit contract
+
+- TCE WF-07 native schedule #41556575907 was validated by Platform recovery #41556605772 through the authenticated `tce-schedule-heartbeat` repository_dispatch payload (source repository, scheduled event, workflow path, run ID, full SHA, and WF-12 heartbeat ID).
+- The fallback dispatched reconciliation #41556624187 only after the latest master reconciliation was 53m old. Payload was `mode=apply`, `allow_image_changes=false`, `target_app=all`; shared preflight passed and no manifest drift meant production manifest apply was skipped. TCE/Auth/MicroFE/Media lanes passed; StockDividend failed on the known old ARM64-incompatible image; Keycloak was skipped.
+- Post-reconciliation recovery #41556855046 verified the exact source run and found the latest inspection 58m old (<75m), so no duplicate inspection dispatch was made.
+- Audit issue: repository_dispatch run #41556605772 displayed `source none` because the run-name only read `inputs.source_run_id`. The follow-up contract exposes `inputs.source_run_id`, `github.event.client_payload.source_run_id`, and `github.event.workflow_run.id` in the run title and enforces this through `validate-workflow-contracts.py`. Functional trigger/dispatch behavior is unchanged.
+- Native inspection schedule remains stale at #41498271871; push inspection #41549730731 is not counted as a native tick. Preserve all existing cron expressions and the TCE market-scan schedule.
