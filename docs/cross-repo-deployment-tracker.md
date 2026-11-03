@@ -4013,3 +4013,29 @@ No code or production manifests were changed in this checkpoint. No image promot
 5. Keep Auth/Keycloak activation gated on production DB credentials, DNS and migration provenance; schedule host maintenance before applying pending OS/containerd/Docker updates.
 
 `reconcile-vps.yml` remains the sole production apply authority. App repositories own tests/builds and immutable GHCR publication; Platform Infra owns production manifests, shared pull credentials, GitOps promotion/reconciliation and rollout/health verification. TCE market-scan schedule unchanged.
+
+
+## 2026-11-03 19:04 ICT / 12:04 UTC — refreshed K3s inspection snapshot
+
+### Inspection evidence
+
+- Inspection run [#41632477654](https://github.com/phanthienquoc/platform-infra/actions/runs/41632477654) completed SUCCESS via \`workflow_dispatch\` (not a native schedule tick). Its generated \`debug/vps-latest.md\` was merged by inspection PR [#1142](https://github.com/phanthienquoc/platform-infra/pull/1142), merge commit \`343ce495045afd97c94e861da7f3991b22078510\`; post-merge \`validate-manifests\` #41632633373 SUCCESS.
+- Node \`tce-k3s-01\` is Ready, ARM64, K3s \`v1.36.3+k3s1\`, Ubuntu 22.04.5, kernel \`6.8.0-1049-oracle\`, containerd \`2.3.2-k3s2\`. Disk usage 55%, available RAM about 19 GiB, runner policy v14. Host reports \`restart_required: yes\`; pending host updates still require a maintenance window.
+- Media backend/frontend and MicroFE Shell/WS/NATS are 1/1 Running. TCE frontend/service, Auth and Keycloak are 0/0. Public OIDC probes for both master and mrcute realms still return HTTP 503.
+- Stock Admin has two 0/1 \`ImagePullBackOff\` Pods using \`12d63b4\`. Stock Backend has one existing 1/1 Running Pod on prior tag \`23b2878\` (CRI image ID \`sha256:bcf5f7b1b660b5b93cd9d9f4f041db7e9166c89b084412fa4f66e8e4d9a43ad1\`) and one 0/1 Pod on \`12d63b4\` with \`no match for platform in manifest\`. Stock Frontend remains 1/1 on prior tag \`23b2878\`. Do not infer that the local cached/previous tag is a newly authorized release or promote it without current publisher provenance and owner authorization.
+- GitOps drift remains clean. The inspection is a fresh fallback snapshot, not evidence that native inspection/recovery/reconciliation schedules have recovered.
+
+### Reconciliation cross-reference
+
+- Post-merge reconciliation [#41632142164](https://github.com/phanthienquoc/platform-infra/actions/runs/41632142164) completed FAILURE at the StockDividend health lane. Shared reconciliation succeeded; GHCR preflight passed; \`ghcr-pull\` remained unchanged; Auth runtime Secret was provisioned/verified with values suppressed; permanent Stock Admin/Backend image-pull errors were not restarted; manifest apply was skipped because \`DRIFT=false\`.
+- Media, MicroFE, TCE and Auth lanes passed their configured checks; TCE/Auth rollout checks were skipped because those workloads remain 0/0. Keycloak was skipped. Stock health remains the only failed lane.
+
+### Next actions
+
+1. Owner must supply destination-only \`PLATFORM_INFRA_MIRROR_TOKEN\`.
+2. Owner must verify \`STOCKDIVIDEND_ACTIONS_READ_TOKEN\` and authorize a new paired immutable StockDividend release with valid ARM64 Admin/Backend manifests.
+3. Run an authorized Media production publisher to prove the paired-digest event end-to-end.
+4. Continue native schedule observation; do not count workflow_dispatch/workflow_run fallback runs as schedule delivery.
+5. Keep Auth/Keycloak off until explicit activation plus DB/DNS/migration prerequisites; schedule host maintenance before applying updates.
+
+TCE market-scan schedule unchanged. \`reconcile-vps.yml\` remains the sole production apply authority.
