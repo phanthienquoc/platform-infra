@@ -65,7 +65,13 @@ make_run() {
 make_jobs() {
   jq -n '{
     jobs: [
-      {name:"Verify auth service",status:"completed",conclusion:"success"},
+      {name:"Verify auth service",status:"completed",conclusion:"success",steps:[
+        {name:"Run npm install --package-lock-only --ignore-scripts --no-audit --no-fund",conclusion:"success"},
+        {name:"Run npm ci --ignore-scripts --no-audit --no-fund",conclusion:"success"},
+        {name:"Run npm test",conclusion:"success"},
+        {name:"Run npm run typecheck",conclusion:"success"},
+        {name:"Run npm run build",conclusion:"success"}
+      ]},
       {name:"Build and publish ARM64 image with version and SHA tags",status:"completed",conclusion:"success",steps:[
         {name:"Validate release and promotion contract",conclusion:"success"},
         {name:"Build and publish image",conclusion:"success"},
@@ -135,6 +141,18 @@ make_jobs > "$tmp_dir/jobs.json"
 jq '(.jobs[] | select(.name == "Verify auth service")).conclusion = "skipped"' "$tmp_dir/jobs.json" > "$tmp_dir/jobs-invalid.json"
 mv "$tmp_dir/jobs-invalid.json" "$tmp_dir/jobs.json"
 expect_failure "skipped application verification job"
+
+for required_step in \
+  "Run npm install --package-lock-only --ignore-scripts --no-audit --no-fund" \
+  "Run npm ci --ignore-scripts --no-audit --no-fund" \
+  "Run npm test" \
+  "Run npm run typecheck" \
+  "Run npm run build"; do
+  make_jobs > "$tmp_dir/jobs.json"
+  jq --arg step "$required_step" '(.jobs[] | select(.name == "Verify auth service") | .steps[] | select(.name == $step)).conclusion = "skipped"' "$tmp_dir/jobs.json" > "$tmp_dir/jobs-invalid.json"
+  mv "$tmp_dir/jobs-invalid.json" "$tmp_dir/jobs.json"
+  expect_failure "skipped Auth verification step: $required_step"
+done
 
 make_jobs > "$tmp_dir/jobs.json"
 jq '(.jobs[] | select(.name == "Build and publish ARM64 image with version and SHA tags") | .steps[] | select(.name == "Build and publish image")).conclusion = "skipped"' "$tmp_dir/jobs.json" > "$tmp_dir/jobs-invalid.json"
