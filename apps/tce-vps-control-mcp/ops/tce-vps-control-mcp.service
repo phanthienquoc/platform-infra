@@ -1,0 +1,33 @@
+[Unit]
+Description=TCE VPS Control MCP
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tce-mcp
+Group=tce-mcp
+WorkingDirectory=/opt/tce-vps-control-mcp
+EnvironmentFile=/etc/tce-vps-control-mcp/server.env
+ExecStart=/usr/bin/node /opt/tce-vps-control-mcp/dist/index.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+UMask=0027
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/log/tce-vps-control-mcp /srv /tmp
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+[Install]
+WantedBy=multi-user.target
