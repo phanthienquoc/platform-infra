@@ -4558,3 +4558,7 @@ No production image promotion, manifest apply, database migration, shared pull-s
 5. Arrange a maintenance window before Ubuntu/containerd/Docker upgrades or host reboot.
 
 PR #1176 is open on the dedicated documentation branch. Its exact head has no PR workflow runs or status/check runs because the changed paths are documentation-only; the branch-protection endpoint is not accessible through the current GitHub integration, so it is intentionally not merged until required-check policy can be verified. No production image promotion, GitOps manifest apply, database migration, shared GHCR pull-Secret change, desired replica change, Pod restart or host reboot occurred in the latest reconciliation. The existing Auth runtime Secret was re-applied with values suppressed. `reconcile-vps.yml` remains the sole production apply authority; no SSH/Compose authority was added. TCE market-scan schedule unchanged.
+
+
+### Checkpoint PR state
+- This 07:00 ICT documentation checkpoint is submitted as Platform PR #1176 on `docs/cross-repo-readiness-20261104-0700-ict`. The exact current head has no PR workflow runs or status/check runs because the changed files are documentation-only and existing workflow path filters do not match. The branch-protection required-check policy is not readable through the current GitHub integration, so PR #1176 remains open and unmerged pending verification of that policy.
