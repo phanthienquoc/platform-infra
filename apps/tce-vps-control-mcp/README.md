@@ -50,7 +50,7 @@ sudo bash scripts/install.sh
 
 The installer creates the service account, installs the Node app and root-owned Docker wrapper, configures sudoers, creates a random bearer token if no environment file exists, and starts the systemd service.
 
-The installer expects `package-lock.json` to be present. Generate and commit it with `npm install --package-lock-only` from this directory before production installation.
+The installer resolves dependencies from the pinned semver ranges in `package.json` during installation. For fully reproducible production builds, generate and commit a `package-lock.json` after validating the dependency tree.
 
 Check local health:
 
