@@ -5125,3 +5125,45 @@ No production manifest/image reference, release flag, shared GHCR credential, da
 - PR #1201 changed only `docs/cross-repo-deployment-tracker.md` and `docs/cross-repo-workflow-inventory.md`; `validate-github-actions` is path-filtered to workflow/script/config changes and was not applicable.
 - Follow-up Actions history at 15:05 ICT still shows no native Platform schedule run after watchdog #41792527398 (14:28 ICT), no native inspect-vps schedule run, and no newer TCE WF-06/WF-12 schedule tick. Manual inspection #41785522310 remains the last K3s snapshot; do not treat it as native schedule delivery.
 - No production mutation, release promotion, database operation, credential change, host reboot, cron edit or TCE market-scan schedule change occurred.
+
+
+## Live K3s inspection checkpoint — 2026-11-04 16:00 ICT / 09:00 UTC
+
+### Repository state and PRs
+- Platform Infra master: `f4bfdec712a39f678eff36e4183cac6d0c6bd6f1`; open draft PRs #544 (Keycloak activation notes), #541 (Keycloak Supabase DB preparation), and #539 (central identity ADR).
+- TCE Dashboard master: `a355ce070204cff209df1c9ba38843c972647860`; no open PRs.
+- StockDividend master: `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; no open PRs.
+- Media Generation master: `e4c7d8990aafc7d837e918c9caf39722d623de7c`; no open PRs.
+- Authentication master: `f978a3f378ee22d4630909c2d182275b21ac9e9a`; PR #75 ready and #76 draft. Their exact-head Auth CI checks remain PASS; production Supabase/migration gates remain unresolved.
+- Platform latest master validation #41797011126 PASS on `f4bfdec712a39f678eff36e4183cac6d0c6bd6f1`. Authentication latest master CI #41670642852 PASS. TCE WF-01 #41758031017, WF-02 #41758030952 and WF-05 #41758031060 PASS. Stock CI #41563856934 and immutable publisher #41563856933 PASS. Media CI #41617592783 PASS.
+
+### Fresh read-only K3s snapshot
+- Inspection run #41785522310 was safely rerun as attempt 2 after confirming `.github/workflows/inspect-vps.yml` and `scripts/inspect-vps.sh` have identical blob SHAs on current master and the inspected commit. The inspection step and output validation succeeded; snapshot generated at `2026-11-04T09:00:13Z` (16:00:13 ICT).
+- Node `tce-k3s-01`: Ready, ARM64, K3s `v1.36.3+k3s1`, Ubuntu 22.04.5 LTS, disk pressure normal at 55%.
+- Host uptime approximately 186 days 18h50m. `restart_required: yes`; pending Ubuntu packages and Docker/containerd updates (containerd.io 2.4.2 available over 2.2.1; Docker CE 29.9.2 available over 29.1.3). No package upgrade or reboot was performed.
+- Healthy at inspection: Media backend/frontend 1/1; MicroFE Shell/WS 1/1; NATS 1/1; cert-manager and core K3s services 1/1.
+- Stock Admin: two Pods `ImagePullBackOff`; new Stock Backend Pod `ImagePullBackOff`. Both use tag `12d63b4`; kubelet reports `no match for platform in manifest`. Existing Stock Backend replica and legacy Stock Frontend remain 1/1.
+- TCE frontend/service 0/0; MicroFE Auth 0/0; Keycloak 0/0. Public Keycloak OIDC probes return HTTP 503. These states are not healthy and were not changed.
+- No production manifest, image, release flag, credential, database, replica, Pod or host state was mutated by inspection.
+
+### Inspection PR handling
+- The rerun created PR #1203 at head `5ad2a89e1f92a2b96345c166bf6b31c8dde4abe8`. Exact-head manifest validation #41803947887 PASS.
+- The inspection workflow refused to merge because GitHub returned HTTP 405 / merge conflict: the rerun used an older run's base SHA `8921555e7cf73a6cb16e95c47cb5bd7c46d458a4`, while master had advanced to `f4bfdec712a39f678eff36e4183cac6d0c6bd6f1`. No merge was attempted after the conflict.
+- A replacement snapshot branch is being prepared from current master to avoid merging stale history. Keep the generated snapshot as evidence; do not force-push or bypass merge validation.
+
+### Native schedule evidence (event types kept distinct)
+- Latest Platform native reconciliation: #41792374251 at 14:27 ICT, failed only at StockDividend workload health; production image apply was skipped.
+- Latest Platform native watchdog: #41792527398 at 14:28 ICT, failed because no scheduled inspect-vps event was present within the 75-minute budget. It verified inspect-vps was active; the native schedule event itself is missing.
+- Latest Platform native recovery schedule: #41787641688 at 13:45 ICT, success. Later recovery #41792556931 and #41792618152 are workflow_run events, not native schedule ticks.
+- No newer native Platform inspection/reconcile/recovery/watchdog schedule event appeared in the latest 100-run history at this checkpoint. Keep existing cron declarations unchanged.
+- Latest TCE native WF-07 #41785211971 at 13:23 ICT PASS; WF-06 #41762490285 at 09:42 ICT FAIL (four public endpoints HTTP 503); WF-12 #41759196674 at 09:12 ICT FAIL (stale healthcheck evidence). Workflow_run WF-12 #41785231592 is not a native schedule tick and also failed freshness.
+- Do not alter TCE market-scan schedule.
+
+### Release and ownership gates
+- Stock immutable ARM64 publication remains verified by #41563856933 for Scraper/Admin/Backend full-SHA tags and digests. Promotion handoff/dispatch remains skipped because release authorization and protected Actions:read credential are not verified. Production tag `12d63b4` remains unchanged.
+- Authentication PR #75/#76 remain gated on Supabase production integration side effects and migration provenance/drift; no database operation or release dispatch.
+- Media CI is green and runtime was 1/1 in this snapshot; no publisher E2E or production promotion is claimed.
+- `locally-uncensored-private` remains retired from active Platform workflows by owner direction. Do not restore its workflow or credentials.
+- `reconcile-vps.yml` remains the sole production apply authority. No duplicate SSH/Compose authority.
+
+No production promotion, manifest or credential mutation, database migration, Pod restart, replica change, host reboot, or TCE market-scan schedule change occurred in this checkpoint.
