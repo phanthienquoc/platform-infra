@@ -462,7 +462,7 @@ jobs:
             exit 0
           fi
 
-          printf '%s\\n' \
+          printf '%s\n' \
             "::warning::Native inspection schedule remains stale (latest native run #$native_latest_id);" \
             "checking read-only fallback activity separately."
 
@@ -474,7 +474,7 @@ jobs:
             fallback_id="$(jq -r '.id' <<< "$fallback_latest")"
             fallback_status="$(jq -r '.status // empty' <<< "$fallback_latest")"
             if [[ "$fallback_status" != "completed" ]]; then
-              printf '%s\\n' \
+              printf '%s\n' \
                 "Recent read-only workflow_dispatch fallback #$fallback_id is $fallback_status;" \
                 "avoiding a duplicate fallback. Native schedule remains stale."
               exit 0
@@ -482,12 +482,8 @@ jobs:
 
             fallback_conclusion="$(jq -r '.conclusion // "unknown"' <<< "$fallback_latest")"
             if [[ "$fallback_conclusion" == "success" ]]; then
-              fallback_activity_at="$(jq -r '.updated_at // .run_started_at // .created_at // empty' <<< "$fallback_latest")"
-              fallback_activity_epoch="$(jq -r \
-                'if (.updated_at // .run_started_at // .created_at) then \
-                  ((.updated_at // .run_started_at // .created_at) | fromdateiso8601) \
-                 else empty end' <<< "$fallback_latest")"
-              [[ -n "$fallback_activity_at" && "$fallback_activity_epoch" =~ ^[0-9]+$ ]] || {
+              fallback_activity_epoch="$(jq -r '(.updated_at // .run_started_at // .created_at // empty) | fromdateiso8601' <<< "$fallback_latest")"
+              [[ "$fallback_activity_epoch" =~ ^[0-9]+$ ]] || {
                 echo "::error::Read-only fallback inspection #$fallback_id has no usable activity timestamp."
                 exit 1
               }
@@ -497,13 +493,15 @@ jobs:
                 exit 1
               }
               if (( fallback_age_seconds <= MAX_INSPECTION_AGE_MINUTES * 60 )); then
-                printf '%s\\n' \
+                printf '%s\n' \
                   "Recent workflow_dispatch inspection fallback #$fallback_id is fresh (age=$((fallback_age_seconds / 60))m);" \
                   "no duplicate fallback needed. Native schedule remains stale and the watchdog must continue to report it."
                 exit 0
               fi
             else
-              echo "::warning::Latest read-only workflow_dispatch fallback #$fallback_id concluded $fallback_conclusion; a new fallback will be attempted."
+              printf '%s\n' \
+                "::warning::Latest read-only workflow_dispatch fallback #$fallback_id concluded $fallback_conclusion;" \
+                "a new fallback will be attempted."
             fi
           fi
 
@@ -512,7 +510,7 @@ jobs:
             echo "::error::Unable to resolve the exact master SHA for inspection dispatch."
             exit 1
           }
-          printf '%s\\n' \
+          printf '%s\n' \
             "::warning::No fresh read-only inspection fallback exists while native schedule evidence is stale;" \
             "dispatching the existing read-only inspection workflow."
           echo "Dispatch payload: ref=master sha=$dispatch_sha (no inputs)"
