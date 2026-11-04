@@ -39,7 +39,6 @@ run-name: >-
     workflows:
       - "reconcile-vps"
       - "inspect-vps"
-      - "Mirror locally-uncensored into private repository"
       - "Reconcile Schedule Freshness Watchdog"
     types: [completed]
   # Independent heartbeat from TCE's scheduled WF-06/WF-07/WF-12 checks.
@@ -64,8 +63,6 @@ jobs:
            (github.event.workflow_run.head_branch == 'master' &&
             (github.event.workflow.path == '.github/workflows/reconcile-vps.yml' ||
              (github.event.workflow.path == '.github/workflows/inspect-vps.yml' &&
-              github.event.workflow_run.event == 'schedule') ||
-             (github.event.workflow.path == '.github/workflows/mirror-locally-uncensored.yml' &&
               github.event.workflow_run.event == 'schedule') ||
              (github.event.workflow.path == '.github/workflows/reconcile-schedule-watchdog.yml' &&
               github.event.workflow_run.event == 'schedule' &&
