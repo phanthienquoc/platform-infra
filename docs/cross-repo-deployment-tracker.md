@@ -5115,3 +5115,13 @@ Wait for the next native recovery/watchdog cycle and verify that a failed schedu
 6. Preserve the ownership boundary: app repos own tests/builds and immutable GHCR publication; Platform Infra owns production manifests, shared GHCR pull credentials, provenance/digest validation, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the sole production apply authority; no duplicate direct SSH/Compose deployment authority.
 
 No production manifest/image reference, release flag, shared GHCR credential, database object, replica, Pod, host maintenance state or cron expression changed. TCE market-scan schedule unchanged.
+
+
+## Post-merge verification — 2026-11-04 15:05 ICT / 08:05 UTC
+
+- Cross-repo checkpoint PR #1201 merged by squash as `617a1f64ba54abad3683d1d3196784ec23c09f41`.
+- Exact PR-head `validate-manifests` run #41796718439 passed on `c2981e9ec04052ae927ec0477bf965be79647804`.
+- Post-merge master `validate-manifests` run #41796804225 passed on merge SHA `617a1f64ba54abad3683d1d3196784ec23c09f41`.
+- PR #1201 changed only `docs/cross-repo-deployment-tracker.md` and `docs/cross-repo-workflow-inventory.md`; `validate-github-actions` is path-filtered to workflow/script/config changes and was not applicable.
+- Follow-up Actions history at 15:05 ICT still shows no native Platform schedule run after watchdog #41792527398 (14:28 ICT), no native inspect-vps schedule run, and no newer TCE WF-06/WF-12 schedule tick. Manual inspection #41785522310 remains the last K3s snapshot; do not treat it as native schedule delivery.
+- No production mutation, release promotion, database operation, credential change, host reboot, cron edit or TCE market-scan schedule change occurred.
