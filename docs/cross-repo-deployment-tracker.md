@@ -4997,3 +4997,37 @@ No production manifest/image reference, release-enable flag, GHCR pull credentia
 5. Do not run Media/Auth publisher E2E, change desired replicas, mutate shared credentials, apply manifests, migrate databases, restart Pods, or reboot the VPS without the relevant authorization/maintenance gate.
 
 Ownership remains unchanged: app repos own tests/builds and immutable GHCR publication; Platform Infra owns production manifests, shared GHCR pull credentials, provenance/digest checks, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the sole production apply authority. No direct SSH/Compose deployment authority was introduced. No production mutation or TCE market-scan schedule change occurred in this checkpoint.
+
+
+## Cross-repository deployment checkpoint — 2026-11-04 13:56 ICT / 06:56 UTC
+
+### Repository heads and open PRs
+| Repository | Current master SHA | Open PRs | Latest app/validation evidence |
+|---|---|---|---|
+| Platform Infra | `0b00384174bc` | #544/#541/#539 (draft) | Master manifest validation #41783214164 PASS; workflow validation #41770766313 PASS before this recovery-guard patch |
+| TCE Dashboard | `a355ce070204` | None | WF-01 #41758031017, WF-02 #41758030952, WF-05 #41758031060 PASS |
+| StockDividend | `50ba0dfb67eb` | None | CI #41563856934 and immutable publisher #41563856933 PASS; no newer run observed |
+| Media Generation | `e4c7d8990aaf` | None | Media CI #41617592783 PASS; no paired publisher E2E observed |
+| Authentication | `f978a3f378ee` | #75 ready / #76 draft | Auth service CI #41670642852 PASS |
+
+Exact-head checks for open PRs: Platform #544/#541/#539 each have `validate-manifests` SUCCESS; Authentication #75/#76 each have `auth-service-ci` SUCCESS. These checks do not override outstanding production side-effect and migration gates. Do not merge Auth #75 while the connected Supabase GitHub integration has production deployment enabled and migration drift remains unresolved; keep #76 draft.
+
+### Scheduled delivery and recovery diagnosis
+- Native recovery schedule #41787641688 completed SUCCESS at 13:45 ICT. Its log confirms the latest master reconciliation #41785260846 had last activity at 13:26:10 ICT (19m old), and the latest inspection #41785522310 had last activity at 13:27:40 ICT (17m old); no fallback dispatch was required.
+- Schedule watchdog #41787664409 FAILED at 13:45 ICT. It verified `reconcile-vps` is active, but the latest native scheduled reconciliation remained #41750519522 (07:56 ICT; age 349m). The latest native scheduled inspection remained #41758796515 (09:08 ICT; age 276m). The inspection workflow itself is active. Keep cron expressions and strict freshness budgets unchanged; manual dispatches are not native schedule evidence.
+- The watchdog failure triggered recovery run #41787700107, but its job was SKIPPED. Root cause: the recovery job-level `workflow_run` filter used `github.event.workflow.path`, which is not a field in the `workflow_run` webhook payload. The source identity is `github.event.workflow_run.workflow_id`. This branch changes the filter to repository-scoped IDs verified from Actions run metadata: reconcile-vps `364209709`, inspect-vps `364209707`, watchdog `402675709`; the workflow-contract validator now requires those IDs and rejects the invalid top-level path reference.
+- This is a trigger/contract correction only. It does not add a deployment authority or change cron. The existing recovery controller remains the only fallback and may dispatch the existing `reconcile-vps` authority in `mode=apply` with `allow_image_changes=false` only when its existing freshness logic determines reconciliation is stale. No fallback apply was dispatched by the 13:45 scheduled recovery run.
+- Read-only inspection dispatch #41785522310 completed SUCCESS at 13:26 ICT; snapshot `debug/vps-latest.md` was generated at 13:26:29 ICT. Node `tce-k3s-01` was Ready on K3s v1.36.3+k3s1 / containerd 2.3.2-k3s2. Media backend/frontend, MicroFE shell/WS and NATS were 1/1. Stock Admin Pods and the new Backend Pod were `ImagePullBackOff` because tag `12d63b4` has no matching ARM64 manifest; existing Backend and legacy Frontend remained 1/1. MicroFE Auth and Keycloak were 0/0. Host reports `restart_required: yes` with containerd/Docker/OS updates pending; no maintenance window is recorded.
+
+### App workflow and release status
+- TCE WF-07 scheduled integration #41785211971 PASS at 13:23 ICT. WF-12 #41785231592 FAILED because WF-06 schedule delivery was stale: last scheduled WF-06 run #41762490285 was 221m old and itself failed four public endpoint probes (HTTP 503). Keep WF-06 strict; do not change the TCE market-scan schedule.
+- StockDividend immutable ARM64 publication remains verified by #41563856933, but production still references `12d63b4`. Keep release/promotion blocked until the protected Actions-read credential and explicit paired Admin/Backend release authorization are available.
+- Media runtime was 1/1 at the 13:26 inspection; CI #41617592783 is the latest publisher-related evidence. Do not dispatch paired publisher E2E without authorization.
+- Authentication CI #41670642852 passed, but Auth/MicroFE Auth and Keycloak remain 0/0 in the latest inspection. Keep Supabase/migration and production activation gates.
+
+### Safety and next action
+- No production manifest, image reference, shared GHCR credential, database, replica, Pod or host state was changed in this checkpoint. No reboot or maintenance operation was performed.
+- `reconcile-vps.yml` remains the sole production apply authority; app repos own tests/builds and immutable GHCR publication. No SSH/Compose deployment authority was added.
+- `locally-uncensored-private` remains retired from active workflows; do not restore its mirror or credentials without explicit owner authorization.
+- TCE market-scan schedules and all existing cron expressions remain unchanged.
+- Next: validate this branch with workflow-contract and manifest checks, then inspect the exact PR head/checks before any squash merge. After merge, verify the recovery workflow no longer skips the failed-watchdog source event and inspect resulting reconciliation/health evidence.

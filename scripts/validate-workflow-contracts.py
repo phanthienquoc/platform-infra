@@ -149,7 +149,7 @@ expected_recovery_sources = """    workflows:
 if expected_recovery_sources not in recovery or "types: [completed]" not in recovery:
     fail("Recovery controller must run after master reconciliation, scheduled inspection, and schedule-watchdog completion.")
 
-watchdog_recovery_gate = """             (github.event.workflow.path == '.github/workflows/reconcile-schedule-watchdog.yml' &&
+watchdog_recovery_gate = """             (github.event.workflow_run.workflow_id == 402675709 &&
               github.event.workflow_run.event == 'schedule' &&
               github.event.workflow_run.conclusion == 'failure')"""
 if watchdog_recovery_gate not in recovery:
@@ -323,10 +323,14 @@ for required in (
         fail(f"Push scope resolver must ignore app documentation: {required}")
 if "github.event.workflow_run.name == 'reconcile-vps'" in recovery:
     fail("Recovery must not compare workflow_run.name to the workflow name when reconcile-vps uses a dynamic run-name.")
-if "github.event.workflow.path == '.github/workflows/reconcile-vps.yml'" not in recovery:
-    fail("Recovery must identify reconciliation completions by the workflow resource path.")
-if "github.event.workflow.path == '.github/workflows/inspect-vps.yml'" not in recovery or "github.event.workflow_run.event == 'schedule'" not in recovery:
+if "github.event.workflow_run.workflow_id == 364209709" not in recovery:
+    fail("Recovery must identify reconcile-vps completions by workflow_run.workflow_id.")
+if "github.event.workflow_run.workflow_id == 364209707" not in recovery or "github.event.workflow_run.event == 'schedule'" not in recovery:
     fail("Only scheduled master inspection completions may trigger reconciliation recovery.")
+if "github.event.workflow_run.workflow_id == 402675709" not in recovery:
+    fail("Recovery must identify schedule-watchdog completions by workflow_run.workflow_id.")
+if "github.event.workflow.path" in recovery:
+    fail("Recovery workflow_run guards must not use the absent top-level github.event.workflow.path field.")
 source_verification_index = recovery.find("- name: Verify and await source reconciliation completion")
 reference_clock_index = recovery.find("- name: Resolve GitHub Actions API reference clock")
 if source_verification_index < 0 or reference_clock_index < 0 or source_verification_index > reference_clock_index:
