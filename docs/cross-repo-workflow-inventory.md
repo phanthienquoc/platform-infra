@@ -2678,3 +2678,13 @@ No production apply, promotion, database migration, secret mutation, replica cha
 - Recovery follow-up #41787700107 was SKIPPED after the failed watchdog. Recovery's job guard incorrectly referenced `github.event.workflow.path`; changed on branch `fix/recovery-workflow-run-source-ids-20261104` to compare verified `github.event.workflow_run.workflow_id` values (reconcile 364209709, inspect 364209707, watchdog 402675709). Contract validator updated to enforce this webhook-payload identity contract and reject the invalid field.
 - Latest read-only K3s snapshot #41785522310 (13:26 ICT): node Ready; Media/MicroFE/NATS 1/1; Stock Admin and new Backend ImagePullBackOff on old non-ARM64 tag; old Backend/legacy Frontend 1/1; Auth and Keycloak 0/0; host restart required. No production changes, credential mutation, migration or reboot.
 - `locally-uncensored-private` remains retired from active workflow inventory. `reconcile-vps.yml` remains the sole production apply authority. No direct SSH/Compose authority and no TCE market-scan schedule changes.
+
+
+## Post-merge verification — 2026-11-04 14:03 ICT / 07:03 UTC
+
+- Recovery source-filter fix PR #1199 merged at `a7cd5802dcbc72911db8be6144fa793fd96e737a`.
+- Exact PR-head validation: #41789478283 `validate-github-actions` PASS and #41789478238 `validate-manifests` PASS on `64748b34ee61535f5aa40ca1256e4d0211fd46d1).
+- Post-merge master validation: #41789565946 `validate-github-actions` PASS and #41789566021 `validate-manifests` PASS on the merge SHA.
+- Recovery now identifies source completions using the verified `workflow_run.workflow_id` values (reconcile 364209709, inspection 364209707, watchdog 402675709); contract validation rejects the absent top-level `github.event.workflow.path` reference.
+- Runtime confirmation is pending the next native scheduled watchdog/recovery cycle. Do not mark the fallback runtime path repaired solely from static/CI validation.
+- No cron or TCE market-scan schedule change; no production manifest/image/credential/database/Pod/host mutation. `reconcile-vps.yml` remains the sole apply authority.

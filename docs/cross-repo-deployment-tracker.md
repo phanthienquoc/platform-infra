@@ -5031,3 +5031,16 @@ Exact-head checks for open PRs: Platform #544/#541/#539 each have `validate-mani
 - `locally-uncensored-private` remains retired from active workflows; do not restore its mirror or credentials without explicit owner authorization.
 - TCE market-scan schedules and all existing cron expressions remain unchanged.
 - Next: validate this branch with workflow-contract and manifest checks, then inspect the exact PR head/checks before any squash merge. After merge, verify the recovery workflow no longer skips the failed-watchdog source event and inspect resulting reconciliation/health evidence.
+
+
+## Post-merge recovery contract verification — 2026-11-04 14:03 ICT / 07:03 UTC
+
+- PR [#1199](https://github.com/phanthienquoc/platform-infra/pull/1199) squash-merged as `a7cd5802dcbc72911db8be6144fa793fd96e737a`.
+- Exact PR-head checks on `64748b34ee61535f5aa40ca1256e4d0211fd46d1): `validate-github-actions` #41789478283 PASS and `validate-manifests` #41789478238 PASS.
+- Post-merge checks on the merge SHA: `validate-github-actions` #41789565946 PASS and `validate-manifests` #41789566021 PASS.
+- Master content verification confirms the recovery guard uses `github.event.workflow_run.workflow_id` for reconcile-vps (364209709), inspect-vps (364209707) and schedule-watchdog (402675709), contains no `github.event.workflow.path` reference, and the validator enforces this contract.
+- The prior failed-watchdog follow-up #41787700107 remains historical evidence of the old skipped behavior. No new post-merge watchdog/recovery cycle had completed by this checkpoint, so the fix is CI-validated but runtime re-trigger behavior is still awaiting the next native schedule cycle.
+- No cron expressions, TCE market-scan schedule, production manifests, image references, GHCR credentials, database objects, replicas, Pods or host state were changed by PR #1199.
+
+### Current operational next step
+Wait for the next native recovery/watchdog cycle and verify that a failed scheduled watchdog completion starts the recovery job rather than skipping it. If the recovery controller runs, inspect its run log and any correlated reconcile dispatch before making a production-health claim. The last live K3s evidence remains inspection #41785522310 at 13:26 ICT: Stock Admin/new Backend ImagePullBackOff on tag `12d63b4`; Media/MicroFE/NATS 1/1; Auth/Keycloak 0/0; host restart required.
