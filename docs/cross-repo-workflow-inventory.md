@@ -2739,3 +2739,25 @@ No production apply, promotion, database migration, secret mutation, replica cha
 - Current Platform master includes the fresh read-only `debug/vps-latest.md` snapshot generated at 16:00:13 ICT plus updated cross-repo tracker/inventory.
 - Snapshot confirms node Ready, ARM64, K3s v1.36.3+k3s1, disk 55%; Media backend/frontend, MicroFE Shell/WS and NATS 1/1; Stock Admin and new Backend ImagePullBackOff; old Stock Backend/Frontend 1/1; TCE/Auth/Keycloak 0/0; host restart required.
 - No production rollout, image promotion, credential/database change, Pod/replica mutation, host reboot or cron change occurred. `reconcile-vps.yml` remains the sole apply authority; TCE market-scan schedule unchanged.
+
+
+## Inspection rebase runtime inventory — 2026-11-04 16:12 ICT / 09:12 UTC
+
+| Repository | Master SHA | Open PRs | Latest CI evidence | Runtime / release gate |
+|---|---|---|---|---|
+| Platform Infra | `a1c0f1bfa5b7` | #544/#541/#539 (draft) | #41805382982 workflow contracts PASS; #41805383142 manifests PASS; inspect #41805382965 SUCCESS | #1207 fixed native Git auth; #1208 fresh snapshot merged after exact-head validation #41805481821 PASS |
+| TCE Dashboard | `a355ce070204` | None | WF-01 #41758031017, WF-02 #41758030952, WF-05 #41758031060 PASS; WF-07 #41785211971 PASS; WF-06 #41762490285 and WF-12 #41759196674 FAIL | TCE/Auth 0/0; strict 503 health remains unhealthy; market-scan schedule untouched |
+| StockDividend | `50ba0dfb67eb` | None | CI #41563856934 PASS; immutable ARM64 publisher #41563856933 PASS | Admin/new Backend ImagePullBackOff on `12d63b4`; release promotion still gated |
+| Media Generation | `e4c7d8990aaf` | None | CI #41617592783 PASS | Backend/frontend 1/1 in 16:11 ICT snapshot |
+| Authentication | `f978a3f378ee` | #75 ready / #76 draft | CI #41670642852 PASS | Auth/Keycloak 0/0; Supabase/migration activation gates remain closed |
+
+### VPS inspection workflow contract
+- The self-hosted runner does not provide `gh`; PR #1207 removed that dependency and uses a per-command Git HTTP extraheader with the workflow token.
+- Push run #41805382965 exercised the new rebase step successfully, created PR #1208 from current master, validated its exact head with #41805481821, and squash-merged it. No stale-base conflict occurred.
+- The read-only snapshot confirms Node Ready, disk 55%, Media/MicroFE/NATS 1/1, Stock Admin/new Backend ImagePullBackOff, old Stock Backend/Frontend 1/1, TCE/Auth/Keycloak 0/0, and host restart required.
+- Native Platform schedule evidence remains stale: reconcile #41792374251 14:27 ICT failed at Stock health; watchdog #41792527398 14:28 ICT failed on missing scheduled inspection; recovery schedule #41787641688 13:45 ICT passed. Workflow_run recovery events are not native schedules.
+- Native TCE health schedule evidence remains stale/degraded; preserve strict HTTP 200 assertions and do not weaken health semantics.
+- App repositories own CI/build and immutable GHCR publication; Platform Infra owns manifests, pull credentials, promotion/reconciliation, rollout and health.
+- Preserve useful CI/test/security/manual/release/scheduled jobs; do not add direct SSH/Compose deployment authority.
+- Stock release, Auth activation and Media/Auth publisher E2E remain gated pending explicit authorization/credentials.
+- `locally-uncensored-private` remains retired. TCE market-scan schedule and all cron declarations unchanged.
