@@ -55,16 +55,17 @@ concurrency:
 
 jobs:
   recover:
-    # workflow_run.name is the run display name; reconcile-vps sets a dynamic run-name.
-    # Use the top-level workflow resource path to distinguish source workflows safely.
+    # workflow_run payloads expose workflow_run.workflow_id, not a top-level workflow.path.
+    # Repository-scoped IDs keep source filtering stable despite dynamic run names.
+    # reconcile-vps=364209709; inspect-vps=364209707; watchdog=402675709.
     if: >-
       ${{ github.ref == 'refs/heads/master' &&
           (github.event_name != 'workflow_run' ||
            (github.event.workflow_run.head_branch == 'master' &&
-            (github.event.workflow.path == '.github/workflows/reconcile-vps.yml' ||
-             (github.event.workflow.path == '.github/workflows/inspect-vps.yml' &&
+            (github.event.workflow_run.workflow_id == 364209709 ||
+             (github.event.workflow_run.workflow_id == 364209707 &&
               github.event.workflow_run.event == 'schedule') ||
-             (github.event.workflow.path == '.github/workflows/reconcile-schedule-watchdog.yml' &&
+             (github.event.workflow_run.workflow_id == 402675709 &&
               github.event.workflow_run.event == 'schedule' &&
               github.event.workflow_run.conclusion == 'failure')))) &&
           (github.event_name != 'repository_dispatch' ||
