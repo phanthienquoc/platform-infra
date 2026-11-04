@@ -3031,3 +3031,66 @@ Snapshot debug/vps-latest.md generated 00:56:19 ICT:
 - Host maintenance requires an approved maintenance window.
 - reconcile-vps.yml remains sole production apply authority; inspect-vps.yml is read-only. App repos own build/test/immutable GHCR publication; Platform owns manifests, shared pull credentials, provenance, paired promotion, reconciliation, rollout and health.
 - locally-uncensored-private remains retired. No production image, manifest, credential, database, Pod, replica or host mutation occurred. TCE market-scan schedule unchanged.
+
+
+# Cross-repo workflow inventory checkpoint — 2026-11-05 02:56 ICT / 19:56 UTC
+
+## Repository state
+
+| Repository | Master SHA | Open PRs | Latest verified evidence |
+|---|---|---|---|
+| phanthienquoc/platform-infra | 53e7acc8f58f | #1222, #544, #541, #539 (draft) | Manual inspect #41900544272 PASS; validation #41900666915 PASS on inspection branch. Current master commit has no check-runs. |
+| phanthienquoc/TCE-dashboard | 52cecd5584e6 | None | Native WF-07 #41900042968 PASS; WF-12 workflow_run #41900072829 FAIL delivery verification, heartbeat job PASS; native WF-06 #41880229621 FAIL four HTTP 503 probes. |
+| phanthienquoc/stockdividend | 50ba0dfb67eb | None | CI #41563856934 PASS; immutable publisher #41563856933 PASS; source handoff and paired digest dispatch SKIPPED. |
+| phanthienquoc/media-generation | e4c7d8990aaf | None | CI #41617592783 PASS; latest inspection shows backend/frontend 1/1 with digest-pinned imageIDs. |
+| phanthienquoc/phanthienquoc-authentication | f978a3f378ee | #75 ready; #76 draft | CI #41670642852 PASS; #75/#76 exact-head validate PASS; Supabase Preview skipped. |
+
+## Platform run and inspection evidence
+
+- Latest master commit is inspection PR #1238 merge SHA `53e7acc8f58f519959c22b0a036140604b210995`; it only updates `debug/vps-latest.md`.
+- Inspection #41900544272 completed SUCCESS at 02:48:43 ICT with event=workflow_dispatch. All inspection steps passed: inspect, meaningful-change detection, snapshot validation, rebase, PR creation, exact-head validation and squash merge.
+- Validation #41900666915 completed SUCCESS on inspection branch `automation/vps-inspection-41900544272-1`, SHA `5284126dc6680f24314466a374e95c32b38b9d62`.
+- The latest master commit has zero check-runs. The previous master validation #41894268626 passed on 101a97d5; do not represent it as validation of 53e7acc8.
+- Manual reconcile #41900128585 at 02:46:08 ICT failed only in StockDividend health; Auth, TCE, Media and MicroFE lanes passed, Keycloak skipped. This was workflow_dispatch, not native schedule.
+- Manual recovery #41900480191 at 02:48:19 ICT succeeded but is not native schedule evidence.
+
+## Native Platform schedule evidence
+
+- inspect-vps.yml: #41881867627, event=schedule, 00:55:54 ICT, SUCCESS. Latest later inspection #41900544272 was manual workflow_dispatch.
+- reconcile-vps.yml: #41860865532, event=schedule, 22:44:26 ICT, FAIL only in StockDividend health. Later #41900128585 was manual and also failed Stock health.
+- recover-stale-ops.yml: #41852388418, event=schedule, 21:55:14 ICT, PASS. Later #41900480191 was manual.
+- reconcile-schedule-watchdog.yml: #41861131656, event=schedule, 22:45:57 ICT, FAIL due stale inspection/recovery evidence. Latest workflow_run #41900169516 skipped; no later native schedule evidence verified.
+
+## TCE schedule and heartbeat
+
+- WF-07 #41900042968, event=schedule, 02:45:37 ICT: SUCCESS; Binance private API check passed and third-party order integration was skipped.
+- WF-12 #41900072829, event=workflow_run, 02:45:48 ICT: overall FAIL because WF-06 delivery verification failed; authenticated heartbeat notification job succeeded.
+- Native WF-06 #41880229621, 00:45:34 ICT: four public endpoint jobs failed with HTTP 503.
+- Native WF-12 #41877745265, 00:27:45 ICT: FAIL on freshness.
+- Heartbeat forwarding is not evidence of service health or Platform native schedule recovery.
+
+## K3s snapshot — 2026-11-05 02:48:52 ICT
+
+- Node `tce-k3s-01`: Ready, ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2; disk 56%, available RAM about 19 GiB.
+- Media backend/frontend, MicroFE Shell/WS, NATS: 1/1. Media images have digest-pinned imageIDs.
+- Stock Admin: two Pods 0/1 ImagePullBackOff; new Backend 0/1 ImagePullBackOff; old Backend and Frontend 1/1.
+- Stock Admin/Backend tag `12d63b4`: no matching ARM64 platform manifest; failed Pods have no resolved imageID.
+- TCE frontend/service and MicroFE Auth/Keycloak: 0/0. Public OIDC probes return HTTP 503.
+- Host `restart_required=yes`; Ubuntu/Docker/containerd updates pending, including Docker 29.9.3 and containerd 2.4.2. No reboot or package upgrade.
+
+## Release gates and ownership
+
+- Stock immutable ARM64 publisher #41563856933 passed, but Platform handoff validation and paired digest dispatch were skipped. Require protected Actions:read access and explicit paired Admin/Backend authorization; promote only through Platform GitOps.
+- Auth PR #75 ready and #76 draft. Exact-head validation passed, Supabase Preview skipped. Do not merge/run migrations/activate until integration target and migration provenance are verified.
+- Platform PR #1222 remains draft. Current patch includes Docker restart and Kubernetes rollout-restart mutation paths, literal `\\n` sequences in TypeScript/installer content, and a `run()` helper that accepts uid/gid but does not forward them to `execFileAsync`. No reproducible lockfile/build/test/ShellCheck evidence. Do not deploy.
+- PRs #544/#541/#539 remain drafts and are not production authorization.
+- `reconcile-vps.yml` is sole production apply authority; `inspect-vps.yml` is read-only. App repos own tests/build/immutable GHCR; Platform owns manifests, pull credentials, provenance, paired promotion, reconciliation, rollout and health.
+- `locally-uncensored-private` remains retired. No production image, manifest, credential, database, Pod, replica or host mutation occurred. No cron changed; TCE market-scan schedule unchanged.
+
+## Next actions
+
+1. Re-establish native inspect/reconcile/recovery/watchdog delivery; do not count dispatch or workflow_run as schedule evidence.
+2. Obtain protected Stock Actions:read access and paired release authorization.
+3. Resolve TCE 0/0 / HTTP 503 while preserving strict HTTP 200 assertions.
+4. Verify Supabase integration/migration provenance before Auth merge or activation.
+5. Obtain maintenance window before host upgrades/reboot.
