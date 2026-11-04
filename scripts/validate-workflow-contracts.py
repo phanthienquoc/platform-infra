@@ -160,11 +160,11 @@ for required in (
     if required not in recovery:
         fail(f"Recovery latest-run selection is missing: {required}")
 for obsolete in (
-    '"repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs"',
-    '"repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs"',
+    '"repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" -F branch=master -F per_page=100',
+    '"repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs" -F branch=master -F per_page=100',
 ):
     if obsolete in recovery:
-        fail(f"Recovery must not use stale workflow-specific run pagination: {obsolete}")
+        fail(f"Recovery freshness must not use stale workflow-specific pagination: {obsolete}")
 
 if "repository_dispatch:" not in recovery or "types: [tce-schedule-heartbeat]" not in recovery:
     fail("Recovery controller must accept the authenticated cross-repository TCE schedule heartbeat.")
