@@ -18,7 +18,7 @@ node -e 'process.exit(Number(process.versions.node.split(".")[0]) >= 22 ? 0 : 1)
 }
 command -v npm >/dev/null || { echo "npm is required." >&2; exit 1; }
 
-id tce-mcp >/dev/null 2>&1 || useradd --system --home-dir /var/lib/tce-vps-control-mcp --create-home --shell /usr/sbin/nologin tce-mcp
+id tce-mcp >/dev/null 2>&1 || useradd --system --home-dir /var/lib/tce-vps-control-mcp --create-home --shell /usr/sbin/nologin tce-mcp\nid tce-shell >/dev/null 2>&1 || useradd --system --gid tce-mcp --home-dir /var/lib/tce-shell --create-home --shell /usr/sbin/nologin tce-shell
 
 install -d -o root -g root -m 0755 "$INSTALL_DIR"
 install -d -o root -g root -m 0750 "$CONFIG_DIR"
