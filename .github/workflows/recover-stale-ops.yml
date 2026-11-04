@@ -127,8 +127,6 @@ jobs:
             echo "::error::Rerun attempts cannot be accepted as native schedule heartbeats."
             exit 1
           fi
-            exit 1
-          }
           [[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ && "$HEARTBEAT_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || {
             echo "::error::TCE heartbeat SHAs must be full commit IDs."
             exit 1
