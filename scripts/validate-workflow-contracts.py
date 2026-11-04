@@ -22,12 +22,12 @@ def fail(message: str) -> None:
 
 def schedule_max_minute_gap(workflow_text: str, workflow_name: str) -> int:
     schedule = re.search(
-        r"(?ms)^  schedule:\s*\n(?P<body>.*?)(?=^  [A-Za-z_][A-Za-z0-9_-]*:\s*$|\Z)",
+        r"(?ms)^  schedule:[ \t]*\n(?P<body>.*?)(?=^  [A-Za-z_][A-Za-z0-9_-]*:[ \t]*$|\Z)",
         workflow_text,
     )
     if schedule is None:
         fail(f"{workflow_name} must declare an explicit schedule for freshness validation.")
-    cron = re.search(r'(?m)^\s*-\s*cron:\s*"([^"]+)"', schedule.group("body"))
+    cron = re.search(r'(?m)^[ \t]*-[ \t]*cron:[ \t]*"([^"]+)"', schedule.group("body"))
     if cron is None:
         fail(f"{workflow_name} must declare a quoted cron expression.")
     fields = cron.group(1).split()
@@ -146,7 +146,7 @@ watchdog_schedule_gap = schedule_max_minute_gap(watchdog, "reconcile-schedule-wa
 if watchdog_schedule_gap > recovery_schedule_gap:
     fail("The schedule freshness watchdog must run at least as frequently as the recovery controller.")
 recovery_age_budget = re.search(
-    r'(?m)^\s*MAX_RECOVERY_AGE_MINUTES:\s*"([0-9]+)"',
+    r'(?m)^[ \t]*MAX_RECOVERY_AGE_MINUTES:[ \t]*"([0-9]+)"',
     watchdog,
 )
 if recovery_age_budget is None:
