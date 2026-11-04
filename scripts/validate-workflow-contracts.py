@@ -1226,7 +1226,7 @@ for required in (
     "gh api -X GET",
     "head_sha == $sha",
     "Dispatch payload: ref=master sha=$dispatch_sha",
-    "sort_by(.updated_at // .run_started_at // .created_at)",
+    "sort_by(.created_at) | last // empty",
     "steps.reconcile.outputs.busy != 'true'",
 ):
     if required not in recovery:
