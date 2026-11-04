@@ -57,6 +57,10 @@ lane_queue = (ROOT / "scripts" / "verify-reconcile-lane-queue.py").read_text(enc
 provision = read("provision-keycloak-tce-client.yml")
 cleanup = read("vps-image-cleanup.yml")
 
+# Read-only validation of the optional VPS MCP must not trigger a production recovery/apply cycle.
+if '"!scripts/validate-vps-control-mcp-contract.py"' not in recovery:
+    fail("Read-only VPS MCP contract validation must be excluded from recovery push triggers.")
+
 # The private locally-uncensored mirror is intentionally detached by owner request.
 # Keep it out of the active workflow set until the owner explicitly asks to restore it.
 if (WORKFLOW_DIR / "mirror-locally-uncensored.yml").exists():
