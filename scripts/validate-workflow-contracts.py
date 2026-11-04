@@ -154,6 +154,19 @@ for required in (
 ):
     if required not in inspection:
         fail(f"VPS inspection transient-merge retry contract is missing: {required}")
+
+# Every inspection API GET must retry transient 5xx/network failures while
+# leaving authentication, not-found, and other 4xx responses as hard failures.
+for required in (
+    "github_api_get()",
+    "local max_get_attempts=3",
+    'status" =~ ^(000|500|502|503|504)$',
+    'encoded_branch="$(printf \'%s\' "$PR_BRANCH" | jq -sRr @uri)"',
+    'runs_json="$(github_api_get "$runs_url" "$RUNNER_TEMP/inspection-validation-runs.json")"',
+    'github_api_get "https://api.github.com/repos/$REPOSITORY/pulls/$PR_NUMBER"',
+):
+    if required not in inspection:
+        fail(f"VPS inspection transient-GET retry contract is missing: {required}")
 if "HTTP (500|502|503|504)" not in recovery:
     fail("Read-only inspection recovery must retry transient GitHub HTTP 5xx dispatch failures.")
 
