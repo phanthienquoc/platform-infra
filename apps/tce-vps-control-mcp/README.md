@@ -69,7 +69,7 @@ kubectl apply -f ops/k8s-rbac.yaml
 kubectl -n tce-ops create token tce-vps-control-mcp --duration=24h
 ```
 
-Create a dedicated kubeconfig at `/etc/tce-vps-control-mcp/kubeconfig` using the cluster API endpoint, CA certificate and service-account token. Do not copy the administrator kubeconfig. Set owner `root:tce-mcp`, mode `0640`, then restart the service. Rotate the token before expiry. The MCP server cannot access Kubernetes until this is configured.
+Create a dedicated kubeconfig at `/etc/tce-vps-control-mcp/kubeconfig` using the cluster API endpoint, CA certificate and service-account token. Do not copy the administrator kubeconfig. Set owner `tce-mcp:tce-mcp`, mode `0600`, then restart the service. This keeps the kubeconfig unreadable by the separate `tce-shell` account. Rotate the token before expiry. The MCP server cannot access Kubernetes until this is configured.
 
 ## Remote ChatGPT connection
 
