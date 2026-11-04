@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { appendFile, mkdir } from "node:fs/promises";
-import { createHash, timingSafeEqual } from "node:crypto";
+import { appendFile, mkdir, realpath } from "node:fs/promises";
+import { createHash, timingSafeEqual, randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import path from "node:path";
@@ -17,7 +17,7 @@ const TOKEN = process.env.MCP_BEARER_TOKEN ?? "";
 const AUDIT_FILE = process.env.AUDIT_FILE ?? "/var/log/tce-vps-control-mcp/audit.jsonl";
 const KUBECTL = process.env.KUBECTL_PATH ?? "/usr/local/bin/kubectl";
 const KUBECONFIG = process.env.KUBECONFIG ?? "/etc/tce-vps-control-mcp/kubeconfig";
-const MAX_COMMAND_MS = 60_000;
+const MAX_COMMAND_MS = 60_000;\nconst SHELL_UID = Number(process.env.SHELL_UID ?? "");\nconst SHELL_GID = Number(process.env.SHELL_GID ?? "");
 const MAX_OUTPUT = 256 * 1024;
 const COMMAND_MAX_LENGTH = 4_000;
 const ROOTS = (process.env.ALLOWED_CWD_ROOTS ?? "/srv,/var/log,/tmp")
@@ -26,7 +26,7 @@ const ROOTS = (process.env.ALLOWED_CWD_ROOTS ?? "/srv,/var/log,/tmp")
 if (TOKEN.length < 48) {
   throw new Error("MCP_BEARER_TOKEN must be a randomly generated secret of at least 48 characters.");
 }
-if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
+if (!Number.isInteger(SHELL_UID) || SHELL_UID < 1 || !Number.isInteger(SHELL_GID) || SHELL_GID < 1) {\n  throw new Error("SHELL_UID and SHELL_GID must identify the dedicated unprivileged shell account and shared operations group.");\n}\nif (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
   throw new Error("PORT must be a valid TCP port.");
 }
 
@@ -115,7 +115,7 @@ function assertSafeShell(command: string): void {
 async function run(
   file: string,
   args: string[],
-  options: { cwd?: string; timeout?: number; env?: NodeJS.ProcessEnv } = {}
+  options: { cwd?: string; timeout?: number; env?: NodeJS.ProcessEnv; uid?: number; gid?: number } = {}
 ): Promise<{ stdout: string; stderr: string; exitCode: number }> {
   try {
     const result = await execFileAsync(file, args, {
@@ -146,7 +146,7 @@ async function executeAudited(
   commandFingerprint: string | undefined,
   work: () => Promise<{ stdout: string; stderr: string; exitCode: number }>
 ) {
-  const requestId = crypto.randomUUID();
+  const requestId = randomUUID();
   const actor = "mcp-bearer";
   const startedAt = Date.now();
   await audit({
@@ -221,13 +221,13 @@ function createMcpServer(): McpServer {
     }
   }, async ({ command, cwd, timeoutMs }) => {
     assertSafeShell(command);
-    const workingDirectory = validateCwd(cwd);
+    const workingDirectory = await validateCwd(cwd);
     const fingerprint = createHash("sha256").update(command).digest("hex");
     const result = await executeAudited("shell_execute", fingerprint, () =>
       run("/bin/bash", ["-lc", command], {
         cwd: workingDirectory,
         timeout: timeoutMs ?? 15_000,
-        env: { HOME: process.env.HOME ?? "/var/lib/tce-vps-control-mcp" }
+        env: { HOME: "/var/lib/tce-shell" },\n        uid: SHELL_UID,\n        gid: SHELL_GID
       })
     );
     return resultText(result);
