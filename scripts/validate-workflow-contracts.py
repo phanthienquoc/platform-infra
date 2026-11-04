@@ -190,6 +190,10 @@ watchdog_recovery_gate = """             (github.event.workflow_run.workflow_id 
               github.event.workflow_run.conclusion == 'failure')"""
 if watchdog_recovery_gate not in recovery:
     fail("A failed native scheduled freshness watchdog must trigger the existing recovery controller; successful/diagnostic watchdog runs must not.")
+if "github.event.workflow_run.run_attempt == 1" not in recovery:
+    fail("Recovery must ignore workflow_run rerun attempts; only the original completed run may drive freshness recovery.")
+if "github.run_attempt == 1" not in recovery:
+    fail("The recovery controller itself must ignore rerun attempts to prevent replay.")
 global_latest_runs_query = 'runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/runs" -F branch=master -F per_page=100)"'
 if recovery.count(global_latest_runs_query) < 2:
     fail("Recovery must query the latest master Actions run page for both reconciliation and inspection freshness.")
@@ -234,13 +238,17 @@ for required in (
     "github.event.action == 'tce-schedule-heartbeat'",
     "github.event.client_payload.source_repository == 'phanthienquoc/TCE-dashboard'",
     "github.event.client_payload.source_event == 'schedule'",
+    "github.event.client_payload.source_run_attempt == '1'",
+    "github.event.client_payload.heartbeat_run_attempt == '1'",
     "github.event.client_payload.source_workflow_path == '.github/workflows/wf-06-tce-healthcheck.yml'",
     "github.event.client_payload.source_workflow_path == '.github/workflows/wf-07-tce-integration-check.yml'",
     "github.event.client_payload.source_workflow_path == '.github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml'",
     "- name: Validate external TCE schedule heartbeat payload",
     "SOURCE_RUN_ID: ${{ github.event.client_payload.source_run_id }}",
+    "SOURCE_RUN_ATTEMPT: ${{ github.event.client_payload.source_run_attempt }}",
     "SOURCE_HEAD_SHA: ${{ github.event.client_payload.source_head_sha }}",
     "HEARTBEAT_RUN_ID: ${{ github.event.client_payload.heartbeat_run_id }}",
+    "HEARTBEAT_RUN_ATTEMPT: ${{ github.event.client_payload.heartbeat_run_attempt }}",
     "HEARTBEAT_HEAD_SHA: ${{ github.event.client_payload.heartbeat_head_sha }}",
     "phanthienquoc/TCE-dashboard",
     "TCE heartbeat SHAs must be full commit IDs",
@@ -250,13 +258,18 @@ for required in (
     "source_run_event",
     "source_run_branch",
     "source_run_sha",
+    "source_run_attempt",
     '[[ "$source_run_event" == "schedule"',
     '"$source_run_branch" == "master"',
     '"$source_run_sha" == "$SOURCE_HEAD_SHA"',
+    'if [[ "$SOURCE_RUN_ATTEMPT" != "1" || "$HEARTBEAT_RUN_ATTEMPT" != "1" ]]; then',
+    '[[ "$source_run_attempt" == "1" && "$source_run_attempt" == "$SOURCE_RUN_ATTEMPT" ]]',
     "Direct WF-12 schedule heartbeat must identify the same source and heartbeat run.",
     "WF-06/WF-07 heartbeat source must be completed before forwarding.",
     "heartbeat_run_path",
+    "heartbeat_run_attempt",
     '[[ "$heartbeat_run_path" == ".github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml" ]]',
+    '[[ "$heartbeat_run_attempt" == "1" && "$heartbeat_run_attempt" == "$HEARTBEAT_RUN_ATTEMPT" ]]',
     '[[ "$heartbeat_run_event" == "workflow_run" ]]',
     '[[ "$heartbeat_run_event" == "schedule" ]]',
     '"$heartbeat_run_sha" == "$HEARTBEAT_HEAD_SHA"',
