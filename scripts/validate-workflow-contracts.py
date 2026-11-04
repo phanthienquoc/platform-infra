@@ -1467,32 +1467,30 @@ if "age_minutes > MAX_RECOVERY_AGE_MINUTES" in recovery_watchdog_block:
     fail("Scheduled recovery freshness must not truncate elapsed time to whole minutes.")
 
 
-# GitHub Actions secret names cannot contain hyphens; keep the mirror credential valid and isolated.
-if "MIRROR_TOKEN: ${{ secrets.PLATFORM_INFRA_MIRROR_TOKEN }}" not in mirror:
-    fail("The mirror workflow must use the valid PLATFORM_INFRA_MIRROR_TOKEN secret name.")
-if "Platform-infra-token" in mirror or "secrets.PLATFORM_INFRA_TOKEN" in mirror or "secrets.PLATFORM_INFRA_DISPATCH_TOKEN" in mirror:
-    fail("The mirror workflow must not use an invalid hyphenated name or reuse application/GHCR credentials.")
-if "Missing PLATFORM_INFRA_MIRROR_TOKEN secret" not in mirror or "git push --mirror" not in mirror:
-    fail("The mirror workflow must fail clearly when its destination-scoped credential is absent and preserve full-ref mirroring.")
+# The mirror workflow reuses the Platform Infra cross-repository handoff secret.
+if "MIRROR_TOKEN: ${{ secrets.PLATFORM_INFRA_TOKEN }}" not in mirror:
+    fail("The mirror workflow must use PLATFORM_INFRA_TOKEN.")
+if "secrets.PLATFORM_INFRA_MIRROR_TOKEN" in mirror or "secrets.PLATFORM_INFRA_DISPATCH_TOKEN" in mirror:
+    fail("The mirror workflow must use PLATFORM_INFRA_TOKEN and must not use the Media/Auth dispatch token.")
+if "Missing PLATFORM_INFRA_TOKEN secret" not in mirror or "git push --mirror" not in mirror:
+    fail("The mirror workflow must fail clearly when PLATFORM_INFRA_TOKEN is absent and preserve full-ref mirroring.")
 
 mirror_credentials = (ROOT / "docs" / "credentials.md").read_text(encoding="utf-8")
 mirror_credentials_key = (ROOT / "docs" / "credentials-key.md").read_text(encoding="utf-8")
 for required in (
-    "`PLATFORM_INFRA_MIRROR_TOKEN`",
+    "`PLATFORM_INFRA_TOKEN`",
     "`phanthienquoc/locally-uncensored-private`",
     "destination repository with `Contents: write`",
-    "It does not need `Actions`, `Packages`, administration, or access to any other repository.",
 ):
     if required not in mirror_credentials:
-        fail(f"Mirror credential documentation is missing least-privilege scope: {required}")
+        fail(f"Mirror credential documentation is missing the shared token contract: {required}")
 for required in (
-    "`PLATFORM_INFRA_MIRROR_TOKEN`",
+    "`PLATFORM_INFRA_TOKEN`",
     "`phanthienquoc/locally-uncensored-private`",
     "destination-repository `Contents: write`",
-    "no `Actions`, `Packages`, administration, or unrelated repository access",
 ):
     if required not in mirror_credentials_key:
-        fail(f"Credential key inventory is missing mirror least-privilege scope: {required}")
+        fail(f"Credential key inventory is missing the shared token contract: {required}")
 
 
 # Canonical Auth release handoff must prove the exact publisher run and pin the registry digest.
