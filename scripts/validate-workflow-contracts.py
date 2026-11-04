@@ -422,14 +422,18 @@ for required in (
     "if: steps.changes.outputs.changed == 'true'",
     "GH_TOKEN: ${{ github.token }}",
     'cp debug/vps-latest.md "$RUNNER_TEMP/vps-latest.md"',
-    "gh auth setup-git",
-    "git fetch --no-tags origin master",
-    "git checkout --force -B master origin/master",
+    "x-access-token:%s",
+    "base64 | tr -d",
+    'http.https://github.com/.extraheader=AUTHORIZATION: basic $auth_header',
+    "fetch --no-tags origin refs/heads/master:refs/remotes/origin/master",
+    "git checkout --force -B master refs/remotes/origin/master",
     'install -m 0644 "$RUNNER_TEMP/vps-latest.md" debug/vps-latest.md',
     "Unexpected worktree changes while rebasing inspection snapshot onto latest master.",
 ):
     if required not in inspection_rebase_block:
         fail(f"VPS inspection latest-master rebase contract is missing: {required}")
+if "gh auth setup-git" in inspection_rebase_block:
+    fail("VPS inspection rebase must not depend on the GitHub CLI on its self-hosted runner.")
 
 
 # Manual production promotion must originate from master; non-master dispatches fail visibly.
