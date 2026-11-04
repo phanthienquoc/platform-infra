@@ -192,6 +192,8 @@ if watchdog_recovery_gate not in recovery:
     fail("A failed native scheduled freshness watchdog must trigger the existing recovery controller; successful/diagnostic watchdog runs must not.")
 if "github.event.workflow_run.run_attempt == 1" not in recovery:
     fail("Recovery must ignore workflow_run rerun attempts; only the original completed run may drive freshness recovery.")
+if "github.run_attempt == 1" not in recovery:
+    fail("The recovery controller itself must ignore rerun attempts to prevent replay.")
 global_latest_runs_query = 'runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/runs" -F branch=master -F per_page=100)"'
 if recovery.count(global_latest_runs_query) < 2:
     fail("Recovery must query the latest master Actions run page for both reconciliation and inspection freshness.")
