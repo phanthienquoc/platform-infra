@@ -134,6 +134,15 @@ if promotion.count(create_pull_request_pin) != 3:
 if legacy_create_pull_request_pin in inspection or legacy_create_pull_request_pin in promotion:
     fail("A legacy Node20 peter-evans/create-pull-request pin remains in a production workflow.")
 
+# Inspection snapshots use an attempt-specific branch to avoid force-pushing a stale
+# automation branch; recovery retries only transient GitHub workflow-dispatch 5xx errors.
+if "branch: automation/vps-inspection-${{ github.run_id }}-${{ github.run_attempt }}" not in inspection:
+    fail("VPS inspection PRs must use a run/attempt-specific branch.")
+if 'EXPECTED_BRANCH="automation/vps-inspection-${RUN_ID}-${RUN_ATTEMPT}"' not in inspection:
+    fail("VPS inspection PR validation must enforce the exact run/attempt-specific branch.")
+if "HTTP (500|502|503|504)" not in recovery:
+    fail("Read-only inspection recovery must retry transient GitHub HTTP 5xx dispatch failures.")
+
 if not re.search(r"(?m)^  workflow_dispatch:", provision):
     fail("Keycloak provisioning must retain its explicit manual workflow_dispatch entry point.")
 if re.search(r"(?m)^  push:", provision):

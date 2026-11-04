@@ -439,7 +439,32 @@ jobs:
           }
           echo "::warning::No recent master inspection run; dispatching the existing read-only inspection workflow."
           echo "Dispatch payload: ref=master sha=$dispatch_sha (no inputs)"
-          gh workflow run inspect-vps.yml --repo "$GITHUB_REPOSITORY" --ref master
+
+          # GitHub occasionally returns HTTP 5xx for workflow dispatch requests.
+          # Retry only those transient server errors; do not retry permission or payload failures.
+          dispatch_succeeded=false
+          for attempt in 1 2 3; do
+            if dispatch_output="$(gh workflow run inspect-vps.yml --repo "$GITHUB_REPOSITORY" --ref master 2>&1)"; then
+              printf '%s\n' "$dispatch_output"
+              dispatch_succeeded=true
+              break
+            else
+              dispatch_status=$?
+              printf '%s\n' "$dispatch_output"
+              if grep -Eq 'HTTP (500|502|503|504)' <<< "$dispatch_output" && (( attempt < 3 )); then
+                delay_seconds=$((attempt * 10))
+                echo "::warning::Transient GitHub HTTP 5xx during inspection dispatch (attempt $attempt/3); retrying in ${delay_seconds}s."
+                sleep "$delay_seconds"
+                continue
+              fi
+              echo "::error::Inspection dispatch failed without a retryable HTTP 5xx response."
+              exit "$dispatch_status"
+            fi
+          done
+          [[ "$dispatch_succeeded" == true ]] || {
+            echo "::error::Inspection workflow dispatch did not succeed after retries."
+            exit 1
+          }
 
           dispatched_run=""
           for attempt in $(seq 1 6); do
