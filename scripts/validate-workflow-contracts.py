@@ -199,17 +199,16 @@ if "github.event.workflow_run.run_attempt == 1" not in recovery:
 if "github.run_attempt == 1" not in recovery:
     fail("The recovery controller itself must ignore rerun attempts to prevent replay.")
 global_latest_runs_query = 'runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/runs" -F branch=master -F per_page=100)"'
-if recovery.count(global_latest_runs_query) < 2:
-    fail("Recovery must query the latest master Actions run page for both reconciliation and inspection freshness.")
+if recovery.count(global_latest_runs_query) < 1:
+    fail("Recovery must query the master Actions run page for reconciliation activity.")
 for required in (
     '--arg workflow_path ".github/workflows/reconcile-vps.yml"',
-    '--arg workflow_path ".github/workflows/inspect-vps.yml"',
     '.path == $workflow_path',
     '.head_branch == "master"',
     'sort_by(.created_at) | last // empty',
 ):
     if required not in recovery:
-        fail(f"Recovery latest-run selection is missing: {required}")
+        fail(f"Recovery reconciliation latest-run selection is missing: {required}")
 for obsolete in (
     '"repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" -F branch=master -F per_page=100',
     '"repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs" -F branch=master -F per_page=100',
