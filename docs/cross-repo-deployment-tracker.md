@@ -5256,3 +5256,34 @@ No production promotion, manifest/credential/database mutation, Pod restart, rep
 - `reconcile-vps.yml` remains the sole production apply authority. No duplicate SSH/Compose deployment authority.
 - `locally-uncensored-private` remains retired from active Platform workflows. Do not restore it without explicit owner authorization.
 - No production promotion, credential/database mutation, Pod restart, replica change, VPS reboot, or TCE market-scan schedule change occurred in this checkpoint.
+
+
+## Cross-repo production checkpoint — 2026-11-04 17:23 ICT / 10:23 UTC
+
+### Inspection reliability follow-up
+- PR #1215 merged as `3059d3c88f19390411b814da0ad8ac861f8203ce`. Exact-head checks #41813515135 (`validate-github-actions`) and #41813515180 (`validate-manifests`) PASS; post-merge #41813597064 and #41813597038 PASS.
+- PR #1215 added a bounded `github_api_get` helper to inspection validation. It retries HTTP 000/500/502/503/504 up to three times with bounded backoff, and leaves other 4xx as hard failures. It is used for validation-run polling and PR state reads.
+- The follow-up push inspection run #41813598197 completed successfully, including exact-head validation and squash merge. Its exact-head `validate-manifests` run #41813734720 PASS on SHA `d9dcfccf4b456c5d27a4a000ffa098b5a7ba4372`. It merged PR #1216 as `fbd792ac7e3681b24c68df58aeecc96890e88e64`.
+- PR #1216 snapshot generated at `2026-11-04T10:21:39Z` (17:21:39 ICT) is now the current `debug/vps-latest.md`. This was a push-triggered inspection, not a native schedule tick. No HTTP 502 or merge error appeared in this run's completed logs; do not claim the retry branch was exercised.
+- PR #1214 was closed unmerged as superseded after its 17:14:55 snapshot was carried into PR #1215. No unvalidated inspection snapshot was force-merged.
+
+### Latest K3s evidence — 17:21:39 ICT
+- Node `tce-k3s-01` remains Ready on ARM64/K3s `v1.36.3+k3s1`; disk pressure normal at 55%; host still reports `restart_required: yes`.
+- Media backend/frontend, MicroFE Shell/WS, and NATS remain 1/1 Running.
+- Stock Admin Pods and the new Stock Backend Pod remain `ImagePullBackOff` on tag `12d63b4` due to missing ARM64 platform manifest; the older Stock Backend replica remains 1/1.
+- TCE frontend/service, MicroFE Auth, and Keycloak remain 0/0. Public Keycloak OIDC endpoints remain HTTP 503.
+- No production manifests, image references, release flags, credentials, database, Pod, replica, or host state changed.
+
+### Native schedule status
+- Latest Platform native inspect remains #41809725184 (16:45 ICT), failed on a GitHub remote HTTP 500 during branch push. Latest native watchdog #41792527398 and reconcile #41792374251 remain failed; recovery schedule #41787641688 passed.
+- #41813598197 is a successful `push` inspection event and must not be counted as native schedule recovery. The new inspection code does not change any cron.
+- Latest TCE WF-06 native schedule remains #41810552435 (16:53 ICT), with four endpoints returning HTTP 503 instead of 200. WF-12 #41810610019 is a `workflow_run` success, not a native schedule tick. No later TCE schedule run was present in the queried history.
+
+### Cross-repo readiness and controls
+- Platform Infra master: `fbd792ac7e3681b24c68df58aeecc96890e88e64`; remaining open Platform PRs #544/#541/#539 are drafts.
+- TCE Dashboard master `a355ce070204`: WF-01/02/05 PASS; strict WF-06 health remains degraded.
+- StockDividend master `50ba0dfb67eb`: CI and immutable ARM64 publication PASS; production paired-digest promotion remains gated, and publisher handoff/dispatch jobs were SKIPPED.
+- Media Generation master `e4c7d8990aaf`: CI PASS; latest inspected backend/frontend 1/1.
+- Authentication master `f978a3f378ee`: PR #75 ready and #76 draft; exact-head validation PASS, Supabase Preview SKIPPED; no activation or migration.
+- App repos own build/test and immutable GHCR publication; Platform Infra owns production manifests, shared pull credentials, digest promotion, reconciliation, rollout and health. `reconcile-vps.yml` remains the sole apply authority.
+- `locally-uncensored-private` remains retired from active Platform workflows. No duplicate SSH/Compose authority. TCE market-scan schedule remains unchanged.
