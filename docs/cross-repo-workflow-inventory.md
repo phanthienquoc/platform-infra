@@ -2357,3 +2357,17 @@ No production image promotion, manifest apply, database migration, shared pull-s
 
 ## Workflow inventory PR state — 2026-11-04 07:00 ICT
 - Platform PR #1176 contains only the tracker, inventory and two checkpoint documents. Exact-head workflow runs/statuses are empty because docs-only paths do not trigger the existing validation workflows. Branch-protection required-check policy is inaccessible through the current integration; leave the PR open until required-check policy is verified.
+
+
+## Workflow inventory runtime update — 2026-11-04 08:00 ICT / 01:00 UTC
+
+- **Repository heads:** Platform Infra 1fcfe9b326dc2f14ef90259820c78aa7f83e5718; TCE 53227425841b6283bebad3bc5c93d509bd8a316a; StockDividend 50ba0dfb67eb3dfaa376db0c752bbef5b0817bec; Media e4c7d8990aafc7d837e918c9caf39722d623de7c; Authentication f978a3f378ee22d4630909c2d182275b21ac9e9a.
+- **Open PRs:** Platform #1176/#1178 and drafts #544/#541/#539; Auth #75 ready/#76 draft; none in TCE, StockDividend or Media. #1176 exact-head validate passed but base is one commit behind current master; branch protection is not readable through the integration. #1178 current exact-head checks are running.
+- **Platform native schedule authority:** reconcile-vps.yml remains the only production apply authority. Native reconcile #41750519522 failed only Stock health; watchdog #41750880073 failed stale Mirror/Inspection/Recovery evidence. Mirror #41737911916 failed because PLATFORM_INFRA_MIRROR_TOKEN is missing; native Inspection #41726305748 and Recovery #41744960810 are stale schedule successes. New manual inspection and recovery dispatch/workflow_run fallbacks are not native schedule evidence.
+- **TCE scheduled workflows:** WF-07 Backup #41739787575 and Integration #41738887996 PASS; WF-06 #41731424392 FAIL on four HTTP 503 public endpoints; WF-12 #41727501039 FAIL on freshness. Keep strict HTTP 200 assertions and all cron expressions unchanged; TCE market-scan schedule unchanged.
+- **StockDividend app publisher:** CI #41563856934 and publisher #41563856933 PASS. Admin, Backend and Scraper full-SHA tags were verified to resolve to ARM64 digests. release_enabled=false; Platform handoff and atomic digest dispatch SKIPPED. No production promotion.
+- **Media and Auth:** master CI #41617592783/#41670642852 PASS. Media paired publisher E2E and Auth manual publisher E2E remain pending; Auth PR #75/#76 remain behind Supabase integration/migration review.
+- **K3s:** read-only inspection #41750782322 generated 00:58:57 UTC snapshot. Node Ready/ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2, Docker 29.1.3, disk 55%, ~19 GiB RAM available, runner policy v14. Media/MicroFE/NATS 1/1; Stock Admin/new Backend ImagePullBackOff on 12d63b4; old Backend/Frontend 1/1; TCE/Auth/Keycloak 0/0; public OIDC 503. Pending host packages remain; no maintenance.
+- **New validator contract:** PR #1178 binds the watchdog schedule cadence to the recovery schedule and requires a three-interval recovery freshness budget. It changes no cron or deployment authority.
+- **Owner gates:** Mirror destination-only token; Stock protected Actions-read token plus explicit paired ARM64 release authorization; Auth/Supabase review; Media/Auth E2E authorization; host maintenance window.
+- **Safety:** no image promotion, GitOps manifest apply, DB migration, shared GHCR pull-secret mutation, replica change, Pod restart or host reboot. Preserve useful CI/test/security/manual/release/scheduled workflows. No SSH/Compose authority. TCE market-scan schedule unchanged.
