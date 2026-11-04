@@ -4630,3 +4630,32 @@ No production image promotion, manifest apply, DB migration, shared GHCR pull-se
 
 ### Safety
 No production image promotion, GitOps manifest apply, database migration, shared GHCR pull-secret mutation, replica change, Pod restart or host reboot occurred. The prior reconciliation re-applied the Auth runtime Secret with values suppressed; shared GHCR pull Secrets remained unchanged. reconcile-vps.yml remains the sole production apply authority. No SSH/Compose authority was added. TCE market-scan schedule unchanged.
+
+
+## Runtime verification update — 2026-11-04 08:32 ICT / 01:32 UTC
+
+### Repository state and open PRs
+- Platform Infra master: `e3668b0cdac49c4d06c89a32cedba655897cab43`; latest master validation `validate-manifests` run #41753255529 completed SUCCESS.
+- TCE Dashboard master: `8e9ed1e1a9428f524e53b733e417a5789b0ec479`; StockDividend: `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media Generation: `e4c7d8990aafc7d837e918c9caf39722d623de7c`; Authentication: `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
+- Open PRs: Platform #544/#541/#539 (all draft); Authentication #75 (ready) and #76 (draft); none in TCE, StockDividend or Media. Platform PRs' visible exact-head `validate` checks pass. Auth #75/#76 visible `validate` checks pass but Supabase Preview is SKIPPED; production integration/migration review remains required.
+- TCE PR #1020 was squash-merged at exact head `65ab919780a1822f7c58f021ef8a34e3618cfaa4`, merge SHA `8e9ed1e1a9428f524e53b733e417a5789b0ec479`. Exact-head WF-05 Backend Unit Tests #41754584520 and WF-02 Prettier #41754584422 both passed. WF-05 log confirms the new contract step, backend build and tests passed. Post-merge WF-01 #41754727927, WF-05 #41754727922 and WF-02 #41754728030 were queued at checkpoint time; do not count them as passed until completed.
+
+### TCE healthcheck/schedule contract now enforced in app CI
+- Existing `scripts/validate-wf-06-healthcheck-contract.sh` was already validating WF-06 public-smoke endpoints, the WF-12 schedule-delivery watchdog, exact-second freshness/queue boundaries, read-only Actions permissions, no direct VPS/SSH/Docker inspection, and the authenticated Platform heartbeat payload.
+- Before PR #1020, the helper was only called by the Prettier PR workflow when WF-06/WF-12/helper files themselves changed. PR #1020 adds an unconditional invocation to `WF-05 TCE Backend Unit Tests`, so every PR and push using that CI workflow now checks the cross-workflow health/schedule contract before build/tests.
+- No WF-06/WF-12 cron expression, market-scan schedule, endpoint, credential, release workflow, manifest or production resource changed.
+
+### Latest native schedule and workflow evidence
+- Platform native reconcile #41750519522 (00:56:29Z) failed only the StockDividend workload health gate. Shared reconciliation passed, GitOps drift was false, `allow_image_changes=false`, and manifest apply was skipped. Media, TCE, Auth and MicroFE lanes passed; Keycloak was skipped.
+- Platform native watchdog #41750880073 (00:59:41Z) failed freshness for Mirror, Inspection and Recovery. Queue wait was 0m; this is stale/missing native schedule evidence, not runner backlog. Native Mirror #41737911916 failed before clone/push because `PLATFORM_INFRA_MIRROR_TOKEN` is empty. Native Inspection #41726305748 and Recovery #41744960810 are old schedule successes. Manual inspection/recovery runs do not count as native schedule ticks.
+- TCE native WF-07 Backup #41739787575 and Integration #41738887996 passed. Native WF-06 #41731424392 failed all four public probes with HTTP 503; native WF-12 #41727501039 failed its WF-06 freshness check. WF-12 workflow_run #41738911293 forwarded a valid heartbeat (notification job PASS) but its independent freshness job failed because latest WF-06 was 53m old versus 25m. Platform receiver #41738925054 validated the heartbeat and completed successfully.
+- StockDividend master CI #41563856934 and immutable image publisher #41563856933 passed. Publisher verified full-SHA Admin/Backend/Scraper tags to ARM64 digests, but `release_enabled=false`; Platform handoff and atomic digest dispatch were SKIPPED. Media master CI #41617592783 and Auth master CI #41670642852 passed. Media paired publisher E2E and Auth manual publisher E2E remain pending.
+- StockDividend's latest observed native scheduled scraper run is #38119714927 (2026-10-11, FAILURE); no newer Stock schedule run was returned. Media and Auth have no native scheduled workflow runs in the inspected history.
+
+### Freshest K3s evidence and production blockers
+- Latest successful read-only inspection is #41750782322 (workflow_dispatch, 00:58:57Z; not a native schedule tick). Node `tce-k3s-01` is Ready/ARM64, K3s v1.36.3+k3s1, disk 55%, about 19 GiB RAM available, runner policy v14 and both runner services active. Ubuntu/containerd/Docker updates remain pending and host still reports restart_required=yes.
+- Media backend/frontend, MicroFE Shell/WS and NATS are 1/1. Stock Admin has two ImagePullBackOff Pods and the new Backend Pod is ImagePullBackOff on tag `12d63b4` with `no match for platform in manifest`; old Backend and legacy Frontend remain 1/1. TCE/Auth/Keycloak remain 0/0; public TCE/Auth endpoints return HTTP 503 while intentionally stopped.
+- Required owner actions: configure destination-only `PLATFORM_INFRA_MIRROR_TOKEN`; configure/verify StockDividend-only Actions-read token and explicitly authorize paired ARM64 release; complete Auth/Supabase production integration and migration review; authorize Media/Auth publisher E2E; arrange a VPS maintenance window.
+
+### Safety and authority
+No StockDividend promotion, production manifest apply, database migration, shared GHCR pull-secret mutation, release-enable change, replica change, Pod restart or VPS reboot occurred in this checkpoint. Auth runtime Secret was re-applied by the prior reconciliation with values suppressed; shared GHCR pull Secrets remained unchanged. `reconcile-vps.yml` remains the sole production apply authority. No SSH/Compose deployment authority was added. Preserve all useful CI/test/security/manual/release/scheduled workflows. TCE market-scan schedule unchanged.
