@@ -260,7 +260,7 @@ for required in (
     '[[ "$source_run_event" == "schedule"',
     '"$source_run_branch" == "master"',
     '"$source_run_sha" == "$SOURCE_HEAD_SHA"',
-    '[[ "$SOURCE_RUN_ATTEMPT" == "1" && "$HEARTBEAT_RUN_ATTEMPT" == "1" ]]',
+    'if [[ "$SOURCE_RUN_ATTEMPT" != "1" || "$HEARTBEAT_RUN_ATTEMPT" != "1" ]]; then',
     '[[ "$source_run_attempt" == "1" && "$source_run_attempt" == "$SOURCE_RUN_ATTEMPT" ]]',
     "Direct WF-12 schedule heartbeat must identify the same source and heartbeat run.",
     "WF-06/WF-07 heartbeat source must be completed before forwarding.",
