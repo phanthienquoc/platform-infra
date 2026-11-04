@@ -32,5 +32,5 @@ jobs:
           test -n "${MIRROR_TOKEN:-}" || { echo "Missing PLATFORM_INFRA_TOKEN secret"; exit 1; }
           git clone --mirror https://github.com/phanthienquoc/locally-uncensored.git source.git
           cd source.git
-          git remote set-url origin "https://x-access-token:${MIRROR_TOKEN}@github.com/phanthienquoc/locally-uncensored-private.git"
+          git remote set-url origin "https://phanthienquoc:${MIRROR_TOKEN}@github.com/phanthienquoc/locally-uncensored-private.git"
           git push --mirror
