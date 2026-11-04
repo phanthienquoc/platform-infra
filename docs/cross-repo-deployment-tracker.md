@@ -511,7 +511,7 @@ No production manifest, image reference, release flag, desired replica count, GH
 
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-04 01:10 UTC (08:10 ICT). Current five-repository refs, exact-head checks, native schedules and K3s snapshot are recorded in the 08:10 checkpoint. Current refs, open PRs, latest Actions runs, native schedule evidence and the read-only K3s snapshot are recorded in the 07:00 checkpoint.
+Last reviewed: 2026-11-04 01:15 UTC (08:15 ICT). PR #1179 is merged at 12e1bb102a6d76c7094335f0c5c3d2b1ba24ca78; post-merge validation passed. The 08:15 checkpoint records current PR and schedule evidence.
 
 ## Latest automation review (2026-11-02 04:05 ICT / 2026-11-01 21:05 UTC; TCE heartbeat source-run identity verification merged; first post-merge scheduled dispatch still pending)
 
@@ -4607,3 +4607,26 @@ No production image promotion, manifest apply, DB migration, shared GHCR pull-se
 - No production promotion, manifest apply, database migration, shared GHCR pull-secret change, replica change, Pod restart or host reboot. reconcile-vps.yml remains the sole production apply authority. No SSH/Compose authority; TCE market-scan schedule unchanged.
 
 - Cross-repo TCE schedule heartbeat is verified end-to-end: direct WF-12 schedule #41727501039 dispatched successfully and Platform recovery #41727515701 passed; scheduled WF-07 #41738887996 forwarded through WF-12 workflow_run #41738911293, and Platform recovery #41738925054 passed source repository/path/event/full-SHA/run-ID validation. WF-12's independent WF-06 freshness job still failed because WF-06 delivery was stale; this is not a dispatch or payload-authentication failure.
+
+
+## Post-merge readiness update — 2026-11-04 08:15 ICT / 01:15 UTC
+
+### Repository and PR state
+- Platform Infra master: 12e1bb102a6d76c7094335f0c5c3d2b1ba24ca78. TCE Dashboard: 53227425841b6283bebad3bc5c93d509bd8a316a. StockDividend: 50ba0dfb67eb3dfaa376db0c752bbef5b0817bec. Media Generation: e4c7d8990aafc7d837e918c9caf39722d623de7c. Authentication: f978a3f378ee22d4630909c2d182275b21ac9e9a.
+- Platform PR #1179 was squash-merged at exact validated head 67e1800c76c5e9ecb3198e9d913194f42a10ab99; merge commit 12e1bb102a6d76c7094335f0c5c3d2b1ba24ca78. Exact-head validate-manifests #41752587927 passed; post-merge validate-manifests #41752671604 passed. Old docs PR #1176 was closed as superseded without merge.
+- Platform PR #1178 remains merged at 97cf87afc169a68d69f12bdec8dc39c2e338ebae. Exact-head validate-manifests #41751765941 and validate-github-actions #41751765994 passed; post-merge validate-manifests #41751967678 and validate-github-actions #41751967612 both passed.
+- Remaining open PRs: Platform #544/#541/#539 (draft); Authentication #75 (ready) and #76 (draft); none in TCE, StockDividend or Media. Auth Supabase Preview remains skipped; production integration/migration side-effect review remains required.
+
+### Cross-repo TCE heartbeat contract verified
+- TCE WF-12 direct scheduled run #41727501039 dispatched a heartbeat successfully; Platform recovery #41727515701 completed successfully.
+- Scheduled TCE WF-07 run #41738887996 was forwarded by WF-12 workflow_run #41738911293. The TCE job log confirms the dispatch was accepted; Platform recovery #41738925054 validated source repository, approved workflow path, source event, master full SHA, source run ID and heartbeat run ID, then completed successfully.
+- WF-12's independent WF-06 freshness job still failed because WF-06 schedule delivery was stale. The cross-repo dispatch and payload-authentication contract is working; this is a source schedule-freshness problem, not a dispatch failure.
+
+### Production and app publisher evidence remains unchanged
+- Native Platform reconcile #41750519522 failed only StockDividend workload health; native watchdog #41750880073 reported stale Mirror/Inspection/Recovery ticks. Mirror #41737911916 failed because PLATFORM_INFRA_MIRROR_TOKEN is missing; native Inspection #41726305748 and Recovery #41744960810 are stale schedule successes. Manual inspection/recovery fallbacks do not count as native ticks.
+- TCE native WF-07 Backup #41739787575 and Integration #41738887996 passed; WF-06 #41731424392 failed four strict HTTP 200 probes with HTTP 503; WF-12 #41727501039 failed WF-06 freshness.
+- Stock publisher #41563856933 verified full-SHA ARM64 Admin/Backend/Scraper tags to immutable digests, but release_enabled=false and Platform handoff/dispatch were skipped. Production Admin/new Backend remain ImagePullBackOff on 12d63b4 with no match for platform in manifest.
+- Media CI #41617592783 and Auth CI #41670642852 passed. Media paired publisher E2E and Auth manual publisher E2E remain pending.
+
+### Safety
+No production image promotion, GitOps manifest apply, database migration, shared GHCR pull-secret mutation, replica change, Pod restart or host reboot occurred. The prior reconciliation re-applied the Auth runtime Secret with values suppressed; shared GHCR pull Secrets remained unchanged. reconcile-vps.yml remains the sole production apply authority. No SSH/Compose authority was added. TCE market-scan schedule unchanged.
