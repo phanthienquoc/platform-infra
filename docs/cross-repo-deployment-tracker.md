@@ -5178,3 +5178,40 @@ No production promotion, manifest or credential mutation, database migration, Po
 - Automated inspection PR #1203 was closed as superseded after its stale-base merge conflict; the fresh snapshot was rebased onto current master and merged through #1204. Its earlier exact-head validation #41803947887 passed, but no merge was forced.
 - Latest live K3s snapshot remains generated at 16:00:13 ICT: node Ready; Media/MicroFE/NATS healthy; Stock Admin/new Backend ImagePullBackOff on `12d63b4`; TCE/Auth/Keycloak 0/0; host restart required. This is inspection evidence only, not a rollout.
 - Native Platform/TCE schedule delivery remains stale as recorded in the 16:00 ICT checkpoint. No cron was edited; TCE market-scan schedule unchanged.
+
+
+## Inspection rebase runtime verification — 2026-11-04 16:12 ICT / 09:12 UTC
+
+### Cross-repo state
+- Platform Infra master: `a1c0f1bfa5b7017dc6b712b9ee8a7ae681490812`; open draft PRs #544, #541, #539.
+- TCE Dashboard master: `a355ce070204cff209df1c9ba38843c972647860`; no open PRs.
+- StockDividend master: `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; no open PRs.
+- Media Generation master: `e4c7d8990aafc7d837e918c9caf39722d623de7c`; no open PRs.
+- Authentication master: `f978a3f378ee22d4630909c2d182275b21ac9e9a`; PR #75 ready, #76 draft.
+- Platform master validation #41805383142 and workflow-contract validation #41805382982 PASS on `7b876608a5ade1f8a054358cf00a4b80c2df5d58`. Latest app CI remains PASS: TCE #41758031017/#41758030952/#41758031060; Stock #41563856934 and publisher #41563856933; Media #41617592783; Auth #41670642852.
+
+### Inspection rebase fix and runtime proof
+- PR #1206 added a latest-master rebase before inspection PR creation but its first runtime test #41805055538 exposed that the self-hosted VPS runner has no `gh` binary (`gh: command not found`, exit 127). Inspection and output validation had passed; rebase failed before PR creation. No production state changed.
+- PR #1207 replaced the GitHub CLI dependency with a single-command Git HTTP extraheader built from `GITHUB_TOKEN`, an explicit fetch refspec to `refs/remotes/origin/master`, and a guarded restore of only `debug/vps-latest.md`. It also updated the workflow contract validator to forbid the unavailable CLI.
+- PR #1207 exact-head `validate-github-actions` #41805294004 PASS and `validate-manifests` #41805293869 PASS; squash merge SHA `7b876608a5ade1f8a054358cf00a4b80c2df5d58`.
+- Runtime proof: master push inspection run #41805382965 completed SUCCESS. The `Rebase inspection snapshot on latest master` step passed; PR #1208 was created from current master, exact-head manifest validation #41805481821 PASS, and the workflow squash-merged #1208 at `a1c0f1bfa5b7017dc6b712b9ee8a7ae681490812`. This confirms stale-base inspection reruns now rebase safely without a GitHub CLI dependency.
+- Earlier PR #1203 remains closed as superseded; it was not force-merged. PR #1204/#1205 and #1206/#1207 are merged with exact-head checks as recorded in their PR histories.
+
+### Latest read-only K3s snapshot — 16:11:24 ICT
+- Source: successful inspection run #41805382965, generated `2026-11-04T09:11:24Z`, committed by PR #1208.
+- Node `tce-k3s-01`: Ready, ARM64, K3s `v1.36.3+k3s1`, disk pressure normal at 55%; `restart_required: yes`. No host update or reboot performed.
+- Media backend/frontend 1/1; MicroFE Shell/WS 1/1; NATS 1/1; core K3s/cert-manager services remain healthy.
+- Stock Admin two Pods and new Backend Pod remain `ImagePullBackOff` on production tag `12d63b4`; kubelet explicitly reports no matching platform manifest. Existing Backend replica and legacy Frontend remain 1/1.
+- TCE frontend/service 0/0; MicroFE Auth 0/0; Keycloak 0/0. Public Keycloak OIDC probes still return HTTP 503.
+- The snapshot is read-only. No production manifests, image references, credentials, databases, Pods, replicas or host state were mutated.
+
+### Native schedule evidence and release gates
+- Latest native Platform reconcile #41792374251 (14:27 ICT) failed at Stock workload health; image apply was skipped. Latest native watchdog #41792527398 (14:28 ICT) failed because no scheduled inspect-vps event existed within its freshness window. Latest native recovery schedule #41787641688 (13:45 ICT) passed. Subsequent workflow_run recovery/watchdog events from push-triggered inspection are not native schedule ticks.
+- Latest native TCE WF-07 #41785211971 (13:23 ICT) PASS; WF-06 #41762490285 (09:42 ICT) FAIL with public endpoints HTTP 503; WF-12 #41759196674 (09:12 ICT) FAIL on stale health evidence. No newer native schedule event appeared in the queried history.
+- Stock full-SHA immutable ARM64 publisher #41563856933 remains PASS, but release handoff/paired-digest dispatch remains gated; production tag `12d63b4` unchanged.
+- Auth PR #75/#76 remain gated on Supabase production integration/migration provenance; no migration or activation performed. Media/Auth publisher E2E remains pending authorization.
+- Host OS/containerd/Docker updates and reboot still require an approved maintenance window.
+- `locally-uncensored-private` remains retired. `reconcile-vps.yml` remains the sole production apply authority. No duplicate SSH/Compose authority.
+- No cron expressions were changed; TCE market-scan schedule unchanged.
+
+No production promotion, manifest/credential/database mutation, Pod restart, replica change, host reboot or market-scan schedule change occurred in this checkpoint.
