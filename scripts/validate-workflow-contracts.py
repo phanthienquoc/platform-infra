@@ -1634,4 +1634,15 @@ if "stale_reconcile" not in lane_queue_contract or 'status in ("in_progress", "c
 if "Still-queued unassigned lanes remain actionable." not in lane_queue_contract:
     fail("Stale reconciliation handling must continue enforcing currently unassigned deployment lanes.")
 
+# Optional VPS MCP must remain read-only and subordinate to the sole GitOps apply authority.
+vps_mcp_contract = ROOT / "scripts" / "validate-vps-control-mcp-contract.py"
+if not vps_mcp_contract.is_file():
+    fail("The optional VPS MCP GitOps-only contract validator is missing.")
+for required in (
+    "python3 scripts/validate-vps-control-mcp-contract.py --self-test",
+    "python3 scripts/validate-vps-control-mcp-contract.py",
+):
+    if required not in manifest_validation:
+        fail(f"Manifest validation must execute the VPS MCP deployment-boundary contract: {required}")
+
 print("Workflow contract validation passed.")
