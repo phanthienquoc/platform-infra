@@ -133,7 +133,13 @@ if re.search(r"(?m)^  push:", provision):
 cleanup_push_paths = cleanup.split("  push:", 1)[1].split("  workflow_dispatch:", 1)[0]
 if '".github/workflows/vps-image-cleanup.yml"' in cleanup_push_paths:
     fail("Editing the image-cleanup workflow itself must not start a cleanup job; script/test pushes remain dry-run only.")
-if 'workflows: ["reconcile-vps", "inspect-vps", "Mirror locally-uncensored into private repository", "Reconcile Schedule Freshness Watchdog"]' not in recovery or "types: [completed]" not in recovery:
+expected_recovery_sources = """    workflows:
+      - "reconcile-vps"
+      - "inspect-vps"
+      - "Mirror locally-uncensored into private repository"
+      - "Reconcile Schedule Freshness Watchdog"
+"""
+if expected_recovery_sources not in recovery or "types: [completed]" not in recovery:
     fail("Recovery controller must run after master reconciliation, scheduled inspection, mirror, and schedule-watchdog completion.")
 
 watchdog_recovery_gate = """             (github.event.workflow.path == '.github/workflows/reconcile-schedule-watchdog.yml' &&
