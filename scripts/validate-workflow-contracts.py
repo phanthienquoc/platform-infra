@@ -147,12 +147,24 @@ watchdog_recovery_gate = """             (github.event.workflow.path == '.github
               github.event.workflow_run.conclusion == 'failure')"""
 if watchdog_recovery_gate not in recovery:
     fail("A failed native scheduled freshness watchdog must trigger the existing recovery controller; successful/diagnostic watchdog runs must not.")
-reconcile_latest_query = 'runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" -F branch=master -F per_page=1)"'
-inspect_latest_query = 'runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs" -F branch=master -F per_page=1)"'
-if reconcile_latest_query not in recovery or inspect_latest_query not in recovery:
-    fail("Recovery freshness checks must query the latest master run (per_page=1) so recent manual/fallback activity prevents duplicate dispatches.")
-if recovery.count("sort_by(.created_at) | last // empty") < 2 or "sort_by(.updated_at // .run_started_at // .created_at)" in recovery:
-    fail("Recovery must select the latest run by created_at, not an older run with a later update timestamp.")
+global_latest_runs_query = 'runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/runs" -F branch=master -F per_page=100)"'
+if recovery.count(global_latest_runs_query) < 2:
+    fail("Recovery must query the latest master Actions run page for both reconciliation and inspection freshness.")
+for required in (
+    '--arg workflow_path ".github/workflows/reconcile-vps.yml"',
+    '--arg workflow_path ".github/workflows/inspect-vps.yml"',
+    '.path == $workflow_path',
+    '.head_branch == "master"',
+    'sort_by(.created_at) | last // empty',
+):
+    if required not in recovery:
+        fail(f"Recovery latest-run selection is missing: {required}")
+for obsolete in (
+    '"repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs"',
+    '"repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs"',
+):
+    if obsolete in recovery:
+        fail(f"Recovery must not use stale workflow-specific run pagination: {obsolete}")
 
 if "repository_dispatch:" not in recovery or "types: [tce-schedule-heartbeat]" not in recovery:
     fail("Recovery controller must accept the authenticated cross-repository TCE schedule heartbeat.")
