@@ -1,3 +1,44 @@
+# Cross-Repository Production Deployment Tracker
+
+Last reviewed: 2026-11-04 21:04 ICT (14:04 UTC)
+
+## Repository readiness
+
+| Repository | Master SHA | Open PRs | Current evidence | Status |
+|---|---|---|---|---|
+| phanthienquoc/platform-infra | `8540179260f106ac47fc8747445cd9cee18c02ea` | #1222 draft; #544/#541/#539 drafts | Current-master manifest validation #41835432534 PASS; action validation #41821072245 is on prior master. | Schedule/runtime verification pending; sole GitOps apply owner. |
+| phanthienquoc/TCE-dashboard | `52cecd5584e6c0a3daf0e2bcff6c89ca064e203d` | none | WF-02/WF-05 latest PASS are on prior PR head; native WF-06 #41810552435 and WF-12 #41807645689 failed. | Public health HTTP 503; preserve strict HTTP 200 and schedules. |
+| phanthienquoc/stockdividend | `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec` | none | CI #41563856934 and immutable ARM64 publisher #41563856933 PASS; paired handoff/dispatch SKIPPED. | Admin/Backend production images remain ImagePullBackOff on non-ARM64 tag `12d63b4`. |
+| phanthienquoc/media-generation | `e4c7d8990aafc7d837e918c9caf39722d623de7c` | none | CI #41617592783 PASS. | Last inspected backend/frontend 1/1; runtime snapshot stale. |
+| phanthienquoc/phanthienquoc-authentication | `f978a3f378ee22d4630909c2d182275b21ac9e9a` | #75 ready; #76 draft | Auth service CI #41670642852 PASS; Supabase Preview SKIPPED. | Keep production merge/activation gated on integration and migration side-effect review. |
+
+## Current actions
+
+1. Obtain a new read-only K3s snapshot from current-master inspect-vps; do not treat a rerun or workflow_run as a native schedule tick.
+2. Verify native Platform and TCE schedule delivery and workflow enablement without changing cron expressions or the TCE market-scan schedule.
+3. Keep Stock release disabled until the protected Actions:read credential is present and the owner authorizes paired Admin/Backend immutable digest promotion.
+4. Keep Auth PR #75/#76 and production activation gated until Supabase integration side effects and migration provenance are authoritatively reviewed.
+5. Keep Platform PR #1222 draft until its MCP is read-only, shell UID/GID isolation is real, and reproducible build/test/lockfile checks exist.
+6. Arrange a host maintenance window before Ubuntu/Docker/containerd upgrades or reboot.
+
+## Current runtime blockers
+
+- **StockDividend:** latest snapshot shows two Stock Admin Pods and the new Backend Pod in ImagePullBackOff because production tag `12d63b4` has no ARM64 manifest. Do not promote only one image.
+- **TCE/Auth:** WF-06 returned HTTP 503 from all four strict public endpoints; TCE/Auth/Keycloak were 0/0 in the latest snapshot. Do not weaken HTTP 200 checks.
+- **Platform schedules:** latest observed native inspection #41809725184 failed on the old static-branch revision; reconcile/watchdog/recovery native evidence is stale. Workflow_dispatch/push/workflow_run events do not replace native schedule evidence.
+- **K3s freshness:** latest read-only snapshot was generated 17:21:39 ICT; host still reports restart_required=yes. No current-health claim is justified.
+- **Release and credentials:** Stock paired promotion, Auth activation, Media/Auth publisher E2E and host maintenance remain gated. The GitOps promotion workflow requires the protected `PLATFORM_INFRA_AUTOMATION_TOKEN`; record its requirement and scope only, never its value.
+
+## Deployment ownership and invariants
+
+- App repositories own tests/builds and immutable GHCR publication.
+- Platform Infra owns production manifests, shared GHCR pull credentials, source-run/tag/digest verification, GitOps promotion/reconciliation, rollout and health verification.
+- `reconcile-vps.yml` is the sole production apply authority; `inspect-vps.yml` is read-only. No direct SSH, Compose, Docker restart or Kubernetes rollout mutation path may bypass GitOps.
+- Preserve CI, tests, security, backup, manual, release and scheduled workflows. `locally-uncensored-private` remains retired.
+- No production manifest, image reference, credential, database, Pod, replica or host mutation is authorized by this checkpoint. All cron declarations and the TCE market-scan schedule remain unchanged.
+
+---
+
 ## Runtime verification update — 2026-11-02 17:01 ICT / 10:01 UTC
 
 ### Repository state, open PRs and current checks
@@ -5488,3 +5529,16 @@ No production promotion, manifest/credential/database mutation, Pod restart, rep
 - `inspect-vps.yml` remains read-only; `reconcile-vps.yml` remains the sole production apply authority. No direct SSH/Compose/MCP Docker/Kubectl mutation authority is allowed.
 - `locally-uncensored-private` remains retired from active Platform workflows by owner direction; do not restore its workflow, schedule, watchdog/recovery hooks or credentials without explicit authorization.
 - No production manifest, image reference, GHCR credential, database, release flag, Pod, replica, host or cron was changed in this checkpoint. TCE market-scan schedule and all existing cron declarations remain unchanged.
+
+
+## Current readiness update — 2026-11-04 21:04 ICT / 14:04 UTC
+
+- Current master heads: Platform Infra `8540179260f106ac47fc8747445cd9cee18c02ea`; TCE `52cecd5584e6c0a3daf0e2bcff6c89ca064e203d`; StockDividend `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media `e4c7d8990aafc7d837e918c9caf39722d623de7c`; Authentication `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
+- Platform open PRs: #1222 draft; #544/#541/#539 drafts. Auth open PRs: #75 ready, #76 draft. TCE, StockDividend and Media have no open PRs.
+- Current Platform master `validate-manifests` #41835432534 PASS. Latest `validate-github-actions` #41821072245 PASS is on prior master `1bb34fb6cddc`, not current head. TCE WF-02 #41819221546 and WF-05 #41819221509 PASS on PR SHA `a1afaf1cc04e`, not current master; native WF-06 #41810552435 and WF-12 #41807645689 failed. Stock CI #41563856934 and immutable ARM64 publisher #41563856933 PASS; paired handoff/dispatch skipped. Media CI #41617592783 PASS. Auth service CI #41670642852 PASS; Supabase Preview skipped.
+- Latest K3s snapshot `debug/vps-latest.md` was generated 17:21:39 ICT: node Ready/ARM64, K3s v1.36.3+k3s1, disk 55%; Media/MicroFE/NATS 1/1; Stock Admin and new Backend ImagePullBackOff; old Backend/legacy Frontend 1/1; TCE/Auth/Keycloak 0/0; public OIDC 503; host restart required. This is stale evidence, not a current health claim.
+- Latest observed native Platform inspection #41809725184 (16:45 ICT) failed on an old static-branch revision. Last recorded native reconcile #41792374251 (14:27 ICT) failed Stock health; watchdog #41792527398 (14:28 ICT) failed freshness; recovery #41787641688 (13:45 ICT) passed but is stale. TCE WF-06 #41810552435 (16:53 ICT) failed four HTTP 200 endpoint checks with 503; WF-12 #41807645689 (16:27 ICT) failed freshness; WF-07 #41785211971 (13:23 ICT) passed. Do not count push, workflow_run, dispatch or rerun as native schedule evidence.
+- This branch adds `scripts/validate-vps-control-mcp-contract.py`, self-tests and manifest/workflow-contract wiring. It keeps the optional MCP absent on master or enforces read-only Docker/Kubernetes/SSH behavior, child UID/GID forwarding and installer UID/GID configuration if present. Draft #1222 remains blocked until it meets the contract and supplies reproducible build/test/lockfile validation.
+- `reconcile-vps.yml` remains the only production apply authority. No production manifest, image, credential, database, Pod, replica or host mutation occurred. `locally-uncensored-private` remains retired; all cron declarations and the TCE market-scan schedule are unchanged.
+
+Checkpoint: [2026-11-04 21:04 ICT](cross-repo-workflow-inventory-checkpoints/2026-11-04-2104-ict.md). The full inventory is in [cross-repo-workflow-inventory.md](cross-repo-workflow-inventory.md).
