@@ -1139,15 +1139,26 @@ for namespace in ("microfe-platform", "stock-prod", "tce-prod", "media-prod"):
 if 'patch deployment "$deployment"' not in bootstrap_script or 'imagePullSecrets' not in bootstrap_script:
     fail("GHCR pull reconciliation must normalize GHCR workload imagePullSecrets.")
 
-# Deployment tracker structural contract: keep all five repositories and action section present.
-tracker = (ROOT / "docs" / "cross-repo-deployment-tracker.md").read_text(encoding="utf-8")
+# Deployment tracker structural contract: keep the file non-empty, the five repositories
+# in the readiness table, and the current action/runtime sections available to operators.
+tracker_path = ROOT / "docs" / "cross-repo-deployment-tracker.md"
+if not tracker_path.is_file() or tracker_path.stat().st_size == 0:
+    fail("Cross-repo deployment tracker must exist and must not be empty.")
+tracker = tracker_path.read_text(encoding="utf-8")
 if "PLATFORM_INFRA_AUTOMATION_TOKEN" in promotion and "PLATFORM_INFRA_AUTOMATION_TOKEN" not in tracker:
     fail("Tracker must record the automation token required by the promotion workflow.")
 
 if "# Cross-Repository Production Deployment Tracker" not in tracker:
     fail("Cross-repo deployment tracker title is missing.")
-if "Last reviewed:" not in tracker or "## Repository readiness" not in tracker or "## Current actions" not in tracker or "## Current runtime blockers" not in tracker:
+required_tracker_sections = (
+    "Last reviewed:",
+    "## Repository readiness",
+    "## Current actions",
+    "## Current runtime blockers",
+)
+if any(section not in tracker for section in required_tracker_sections):
     fail("Cross-repo deployment tracker must retain its review date, readiness table, current actions, and runtime blockers.")
+readiness_section = tracker.split("## Repository readiness", 1)[1].split("\n## ", 1)[0]
 for repository in (
     "phanthienquoc/platform-infra",
     "phanthienquoc/TCE-dashboard",
@@ -1155,8 +1166,8 @@ for repository in (
     "phanthienquoc/media-generation",
     "phanthienquoc/phanthienquoc-authentication",
 ):
-    if repository not in tracker:
-        fail(f"Cross-repo deployment tracker is missing repository: {repository}")
+    if repository not in readiness_section:
+        fail(f"Cross-repo deployment readiness table is missing repository: {repository}")
 
 
 # Auth shutdown must be an isolated, allowlisted maintenance operation.
