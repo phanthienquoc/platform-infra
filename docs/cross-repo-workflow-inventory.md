@@ -2700,3 +2700,11 @@ No production apply, promotion, database migration, secret mutation, replica cha
 - Recovery guard runtime: native watchdog failure #41792527398 triggered successful recovery #41792556931 after PR #1199; fallback inspection was correctly skipped because manual inspection #41785522310 was 62m old at recovery time. A later recovery #41792618152 also succeeded; the subsequent workflow_run watchdog failure #41792618193 was not allowed to recurse into recovery (#41792641990 skipped by event guard). Native inspect schedule remains stale; do not claim it was repaired.
 - Last K3s snapshot #41785522310 (13:26 ICT): node Ready/ARM64, K3s v1.36.3+k3s1, disk 55%, restart required; Media/MicroFE/NATS 1/1; Stock Admin and new Backend ImagePullBackOff on `12d63b4`; old Backend and legacy Frontend 1/1; TCE/Auth/Keycloak 0/0.
 - `locally-uncensored-private` remains retired; `reconcile-vps.yml` remains the sole production apply authority. No direct SSH/Compose authority. No production promotion, credential/DB mutation, replica/Pod change, host reboot or TCE market-scan schedule change.
+
+
+## Checkpoint documentation merge verification — 2026-11-04 15:05 ICT
+
+- PR #1201 merged by squash as `617a1f64ba54abad3683d1d3196784ec23c09f41`.
+- Exact-head `validate-manifests` #41796718439 and post-merge master `validate-manifests` #41796804225 both PASS.
+- PR touched only the deployment tracker and workflow inventory; the path-filtered GitHub Actions workflow validation was not applicable.
+- No newer native Platform or TCE schedule event was observed after the 14:59 ICT checkpoint. The native inspect-vps schedule remains stale; latest K3s snapshot is still the manual inspection #41785522310.
