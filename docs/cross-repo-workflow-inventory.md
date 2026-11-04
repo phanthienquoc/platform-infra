@@ -2556,3 +2556,13 @@ Auth PR #75/#76 both have current visible validate checks SUCCESS and Supabase P
 
 ### Safety
 - No production manifest/image reference, release-enable flag, shared GHCR credential, database object, replica, pod, or TCE market-scan schedule was changed by this checkpoint.
+
+
+## Post-merge verification — 2026-11-04 11:02 ICT / 04:02 UTC
+
+- PR #1195 merged by squash as `a704c9dd63c026e327e2d52ae20786bfc3fd7134` after the exact PR head `ea29d3f939fba566b0a5c81ebe590e7e9140b7e1` passed `validate-github-actions` run #41770698592 and `validate-manifests` run #41770698653.
+- Post-merge source verification on master: `.github/workflows/mirror-locally-uncensored.yml` returns 404 (absent); `recover-stale-ops.yml` and `reconcile-schedule-watchdog.yml` contain no mirror trigger; active credential inventories contain no mirror credential reference; `validate-workflow-contracts.py` fails if the workflow is recreated without explicit owner authorization.
+- PR #1194 is merged as `cce9a1755c48f0695ba4ef523fd8a7f43b93fec3`; PR #1195 is merged as above. The private mirror repository itself was not deleted.
+- Exact PR checks are verified. The connected GitHub interface did not return post-merge Actions runs or combined commit statuses for the merge SHA, so no post-merge CI result is claimed.
+- No production rollout, image promotion, manifest mutation, credential mutation, database write, K3s restart or TCE market-scan schedule change occurred. The latest live-runtime readiness evidence remains the 09:55 ICT checkpoint until a fresh inspection is available.
+- Restoration is prohibited unless the owner explicitly asks for it; do not recreate the workflow, schedule, recovery/watchdog subscriptions, or token documentation.
