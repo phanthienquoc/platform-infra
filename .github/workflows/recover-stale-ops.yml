@@ -294,7 +294,16 @@ jobs:
           }
 
           runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/runs" -F branch=master -F per_page=100)"
-          latest="$(jq -c --arg workflow_path ".github/workflows/reconcile-vps.yml" '[.workflow_runs[] | select(.path == $workflow_path and .head_branch == "master")] | sort_by(.created_at) | last // empty' <<< "$runs")"
+          latest="$(
+            jq -c \
+              --arg workflow_path ".github/workflows/reconcile-vps.yml" \
+              '[
+                .workflow_runs[]
+                | select(.path == $workflow_path and .head_branch == "master")
+              ]
+              | sort_by(.created_at)
+              | last // empty' <<< "$runs"
+          )"
           if [[ -z "$latest" ]]; then
             age_seconds=$((MAX_RECONCILE_AGE_MINUTES * 60 + 1))
             latest_id="none"
@@ -383,7 +392,16 @@ jobs:
           }
 
           runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/runs" -F branch=master -F per_page=100)"
-          latest="$(jq -c --arg workflow_path ".github/workflows/inspect-vps.yml" '[.workflow_runs[] | select(.path == $workflow_path and .head_branch == "master")] | sort_by(.created_at) | last // empty' <<< "$runs")"
+          latest="$(
+            jq -c \
+              --arg workflow_path ".github/workflows/inspect-vps.yml" \
+              '[
+                .workflow_runs[]
+                | select(.path == $workflow_path and .head_branch == "master")
+              ]
+              | sort_by(.created_at)
+              | last // empty' <<< "$runs"
+          )"
           if [[ -z "$latest" ]]; then
             age_seconds=$((MAX_INSPECTION_AGE_MINUTES * 60 + 1))
             latest_id="none"
