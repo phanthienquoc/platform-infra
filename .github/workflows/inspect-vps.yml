@@ -74,6 +74,27 @@ jobs:
           fi
           echo "Inspection output structure validated."
 
+      # A rerun may execute from an older workflow SHA. Rebase the generated
+      # read-only snapshot onto the live master tip before the PR action creates
+      # its branch, otherwise the exact-head merge can fail on a stale base.
+      - name: Rebase inspection snapshot on latest master
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cp debug/vps-latest.md "$RUNNER_TEMP/vps-latest.md"
+          gh auth setup-git
+          git fetch --no-tags origin master
+          git checkout --force -B master origin/master
+          install -m 0644 "$RUNNER_TEMP/vps-latest.md" debug/vps-latest.md
+          if [[ "$(git status --short)" != " M debug/vps-latest.md" ]]; then
+            echo "Unexpected worktree changes while rebasing inspection snapshot onto latest master." >&2
+            git status --short
+            exit 1
+          fi
+          echo "Inspection snapshot is now based on current origin/master."
+
       - name: Create inspection PR
         id: inspection_pr
         if: steps.changes.outputs.changed == 'true'
