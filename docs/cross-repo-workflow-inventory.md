@@ -2810,3 +2810,29 @@ No production apply, promotion, database migration, secret mutation, replica cha
 - Platform native schedules have no newer schedule-event evidence after the listed 16:45 inspect / 14:28 watchdog / 14:27 reconcile / 13:45 recovery runs. Successful push and workflow_run events are not substitutes for native schedule ticks. Next action: run read-only `inspect-vps.yml` via workflow_dispatch on master and inspect GitHub Actions workflow enablement/delivery for the scheduled workflows.
 - `reconcile-vps.yml` remains the sole production apply authority. App repos own tests/builds and immutable GHCR publication; Platform Infra owns production manifests, shared pull credentials, digest promotion/reconciliation, rollout and health.
 - `locally-uncensored-private` remains retired; no direct SSH/Compose deployment authority was added. No production mutation, host reboot, credential/database change, image promotion or TCE market-scan schedule change occurred.
+
+
+## Cross-repo workflow inventory — 2026-11-04 18:30 ICT / 11:30 UTC
+
+| Repository | Master SHA | Open PRs | Latest CI / publisher evidence | Runtime / release gate |
+|---|---|---|---|---|
+| Platform Infra | `1bb34fb6cddc` | #1222 draft; #544/#541/#539 drafts | #41821072245 action validation PASS; #41821072276 manifest validation PASS; #1222 #41821355040 manifest validation PASS only | #1221 first-attempt heartbeat guard merged; no post-merge native schedule event. #1222 is not deployable: missing UID/GID forwarding for shell isolation and direct Docker/K8s mutation tools conflict with GitOps authority (review comment #6629554340). |
+| TCE Dashboard | `52cecd5584e6` | None | #1022 exact-head WF-02/WF-05 PASS on PR SHA; no current-master combined status | WF-06 #41810552435 native schedule FAIL (four HTTP 503); WF-12 #41807645689 native schedule FAIL; WF-07 #41785211971 PASS. First-attempt heartbeat payload is now present on master; runtime confirmation pending. |
+| StockDividend | `50ba0dfb67eb` | None | CI #41563856934 PASS; immutable ARM64 publisher #41563856933 PASS | Admin/new Backend remain ImagePullBackOff on `12d63b4`; release gate disabled, handoff and paired digest dispatch SKIPPED. |
+| Media Generation | `e4c7d8990aaf` | None | CI #41617592783 PASS | Last snapshot observed backend/frontend 1/1 at 17:21 ICT; no new publisher E2E. |
+| Authentication | `f978a3f378ee` | #75 ready; #76 draft | CI #41670642852 PASS | Auth/Keycloak 0/0; Supabase/migration and activation gates remain closed; no current-head release publisher run observed. |
+
+### Schedule and runtime evidence
+- Platform native schedules: inspect #41809725184 (16:45 ICT) FAIL; reconcile #41792374251 (14:27 ICT) FAIL; watchdog #41792527398 (14:28 ICT) FAIL; recovery #41787641688 (13:45 ICT) PASS. No newer native schedule event observed through 18:30 ICT.
+- TCE native schedules: WF-06 #41810552435 (16:53 ICT) FAIL, four public endpoints HTTP 503; WF-12 #41807645689 (16:27 ICT) FAIL; WF-07 #41785211971 (13:23 ICT) PASS. Workflow_run #41818548221 (18:05 ICT) is not a native schedule tick and predates the new first-attempt payload guard.
+- The current Platform and TCE master commits both contain first-attempt-only schedule heartbeat protection. No post-merge native schedule cycle has validated the guard yet.
+- Latest K3s evidence remains read-only snapshot #41813598197 at 17:21:39 ICT: node Ready, disk 55%; Media/MicroFE/NATS 1/1; Stock Admin/new Backend ImagePullBackOff; old Stock Backend/Frontend 1/1; TCE/Auth/Keycloak 0/0; host restart required. Snapshot is stale; no current health claim.
+- Preserve all existing cron declarations and the TCE market-scan schedule. Do not treat push, workflow_run, repository_dispatch or rerun attempts as native schedule evidence.
+
+### Publisher and ownership contract
+- StockDividend: immutable ARM64 publication PASS; promotion remains disabled and requires the protected Actions:read credential plus explicit paired Admin/Backend digest authorization.
+- Media: paired frontend/backend digest publisher and Platform dispatch contract present; no new publisher E2E observed.
+- Auth: manual workflow_dispatch release emits full-SHA release tag, immutable digest and source provenance; Platform verifies source run and tag-to-digest correlation. Current-head release execution not observed.
+- App repos own tests/builds and immutable GHCR publication. Platform owns production manifests, shared GHCR pull credentials, digest/provenance validation, GitOps promotion/reconciliation, rollout and health.
+- `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No duplicate SSH/Compose or MCP Docker/Kubectl mutation authority is permitted.
+- `locally-uncensored-private` remains retired. No production mutation, image promotion, secret/database change, Pod/replica change or host reboot occurred.
