@@ -1,13 +1,13 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-04 22:59 ICT (15:59 UTC)  
-Platform Infra master: `d206e0cc9277ca6b7f707ff3075e13c63ca59961`
+Last reviewed: 2026-11-05 00:00 ICT (17:00 UTC)
+Platform Infra master at checkpoint: `71bf46709429422def864c1ae5c6948403c562f5`
 
 ## Repository readiness
 
 | Repository | Master SHA | Open PRs | Latest verified CI / publication |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `d206e0cc9277` | #1222, #544, #541, #539 (all draft) | Read-only inspection #41861306384 PASS; inspection PR #1231 merged as this SHA. Manifest validation #41861440816 PASS on inspection PR head `150d673d`. No current-master workflow-contract validation after the inspection merge; this tracker/validator PR will trigger it. |
+| phanthienquoc/platform-infra | `71bf46709429` | #1222, #544, #541, #539 (all draft) | PR #1232 merged as `71bf4670`; exact-head `lint` #41863805546 and `validate` #41863805484 PASS; post-merge `lint` #41873351411 and `validate` #41873351409 PASS on current master. |
 | phanthienquoc/TCE-dashboard | `52cecd5584e6` | None | WF-02 #41819221546 and WF-05 #41819221509 PASS on PR head `a1afaf1c`, not current master. No current-master CI run returned. |
 | phanthienquoc/stockdividend | `50ba0dfb67eb` | None | CI #41563856934 PASS; immutable ARM64 publisher #41563856933 PASS. Release handoff and paired digest dispatch are SKIPPED. |
 | phanthienquoc/media-generation | `e4c7d8990aaf` | None | Media CI #41617592783 PASS. Latest inspection shows backend/frontend 1/1 with digest-pinned imageIDs. |
@@ -23,22 +23,22 @@ Platform Infra master: `d206e0cc9277ca6b7f707ff3075e13c63ca59961`
 
 ## Current runtime blockers
 
-- **K3s snapshot:** [inspection #41861306384](https://github.com/phanthienquoc/platform-infra/actions/runs/41861306384) succeeded via workflow_dispatch at 22:46:58 ICT; snapshot generated 22:47:09 ICT and merged through [PR #1231](https://github.com/phanthienquoc/platform-infra/pull/1231) as master SHA `d206e0cc9277`. Node `tce-k3s-01` is Ready, ARM64, K3s `v1.36.3+k3s1`, disk 55%, available memory about 19 GiB. GitOps drift is clean.
-- **StockDividend:** two Admin Pods and the new Backend Pod are `ImagePullBackOff` on `12d63b4`; GHCR reports no matching ARM64 manifest. The older Backend and Frontend remain 1/1. Do not promote either Admin or Backend independently.
-- **TCE/Auth:** TCE frontend/service and MicroFE Auth/Keycloak are 0/0 in this snapshot. Public OIDC probes return HTTP 503. WF-06's strict four-endpoint HTTP 200 check failed with HTTP 503; WF-12 schedule freshness also failed. Preserve the strict health gate.
-- **Healthy inspected workloads:** Media backend/frontend, MicroFE Shell/WS, and NATS are 1/1. This is point-in-time evidence, not a continuing health guarantee.
-- **Host maintenance:** `restart_required=yes`; Ubuntu, Docker and containerd updates are pending. No reboot or upgrade was performed.
+- **K3s snapshot:** [read-only inspection #41861306384](https://github.com/phanthienquoc/platform-infra/actions/runs/41861306384) succeeded via `workflow_dispatch` at 22:46:58 ICT; `debug/vps-latest.md` was generated at 22:47:09 ICT and merged by PR #1231. At this 00:00 ICT checkpoint it is about 73 minutes old, close to the 75-minute freshness budget. Node `tce-k3s-01` was Ready, ARM64, K3s `v1.36.3+k3s1`, disk 55%, available memory about 19 GiB; GitOps drift was clean. Treat this as point-in-time evidence, not current health.
+- **StockDividend:** latest scheduled reconcile [#41860865532](https://github.com/phanthienquoc/platform-infra/actions/runs/41860865532) failed only in the StockDividend lane. Two Admin Pods and the new Backend Pod are `ImagePullBackOff` on `12d63b4`; containerd reports `no match for platform in manifest`. Old Backend and Frontend were 1/1. Immutable ARM64 publisher #41563856933 succeeded, but the paired handoff and promotion dispatch were skipped. Do not promote either image independently.
+- **TCE/Auth:** TCE frontend/service and Auth/Keycloak workloads were 0/0 in the latest inspection. Native WF-06 [#41810552435](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41810552435) failed all four public endpoint jobs; the Auth liveness log confirms HTTP 503 where HTTP 200 is required. WF-12 #41807645689 failed schedule freshness. Preserve strict HTTP 200 checks; do not infer health from a skipped/zero-replica workload.
+- **Healthy inspected workloads:** Media backend/frontend, MicroFE Shell/WS, and NATS were 1/1. Media image IDs were digest-pinned. This is only the 22:47 ICT snapshot.
+- **Host maintenance:** `restart_required=yes`; Ubuntu, Docker and containerd updates remain pending, including containerd 2.4.2 and Docker 29.9.3 packages. No reboot or upgrade was performed.
 
 ## Native schedule evidence
 
 | Workflow | Latest native schedule evidence | Result |
 |---|---|---|
-| `inspect-vps.yml` (`2,32 * * * *`) | #41809725184 at 16:45 ICT; old workflow SHA `9f74d23` | FAIL. Latest successful inspection #41861306384 at 22:46 ICT was `workflow_dispatch`, not schedule. |
-| `reconcile-vps.yml` (`7,22,37,52 * * * *`) | #41860865532 at 22:44 ICT | FAIL only at StockDividend workload health; Auth, TCE, Media and MicroFE lanes passed. |
-| `recover-stale-ops.yml` (`10,25,40,55 * * * *`) | #41852388418 at 21:55 ICT | PASS. Later dispatch/workflow_run executions are not native schedule evidence. |
-| `reconcile-schedule-watchdog.yml` (`12,27,42,57 * * * *`) | #41861131656 at 22:45 ICT | FAIL: scheduled inspection delivery and recovery-controller freshness checks failed. |
+| `inspect-vps.yml` (`2,32 * * * *`) | #41809725184 at 16:45 ICT; workflow SHA `9f74d23` | FAIL. Latest successful inspection #41861306384 at 22:46 ICT was `workflow_dispatch`, not schedule. |
+| `reconcile-vps.yml` (`7,22,37,52 * * * *`) | #41860865532 at 22:44 ICT | FAIL only at StockDividend workload health; Auth, TCE, Media and MicroFE lanes passed; Keycloak skipped. |
+| `recover-stale-ops.yml` (`10,25,40,55 * * * *`) | #41852388418 at 21:55 ICT | PASS. No later native schedule run was returned through 00:00 ICT. |
+| `reconcile-schedule-watchdog.yml` (`12,27,42,57 * * * *`) | #41861131656 at 22:45 ICT | FAIL. Its log confirms inspect/recovery workflows were active, but no scheduled inspection was present within 75 minutes (latest native inspect age 360m) and latest native recovery was 50m old. |
 
-The native watchdog's failures are real schedule-delivery signals. The manual inspection at 22:46 ICT refreshed the snapshot but does not repair native schedule delivery. Preserve all existing cron declarations, including the TCE market-scan schedule.
+The watchdog's failure is a real native schedule-delivery signal, not a health-check false positive. The successful inspection at 22:46 ICT was manually dispatched and does not repair native schedule delivery. The successful recovery #41852388418 was a native schedule run but was already 50 minutes old when watchdog #41861131656 evaluated it. No newer native Platform or TCE schedule events were returned by the Actions API at this checkpoint. Preserve all existing cron declarations, including the TCE market-scan schedule; do not substitute reruns, `workflow_dispatch`, or `workflow_run` events for native schedule evidence.
 
 ## Ownership and safety contract
 
@@ -61,3 +61,11 @@ The native watchdog's failures are real schedule-delivery signals. The manual in
 - Stock immutable publisher #41563856933: https://github.com/phanthienquoc/stockdividend/actions/runs/41563856933
 - Media CI #41617592783: https://github.com/phanthienquoc/media-generation/actions/runs/41617592783
 - Auth service CI #41670642852: https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41670642852
+
+
+## Latest workflow inventory checkpoint
+
+[2026-11-05 00:00 ICT](cross-repo-workflow-inventory-checkpoints/2026-11-05-0000-ict.md) records current repository heads, open PRs, exact-head/post-merge checks, native schedule evidence, latest K3s snapshot age, and the remaining release gates.
+
+- PR #1232 merged as `71bf46709429422def864c1ae5c6948403c562f5`; exact-head checks #41863805546/#41863805484 and post-merge checks #41873351411/#41873351409 all passed.
+- No production image promotion, manifest/credential/database mutation, Pod/replica change, host reboot, or schedule expression change occurred in this checkpoint.
