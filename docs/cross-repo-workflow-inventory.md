@@ -2480,3 +2480,46 @@ No production image promotion, manifest apply, database migration, shared pull-s
 - Owner actions: Mirror destination-only Contents:write token; protected Stock Actions:read token plus explicit paired ARM64 release authorization; Auth/Supabase migration review; Media/Auth E2E authorization; host maintenance window.
 - App repos remain the only build/publish owners. Platform Infra remains the only production manifest/promotion/reconciliation/health owner. `reconcile-vps.yml` is the sole apply authority; no SSH/Compose deployment authority.
 - No image promotion, manifest apply, DB migration, shared pull-secret mutation, release enablement, replica change, Pod restart or VPS reboot in this checkpoint. TCE market-scan schedule unchanged.
+
+
+## Workflow inventory update — 2026-11-04 09:55 ICT / 02:55 UTC
+
+### Current repository and PR inventory
+| Repository | Master SHA | Open PRs | Current readiness |
+|---|---|---:|---|
+| Platform Infra | `3f591e9aaddb` | #544/#541/#539 (draft) | Promotion/reconciliation owner; Stock and Mirror blocked |
+| TCE Dashboard | `a355ce070204` | 0 | App CI PASS; public WF-06 health 503 |
+| StockDividend | `50ba0dfb67eb` | 0 | CI/publisher PASS; production release disabled; live Admin/Backend image pull blocked |
+| Media Generation | `e4c7d8990aaf` | 0 | CI PASS; runtime backend/frontend 1/1; paired publisher E2E pending |
+| Authentication | `f978a3f378ee` | #75 ready / #76 draft | CI PASS; service 0/0; Supabase/migration review gates remain |
+
+Auth PR #75/#76 both have current visible validate checks SUCCESS and Supabase Preview SKIPPED. Do not treat skipped preview as a successful production integration test.
+
+### New Platform paired digest helper
+- `scripts/promote-paired-image-digests.py` is now the single implementation for StockDividend backend/admin and Media backend/frontend paired digest rewrites.
+- Called from `.github/workflows/gitops-image-promotion.yml` only for `component=release`, after the existing source-run provenance and GHCR tag-to-digest validation.
+- `validate-manifests.yml` runs Python compile and helper self-tests. `validate-workflow-contracts.py` statically requires the helper invocation and test wiring.
+- PR #1189 exact-head checks #41764217505/#41764217540/#41764217582 all PASS; post-merge checks #41764297891/#41764297953/#41764297783 all PASS. Merge SHA `3f591e9aaddb55f28f7e49438c0d18c92e05208f`.
+- The helper is an offline file transformation only. It does not publish images, verify credentials, alter production manifests on master, or trigger a deployment by itself.
+
+### Workflow ownership and schedule evidence
+| Repository / workflow | Owner | Latest verified evidence | Status |
+|---|---|---|---|
+| Platform `reconcile-vps.yml` | Platform Infra | Native #41750519522 FAIL Stock; manual #41762538154 FAIL Stock; shared preflight PASS, drift false, apply skipped | BLOCKED by Stock runtime |
+| Platform `inspect-vps.yml` | Platform Infra | Native #41758796515 SUCCESS | Latest observed native inspection |
+| Platform `reconcile-schedule-watchdog.yml` | Platform Infra | Native #41750880073 FAILURE | Stale native schedule lanes; queue not established as cause |
+| Platform `recover-stale-ops.yml` | Platform Infra | #41762735716 and #41764298072 SUCCESS | Fallbacks avoided when latest master activity was fresh |
+| Platform Mirror | Platform Infra | #41737911916 FAILURE | Missing `PLATFORM_INFRA_MIRROR_TOKEN` |
+| TCE WF-06 | TCE app | Native #41762490285 FAILURE; four public endpoints HTTP 503 | Schedule delivered; public health blocked |
+| TCE WF-12 | TCE app | Native #41759196674 FAILURE; workflow_run #41762512743 SUCCESS | Heartbeat/forwarder works; direct cron freshness remains degraded |
+| TCE WF-07 backup/integration | TCE app | #41739787575/#41738887996 SUCCESS | PASS |
+| StockDividend CI/publisher | Stock app | #41563856934/#41563856933 SUCCESS | ARM64 publication verified; promotion gate false |
+| Media CI | Media app | #41617592783 SUCCESS | Runtime 1/1; E2E pending |
+| Auth CI | Auth app | #41670642852 SUCCESS | Runtime stopped; integration/migration review pending |
+
+### Production workload and authority
+- K3s node `tce-k3s-01` Ready/ARM64, K3s v1.36.3+k3s1, runner policy v14. Media backend/frontend, MicroFE Shell/WS and NATS are 1/1. Stock Admin (two Pods) and new Backend are ImagePullBackOff on old tag `12d63b4` due to no matching ARM64 manifest; old Backend and legacy Frontend remain 1/1. TCE/Auth/Keycloak are 0/0.
+- App repositories own tests/builds and immutable GHCR publication. Platform Infra owns production manifests, shared GHCR pull credentials, publisher provenance/digest validation, GitOps promotion/reconciliation and K3s rollout/health verification.
+- `reconcile-vps.yml` remains the sole production apply authority. No duplicate direct SSH/Compose deployment authority. Preserve purposeful CI/test/security/manual/release/scheduled jobs.
+- Owner gates: destination-only Mirror Contents:write token; protected Stock Actions:read token plus explicit paired ARM64 release authorization; Auth/Supabase integration/migration review; Media/Auth publisher E2E authorization; host maintenance window.
+- No production promotion, manifest apply, DB migration, shared pull-secret mutation, release enablement, replica change, Pod restart or VPS reboot in this checkpoint. TCE market-scan schedule unchanged.
