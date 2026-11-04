@@ -55,13 +55,13 @@ concurrency:
 
 jobs:
   recover:
-    # GitHub reruns preserve event=schedule; only run_attempt=1 is native schedule evidence.
     # GitHub reruns preserve the original event; only attempt 1 is native schedule evidence.
     # workflow_run payloads expose workflow_run.workflow_id, not a top-level workflow.path.
     # Repository-scoped IDs keep source filtering stable despite dynamic run names.
     # reconcile-vps=364209709; inspect-vps=364209707; watchdog=402675709.
     if: >-
       ${{ github.ref == 'refs/heads/master' &&
+          github.run_attempt == 1 &&
           (github.event_name != 'workflow_run' ||
            (github.event.workflow_run.head_branch == 'master' &&
             github.event.workflow_run.run_attempt == 1 &&
