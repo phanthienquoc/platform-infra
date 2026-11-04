@@ -4735,3 +4735,37 @@ No StockDividend promotion, production manifest apply, database migration, share
 - Media/Auth: authorize paired/manual publisher E2E. Host: arrange a maintenance window before OS/containerd/Docker upgrade or reboot.
 - No Stock promotion, production manifest apply, DB migration, shared GHCR pull-secret mutation, release-enable change, replica change, Pod restart or VPS reboot occurred. Auth runtime Secret was re-applied by reconciliation with values suppressed; shared GHCR pull Secrets remained unchanged.
 - App repositories own tests/builds and immutable GHCR publication. Platform Infra owns production manifests, shared pull credentials, digest promotion/reconciliation and rollout/health. `reconcile-vps.yml` remains the sole production apply authority. No SSH/Compose authority was added. Preserve useful CI/test/security/manual/release/scheduled workflows. TCE market-scan schedule unchanged.
+
+
+## Runtime recovery and latest evidence — 2026-11-04 09:13 ICT / 02:13 UTC
+
+### Native schedule and heartbeat
+- Platform native Inspection #41758796515 ran on `schedule` at 02:08:48 UTC and passed. This is the latest native inspection tick; the read-only snapshot was refreshed.
+- Platform Watchdog #41758946874 was a `workflow_run` diagnostic after the inspection schedule, not a native watchdog schedule. It failed because native Reconcile/Mirror/Recovery freshness remained stale; inspection delivery and runner queue checks passed (queue wait 0m). The follow-on recovery run #41758977950 was correctly SKIPPED because the watchdog source event was `workflow_run`, not `schedule`.
+- The native watchdog schedule #41750880073 at 00:59:41 UTC remains the latest observed native watchdog tick. No later native watchdog schedule run was observed in this checkpoint.
+- TCE native WF-12 #41759196674 ran at 02:12:22 UTC and failed only the WF-06 freshness gate. Its authenticated heartbeat dispatch passed: source path `.github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml`, source run #41759196674, source SHA `a355ce070204cff209df1c9ba38843c972647860`; Platform accepted HTTP 204.
+- Platform receiver #41759211141 completed SUCCESS and validated the external heartbeat payload. It detected recent reconciliation activity and did not dispatch another reconcile. TCE WF-06 latest native schedule remains #41731424392 at 22:30:44 UTC, age 221m, queue wait 0m; its delivery is genuinely stale, not queued.
+
+### Recovery and production reconciliation
+- Existing recovery controller #41758946954 was triggered by the successful native inspection schedule and completed SUCCESS. It detected latest master reconciliation #41750519522 was 71m old and dispatched the existing `reconcile-vps.yml` authority as run #41758966117 with exact payload: ref=master, SHA `92a3e140f7aed6a94cdad8578effd0b309f1e374`, mode=apply, `allow_image_changes=false`, `target_app=all`.
+- Shared reconcile job passed GHCR access preflight, Auth runtime Secret provision/verification (values suppressed), TCE release-pairing check and Media digest resolution. GHCR pull Secrets in microfe-platform, stock-prod, tce-prod and media-prod were all `unchanged`. The restart helper found no transient image-pull failures; it explicitly skipped Stock Admin and Backend because the `12d63b4` tags return permanent `no match for platform in manifest`.
+- Kubernetes diff reported all namespaces unchanged and no drift. Workload-image guard and production manifest apply were SKIPPED; no image promotion or manifest mutation occurred.
+- Auth, TCE, Media and MicroFE workload-health lanes passed; their rollouts were skipped because no changes were required. Keycloak lane was skipped. StockDividend health lane failed on two Admin Pods and one new Backend Pod with ImagePullBackOff; old Backend and legacy Frontend remained Running. Overall run #41758966117 therefore completed FAILURE solely at the StockDividend lane/final gate.
+- The post-reconciliation recovery controller #41759189967 completed SUCCESS and found reconciliation recent; it did not dispatch another reconciliation. The TCE heartbeat receiver #41759211141 also completed SUCCESS without a duplicate dispatch.
+
+### Latest K3s evidence
+- Reconciliation #41758966117 captured node `tce-k3s-01` Ready, ARM64, K3s v1.36.3+k3s1, Ubuntu 22.04.5, containerd 2.3.2-k3s2.
+- Media backend/frontend, MicroFE Shell/WS and NATS were healthy. Stock Admin two Pods and new Backend remained ImagePullBackOff due to permanent architecture mismatch; old Backend and legacy Frontend remained 1/1.
+- Auth HTTPS/runtime health verification passed while Auth remained at its configured stopped state; TCE GitOps image and workload-health verification passed while rollout was skipped. These checks do not mean TCE/Auth services were scaled up.
+- No host upgrade/reboot was performed.
+
+### New watchdog recovery contract status
+- Platform PR #1183 is merged. The failure-only recovery gate was exercised in its negative case: watchdog run #41758946874 had source event `workflow_run`, so recovery run #41758977950 was skipped. This confirms diagnostics do not trigger production recovery.
+- A positive native-scheduled watchdog-failure event has not yet occurred after the change; keep the gate pending until that exact source event is observed. The existing inspection-schedule and TCE-heartbeat recovery paths continue to work.
+
+### Remaining owner gates and safety
+- Mirror: `PLATFORM_INFRA_MIRROR_TOKEN` still missing; owner must provide destination-only Contents:write for `phanthienquoc/locally-uncensored-private`.
+- StockDividend: `STOCKDIVIDEND_ACTIONS_READ_TOKEN` in protected Platform Environment plus explicit paired Admin/Backend ARM64 production release authorization are still required.
+- Auth: Supabase production integration/migration provenance review before PR #75/#76 merge or service activation. Media/Auth publisher E2E still requires release authorization. Host updates require a maintenance window.
+- No production image promotion, manifest apply, DB migration, shared GHCR pull-secret mutation, release-enable change, replica change, Pod restart or VPS reboot. Auth runtime Secret provision/verification ran with values suppressed; shared GHCR pull Secrets were unchanged.
+- `reconcile-vps.yml` remains the sole production apply authority. No SSH/Compose authority was added. Preserve useful CI/test/security/manual/release/scheduled workflows. TCE market-scan schedule unchanged.
