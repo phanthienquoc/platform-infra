@@ -410,6 +410,27 @@ for required in ("after_merge_head", "after_merge_merged", "merge_commit_sha", "
 if "Merged inspection PR head does not match the exact validated SHA" not in inspection:
     fail("VPS inspection must verify the merged PR head still matches the exact validated SHA.")
 
+# A rerun may execute from an older workflow SHA. Rebase the generated snapshot
+# onto the live master tip before creating the PR, so exact-head validation is
+# never followed by a predictable stale-base merge conflict.
+inspection_rebase_step = inspection.find("name: Rebase inspection snapshot on latest master")
+inspection_create_step = inspection.find("name: Create inspection PR")
+if inspection_rebase_step < 0 or inspection_create_step <= inspection_rebase_step:
+    fail("VPS inspection must rebase its generated snapshot onto current master before creating the PR.")
+inspection_rebase_block = inspection[inspection_rebase_step:inspection_create_step]
+for required in (
+    "if: steps.changes.outputs.changed == 'true'",
+    "GH_TOKEN: ${{ github.token }}",
+    'cp debug/vps-latest.md "$RUNNER_TEMP/vps-latest.md"',
+    "gh auth setup-git",
+    "git fetch --no-tags origin master",
+    "git checkout --force -B master origin/master",
+    'install -m 0644 "$RUNNER_TEMP/vps-latest.md" debug/vps-latest.md',
+    "Unexpected worktree changes while rebasing inspection snapshot onto latest master.",
+):
+    if required not in inspection_rebase_block:
+        fail(f"VPS inspection latest-master rebase contract is missing: {required}")
+
 
 # Manual production promotion must originate from master; non-master dispatches fail visibly.
 if "if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/master'" not in promotion:
