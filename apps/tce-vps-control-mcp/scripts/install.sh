@@ -24,10 +24,10 @@ install -d -o root -g root -m 0755 "$INSTALL_DIR"
 install -d -o root -g root -m 0750 "$CONFIG_DIR"
 install -d -o tce-mcp -g tce-mcp -m 0750 "$AUDIT_DIR"
 
-cp -a "$APP_DIR/package.json" "$APP_DIR/package-lock.json" "$APP_DIR/tsconfig.json" "$APP_DIR/src" "$INSTALL_DIR/"
+cp -a "$APP_DIR/package.json" "$APP_DIR/tsconfig.json" "$APP_DIR/src" "$INSTALL_DIR/"
 chown -R root:root "$INSTALL_DIR"
 cd "$INSTALL_DIR"
-npm ci --omit=dev=false
+npm install --include=dev --no-audit --no-fund
 npm run build
 npm prune --omit=dev
 
