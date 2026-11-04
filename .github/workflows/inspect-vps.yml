@@ -105,7 +105,7 @@ jobs:
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1
         with:
           token: ${{ github.token }}
-          branch: automation/vps-inspection
+          branch: automation/vps-inspection-${{ github.run_id }}-${{ github.run_attempt }}
           delete-branch: true
           title: "chore: update VPS inspection state"
           commit-message: "chore: update VPS inspection state"
@@ -121,11 +121,14 @@ jobs:
           PR_NUMBER: ${{ steps.inspection_pr.outputs.pull-request-number }}
           PR_HEAD_SHA: ${{ steps.inspection_pr.outputs.pull-request-head-sha }}
           PR_BRANCH: ${{ steps.inspection_pr.outputs.pull-request-branch }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
           REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
           [[ "$PR_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Missing or invalid inspection PR head SHA." >&2; exit 1; }
-          [[ "$PR_BRANCH" == "automation/vps-inspection" ]] || { echo "Unexpected inspection PR branch: $PR_BRANCH" >&2; exit 1; }
+          EXPECTED_BRANCH="automation/vps-inspection-${RUN_ID}-${RUN_ATTEMPT}"
+          [[ "$PR_BRANCH" == "$EXPECTED_BRANCH" ]] || { echo "Unexpected inspection PR branch: $PR_BRANCH (expected $EXPECTED_BRANCH)" >&2; exit 1; }
 
           started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           dispatch_payload="$(jq -n --arg ref "$PR_BRANCH" '{ref: $ref}')"
