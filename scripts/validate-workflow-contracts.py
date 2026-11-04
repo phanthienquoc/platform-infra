@@ -136,7 +136,7 @@ if '".github/workflows/vps-image-cleanup.yml"' in cleanup_push_paths:
 if 'workflows: ["reconcile-vps", "inspect-vps", "Mirror locally-uncensored into private repository", "Reconcile Schedule Freshness Watchdog"]' not in recovery or "types: [completed]" not in recovery:
     fail("Recovery controller must run after master reconciliation, scheduled inspection, mirror, and schedule-watchdog completion.")
 
-watchdog_recovery_gate = """(github.event.workflow.path == '.github/workflows/reconcile-schedule-watchdog.yml' &&
+watchdog_recovery_gate = """             (github.event.workflow.path == '.github/workflows/reconcile-schedule-watchdog.yml' &&
               github.event.workflow_run.event == 'schedule' &&
               github.event.workflow_run.conclusion == 'failure')"""
 if watchdog_recovery_gate not in recovery:
