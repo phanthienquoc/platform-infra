@@ -2613,3 +2613,55 @@ Auth PR #75/#76 both have current visible validate checks SUCCESS and Supabase P
 4. Run Media/Auth publisher E2E only after authorization; schedule host maintenance before reboot/upgrade.
 
 No production apply, promotion, database migration, secret mutation, replica change, Pod restart, VPS reboot or TCE market-scan schedule change occurred in this checkpoint.
+
+
+## Active workflow inventory — 2026-11-04 13:02 ICT / 06:02 UTC
+
+### Current repository heads and PRs
+| Repository | Master SHA | Open PRs | CI / publication evidence |
+|---|---|---|---|
+| Platform Infra | `be3e61837dfc` | #544/#541/#539 (draft) | Master manifest validation #41777462054 PASS |
+| TCE Dashboard | `a355ce070204` | 0 | WF-01 #41758031017, WF-02 #41758030952, WF-05 #41758031060 PASS |
+| StockDividend | `50ba0dfb67eb` | 0 | CI #41563856934 and publisher #41563856933 PASS; no later run |
+| Media Generation | `e4c7d8990aaf` | 0 | CI #41617592783 PASS; no paired publisher E2E observed |
+| Authentication | `f978a3f378ee` | #75 ready / #76 draft | Auth service CI #41670642852 PASS; release not dispatched |
+
+### Active Platform production and schedule workflows
+| Workflow | Latest observed event | Latest evidence | Status |
+|---|---|---|---|
+| `reconcile-vps.yml` | Native schedule | #41750519522 FAILURE; Stock workload health gate | Sole apply authority; keep strict |
+| `inspect-vps.yml` | Native schedule | #41758796515 SUCCESS at 09:08 ICT | Read-only; stale at 13:02 ICT |
+| `recover-stale-ops.yml` | Native schedule | #41744960810 SUCCESS at 07:11 ICT | No newer native schedule returned |
+| `reconcile-schedule-watchdog.yml` | Native schedule | #41750880073 FAILURE at 07:59 ICT; recovery age 48m vs 45m budget | Native schedule freshness degraded |
+| `gitops-image-promotion.yml` | Release handoff gated | No paired production promotion | Preserve provenance and digest gate |
+| `validate-manifests.yml` | Push | #41777462054 PASS on current master | Active validation |
+| `validate-github-actions.yml` | Push | #41770766313 PASS on previous post-merge head | Active validation; no newer run returned |
+
+### App workflow evidence
+| Repository / workflow | Latest evidence | Status |
+|---|---|---|
+| TCE WF-06 | Native #41762490285 FAILURE; four public endpoints HTTP 503 | Keep strict; public health blocked |
+| TCE WF-12 | Native #41759196674 FAILURE; freshness | Keep schedule and heartbeat contract |
+| TCE WF-07 Backup / Integration | #41739787575 / #41738887996 SUCCESS | Preserve |
+| Stock CI / immutable publisher | #41563856934 / #41563856933 SUCCESS | ARM64 digest publication was previously verified; production release still gated |
+| Media CI / publisher | #41617592783 SUCCESS; no E2E publisher run observed | Preserve app-side CI/publisher |
+| Auth CI / release | #41670642852 SUCCESS; no new release dispatch | Preserve manual release; activation gated |
+
+### Open PR checks and production side-effect gates
+- Platform #544/#541/#539 each have a successful exact-head `validate-manifests` run (#38575430454/#38567431761/#38548718033); all remain drafts.
+- Auth #75 exact-head CI #40446492086 PASS, but owner-provided Supabase Dashboard evidence in the PR says GitHub integration is connected to the repository root and `Deploy to production=ON` for `master`. Keep open because merge may trigger production database deployment while migration drift is unresolved.
+- Auth #76 exact-head CI #41329425940 PASS, remains draft; migration provenance/drift investigation incomplete.
+- A successful test-only check does not override external production integration side effects. Do not merge #75/#76 on CI status alone.
+
+### Runtime and ownership
+- Last fresh-enough K3s evidence is still inspection #41758796515 at 09:08 ICT; at that time Media/MicroFE/NATS were 1/1 and TCE/Auth/Keycloak 0/0. Last reconciliation #41762538154 at 09:43 ICT confirmed Stock Admin/Backend ImagePullBackOff on tag `12d63b4` due to missing ARM64 manifest. No new live K3s inspection was available by 13:02 ICT.
+- Native Platform schedules have no newer `event=schedule` run in the returned Actions history after inspection #41758796515, watchdog #41750880073, reconciliation #41750519522 and recovery #41744960810. Keep all cron expressions intact; do not count manual/push diagnostics as native schedule delivery.
+- App repositories own tests/builds and immutable GHCR publishing. Platform Infra owns production manifests, shared pull credentials, provenance/digest validation, GitOps promotion/reconciliation, K3s rollout and health verification.
+- `reconcile-vps.yml` is the only production apply authority. `inspect-vps.yml` is read-only. Preserve useful CI/test/security/manual/release/scheduled jobs; do not introduce direct SSH/Compose deployment authority.
+- `locally-uncensored-private` remains retired from active workflows by owner direction. The private repository remains untouched; do not restore its mirror workflow, cron, watchdog/recovery hooks or token references without explicit owner authorization.
+
+### Next actions
+1. Obtain a fresh read-only inspection and separately verify native schedule delivery; workflow_dispatch could not be invoked by the available automation interface in this run.
+2. Resolve Stock's protected Actions:read credential and explicit paired ARM64 release authorization before any digest promotion.
+3. Complete Supabase production integration and migration drift review before Auth merge/activation.
+4. Keep TCE health strict and market-scan schedules unchanged; arrange maintenance window before host restart/upgrade.
