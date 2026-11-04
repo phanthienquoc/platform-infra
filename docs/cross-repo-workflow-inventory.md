@@ -2779,3 +2779,21 @@ No production apply, promotion, database migration, secret mutation, replica cha
 - Inspection remains read-only. GitOps apply remains in `reconcile-vps.yml`; no second SSH/Compose deployment authority is permitted.
 - Preserve manual, release, security, CI/test, and scheduled workflows. Do not remove or reschedule useful jobs.
 - `locally-uncensored-private` remains detached. TCE market-scan schedule remains unchanged.
+
+
+## Workflow inventory checkpoint — 2026-11-04 17:23 ICT / 10:23 UTC
+
+| Repository | Latest verified CI / publication | Latest operational evidence | Open PRs / gate |
+|---|---|---|---|
+| Platform Infra | PR #1215 exact-head and post-merge validation PASS | Push inspection #41813598197 PASS; exact-head snapshot validation #41813734720 PASS; PR #1216 merged. Native schedule remains stale: inspect #41809725184 FAIL, watchdog #41792527398 FAIL, reconcile #41792374251 FAIL, recovery #41787641688 PASS | #544/#541/#539 drafts; no production apply from this checkpoint |
+| TCE Dashboard | WF-01 #41758031017, WF-02 #41758030952, WF-05 #41758031060 PASS | WF-06 #41810552435 native schedule FAIL (four HTTP 503); WF-12 #41810610019 workflow_run PASS; WF-07 #41785211971 schedule PASS | No PRs; preserve strict HTTP 200 and all schedules |
+| StockDividend | CI #41563856934 and immutable ARM64 publisher #41563856933 PASS | Stock Admin/new Backend Pods ImagePullBackOff on `12d63b4` | No PRs; paired Admin/Backend digest promotion remains gated |
+| Media Generation | CI #41617592783 PASS | Latest inspection 17:21:39 ICT: backend/frontend 1/1 | No PRs; publisher E2E remains gated |
+| Authentication | CI #41670642852 PASS; PR #75/#76 exact-head validation PASS | Auth/Keycloak 0/0; OIDC HTTP 503 | #75 ready, #76 draft; Supabase/migration gate remains |
+
+### Inspection API reliability contract
+- Inspection validation now uses bounded GET retries for HTTP 000/500/502/503/504 across validation-run polling and PR-state verification.
+- Retry support is bounded; non-transient 4xx and changed PR heads remain hard failures.
+- The new code completed one full push-triggered inspection/validation/squash-merge cycle successfully (#41813598197 / #41813734720 / PR #1216). No actual retry warning was observed in that successful run.
+- PR #1214 was closed unmerged as superseded; its snapshot was incorporated in PR #1215. PR #1216 supplies the newer 17:21:39 ICT snapshot.
+- Preserve useful CI, tests, security, manual, release and scheduled workflows. Do not add a second deployment authority or alter the TCE market-scan cadence.
