@@ -147,6 +147,13 @@ watchdog_recovery_gate = """             (github.event.workflow.path == '.github
               github.event.workflow_run.conclusion == 'failure')"""
 if watchdog_recovery_gate not in recovery:
     fail("A failed native scheduled freshness watchdog must trigger the existing recovery controller; successful/diagnostic watchdog runs must not.")
+reconcile_latest_query = 'runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" -F branch=master -F per_page=1)"'
+inspect_latest_query = 'runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs" -F branch=master -F per_page=1)"'
+if reconcile_latest_query not in recovery or inspect_latest_query not in recovery:
+    fail("Recovery freshness checks must query the latest master run (per_page=1) so recent manual/fallback activity prevents duplicate dispatches.")
+if recovery.count("sort_by(.created_at) | last // empty") < 2 or "sort_by(.updated_at // .run_started_at // .created_at)" in recovery:
+    fail("Recovery must select the latest run by created_at, not an older run with a later update timestamp.")
+
 if "repository_dispatch:" not in recovery or "types: [tce-schedule-heartbeat]" not in recovery:
     fail("Recovery controller must accept the authenticated cross-repository TCE schedule heartbeat.")
 
