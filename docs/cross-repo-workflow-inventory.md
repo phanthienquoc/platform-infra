@@ -2447,3 +2447,36 @@ No production image promotion, manifest apply, database migration, shared pull-s
 - Post-reconcile recovery #41759189967 SUCCESS with no duplicate dispatch. TCE heartbeat recovery #41759211141 SUCCESS with no duplicate dispatch.
 - Platform PR #1183 merged with exact-head lint #41758621386 and validate #41758621288 PASS; post-merge #41758724485 and #41758724456 PASS. New watchdog recovery path's negative gate was exercised; positive native schedule-failure path remains unobserved.
 - App ownership and production authority unchanged. No promotion, manifest apply, DB migration, shared pull-secret mutation, release enablement, replica change, Pod restart or VPS reboot. Auth runtime Secret provision/verification step ran with values suppressed; shared GHCR Secrets unchanged. TCE market-scan schedule unchanged.
+
+
+## Workflow inventory update — 2026-11-04 09:28 ICT / 02:28 UTC
+
+### Current repository heads and PR state
+- Platform Infra: `9ab987f8d876ba1f2e1c30f77f2edafa6727b147`; open #544/#541/#539 (draft), #1187 merged.
+- TCE Dashboard: `a355ce070204cff209df1c9ba38843c972647860`; no open PRs.
+- StockDividend: `50ba0dfb67eb3dfaa376db0c752bbef5f0817bec`; no open PRs.
+- Media Generation: `e4c7d8990aafc7d837e918c9caf39722d623de7c`; no open PRs.
+- Authentication: `f978a3f378ee22d4630909c2d182275b21ac9e9a`; open #75 (ready) and #76 (draft).
+
+### Workflow ownership and latest evidence
+| Repository | Workflow ownership | Latest verified evidence | Readiness |
+|---|---|---|---|
+| Platform Infra | Production manifests; shared GHCR pull credentials; GitOps promotion/reconciliation; K3s rollout/health; read-only inspection; schedule recovery; mirror | PR #1187 exact-head lint #41760394034 PASS and manifest #41760394024 PASS; post-merge #41760891957/#41760892039 PASS. Native Inspection #41758796515 PASS; native Watchdog #41750880073 FAIL stale; native Reconcile #41750519522 FAIL Stock; Mirror #41737911916 FAIL missing token. | BLOCKED |
+| TCE Dashboard | App tests/build/publisher; strict public WF-06 health; WF-07 backup/integration; WF-12 schedule freshness and authenticated heartbeat | Master WF-05 #41758031060, WF-01 #41758031017, WF-02 #41758030952 PASS. Native WF-12 #41759196674 FAIL freshness but heartbeat accepted by Platform #41759211141; WF-06 #41731424392 FAIL four HTTP 503 probes; WF-07 backup #41739787575 and integration #41738887996 PASS. | PUBLIC HEALTH BLOCKED |
+| StockDividend | App CI/build; immutable full-SHA GHCR publication and paired digest dispatch | Master CI #41563856934 and publisher #41563856933 PASS; publisher handoff/dispatch SKIPPED while release remains disabled. Production Admin/Backend tag `12d63b4` fails ARM64 pull with no matching platform manifest. | RELEASE BLOCKED |
+| Media Generation | App CI/build and immutable GHCR publication; Platform owns deployment and runtime health | Master CI #41617592783 PASS; backend/frontend 1/1 and digest-pinned in latest K3s snapshot. Paired publisher E2E pending. | RUNTIME HEALTHY; E2E PENDING |
+| Authentication | Auth service/web CI and immutable release publisher; Platform owns production manifests and runtime Secret | Master auth-service CI #41670642852 PASS; runtime Secret verification passed in reconciliation with values suppressed; Auth remains 0/0. PR #75/#76 await Supabase integration/migration review; manual publisher E2E pending. | ACTIVATION BLOCKED |
+
+### Recovery and schedule contract
+- `recover-stale-ops.yml` now selects the newest master reconciliation and inspection by exact workflow `.path`, master branch and `created_at` from the current Actions run page. This allows recent `workflow_dispatch` fallback runs to suppress duplicate dispatches.
+- The failure-only native watchdog recovery gate remains intact; successful/diagnostic `workflow_run` events do not trigger production recovery.
+- Manual reconciliation defaults to read-only plan; schedule/master-push/authenticated GitOps promotion retain their existing apply behavior. Existing freshness budgets are unchanged.
+- TCE WF-05 remains the single unconditional CI owner for the WF-06/WF-12 contract. WF-02 retains formatting only; no duplicate invocation.
+- Preserve all purposeful CI/test/security/manual/release/scheduled workflows. No TCE market-scan cron change.
+
+### Production readiness and gates
+- K3s `tce-k3s-01`: Ready/ARM64, K3s v1.36.3+k3s1, disk 55%, ~19 GiB available RAM, runner policy v14. Host maintenance pending (`restart_required=yes`).
+- Healthy: Media backend/frontend, MicroFE Shell/WS, NATS. Unhealthy: Stock Admin (2 Pods) and new Backend (ImagePullBackOff, ARM64 manifest mismatch). Existing Stock Backend and legacy Frontend remain 1/1. TCE/Auth/Keycloak 0/0.
+- Owner actions: Mirror destination-only Contents:write token; protected Stock Actions:read token plus explicit paired ARM64 release authorization; Auth/Supabase migration review; Media/Auth E2E authorization; host maintenance window.
+- App repos remain the only build/publish owners. Platform Infra remains the only production manifest/promotion/reconciliation/health owner. `reconcile-vps.yml` is the sole apply authority; no SSH/Compose deployment authority.
+- No image promotion, manifest apply, DB migration, shared pull-secret mutation, release enablement, replica change, Pod restart or VPS reboot in this checkpoint. TCE market-scan schedule unchanged.
