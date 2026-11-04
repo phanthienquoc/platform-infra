@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-11-04T09:11:24+00:00
+Generated: 2026-11-04T10:02:51+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -18,7 +18,7 @@ Filesystem      Size  Used Avail Use% Mounted on
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   25G   21G  55% /
 disk_pressure: normal (55%)
- 09:11:24 up 186 days, 19:01,  0 users,  load average: 0.13, 0.17, 0.16
+ 10:02:51 up 186 days, 19:53,  0 users,  load average: 0.14, 0.16, 0.17
 
 ### Top disk consumers (best-effort, runner-readable paths)
 4.0K	/var/lib/docker
@@ -44,7 +44,7 @@ disk_pressure: normal (55%)
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
 1057701 /opt/media-actions-runner/bin/Runner.Listener run --startuptype service
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-2293738 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+2340728 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
   actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-media-generation.media-generation-k3s-01)
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service           loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
@@ -131,13 +131,13 @@ kube-system        local-path-provisioner-58d557dc48-jbhhp     1/1     Running  
 kube-system        metrics-server-6dc596dfb8-s2bzm             1/1     Running            0             74d     10.42.0.4     tce-k3s-01   <none>           <none>
 kube-system        svclb-traefik-859779c1-7bwx2                2/2     Running            0             74d     10.42.0.7     tce-k3s-01   <none>           <none>
 kube-system        traefik-59b7647586-gml84                    1/1     Running            0             74d     10.42.0.8     tce-k3s-01   <none>           <none>
-media-prod         media-generation-665d86ff54-4664l           1/1     Running            0             3d4h    10.42.0.155   tce-k3s-01   <none>           <none>
-media-prod         media-generation-frontend-58d8bbc67-lwhhf   1/1     Running            0             3d4h    10.42.0.154   tce-k3s-01   <none>           <none>
+media-prod         media-generation-665d86ff54-4664l           1/1     Running            0             3d5h    10.42.0.155   tce-k3s-01   <none>           <none>
+media-prod         media-generation-frontend-58d8bbc67-lwhhf   1/1     Running            0             3d5h    10.42.0.154   tce-k3s-01   <none>           <none>
 microfe-platform   microfe-shell-7b44b44dfb-ln4sw              1/1     Running            0             3d7h    10.42.0.153   tce-k3s-01   <none>           <none>
 microfe-platform   microfe-ws-5bc979dd77-txd28                 1/1     Running            0             3d7h    10.42.0.152   tce-k3s-01   <none>           <none>
 microfe-platform   nats-7bc8d9f768-q682m                       1/1     Running            0             26d     10.42.0.178   tce-k3s-01   <none>           <none>
 stock-prod         stock-admin-5864bcb497-6b6hm                0/1     ImagePullBackOff   0             2d10h   10.42.0.182   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-59cddb87b7-qgkjr                0/1     ImagePullBackOff   0             2d10h   10.42.0.180   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-59cddb87b7-qgkjr                0/1     ImagePullBackOff   0             2d11h   10.42.0.180   tce-k3s-01   <none>           <none>
 stock-prod         stock-backend-57ccb8ff6-d25jq               1/1     Running            0             46d     10.42.0.55    tce-k3s-01   <none>           <none>
 stock-prod         stock-backend-6bc874575d-xcg2j              0/1     ImagePullBackOff   0             2d10h   10.42.0.183   tce-k3s-01   <none>           <none>
 stock-prod         stock-frontend-79c57845df-z747s             1/1     Running            0             46d     10.42.0.56    tce-k3s-01   <none>           <none>
@@ -174,7 +174,7 @@ kube-system        metrics-server              1/1     1            1           
 kube-system        traefik                     1/1     1            1           74d
 media-prod         media-generation            1/1     1            1           34d
 media-prod         media-generation-frontend   1/1     1            1           34d
-microfe-platform   keycloak                    0/0     0            0           18d
+microfe-platform   keycloak                    0/0     0            0           19d
 microfe-platform   microfe-auth                0/0     0            0           29d
 microfe-platform   microfe-shell               1/1     1            1           29d
 microfe-platform   microfe-ws                  1/1     1            1           29d
@@ -182,8 +182,8 @@ microfe-platform   nats                        1/1     1            1           
 stock-prod         stock-admin                 0/1     1            0           42d
 stock-prod         stock-backend               1/1     1            1           46d
 stock-prod         stock-frontend              1/1     0            1           46d
-tce-prod           tce-frontend                0/0     0            0           70d
-tce-prod           tce-service                 0/0     0            0           70d
+tce-prod           tce-frontend                0/0     0            0           71d
+tce-prod           tce-service                 0/0     0            0           71d
 
 ### Pod failure evidence
 stock-prod	stock-admin-5864bcb497-6b6hm	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": no match for platform in manifest: not found
@@ -272,7 +272,7 @@ kube-system        metrics-server              ClusterIP      10.43.120.41    <n
 kube-system        traefik                     LoadBalancer   10.43.213.239   10.0.0.120    80:30225/TCP,443:30415/TCP   74d
 media-prod         media-generation            ClusterIP      10.43.252.95    <none>        3000/TCP                     34d
 media-prod         media-generation-frontend   ClusterIP      10.43.48.52     <none>        80/TCP                       34d
-microfe-platform   keycloak                    ClusterIP      10.43.142.95    <none>        80/TCP,9000/TCP              18d
+microfe-platform   keycloak                    ClusterIP      10.43.142.95    <none>        80/TCP,9000/TCP              19d
 microfe-platform   microfe-auth                ClusterIP      10.43.83.168    <none>        80/TCP                       29d
 microfe-platform   microfe-shell               ClusterIP      10.43.6.23      <none>        80/TCP                       29d
 microfe-platform   microfe-ws                  ClusterIP      10.43.86.34     <none>        8080/TCP                     29d
@@ -281,16 +281,16 @@ stock-prod         backend                     ClusterIP      10.43.46.139    <n
 stock-prod         stock-admin                 ClusterIP      10.43.97.150    <none>        3000/TCP                     42d
 stock-prod         stock-backend               ClusterIP      10.43.247.219   <none>        8080/TCP                     46d
 stock-prod         stock-frontend              ClusterIP      10.43.53.102    <none>        3000/TCP                     46d
-tce-prod           tce-frontend                ClusterIP      10.43.99.130    <none>        80/TCP                       70d
-tce-prod           tce-service                 ClusterIP      10.43.189.227   <none>        8210/TCP                     70d
+tce-prod           tce-frontend                ClusterIP      10.43.99.130    <none>        80/TCP                       71d
+tce-prod           tce-service                 ClusterIP      10.43.189.227   <none>        8210/TCP                     71d
 NAMESPACE          NAME                               CLASS     HOSTS                                                          ADDRESS      PORTS     AGE
 media-prod         media                              traefik   media.mrcute.space                                             10.0.0.120   80, 443   34d
-microfe-platform   keycloak-public                    traefik   sso.mrcute.space                                               10.0.0.120   80, 443   18d
-microfe-platform   keycloak-registration-rate-limit   traefik   sso.mrcute.space                                               10.0.0.120   80, 443   7d5h
+microfe-platform   keycloak-public                    traefik   sso.mrcute.space                                               10.0.0.120   80, 443   19d
+microfe-platform   keycloak-registration-rate-limit   traefik   sso.mrcute.space                                               10.0.0.120   80, 443   7d6h
 microfe-platform   microfe-public                     traefik   app.mrcute.space,auth.mrcute.space,ws.mrcute.space             10.0.0.120   80, 443   29d
 stock-prod         stock                              traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   42d
 stock-prod         stock-ingress                      traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   46d
-tce-prod           tce                                traefik   tce.mrcute.space                                               10.0.0.120   80, 443   70d
+tce-prod           tce                                traefik   tce.mrcute.space                                               10.0.0.120   80, 443   71d
 
 ## K3s service
 active
@@ -300,9 +300,9 @@ enabled
 
 ## Keycloak diagnostics
 NAME       READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                             SELECTOR
-keycloak   0/0     0            0           18d   keycloak     quay.io/keycloak/keycloak:26.8.1   app.kubernetes.io/name=keycloak
+keycloak   0/0     0            0           19d   keycloak     quay.io/keycloak/keycloak:26.8.1   app.kubernetes.io/name=keycloak
 error: timed out waiting for the condition
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.050477s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049995s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.049853s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049554s remote_ip=132.226.175.206
