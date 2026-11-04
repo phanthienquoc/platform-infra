@@ -763,57 +763,19 @@ jobs:
           esac
 
           if [[ "$COMPONENT" == "release" && ( "$APP" == "stockdividend" || "$APP" == "media-generation" ) ]]; then
-            python3 - "$FILE" "$APP" "$BACKEND_DIGEST" "$ADMIN_DIGEST" "$FRONTEND_DIGEST" <<'PY'
-          import pathlib
-          import re
-          import sys
-
-          path = pathlib.Path(sys.argv[1])
-          app = sys.argv[2]
-          backend_digest = sys.argv[3]
-          admin_digest = sys.argv[4]
-          frontend_digest = sys.argv[5]
-          if app == "stockdividend":
-              desired = {
-                  "ghcr.io/phanthienquoc/stockdividend/backend": backend_digest,
-                  "ghcr.io/phanthienquoc/stockdividend/admin": admin_digest,
-              }
-          elif app == "media-generation":
-              desired = {
-                  "ghcr.io/phanthienquoc/media-generation/backend": backend_digest,
-                  "ghcr.io/phanthienquoc/media-generation/frontend": frontend_digest,
-              }
-          else:
-              raise SystemExit(f"Unsupported paired digest app: {app}")
-
-          digest_pattern = re.compile(r"^sha256:[0-9a-f]{64}$")
-          lines = path.read_text().splitlines()
-          found = set()
-
-          for index, line in enumerate(lines):
-              name = line.strip()
-              if name not in {f"- name: {image}" for image in desired}:
-                  continue
-              image = name.removeprefix("- name: ")
-              end = index + 1
-              while end < len(lines) and not lines[end].lstrip().startswith("- name:"):
-                  end += 1
-              fields = [i for i in range(index + 1, end)
-                        if lines[i].strip().startswith(("newTag:", "digest:"))]
-              if len(fields) != 1:
-                  raise SystemExit(f"Expected exactly one image tag/digest field for {image}")
-              digest = desired[image]
-              if not digest_pattern.fullmatch(digest):
-                  raise SystemExit(f"Invalid digest for {image}: {digest!r}")
-              field_index = fields[0]
-              indent = lines[field_index][:len(lines[field_index]) - len(lines[field_index].lstrip())]
-              lines[field_index] = f"{indent}digest: {digest}"
-              found.add(image)
-
-          if found != set(desired):
-              raise SystemExit(f"Paired manifest entries missing: {sorted(set(desired) - found)}")
-          path.write_text("\n".join(lines) + "\n")
-          PY
+            if [[ "$APP" == "stockdividend" ]]; then
+              python3 scripts/promote-paired-image-digests.py \
+                --file "$FILE" \
+                --app "$APP" \
+                --backend-digest "$BACKEND_DIGEST" \
+                --admin-digest "$ADMIN_DIGEST"
+            else
+              python3 scripts/promote-paired-image-digests.py \
+                --file "$FILE" \
+                --app "$APP" \
+                --backend-digest "$BACKEND_DIGEST" \
+                --frontend-digest "$FRONTEND_DIGEST"
+            fi
             grep -A2 "name: ghcr.io/phanthienquoc/$APP/" "$FILE"
           elif [[ "$APP" == "auth-service" && "$COMPONENT" == "auth" && -n "$AUTH_DIGEST" ]]; then
             python3 scripts/promote-auth-image-digest.py --file "$FILE" --digest "$AUTH_DIGEST"

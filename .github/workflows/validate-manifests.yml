@@ -29,6 +29,12 @@ jobs:
       - name: Test Auth digest promotion helper
         run: python3 scripts/promote-auth-image-digest.py --self-test
 
+      - name: Test paired image digest promotion helper
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/promote-paired-image-digests.py
+          python3 scripts/promote-paired-image-digests.py --self-test
+
       - name: Validate changed production image references
         if: github.event_name == 'pull_request'
         env:

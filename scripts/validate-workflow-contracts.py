@@ -515,8 +515,25 @@ if '[[ "$ADMIN_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]' not in promotion:
     fail("StockDividend admin digest must be validated before GHCR access.")
 if "Update Kustomize image tag or paired digests" not in promotion:
     fail("StockDividend/Media digest promotion must update both production image entries atomically.")
-if "stockdividend/release" not in promotion or "digest: {digest}" not in promotion:
-    fail("StockDividend promotion must pin both images by registry digest, not only mutable tags.")
+if "stockdividend/release" not in promotion or "scripts/promote-paired-image-digests.py" not in promotion:
+    fail("StockDividend/Media paired releases must use the tested immutable digest-promotion helper.")
+
+paired_digest_helper = (ROOT / "scripts" / "promote-paired-image-digests.py").read_text(encoding="utf-8")
+for required in (
+    '"stockdividend": {',
+    '"media-generation": {',
+    'def promote_text(',
+    'def promote_file(',
+    'if len(fields) != 1:',
+    'duplicate image entry:',
+    'os.replace(temporary_path, path)',
+    'def self_test()',
+    'Paired StockDividend/Media digest-promotion self-tests passed.',
+):
+    if required not in paired_digest_helper:
+        fail(f"Paired image digest-promotion helper is missing contract: {required}")
+if "python3 scripts/promote-paired-image-digests.py --self-test" not in read("validate-manifests.yml"):
+    fail("Paired StockDividend/Media digest-promotion regression tests must run in validate-manifests.")
 if "EVENT_COMMIT" not in promotion or "EVENT_BACKEND_DIGEST" not in promotion or "EVENT_ADMIN_DIGEST" not in promotion:
     fail("StockDividend promotion must resolve source commit and both image digests from the dispatch payload.")
 
