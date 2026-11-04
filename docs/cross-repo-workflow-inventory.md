@@ -2665,3 +2665,16 @@ No production apply, promotion, database migration, secret mutation, replica cha
 2. Resolve Stock's protected Actions:read credential and explicit paired ARM64 release authorization before any digest promotion.
 3. Complete Supabase production integration and migration drift review before Auth merge/activation.
 4. Keep TCE health strict and market-scan schedules unchanged; arrange maintenance window before host restart/upgrade.
+
+
+## Cross-repo workflow inventory update — 2026-11-04 13:56 ICT / 06:56 UTC
+
+- Platform master `0b00384174bc`; open draft PRs #544/#541/#539. Latest master manifest validation #41783214164 PASS; latest master workflow validation #41770766313 PASS before the recovery guard change.
+- TCE master `a355ce070204`; no open PRs. WF-01/WF-02/WF-05 PASS; WF-07 scheduled integration #41785211971 PASS; WF-12 #41785231592 FAIL because WF-06 schedule run #41762490285 is 221m stale and its four public probes returned HTTP 503. Preserve all TCE schedules, especially market-scan.
+- Stock master `50ba0dfb67eb`; no open PRs. CI #41563856934 and immutable ARM64 publisher #41563856933 PASS. Production tag `12d63b4` remains non-ARM64; paired promotion remains gated.
+- Media master `e4c7d8990aaf`; no open PRs. CI #41617592783 PASS; latest inspection at 13:26 ICT observed backend/frontend 1/1; paired publisher E2E remains pending authorization.
+- Authentication master `f978a3f378ee`; #75 ready and #76 draft. Exact-head Auth CI checks PASS; keep production Supabase/migration and activation gates.
+- Platform native schedule watchdog #41787664409 FAIL: reconcile native run #41750519522 age 349m and inspect native run #41758796515 age 276m; both workflows report active. Native recovery schedule #41787641688 PASS and did not need a fallback dispatch because latest all-event master reconcile/inspection activities were 19m/17m old.
+- Recovery follow-up #41787700107 was SKIPPED after the failed watchdog. Recovery's job guard incorrectly referenced `github.event.workflow.path`; changed on branch `fix/recovery-workflow-run-source-ids-20261104` to compare verified `github.event.workflow_run.workflow_id` values (reconcile 364209709, inspect 364209707, watchdog 402675709). Contract validator updated to enforce this webhook-payload identity contract and reject the invalid field.
+- Latest read-only K3s snapshot #41785522310 (13:26 ICT): node Ready; Media/MicroFE/NATS 1/1; Stock Admin and new Backend ImagePullBackOff on old non-ARM64 tag; old Backend/legacy Frontend 1/1; Auth and Keycloak 0/0; host restart required. No production changes, credential mutation, migration or reboot.
+- `locally-uncensored-private` remains retired from active workflow inventory. `reconcile-vps.yml` remains the sole production apply authority. No direct SSH/Compose authority and no TCE market-scan schedule changes.
