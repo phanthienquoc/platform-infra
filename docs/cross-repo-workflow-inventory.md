@@ -2730,3 +2730,12 @@ No production apply, promotion, database migration, secret mutation, replica cha
 - Auth #75/#76 remain gated on Supabase integration target/effect and migration drift review. Media/Auth publisher E2E remains pending authorization.
 - Preserve useful CI/test/security/manual/release/scheduled workflows. Do not create direct SSH/Compose deployment authority. `locally-uncensored-private` remains retired.
 - TCE market-scan schedule and all existing cron declarations remain unchanged.
+
+
+## Post-merge inspection verification — 2026-11-04 16:00 ICT / 09:04 UTC
+
+- Platform Infra PR #1204 merged as `49e8ea6e60168ce1702303ad7535f49bc4278958`; exact-head validation #41804308471 PASS and post-merge master validation #41804382004 PASS.
+- PR #1203 was closed as superseded because its branch was based on old master and GitHub rejected the merge with conflicts. No force merge was attempted.
+- Current Platform master includes the fresh read-only `debug/vps-latest.md` snapshot generated at 16:00:13 ICT plus updated cross-repo tracker/inventory.
+- Snapshot confirms node Ready, ARM64, K3s v1.36.3+k3s1, disk 55%; Media backend/frontend, MicroFE Shell/WS and NATS 1/1; Stock Admin and new Backend ImagePullBackOff; old Stock Backend/Frontend 1/1; TCE/Auth/Keycloak 0/0; host restart required.
+- No production rollout, image promotion, credential/database change, Pod/replica mutation, host reboot or cron change occurred. `reconcile-vps.yml` remains the sole apply authority; TCE market-scan schedule unchanged.
