@@ -2566,3 +2566,50 @@ Auth PR #75/#76 both have current visible validate checks SUCCESS and Supabase P
 - Exact PR checks are verified. The connected GitHub interface did not return post-merge Actions runs or combined commit statuses for the merge SHA, so no post-merge CI result is claimed.
 - No production rollout, image promotion, manifest mutation, credential mutation, database write, K3s restart or TCE market-scan schedule change occurred. The latest live-runtime readiness evidence remains the 09:55 ICT checkpoint until a fresh inspection is available.
 - Restoration is prohibited unless the owner explicitly asks for it; do not recreate the workflow, schedule, recovery/watchdog subscriptions, or token documentation.
+
+
+## Active workflow inventory and readiness — 2026-11-04 12:03 ICT / 05:03 UTC
+
+### Current repository and PR inventory
+| Repository | Master SHA | Open PRs | Readiness |
+|---|---|---|---|
+| Platform Infra | `7e26b75dba3e` | #544/#541/#539 (draft) | Production owner; Stock workload blocked; native schedule evidence stale |
+| TCE Dashboard | `a355ce070204` | 0 | CI PASS; strict public WF-06 probes return 503 while TCE/Auth are 0/0 |
+| StockDividend | `50ba0dfb67eb` | 0 | CI and immutable ARM64 publication PASS; release handoff/dispatch skipped; production tag `12d63b4` cannot pull on ARM64 |
+| Media Generation | `e4c7d8990aaf` | 0 | CI PASS; last inspected runtime 1/1 at 09:08 ICT (stale); paired publisher E2E pending |
+| Authentication | `f978a3f378ee` | #75 ready / #76 draft | CI PASS; Auth 0/0; Supabase/migration review and publisher E2E pending |
+
+### Active workflow ownership and evidence
+| Repository / workflow | Owner | Latest verified evidence | Status |
+|---|---|---|---|
+| Platform `reconcile-vps.yml` | Platform Infra | Manual #41762538154: shared preflight PASS, drift false, apply skipped, Stock health FAIL | Sole production apply authority; blocked by Stock |
+| Platform `inspect-vps.yml` | Platform Infra | Native #41758796515 SUCCESS at 02:08:48 UTC | Read-only; stale, next safe dispatch is inspection |
+| Platform `recover-stale-ops.yml` / `reconcile-schedule-watchdog.yml` | Platform Infra | Native watchdog #41750880073 FAIL stale; push diagnostic #41770766300 PASS but still reports stale native runs | Keep schedules and freshness enforcement; diagnostic is not cron |
+| Platform `gitops-image-promotion.yml` | Platform Infra | Stock handoff and paired dispatch skipped by release gate; no production image mutation | Digest/provenance promotion only after authorization |
+| Platform `validate-manifests.yml` / `validate-github-actions.yml` | Platform Infra | Current master manifest #41770814934 PASS; post-merge workflow validation #41770766313 PASS | Retain validation checks |
+| TCE WF-01/WF-02/WF-05 | TCE app | #41758031017/#41758030952/#41758031060 PASS | App CI owner |
+| TCE WF-06 | TCE app | Native #41762490285 FAIL, four HTTP 503 responses vs expected 200 | Keep strict; public health blocked |
+| TCE WF-07 Backup/Integration | TCE app | #41739787575/#41738887996 PASS | Preserve backup/integration jobs |
+| TCE WF-12 | TCE app | Native #41759196674 freshness FAIL; workflow_run #41762512743 forwarding PASS | Preserve native schedule and authenticated heartbeat |
+| StockDividend CI / Build and Publish Images | Stock app | #41563856934/#41563856933 PASS; Scraper/Admin/Backend full-SHA ARM64 digests verified | Release dispatch skipped; owner authorization required |
+| Media CI / publisher | Media app | #41617592783 PASS; no paired publisher E2E observed | App owns publication; Platform owns rollout |
+| Auth service CI / release handoff | Auth app | #41670642852 PASS including immutable release-contract and manual action pin checks | No manual release dispatch; activation gated |
+
+### Shared production and release gates
+- Platform's shared `GHCR_READ_TOKEN`/Kubernetes pull credential contract remains platform-owned. Latest manual reconciliation passed GHCR pull access and shared credential checks; no credential mutation is claimed.
+- Stock immutable ARM64 digests are recorded in the deployment tracker. Production still references non-ARM64 tag `12d63b4`; keep release gate closed until `STOCKDIVIDEND_ACTIONS_READ_TOKEN` is verified and paired promotion is explicitly authorized.
+- Auth PR #75/#76 remain gated on Supabase integration/migration side effects; Supabase Preview SKIPPED is not production evidence.
+- Media/Auth publisher E2E and VPS maintenance window remain pending.
+- TCE/Auth/Keycloak 0/0 and public HTTP 503 are not reclassified as healthy. Do not change TCE market-scan schedules.
+
+### Retired workflow
+- `.github/workflows/mirror-locally-uncensored.yml` is RETIRED by PR #1194/#1195. No active recovery/watchdog subscription, freshness check or credential documentation remains. The contract validator rejects reintroduction without explicit owner authorization.
+- Historical checkpoint files may retain prior mirror-token failure notes as append-only evidence. Do not configure `PLATFORM_INFRA_MIRROR_TOKEN`; do not recreate or auto-add this integration.
+
+### Next actions
+1. Trigger/verify a read-only Platform inspection while separately monitoring for native `event=schedule` delivery. Keep all existing cron declarations unchanged.
+2. Obtain explicit StockDividend release authorization and protected Actions:read credential; then rerun publisher handoff and promote paired immutable digests through Platform Infra.
+3. Complete Auth/Supabase migration and integration review before merging gated Auth PRs or activating Auth.
+4. Run Media/Auth publisher E2E only after authorization; schedule host maintenance before reboot/upgrade.
+
+No production apply, promotion, database migration, secret mutation, replica change, Pod restart, VPS reboot or TCE market-scan schedule change occurred in this checkpoint.
