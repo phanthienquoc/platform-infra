@@ -140,6 +140,20 @@ if "branch: automation/vps-inspection-${{ github.run_id }}-${{ github.run_attemp
     fail("VPS inspection PRs must use a run/attempt-specific branch.")
 if 'EXPECTED_BRANCH="automation/vps-inspection-${RUN_ID}-${RUN_ATTEMPT}"' not in inspection:
     fail("VPS inspection PR validation must enforce the exact run/attempt-specific branch.")
+
+# Inspection merge must tolerate bounded GitHub API 5xx/network failures without
+# ever relaxing the exact validated PR-head check or merging a changed branch.
+for required in (
+    "max_merge_attempts=3",
+    "merge_confirmed=false",
+    "for ((attempt = 1; attempt <= max_merge_attempts; attempt++)); do",
+    'current_head" == "$PR_HEAD_SHA"',
+    'merge_http_status" =~ ^(000|500|502|503|504)$',
+    "retry_delay=$((attempt * 5))",
+    '[[ "$merge_confirmed" == "true" ]]'
+):
+    if required not in inspection:
+        fail(f"VPS inspection transient-merge retry contract is missing: {required}")
 if "HTTP (500|502|503|504)" not in recovery:
     fail("Read-only inspection recovery must retry transient GitHub HTTP 5xx dispatch failures.")
 
