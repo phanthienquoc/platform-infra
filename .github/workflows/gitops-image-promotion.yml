@@ -777,7 +777,7 @@ jobs:
                 --frontend-digest "$FRONTEND_DIGEST"
             fi
             grep -A2 "name: ghcr.io/phanthienquoc/$APP/" "$FILE"
-                    elif [[ "$APP" == "auth-service" && "$COMPONENT" == "auth" && -n "$AUTH_DIGEST" ]]; then
+          elif [[ "$APP" == "auth-service" && "$COMPONENT" == "auth" && -n "$AUTH_DIGEST" ]]; then
             python3 scripts/promote-auth-image-digest.py --file "$FILE" --digest "$AUTH_DIGEST"
             grep -A2 "name: ghcr.io/phanthienquoc/auth-service/auth" "$FILE"
           else
