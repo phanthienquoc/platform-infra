@@ -1,13 +1,13 @@
 # Cross-Repository Production Deployment Tracker
 
 Last reviewed: 2026-11-05 05:02 ICT (2026-11-04 22:02 UTC)
-Platform Infra master at checkpoint: 58cb64461beaf70f96fac0a3e4f5559b9efdb0b3
+Platform Infra master at checkpoint: fe243a7ecc652a720a813f93e669474bb858c848
 
 ## Repository readiness
 
 | Repository | Master SHA | Open PRs | Latest verified CI / publication |
 |---|---|---|---|
-| phanthienquoc/platform-infra | 58cb64461beaf70f96fac0a3e4f5559b9efdb0b3 | #1222, #544, #541, #539 (all draft) | Latest master inspection-state commit #1241 has no combined status contexts. Last verified master validation #41913017357 passed on prior SHA 1db9885573c8; it is not validation of current master. Current recovery fix is on branch fix/recovery-native-inspection-evidence-20261105-0502-ict. |
+| phanthienquoc/platform-infra | fe243a7ecc652a720a813f93e669474bb858c848 | #1222, #544, #541, #539 (all draft) | PR #1242 merged; exact-head #41923196096/#41923196112 and post-merge #41923323345/#41923323244 all PASS. Current master validation is green on fe243a7. |
 | phanthienquoc/TCE-dashboard | 52cecd5584e6c0a3daf0e2bcff6c89ca064e203d | None | Native WF-07 #41900042968 PASS at 02:45 ICT. Native WF-06 #41880229621 FAIL (all four public endpoints HTTP 503). Native WF-12 #41877745265 FAIL (freshness); workflow_run #41900072829 FAIL on delivery verification although authenticated Platform heartbeat notification passed. |
 | phanthienquoc/stockdividend | 50ba0dfb67eb3dfaa376db0c752bbef5b0817bec | None | CI #41563856934 PASS; immutable ARM64 publisher #41563856933 PASS. Scraper/Admin/Backend full-source-SHA images resolve to linux/arm64 digests. Production GitOps promotion is explicitly disabled by publisher gate; handoff validation and paired digest dispatch are SKIPPED. |
 | phanthienquoc/media-generation | e4c7d8990aafc7d837e918c9caf39722d623de7c | None | Media CI #41617592783 PASS. Latest runtime snapshot #1241 shows backend/frontend 1/1 with digest-pinned imageIDs. |
@@ -15,7 +15,7 @@ Platform Infra master at checkpoint: 58cb64461beaf70f96fac0a3e4f5559b9efdb0b3
 
 ## Current actions
 
-1. Fix the inspection recovery controller's event classification. Watchdog #41918315745 correctly failed because the latest native event=schedule inspection #41881867627 was 224 minutes old. Recovery #41918357799 then incorrectly considered manual inspection #41914913277 recent because its query included every event, and skipped the read-only fallback. The branch fix/recovery-native-inspection-evidence-20261105-0502-ict now separates native schedule freshness from workflow_dispatch fallback freshness and prevents duplicate fallback dispatches. Manual fallback never satisfies native schedule watchdog evidence.
+1. PR #1242 merged the inspection recovery event-classification fix. Watchdog #41918315745 correctly failed because native event=schedule inspection #41881867627 was 224 minutes old. Recovery #41918357799 had incorrectly treated manual inspection #41914913277 as native activity. The merged controller now queries native event=schedule and workflow_dispatch fallback runs separately, suppresses duplicate read-only fallbacks, and never treats manual fallback as native schedule evidence. Exact-head validation #41923196096/#41923196112 and post-merge validation #41923323345/#41923323244 all PASS. No native schedule run after the merge has yet been observed.
 2. Restore and verify native Platform schedule delivery independently for inspect-vps, reconcile-vps, recover-stale-ops, and reconcile-schedule-watchdog. Do not count workflow_dispatch, workflow_run, repository_dispatch, or reruns as native schedule evidence.
 3. Keep StockDividend production promotion disabled. The publisher explicitly logged that promotion is disabled; handoff validation and paired digest dispatch were skipped. Do not enable promotion without explicit release authorization. Preserve atomic Admin/Backend pairing.
 4. Resolve TCE service availability while preserving strict HTTP 200 endpoint assertions. Current TCE frontend/service and Auth/Keycloak desired replicas are 0/0 in the latest snapshot; heartbeat forwarding is not service health.
@@ -44,7 +44,7 @@ Platform Infra master at checkpoint: 58cb64461beaf70f96fac0a3e4f5559b9efdb0b3
 | recover-stale-ops.yml | 10,25,40,55 * * * * | #41914511298 at 04:16:19 ICT | PASS. Later #41918357799 at 04:41 ICT was workflow_run, not native schedule evidence. |
 | reconcile-schedule-watchdog.yml | 12,27,42,57 * * * * | #41918315745 at 04:40:44 ICT | FAIL: no native inspect-vps run within the 75-minute budget. The failed step explicitly reported latest native inspect #41881867627 age 224 minutes. |
 
-The recovery run #41918357799 succeeded but did not dispatch a fallback because it treated recent workflow_dispatch inspection #41914913277 as if it were native schedule activity. This is the defect addressed by the current branch. A successful manual fallback refreshes the snapshot but must not turn the native schedule watchdog green.
+The recovery run #41918357799 succeeded but did not dispatch a fallback because it treated recent workflow_dispatch inspection #41914913277 as if it were native schedule activity. PR #1242 fixes this event-classification defect. The post-merge push validations are not native schedule evidence; a later event=schedule recovery/inspection cycle is still required to verify the behavior in production. A successful manual fallback refreshes the snapshot but must not turn the native schedule watchdog green.
 
 TCE native schedule evidence:
 - WF-07 #41900042968 at 02:45:37 ICT: SUCCESS; Binance private API check passed; third-party order integration skipped.
@@ -65,6 +65,11 @@ TCE native schedule evidence:
 
 ## Current runtime and release references
 
+- Recovery event-classification fix PR #1242: https://github.com/phanthienquoc/platform-infra/pull/1242
+- PR #1242 exact-head validate-github-actions #41923196096: https://github.com/phanthienquoc/platform-infra/actions/runs/41923196096
+- PR #1242 exact-head validate-manifests #41923196112: https://github.com/phanthienquoc/platform-infra/actions/runs/41923196112
+- PR #1242 post-merge validate-github-actions #41923323345: https://github.com/phanthienquoc/platform-infra/actions/runs/41923323345
+- PR #1242 post-merge validate-manifests #41923323244: https://github.com/phanthienquoc/platform-infra/actions/runs/41923323244
 - Platform latest native reconcile #41917440202: https://github.com/phanthienquoc/platform-infra/actions/runs/41917440202
 - Platform native watchdog #41918315745: https://github.com/phanthienquoc/platform-infra/actions/runs/41918315745
 - Platform watchdog-triggered recovery #41918357799: https://github.com/phanthienquoc/platform-infra/actions/runs/41918357799
@@ -86,4 +91,4 @@ TCE native schedule evidence:
 
 ## Latest workflow inventory checkpoint
 
-[2026-11-05 05:02 ICT](cross-repo-workflow-inventory-checkpoints/2026-11-05-0502-ict.md) records the current five-repository heads/open PRs, native schedule evidence, Stock promotion hold, current K3s snapshot, and the inspection recovery event-classification defect.
+[2026-11-05 05:14 ICT](cross-repo-workflow-inventory-checkpoints/2026-11-05-0514-ict.md) records the current five-repository heads/open PRs, PR #1242 merge evidence, native schedule evidence, Stock promotion hold, current K3s snapshot, and remaining runtime blockers.
