@@ -5379,3 +5379,48 @@ No production promotion, manifest/credential/database mutation, Pod restart, rep
 - No production image promotion, manifest/credential/database mutation, replica/Pod change, host reboot or maintenance operation was performed.
 - `locally-uncensored-private` remains retired from active Platform workflows; do not restore its mirror or credentials without explicit authorization.
 - No TCE market-scan schedule or other cron declaration was changed.
+
+
+## Cross-repo readiness checkpoint — 2026-11-04 19:02 ICT / 12:02 UTC
+
+### Repository heads, open PRs and latest CI evidence
+
+| Repository | Current master | Open PRs | Latest relevant workflow evidence | Readiness |
+|---|---|---|---|---|
+| Platform Infra | `7b2eada1d42c5d9aae10da50d00a56dd39d1d9f1` | #1222 draft; #544/#541/#539 drafts | Master manifest validation #41822407438 PASS. Action validation #41821072245 PASS is on prior master `1bb34fb6`; #1222 manifest validation #41821355040 PASS only. | GitOps apply authority intact; native schedules stale. |
+| TCE Dashboard | `52cecd5584e6c0a3daf0e2bcff6c89ca064e203d` | None | WF-02 #41819221546 and WF-05 #41819221509 PASS on prior PR head `a1afaf1c`; no combined status checks returned for current master. Native WF-06 #41810552435 and WF-12 #41807645689 FAIL. | Public health degraded; keep HTTP 200 assertions. |
+| StockDividend | `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec` | None | CI #41563856934 PASS; immutable ARM64 publisher #41563856933 PASS. | Production Admin/new Backend still pull non-ARM64 tag `12d63b4`; paired digest promotion remains gated. |
+| Media Generation | `e4c7d8990aafc7d837e918c9caf39722d623de7c` | None | Media CI #41617592783 PASS. | Latest available K3s snapshot shows backend/frontend 1/1; snapshot is stale and no newer publisher E2E is observed. |
+| Authentication | `f978a3f378ee22d4630909c2d182275b21ac9e9a` | #75 ready; #76 draft | Auth CI #41670642852 PASS; PR #75/#76 exact-head validation previously passed, Supabase Preview skipped. | Auth/Keycloak remain 0/0 in latest snapshot; Supabase/migration gates remain closed. |
+
+### Native schedule delivery (only event=schedule is counted)
+
+- Platform inspect-vps #41809725184 at 16:45 ICT failed on an older workflow revision while pushing the reused branch `automation/vps-inspection`; the log shows GitHub remote `Internal Server Error` / HTTP 500. Current master has the per-run branch/rebase implementation from the later inspection workflow work, so this old failure is not evidence that the current revision repeats the same branch-collision path. No newer native schedule event was present at 19:02 ICT.
+- Platform reconcile-vps #41792374251 at 14:27 ICT failed only at StockDividend health. TCE, MicroFE, Auth and Media lanes succeeded; Keycloak lane was skipped. Stock Admin and new Backend Pods could not pull `12d63b4` because its manifest has no matching ARM64 platform.
+- Platform watchdog #41792527398 at 14:28 ICT failed its scheduled inspection freshness check. Latest native recovery schedule #41787641688 at 13:45 ICT was successful, but is now stale. No later native recovery schedule event was present at this checkpoint.
+- TCE WF-06 #41810552435 at 16:53 ICT failed all four strict public endpoint checks: TCE web, TCE API, Auth liveness and Auth readiness each returned HTTP 503 instead of 200. TCE WF-12 #41807645689 at 16:27 ICT failed because no WF-06 schedule run existed within its 25-minute freshness budget (the latest run then was #41762490285, 404 minutes old). WF-07 #41785211971 at 13:23 ICT passed.
+- Do not count push, workflow_run, repository_dispatch or rerun events as native schedule evidence. Preserve every cron declaration and the TCE market-scan cadence.
+
+### Latest K3s evidence (stale; not a current health claim)
+
+- Current master snapshot file `debug/vps-latest.md` was generated at 17:21:39 ICT (2026-11-04T10:21:39Z). No newer read-only inspection is available.
+- Node `tce-k3s-01`: Ready, ARM64, K3s `v1.36.3+k3s1`; Ubuntu 22.04.5; disk pressure normal at 55%; host still reports `restart_required: yes`.
+- Media backend/frontend, MicroFE Shell/WS and NATS: 1/1 Running.
+- Stock Admin (two Pods) and new Backend Pod: ImagePullBackOff on `ghcr.io/phanthienquoc/stockdividend/{admin,backend}:12d63b4`, with explicit `no match for platform in manifest`. Old Backend and legacy Frontend remain 1/1.
+- TCE frontend/service, MicroFE Auth and Keycloak: 0/0.
+- No production rollout, image promotion, credentials/database mutation, replica/Pod change or host reboot was performed.
+
+### PR #1222 security and deployment review
+
+- PR #1222 remains draft at head `f018e39eda52770539fc10671fba0d04baec8046`; its manifest validation #41821355040 PASS is not TypeScript or security validation.
+- Review comment #6629554340 identifies that `SHELL_UID/SHELL_GID` are parsed but not passed to `execFileAsync`, so the child process does not actually run under the dedicated `tce-shell` identity.
+- The proposed `docker_restart` and `k8s_rollout_restart` tools create production mutation paths outside `reconcile-vps.yml`, violating the single GitOps apply authority contract. Keep this PR draft and do not deploy until the UID/GID isolation is tested, all production mutations are removed or routed through GitOps, and reproducible build/tests/YAML/ShellCheck/lockfile validation exists.
+- Keycloak docs drafts #544/#541/#539 remain gated on the documented Supabase runtime role/password, protected production secret, JDBC configuration, DNS and architecture decision.
+
+### Ownership and guardrails
+
+- App repositories own tests/builds and immutable GHCR image publication. Platform Infra owns production manifests, shared GHCR pull credentials, source/digest verification, GitOps promotion/reconciliation, rollout and health.
+- `inspect-vps.yml` remains read-only. `reconcile-vps.yml` remains the sole production apply authority.
+- Preserve useful CI, test, security, manual, release and scheduled workflows. No direct SSH/Compose/MCP Docker/Kubectl mutation authority.
+- `locally-uncensored-private` remains retired from active Platform workflows; do not restore its mirror or credentials without explicit authorization.
+- TCE market-scan schedule and all cron declarations remain unchanged.
