@@ -3126,3 +3126,35 @@ Evidence:
 - Stock CI: https://github.com/phanthienquoc/stockdividend/actions/runs/41563856934
 - Media CI: https://github.com/phanthienquoc/media-generation/actions/runs/41617592783
 - Auth CI: https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41670642852
+
+
+## Cross-repo workflow inventory checkpoint — 2026-11-05 05:02 ICT / 2026-11-04 22:02 UTC
+
+# Cross-repo workflow inventory checkpoint — 2026-11-05 05:02 ICT / 2026-11-04 22:02 UTC
+
+- Platform Infra master: 58cb64461beaf70f96fac0a3e4f5559b9efdb0b3; open PRs #1222, #544, #541, #539 (all draft). TCE master 52cecd5584e6c0a3daf0e2bcff6c89ca064e203d; Stock master 50ba0dfb67eb3dfaa376db0c752bbef5b0817bec; Media master e4c7d8990aafc7d837e918c9caf39722d623de7c; Authentication master f978a3f378ee22d4630909c2d182275b21ac9e9a with PR #75 ready and #76 draft.
+- Platform native schedule events: inspect #41881867627 (00:55 ICT PASS, now stale); reconcile #41917440202 (04:35 ICT FAIL in Stock health); recovery #41914511298 (04:16 ICT PASS); watchdog #41918315745 (04:40 ICT FAIL because inspect age was 224 minutes).
+- Recovery bug: watchdog-triggered recovery #41918357799 succeeded but queried all inspect-vps events, so it treated manual workflow_dispatch #41914913277 at 04:18 ICT as native schedule activity and skipped fallback. The current branch fix/recovery-native-inspection-evidence-20261105-0502-ict separates event=schedule evidence from workflow_dispatch fallback activity. Manual fallback will never satisfy native schedule freshness; duplicate fallbacks are suppressed.
+- TCE: native WF-07 #41900042968 PASS at 02:45 ICT; WF-06 #41880229621 FAIL with four HTTP 503 probes; WF-12 #41877745265 FAIL on freshness; workflow_run #41900072829 FAIL on delivery verification although heartbeat notification passed.
+- Stock: CI #41563856934 and immutable ARM64 publisher #41563856933 PASS. Verified Scraper digest sha256:6b3ee2676268baf8ae2e77f68df3b730d797ea6192541710720d04585e99f8a2, Admin sha256:a5c2dbb1a0b6c417891e18256fd4c00a6e14e53a4c34939c12fc1e43c7f3339e, Backend sha256:cb0135fc57bc8a2514288105ab35cc59f4cb922555f028dbf97f44c077b76a9a. Production promotion explicitly disabled; handoff and paired dispatch SKIPPED.
+- Media CI #41617592783 PASS; snapshot #1241 backend/frontend 1/1 and digest-pinned.
+- Auth CI #41670642852 PASS; PR #75 exact-head #40446492086 PASS; PR #76 exact-head #41329425940 PASS; Supabase Preview SKIPPED.
+- K3s snapshot generated 04:19:01 ICT by workflow_dispatch inspection #41914913277 and merged by PR #1241. At 05:02 ICT age about 43 minutes. Node Ready/ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2, disk 56%, about 19 GiB RAM available. Media, MicroFE Shell/WS and NATS 1/1. Two Stock Admin Pods and new Backend Pod ImagePullBackOff; old Backend/Frontend 1/1. TCE frontend/service and Auth/Keycloak 0/0. Host restart_required=yes.
+- MCP PR #1222 remains draft: direct Docker/Kubernetes mutation, malformed literal backslash-n source/installer, missing SHELL_UID/GID forwarding and no reproducible lockfile/build/test/ShellCheck evidence.
+- App repos own tests/build/immutable GHCR. Platform owns manifests, shared pull credentials, provenance, paired promotion, reconciliation, rollout and health. reconcile-vps.yml sole apply authority; inspect-vps.yml read-only. No direct SSH/Compose/MCP mutation authority. locally-uncensored-private remains retired.
+- No production image/manifest/credential/database/Pod/replica/host mutation or cron change occurred. TCE market-scan schedule unchanged.
+
+Evidence:
+- Platform native inspect #41881867627: https://github.com/phanthienquoc/platform-infra/actions/runs/41881867627
+- Platform native reconcile #41917440202: https://github.com/phanthienquoc/platform-infra/actions/runs/41917440202
+- Platform watchdog #41918315745: https://github.com/phanthienquoc/platform-infra/actions/runs/41918315745
+- Platform recovery #41918357799: https://github.com/phanthienquoc/platform-infra/actions/runs/41918357799
+- Platform native recovery #41914511298: https://github.com/phanthienquoc/platform-infra/actions/runs/41914511298
+- Platform manual inspection #41914913277: https://github.com/phanthienquoc/platform-infra/actions/runs/41914913277
+- Snapshot PR #1241: https://github.com/phanthienquoc/platform-infra/pull/1241
+- TCE WF-07 #41900042968: https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41900042968
+- TCE WF-06 #41880229621: https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41880229621
+- TCE WF-12 #41877745265: https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41877745265
+- Stock publisher #41563856933: https://github.com/phanthienquoc/stockdividend/actions/runs/41563856933
+- Media CI #41617592783: https://github.com/phanthienquoc/media-generation/actions/runs/41617592783
+- Auth CI #41670642852: https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41670642852

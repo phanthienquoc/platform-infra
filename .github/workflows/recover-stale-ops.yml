@@ -418,47 +418,93 @@ jobs:
             exit 1
           }
 
-          runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/runs" -F branch=master -F per_page=100)"
-          latest="$(
-            jq -c \
-              --arg workflow_path ".github/workflows/inspect-vps.yml" \
-              '[
-                .workflow_runs[]
-                | select(.path == $workflow_path and .head_branch == "master")
-              ]
-              | sort_by(.created_at)
-              | last // empty' <<< "$runs"
-          )"
-          if [[ -z "$latest" ]]; then
-            age_seconds=$((MAX_INSPECTION_AGE_MINUTES * 60 + 1))
-            latest_id="none"
-          else
-            latest_id="$(jq -r '.id' <<< "$latest")"
-            status="$(jq -r '.status // empty' <<< "$latest")"
-            if [[ "$status" != "completed" ]]; then
-              echo "Inspection run #$latest_id is $status; avoiding a duplicate dispatch."
+          # Native schedule evidence and read-only fallback activity are separate signals.
+          # A recent workflow_dispatch must never be treated as a native cron delivery.
+          native_runs="$(gh api -X GET \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs" \
+            -f event=schedule -F branch=master -F per_page=100)"
+          native_latest="$(jq -c '.workflow_runs | sort_by(.created_at) | last // empty' <<< "$native_runs")"
+          native_age_seconds=$((MAX_INSPECTION_AGE_MINUTES * 60 + 1))
+          native_latest_id="none"
+
+          if [[ -n "$native_latest" ]]; then
+            native_latest_id="$(jq -r '.id' <<< "$native_latest")"
+            native_status="$(jq -r '.status // empty' <<< "$native_latest")"
+            if [[ "$native_status" != "completed" ]]; then
+              echo "Native scheduled inspection #$native_latest_id is $native_status; avoiding a duplicate fallback."
               exit 0
             fi
-            conclusion="$(jq -r '.conclusion // "unknown"' <<< "$latest")"
-            if [[ "$conclusion" != "success" ]]; then
-              echo "::warning::Latest master inspection #$latest_id completed with conclusion=$conclusion."
-              echo "::warning::dispatching a read-only fallback."
-              age_seconds=$((MAX_INSPECTION_AGE_MINUTES * 60 + 1))
+
+            native_conclusion="$(jq -r '.conclusion // "unknown"' <<< "$native_latest")"
+            native_created_at="$(jq -r '.created_at // empty' <<< "$native_latest")"
+            native_created_epoch="$(jq -r 'if .created_at then (.created_at | fromdateiso8601) else empty end' <<< "$native_latest")"
+            [[ -n "$native_created_at" && "$native_created_epoch" =~ ^[0-9]+$ ]] || {
+              echo "::error::Latest native scheduled inspection #$native_latest_id has no usable created_at timestamp."
+              exit 1
+            }
+            native_age_seconds=$((REFERENCE_EPOCH - native_created_epoch))
+            (( native_age_seconds >= 0 )) || {
+              echo "::error::Native scheduled inspection #$native_latest_id is newer than the recovery API clock."
+              exit 1
+            }
+            if [[ "$native_conclusion" != "success" ]]; then
+              echo "::warning::Latest native scheduled inspection #$native_latest_id concluded $native_conclusion."
+              native_age_seconds=$((MAX_INSPECTION_AGE_MINUTES * 60 + 1))
             else
-              activity_at="$(jq -r '.updated_at // .run_started_at // .created_at' <<< "$latest")"
-              activity_epoch="$(jq -r '(.updated_at // .run_started_at // .created_at) | fromdateiso8601' <<< "$latest")"
-              age_seconds=$((REFERENCE_EPOCH - activity_epoch))
-              (( age_seconds >= 0 )) || {
-                echo "::error::Inspection activity timestamp is newer than the recovery API clock."
-                exit 1
-              }
-              echo "Latest master inspection run #$latest_id: last_activity=$activity_at, age=$((age_seconds / 60))m."
+              echo "Latest native scheduled inspection #$native_latest_id: age=$((native_age_seconds / 60))m conclusion=$native_conclusion."
             fi
+          else
+            echo "::warning::No native scheduled inspect-vps run is available in GitHub Actions history."
           fi
 
-          if (( age_seconds <= MAX_INSPECTION_AGE_MINUTES * 60 )); then
-            echo "Inspection delivery is recent; no fallback dispatch needed."
+          if (( native_age_seconds <= MAX_INSPECTION_AGE_MINUTES * 60 )); then
+            echo "Native scheduled inspection is fresh; no fallback dispatch needed."
             exit 0
+          fi
+
+          printf '%s\n' \
+            "::warning::Native inspection schedule remains stale (latest native run #$native_latest_id);" \
+            "checking read-only fallback activity separately."
+
+          fallback_runs="$(gh api -X GET \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs" \
+            -f event=workflow_dispatch -F branch=master -F per_page=100)"
+          fallback_latest="$(jq -c '.workflow_runs | sort_by(.created_at) | last // empty' <<< "$fallback_runs")"
+          if [[ -n "$fallback_latest" ]]; then
+            fallback_id="$(jq -r '.id' <<< "$fallback_latest")"
+            fallback_status="$(jq -r '.status // empty' <<< "$fallback_latest")"
+            if [[ "$fallback_status" != "completed" ]]; then
+              printf '%s\n' \
+                "Recent read-only workflow_dispatch fallback #$fallback_id is $fallback_status;" \
+                "avoiding a duplicate fallback. Native schedule remains stale."
+              exit 0
+            fi
+
+            fallback_conclusion="$(jq -r '.conclusion // "unknown"' <<< "$fallback_latest")"
+            if [[ "$fallback_conclusion" == "success" ]]; then
+              fallback_activity_epoch="$(jq -r \
+                '(.updated_at // .run_started_at // .created_at // empty) | fromdateiso8601' \
+                <<< "$fallback_latest")"
+              [[ "$fallback_activity_epoch" =~ ^[0-9]+$ ]] || {
+                echo "::error::Read-only fallback inspection #$fallback_id has no usable activity timestamp."
+                exit 1
+              }
+              fallback_age_seconds=$((REFERENCE_EPOCH - fallback_activity_epoch))
+              (( fallback_age_seconds >= 0 )) || {
+                echo "::error::Read-only fallback inspection #$fallback_id is newer than the recovery API clock."
+                exit 1
+              }
+              if (( fallback_age_seconds <= MAX_INSPECTION_AGE_MINUTES * 60 )); then
+                printf '%s\n' \
+                  "Recent workflow_dispatch inspection fallback #$fallback_id is fresh (age=$((fallback_age_seconds / 60))m);" \
+                  "no duplicate fallback needed. Native schedule remains stale and the watchdog must continue to report it."
+                exit 0
+              fi
+            else
+              printf '%s\n' \
+                "::warning::Latest read-only workflow_dispatch fallback #$fallback_id concluded $fallback_conclusion;" \
+                "a new fallback will be attempted."
+            fi
           fi
 
           dispatch_sha="$(gh api "repos/${GITHUB_REPOSITORY}/commits/master" --jq .sha)"
@@ -466,7 +512,9 @@ jobs:
             echo "::error::Unable to resolve the exact master SHA for inspection dispatch."
             exit 1
           }
-          echo "::warning::No recent master inspection run; dispatching the existing read-only inspection workflow."
+          printf '%s\n' \
+            "::warning::No fresh read-only inspection fallback exists while native schedule evidence is stale;" \
+            "dispatching the existing read-only inspection workflow."
           echo "Dispatch payload: ref=master sha=$dispatch_sha (no inputs)"
 
           # GitHub occasionally returns HTTP 5xx for workflow dispatch requests.
@@ -515,7 +563,7 @@ jobs:
             if [[ -n "$dispatched_run" ]]; then
               run_id="$(jq -r '.id' <<< "$dispatched_run")"
               run_url="$(jq -r '.html_url' <<< "$dispatched_run")"
-              echo "Verified fallback inspection dispatch: #$run_id $run_url"
+              echo "Verified read-only workflow_dispatch fallback: #$run_id $run_url (does not satisfy native schedule freshness)."
               exit 0
             fi
             echo "Waiting for inspection workflow_dispatch correlation (attempt $attempt/6)..."
