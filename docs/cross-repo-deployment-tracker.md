@@ -859,7 +859,7 @@ This review rechecked all five master refs, open PRs, latest workflow runs/check
 
 ## Latest automation review (2026-11-01 14:05 UTC; StockDividend full-SHA ARM64 publication verified)
 
-Last reviewed: 2026-11-01 14:05 UTC. This review starts from current master refs, open PRs, latest Actions runs, the existing tracker, and current publisher logs. It records successful immutable publication for StockDividend commit `1559097`, a cancelled six-hour weekend scraper run, and a new narrow scraper optimization PR. Production promotion remains disabled; no production workload mutation occurred.
+Last reviewed: 2026-11-04 00:00 UTC (07:00 ICT). The latest runtime verification and exact evidence are appended below.
 
 - Current master heads: platform-infra `988f88a30b0fd1039ee78674cfdc7b9735e44dea`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `1559097da834652e2f6dfbd5a8d012a526f0133b`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
 - Open PRs: platform-infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #76/#75; StockDividend #23; none in TCE Dashboard or Media Generation. StockDividend #22 is merged as `1559097`.
@@ -4517,3 +4517,42 @@ No production image promotion, GitOps manifest apply, database migration, shared
 - Owner actions remain unchanged: provide destination-only Mirror token, verify Stock protected Actions-read token and authorize paired ARM64 release, complete Auth/Supabase review, and arrange host maintenance window.
 
 No production image promotion, manifest apply, database migration, shared pull-secret mutation, replica change, Pod restart or host reboot occurred. `reconcile-vps.yml` remains the sole production apply authority. No direct SSH/Compose deployment authority or cron change was introduced; TCE market-scan schedule unchanged.
+
+
+## Runtime verification update — 2026-11-04 07:00 ICT / 00:00 UTC
+
+### Repository state, open PRs and latest checks
+- **Current master heads:** Platform Infra `d9d71bab60bb49dbdf68e85b93f1bc71d5b03880`; TCE Dashboard `53227425841b6283bebad3bc5c93d509bd8a316a`; StockDividend `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media Generation `e4c7d8990aafc7d837e918c9caf39722d623de7c`; Authentication `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
+- Platform PR #1175 is merged; its master commit updates the read-only VPS inspection snapshot at 23:20 UTC. Open PRs: Platform #544/#541/#539 (all draft); Authentication #75 (ready) and #76 (draft); no open PRs in TCE, StockDividend or Media.
+- Exact-head PR-triggered checks remain successful: Platform #544 #38575430454, #541 #38567431761, #539 #38548718033; Auth #75 #40446492086 and #76 #41329425940. These checks do not clear the Auth/Supabase production integration and migration review gates.
+- Latest observed Platform master run is watchdog #41738969152 (workflow_run, skipped); latest recovery #41738925054 (repository_dispatch, success). The newer validation run #41738376640 is workflow_dispatch on `automation/vps-inspection` SHA `727a4605e998b1e38a8966e2621fa33c63cfafa9`, not a master or native-schedule check.
+- TCE latest observed native runs: WF-07 backup #41739787575 (23:31:10Z, success), WF-07 integration #41738887996 (23:24:25Z, success), WF-06 healthcheck #41731424392 (22:30:44Z, failure), WF-12 watchdog #41727501039 (22:04:27Z, failure).
+- StockDividend master CI #41563856934 and publisher #41563856933 passed on master SHA `50ba0dfb`; publisher's production release gate remained false and Platform handoff/dispatch were skipped. Media CI #41617592783 passed. Auth master CI #41670642852 passed; no Auth manual publisher/dispatch was observed.
+
+### Latest native schedule evidence (event=schedule only)
+- Platform mirror #41737911916 (23:17:07Z) failed because `PLATFORM_INFRA_MIRROR_TOKEN` is absent.
+- Platform inspection #41726305748 (21:56:27Z) passed. Its newer read-only manual inspection #41738272391 (23:19:51Z) passed and produced the snapshot generated at 23:20:00Z, but is not native schedule evidence.
+- Platform watchdog #41715283880 (20:44:07Z) failed stale-operation freshness; reconciliation #41714763176 (20:40:42Z) failed only StockDividend workload health; recovery #41703551669 (19:28:20Z) passed.
+- TCE WF-06 #41731424392 still fails strict HTTP 200 probes (all four public TCE/Auth endpoints returned HTTP 503). WF-12 #41727501039 failed its schedule-freshness gate. WF-07 backup and integration native schedules passed as listed above.
+- Recovery/workflow_run/repository_dispatch runs are not counted as native schedule ticks. Do not alter any cron declaration or the TCE market-scan schedule.
+
+### Latest reconciliation and production evidence
+- Reconciliation #41737965410 was an explicit manual `workflow_dispatch` with `mode=apply`, `target_app=all`, and `ALLOW_IMAGE_CHANGES=false`. Shared preflight and GHCR pull-access checks passed for all private production images.
+- The same run provisioned/re-applied the existing Auth runtime Secret from protected production Environment inputs; values were suppressed. The four shared `ghcr-pull` namespace Secrets reported `unchanged`. No database migration or Auth/Keycloak scale-up was run.
+- GitOps drift was false, so production manifest apply and post-apply drift checks were skipped. The StockDividend health lane failed; MicroFE, Media, TCE and Auth lanes passed their configured contracts; Keycloak was skipped. The Stock image-pull recovery helper classified both Admin and Backend failures as permanent and skipped rollout restarts.
+- Stock failure log: two Admin Pods and the new Backend Pod pull tag `12d63b4` and report `no match for platform in manifest`. Existing Backend and legacy Frontend remain 1/1 on `23b2878`. This is an image architecture/release blocker, not a pull-secret failure.
+
+### Fresh read-only K3s snapshot
+- `debug/vps-latest.md` was regenerated by inspection #41738272391 at 2026-11-03T23:20:00Z. Node `tce-k3s-01` is Ready/ARM64; Ubuntu 22.04.5; K3s v1.36.3+k3s1; containerd 2.3.2-k3s2; Docker 29.1.3; disk 55%; about 19 GiB available RAM. Platform and Media runner services are active; runner policy v14 is installed.
+- Host reports `restart_required: yes`; pending updates include containerd 2.4.2-3 and Docker 29.9.2 plus Ubuntu packages. No maintenance/reboot was performed.
+- Media backend/frontend, MicroFE Shell/WS and NATS are 1/1. Stock Admin has two `ImagePullBackOff` Pods; the new Backend Pod is also `ImagePullBackOff`; old Backend and legacy Frontend remain 1/1. TCE frontend/service, Auth and Keycloak remain 0/0. Public Keycloak OIDC probes return HTTP 503.
+- Live image inventory confirms Media and MicroFE workloads use digest-pinned references; Stock Admin/Backend still use `12d63b4` without a resolved imageID. Do not promote or mutate image references until the paired ARM64 release is authorized.
+
+### Owner gates and next actions
+1. Configure `PLATFORM_INFRA_MIRROR_TOKEN` with destination-only `Contents:write` on `phanthienquoc/locally-uncensored-private`; do not substitute GHCR or app-release tokens.
+2. Verify `STOCKDIVIDEND_ACTIONS_READ_TOKEN` in the protected production Environment and explicitly authorize the paired Admin/Backend ARM64 release. Keep the production release gate closed until both are satisfied.
+3. Keep Auth PR #75 behind authoritative Supabase integration/migration side-effect review and #76 behind migration provenance/drift review. Media/Auth paired publisher E2E remains release-authorized work.
+4. Preserve strict TCE HTTP 200 checks. TCE/Auth/Keycloak remain intentionally scale-to-zero; activation requires explicit approval and verified runtime credentials/DB readiness.
+5. Arrange a maintenance window before Ubuntu/containerd/Docker upgrades or host reboot.
+
+No production image promotion, GitOps manifest apply, database migration, shared GHCR pull-Secret change, desired replica change, Pod restart or host reboot occurred in the latest reconciliation. The existing Auth runtime Secret was re-applied with values suppressed. `reconcile-vps.yml` remains the sole production apply authority; no SSH/Compose authority was added. TCE market-scan schedule unchanged.
