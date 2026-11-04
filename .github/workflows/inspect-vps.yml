@@ -126,6 +126,48 @@ jobs:
           REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
+
+          github_api_get() {
+            local url="$1"
+            local response_file="$2"
+            local max_get_attempts=3
+            local attempt=1
+            local status
+            local retry_delay
+
+            while (( attempt <= max_get_attempts )); do
+              : > "$response_file"
+              if status="$(curl --silent --show-error \
+                --output "$response_file" \
+                --write-out '%{http_code}' \
+                -H "Accept: application/vnd.github+json" \
+                -H "Authorization: Bearer $GH_TOKEN" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                "$url")"; then
+                :
+              else
+                status="000"
+              fi
+
+              if [[ "$status" == "200" ]]; then
+                cat "$response_file"
+                return 0
+              fi
+
+              if [[ "$status" =~ ^(000|500|502|503|504)$ ]] && (( attempt < max_get_attempts )); then
+                retry_delay=$((attempt * 5))
+                echo "::warning::Transient GitHub API GET failure HTTP $status; retrying in ${retry_delay}s (attempt $((attempt + 1))/$max_get_attempts)." >&2
+                sleep "$retry_delay"
+                attempt=$((attempt + 1))
+                continue
+              fi
+
+              echo "::error::GitHub API GET failed with HTTP $status: $url" >&2
+              return 1
+            done
+
+            return 1
+          }
           [[ "$PR_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Missing or invalid inspection PR head SHA." >&2; exit 1; }
           EXPECTED_BRANCH="automation/vps-inspection-${RUN_ID}-${RUN_ATTEMPT}"
           [[ "$PR_BRANCH" == "$EXPECTED_BRANCH" ]] || { echo "Unexpected inspection PR branch: $PR_BRANCH (expected $EXPECTED_BRANCH)" >&2; exit 1; }
@@ -143,14 +185,9 @@ jobs:
           deadline=$((SECONDS + 900))
           validation_run=""
           while (( SECONDS < deadline )); do
-            runs_json="$(curl --fail --silent --show-error -G \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer $GH_TOKEN" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              "https://api.github.com/repos/$REPOSITORY/actions/workflows/validate-manifests.yml/runs" \
-              --data-urlencode "branch=$PR_BRANCH" \
-              --data-urlencode "event=workflow_dispatch" \
-              --data-urlencode "per_page=20")"
+            encoded_branch="$(printf '%s' "$PR_BRANCH" | jq -sRr @uri)"
+            runs_url="https://api.github.com/repos/$REPOSITORY/actions/workflows/validate-manifests.yml/runs?branch=$encoded_branch&event=workflow_dispatch&per_page=20"
+            runs_json="$(github_api_get "$runs_url" "$RUNNER_TEMP/inspection-validation-runs.json")"
             validation_run="$(jq -c --arg sha "$PR_HEAD_SHA" --arg started "$started_at" \
               '[.workflow_runs[] | select(.head_sha == $sha and .event == "workflow_dispatch" and .created_at >= $started)] | sort_by(.created_at) | last // empty' \
               <<< "$runs_json")"
@@ -173,11 +210,7 @@ jobs:
             exit 1
           fi
 
-          pr_json="$(curl --fail --silent --show-error \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/$REPOSITORY/pulls/$PR_NUMBER")"
+          pr_json="$(github_api_get "https://api.github.com/repos/$REPOSITORY/pulls/$PR_NUMBER" "$RUNNER_TEMP/inspection-pr-pre-merge.json")"
           [[ "$(jq -r '.state' <<< "$pr_json")" == "open" ]] || { echo "Inspection PR is no longer open; refusing merge." >&2; exit 1; }
           [[ "$(jq -r '.head.sha' <<< "$pr_json")" == "$PR_HEAD_SHA" ]] || { echo "Inspection PR head changed after validation; refusing merge." >&2; exit 1; }
           [[ "$(jq -r '.head.ref' <<< "$pr_json")" == "$PR_BRANCH" ]] || { echo "Inspection PR branch changed after validation; refusing merge." >&2; exit 1; }
@@ -188,11 +221,7 @@ jobs:
           merge_confirmed=false
 
           for ((attempt = 1; attempt <= max_merge_attempts; attempt++)); do
-            current_pr_json="$(curl --fail --silent --show-error \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer $GH_TOKEN" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              "https://api.github.com/repos/$REPOSITORY/pulls/$PR_NUMBER")"
+            current_pr_json="$(github_api_get "https://api.github.com/repos/$REPOSITORY/pulls/$PR_NUMBER" "$RUNNER_TEMP/inspection-pr-current.json")"
             current_state="$(jq -r '.state // empty' <<< "$current_pr_json")"
             current_head="$(jq -r '.head.sha // empty' <<< "$current_pr_json")"
             current_merged="$(jq -r '.merged // false' <<< "$current_pr_json")"
@@ -228,11 +257,7 @@ jobs:
                 exit 1
               }
 
-              merged_pr_json="$(curl --fail --silent --show-error \
-                -H "Accept: application/vnd.github+json" \
-                -H "Authorization: Bearer $GH_TOKEN" \
-                -H "X-GitHub-Api-Version: 2022-11-28" \
-                "https://api.github.com/repos/$REPOSITORY/pulls/$PR_NUMBER")"
+              merged_pr_json="$(github_api_get "https://api.github.com/repos/$REPOSITORY/pulls/$PR_NUMBER" "$RUNNER_TEMP/inspection-pr-merged.json")"
               [[ "$(jq -r '.merged // false' <<< "$merged_pr_json")" == "true" ]] || {
                 echo "GitHub did not report the inspection PR as merged after the merge request." >&2
                 exit 1
@@ -251,11 +276,7 @@ jobs:
               break
             fi
 
-            if after_merge_pr="$(curl --fail --silent --show-error \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer $GH_TOKEN" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              "https://api.github.com/repos/$REPOSITORY/pulls/$PR_NUMBER")"; then
+            if after_merge_pr="$(github_api_get "https://api.github.com/repos/$REPOSITORY/pulls/$PR_NUMBER" "$RUNNER_TEMP/inspection-pr-after-merge.json")"; then
               after_merge_state="$(jq -r '.state // empty' <<< "$after_merge_pr")"
               after_merge_head="$(jq -r '.head.sha // empty' <<< "$after_merge_pr")"
               after_merge_merged="$(jq -r '.merged // false' <<< "$after_merge_pr")"
