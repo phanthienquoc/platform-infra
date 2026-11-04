@@ -119,7 +119,7 @@ async function run(
 ): Promise<{ stdout: string; stderr: string; exitCode: number }> {
   try {
     const result = await execFileAsync(file, args, {
-      cwd: options.cwd,
+      ...(options.cwd ? { cwd: options.cwd } : {}),
       timeout: Math.min(options.timeout ?? 15_000, MAX_COMMAND_MS),
       maxBuffer: MAX_OUTPUT,
       windowsHide: true,
