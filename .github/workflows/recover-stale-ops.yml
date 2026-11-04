@@ -494,7 +494,7 @@ jobs:
             fi
           fi
 
-                    dispatch_sha="$(gh api "repos/${GITHUB_REPOSITORY}/commits/master" --jq .sha)"
+          dispatch_sha="$(gh api "repos/${GITHUB_REPOSITORY}/commits/master" --jq .sha)"
           [[ "$dispatch_sha" =~ ^[0-9a-f]{40}$ ]] || {
             echo "::error::Unable to resolve the exact master SHA for inspection dispatch."
             exit 1
