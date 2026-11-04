@@ -780,7 +780,7 @@ Last reviewed: 2026-10-31 12:03 ICT. Inventory is based on the workflow files pr
 | `.github/workflows/validate-recovery-readiness.yml` | Recovery readiness gate. | Preserve. |
 | `.github/workflows/bootstrap-runner.yml` | Self-hosted runner bootstrap/update. | Infrastructure bootstrap; not an app release lane. |
 | `.github/workflows/vps-image-cleanup.yml` | VPS image cleanup. | Maintenance job; keep separate from release/reconcile authority. |
-| `.github/workflows/mirror-locally-uncensored.yml` | Scheduled repository mirror. | Recent scheduled runs failed; investigate independently, but do not remove without proving it obsolete. |
+| `.github/workflows/mirror-locally-uncensored.yml` | Historical workflow; removed by owner-directed PR #1194. | DETACHED. Do not recreate or restore without explicit owner authorization. |
 
 ## TCE-dashboard — application CI and release producer
 
@@ -2523,3 +2523,36 @@ Auth PR #75/#76 both have current visible validate checks SUCCESS and Supabase P
 - `reconcile-vps.yml` remains the sole production apply authority. No duplicate direct SSH/Compose deployment authority. Preserve purposeful CI/test/security/manual/release/scheduled jobs.
 - Owner gates: destination-only Mirror Contents:write token; protected Stock Actions:read token plus explicit paired ARM64 release authorization; Auth/Supabase integration/migration review; Media/Auth publisher E2E authorization; host maintenance window.
 - No production promotion, manifest apply, DB migration, shared pull-secret mutation, release enablement, replica change, Pod restart or VPS reboot in this checkpoint. TCE market-scan schedule unchanged.
+
+
+## Cross-repository deployment checkpoint — 2026-11-04 10:58 ICT / 03:58 UTC
+
+### Repository heads and pull requests
+- Platform Infra master: `cce9a1755c48f0695ba4ef523fd8a7f43b93fec3` (PR #1194 merged). Follow-up contract cleanup is on branch `fix/retire-locally-uncensored-contracts`.
+- TCE Dashboard master: `a355ce070204cff209df1c9ba38843c972647860`; no open PRs.
+- StockDividend master: `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; no open PRs.
+- Media Generation master: `e4c7d8990aafc7d837e918c9caf39722d623de7c`; no open PRs.
+- Authentication master: `f978a3f378ee22d4630909c2d182275b21ac9e9a`; open PRs #75 (ready) and #76 (draft).
+- Other open Platform Infra PRs: #544, #541 and #539 (all drafts). TCE, StockDividend and Media have no open PRs.
+
+### Detached integration — owner-directed
+- PR #1194 merged at 04:00:24 UTC as `cce9a1755c48f0695ba4ef523fd8a7f43b93fec3`; it removes `.github/workflows/mirror-locally-uncensored.yml`. The private destination repository is not deleted.
+- The exact-head validation run #41770293998 failed because the workflow-contract validator still required the deleted mirror file; manifest validation #41770294038 passed. The PR was merged before this contract dependency was corrected.
+- Follow-up branch `fix/retire-locally-uncensored-contracts` removes the mirror subscriptions from recovery/watchdog, removes mirror freshness monitoring and obsolete credential documentation, and changes workflow-contract validation to fail if the mirror workflow is reintroduced without explicit owner authorization.
+- Historical mirror run evidence in this append-only inventory is retained as history, not as an active deployment requirement. Do not restore the mirror workflow, its schedule, or its recovery/watchdog hooks unless the owner explicitly requests it.
+
+### Current workflow ownership
+- App repositories remain responsible for tests/builds and immutable GHCR publication: TCE Dashboard, StockDividend, Media Generation and Authentication.
+- Platform Infra remains responsible for production manifests, shared GHCR pull credentials, publisher provenance/digest validation, GitOps promotion/reconciliation, K3s rollout and health verification.
+- `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` is read-only. No direct SSH/Compose deployment authority is introduced.
+- Preserve purposeful CI, tests, security, backups, manual/release/maintenance and scheduled jobs. TCE market-scan schedules are unchanged.
+
+### Readiness and owner gates
+- Latest recorded checkpoint before this update (09:55 ICT) showed Platform reconciliation blocked by StockDividend Admin/Backend ARM64 image-manifest mismatch; TCE public WF-06 checks returned HTTP 503 while TCE/Auth were scaled to zero; Media runtime was 1/1; Auth remained 0/0 pending Supabase/migration review.
+- StockDividend production release remains disabled. Do not promote until the protected Actions-read credential and explicit paired ARM64 release authorization are present.
+- Auth PR #75/#76 remain gated on Supabase production integration side effects and migration provenance/drift review. A skipped Supabase Preview is not production integration evidence.
+- Media/Auth publisher E2E and VPS maintenance-window gates remain unresolved in the latest recorded runtime checkpoint.
+- Latest exact PR check evidence available in this run is #41770293998 (workflow-contract failure described above) and #41770294038 (manifest validation success). The connector does not expose a repository-wide Actions run listing in this session; do not infer newer native schedule or live K3s health results from old checkpoints.
+
+### Safety
+- No production manifest/image reference, release-enable flag, shared GHCR credential, database object, replica, pod, or TCE market-scan schedule was changed by this checkpoint.

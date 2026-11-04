@@ -53,10 +53,18 @@ promotion = read("gitops-image-promotion.yml")
 recovery = read("recover-stale-ops.yml")
 watchdog = read("reconcile-schedule-watchdog.yml")
 inspection = read("inspect-vps.yml")
-mirror = read("mirror-locally-uncensored.yml")
 lane_queue = (ROOT / "scripts" / "verify-reconcile-lane-queue.py").read_text(encoding="utf-8")
 provision = read("provision-keycloak-tce-client.yml")
 cleanup = read("vps-image-cleanup.yml")
+
+# The private locally-uncensored mirror is intentionally detached by owner request.
+# Keep it out of the active workflow set until the owner explicitly asks to restore it.
+if (WORKFLOW_DIR / "mirror-locally-uncensored.yml").exists():
+    fail("locally-uncensored mirror must remain detached until explicit owner authorization.")
+for active_workflow in (recovery, watchdog):
+    if "mirror-locally-uncensored" in active_workflow or "Mirror locally-uncensored into private repository" in active_workflow:
+        fail("Recovery/watchdog must not subscribe to the detached locally-uncensored mirror.")
+
 
 # Manual reconciliation must be non-mutating unless an operator explicitly
 # selects apply. Scheduled, push and authenticated promotion events keep their
@@ -136,11 +144,10 @@ if '".github/workflows/vps-image-cleanup.yml"' in cleanup_push_paths:
 expected_recovery_sources = """    workflows:
       - "reconcile-vps"
       - "inspect-vps"
-      - "Mirror locally-uncensored into private repository"
       - "Reconcile Schedule Freshness Watchdog"
 """
 if expected_recovery_sources not in recovery or "types: [completed]" not in recovery:
-    fail("Recovery controller must run after master reconciliation, scheduled inspection, mirror, and schedule-watchdog completion.")
+    fail("Recovery controller must run after master reconciliation, scheduled inspection, and schedule-watchdog completion.")
 
 watchdog_recovery_gate = """             (github.event.workflow.path == '.github/workflows/reconcile-schedule-watchdog.yml' &&
               github.event.workflow_run.event == 'schedule' &&
@@ -320,8 +327,6 @@ if "github.event.workflow.path == '.github/workflows/reconcile-vps.yml'" not in 
     fail("Recovery must identify reconciliation completions by the workflow resource path.")
 if "github.event.workflow.path == '.github/workflows/inspect-vps.yml'" not in recovery or "github.event.workflow_run.event == 'schedule'" not in recovery:
     fail("Only scheduled master inspection completions may trigger reconciliation recovery.")
-if "github.event.workflow.path == '.github/workflows/mirror-locally-uncensored.yml'" not in recovery or "github.event.workflow_run.event == 'schedule'" not in recovery:
-    fail("Only scheduled master mirror completions may act as the independent recovery heartbeat.")
 source_verification_index = recovery.find("- name: Verify and await source reconciliation completion")
 reference_clock_index = recovery.find("- name: Resolve GitHub Actions API reference clock")
 if source_verification_index < 0 or reference_clock_index < 0 or source_verification_index > reference_clock_index:
@@ -1263,10 +1268,10 @@ for required in (
 for forbidden in ("platform-kubectl", "scripts/reconcile-vps.sh", "kubectl apply", "docker compose", "ssh "):
     if forbidden in recovery:
         fail(f"Schedule recovery must dispatch existing GitHub workflows only, not deploy directly: {forbidden}")
-if "workflow_run:" not in watchdog or "      - inspect-vps" not in watchdog or "      - reconcile-vps" not in watchdog or "      - Mirror locally-uncensored into private repository" not in watchdog:
-    fail("The watchdog must run after scheduled reconciliation, inspection, and the independent mirror heartbeat.")
+if "workflow_run:" not in watchdog or "      - inspect-vps" not in watchdog or "      - reconcile-vps" not in watchdog or "      - Recover Stale Scheduled Ops" not in watchdog:
+    fail("The watchdog must run after scheduled reconciliation, inspection, and recovery-controller completions.")
 if "      - completed" not in watchdog or "github.event.workflow_run.event == 'schedule'" not in watchdog:
-    fail("The watchdog fallback must be limited to completed scheduled reconcile-vps/inspect-vps/mirror runs.")
+    fail("The watchdog fallback must be limited to completed scheduled reconcile-vps/inspect-vps/recovery runs.")
 if '"/repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs"' in watchdog:
     fail("The watchdog gh api endpoint must not start with a slash.")
 if '"repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs"' not in watchdog:
@@ -1307,8 +1312,8 @@ if "bash scripts/tests/restart-blocked-image-pulls.test.sh" not in actions_valid
 # scheduled/manual/fallback invocations must continue to fail closed on stale data.
 if '  push:\n    branches: [master]\n    paths:\n      - ".github/workflows/reconcile-schedule-watchdog.yml"' not in watchdog:
     fail("The watchdog must run a path-scoped post-merge API smoke check on master.")
-if watchdog.count('if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then') != 15:
-    fail("Only the watchdog's empty-history, disabled-workflow, queue-delay, stale-history, inspection-result, mirror-result, and recovery-result guards may be warn-only for push smoke runs.")
+if watchdog.count('if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then') != 11:
+    fail("Only the watchdog's empty-history, disabled-workflow, queue-delay, stale-history, inspection-result, and recovery-result guards may be warn-only for push smoke runs.")
 if '::warning::Read-only API smoke succeeded' not in watchdog:
     fail("The watchdog push smoke must clearly label stale/missing schedule or queue data as a warning, not health success.")
 if '::error::No scheduled reconcile-vps run within ${MAX_AGE_MINUTES} minutes.' not in watchdog:
@@ -1363,7 +1368,7 @@ if 'actions/runs/${GITHUB_RUN_ID}' not in watchdog:
 if "age_seconds=$((reference_epoch - created_epoch))" not in watchdog:
     fail("Scheduled reconciliation freshness must use the GitHub API reference timestamp.")
 reconcile_freshness_block = watchdog.split("name: Inspect latest scheduled reconcile run", 1)[1].split(
-    "name: Verify scheduled mirror delivery and result", 1
+    "name: Report latest scheduled inspection runner queue delay", 1
 )[0]
 if "age_seconds > MAX_AGE_MINUTES * 60" not in reconcile_freshness_block:
     fail("Scheduled reconciliation freshness must compare exact elapsed seconds against its budget.")
@@ -1413,32 +1418,6 @@ for required in (
     if required not in inspection_recovery_block:
         fail(f"Inspection recovery success contract is missing: {required}")
 
-# The independent mirror remains an hourly, destination-scoped workflow and must be monitored.
-if "    - cron: '17 * * * *'" not in mirror:
-    fail("The private mirror workflow must retain its hourly schedule.")
-if 'MAX_MIRROR_AGE_MINUTES: "90"' not in watchdog:
-    fail("The watchdog must enforce a 90-minute freshness budget for the hourly private mirror.")
-mirror_watchdog_step = watchdog.find("name: Verify scheduled mirror delivery and result")
-if mirror_watchdog_step < 0 or "if: always()" not in watchdog[mirror_watchdog_step:]:
-    fail("Scheduled mirror delivery/result verification must run even when another watchdog check fails.")
-mirror_watchdog_block = watchdog[mirror_watchdog_step:]
-for required in (
-    '"repos/${GITHUB_REPOSITORY}/actions/workflows/mirror-locally-uncensored.yml"',
-    '"repos/${GITHUB_REPOSITORY}/actions/workflows/mirror-locally-uncensored.yml/runs"',
-    "event=schedule",
-    "MAX_MIRROR_AGE_MINUTES",
-    "age_seconds > MAX_MIRROR_AGE_MINUTES * 60",
-    '[[ "$conclusion" != "success" ]]',
-    '::error::Scheduled mirror run #${run_id} failed with conclusion=${conclusion}.',
-    '::warning::Read-only API smoke succeeded; latest scheduled mirror run concluded',
-):
-    if required not in mirror_watchdog_block:
-        fail(f"Scheduled mirror watchdog contract is missing: {required}")
-if "age_minutes > MAX_MIRROR_AGE_MINUTES" in mirror_watchdog_block:
-    fail("Scheduled mirror freshness must not truncate elapsed time to whole minutes.")
-
-
-
 # The recovery controller is a separate scheduled safety net and must be monitored too.
 if "      - Recover Stale Scheduled Ops" not in watchdog:
     fail("The watchdog must run after native scheduled recovery-controller completions.")
@@ -1465,32 +1444,6 @@ for required in (
         fail(f"Scheduled recovery-controller watchdog contract is missing: {required}")
 if "age_minutes > MAX_RECOVERY_AGE_MINUTES" in recovery_watchdog_block:
     fail("Scheduled recovery freshness must not truncate elapsed time to whole minutes.")
-
-
-# The mirror workflow reuses the Platform Infra cross-repository handoff secret.
-if "MIRROR_TOKEN: ${{ secrets.PLATFORM_INFRA_TOKEN }}" not in mirror:
-    fail("The mirror workflow must use PLATFORM_INFRA_TOKEN.")
-if "secrets.PLATFORM_INFRA_MIRROR_TOKEN" in mirror or "secrets.PLATFORM_INFRA_DISPATCH_TOKEN" in mirror:
-    fail("The mirror workflow must use PLATFORM_INFRA_TOKEN and must not use the Media/Auth dispatch token.")
-if "Missing PLATFORM_INFRA_TOKEN secret" not in mirror or "git push --mirror" not in mirror:
-    fail("The mirror workflow must fail clearly when PLATFORM_INFRA_TOKEN is absent and preserve full-ref mirroring.")
-
-mirror_credentials = (ROOT / "docs" / "credentials.md").read_text(encoding="utf-8")
-mirror_credentials_key = (ROOT / "docs" / "credentials-key.md").read_text(encoding="utf-8")
-for required in (
-    "`PLATFORM_INFRA_TOKEN`",
-    "`phanthienquoc/locally-uncensored-private`",
-    "destination repository with `Contents: write`",
-):
-    if required not in mirror_credentials:
-        fail(f"Mirror credential documentation is missing the shared token contract: {required}")
-for required in (
-    "`PLATFORM_INFRA_TOKEN`",
-    "`phanthienquoc/locally-uncensored-private`",
-    "destination-repository `Contents: write`",
-):
-    if required not in mirror_credentials_key:
-        fail(f"Credential key inventory is missing the shared token contract: {required}")
 
 
 # Canonical Auth release handoff must prove the exact publisher run and pin the registry digest.
