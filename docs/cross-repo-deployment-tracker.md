@@ -5424,3 +5424,67 @@ No production promotion, manifest/credential/database mutation, Pod restart, rep
 - Preserve useful CI, test, security, manual, release and scheduled workflows. No direct SSH/Compose/MCP Docker/Kubectl mutation authority.
 - `locally-uncensored-private` remains retired from active Platform workflows; do not restore its mirror or credentials without explicit authorization.
 - TCE market-scan schedule and all cron declarations remain unchanged.
+
+
+## Cross-repo readiness checkpoint — 2026-11-04 20:04 ICT / 13:04 UTC
+
+### Repository heads, open PRs and latest verified checks
+
+| Repository | Current master | Open PRs | Latest relevant CI / publication evidence | Readiness |
+|---|---|---|---|---|
+| Platform Infra | `a17b896e45dba3a9fa7b0cc33fb0c7f8e786eef5` | #1222 draft; #544/#541/#539 drafts | Current-head `validate-manifests` #41826435566 PASS. `validate-github-actions` #41821072245 PASS is on prior master `1bb34fb6`; no current-head action-validation run was observed. Current commit check-runs contain one successful `validate` check while combined status remains pending. | Documentation/manifests validation passes; native schedules remain stale. |
+| TCE Dashboard | `52cecd5584e6c0a3daf0e2bcff6c89ca064e203d` | None | WF-01 #41758031017 PASS on current master. WF-02 #41819221546 and WF-05 #41819221509 PASS on prior PR head `a1afaf1c`, not current master. | WF-06 strict public health fails; WF-12 schedule freshness fails. |
+| StockDividend | `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec` | None | StockDividend CI #41563856934 PASS; immutable Build and Publish Images #41563856933 PASS on current master. All Scraper/Admin/Backend build and ARM64 manifest verification steps succeeded. | Production Admin/new Backend remain blocked on old non-ARM64 tag `12d63b4`; paired digest handoff remains skipped. |
+| Media Generation | `e4c7d8990aafc7d837e918c9caf39722d623de7c` | None | Media CI #41617592783 PASS on current master. Latest observed WF-03 production deploy #41158598649 is older (2026-10-31). | No new publisher E2E or fresh runtime inspection observed. |
+| Authentication | `f978a3f378ee22d4630909c2d182275b21ac9e9a` | #75 ready; #76 draft | Auth service CI #41670642852 PASS on current master. Auth web CI #41542942080 passed on prior master `1f39b18d`. PR #75/#76 `validate` checks PASS; both Supabase Preview checks are SKIPPED. | Auth/Keycloak remain 0/0 in the latest available K3s snapshot; production activation/migration gates remain closed. |
+
+### Platform inspection and native schedule evidence
+
+- The latest native Platform `event=schedule` run in the inspected 100-run history is inspect-vps #41809725184 at 2026-11-04 09:45:32Z (16:45:32 ICT), FAILURE. Its job log shows inspection, output validation and rebase all succeeded; PR creation failed while pushing the old static branch `automation/vps-inspection` with GitHub remote HTTP 500 / Internal Server Error. This run checked out old master `9f74d239`; it does not exercise the current implementation.
+- Current master `inspect-vps.yml` blob `ccfce6740d810ef44a497e52439b6978134f29a9` uses a per-run branch `automation/vps-inspection-${github.run_id}-${github.run_attempt}`, deletes the branch after use, and verifies the expected run-specific branch before exact-head validation. No later native scheduled inspection has exercised this current implementation.
+- Latest native reconcile #41792374251 (2026-11-04 07:??Z / 14:27 ICT) failed only in the StockDividend workload-health lane. Its job log confirms the two Stock Admin Pods and new Backend Pod are `ImagePullBackOff` on `12d63b4` with `no match for platform in manifest`. TCE, MicroFE, Auth and Media lanes passed; Keycloak was skipped. Image changes and production manifest apply were skipped (`allow_image_changes=false` / no drift).
+- Latest native watchdog #41792527398 (14:28 ICT) failed scheduled inspection freshness. Latest native recovery schedule #41787641688 (13:45 ICT) passed but is stale. Recovery workflow_dispatch #41818823248 (18:08 ICT) passed, but workflow_dispatch is not native schedule evidence. No newer native Platform schedule event was present in the inspected run history.
+- Preserve the current Platform cron declarations. Do not count push, workflow_run, repository_dispatch, workflow_dispatch or rerun attempts as native schedule delivery.
+
+### TCE schedule and health evidence
+
+- Latest native WF-06 #41810552435 at 2026-11-04 09:53:31Z (16:53:31 ICT) failed all four strict public endpoint checks. The job log explicitly confirms Auth liveness returned HTTP 503 where HTTP 200 is required; all four endpoint jobs concluded failure. The service is not healthy merely because the workflow completed.
+- Latest native WF-12 #41807645689 at 09:27:25Z (16:27:25 ICT) failed WF-06 schedule freshness: latest scheduled WF-06 at that time was #41762490285, age 404 minutes against a 25-minute budget. Its authenticated notification to Platform succeeded; Platform receiver #41807662713 succeeded, but neither is a native WF-12 tick.
+- Latest native WF-07 integration check #41785211971 at 13:23 ICT passed. No later native WF-06/WF-12 schedule events were observed in the latest 100-run history.
+- Keep HTTP 200 health assertions strict and preserve every TCE cron declaration, especially the TCE market-scan schedule.
+
+### Stock immutable publication and production blocker
+
+- Current StockDividend master CI #41563856934 and publisher #41563856933 passed. Publisher steps confirmed native ARM64 runner, Buildx, all three image pushes and immutable ARM64 manifest verification. Platform handoff and atomic paired Admin/Backend digest dispatch were SKIPPED because the explicit production promotion gate remains closed.
+- Platform reconciliation #41792374251 reports:
+  - `ghcr.io/phanthienquoc/stockdividend/admin:12d63b4`: `ImagePullBackOff`, no matching platform manifest.
+  - `ghcr.io/phanthienquoc/stockdividend/backend:12d63b4`: `ImagePullBackOff`, no matching platform manifest.
+  - Existing Backend replica and legacy Frontend were still Running in the last snapshot.
+- Do not change production image references or promote only one image. Next promotion must verify and dispatch the paired immutable Admin/Backend digests with source provenance after the protected Actions:read credential and explicit owner authorization are available.
+
+### Latest K3s snapshot (stale; not a current health claim)
+
+- Current `debug/vps-latest.md` blob `41c2a99052324e2875895e45c146350bd3fdc43e` was generated 2026-11-04T10:21:39Z (17:21:39 ICT), more than 2h42m before this checkpoint.
+- Node `tce-k3s-01` was Ready, ARM64, K3s `v1.36.3+k3s1`; disk 55%, ~19 GiB memory available. Platform runner service was active/enabled and runner policy v14 was present.
+- Docker reported 29.1.3; K3s runtime reported containerd 2.3.2-k3s2. Ubuntu/Docker/containerd updates remained pending and `restart_required: yes`. No reboot/upgrade was performed.
+- Snapshot workload state: Media backend/frontend, MicroFE Shell/WS and NATS 1/1; Stock Admin and new Backend ImagePullBackOff; old Stock Backend and legacy Frontend 1/1; TCE/Auth/Keycloak 0/0. Do not present this stale snapshot as current cluster health.
+
+### PR #1222 — TCE VPS Control MCP remains blocked
+
+- PR #1222 remains OPEN/DRAFT at head `f018e39eda52770539fc10671fba0d04baec8046` (11 files, 727 additions). Its only observed validation is manifest check #41821355040 PASS; no TypeScript build, unit test, YAML/ShellCheck or lockfile validation is established. No PR reviews/review threads are recorded.
+- Existing blocking issue comment #6629554340 identifies: (1) UID/GID values are accepted but not forwarded to `execFileAsync`, so the child process is not proven to run as `tce-shell`; (2) `docker_restart` and `k8s_rollout_restart` create mutation paths outside the sole GitOps apply authority; (3) reproducible build/test, YAML, ShellCheck and lockfile validation are missing.
+- Keep #1222 draft and undeployed. Any accepted MCP must be read-only for production, or route approved mutation through the existing GitOps promotion/reconciliation contract. Do not create a second SSH/Compose/Docker/Kubectl deployment authority.
+
+### Ownership, exact next actions and safety
+
+1. Obtain a fresh read-only K3s snapshot by dispatching current-master `inspect-vps.yml` with `workflow_dispatch`. The connected GitHub actions surface in this run supports read/fetch and PR/file operations but exposes no workflow-dispatch operation; no dispatch or fresh snapshot is claimed.
+2. Observe the next native Platform inspection/reconcile/watchdog/recovery and TCE WF-06/WF-12 schedule events. Validate current run-attempt/source identity and keep schedule events distinct from fallbacks.
+3. Keep Stock promotion gated until protected StockDividend Actions:read access and explicit paired Admin/Backend digest authorization are available.
+4. Keep Auth #75/#76 gated on Supabase production integration side effects and migration provenance/drift review. Keep Media/Auth publisher E2E gated until authorized.
+5. Schedule an approved host maintenance window before Ubuntu/containerd/Docker upgrade or reboot.
+6. Keep PR #1222 draft until shell identity isolation is regression-tested, all production mutation paths are removed/routed through GitOps, and reproducible CI/lockfile checks pass.
+
+- App repositories own tests/builds and immutable GHCR image publication. Platform Infra owns production manifests, shared GHCR pull credentials, source/digest/provenance verification, GitOps promotion/reconciliation, rollout and health verification.
+- `inspect-vps.yml` remains read-only; `reconcile-vps.yml` remains the sole production apply authority. No direct SSH/Compose/MCP Docker/Kubectl mutation authority is allowed.
+- `locally-uncensored-private` remains retired from active Platform workflows by owner direction; do not restore its workflow, schedule, watchdog/recovery hooks or credentials without explicit authorization.
+- No production manifest, image reference, GHCR credential, database, release flag, Pod, replica, host or cron was changed in this checkpoint. TCE market-scan schedule and all existing cron declarations remain unchanged.

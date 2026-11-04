@@ -2850,3 +2850,25 @@ No production apply, promotion, database migration, secret mutation, replica cha
 - PR #1222 must remain draft: missing actual UID/GID forwarding to child shell and direct Docker/Kubectl mutation paths conflict with GitOps-only production authority; reproducible TypeScript/test/YAML/ShellCheck/lockfile validation is also missing.
 - `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` is read-only. App repos own tests/builds and immutable publication; Platform owns manifests, pull credentials, digest/provenance checks, promotion, reconciliation and rollout health.
 - `locally-uncensored-private` remains retired. No production image promotion, manifest/credential/database mutation, replica/Pod change, host reboot or TCE market-scan schedule change occurred.
+
+
+## Cross-repo workflow inventory — 2026-11-04 20:04 ICT / 13:04 UTC
+
+| Repository | Current master | Latest verified CI / publisher | Native schedule / runtime | Open PRs / owner gate |
+|---|---|---|---|---|
+| Platform Infra | `a17b896e45db` | #41826435566 current-head manifest validation PASS; #41821072245 action validation PASS on prior master | Native inspect #41809725184 (16:45 ICT) failed pushing old static branch; current master uses run-specific branch but no new native tick. Reconcile #41792374251 failed Stock health; watchdog #41792527398 stale; recovery schedule #41787641688 last PASS. Latest K3s snapshot 17:21 ICT is stale. | #1222 draft; #544/#541/#539 drafts. Sole production apply authority. |
+| TCE Dashboard | `52cecd5584e6` | WF-01 #41758031017 PASS on master; WF-02 #41819221546 and WF-05 #41819221509 PASS on prior PR head | WF-06 #41810552435 native schedule failed all four HTTP 200 checks (503); WF-12 #41807645689 failed freshness; WF-07 #41785211971 PASS. | No PRs; strict health contract and market-scan schedule unchanged. |
+| StockDividend | `50ba0dfb67eb` | CI #41563856934 and immutable ARM64 publisher #41563856933 PASS; handoff/paired dispatch SKIPPED | Production Admin/new Backend still ImagePullBackOff on `12d63b4`; old Backend/legacy Frontend last observed 1/1. | No PRs; paired digest promotion requires protected Actions:read credential and explicit authorization. |
+| Media Generation | `e4c7d8990aaf` | CI #41617592783 PASS; latest observed WF-03 #41158598649 is from Oct 31 | Last K3s snapshot 17:21 ICT observed backend/frontend 1/1; no fresh snapshot/publisher E2E. | No PRs; publisher E2E remains gated. |
+| Authentication | `f978a3f378ee` | Service CI #41670642852 PASS on master; web CI #41542942080 is on prior master; PR #75/#76 validate PASS, Supabase Preview SKIPPED | Auth/Keycloak 0/0 in stale 17:21 ICT snapshot; no production activation. | #75 ready, #76 draft; Supabase/migration gate remains closed. |
+
+### Cross-repo deployment contract and blockers
+
+- App repos own test/build and immutable GHCR publication. Stock's current-master publisher completed ARM64 manifest verification for Scraper/Admin/Backend; Platform handoff and paired digest dispatch remain skipped. Never promote Admin or Backend independently.
+- Platform owns manifests, shared GHCR pull credentials, source-run/tag/digest provenance checks, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` is the only production apply authority; `inspect-vps.yml` is read-only.
+- The latest Stock health log proves the production tag `12d63b4` has no ARM64 manifest for Admin and Backend. Preserve the failure gate until paired immutable digest promotion is authorized and verified.
+- TCE WF-06 public endpoints return HTTP 503 while HTTP 200 is required. WF-12's 25-minute freshness check fails separately from endpoint health. Preserve the strict status and all cron expressions.
+- Platform's 16:45 native inspection failure was on old master `9f74d23` and old static branch `automation/vps-inspection`; current master has run-specific branches. A fresh native schedule tick is still needed to verify current code.
+- PR #1222 remains draft because UID/GID isolation is not wired to the child process and Docker/Kubernetes mutation tools bypass GitOps. Its manifest check alone does not establish TypeScript/security readiness.
+- Latest K3s snapshot at 17:21 ICT is stale. Host maintenance remains pending; no reboot/upgrade was performed.
+- `locally-uncensored-private` remains retired. Preserve useful CI, tests, security, manual/release/scheduled jobs. Do not create direct SSH/Compose or MCP mutation authority. TCE market-scan schedule and all cron declarations remain unchanged.
