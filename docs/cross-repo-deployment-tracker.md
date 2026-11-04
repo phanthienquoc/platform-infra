@@ -4897,3 +4897,55 @@ No StockDividend promotion, production manifest apply, database migration, share
 - Exact PR checks are verified. The connected GitHub interface did not return post-merge Actions runs or combined commit statuses for the merge SHA, so no post-merge CI result is claimed.
 - No production rollout, image promotion, manifest mutation, credential mutation, database write, K3s restart or TCE market-scan schedule change occurred. The latest live-runtime readiness evidence remains the 09:55 ICT checkpoint until a fresh inspection is available.
 - Restoration is prohibited unless the owner explicitly asks for it; do not recreate the workflow, schedule, recovery/watchdog subscriptions, or token documentation.
+
+
+## Cross-repo deployment checkpoint — 2026-11-04 12:03 ICT / 05:03 UTC
+
+### Repository heads and open pull requests
+- Platform Infra master: `7e26b75dba3e748772b0cb70213886ea7df82b8e`.
+- TCE Dashboard master: `a355ce070204cff209df1c9ba38843c972647860`.
+- StockDividend master: `50ba0dfb67eb3dfaa376db0c752bbef5f0817bec`.
+- Media Generation master: `e4c7d8990aafc7d837e918c9caf39722d623de7c`.
+- Authentication master: `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
+- Open Platform PRs: #544, #541, #539 (all drafts). Their exact current heads have `validate-manifests` SUCCESS: #544 run [#38575430454](https://github.com/phanthienquoc/platform-infra/actions/runs/38575430454), #541 [#38567431761](https://github.com/phanthienquoc/platform-infra/actions/runs/38567431761), #539 [#38548718033](https://github.com/phanthienquoc/platform-infra/actions/runs/38548718033). They remain drafts and are not approved for production activation.
+- Open Authentication PRs: #75 (ready) and #76 (draft). Exact-head `auth-service-ci` passed for #75 [#40446492086](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/40446492086) and #76 [#41329425940](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41329425940). Supabase Preview is skipped; green CI does not resolve the production integration/migration side-effect gate.
+- TCE Dashboard, StockDividend and Media Generation have no open PRs.
+- Platform PR #1194 merged as `cce9a1755c48f0695ba4ef523fd8a7f43b93fec3`; PR #1195 merged as `a704c9dd63c026e327e2d52ae20786bfc3fd7134`.
+
+### Current CI, immutable publication and handoff evidence
+- Platform master `validate-manifests` passed on current head in [run #41770814934](https://github.com/phanthienquoc/platform-infra/actions/runs/41770814934). Post-merge `validate-github-actions` passed in [#41770766313](https://github.com/phanthienquoc/platform-infra/actions/runs/41770766313); PR #1195 exact-head `validate-github-actions` and `validate-manifests` passed in [#41770698592](https://github.com/phanthienquoc/platform-infra/actions/runs/41770698592) and [#41770698653](https://github.com/phanthienquoc/platform-infra/actions/runs/41770698653).
+- TCE master CI passed: WF-05 [#41758031060](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41758031060), WF-01 [#41758031017](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41758031017), WF-02 [#41758030952](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41758030952).
+- StockDividend CI [#41563856934](https://github.com/phanthienquoc/stockdividend/actions/runs/41563856934) and publisher [#41563856933](https://github.com/phanthienquoc/stockdividend/actions/runs/41563856933) passed. Publisher log verified the immutable full-source-SHA tag for commit `50ba0dfb67eb3dfaa376db0c752bbef5f0817bec` and `linux/arm64` support for all three images:
+  - Scraper: `sha256:6b3ee2676268baf8ae2e77f68df3b730d797ea6192541710720d04585e99f8a2`
+  - Admin: `sha256:a5c2dbb1a0b6c417891e18256fd4c00a6e14e53a4c34939c12fc1e43c7f3339e`
+  - Backend: `sha256:cb0135fc57bc8a2514288105ab35cc59f4cb922555f028dbf97f44c077b76a9a`
+  - The production handoff-validation and paired-digest dispatch jobs were SKIPPED by the release gate. No image promotion was performed.
+- Media master CI [#41617592783](https://github.com/phanthienquoc/media-generation/actions/runs/41617592783) passed tests, typecheck and build. A paired publisher E2E was not observed.
+- Authentication master CI [#41670642852](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41670642852) passed tests, typecheck, build, container build, immutable release-contract validation and manual-release action pin validation. No manual Auth publisher E2E or production dispatch was observed.
+
+### Native schedule delivery versus diagnostic and manual runs
+- The latest page of 100 Platform Actions runs inspected at 05:03 UTC contains no newer `event=schedule` runs. Last confirmed native events remain: reconciliation [#41750519522](https://github.com/phanthienquoc/platform-infra/actions/runs/41750519522) at 00:56:29 UTC (FAIL only Stock health); watchdog [#41750880073](https://github.com/phanthienquoc/platform-infra/actions/runs/41750880073) at 00:59:41 UTC (FAIL stale schedule lanes); inspection [#41758796515](https://github.com/phanthienquoc/platform-infra/actions/runs/41758796515) at 02:08:48 UTC (SUCCESS); recovery [#41744960810](https://github.com/phanthienquoc/platform-infra/actions/runs/41744960810) at 00:11:32 UTC (SUCCESS).
+- Manual reconciliation [#41762538154](https://github.com/phanthienquoc/platform-infra/actions/runs/41762538154) at 02:43 UTC is not a native schedule tick. Shared preflight, GHCR pull access, shared pull credentials and Auth runtime Secret checks passed; GitOps drift was false and `allow_image_changes=false`, so production manifest apply was skipped. Media, MicroFE, TCE and Auth lanes passed; Keycloak was skipped. Stock health failed.
+- The push-diagnostic watchdog [#41770766300](https://github.com/phanthienquoc/platform-infra/actions/runs/41770766300) passed at 04:02:40 UTC, but its log still reported the latest scheduled reconciliation age as 186m, inspection age 113m and recovery age 231m. A push diagnostic success is not proof of native schedule delivery.
+- Current schedule declarations remain unchanged: reconciliation every 15 minutes, inspection every 30 minutes, recovery every 15 minutes, and schedule watchdog every 15 minutes. Do not alter these declarations to mask missing schedule events.
+
+### TCE public health and last K3s evidence
+- Native WF-06 [#41762490285](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41762490285) at 02:42:30 UTC failed all four strict public endpoint checks with HTTP 503 instead of HTTP 200. Job log [#126353156615](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41762490285) confirms TCE web returned 503. WF-12 workflow_run forwarder [#41762512743](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41762512743) passed schedule-delivery verification and heartbeat forwarding, but it is not a native WF-12 cron tick. Latest native WF-12 schedule [#41759196674](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41759196674) failed freshness. WF-07 Backup [#41739787575](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41739787575) and Integration [#41738887996](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41738887996) passed.
+- Last read-only K3s snapshot is inspection #41758796515 at 02:08:48 UTC (09:08 ICT), now stale by more than two hours. It reported node `tce-k3s-01` Ready/ARM64, K3s v1.36.3+k3s1, disk 55%, about 19 GiB available RAM, runner policy v14, and `restart_required=yes` for pending host maintenance.
+- The later manual reconciliation's Pod listing at 02:43 UTC confirms Stock Admin Pods and the new Backend Pod in ImagePullBackOff on tag `12d63b4`, with `no match for platform in manifest`. Existing Backend and legacy Frontend remained 1/1. Media backend/frontend, MicroFE Shell/WS and NATS were 1/1 at that observation. TCE, Auth and Keycloak were 0/0. These are last-observed values, not a fresh 12:03 ICT live inspection.
+- Keep WF-06 strict HTTP 200 assertions. TCE/Auth scale-to-zero is not healthy public service; do not convert 503 into success and do not change the TCE market-scan schedule.
+
+### Owner-directed mirror detachment — supersedes historical token references
+- PR #1194 removed `.github/workflows/mirror-locally-uncensored.yml`; PR #1195 removed recovery/watchdog subscriptions, freshness checks and obsolete credential documentation. The workflow path is absent (404), and `scripts/validate-workflow-contracts.py` fails if it is reintroduced without explicit owner authorization.
+- `docs/credentials.md` no longer contains `PLATFORM_INFRA_MIRROR_TOKEN`. Older append-only checkpoint files still contain the token as historical evidence; those references are not active configuration instructions.
+- The mirror is RETIRED from the active platform workflow inventory. Do not configure a mirror token, recreate the workflow, or restore schedule/recovery/watchdog hooks unless the owner explicitly requests it. The private destination repository was not deleted.
+
+### Readiness and exact next actions
+1. Platform production remains BLOCKED by StockDividend Admin/Backend ImagePullBackOff and stale native Platform schedule evidence. The next safe operational action is a read-only `inspect-vps` dispatch, followed by checking for a genuine `event=schedule` tick separately; do not report a manual/diagnostic run as cron delivery.
+2. Keep StockDividend release disabled. Owner must configure/verify `STOCKDIVIDEND_ACTIONS_READ_TOKEN` in the protected Platform production Environment and explicitly authorize paired Admin/Backend ARM64 promotion. After authorization, rerun the app publisher/handoff and promote the verified immutable digest pair through Platform Infra; do not edit production image tags directly.
+3. Keep TCE/Auth/Keycloak at their current desired scale until activation is explicitly authorized. Keep strict public health assertions and do not alter market-scan schedules.
+4. Keep Auth PR #75/#76 gated until the Supabase GitHub integration target/effect and migration provenance/drift are authoritatively reviewed. A skipped Supabase Preview is not production evidence.
+5. Run Media/Auth paired publisher E2E only after release authorization. Arrange a VPS maintenance window before any OS/containerd/Docker upgrade or reboot.
+6. Preserve the ownership boundary: app repositories own tests/builds and immutable GHCR publication; Platform Infra owns manifests, shared GHCR pull credentials, provenance/digest validation, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the sole production apply authority; no direct SSH/Compose deployment authority.
+
+No production manifest/image reference, release-enable flag, GHCR pull credential, database object, desired replica, Pod, host maintenance state or cron expression was changed in this checkpoint. TCE market-scan schedule unchanged.
