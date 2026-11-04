@@ -445,12 +445,12 @@ jobs:
           dispatch_succeeded=false
           for attempt in 1 2 3; do
             if dispatch_output="$(gh workflow run inspect-vps.yml --repo "$GITHUB_REPOSITORY" --ref master 2>&1)"; then
-              printf '%s\\n' "$dispatch_output"
+              printf '%s\n' "$dispatch_output"
               dispatch_succeeded=true
               break
             else
               dispatch_status=$?
-              printf '%s\\n' "$dispatch_output"
+              printf '%s\n' "$dispatch_output"
               if grep -Eq 'HTTP (500|502|503|504)' <<< "$dispatch_output" && (( attempt < 3 )); then
                 delay_seconds=$((attempt * 10))
                 echo "::warning::Transient GitHub HTTP 5xx during inspection dispatch (attempt $attempt/3); retrying in ${delay_seconds}s."
