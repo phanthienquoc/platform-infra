@@ -511,6 +511,8 @@ No production manifest, image reference, release flag, desired replica count, GH
 
 # Cross-Repository Production Deployment Tracker
 
+Last reviewed: 2026-11-04 01:10 UTC (08:10 ICT). Current five-repository refs, exact-head checks, native schedules and K3s snapshot are recorded in the 08:10 checkpoint. Current refs, open PRs, latest Actions runs, native schedule evidence and the read-only K3s snapshot are recorded in the 07:00 checkpoint.
+
 ## Latest automation review (2026-11-02 04:05 ICT / 2026-11-01 21:05 UTC; TCE heartbeat source-run identity verification merged; first post-merge scheduled dispatch still pending)
 
 This review rechecked the five repository master refs, open PRs, latest Actions runs/checks, the deployment tracker, current recovery dispatches, the latest available K3s snapshot, and the last bounded Supabase probe. Platform recovery is executing safely and its dispatches are correlated to exact master SHAs. The cross-repository heartbeat receiver now verifies both TCE run IDs against the public Actions API, but no scheduled TCE event has yet exercised the sender after merge. StockDividend remains the only failing application lane.
@@ -4517,3 +4519,89 @@ No production image promotion, GitOps manifest apply, database migration, shared
 - Owner actions remain unchanged: provide destination-only Mirror token, verify Stock protected Actions-read token and authorize paired ARM64 release, complete Auth/Supabase review, and arrange host maintenance window.
 
 No production image promotion, manifest apply, database migration, shared pull-secret mutation, replica change, Pod restart or host reboot occurred. `reconcile-vps.yml` remains the sole production apply authority. No direct SSH/Compose deployment authority or cron change was introduced; TCE market-scan schedule unchanged.
+
+
+## Runtime verification update — 2026-11-04 07:00 ICT / 00:00 UTC
+
+### Repository state, open PRs and latest checks
+- **Current master heads:** Platform Infra `d9d71bab60bb49dbdf68e85b93f1bc71d5b03880`; TCE Dashboard `53227425841b6283bebad3bc5c93d509bd8a316a`; StockDividend `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media Generation `e4c7d8990aafc7d837e918c9caf39722d623de7c`; Authentication `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
+- Platform PR #1175 is merged; its master commit updates the read-only VPS inspection snapshot at 23:20 UTC. Open PRs: Platform #544/#541/#539 (all draft) and #1176 (this documentation checkpoint, open); Authentication #75 (ready) and #76 (draft); no open PRs in TCE, StockDividend or Media.
+- Exact-head PR-triggered checks remain successful: Platform #544 #38575430454, #541 #38567431761, #539 #38548718033; Auth #75 #40446492086 and #76 #41329425940. These checks do not clear the Auth/Supabase production integration and migration review gates.
+- Latest observed Platform master run is watchdog #41738969152 (workflow_run, skipped); latest recovery #41738925054 (repository_dispatch, success). The newer validation run #41738376640 is workflow_dispatch on `automation/vps-inspection` SHA `727a4605e998b1e38a8966e2621fa33c63cfafa9`, not a master or native-schedule check.
+- TCE latest observed native runs: WF-07 backup #41739787575 (23:31:10Z, success), WF-07 integration #41738887996 (23:24:25Z, success), WF-06 healthcheck #41731424392 (22:30:44Z, failure), WF-12 watchdog #41727501039 (22:04:27Z, failure).
+- StockDividend master CI #41563856934 and publisher #41563856933 passed on master SHA `50ba0dfb`; publisher's production release gate remained false and Platform handoff/dispatch were skipped. Media CI #41617592783 passed. Auth master CI #41670642852 passed; no Auth manual publisher/dispatch was observed.
+
+### Latest native schedule evidence (event=schedule only)
+- Platform mirror #41737911916 (23:17:07Z) failed because `PLATFORM_INFRA_MIRROR_TOKEN` is absent.
+- Platform inspection #41726305748 (21:56:27Z) passed. Its newer read-only manual inspection #41738272391 (23:19:51Z) passed and produced the snapshot generated at 23:20:00Z, but is not native schedule evidence.
+- Platform watchdog #41715283880 (20:44:07Z) failed stale-operation freshness; reconciliation #41714763176 (20:40:42Z) failed only StockDividend workload health; recovery #41703551669 (19:28:20Z) passed.
+- TCE WF-06 #41731424392 still fails strict HTTP 200 probes (all four public TCE/Auth endpoints returned HTTP 503). WF-12 #41727501039 failed its schedule-freshness gate. WF-07 backup and integration native schedules passed as listed above.
+- Recovery/workflow_run/repository_dispatch runs are not counted as native schedule ticks. Do not alter any cron declaration or the TCE market-scan schedule.
+
+### Latest reconciliation and production evidence
+- Reconciliation #41737965410 was an explicit manual `workflow_dispatch` with `mode=apply`, `target_app=all`, and `ALLOW_IMAGE_CHANGES=false`. Shared preflight and GHCR pull-access checks passed for all private production images.
+- The same run provisioned/re-applied the existing Auth runtime Secret from protected production Environment inputs; values were suppressed. The four shared `ghcr-pull` namespace Secrets reported `unchanged`. No database migration or Auth/Keycloak scale-up was run.
+- GitOps drift was false, so production manifest apply and post-apply drift checks were skipped. The StockDividend health lane failed; MicroFE, Media, TCE and Auth lanes passed their configured contracts; Keycloak was skipped. The Stock image-pull recovery helper classified both Admin and Backend failures as permanent and skipped rollout restarts.
+- Stock failure log: two Admin Pods and the new Backend Pod pull tag `12d63b4` and report `no match for platform in manifest`. Existing Backend and legacy Frontend remain 1/1 on `23b2878`. This is an image architecture/release blocker, not a pull-secret failure.
+
+### Fresh read-only K3s snapshot
+- `debug/vps-latest.md` was regenerated by inspection #41738272391 at 2026-11-03T23:20:00Z. Node `tce-k3s-01` is Ready/ARM64; Ubuntu 22.04.5; K3s v1.36.3+k3s1; containerd 2.3.2-k3s2; Docker 29.1.3; disk 55%; about 19 GiB available RAM. Platform and Media runner services are active; runner policy v14 is installed.
+- Host reports `restart_required: yes`; pending updates include containerd 2.4.2-3 and Docker 29.9.2 plus Ubuntu packages. No maintenance/reboot was performed.
+- Media backend/frontend, MicroFE Shell/WS and NATS are 1/1. Stock Admin has two `ImagePullBackOff` Pods; the new Backend Pod is also `ImagePullBackOff`; old Backend and legacy Frontend remain 1/1. TCE frontend/service, Auth and Keycloak remain 0/0. Public Keycloak OIDC probes return HTTP 503.
+- Live image inventory confirms Media and MicroFE workloads use digest-pinned references; Stock Admin/Backend still use `12d63b4` without a resolved imageID. Do not promote or mutate image references until the paired ARM64 release is authorized.
+
+### Owner gates and next actions
+1. Configure `PLATFORM_INFRA_MIRROR_TOKEN` with destination-only `Contents:write` on `phanthienquoc/locally-uncensored-private`; do not substitute GHCR or app-release tokens.
+2. Verify `STOCKDIVIDEND_ACTIONS_READ_TOKEN` in the protected production Environment and explicitly authorize the paired Admin/Backend ARM64 release. Keep the production release gate closed until both are satisfied.
+3. Keep Auth PR #75 behind authoritative Supabase integration/migration side-effect review and #76 behind migration provenance/drift review. Media/Auth paired publisher E2E remains release-authorized work.
+4. Preserve strict TCE HTTP 200 checks. TCE/Auth/Keycloak remain intentionally scale-to-zero; activation requires explicit approval and verified runtime credentials/DB readiness.
+5. Arrange a maintenance window before Ubuntu/containerd/Docker upgrades or host reboot.
+
+PR #1176 is open on the dedicated documentation branch. Its exact head has no PR workflow runs or status/check runs because the changed paths are documentation-only; the branch-protection endpoint is not accessible through the current GitHub integration, so it is intentionally not merged until required-check policy can be verified. No production image promotion, GitOps manifest apply, database migration, shared GHCR pull-Secret change, desired replica change, Pod restart or host reboot occurred in the latest reconciliation. The existing Auth runtime Secret was re-applied with values suppressed. `reconcile-vps.yml` remains the sole production apply authority; no SSH/Compose authority was added. TCE market-scan schedule unchanged.
+
+
+### Checkpoint PR state
+- This 07:00 ICT documentation checkpoint is submitted as Platform PR #1176 on `docs/cross-repo-readiness-20261104-0700-ict`. The exact current head has no PR workflow runs or status/check runs because the changed files are documentation-only and existing workflow path filters do not match. The branch-protection required-check policy is not readable through the current GitHub integration, so PR #1176 remains open and unmerged pending verification of that policy.
+
+
+## Runtime verification update — 2026-11-04 08:00 ICT / 01:00 UTC
+
+### Current repository state and pull requests
+- Platform Infra master is 1fcfe9b326dc2f14ef90259820c78aa7f83e5718; TCE Dashboard is 53227425841b6283bebad3bc5c93d509bd8a316a; StockDividend is 50ba0dfb67eb3dfaa376db0c752bbef5b0817bec; Media Generation is e4c7d8990aafc7d837e918c9caf39722d623de7c; Authentication is f978a3f378ee22d4630909c2d182275b21ac9e9a.
+- Open PRs: Platform #1176 and #1178 plus draft #544/#541/#539; Authentication #75 ready and #76 draft; none in TCE, StockDividend or Media.
+- Platform #1176's exact head b9320df108133c1ab02b846627e0da799f8614eb has validate #41744077466 PASS, but its base is behind master by PR #1177. Classic branch-protection policy is not readable through the integration; leave unmerged until required-check policy is verified.
+- Platform #1178 implements a validator-only recovery schedule/freshness budget contract. Current exact head f414cd7c13b0ff40375e66ceb811c1fb88db60fe has validate-manifests #41751765941 and validate-github-actions #41751765994 in progress. The earlier head's checks are not counted as exact-head completion.
+- Platform #544/#541/#539 are draft and not mergeable against current master. Their older validate checks passed. Auth #75/#76 validate checks passed but Supabase Preview was skipped on both; the documented production integration/migration gate remains.
+
+### Latest Actions and native schedule results
+- Platform native reconcile #41750519522 (00:56:29 UTC) failed only StockDividend workload health. Shared preflight and other configured application lanes passed; Keycloak was skipped. The next watchdog measured this reconcile at age 3m and queue wait 0m.
+- Platform native watchdog #41750880073 (00:59:41 UTC) failed Mirror (latest #41737911916 age 102m vs 90m), Inspection (latest #41726305748 age 183m vs 75m), and Recovery (latest #41744960810 age 48m vs 45m). Reconcile freshness passed.
+- Mirror #41737911916 failed because PLATFORM_INFRA_MIRROR_TOKEN was missing; the job stopped before clone/push. Native Inspection #41726305748 and Recovery #41744960810 are old schedule successes. Newer inspection #41750782322, recovery dispatch #41750736318 and recovery workflow_run #41750762620 are not native schedule ticks.
+- TCE native WF-07 Backup #41739787575 and Integration #41738887996 passed. Native WF-06 #41731424392 failed four strict HTTP 200 probes with 503; native WF-12 #41727501039 failed freshness. A later workflow_run event is not native schedule evidence.
+- Stock CI #41563856934 and image publisher #41563856933 passed. Publisher verified full-SHA Admin/Backend/Scraper tags resolve to ARM64 digests (Admin a5c2dbb1…, Backend cb0135fc…, Scraper 6b3ee267…). release_enabled=false, Platform handoff SKIPPED, atomic digest dispatch SKIPPED; protected Actions-read token was not exercised.
+- Media CI #41617592783 and Auth CI #41670642852 passed. Media paired publisher E2E and Auth manual publisher E2E remain pending.
+
+### Fresh K3s inspection
+- Inspection #41750782322 (workflow_dispatch, not schedule) generated debug/vps-latest.md at 2026-11-04T00:58:57Z. Node tce-k3s-01 Ready/ARM64, Ubuntu 22.04.5, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2, Docker 29.1.3, disk 55%, ~19 GiB available RAM, runner policy v14 and both runner services active.
+- Pending Ubuntu/containerd/Docker package updates remain; no maintenance or reboot. Media backend/frontend, MicroFE Shell/WS and NATS are 1/1. Two Stock Admin Pods and one new Backend Pod are ImagePullBackOff on 12d63b4 with no match for platform in manifest; old Backend and legacy Frontend are 1/1. TCE/Auth/Keycloak are 0/0 and public OIDC probes return 503. GitOps drift is clean.
+
+### Deployment contract added
+- PR #1178 adds schedule-cadence validation: watchdog must run at least as frequently as the recovery controller, and MAX_RECOVERY_AGE_MINUTES must equal three maximum recovery schedule intervals. The current 15-minute recovery cadence, 15-minute watchdog cadence and 45-minute freshness budget satisfy the contract.
+- The code change does not modify cron or any production behavior. TCE market-scan schedule remains unchanged.
+
+### Required owner actions
+- Configure destination-only PLATFORM_INFRA_MIRROR_TOKEN; verify STOCKDIVIDEND_ACTIONS_READ_TOKEN and explicitly authorize paired ARM64 release; complete Auth/Supabase integration/migration review; authorize Media/Auth publisher E2E; arrange host maintenance window.
+- Keep all production release and GitOps gates closed until owner authorization and exact digest evidence are present.
+
+No production image promotion, manifest apply, DB migration, shared GHCR pull-secret mutation, replica change, Pod restart or host reboot occurred. reconcile-vps.yml remains the only production apply authority; no SSH/Compose authority was added. TCE market-scan schedule unchanged.
+
+
+## Post-merge follow-up — 2026-11-04 08:10 ICT / 01:10 UTC
+
+- Platform PR #1178 was squash-merged at exact validated head f414cd7c13b0ff40375e66ceb811c1fb88db60fe; merge commit/master head is 97cf87afc169a68d69f12bdec8dc39c2e338ebae.
+- Exact-head PR checks passed: validate-manifests #41751765941 and validate-github-actions #41751765994. Post-merge validate-manifests #41751967678 passed. Post-merge validate-github-actions #41751967612 was still in progress at 01:08:53 UTC; do not claim post-merge lint success until completed.
+- The merged contract parses the native recovery and watchdog minute schedules, requires watchdog cadence no slower than recovery cadence, and requires MAX_RECOVERY_AGE_MINUTES to equal three maximum recovery intervals. Current 15-minute/15-minute/45-minute values pass. No cron was changed.
+- Platform PR #1176 was updated with the 08:00 snapshot but its branch is two commits behind master after #1177 and #1178; its exact-head validate-manifests #41751933952 passed, but GitHub reports mergeable=false. A replacement documentation branch docs/cross-repo-readiness-20261104-0810-ict was created from current master to carry the refreshed tracker/inventory/checkpoints without a stale base. The old #1176 will be superseded after the replacement PR is opened.
+- Latest native production evidence is unchanged from the 08:00 checkpoint: reconcile #41750519522 fails only Stock image architecture health; watchdog #41750880073 reports stale native Mirror/Inspection/Recovery ticks; the manual inspection snapshot #41750782322 is current but not native schedule evidence.
+- Stock publisher #41563856933 independently verified ARM64 Admin/Backend/Scraper digests for source SHA 50ba0dfb67eb3dfaa376db0c752bbef5b0817bec, but release_enabled=false and no Platform handoff/atomic dispatch occurred.
+- No production promotion, manifest apply, database migration, shared GHCR pull-secret change, replica change, Pod restart or host reboot. reconcile-vps.yml remains the sole production apply authority. No SSH/Compose authority; TCE market-scan schedule unchanged.
