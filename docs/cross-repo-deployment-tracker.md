@@ -5329,3 +5329,53 @@ No production promotion, manifest/credential/database mutation, Pod restart, rep
 - Host maintenance/reboot requires an approved maintenance window. No production manifest/image/credential/database/Pod/replica/host mutation was performed in this checkpoint.
 - `locally-uncensored-private` remains retired from active Platform workflows by owner direction. Do not restore its workflow, schedule, watchdog/recovery hooks or token references without explicit authorization.
 - No TCE market-scan schedule or other cron declaration was changed.
+
+
+## Cross-repo readiness checkpoint — 2026-11-04 18:30 ICT / 11:30 UTC
+
+### Repository heads and current CI
+
+| Repository | Current master | Open PRs | Latest verified CI / publication |
+|---|---|---|---|
+| Platform Infra | `1bb34fb6cddc7335c468b244ffd48016a2634000` | #1222 draft; #544/#541/#539 drafts | Master action validation #41821072245 PASS; manifest validation #41821072276 PASS |
+| TCE Dashboard | `52cecd5584e6c0a3daf0e2bcff6c89ca064e203d` | None; #1022 closed unmerged after its content was found on master | #1022 exact-head WF-02 #41819221546 and WF-05 #41819221509 PASS on PR head `a1afaf1cc04e1abfc7df137f50a6aaec630452ce`; no combined status checks observed for current master SHA |
+| StockDividend | `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec` | None | CI #41563856934 PASS; immutable ARM64 publisher #41563856933 PASS |
+| Media Generation | `e4c7d8990aafc7d837e918c9caf39722d623de7c` | None | CI #41617592783 PASS |
+| Authentication | `f978a3f378ee22d4630909c2d182275b21ac9e9a` | #75 ready; #76 draft | Auth service CI #41670642852 PASS |
+
+### Platform Infra workflow / PR state
+
+- PR #1221 merged as `1bb34fb6cddc7335c468b244ffd48016a2634000`. It rejects rerun attempts as native schedule heartbeats: the recovery controller requires its own `github.run_attempt == 1`, workflow_run sources require `workflow_run.run_attempt == 1`, and TCE repository_dispatch payloads require both source and heartbeat attempt fields to equal 1.
+- Post-merge master validation on the exact current SHA: #41821072245 `validate-github-actions` PASS and #41821072276 `validate-manifests` PASS.
+- New draft PR #1222 adds a TCE VPS Control MCP. Its manifest validation #41821355040 PASS is not a TypeScript/security validation. Review comment #6629554340 records two blockers: the shell runner accepts but does not forward UID/GID to `execFileAsync`, and `docker_restart`/`k8s_rollout_restart` would create a production mutation path outside `reconcile-vps.yml`. The PR also records that TypeScript build/tests, YAML validation, ShellCheck and a lockfile are not yet complete. Keep it draft; do not deploy.
+- Older Keycloak/SSO drafts #544/#541/#539 remain gated by the documented Supabase role/password, protected environment secret, DNS and architecture-decision prerequisites.
+
+### Native schedule delivery — event types are not interchangeable
+
+- Platform latest native scheduled inspection: #41809725184 at 16:45 ICT, FAIL (old inspection workflow revision / GitHub remote HTTP 500). Latest native reconcile #41792374251 at 14:27 ICT, FAIL at Stock health. Latest native watchdog #41792527398 at 14:28 ICT, FAIL on inspection freshness. Latest native recovery schedule #41787641688 at 13:45 ICT, PASS.
+- No newer Platform `event=schedule` run was present through this 18:30 ICT checkpoint. Master push validation and workflow_run/repository_dispatch runs are not native schedule evidence.
+- TCE latest native WF-06 #41810552435 at 16:53 ICT, FAIL with HTTP 503 from the four public endpoints; latest native WF-12 #41807645689 at 16:27 ICT, FAIL on freshness; WF-07 #41785211971 at 13:23 ICT, PASS.
+- TCE workflow_run watchdog #41818548221 at 18:05 ICT failed its WF-06 freshness verification but its Platform notification step succeeded. That run pre-dates the first-attempt payload guard. Platform recovery accepted its rerun heartbeat (#41818562089) and dispatched reconcile #41818583527, which failed Stock health; the later recovery dispatch #41818823248 completed successfully. PR #1221 now blocks that rerun-heartbeat path, but no post-merge native schedule cycle has yet exercised the new guard.
+- Preserve all schedule declarations and the TCE market-scan cadence. Do not rerun a failed scheduled run and count that rerun as a fresh native schedule tick.
+
+### Immutable publication, dispatch and release gates
+
+- StockDividend publisher #41563856933 verified immutable full-SHA image tags and ARM64 manifests for Scraper/Admin/Backend. Its master guard, promotion gate and image build/push passed; Platform handoff and atomic paired-digest dispatch were SKIPPED because production promotion remains disabled. Production Admin/new Backend still reference non-ARM64 tag `12d63b4`; do not change GitOps until the protected Actions:read credential and explicit paired Admin/Backend promotion authorization are available.
+- Media release workflow `wf-03-media-production-deploy.yml` publishes frontend/backend digests and dispatches the paired event to Platform; current Media master CI passed, but no newer publisher E2E/release dispatch was observed.
+- Auth release workflow is manual (`workflow_dispatch`) and emits `auth-image-published` with full-SHA tag, digest, source run ID/path/event/SHA. Platform receiver validates source-run provenance, both immutable tag-to-digest mappings and the digest-only image reference. Current-head CI passed, but no release publisher run on current master was observed. PR #75/#76 remain gated; Supabase Preview checks were SKIPPED and production integration/migration effects remain unresolved.
+- Platform owns digest verification, production Kustomize promotion, GHCR pull credentials, reconciliation and rollout. App repos own tests/builds and immutable publication.
+
+### Latest available K3s evidence (not current)
+
+- Latest read-only snapshot remains #41813598197, generated 17:21:39 ICT; it is not a native schedule run and is now stale relative to this checkpoint.
+- Node `tce-k3s-01` was Ready (ARM64, K3s `v1.36.3+k3s1`), disk pressure normal at 55%.
+- Media backend/frontend, MicroFE Shell/WS and NATS were 1/1. Stock Admin and new Backend Pods were `ImagePullBackOff` on `12d63b4`; old Backend and legacy Frontend were 1/1. TCE/Auth/Keycloak were 0/0. Host still reported `restart_required: yes` with OS/Docker/containerd updates pending.
+- No new read-only VPS inspection was dispatched in this run; current live K3s health is therefore unverified.
+
+### Ownership and safety
+
+- `inspect-vps.yml` remains read-only. `reconcile-vps.yml` remains the sole production apply authority.
+- Do not introduce direct SSH/Compose or MCP Docker/Kubectl mutation paths that bypass GitOps.
+- No production image promotion, manifest/credential/database mutation, replica/Pod change, host reboot or maintenance operation was performed.
+- `locally-uncensored-private` remains retired from active Platform workflows; do not restore its mirror or credentials without explicit authorization.
+- No TCE market-scan schedule or other cron declaration was changed.
