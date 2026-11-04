@@ -48,7 +48,6 @@ def schedule_max_minute_gap(workflow_text: str, workflow_name: str) -> int:
     gaps.append(minutes[0] + 60 - minutes[-1])
     return max(gaps)
 
-
 reconcile = read("reconcile-vps.yml")
 promotion = read("gitops-image-promotion.yml")
 recovery = read("recover-stale-ops.yml")
