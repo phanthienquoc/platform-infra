@@ -48,7 +48,7 @@ cd apps/tce-vps-control-mcp
 sudo bash scripts/install.sh
 ```
 
-The installer creates the service account, installs the Node app and root-owned Docker wrapper, configures sudoers, creates a random bearer token if no environment file exists, and starts the systemd service.
+The installer creates separate MCP and shell accounts, installs the Node app and root-owned Docker wrapper, configures sudoers, creates a random bearer token if no environment file exists, and starts the systemd service.
 
 The installer resolves dependencies from the pinned semver ranges in `package.json` during installation. For fully reproducible production builds, generate and commit a `package-lock.json` after validating the dependency tree.
 
