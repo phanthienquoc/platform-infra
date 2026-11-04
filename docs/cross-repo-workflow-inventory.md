@@ -780,7 +780,7 @@ Last reviewed: 2026-10-31 12:03 ICT. Inventory is based on the workflow files pr
 | `.github/workflows/validate-recovery-readiness.yml` | Recovery readiness gate. | Preserve. |
 | `.github/workflows/bootstrap-runner.yml` | Self-hosted runner bootstrap/update. | Infrastructure bootstrap; not an app release lane. |
 | `.github/workflows/vps-image-cleanup.yml` | VPS image cleanup. | Maintenance job; keep separate from release/reconcile authority. |
-| `.github/workflows/mirror-locally-uncensored.yml` | Scheduled repository mirror. | Recent scheduled runs failed; investigate independently, but do not remove without proving it obsolete. |
+| `.github/workflows/mirror-locally-uncensored.yml` | Historical workflow; removed by owner-directed PR #1194. | DETACHED. Do not recreate or restore without explicit owner authorization. |
 
 ## TCE-dashboard — application CI and release producer
 
