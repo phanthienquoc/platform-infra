@@ -482,7 +482,9 @@ jobs:
 
             fallback_conclusion="$(jq -r '.conclusion // "unknown"' <<< "$fallback_latest")"
             if [[ "$fallback_conclusion" == "success" ]]; then
-              fallback_activity_epoch="$(jq -r '(.updated_at // .run_started_at // .created_at // empty) | fromdateiso8601' <<< "$fallback_latest")"
+              fallback_activity_epoch="$(jq -r \
+                '(.updated_at // .run_started_at // .created_at // empty) | fromdateiso8601' \
+                <<< "$fallback_latest")"
               [[ "$fallback_activity_epoch" =~ ^[0-9]+$ ]] || {
                 echo "::error::Read-only fallback inspection #$fallback_id has no usable activity timestamp."
                 exit 1
