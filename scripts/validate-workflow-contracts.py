@@ -20,9 +20,38 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 
+def schedule_max_minute_gap(workflow_text: str, workflow_name: str) -> int:
+    schedule = re.search(
+        r"(?ms)^  schedule:[ \t]*\n(?P<body>.*?)(?=^  [A-Za-z_][A-Za-z0-9_-]*:[ \t]*$|\Z)",
+        workflow_text,
+    )
+    if schedule is None:
+        fail(f"{workflow_name} must declare an explicit schedule for freshness validation.")
+    cron = re.search(r'(?m)^[ \t]*-[ \t]*cron:[ \t]*"([^"]+)"', schedule.group("body"))
+    if cron is None:
+        fail(f"{workflow_name} must declare a quoted cron expression.")
+    fields = cron.group(1).split()
+    if len(fields) != 5:
+        fail(f"{workflow_name} cron must contain five fields.")
+    minute_field = fields[0]
+    if re.fullmatch(r"\*/[1-9][0-9]*", minute_field):
+        return int(minute_field[2:])
+    if not re.fullmatch(r"[0-9]+(?:,[0-9]+)*", minute_field):
+        fail(
+            f"{workflow_name} minute cron field must use a numeric list or */N step; "
+            "extend the freshness contract parser before changing its schedule."
+        )
+    minutes = sorted({int(value) for value in minute_field.split(",")})
+    if not minutes or any(value < 0 or value > 59 for value in minutes):
+        fail(f"{workflow_name} cron minute values must be between 0 and 59.")
+    gaps = [right - left for left, right in zip(minutes, minutes[1:])]
+    gaps.append(minutes[0] + 60 - minutes[-1])
+    return max(gaps)
+
 reconcile = read("reconcile-vps.yml")
 promotion = read("gitops-image-promotion.yml")
 recovery = read("recover-stale-ops.yml")
+watchdog = read("reconcile-schedule-watchdog.yml")
 inspection = read("inspect-vps.yml")
 mirror = read("mirror-locally-uncensored.yml")
 lane_queue = (ROOT / "scripts" / "verify-reconcile-lane-queue.py").read_text(encoding="utf-8")
@@ -108,6 +137,25 @@ if 'workflows: ["reconcile-vps", "inspect-vps", "Mirror locally-uncensored into 
     fail("Recovery controller must run after master reconciliation, scheduled inspection, and the independent mirror schedule heartbeat.")
 if "repository_dispatch:" not in recovery or "types: [tce-schedule-heartbeat]" not in recovery:
     fail("Recovery controller must accept the authenticated cross-repository TCE schedule heartbeat.")
+
+# Keep the freshness watchdog aligned with the native recovery cadence. The
+# budget is exactly three maximum schedule intervals: two missed ticks can be
+# observed, while a third missed tick fails closed instead of hiding stale ops.
+recovery_schedule_gap = schedule_max_minute_gap(recovery, "recover-stale-ops")
+watchdog_schedule_gap = schedule_max_minute_gap(watchdog, "reconcile-schedule-watchdog")
+if watchdog_schedule_gap > recovery_schedule_gap:
+    fail("The schedule freshness watchdog must run at least as frequently as the recovery controller.")
+recovery_age_budget = re.search(
+    r'(?m)^[ \t]*MAX_RECOVERY_AGE_MINUTES:[ \t]*"([0-9]+)"',
+    watchdog,
+)
+if recovery_age_budget is None:
+    fail("The schedule watchdog must declare MAX_RECOVERY_AGE_MINUTES.")
+if int(recovery_age_budget.group(1)) != recovery_schedule_gap * 3:
+    fail(
+        "MAX_RECOVERY_AGE_MINUTES must equal three maximum recovery schedule intervals "
+        "so missed native schedule delivery remains observable."
+    )
 for required in (
     "github.event.action == 'tce-schedule-heartbeat'",
     "github.event.client_payload.source_repository == 'phanthienquoc/TCE-dashboard'",
