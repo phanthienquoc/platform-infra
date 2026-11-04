@@ -1497,19 +1497,32 @@ for required in (
 if "age_minutes > MAX_INSPECTION_AGE_MINUTES" in inspection_freshness_block:
     fail("Scheduled inspection freshness must not truncate elapsed time to whole minutes.")
 
-# A recent failed/cancelled inspection is not fresh evidence and must trigger the read-only fallback.
+# Native scheduled inspection evidence and manual fallback activity must never be conflated.
 inspection_recovery_step = recovery.find("name: Recover missing inspection delivery")
 if inspection_recovery_step < 0:
     fail("Recovery controller must retain its read-only inspection fallback.")
 inspection_recovery_block = recovery[inspection_recovery_step:].split("\n      - name:", 1)[0]
 for required in (
-    "jq -r '.conclusion // \"unknown\"' <<< \"$latest\"",
-    'if [[ "$conclusion" != "success" ]]; then',
+    '"repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs"',
+    "-f event=schedule",
+    "native_latest=",
+    "native_conclusion=",
     "MAX_INSPECTION_AGE_MINUTES * 60 + 1",
-    "dispatching a read-only fallback.",
+    "-f event=workflow_dispatch",
+    "fallback_latest=",
+    "fallback_conclusion=",
+    "Native inspection schedule remains stale",
+    "does not satisfy native schedule freshness",
+    "dispatching the existing read-only inspection workflow.",
 ):
     if required not in inspection_recovery_block:
-        fail(f"Inspection recovery success contract is missing: {required}")
+        fail(f"Inspection recovery native/fallback separation contract is missing: {required}")
+if 'repos/${GITHUB_REPOSITORY}/actions/runs" -F branch=master' in inspection_recovery_block:
+    fail("Inspection recovery must not use an unfiltered all-event run list as native schedule evidence.")
+if "event=workflow_dispatch" in inspection_recovery_block.split("fallback_runs=", 1)[0]:
+    fail("Manual workflow_dispatch activity must not participate in native inspection freshness.")
+if "event=schedule" not in inspection_recovery_block.split("fallback_runs=", 1)[0]:
+    fail("Native inspection freshness must query only event=schedule runs.")
 
 # The recovery controller is a separate scheduled safety net and must be monitored too.
 if "      - Recover Stale Scheduled Ops" not in watchdog:
