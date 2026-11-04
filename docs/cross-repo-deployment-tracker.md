@@ -5065,7 +5065,7 @@ Wait for the next native recovery/watchdog cycle and verify that a failed schedu
 - No PR was merged in this checkpoint. Green CI does not authorize Keycloak, Auth, StockDividend or Media production activation.
 
 ### Recovery guard — runtime evidence after PR #1199
-- PR #1199 merged as `a7cd5802dcbc729923c0ac2e2e01e39465561ab7` is recorded in the previous checkpoint; exact-head and post-merge `validate-github-actions` / `validate-manifests` checks passed (#41789478283, #41789478238, #41789565946, #41789566021).
+- PR #1199 merged as `a7cd5802dcbc72911db8be6144fa793fd96e737a` is recorded in the previous checkpoint; exact-head and post-merge `validate-github-actions` / `validate-manifests` checks passed (#41789478283, #41789478238, #41789565946, #41789566021).
 - Native scheduled watchdog #41792527398 (14:28:38 ICT) failed because the latest **native scheduled** inspect-vps run was #41758796515 at 09:08:48 ICT, older than the 75-minute inspection budget.
 - Recovery run #41792556931 (workflow_run from that native scheduled watchdog failure) completed SUCCESS. This confirms the corrected `workflow_run.workflow_id` source identity guard is functioning.
 - Recovery did not dispatch another inspection: its latest all-event inspection was manual run #41785522310, snapshot generated 13:26:29 ICT, age about 62 minutes at recovery time and within the 75-minute fallback threshold. The native schedule watchdog deliberately does not count that manual run as native cron evidence.
