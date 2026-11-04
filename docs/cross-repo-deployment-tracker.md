@@ -511,6 +511,8 @@ No production manifest, image reference, release flag, desired replica count, GH
 
 # Cross-Repository Production Deployment Tracker
 
+Last reviewed: 2026-11-04 00:00 UTC (07:00 ICT). Current refs, open PRs, latest Actions runs, native schedule evidence and the read-only K3s snapshot are recorded in the 07:00 checkpoint.
+
 ## Latest automation review (2026-11-02 04:05 ICT / 2026-11-01 21:05 UTC; TCE heartbeat source-run identity verification merged; first post-merge scheduled dispatch still pending)
 
 This review rechecked the five repository master refs, open PRs, latest Actions runs/checks, the deployment tracker, current recovery dispatches, the latest available K3s snapshot, and the last bounded Supabase probe. Platform recovery is executing safely and its dispatches are correlated to exact master SHAs. The cross-repository heartbeat receiver now verifies both TCE run IDs against the public Actions API, but no scheduled TCE event has yet exercised the sender after merge. StockDividend remains the only failing application lane.
@@ -859,7 +861,7 @@ This review rechecked all five master refs, open PRs, latest workflow runs/check
 
 ## Latest automation review (2026-11-01 14:05 UTC; StockDividend full-SHA ARM64 publication verified)
 
-Last reviewed: 2026-11-04 00:00 UTC (07:00 ICT). The latest runtime verification and exact evidence are appended below.
+Last reviewed: 2026-11-01 14:05 UTC. This review starts from current master refs, open PRs, latest Actions runs, the existing tracker, and current publisher logs. It records successful immutable publication for StockDividend commit `1559097`, a cancelled six-hour weekend scraper run, and a new narrow scraper optimization PR. Production promotion remains disabled; no production workload mutation occurred.
 
 - Current master heads: platform-infra `988f88a30b0fd1039ee78674cfdc7b9735e44dea`; TCE Dashboard `49fe5841cce460df2a7be6d8846b34a57b6be152`; StockDividend `1559097da834652e2f6dfbd5a8d012a526f0133b`; Media Generation `d8e695d772ab2dc0da5c15cc428ee78ac6537518`; Authentication `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`.
 - Open PRs: platform-infra #795/#749/#741/#648/#544/#541/#539/#538; Authentication #76/#75; StockDividend #23; none in TCE Dashboard or Media Generation. StockDividend #22 is merged as `1559097`.
