@@ -3194,3 +3194,41 @@ Evidence:
 - Stock publisher #41563856933: https://github.com/phanthienquoc/stockdividend/actions/runs/41563856933
 - Media CI #41617592783: https://github.com/phanthienquoc/media-generation/actions/runs/41617592783
 - Auth CI #41670642852: https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41670642852
+
+
+# Cross-repo workflow inventory checkpoint — 2026-11-05 06:01 ICT / 2026-11-04 23:01 UTC
+
+- Platform Infra master: cfdce04a1d78fc2dcc9c1494628ff8791126ca20. Inspection run #41929001497 completed successfully; all inspect job steps passed. It created PR #1244 and merged exact PR head 6d642d020462566b1ad0cc0b8ecf79b30fc6199f as cfdce04. The connected run/job response did not expose the workflow event type; do not count this as native schedule evidence.
+- Platform open PRs: #1222, #544, #541, #539 (all draft). Last returned validate-manifests runs: #41821355040, #38575430454, #38567431761, #38548718033 respectively, all successful but historical. #1222 remains blocked by Docker/Kubernetes mutation authority, previously observed literal backslash-n source/installer defects, missing SHELL_UID/GID forwarding and absent reproducible build/test/lockfile evidence.
+- TCE Dashboard master: 52cecd5584e6c0a3daf0e2bcff6c89ca064e203d; no open PRs. Last verified native WF-07 #41900042968 PASS at 02:45 ICT; WF-06 #41880229621 FAIL with four HTTP 503 endpoints; WF-12 #41877745265 FAIL on freshness. Workflow_run #41900072829 failed delivery verification although its authenticated Platform heartbeat notification passed. No newer run list was exposed in this inspection.
+- StockDividend master: 50ba0dfb67eb3dfaa376db0c752bbef5b0817bec; no open PRs. CI #41563856934 and immutable ARM64 publisher #41563856933 PASS. The publisher explicitly disables production GitOps promotion; handoff validation and paired Admin/Backend dispatch are SKIPPED. Production tags 12d63b4 for Admin/Backend still have no ARM64 manifest. Do not enable promotion without explicit release authorization and protected STOCKDIVIDEND_ACTIONS_READ_TOKEN.
+- Media Generation master: e4c7d8990aafc7d837e918c9caf39722d623de7c; no open PRs. CI #41617592783 PASS. Latest inspection shows backend/frontend 1/1 with digest-pinned imageIDs.
+- Authentication master: f978a3f378ee22d4630909c2d182275b21ac9e9a; PR #75 ready (head a8e8a1d99e86a679b8d2ea7c7e7fa91302ffcc05), PR #76 draft (head f19cacb0bf2b454b3152bd3a501f6f88d0a14a58). Auth CI #41670642852 PASS; last documented exact-head validation refs are #40446492086 and #41329425940. The connected workflow-run lookup returned no run records for current Auth PR heads. Supabase Preview remains SKIPPED; migration branch remains MIGRATIONS_FAILED and production integration target/effect is not verified.
+- K3s snapshot debug/vps-latest.md generated 2026-11-04T22:52:28Z (05:52:28 ICT), merged by PR #1244. At 06:01 ICT it is about 9 minutes old. Node tce-k3s-01 Ready/ARM64; K3s v1.36.3+k3s1; containerd 2.3.2-k3s2; disk 56%; available memory about 19 GiB. Media backend/frontend, MicroFE Shell/WS and NATS 1/1. Two Stock Admin Pods and new Stock Backend Pod ImagePullBackOff; old Backend/Frontend 1/1. TCE frontend/service and MicroFE Auth/Keycloak 0/0. Public Keycloak OIDC probes HTTP 503. Host restart_required=yes; Docker 29.1.3 and containerd 2.3.2-k3s2 installed; containerd 2.4.2 and Docker 29.9.3 pending. No reboot/upgrade.
+- Native Platform evidence still positively verified: inspect #41881867627 at 00:55 ICT PASS but stale; reconcile #41917440202 at 04:35 ICT FAIL in Stock health; recovery #41914511298 at 04:16 ICT PASS; watchdog #41918315745 at 04:40 ICT FAIL because native inspection freshness exceeded 75 minutes. Inspection #41929001497 is successful but event type is not surfaced; do not count it as native schedule.
+- PR #1242 recovery event-classification fix is merged. Exact-head #41923196096/#41923196112 and post-merge #41923323345/#41923323244 all PASS. A post-merge native event=schedule cycle is still required to prove the fix in production.
+- Credential contract: GHCR_READ_TOKEN is package read:packages only with GHCR_USERNAME. STOCKDIVIDEND_ACTIONS_READ_TOKEN is protected production Environment Actions:read only. TCE and Stock use separate PLATFORM_INFRA_TOKEN values (TCE Contents:write + Actions:read; Stock Contents:write). Media and Auth use separate PLATFORM_INFRA_DISPATCH_TOKEN values (Media Contents:write + Actions:read; Auth Contents:write). Active GitOps promotion uses workflow-scoped GITHUB_TOKEN; PLATFORM_INFRA_AUTOMATION_TOKEN is obsolete and must not be reintroduced.
+- App repos own tests/build/immutable GHCR publication. Platform Infra owns production manifests, shared pull credentials, provenance, paired promotion, reconciliation, rollout and health. reconcile-vps.yml remains the sole production apply authority; inspect-vps.yml is read-only. No direct SSH/Compose/MCP mutation authority. locally-uncensored-private remains retired.
+- No production image/manifest/credential/database/Pod/replica/host mutation or cron change occurred. TCE market-scan schedule unchanged.
+
+Evidence:
+- Inspection run #41929001497: https://github.com/phanthienquoc/platform-infra/actions/runs/41929001497
+- Inspection PR #1244: https://github.com/phanthienquoc/platform-infra/pull/1244
+- K3s snapshot: https://github.com/phanthienquoc/platform-infra/blob/master/debug/vps-latest.md
+- Recovery fix PR #1242: https://github.com/phanthienquoc/platform-infra/pull/1242
+- Exact-head validate-github-actions #41923196096: https://github.com/phanthienquoc/platform-infra/actions/runs/41923196096
+- Exact-head validate-manifests #41923196112: https://github.com/phanthienquoc/platform-infra/actions/runs/41923196112
+- Post-merge validate-github-actions #41923323345: https://github.com/phanthienquoc/platform-infra/actions/runs/41923323345
+- Post-merge validate-manifests #41923323244: https://github.com/phanthienquoc/platform-infra/actions/runs/41923323244
+- Native inspect #41881867627: https://github.com/phanthienquoc/platform-infra/actions/runs/41881867627
+- Native reconcile #41917440202: https://github.com/phanthienquoc/platform-infra/actions/runs/41917440202
+- Native recovery #41914511298: https://github.com/phanthienquoc/platform-infra/actions/runs/41914511298
+- Native watchdog #41918315745: https://github.com/phanthienquoc/platform-infra/actions/runs/41918315745
+- TCE WF-07 #41900042968: https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41900042968
+- TCE WF-06 #41880229621: https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41880229621
+- TCE WF-12 #41877745265: https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41877745265
+- TCE heartbeat verification #41900072829: https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41900072829
+- Stock publisher #41563856933: https://github.com/phanthienquoc/stockdividend/actions/runs/41563856933
+- Stock CI #41563856934: https://github.com/phanthienquoc/stockdividend/actions/runs/41563856934
+- Media CI #41617592783: https://github.com/phanthienquoc/media-generation/actions/runs/41617592783
+- Auth CI #41670642852: https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41670642852
