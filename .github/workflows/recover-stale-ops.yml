@@ -36,7 +36,11 @@ run-name: >-
         required: false
         type: string
   workflow_run:
-    workflows: ["reconcile-vps", "inspect-vps", "Mirror locally-uncensored into private repository", "Reconcile Schedule Freshness Watchdog"]
+    workflows:
+      - "reconcile-vps"
+      - "inspect-vps"
+      - "Mirror locally-uncensored into private repository"
+      - "Reconcile Schedule Freshness Watchdog"
     types: [completed]
   # Independent heartbeat from TCE's scheduled WF-06/WF-07/WF-12 checks.
   repository_dispatch:
