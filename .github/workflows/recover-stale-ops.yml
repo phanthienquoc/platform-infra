@@ -62,6 +62,7 @@ jobs:
       ${{ github.ref == 'refs/heads/master' &&
           (github.event_name != 'workflow_run' ||
            (github.event.workflow_run.head_branch == 'master' &&
+            github.event.workflow_run.run_attempt == 1 &&
             (github.event.workflow_run.workflow_id == 364209709 ||
              (github.event.workflow_run.workflow_id == 364209707 &&
               github.event.workflow_run.event == 'schedule') ||
@@ -72,6 +73,8 @@ jobs:
            (github.event.action == 'tce-schedule-heartbeat' &&
             github.event.client_payload.source_repository == 'phanthienquoc/TCE-dashboard' &&
             github.event.client_payload.source_event == 'schedule' &&
+            github.event.client_payload.source_run_attempt == '1' &&
+            github.event.client_payload.heartbeat_run_attempt == '1' &&
             (github.event.client_payload.source_workflow_path == '.github/workflows/wf-06-tce-healthcheck.yml' ||
              github.event.client_payload.source_workflow_path == '.github/workflows/wf-07-tce-integration-check.yml' ||
              github.event.client_payload.source_workflow_path == '.github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml'))) }}
@@ -89,8 +92,10 @@ jobs:
           SOURCE_EVENT: ${{ github.event.client_payload.source_event }}
           SOURCE_WORKFLOW_PATH: ${{ github.event.client_payload.source_workflow_path }}
           SOURCE_RUN_ID: ${{ github.event.client_payload.source_run_id }}
+          SOURCE_RUN_ATTEMPT: ${{ github.event.client_payload.source_run_attempt }}
           SOURCE_HEAD_SHA: ${{ github.event.client_payload.source_head_sha }}
           HEARTBEAT_RUN_ID: ${{ github.event.client_payload.heartbeat_run_id }}
+          HEARTBEAT_RUN_ATTEMPT: ${{ github.event.client_payload.heartbeat_run_attempt }}
           HEARTBEAT_HEAD_SHA: ${{ github.event.client_payload.heartbeat_head_sha }}
         shell: bash
         run: |
@@ -113,6 +118,16 @@ jobs:
             echo "::error::TCE heartbeat run IDs must be numeric."
             exit 1
           }
+          if ! [[ "$SOURCE_RUN_ATTEMPT" =~ ^[0-9]+$ ]] || ! [[ "$HEARTBEAT_RUN_ATTEMPT" =~ ^[0-9]+$ ]]; then
+            echo "::error::TCE heartbeat run attempts must be numeric."
+            exit 1
+          fi
+          if [[ "$SOURCE_RUN_ATTEMPT" != "1" || "$HEARTBEAT_RUN_ATTEMPT" != "1" ]]; then
+            echo "::error::Rerun attempts cannot be accepted as native schedule heartbeats."
+            exit 1
+          fi
+            exit 1
+          }
           [[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ && "$HEARTBEAT_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || {
             echo "::error::TCE heartbeat SHAs must be full commit IDs."
             exit 1
@@ -132,6 +147,7 @@ jobs:
           source_run_event="$(jq -r '.event // empty' <<< "$source_run")"
           source_run_branch="$(jq -r '.head_branch // empty' <<< "$source_run")"
           source_run_sha="$(jq -r '.head_sha // empty' <<< "$source_run")"
+          source_run_attempt="$(jq -r '.run_attempt // empty' <<< "$source_run")"
           source_run_status="$(jq -r '.status // empty' <<< "$source_run")"
 
           [[ "$source_run_path" == "$SOURCE_WORKFLOW_PATH" ]] || {
@@ -140,6 +156,10 @@ jobs:
           }
           [[ "$source_run_event" == "schedule" && "$source_run_branch" == "master" && "$source_run_sha" == "$SOURCE_HEAD_SHA" ]] || {
             echo "::error::TCE source run #$SOURCE_RUN_ID is not the claimed scheduled master commit."
+            exit 1
+          }
+          [[ "$source_run_attempt" == "1" && "$source_run_attempt" == "$SOURCE_RUN_ATTEMPT" ]] || {
+            echo "::error::TCE source run #$SOURCE_RUN_ID is a rerun or its attempt does not match the payload."
             exit 1
           }
 
@@ -168,6 +188,7 @@ jobs:
           heartbeat_run_event="$(jq -r '.event // empty' <<< "$heartbeat_run")"
           heartbeat_run_branch="$(jq -r '.head_branch // empty' <<< "$heartbeat_run")"
           heartbeat_run_sha="$(jq -r '.head_sha // empty' <<< "$heartbeat_run")"
+          heartbeat_run_attempt="$(jq -r '.run_attempt // empty' <<< "$heartbeat_run")"
           heartbeat_run_status="$(jq -r '.status // empty' <<< "$heartbeat_run")"
 
           [[ "$heartbeat_run_path" == ".github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml" ]] || {
@@ -180,6 +201,10 @@ jobs:
           }
           [[ "$heartbeat_run_status" == "in_progress" || "$heartbeat_run_status" == "completed" ]] || {
             echo "::error::TCE heartbeat run #$HEARTBEAT_RUN_ID has an unexpected status: $heartbeat_run_status."
+            exit 1
+          }
+          [[ "$heartbeat_run_attempt" == "1" && "$heartbeat_run_attempt" == "$HEARTBEAT_RUN_ATTEMPT" ]] || {
+            echo "::error::TCE heartbeat run #$HEARTBEAT_RUN_ID is a rerun or its attempt does not match the payload."
             exit 1
           }
 
@@ -198,8 +223,11 @@ jobs:
               ;;
           esac
 
-          printf 'Verified TCE schedule heartbeat against Actions API: source=%s run=%s sha=%s heartbeat_run=%s event=%s\n' \
-            "$SOURCE_WORKFLOW_PATH" "$SOURCE_RUN_ID" "$SOURCE_HEAD_SHA" "$HEARTBEAT_RUN_ID" "$heartbeat_run_event"
+          printf 'Verified TCE schedule heartbeat: source=%s run=%s attempt=%s sha=%s heartbeat_run=%s attempt=%s event=%s\\n' \
+            "$SOURCE_WORKFLOW_PATH" "$SOURCE_RUN_ID" \
+            "$SOURCE_RUN_ATTEMPT" "$SOURCE_HEAD_SHA" \
+            "$HEARTBEAT_RUN_ID" "$HEARTBEAT_RUN_ATTEMPT" \
+            "$heartbeat_run_event"
 
       - name: Verify and await source reconciliation completion
         id: source
