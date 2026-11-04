@@ -5215,3 +5215,44 @@ No production promotion, manifest or credential mutation, database migration, Po
 - No cron expressions were changed; TCE market-scan schedule unchanged.
 
 No production promotion, manifest/credential/database mutation, Pod restart, replica change, host reboot or market-scan schedule change occurred in this checkpoint.
+
+
+## Cross-repo production checkpoint — 2026-11-04 17:16 ICT / 10:16 UTC
+
+### Repository heads and open PRs
+| Repository | Master SHA | Open PRs | Latest relevant CI / workflow evidence |
+|---|---|---|---|
+| Platform Infra | `ba3a48d85f61` | #544/#541/#539 (draft); #1214 inspection snapshot pending | PR #1213 merged; exact-head validation and post-merge validation PASS |
+| TCE Dashboard | `a355ce070204` | None | WF-01 #41758031017, WF-02 #41758030952, WF-05 #41758031060 PASS; WF-06 #41810552435 FAIL; WF-12 #41810610019 workflow_run PASS |
+| StockDividend | `50ba0dfb67eb` | None | CI #41563856934 PASS; immutable publisher #41563856933 PASS |
+| Media Generation | `e4c7d8990aaf` | None | CI #41617592783 PASS |
+| Authentication | `f978a3f378ee` | #75 ready / #76 draft | #75/#76 exact-head `validate` PASS; Supabase Preview SKIPPED |
+
+### Inspection workflow reliability
+- PR #1212 merged the 17:05 ICT read-only snapshot at `33d5895e7312`; exact-head manifest validation #41811953949 PASS. Its workflow run had received a transient GitHub HTTP 502 on the merge API, then the exact same validated head was safely squash-merged.
+- PR #1213 merged as `ba3a48d85f61ee3f62e03cebe0c9a01ea9d3b408`. It added up to three retries for merge API/network 5xx responses, re-reading the PR and preserving the exact validated head guard on every attempt. Exact-head #41812823752 (validate-github-actions) and #41812823950 (validate-manifests) PASS; post-merge #41812892183 and #41812892184 PASS.
+- Push inspection run #41812892265 completed VPS inspection, output validation, and latest-master rebase successfully. It generated a fresh snapshot at `2026-11-04T10:14:55Z` (17:14:55 ICT) and opened PR #1214 at head `e2af01cbbb86b0a1e47e20f74ec25f98a710299d`.
+- PR #1214 was not merged: the run hit GitHub HTTP 502 while polling/reading the exact-head validation workflow. No successful exact-head validation run was found in Actions history. The snapshot is carried into this checkpoint PR and will receive ordinary PR validation; #1214 remains open until this replacement is merged, then can be closed as superseded.
+- This checkpoint adds bounded retry handling for GitHub API GETs in inspection validation. HTTP 000/500/502/503/504 are retried; other 4xx remain hard failures. Merge safety continues to require the exact PR head SHA.
+
+### Latest read-only K3s snapshot — 17:14:55 ICT
+- Node `tce-k3s-01`: Ready, ARM64, K3s `v1.36.3+k3s1`; disk pressure normal at 55%; host `restart_required: yes`. Ubuntu 22.04.5 LTS; containerd `2.3.2-k3s2`.
+- Media backend/frontend: 1/1 Running. MicroFE Shell/WS and NATS: 1/1 Running.
+- Stock Admin (two Pods) and new Stock Backend Pod: `ImagePullBackOff` on `12d63b4`; kubelet reports `no match for platform in manifest`. Existing Stock Backend replica remains 1/1. No image promotion performed.
+- TCE frontend/service: 0/0. MicroFE Auth and Keycloak: 0/0. Public Keycloak OIDC endpoints: HTTP 503.
+- Snapshot is read-only. No production manifests, image references, secrets, database, Pod, replica, or host state changed.
+
+### Native schedule evidence (do not conflate event types)
+- Latest Platform native inspection #41809725184 (16:45 ICT) failed while pushing its inspection branch; GitHub returned remote HTTP 500. Latest native watchdog #41792527398 and reconcile #41792374251 failed; recovery schedule #41787641688 passed.
+- The successful/failed inspection run #41812892265 is a push event, not a native schedule tick. No newer native schedule delivery was observed in the queried schedule history.
+- Latest TCE WF-06 native schedule #41810552435 (16:53 ICT) failed: TCE web, TCE API, Auth liveness, and Auth readiness all returned HTTP 503 (expected 200). WF-12 #41810610019 was a workflow_run success, not a native schedule tick. WF-07 #41785211971 native schedule PASS.
+- Preserve all existing cron expressions and TCE market-scan cadence. Do not weaken HTTP 200 health assertions to mask scale-to-zero services.
+
+### Release gates and ownership
+- Stock full-SHA immutable ARM64 publication remains PASS, but paired Admin/Backend promotion remains gated. Production stays on tag `12d63b4`; no release flag or GitOps manifest changed.
+- Auth #75/#76 remain gated on Supabase production integration effects and migration drift review. No migration or activation.
+- Media/Auth publisher E2E remains pending authorization.
+- App repositories own CI/build and immutable GHCR publication. Platform Infra owns production manifests, shared GHCR pull credentials, digest promotion/reconciliation, rollout and health.
+- `reconcile-vps.yml` remains the sole production apply authority. No duplicate SSH/Compose deployment authority.
+- `locally-uncensored-private` remains retired from active Platform workflows. Do not restore it without explicit owner authorization.
+- No production promotion, credential/database mutation, Pod restart, replica change, VPS reboot, or TCE market-scan schedule change occurred in this checkpoint.
