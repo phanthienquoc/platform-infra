@@ -4769,3 +4769,45 @@ No StockDividend promotion, production manifest apply, database migration, share
 - Auth: Supabase production integration/migration provenance review before PR #75/#76 merge or service activation. Media/Auth publisher E2E still requires release authorization. Host updates require a maintenance window.
 - No production image promotion, manifest apply, DB migration, shared GHCR pull-secret mutation, release-enable change, replica change, Pod restart or VPS reboot. Auth runtime Secret provision/verification ran with values suppressed; shared GHCR pull Secrets were unchanged.
 - `reconcile-vps.yml` remains the sole production apply authority. No SSH/Compose authority was added. Preserve useful CI/test/security/manual/release/scheduled workflows. TCE market-scan schedule unchanged.
+
+
+## Cross-repo readiness update — 2026-11-04 09:28 ICT / 02:28 UTC
+
+### Repository state, open PRs and merged recovery fix
+- Current master heads: Platform Infra `9ab987f8d876ba1f2e1c30f77f2edafa6727b147`; TCE Dashboard `a355ce070204cff209df1c9ba38843c972647860`; StockDividend `50ba0dfb67eb3dfaa376db0c752bbef5f0817bec`; Media Generation `e4c7d8990aafc7d837e918c9caf39722d623de7c`; Authentication `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
+- Open PRs: Platform #544/#541/#539 (draft, old bases); Authentication #75 (ready) and #76 (draft); no open PRs in TCE, StockDividend or Media. Platform PR #1187 is merged; PR #1176 remains closed/superseded.
+- Platform PR #1187, `fix/recovery-latest-run-query-20261104`, merged by squash as `9ab987f8d876ba1f2e1c30f77f2edafa6727b147`. It changes both reconciliation and inspection freshness lookups in `recover-stale-ops.yml` to read the latest master Actions run page, filter by exact workflow `.path` and `head_branch=master`, and select by `created_at`. The static workflow contract now requires these filters and rejects the prior workflow-specific pagination/sort expression.
+- Exact-head checks on PR head `6a17781c3efbe9a471fef91a31aa5b85ef7a9b16`: `validate-github-actions` #41760394034 PASS; `validate-manifests` #41760394024 PASS. Both check runs and all job steps completed successfully.
+- Post-merge checks on master SHA `9ab987f8...`: `validate-github-actions` #41760891957 PASS; `validate-manifests` #41760892039 PASS. The latter skipped only the changed-image-reference check because no production image references changed; manifest rendering, Auth GitOps validation, secret policy, immutable image policy and network-boundary checks passed.
+- The fix prevents recent manual/workflow-dispatch reconciliations from being ignored when the recovery controller evaluates whether another fallback apply is needed. Freshness thresholds and fail-closed behavior are unchanged. `reconcile-vps.yml` remains the only apply authority.
+
+### Platform schedule, recovery and production reconciliation
+- Latest native Platform schedule evidence: Inspection #41758796515 (02:08:48 UTC, SUCCESS); watchdog #41750880073 (00:59:41 UTC, FAILURE—stale Mirror/Inspection/Recovery); reconciliation #41750519522 (00:56:29 UTC, FAILURE—Stock health); Recovery #41744960810 (00:11:32 UTC, SUCCESS); Mirror #41737911916 (23:17:07 UTC, FAILURE before Git operations because `PLATFORM_INFRA_MIRROR_TOKEN` is missing/empty).
+- Do not count manual or `workflow_run` fallback events as native schedule ticks. Watchdog diagnostics reported queue wait 0m, so the current evidence points to stale/missing native schedule delivery rather than runner queue saturation.
+- Latest manual recovery reconciliation #41759228531 (02:12:39 UTC, workflow_dispatch) completed FAILURE solely at the StockDividend health lane. Shared reconcile job succeeded, GitOps drift was clean, `allow_image_changes=false`, and production manifest apply was skipped. Media, TCE, MicroFE and Auth lanes passed; Keycloak was skipped.
+- Stock health log #126342875255 confirms two Admin Pods and one new Backend Pod are Pending/ImagePullBackOff on tag `12d63b4`, with `no match for platform in manifest`. Existing Backend and legacy Frontend remain 1/1. The permanent architecture mismatch is correctly not “fixed” by a Pod restart.
+- Recovery #41759442527 (02:14:37 UTC, workflow_dispatch) completed SUCCESS. PR #1187 addresses the earlier duplicate-dispatch evidence by ensuring latest master Actions runs are considered across event types.
+
+### Latest K3s snapshot and workload health
+- Read-only inspection #41758796515 generated `debug/vps-latest.md` at 2026-11-04T02:08:56Z (blob `f3510e820804c8f5bc33fcf07ccf88253e3ab47f`). Node `tce-k3s-01` is Ready/ARM64, K3s v1.36.3+k3s1, Ubuntu 22.04.5, disk 55%, about 19 GiB available RAM; runner policy v14 and both runner services active. Docker 29.1.3; containerd 2.3.2-k3s2. Host still reports `restart_required=yes` with OS/containerd/Docker updates pending.
+- Media backend/frontend, MicroFE Shell/WS and NATS are 1/1. Stock Admin has two ImagePullBackOff Pods; new Stock Backend Pod is ImagePullBackOff; old Backend and legacy Frontend remain 1/1. TCE, Auth and Keycloak remain 0/0. Public TCE/Auth and Keycloak OIDC endpoints return HTTP 503 while their workloads are intentionally stopped.
+- No host upgrade/reboot was performed. The snapshot is read-only; the later reconciliation health log independently confirms the Stock image-pull failure.
+
+### TCE schedule and cross-repo heartbeat
+- Latest native TCE WF-12 #41759196674 (02:12:22 UTC) failed the WF-06 freshness check but sent an authenticated heartbeat successfully. Platform receiver #41759211141 completed SUCCESS after verifying the source repository, workflow path, event, run ID and full SHA; it did not dispatch duplicate reconciliation.
+- Latest native WF-06 #41731424392 (22:30:44 UTC) failed all four strict public HTTP 200 probes with HTTP 503: TCE home, TCE API health, Auth liveness and Auth readiness. WF-12 #41727501039 (22:04:27 UTC) failed freshness. WF-07 Backup #41739787575 (23:31:10 UTC) and Integration #41738887996 (23:24:25 UTC) passed.
+- TCE master CI after the health-contract ownership change passed: WF-05 #41758031060, WF-01 #41758031017 and WF-02 #41758030952. The mandatory WF-06/WF-12 contract remains owned by WF-05; Prettier does not duplicate the invocation.
+- TCE market-scan schedule and all existing cron declarations remain unchanged. Do not weaken public HTTP 200 health assertions to treat 503 as success.
+
+### App CI, immutable publication and owner gates
+- StockDividend master CI #41563856934 and Build/Publish #41563856933 passed. Publisher verified full-SHA ARM64 artifacts, but `release_enabled=false`; Platform handoff and atomic digest dispatch were SKIPPED. The live manifests still reference Admin/Backend tag `12d63b4`, which has the ARM64 manifest mismatch.
+- Media master CI #41617592783 passed; production backend/frontend remain 1/1 and digest-pinned. Paired publisher E2E remains pending.
+- Authentication master CI #41670642852 passed. Auth PR #75/#76 remain gated on Supabase production integration side effects and migration provenance/drift review; manual publisher E2E remains pending.
+- Owner gates: configure `PLATFORM_INFRA_MIRROR_TOKEN` as destination-only Contents:write for `phanthienquoc/locally-uncensored-private`; configure/verify `STOCKDIVIDEND_ACTIONS_READ_TOKEN` as StockDividend-only Actions:read in the protected Platform Environment and obtain explicit paired Admin/Backend ARM64 release authorization; authorize Media/Auth publisher E2E; complete Auth/Supabase review; arrange a maintenance window before host upgrades/reboot.
+- Credential values are not observable and were not inferred. No token was substituted or exposed.
+
+### Authority and safety
+- App repositories own tests/builds and immutable GHCR publication. Platform Infra owns production manifests, shared GHCR pull credentials, digest promotion, GitOps reconciliation, rollout and health verification.
+- `reconcile-vps.yml` remains the sole production apply authority. Preserve useful CI/test/security/manual/release/scheduled workflows; no duplicate direct SSH/Compose deployment authority.
+- No production image promotion, production manifest apply, database migration, shared GHCR pull-secret mutation, release-enable change, replica change, Pod restart or VPS reboot occurred in this checkpoint. Auth runtime Secret had been re-applied by the earlier reconciliation with values suppressed; shared GHCR pull Secrets remained unchanged.
+- TCE market-scan schedule unchanged.
