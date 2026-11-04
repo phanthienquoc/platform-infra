@@ -2353,3 +2353,7 @@ No production image promotion, manifest apply, database migration, shared pull-s
 - **Owner actions:** configure destination-only Mirror token; verify Stock protected Actions-read token and explicitly authorize paired ARM64 release; complete Auth/Supabase review; authorize Media/Auth E2E; arrange host maintenance window.
 - **PR #1176:** documentation-only; exact head has no workflow/check/status runs because path filters do not match docs. Branch-protection required-check policy could not be read through the integration, so the PR remains open and unmerged.
 - **Authority/safety:** app repos own tests/builds/immutable GHCR publication; Platform owns production manifests, shared pull credentials, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the only apply authority. Preserve useful CI/test/security/manual/release/scheduled jobs. No SSH/Compose authority, production image promotion, manifest apply, DB migration, GHCR pull-secret change, replica change, Pod restart or reboot. Existing Auth runtime Secret was re-applied with values suppressed. TCE market-scan schedule unchanged.
+
+
+## Workflow inventory PR state — 2026-11-04 07:00 ICT
+- Platform PR #1176 contains only the tracker, inventory and two checkpoint documents. Exact-head workflow runs/statuses are empty because docs-only paths do not trigger the existing validation workflows. Branch-protection required-check policy is inaccessible through the current integration; leave the PR open until required-check policy is verified.
