@@ -2761,3 +2761,21 @@ No production apply, promotion, database migration, secret mutation, replica cha
 - Preserve useful CI/test/security/manual/release/scheduled jobs; do not add direct SSH/Compose deployment authority.
 - Stock release, Auth activation and Media/Auth publisher E2E remain gated pending explicit authorization/credentials.
 - `locally-uncensored-private` remains retired. TCE market-scan schedule and all cron declarations unchanged.
+
+
+## Workflow inventory checkpoint — 2026-11-04 17:16 ICT / 10:16 UTC
+
+| Repository | CI / publication | Scheduled / operational status | Owner / gate |
+|---|---|---|---|
+| Platform Infra | PR #1213 exact-head and post-merge validations PASS | Native inspect #41809725184 failed on GitHub remote 500; watchdog #41792527398 stale; reconcile #41792374251 blocked by Stock health; recovery #41787641688 PASS | Sole production apply authority; #1214 snapshot PR awaiting safe validation |
+| TCE Dashboard | WF-01/02/05 PASS | WF-06 #41810552435 native schedule FAIL: four endpoints HTTP 503; WF-12 #41810610019 workflow_run PASS; WF-07 #41785211971 native schedule PASS | Keep strict HTTP 200 and all schedules; market-scan unchanged |
+| StockDividend | CI #41563856934 and immutable ARM64 publisher #41563856933 PASS | Admin and new Backend Pods ImagePullBackOff on production tag `12d63b4` | App owns build/publish; promotion requires explicit paired-digest release authorization |
+| Media Generation | CI #41617592783 PASS | Latest 17:14:55 ICT inspection: backend/frontend 1/1 | App owns build/publish; publisher E2E remains gated |
+| Authentication | CI #41670642852 PASS; PR #75/#76 exact-head validate PASS | Auth/Keycloak 0/0; public OIDC HTTP 503 | Supabase integration/migration review before merge/activation |
+
+### Platform inspection workflow contract
+- PR #1213 adds bounded exact-head merge retries for transient HTTP 000/500/502/503/504 and passed actionlint, yamllint, ShellCheck, ops regression, workflow-contract and manifest validation.
+- PR #1214's snapshot is not treated as merged evidence because its exact-head validation polling hit HTTP 502. The replacement checkpoint carries the 17:14:55 ICT snapshot and adds bounded retry for GitHub API GET calls.
+- Inspection remains read-only. GitOps apply remains in `reconcile-vps.yml`; no second SSH/Compose deployment authority is permitted.
+- Preserve manual, release, security, CI/test, and scheduled workflows. Do not remove or reschedule useful jobs.
+- `locally-uncensored-private` remains detached. TCE market-scan schedule remains unchanged.
