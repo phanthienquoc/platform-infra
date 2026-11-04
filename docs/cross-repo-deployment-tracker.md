@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-04 21:04 ICT (14:04 UTC)
+Last reviewed: 2026-11-04 21:18 ICT (14:04 UTC)
 
 ## Repository readiness
 
@@ -5542,3 +5542,15 @@ No production promotion, manifest/credential/database mutation, Pod restart, rep
 - `reconcile-vps.yml` remains the only production apply authority. No production manifest, image, credential, database, Pod, replica or host mutation occurred. `locally-uncensored-private` remains retired; all cron declarations and the TCE market-scan schedule are unchanged.
 
 Checkpoint: [2026-11-04 21:04 ICT](cross-repo-workflow-inventory-checkpoints/2026-11-04-2104-ict.md). The full inventory is in [cross-repo-workflow-inventory.md](cross-repo-workflow-inventory.md).
+
+
+## Current readiness update — 2026-11-04 21:18 ICT / 14:18 UTC
+
+- Platform Infra master is `67029764bb3ece241da364723ca43e8c98383210`. PR #1226 (GitOps-only MCP validator), #1227 (exclude read-only validator from recovery push triggers) and #1228 (fresh read-only VPS inspection) are all merged. #1226 exact-head checks #41845234742/#41845234698/#41845235723 and post-merge #41845398015/#41845398311/#41845398032 passed. #1227 exact-head #41845658307/#41845658591 and post-merge #41845802140/#41845801707 passed. #1228 inspection #41845846869 and exact-head manifest validation #41845977972 passed; merge SHA is the current master.
+- Open Platform PRs remain #1222 draft and #544/#541/#539 drafts. Auth PRs remain #75 ready and #76 draft. TCE, StockDividend and Media have no open PRs.
+- Recovery #41845398314 initially ran after #1226 because the new read-only validator matched the broad `scripts/**` push trigger. It dispatched reconcile #41845426647 with `mode=apply`, `allow_image_changes=false`, `target_app=all`. Auth Secret was already complete, GHCR pull Secrets were unchanged, permanent Stock image errors were not restarted, drift was clean and manifest apply was skipped. Auth/Media/TCE/MicroFE lanes passed; Stock health failed. PR #1227 excludes the validator path and passed exact-head/post-merge validation; its merge produced no new push recovery run.
+- Fresh snapshot #1228 generated 2026-11-04T14:16:14Z: node Ready/ARM64, K3s v1.36.3+k3s1, disk 55%, runner policy v14; Media/MicroFE/NATS 1/1; Stock Admin two Pods and new Backend ImagePullBackOff on `12d63b4`; old Backend and legacy Frontend 1/1; TCE/Auth/Keycloak 0/0; OIDC probes 503; GitOps drift clean; host restart required with containerd/Docker/Ubuntu updates pending. This is a fresh read-only snapshot, not proof that Stock or public health is ready.
+- Latest observed native Platform schedule evidence remains inspect #41809725184 (16:45 ICT) failed, reconcile #41792374251 (14:27 ICT) failed Stock health, watchdog #41792527398 (14:28 ICT) failed freshness, recovery #41787641688 (13:45 ICT) passed but stale. TCE WF-06 #41810552435 (16:53 ICT) failed four HTTP 200 checks with 503; WF-12 #41807645689 (16:27 ICT) failed freshness; WF-07 #41785211971 (13:23 ICT) passed. The new inspection and recovery runs were workflow_dispatch/workflow_run, not native schedule events.
+- Remaining gates: paired Stock Admin/Backend digest promotion needs protected Actions:read credential and explicit authorization; Auth production changes need Supabase/migration side-effect review; PR #1222 remains draft until read-only and shell UID/GID/build/test/lockfile contracts are met; host upgrades need a maintenance window. No cron or TCE market-scan schedule changed. No production manifest/image/credential/database/Pod/replica/host mutation occurred.
+
+Full checkpoint: [2026-11-04 21:18 ICT](cross-repo-workflow-inventory-checkpoints/2026-11-04-2118-ict.md).
