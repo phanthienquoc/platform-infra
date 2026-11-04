@@ -5167,3 +5167,14 @@ No production manifest/image reference, release flag, shared GHCR credential, da
 - `reconcile-vps.yml` remains the sole production apply authority. No duplicate SSH/Compose authority.
 
 No production promotion, manifest or credential mutation, database migration, Pod restart, replica change, host reboot, or TCE market-scan schedule change occurred in this checkpoint.
+
+
+## Post-merge verification — 2026-11-04 16:00 ICT / 09:04 UTC
+
+- Fresh K3s snapshot and readiness checkpoint PR #1204 was squash-merged as `49e8ea6e60168ce1702303ad7535f49bc4278958`.
+- Exact-head `validate-manifests` run #41804308471 passed on PR head `250fc456b3c8b1a7f032aa3aeabb41046366860f`.
+- Post-merge master `validate-manifests` run #41804382004 passed on merge SHA `49e8ea6e60168ce1702303ad7535f49bc4278958`.
+- The PR changed only `debug/vps-latest.md` and the two cross-repo readiness documents. Production manifests, images, secrets, databases, Pods, replicas and host state were not changed.
+- Automated inspection PR #1203 was closed as superseded after its stale-base merge conflict; the fresh snapshot was rebased onto current master and merged through #1204. Its earlier exact-head validation #41803947887 passed, but no merge was forced.
+- Latest live K3s snapshot remains generated at 16:00:13 ICT: node Ready; Media/MicroFE/NATS healthy; Stock Admin/new Backend ImagePullBackOff on `12d63b4`; TCE/Auth/Keycloak 0/0; host restart required. This is inspection evidence only, not a rollout.
+- Native Platform/TCE schedule delivery remains stale as recorded in the 16:00 ICT checkpoint. No cron was edited; TCE market-scan schedule unchanged.
