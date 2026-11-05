@@ -1,13 +1,13 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-05 10:04 ICT (2026-11-05 03:04 UTC)
-Platform Infra master at checkpoint: 8ae797a0bd69be772a590515d73dfce0e45a820e
+Last reviewed: 2026-11-05 10:10 ICT (2026-11-05 03:10 UTC)
+Platform Infra master at checkpoint: f38623f129253fc49301ee06eb5360b163eef232
 
 ## Repository readiness
 
 | Repository | Master SHA | Open PRs | Latest verified CI / publication |
 |---|---|---|---|
-| phanthienquoc/platform-infra | 8ae797a0bd69be772a590515d73dfce0e45a820e | #1222, #544, #541, #539 (all draft) | Inspection #41958436222 manual dispatch PASS at 09:56:44 ICT; snapshot committed as #1253. Validation #41958510609 PASS. Native recovery #41949145532 PASS; native reconcile #41950932898 FAIL only Stock health; native watchdog #41951133668 FAIL on stale inspection. |
+| phanthienquoc/platform-infra | f38623f129253fc49301ee06eb5360b163eef232 | #1222, #544, #541, #539 (all draft) | Inspection #41958436222 manual dispatch PASS at 09:56:44 ICT; snapshot committed as #1253. Validation #41958510609 PASS. Native recovery #41949145532 PASS; native reconcile #41950932898 FAIL only Stock health; native watchdog #41951133668 FAIL on stale inspection. |
 | phanthienquoc/TCE-dashboard | 52cecd5584e6c0a3daf0e2bcff6c89ca064e203d | None | WF-12 native #41958165099 FAIL at 09:54:09 ICT because WF-06 schedule evidence is 220m stale; WF-06 remains active but latest native run #41932031987 is 06:13:49 ICT and failed public HTTP 503 checks. WF-07 Backup #41936628258 PASS. |
 | phanthienquoc/stockdividend | 50ba0dfb67eb3dfaa376db0c752bbef5b0817bec | None | CI #41563856934 and immutable ARM64 publisher #41563856933 PASS on 2026-11-03. Promotion remains disabled; paired handoff/dispatch SKIPPED; production tag 12d63b4 lacks ARM64 manifest. |
 | phanthienquoc/media-generation | e4c7d8990aafc7d837e918c9caf39722d623de7c | None | CI #41617592783 PASS on 2026-11-03; latest 09:56 ICT snapshot shows backend/frontend 1/1 with digest-pinned imageIDs. |
@@ -337,3 +337,19 @@ Details:
 5. Obtain a maintenance window before host package upgrades/reboot.
 
 No production image, manifest, credential, database, Pod, replica or host mutation was performed. reconcile-vps.yml remains the sole production apply authority; app repos own build/test/immutable GHCR; Platform Infra owns GitOps, pull credentials, promotion and rollout. Preserve useful CI, security, backup, manual and scheduled workflows. No cron expression was changed; the TCE market-scan schedule is unchanged.
+
+
+## Audit correction — production-side effects of reconcile run #41958192072 (2026-11-05 10:10 ICT)
+
+The prior 10:04 checkpoint incorrectly described the reconcile run as having no credential mutation. The run was a workflow_dispatch with mode=apply, target_app=all and ALLOW_IMAGE_CHANGES=false. Its job-step API records the following successful steps:
+
+- Validate GHCR pull access before mutating cluster credentials.
+- Provision Auth runtime Secret from the platform-infra production Environment.
+- Bootstrap shared GHCR pull credentials.
+- Execute the managed image-pull-blocked workload restart policy.
+- Verify cluster after reconciliation.
+
+The shared preflight reported DRIFT=false; Apply production manifests and post-apply drift verification were skipped. Therefore, this run did perform controlled production credential reconciliation (Auth runtime Secret and shared GHCR pull Secret), despite making no production manifest/image-reference change. The Stock lane still failed: Admin and new Backend remained ImagePullBackOff on tag 12d63b4 because the ARM64 manifest is absent. The run did not establish Stock recovery or a healthy overall deployment.
+
+Do not describe this reconcile as zero production-side operations. The evidence does not show a database migration, image digest promotion, manifest apply, desired replica change or host reboot. The workflow-step summary shows the managed restart step completed, but this audit does not infer that every blocked Pod was restarted; the subsequent inspection still shows the Stock Admin/Backend failures.
+
