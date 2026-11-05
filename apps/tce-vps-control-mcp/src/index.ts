@@ -17,7 +17,7 @@ const TOKEN = process.env.MCP_BEARER_TOKEN ?? "";
 const AUDIT_FILE = process.env.AUDIT_FILE ?? "/var/log/tce-vps-control-mcp/audit.jsonl";
 const KUBECTL = process.env.KUBECTL_PATH ?? "/usr/local/bin/kubectl";
 const KUBECONFIG = process.env.KUBECONFIG ?? "/etc/tce-vps-control-mcp/kubeconfig";
-const MAX_COMMAND_MS = 60_000;\nconst SHELL_UID = Number(process.env.SHELL_UID ?? "");\nconst SHELL_GID = Number(process.env.SHELL_GID ?? "");
+const MAX_COMMAND_MS = 60_000;
 const MAX_OUTPUT = 256 * 1024;
 const COMMAND_MAX_LENGTH = 4_000;
 const ROOTS = (process.env.ALLOWED_CWD_ROOTS ?? "/srv,/var/log,/tmp")
@@ -26,7 +26,7 @@ const ROOTS = (process.env.ALLOWED_CWD_ROOTS ?? "/srv,/var/log,/tmp")
 if (TOKEN.length < 48) {
   throw new Error("MCP_BEARER_TOKEN must be a randomly generated secret of at least 48 characters.");
 }
-if (!Number.isInteger(SHELL_UID) || SHELL_UID < 1 || !Number.isInteger(SHELL_GID) || SHELL_GID < 1) {\n  throw new Error("SHELL_UID and SHELL_GID must identify the dedicated unprivileged shell account and shared operations group.");\n}\nif (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
+if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
   throw new Error("PORT must be a valid TCP port.");
 }
 
@@ -42,8 +42,8 @@ type AuditRecord = {
 };
 
 async function audit(record: AuditRecord): Promise<void> {
-  await mkdir(path.dirname(AUDIT_FILE), { recursive: true, mode: 0o750 });
-  await appendFile(AUDIT_FILE, JSON.stringify(record) + "\n", { mode: 0o640 });
+  await mkdir(path.dirname(AUDIT_FILE), { recursive: true, mode: 0o700 });
+  await appendFile(AUDIT_FILE, JSON.stringify(record) + "\n", { mode: 0o600 });
 }
 
 function safeEqual(left: string, right: string): boolean {
@@ -86,10 +86,20 @@ function validateNamespace(value: string): string {
   return value;
 }
 
-function validateCwd(input?: string): string {
-  const cwd = path.resolve(input ?? ROOTS[0] ?? "/srv");
-  const allowed = ROOTS.some((root) => cwd === root || cwd.startsWith(root + path.sep));
-  if (!allowed) throw new Error("Working directory is outside ALLOWED_CWD_ROOTS.");
+async function validateCwd(input?: string): Promise<string> {
+  const requested = path.resolve(input ?? ROOTS[0] ?? "/srv");
+  const cwd = await realpath(requested);
+  const allowedRoots = await Promise.all(ROOTS.map(async (root) => {
+    try {
+      return await realpath(root);
+    } catch {
+      return null;
+    }
+  }));
+  const allowed = allowedRoots.some((root) =>
+    root !== null && (cwd === root || cwd.startsWith(root + path.sep))
+  );
+  if (!allowed) throw new Error("Working directory resolves outside ALLOWED_CWD_ROOTS.");
   return cwd;
 }
 
@@ -108,7 +118,7 @@ function assertSafeShell(command: string): void {
     />\s*\/dev\/(sd[a-z]|nvme|vd[a-z])/i
   ];
   if (forbidden.some((pattern) => pattern.test(command))) {
-    throw new Error("Command rejected by the host safety policy. Use the dedicated Docker/Kubernetes tools for managed operations.");
+    throw new Error("Command rejected by the host safety policy. Use read-only diagnostics; production mutations must go through Platform reconcile-vps.yml.");
   }
 }
 
@@ -213,7 +223,7 @@ function createMcpServer(): McpServer {
   });
 
   server.registerTool("shell_execute", {
-    description: "Execute a shell command as the dedicated unprivileged tce-mcp OS user. Arbitrary shell syntax is supported, but sudo, kubectl, docker and destructive host commands are blocked. Use only when the user explicitly requested the command. Command output is truncated and secrets are redacted.",
+    description: "Execute a shell command as the separate unprivileged tce-shell OS account. It has no sudoers entry, Docker group membership or Kubernetes kubeconfig. Arbitrary shell syntax is supported within the OS permissions of tce-shell. Use only when the user explicitly requested the command. Output is truncated and secrets are redacted.",
     inputSchema: {
       command: z.string().min(1).max(COMMAND_MAX_LENGTH),
       cwd: z.string().optional(),
@@ -224,10 +234,10 @@ function createMcpServer(): McpServer {
     const workingDirectory = await validateCwd(cwd);
     const fingerprint = createHash("sha256").update(command).digest("hex");
     const result = await executeAudited("shell_execute", fingerprint, () =>
-      run("/bin/bash", ["-lc", command], {
+      run("/usr/bin/sudo", ["-n", "-u", "tce-shell", "-H", "--", "/bin/bash", "-lc", command], {
         cwd: workingDirectory,
         timeout: timeoutMs ?? 15_000,
-        env: { HOME: "/var/lib/tce-shell" },\n        uid: SHELL_UID,\n        gid: SHELL_GID
+        env: { HOME: "/var/lib/tce-shell" }
       })
     );
     return resultText(result);
@@ -253,20 +263,6 @@ function createMcpServer(): McpServer {
     validateName(container, "container");
     const result = await executeAudited("docker_logs", undefined, () =>
       run("/usr/bin/sudo", ["-n", "/usr/local/sbin/tce-mcp-docker", "logs", container, String(tail)])
-    );
-    return resultText(result);
-  });
-
-  server.registerTool("docker_restart", {
-    description: "Restart one Docker container. MUTATING: call only after the user explicitly confirms the target container and restart.",
-    inputSchema: {
-      container: z.string().min(1).max(128),
-      confirmedByUser: z.literal(true)
-    }
-  }, async ({ container }) => {
-    validateName(container, "container");
-    const result = await executeAudited("docker_restart", undefined, () =>
-      run("/usr/bin/sudo", ["-n", "/usr/local/sbin/tce-mcp-docker", "restart", container], { timeout: 30_000 })
     );
     return resultText(result);
   });
@@ -304,24 +300,6 @@ function createMcpServer(): McpServer {
     if (previous) args.push("--previous");
     const result = await executeAudited("k8s_logs", undefined, () =>
       run(KUBECTL, args, { timeout: 20_000, env: { KUBECONFIG } })
-    );
-    return resultText(result);
-  });
-
-  server.registerTool("k8s_rollout_restart", {
-    description: "Restart a Kubernetes Deployment by issuing kubectl rollout restart. MUTATING: use only after the user explicitly confirms namespace and deployment.",
-    inputSchema: {
-      namespace: z.string().min(1).max(63),
-      deployment: z.string().min(1).max(253),
-      confirmedByUser: z.literal(true)
-    }
-  }, async ({ namespace, deployment }) => {
-    validateNamespace(namespace);
-    if (!/^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$/.test(deployment)) throw new Error("Invalid deployment name.");
-    const result = await executeAudited("k8s_rollout_restart", undefined, () =>
-      run(KUBECTL, ["rollout", "restart", `deployment/${deployment}`, "-n", namespace], {
-        timeout: 30_000, env: { KUBECONFIG }
-      })
     );
     return resultText(result);
   });
