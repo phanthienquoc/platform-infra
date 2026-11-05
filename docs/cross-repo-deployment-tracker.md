@@ -1,5 +1,34 @@
 # Cross-Repository Production Deployment Tracker
 
+## Runtime diagnosis update — 2026-11-06 03:34 ICT (2026-11-05 20:34 UTC)
+
+This update supersedes the earlier statement that TCE/Auth public HTTP 503 responses were only correlated with zero-replica observations. Current GitOps source manifests and their ingress routes now prove the expected upstream-unavailable state.
+
+### Public 503 root cause — intentional operator shutdown
+
+- TCE ingress `apps/tce-dashboard/overlays/prod/ingress.yaml` routes `tce.mrcute.space/` to Service `tce-frontend:80` and `/api` to `tce-service:8210`.
+- Both backing Deployments explicitly declare `replicas: 0` in `apps/tce-dashboard/base/frontend.yaml` and `apps/tce-dashboard/base/service.yaml`, with comments recording the temporary operator request to scale TCE down until re-enabled.
+- Auth ingress `platform/microfe/ingress.yaml` routes `auth.mrcute.space/` to Service `microfe-auth:80`.
+- The backing `platform/auth-service/deployment.yaml` explicitly declares `replicas: 0` and records the temporary operator request to stop Auth API and Keycloak until the Supabase/Keycloak connection issue is resolved.
+- `platform/keycloak/deployment.yaml` also explicitly declares `replicas: 0` under the same operator shutdown intent.
+- These routes plus zero desired replicas explain the strict public 503 probes for TCE web/API and Auth readiness/liveness. The healthcheck is correctly reporting intentional unavailability; it is not evidence of a new image-pull or deployment regression.
+- Do not restore replicas, alter ingress, or weaken HTTP 200 gates without a new explicit operator authorization. The existing shutdown state is intentional and must remain GitOps-managed.
+
+### PR #1289 completion
+
+- PR #1289 merged by squash as `f5d62e4a4f9abd992458849929a14a85a3250614`.
+- Exact-head validation #42104285775 PASS on `5a570ae15ded480b2c391941db9bc71eeb8d4cb5`.
+- Post-merge validation #42104477168 PASS on the merge SHA. Manifest rendering, digest-promotion helpers, MCP GitOps-only contract, shell checks, Auth GitOps, YAML structure, secret policy, immutable image policy, Keycloak isolation and network boundaries passed. Changed-image validation was skipped because PR #1289 was documentation-only.
+
+### Updated next actions
+
+1. Keep TCE/Auth/Keycloak at their operator-requested zero-replica state until the operator resolves the Supabase/Keycloak issue and explicitly authorizes reactivation.
+2. Continue verifying the new TCE PR #1025 stale-WF-06 recovery path on a post-merge native WF-07/WF-12 event; do not count pre-merge runs as E2E evidence.
+3. Keep Stock Admin/Backend paired promotion blocked until explicit release authorization and protected publisher provenance; current tag `12d63b4` remains ARM64-incompatible.
+4. Preserve native schedule freshness separately from workflow_dispatch fallback freshness; do not change cron declarations.
+5. Keep Authentication migrations and Keycloak activation gated; wait for an approved VPS maintenance window before host/package changes.
+
+
 ## Current review — 2026-11-06 03:27 ICT (2026-11-05 20:27 UTC)
 
 This review re-read all five default-branch commits, open PRs, latest Actions runs, Platform native schedule history, the latest reconciliation and lane summaries, the current read-only VPS snapshot, Stock's publisher contract/run, and TCE's newly merged recovery change. It supersedes the 01:58 review below.
@@ -79,9 +108,9 @@ The latest 100 Platform Actions runs through #42099407335 (03:01:17 ICT) contain
 - TCE market-scan schedule unchanged.
 
 
-Last reviewed: 2026-11-06 03:27 ICT (2026-11-05 20:27 UTC)
-Platform Infra master at checkpoint: 9d533e503d412e583873a91aefd66263c297fafa
-Latest checkpoint: docs/cross-repo-workflow-inventory-checkpoints/2026-11-06-0327-ict.md
+Last reviewed: 2026-11-06 03:34 ICT (2026-11-05 20:34 UTC)
+Platform Infra master at checkpoint: f5d62e4a4f9abd992458849929a14a85a3250614
+Latest checkpoint: docs/cross-repo-workflow-inventory-checkpoints/2026-11-06-0334-ict.md
 
 ## Current review — 2026-11-06 01:58 ICT (2026-11-05 18:58 UTC)
 

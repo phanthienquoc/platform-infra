@@ -1,3 +1,13 @@
+## Workflow inventory runtime update — 2026-11-06 03:34 ICT / 2026-11-05 20:34 UTC
+
+- **Platform PR #1289:** merged as `f5d62e4a4f9abd992458849929a14a85a3250614`; exact-head #42104285775 PASS and post-merge #42104477168 PASS.
+- **TCE PR #1025:** merged as `162390fe4811131c11d3f39d264e0722a826dc0f`; exact-head WF-05/WF-02 and post-merge WF-01/WF-05/WF-02 passed. No qualifying post-merge native WF-07/WF-12 event has yet exercised the new WF-13 stale-WF-06 path.
+- **Public 503 root cause now confirmed by GitOps source:** TCE ingress routes to `tce-frontend` and `tce-service`, both explicitly `replicas: 0` under a temporary operator shutdown request. Auth ingress routes to `microfe-auth`, whose Deployment is explicitly `replicas: 0`; Keycloak is also `replicas: 0`. These zero-replica states explain the expected strict public 503 responses. Do not restore replicas or weaken HTTP health checks without explicit operator authorization.
+- **Stock:** production overlay still uses `newTag: 12d63b4` for both Admin and Backend. Latest publisher #41563856933 verified immutable ARM64 full-SHA images, but the production hold was false and paired promotion was skipped. The old production tag remains architecture-incompatible; no release authorization.
+- **Platform native schedules:** latest native inspect #42049660972, reconcile #42068683835, recovery #42068414686 and watchdog #42070623710 remain the latest native schedule events. The 03:00 inspection #42099284088 was workflow_dispatch fallback, not native schedule evidence. Preserve cron declarations.
+- **Auth PRs:** #75 remains ready with exact-head `validate` PASS but `Supabase Preview` SKIPPED and commit status pending; #76 remains draft. Do not merge or run migrations on historical/partial checks.
+- **Ownership/safety:** app repos own tests/builds/immutable GHCR; Platform owns manifests/credentials/provenance/promotion/reconcile/rollout. `reconcile-vps.yml` remains sole apply authority; `inspect-vps.yml` remains read-only. No production image, manifest, credential, database, replica, host or cron mutation. TCE market-scan schedule unchanged.
+
 ## Workflow inventory runtime update — 2026-11-06 03:27 ICT / 2026-11-05 20:27 UTC
 
 - **Repository heads:** Platform Infra `9d533e503d412e583873a91aefd66263c297fafa`; TCE Dashboard `162390fe4811131c11d3f39d264e0722a826dc0f`; StockDividend `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media Generation `e4c7d8990aafc7d837e918c9caf39722d623de7c`; Authentication `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
