@@ -67,3 +67,83 @@ jobs:
           path: apps/tce-vps-control-mcp/package-lock.json
           if-no-files-found: error
           retention-days: 7
+
+  # Temporary, isolated bootstrap: commit only the previously reviewed lockfile.
+  # This job does not execute PR code; remove it after package-lock.json is committed.
+  commit-reviewed-lockfile:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: Checkout exact PR head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: true
+
+      - name: Download the reviewed lockfile artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
+        with:
+          name: tce-vps-control-mcp-package-lock
+          repository: ${{ github.repository }}
+          run-id: 42030355637
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: apps/tce-vps-control-mcp
+
+      - name: Verify artifact integrity and dependency contract
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          path = Path("apps/tce-vps-control-mcp/package-lock.json")
+          raw = path.read_bytes()
+          expected_sha256 = "105eb616f8319e0c1d3234429434d35828c750f29a595395aace0f03e6b6e2c0"
+          actual_sha256 = hashlib.sha256(raw).hexdigest()
+          if actual_sha256 != expected_sha256:
+              raise SystemExit(f"Reviewed lockfile SHA-256 mismatch: {actual_sha256}")
+
+          lock = json.loads(raw)
+          if lock.get("lockfileVersion") != 3:
+              raise SystemExit("Expected npm lockfile version 3.")
+
+          root = lock.get("packages", {}).get("")
+          expected_dependencies = {"@modelcontextprotocol/sdk": "1.12.1", "zod": "3.25.76"}
+          expected_dev_dependencies = {"@types/node": "22.15.30", "typescript": "5.8.3"}
+          if root is None or root.get("dependencies") != expected_dependencies:
+              raise SystemExit("Lockfile root dependencies do not match package.json.")
+          if root.get("devDependencies") != expected_dev_dependencies:
+              raise SystemExit("Lockfile root devDependencies do not match package.json.")
+
+          entries = [(name, value) for name, value in lock["packages"].items() if name]
+          invalid = [
+              name for name, value in entries
+              if not value.get("integrity")
+              or not str(value.get("resolved", "")).startswith("https://registry.npmjs.org/")
+          ]
+          if len(entries) != 93 or invalid:
+              raise SystemExit(f"Invalid lockfile entries: count={len(entries)}, invalid={invalid}")
+
+          print(f"Reviewed lockfile verified: {len(entries)} packages, SHA-256 {actual_sha256}")
+          PY
+
+      - name: Commit reviewed lockfile to the PR branch
+        env:
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          git check-ref-format --branch "$PR_HEAD_REF"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/tce-vps-control-mcp/package-lock.json
+          if git diff --cached --quiet; then
+            echo "The reviewed lockfile is already committed."
+            exit 0
+          fi
+          git commit -m "chore(vps-mcp): commit reviewed npm lockfile"
+          git push origin "HEAD:refs/heads/$PR_HEAD_REF"
