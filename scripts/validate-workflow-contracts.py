@@ -307,6 +307,8 @@ for required_path in (
 recovery_push_paths = recovery.split("  push:", 1)[1].split("  workflow_dispatch:", 1)[0]
 if '"!apps/**/*.md"' not in recovery_push_paths:
     fail("Recovery push must exclude Markdown-only app documentation from production bootstrap.")
+if "'!apps/tce-vps-control-mcp/**'" not in recovery_push_paths:
+    fail("Recovery push must exclude the diagnostics-only VPS MCP from production bootstrap.")
 if '".github/workflows/reconcile-vps.yml"' in recovery_push_paths:
     fail("Changes to the production apply workflow must be validated but must not auto-dispatch production reconciliation.")
 if '".github/workflows/recover-stale-ops.yml"' in recovery_push_paths:
@@ -379,11 +381,16 @@ if "run-name: Reconcile VPS —" not in reconcile:
 reconcile_push_paths = reconcile.split("  push:", 1)[1].split("\\n\\npermissions:", 1)[0]
 if "- apps/**" not in reconcile_push_paths or "- '!apps/**/*.md'" not in reconcile_push_paths:
     fail("Production reconciliation push paths must exclude Markdown-only app documentation.")
+if "'!apps/tce-vps-control-mcp/**'" not in reconcile_push_paths:
+    fail("Production reconciliation push paths must exclude the diagnostics-only VPS MCP.")
 scope_resolver = (ROOT / "scripts" / "resolve-push-deployment-scope.sh").read_text(encoding="utf-8")
 for required in (
     "apps/**/*.md|apps/**/docs/*",
     "assert_failure apps/stockdividend/README.md",
     "assert_failure apps/stockdividend/docs/production-runtime.md",
+    "apps/tce-vps-control-mcp/*",
+    "assert_failure apps/tce-vps-control-mcp/package.json",
+    "assert_scope tce-dashboard apps/tce-dashboard/overlays/prod/kustomization.yaml apps/tce-vps-control-mcp/package.json",
 ):
     if required not in scope_resolver:
         fail(f"Push scope resolver must ignore app documentation: {required}")
