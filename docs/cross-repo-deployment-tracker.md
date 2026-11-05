@@ -1,17 +1,17 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-05 07:56 ICT (2026-11-05 00:56 UTC)
-Platform Infra master at checkpoint: 420ff3091867b35772472a1ab54efd74d9e5c255
+Last reviewed: 2026-11-05 09:00 ICT (2026-11-05 02:00 UTC)
+Platform Infra master at checkpoint: 76dad0be9a3aab4130dbd25b7c2c00deb8e24d9e
 
 ## Repository readiness
 
 | Repository | Master SHA | Open PRs | Latest verified CI / publication |
 |---|---|---|---|
-| phanthienquoc/platform-infra | 420ff3091867b35772472a1ab54efd74d9e5c255 | #1222, #544, #541, #539 (all draft) | Latest master validation #41938463049 PASS at 07:03:36 ICT. Native inspection #41934713847 PASS at 06:33:56 ICT is the latest schedule event; no newer Platform schedule event observed by 07:56. Reconcile #41917440202 FAIL (Stock health), recovery #41914511298 PASS but stale, watchdog #41918315745 FAIL. |
-| phanthienquoc/TCE-dashboard | 52cecd5584e6c0a3daf0e2bcff6c89ca064e203d | None | Latest native schedule #41936628258 WF-07 Backup PASS at 06:48:44 ICT. WF-06 #41932031987 FAIL at 06:13:49 ICT (four endpoints HTTP 503); WF-12 #41928632194 FAIL at 05:49:42 ICT. Workflow_run #41932063303 PASS only for forwarding, not native schedule evidence. No newer TCE schedule event observed by 07:56. |
-| phanthienquoc/stockdividend | 50ba0dfb67eb3dfaa376db0c752bbef5b0817bec | None | CI #41563856934 and immutable ARM64 publisher #41563856933 PASS on 2026-11-03. Publisher release gate explicitly disables production GitOps promotion; handoff validation and paired Admin/Backend dispatch are SKIPPED. Existing production tag 12d63b4 remains incompatible with ARM64. |
-| phanthienquoc/media-generation | e4c7d8990aafc7d837e918c9caf39722d623de7c | None | Media CI #41617592783 PASS on 2026-11-03. Latest available K3s snapshot at 06:34 ICT shows backend/frontend 1/1 with digest-pinned imageIDs; snapshot is stale by 07:56. |
-| phanthienquoc/phanthienquoc-authentication | f978a3f378ee22d4630909c2d182275b21ac9e9a | #75 ready; #76 draft | Auth CI #41670642852 PASS on 2026-11-03. PR #75/#76 validation checks PASS but Supabase Preview is SKIPPED; migration/production gate remains closed. |
+| phanthienquoc/platform-infra | 76dad0be9a3aab4130dbd25b7c2c00deb8e24d9e | #1222, #544, #541, #539 (all draft) | Inspection PR #1251 exact-head validation #41949516885 PASS at 08:35:13 ICT; master is the merged read-only snapshot. Native recovery #41949145532 PASS; native reconcile #41950932898 FAIL only in Stock health; native watchdog #41951133668 FAIL on stale native inspection. |
+| phanthienquoc/TCE-dashboard | 52cecd5584e6c0a3daf0e2bcff6c89ca064e203d | None | Latest native WF-07 Backup #41936628258 PASS at 06:48:44 ICT. WF-06 #41932031987 FAIL (four HTTP 503); WF-12 #41928632194 FAIL. No newer TCE schedule run observed by 09:00 ICT. |
+| phanthienquoc/stockdividend | 50ba0dfb67eb3dfaa376db0c752bbef5b0817bec | None | CI #41563856934 and immutable ARM64 publisher #41563856933 PASS on 2026-11-03. Promotion gate remains disabled; paired handoff/dispatch SKIPPED; production tags 12d63b4 remain incompatible with ARM64. |
+| phanthienquoc/media-generation | e4c7d8990aafc7d837e918c9caf39722d623de7c | None | CI #41617592783 PASS on 2026-11-03; 08:34 ICT snapshot shows backend/frontend 1/1 with digest-pinned imageIDs. |
+| phanthienquoc/phanthienquoc-authentication | f978a3f378ee22d4630909c2d182275b21ac9e9a | #75 ready; #76 draft | CI #41670642852 PASS on 2026-11-03; PR exact-head checks historical and Supabase Preview SKIPPED. |
 
 Current Platform Infra PR heads and last returned validation runs:
 - #1222 draft, head f018e39eda52770539fc10671fba0d04baec8046; validate-manifests #41821355040 PASS. The PR remains unsafe for deployment: it still proposes Docker/Kubernetes mutation tools, the previously reviewed source/installer newline defects and missing SHELL_UID/GID forwarding remain unresolved, and reproducible build/tests/lockfile evidence is absent.
@@ -121,7 +121,7 @@ TCE native schedule evidence:
 
 ## Latest workflow inventory checkpoint
 
-[2026-11-05 07:56 ICT](cross-repo-workflow-inventory-checkpoints/2026-11-05-0756-ict.md) records the current five-repository heads/open PRs/checks, missing native schedule events, stale K3s snapshot age, Stock paired-release gate and Auth Supabase migration gate. The preceding 07:01 ICT checkpoint remains in the inventory history.
+[2026-11-05 09:00 ICT](cross-repo-workflow-inventory-checkpoints/2026-11-05-0900-ict.md) records the current five-repository heads/open PRs/checks, native recovery/reconcile delivery, stale native inspection schedule, fresh manual snapshot, Stock paired-release gate and Auth Supabase migration gate. The 07:56 ICT checkpoint remains in the inventory history.
 
 
 ## Checkpoint update — 2026-11-05 07:56 ICT (00:56 UTC)
@@ -197,6 +197,102 @@ Evidence:
 - TCE WF-06 #41932031987: https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41932031987
 - TCE WF-12 #41928632194: https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41928632194
 - TCE WF-07 Backup #41936628258: https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41936628258
+- Stock publisher #41563856933: https://github.com/phanthienquoc/stockdividend/actions/runs/41563856933
+- Media CI #41617592783: https://github.com/phanthienquoc/media-generation/actions/runs/41617592783
+- Auth CI #41670642852: https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41670642852
+
+
+# Cross-repo deployment readiness checkpoint — 2026-11-05 09:00 ICT / 02:00 UTC
+
+## Repository state and pull requests
+
+All five default-branch refs, open PRs, latest Actions runs and the current deployment tracker were re-read for this checkpoint.
+
+| Repository | Master SHA | Open PRs | Latest verified CI / run evidence |
+|---|---|---|---|
+| Platform Infra | `76dad0be9a3aab4130dbd25b7c2c00deb8e24d9e` | #1222, #544, #541, #539 (all draft) | Inspection snapshot PR #1251 exact-head validation #41949516885 PASS; PR #1251 merged. Native recovery #41949145532 PASS; native reconcile #41950932898 FAIL only in Stock health; native watchdog #41951133668 FAIL because native inspection is stale. |
+| TCE Dashboard | `52cecd5584e6c0a3daf0e2bcff6c89ca064e203d` | None | Latest native schedule WF-07 Backup #41936628258 PASS at 06:48:44 ICT. WF-06 #41932031987 FAIL at 06:13:49 ICT; WF-12 #41928632194 FAIL at 05:49:42 ICT. No newer TCE schedule run in the inspected Actions history. |
+| StockDividend | `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec` | None | CI #41563856934 and immutable ARM64 publisher #41563856933 PASS on 2026-11-03. Production promotion remains explicitly disabled; paired handoff/dispatch SKIPPED. |
+| Media Generation | `e4c7d8990aafc7d837e918c9caf39722d623de7c` | None | CI #41617592783 PASS on 2026-11-03. Latest snapshot shows backend/frontend 1/1 and digest-pinned. |
+| Authentication | `f978a3f378ee22d4630909c2d182275b21ac9e9a` | #75 ready; #76 draft | CI #41670642852 PASS on 2026-11-03. Exact-head PR checks #40446492086/#41329425940 PASS but historical; Supabase Preview remains SKIPPED. |
+
+Open PR exact heads remain unchanged:
+- Platform #1222: `f018e39eda52770539fc10671fba0d04baec8046`; last PR validation #41821355040 PASS (historical). Still draft and unsafe: proposed Docker/Kubernetes mutation tools, unresolved shell/newline and UID/GID isolation issues, and no reproducible lockfile/build/test/ShellCheck evidence.
+- Platform #544: `c95e7daecb83b65577b54303427fe4ea81adfe06`; #38575430454 PASS (historical, draft).
+- Platform #541: `b8f7c6ba04e3d971336a899b2efd5894662083b3`; #38567431761 PASS (historical, draft).
+- Platform #539: `2dc48b97017ecb08e49682633303a2f1d5e991a1`; #38548718033 PASS (historical, draft).
+- Auth #75: `a8e8a1d99e86a679b8d2ea7c7e7fa91302ffcc05`; #40446492086 PASS (historical, ready).
+- Auth #76: `f19cacb0bf2b454b3152bd3a501f6f88d0a14a58`; #41329425940 PASS (historical, draft).
+
+## Platform native schedule evidence
+
+Native schedule events are separated from workflow_dispatch, workflow_run and repository_dispatch. A fallback can refresh a snapshot or run reconciliation, but it cannot satisfy native schedule freshness.
+
+| Workflow | Latest native schedule | Result at 09:00 ICT |
+|---|---|---|
+| inspect-vps | #41934713847 at 06:33:56 ICT | PASS but stale; no later event=schedule observed |
+| recover-stale-ops | #41949145532 at 08:31:53 ICT | PASS |
+| reconcile-vps | #41950932898 at 08:47:55 ICT | FAIL in StockDividend health lane |
+| reconcile-schedule-watchdog | #41951133668 at 08:49:44 ICT | FAIL because latest native inspect run was 135 minutes old |
+
+Details:
+- The scheduled recovery controller #41949145532 successfully detected stale reconciliation and dispatched the existing GitOps authority as workflow_dispatch #41949160533. Payload evidence in its log: `ref=master`, source SHA `bba0cf2e8dafaf312fea45b8c8a9c93d22aa5ec0`, `mode=apply`, `allow_image_changes=false`, `target_app=all`. The fallback is not native schedule evidence.
+- Reconcile #41950932898 had no runner queue delay. Shared preflight and reconciliation job succeeded; no manifest drift was detected, so manifest apply and rollout restarts were skipped. Auth runtime Secret provision/verification completed; Auth, TCE, MicroFE and Media health lanes succeeded. Stock health failed on Admin and new Backend ImagePullBackOff. The final lane summary correctly failed.
+- The Stock lane log identifies `ghcr.io/phanthienquoc/stockdividend/admin:12d63b4` (two Pods) and `backend:12d63b4` (one Pod) with `no match for platform in manifest`. `ALLOW_IMAGE_CHANGES=false`; no image was promoted and rollout restart was skipped.
+- Watchdog #41951133668 verified `inspect-vps` and `reconcile-vps` are active and found no scheduled reconciliation runner queue delay. It accepted native recovery #41949145532 (17 minutes old at watchdog time) but failed native inspection freshness: latest native inspect #41934713847 was 135 minutes old, beyond the 75-minute budget.
+- The manual read-only inspection #41949431808 ran at 08:34:27 ICT and generated snapshot at 08:34:36 ICT. Recovery workflow_dispatch #41949390240 completed the fallback path. Inspection PR #1251 merged exact head `e063193f1bdb8383a06ee9af891450753793f313` as master commit `76dad0be9a3aab4130dbd25b7c2c00deb8e24d9e`. This fresh fallback snapshot does not clear the native inspect schedule blocker.
+- Recovery workflow_run #41951186498 succeeded and explicitly observed the fresh workflow_dispatch inspection fallback #41949431808 (14 minutes old at its reference time); it did not conflate that fallback with native schedule evidence. Watchdog workflow_run #41951186419 also failed native inspection freshness.
+
+## Latest K3s snapshot
+
+`debug/vps-latest.md` was generated at 2026-11-05T01:34:36Z (08:34:36 ICT), about 26 minutes old at this checkpoint; it is within the 75-minute snapshot freshness budget but is still point-in-time evidence.
+
+- Node `tce-k3s-01`: Ready, ARM64; K3s v1.36.3+k3s1; containerd 2.3.2-k3s2; disk 56%; available RAM about 19 GiB.
+- Media backend/frontend: 1/1. MicroFE Shell/WS and NATS: 1/1.
+- Stock Admin: two Pods 0/1 ImagePullBackOff on tag `12d63b4`; new Backend Pod 0/1 ImagePullBackOff on `12d63b4`; previous Backend and Frontend 1/1.
+- TCE frontend/service: 0/0. MicroFE Auth and Keycloak: 0/0. Public Keycloak OIDC discovery probes returned HTTP 503.
+- Host `restart_required=yes`; Docker/containerd and Ubuntu package upgrades remain pending. No reboot or upgrade was performed.
+
+## TCE, Stock, Media and Auth gates
+
+- TCE WF-06 #41932031987 failed four strict public probes (TCE API, TCE web, Auth liveness and Auth readiness) with HTTP 503 instead of HTTP 200. WF-12 native #41928632194 failed; workflow_run #41932063303 passed heartbeat forwarding only. WF-07 Backup #41936628258 passed. No newer TCE schedule event was present by this checkpoint. Preserve all TCE cron declarations, especially the market-scan schedule; do not weaken HTTP 200.
+- Stock publisher #41563856933 published immutable linux/arm64 artifacts for source SHA `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`: Scraper `sha256:6b3ee2676268baf8ae2e77f68df3b730d797ea6192541710720d04585e99f8a2`; Admin `sha256:a5c2dbb1a0b6c417891e18256fd4c00a6e14e53a4c34939c12fc1e43c7f3339e`; Backend `sha256:cb0135fc57bc8a2514288105ab35cc59f4cb922555f028dbf97f44c077b76a9a`. Publisher gate explicitly disables production promotion; handoff validation and paired Admin/Backend dispatch are SKIPPED. No release authorization is inferred.
+- Media CI #41617592783 PASS; snapshot shows both production workloads 1/1 with digest-pinned imageIDs.
+- Auth CI #41670642852 PASS. PR #75/#76 checks are historical and Supabase Preview remains SKIPPED; migration provenance and production integration target/effects are unverified. Do not merge on these checks or run migrations.
+
+## Next dependency-safe actions
+
+1. Confirm the next native `inspect-vps` scheduled event. If still absent, investigate GitHub Actions schedule delivery and workflow enabled state; do not count manual fallback as native evidence or change cron without a diagnosed cause.
+2. Keep the Stock paired promotion gate closed until explicit release authorization and protected `STOCKDIVIDEND_ACTIONS_READ_TOKEN` access are confirmed. Then promote both Admin and Backend digests atomically through Platform GitOps.
+3. Keep TCE/Auth health gates strict and workloads at their last declared 0/0 until activation is explicitly authorized; investigate 503 without manufacturing a green result.
+4. Verify Auth Supabase deployment binding and migration provenance before merging #75/#76 or running migrations.
+5. Keep #1222 draft until Docker/Kubernetes mutation authority is removed or brought under the single GitOps authority, UID/GID isolation is enforced, and reproducible build/test/lockfile/ShellCheck evidence exists.
+6. Wait for a maintenance window before host upgrades or reboot.
+
+## Ownership and safety
+
+- App repositories own tests, builds and immutable GHCR publication.
+- Platform Infra owns production manifests, shared GHCR pull credentials, provenance, paired digest promotion, GitOps reconciliation, rollout and health verification.
+- `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only.
+- No direct SSH/Compose/MCP mutation authority was added. `locally-uncensored-private` remains retired.
+- The scheduled reconcile executed its Auth runtime Secret provision/verification step, but no manifest drift was found and production manifest apply was skipped. Do not represent this checkpoint as having made zero production-side operations.
+- No production image promotion, manifest apply, database migration, Pod/replica change, host reboot or package upgrade was initiated by this documentation update. TCE market-scan schedule unchanged.
+
+## Evidence
+
+- Inspection snapshot PR #1251: https://github.com/phanthienquoc/platform-infra/pull/1251
+- Manual read-only inspection #41949431808: https://github.com/phanthienquoc/platform-infra/actions/runs/41949431808
+- Inspection exact-head validation #41949516885: https://github.com/phanthienquoc/platform-infra/actions/runs/41949516885
+- Native recovery #41949145532: https://github.com/phanthienquoc/platform-infra/actions/runs/41949145532
+- Recovery reconciliation fallback #41949160533: https://github.com/phanthienquoc/platform-infra/actions/runs/41949160533
+- Native reconciliation #41950932898: https://github.com/phanthienquoc/platform-infra/actions/runs/41950932898
+- Native watchdog #41951133668: https://github.com/phanthienquoc/platform-infra/actions/runs/41951133668
+- Watchdog workflow_run #41951186419: https://github.com/phanthienquoc/platform-infra/actions/runs/41951186419
+- Recovery workflow_run #41951186498: https://github.com/phanthienquoc/platform-infra/actions/runs/41951186498
+- Native TCE WF-07 Backup #41936628258: https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41936628258
+- Native TCE WF-06 #41932031987: https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41932031987
+- Native TCE WF-12 #41928632194: https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41928632194
+- TCE workflow_run heartbeat forwarding #41932063303: https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41932063303
 - Stock publisher #41563856933: https://github.com/phanthienquoc/stockdividend/actions/runs/41563856933
 - Media CI #41617592783: https://github.com/phanthienquoc/media-generation/actions/runs/41617592783
 - Auth CI #41670642852: https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41670642852
