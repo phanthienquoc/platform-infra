@@ -121,7 +121,7 @@ TCE native schedule evidence:
 
 ## Latest workflow inventory checkpoint
 
-[2026-11-05 07:01 ICT](cross-repo-workflow-inventory-checkpoints/2026-11-05-0701-ict.md) records the post-merge native inspection event, recovery/watchdog freshness failure, new watchdog regression guard, latest K3s snapshot, five-repository heads and remaining production release gates.
+[2026-11-05 07:56 ICT](cross-repo-workflow-inventory-checkpoints/2026-11-05-0756-ict.md) records the current five-repository heads/open PRs/checks, missing native schedule events, stale K3s snapshot age, Stock paired-release gate and Auth Supabase migration gate. The preceding 07:01 ICT checkpoint remains in the inventory history.
 
 
 ## Checkpoint update — 2026-11-05 07:56 ICT (00:56 UTC)
