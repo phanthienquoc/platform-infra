@@ -3822,3 +3822,14 @@ The same run explicitly reported production GitOps promotion disabled; the Platf
 - TCE PR #1023 now isolates Actions:write in new WF-13 workflow_run recovery. WF-12 was restored to actions:read after the existing contract validator rejected the interim write permission. Current head c82afdbd836acff29fd60b0307478f02b8cd0f18; WF-05/WF-02 exact-head checks still pending/in progress. Do not merge yet.
 - Stock immutable ARM64 publisher #41563856933 remains PASS, but production promotion stays disabled pending authorization and provenance.
 - No production image/manifest/database/replica/host change. TCE market-scan schedule unchanged.
+
+
+## Checkpoint — 2026-11-05 18:10 ICT
+
+- Platform docs PR #1266 merged as aed8655f98dbc486b5c96525b3fffd2b544a350a; post-merge validate-manifests #42016668480 PASS.
+- TCE PR #1023 merged as a7b26b21782e4031364a9559b6eefdc2e654cc1e after exact-head WF-05 #42016023371 and WF-02 #42016023242 PASS. Post-merge WF-05 #42016555379 and WF-02 #42016555285 PASS; WF-01 #42016555183 still in progress.
+- WF-12 remains read-only. The isolated WF-13 workflow_run recovery dispatcher has Actions:write, no cron and can dispatch only WF-06 after a failed native WF-12 schedule event on master. Contract validator now parses and asserts this boundary.
+- End-to-end WF-13 dispatch not yet observed because native WF-12 schedule history still ends at #42013061466. The HTTP 204 Platform heartbeat is not TCE health evidence.
+- Latest K3s snapshot generated 17:46:16 ICT; Stock Admin/new Backend still ImagePullBackOff on 12d63b4; Media/MicroFE 1/1; TCE/Auth/Keycloak 0/0.
+- Stock immutable ARM64 publication remains verified, but production paired promotion remains disabled pending authorization/provenance.
+- No production mutations, host maintenance or cron changes. TCE market-scan schedule unchanged.
