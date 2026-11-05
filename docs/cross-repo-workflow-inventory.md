@@ -3899,3 +3899,18 @@ The same run explicitly reported production GitOps promotion disabled; the Platf
 - **Media/Auth:** Media CI #41617592783 PASS and runtime 1/1 in the fresh snapshot. Auth CI #41670642852 PASS; PR #75/#76 remain gated on Supabase production binding and migration provenance.
 - **MCP:** Platform PR #1268 remains draft at head 81dfa692dc4a0b363314da72cac6700f1d7f514f; three exact-head checks pass, but reviewed package-lock artifact #13416365990 remains uncommitted.
 - **Ownership/safety:** app repos own tests/builds/immutable GHCR publication; Platform owns manifests/shared pull credentials/promotion/reconciliation/rollout/health. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` read-only. No duplicate SSH/Compose authority, production image promotion, manifest apply, DB migration, replica change, host reboot or package upgrade. TCE market-scan schedule unchanged.
+
+
+## Workflow inventory runtime update — 2026-11-05 23:30 ICT / 16:30 UTC
+
+- **Current master SHAs:** Platform `a239187b7694a02dedb2b7ade6b31e0be139ac44`; TCE `c5415f8ac0aa1ffa0b17c18d1b05952c68f9f65c`; Stock `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media `e4c7d8990aafc7d837e918c9caf39722d623de7c`; Auth `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
+- **Open PRs:** Platform #544/#541/#539 draft; Auth #75 ready/#76 draft; none in TCE, Stock or Media.
+- **Platform merged work:** #1268 adds diagnostics-only VPS MCP and committed lockfile; #1276 records fresh inspection snapshot; #1278 prevents MCP-only files from triggering production reconciliation and adds resolver regression coverage. #1278 exact-head checks #42064383310/#42064383238/#42064383170 and post-merge #42064588984/#42064588923/#42064588960 all PASS.
+- **Reconcile failure:** #42063703873 triggered on MCP merge due broad `apps/**` push filter and failed closed on `apps/tce-vps-control-mcp/.env.example`. All production mutation steps were skipped. Recovery controller #42063793863 dispatched inspection #42063840567, which passed. This fallback is not native schedule evidence.
+- **K3s snapshot:** #42063840567 generated `debug/vps-latest.md` at 23:23:06 ICT. Node Ready/ARM64; disk 56%; ~19 GiB RAM; GitOps drift clean; Media/MicroFE/NATS 1/1; Stock Admin and new Backend ImagePullBackOff on `12d63b4` due missing ARM64 manifest; old Backend/Frontend 1/1; TCE/Auth/Keycloak 0/0; host restart required.
+- **Native Platform schedules:** inspect-vps #42049660972 PASS at 21:55 ICT; reconcile-vps #41995809261 FAIL Stock health; recover-stale-ops #41994805588 PASS but stale; watchdog #41997764646 FAIL freshness. No later native schedule event was returned.
+- **TCE native schedules:** WF-06 #42019530614 failed four public probes at 18:30:38 ICT; WF-12 #42013061466 failed freshness at 17:43:23 ICT; WF-13 #42019590810 skipped on non-native workflow_run source. No E2E recovery event yet. WF-01 #42053388961, WF-02 #42053388868 and WF-05 #42053388841 post-merge checks PASS.
+- **Stock:** CI #41563856934 and ARM64 publisher #41563856933 PASS; paired promotion blocked on release authorization/provenance.
+- **Media:** CI #41617592783 PASS; runtime 1/1 in the fresh fallback snapshot.
+- **Auth:** CI #41670642852 PASS; PR #75/#76 remain gated on Supabase binding/migration provenance.
+- **Ownership/safety:** app repos own tests/builds/immutable GHCR; Platform owns manifests/shared pull credentials/promotion/reconciliation/rollout/health. `reconcile-vps.yml` remains sole production apply authority; `inspect-vps.yml` read-only. No production image/manifest/database/replica/host/cron mutation. TCE market-scan schedule unchanged.
