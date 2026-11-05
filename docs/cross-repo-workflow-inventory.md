@@ -3914,3 +3914,18 @@ The same run explicitly reported production GitOps promotion disabled; the Platf
 - **Media:** CI #41617592783 PASS; runtime 1/1 in the fresh fallback snapshot.
 - **Auth:** CI #41670642852 PASS; PR #75/#76 remain gated on Supabase binding/migration provenance.
 - **Ownership/safety:** app repos own tests/builds/immutable GHCR; Platform owns manifests/shared pull credentials/promotion/reconciliation/rollout/health. `reconcile-vps.yml` remains sole production apply authority; `inspect-vps.yml` read-only. No production image/manifest/database/replica/host/cron mutation. TCE market-scan schedule unchanged.
+
+
+## Workflow inventory runtime update — 2026-11-05 23:44 ICT / 16:44 UTC
+
+- **Repository heads:** Platform Infra `d4705442de747c80ace35d14f7dee209e25fe6ac`; TCE Dashboard `c5415f8ac0aa1ffa0b17c18d1b05952c68f9f65c`; StockDividend `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media Generation `e4c7d8990aafc7d837e918c9caf39722d623de7c`; Authentication `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
+- **Open PRs:** Platform #544/#541/#539 (draft); Authentication #75 (ready)/#76 (draft); none in TCE, StockDividend or Media.
+- **Platform #1280:** merged as `d4705442de747c80ace35d14f7dee209e25fe6ac`. Exact-head validate-github-actions #42066670909 and validate-manifests #42066667137 PASS; post-merge #42067822505 and #42067839646 PASS. The change excludes diagnostics-only MCP paths from recovery push bootstrap and extends workflow/resolver regression contracts. No cron expression or production apply authority changed.
+- **MCP:** PR #1268 was already merged as `29e26d829d4f02d44be2747a411a8c68d4ff48db`, including committed package-lock and diagnostics-only permissions. The follow-on #1280 fix closes the separate recovery-controller trigger gap; MCP remains subordinate to GitOps and cannot mutate Docker/Kubernetes.
+- **Native Platform schedules:** inspect-vps #42049660972 PASS (21:55:03 ICT); reconcile-vps #41995809261 FAIL (Stock health); recover-stale-ops #41994805588 PASS but stale; watchdog #41997764646 FAIL freshness. No newer `event=schedule` runs returned. Recovery workflow_run and workflow_dispatch fallbacks are not native schedule evidence.
+- **K3s snapshot:** #42063840567 generated 23:23:06 ICT by workflow_dispatch. Node Ready/ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2, Docker 29.1.3, disk 56%, ~19 GiB RAM, GitOps drift clean, restart_required=yes. Media/MicroFE/NATS 1/1; Stock Admin and new Backend ImagePullBackOff on `12d63b4`; old Backend/Frontend 1/1; TCE/Auth/Keycloak 0/0.
+- **TCE:** latest native WF-06 #42019530614 failed all four HTTP 200 probes with 503; WF-12 #42013061466 failed freshness; WF-07 #41982802263 passed. PR #1024 and post-merge WF-01/WF-02/WF-05 checks pass, but no qualifying native WF-13 E2E dispatch is evidenced. No TCE cron changed.
+- **StockDividend:** CI #41563856934 and immutable ARM64 publisher #41563856933 PASS. Build/push and ARM64 manifest verification passed; Platform handoff and atomic paired production promotion were SKIPPED. Keep authorization/provenance gate closed.
+- **Media:** CI #41617592783 PASS; latest snapshot shows backend/frontend 1/1.
+- **Authentication:** CI #41670642852 PASS. PR #75/#76 remain gated on Supabase Deploy to production binding and migration provenance; checks #40446492086/#41329425940 are historical, Preview skipped.
+- **Safety:** app repos own tests/builds/immutable GHCR; Platform owns manifests/credentials/promotion/reconcile/rollout/health. `reconcile-vps.yml` sole apply authority; `inspect-vps.yml` read-only. No production image/manifest/database/replica/host/cron mutation. TCE market-scan schedule unchanged.
