@@ -3874,3 +3874,14 @@ The same run explicitly reported production GitOps promotion disabled; the Platf
 - **Media Generation:** CI #41617592783 PASS; runtime evidence is stale.
 - **Authentication:** CI #41670642852 PASS; #75/#76 remain gated on Supabase production deployment binding and migration provenance.
 - **Ownership/safety:** app repos own tests/builds/immutable GHCR; Platform Infra owns manifests/shared pull credentials/promotion/reconciliation/rollout/health. `reconcile-vps.yml` remains sole production apply authority and `inspect-vps.yml` read-only. No production image, manifest, database, replica, host or cron mutation. TCE market-scan schedule unchanged.
+
+
+## Deployment authority audit — 2026-11-05 20:59 ICT / 13:59 UTC
+
+- Reviewed current app publisher workflows: TCE wf-03-tce-production-deploy.yml, Stock deploy.yml, Media wf-03-media-production-deploy.yml, Auth release.yml. They build/publish images and send release requests or digest handoffs to Platform Infra; the reviewed paths do not SSH to production, run Compose, or apply Kubernetes manifests.
+- Platform gitops-image-promotion.yml owns provenance/digest validation and GitOps manifest promotion. Platform reconcile-vps.yml remains the sole production apply authority. No duplicate direct SSH/Compose or app-owned kubectl apply path was found in the reviewed release workflows.
+- Preserve the manual/release triggers: these are deliberate app-owned publishers, not redundant deploy authorities.
+- Current master SHAs: Platform 30db773980223132997a3e98c9703c4e2d90c70a; TCE a7b26b21782e4031364a9559b6eefdc2e654cc1e; Stock 50ba0dfb67eb3dfaa376db0c752bbef5b0817bec; Media e4c7d8990aafc7d837e918c9caf39722d623de7c; Auth f978a3f378ee22d4630909c2d182275b21ac9e9a.
+- Open PRs: Platform #1268/#544/#541/#539; Auth #75/#76; none in TCE, Stock or Media. Platform #1268 is draft because its reviewed lockfile is not committed. Auth #75 exact-head CI #40446492086 passed, but its Supabase master-push side-effect gate remains unresolved.
+- Native Platform schedule evidence remains stale; latest K3s snapshot #42013436672 is over the 75-minute freshness budget. TCE WF-13 #42019590810 was skipped for a non-native WF-12 workflow_run event; no native end-to-end recovery is evidenced.
+- Do not change any cron declaration, production image, manifest, database, desired replica count, host or deployment authority. TCE market-scan schedule unchanged.
