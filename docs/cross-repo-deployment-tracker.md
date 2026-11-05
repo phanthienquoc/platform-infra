@@ -1,5 +1,53 @@
 # Cross-Repository Production Deployment Tracker
 
+## Current review — 2026-11-06 03:42 ICT (2026-11-05 20:42 UTC)
+
+This review adds the TCE WF-12 source-filter hardening merged after the 03:34 review. It also preserves the direct GitOps explanation for the TCE/Auth 503 state.
+
+### Repository refs and PRs
+
+| Repository | Default-branch SHA | Open PRs | Latest relevant evidence |
+|---|---|---|---|
+| Platform Infra | `04fab34ea9e1a8d2803881b4587e8f15b89e4cd6` | #544/#541/#539 (draft) | PR #1290 merged; exact-head #42104850991 and post-merge #42104919461 PASS. |
+| TCE Dashboard | `512b69d837e2a65c39867a062529a7fa0eada4cc` | None | PR #1026 merged; exact-head WF-02/WF-05 and post-merge WF-12/WF-02/WF-05 passed; post-merge WF-01 build is still running at this review. |
+| StockDividend | `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec` | None | Publisher #41563856933 verified immutable ARM64 full-SHA artifacts; production hold false and paired promotion skipped. |
+| Media Generation | `e4c7d8990aafc7d837e918c9caf39722d623de7c` | None | Latest CI #41617592783 is historical (Nov 3). |
+| Authentication | `f978a3f378ee22d4630909c2d182275b21ac9e9a` | #75 (ready), #76 (draft) | Latest master CI #41670642852 is historical (Nov 3); PR #75 Supabase Preview is SKIPPED and commit status pending. |
+
+### TCE PR #1026 — WF-07 source conclusion guard
+
+- PR [#1026](https://github.com/phanthienquoc/TCE-dashboard/pull/1026) merged at 03:39:08 ICT as `512b69d837e2a65c39867a062529a7fa0eada4cc`.
+- The WF-12 `verify` job now accepts a `workflow_run` source from WF-06 as before, but accepts WF-07 only when that native scheduled WF-07 run concluded `success`. A failed WF-07 still emits the existing Platform heartbeat; it cannot independently cause the stale-WF-06 watchdog path to fail and trigger WF-13.
+- WF-06 native failures remain independently handled by WF-13. WF-12 remains read-only and WF-13 remains the only WF-06 fallback dispatcher. No cron or market-scan schedule changed.
+- Exact-head checks on `d3025bcdf63e90eff24c36b10ce6d03133f69f50`: WF-02 PR #42105124810 PASS; WF-05 PR #42105124578 PASS; push WF-02 #42105113543 PASS and push WF-05 #42105113596 PASS.
+- Post-merge checks on `512b69d837e2a65c39867a062529a7fa0eada4cc`: WF-12 push smoke #42105365586 PASS; WF-02 #42105365483 PASS; WF-05 #42105365567 PASS. WF-01 build/verify #42105365294 was still in progress at 03:42 ICT after the frontend image build passed and backend image build began; do not call the full post-merge build green until it completes.
+- No post-merge native WF-07/WF-12 schedule event has yet exercised the new source-conclusion guard. Latest native WF-07 #42098832858 (02:57:39 ICT), WF-12 workflow_run #42098855352 (02:57:48 ICT), and WF-13 #42098897759 (02:58:04 ICT) all predate PR #1025 and #1026 merges. Latest native WF-06 #42089383865 (01:58:27 ICT) and native WF-12 #42083178274 (01:19:51 ICT) remain old failures.
+
+### Confirmed TCE/Auth public 503 state
+
+- TCE ingress routes `tce.mrcute.space/` to `tce-frontend` and `/api` to `tce-service`; both backing Deployments explicitly set `replicas: 0` under a temporary operator shutdown request.
+- Auth ingress routes `auth.mrcute.space` to `microfe-auth`; its Deployment explicitly sets `replicas: 0` under the same operator shutdown intent. Keycloak also explicitly sets `replicas: 0`.
+- These source manifests and ingress mappings explain the public 503 probes. The healthcheck is correctly reporting intentional unavailability, not a new image or credential regression. Do not restore replicas, alter ingress or weaken HTTP 200 gates without explicit operator authorization.
+
+### Platform runtime and native schedule evidence
+
+- Platform PR #1290 merged as `04fab34ea9e1a8d2803881b4587e8f15b89e4cd6`; exact-head #42104850991 and post-merge #42104919461 passed.
+- Latest native Platform schedules remain inspect-vps #42049660972 (Nov 5 21:55 ICT), reconcile-vps #42068683835 (23:51, Stock health failure), recover-stale-ops #42068414686 (23:49, PASS), and watchdog #42070623710 (Nov 6 00:02, inspection freshness failure). No newer native `event=schedule` run appeared through the latest run page after #42104919461.
+- Recovery #42099209509 dispatched read-only inspect #42099284088, which passed and generated `debug/vps-latest.md` at 03:00:41 ICT. At 03:42 it is about 41 minutes old and remains within the 75-minute fallback budget; it is workflow_dispatch evidence, not native schedule evidence.
+- Snapshot-time runtime remains: node `tce-k3s-01` Ready/ARM64; K3s v1.36.3+k3s1; containerd 2.3.2-k3s2; Docker 29.1.3; disk 56%; ~19 GiB available RAM; `restart_required=yes`. Media/MicroFE/NATS 1/1; Stock Admin and new Backend ImagePullBackOff; old Backend/Frontend 1/1; TCE frontend/service, microfe-auth and Keycloak 0/0.
+- Stock production overlay still uses `newTag: 12d63b4` for Admin and Backend. Publisher #41563856933 verified ARM64 full-SHA artifacts, but the production hold was false and paired promotion was skipped. Platform's `validate-ghcr-image-reference.sh` independently verifies ARM64 manifests/configs before accepting a promotion. Keep the old tag blocked; do not promote without explicit release authorization and protected publisher provenance.
+
+### Next actions and safety
+
+1. Wait for TCE post-merge WF-01 #42105365294 to finish; then verify the next post-merge native WF-07 → WF-12 → WF-13 sequence exactly once.
+2. Keep TCE/Auth/Keycloak at their explicitly requested zero-replica state until a new operator authorization resolves the Supabase/Keycloak issue.
+3. Keep Stock paired promotion disabled until explicit release authorization and protected publisher provenance are verified.
+4. Keep native schedule freshness separate from workflow_dispatch fallback freshness; preserve every cron declaration.
+5. Keep Auth migrations and Keycloak activation gated; wait for an approved VPS maintenance window before host/package changes.
+6. Preserve app-owned tests/builds/immutable GHCR and Platform-owned manifests/credentials/provenance/promotion/reconciliation/rollout. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only.
+7. No production image, manifest, credential, database, replica, host or cron mutation. TCE market-scan schedule unchanged.
+
+
 ## Runtime diagnosis update — 2026-11-06 03:34 ICT (2026-11-05 20:34 UTC)
 
 This update supersedes the earlier statement that TCE/Auth public HTTP 503 responses were only correlated with zero-replica observations. Current GitOps source manifests and their ingress routes now prove the expected upstream-unavailable state.
@@ -108,9 +156,9 @@ The latest 100 Platform Actions runs through #42099407335 (03:01:17 ICT) contain
 - TCE market-scan schedule unchanged.
 
 
-Last reviewed: 2026-11-06 03:34 ICT (2026-11-05 20:34 UTC)
-Platform Infra master at checkpoint: f5d62e4a4f9abd992458849929a14a85a3250614
-Latest checkpoint: docs/cross-repo-workflow-inventory-checkpoints/2026-11-06-0334-ict.md
+Last reviewed: 2026-11-06 03:42 ICT (2026-11-05 20:42 UTC)
+Platform Infra master at checkpoint: 04fab34ea9e1a8d2803881b4587e8f15b89e4cd6
+Latest checkpoint: docs/cross-repo-workflow-inventory-checkpoints/2026-11-06-0342-ict.md
 
 ## Current review — 2026-11-06 01:58 ICT (2026-11-05 18:58 UTC)
 
