@@ -15,7 +15,10 @@ REQUIRED_FILES = (
     "ops/tce-mcp-docker",
     "ops/k8s-rbac.yaml",
     "scripts/install.sh",
+    "ops/tce-vps-control-mcp.sudoers",
+    "ops/tce-vps-control-mcp.service",
     "README.md",
+    "package.json",
 )
 
 FORBIDDEN_COMMANDS = (
@@ -41,6 +44,8 @@ def validate_files(files: dict[str, str]) -> list[str]:
     wrapper = files.get("ops/tce-mcp-docker", "")
     rbac = files.get("ops/k8s-rbac.yaml", "")
     installer = files.get("scripts/install.sh", "")
+    sudoers = files.get("ops/tce-vps-control-mcp.sudoers", "")
+    service = files.get("ops/tce-vps-control-mcp.service", "")
     readme = files.get("README.md", "")
 
     for relative, content in (
@@ -65,18 +70,32 @@ def validate_files(files: dict[str, str]) -> list[str]:
         if re.search(r"(?m)^\s*verbs\s*:", line) and re.search(r"\b(create|update|patch|delete)\b", line):
             errors.append("Kubernetes MCP RBAC must remain read-only (get/list/watch)")
 
-    call_marker = "execFileAsync(file, args, {"
-    if call_marker not in source:
-        errors.append("shell runner must invoke execFileAsync with an explicit options object")
-    else:
-        call_options = source.split(call_marker, 1)[1].split("\n    });", 1)[0]
-        if "uid: options.uid" not in call_options or "gid: options.gid" not in call_options:
-            errors.append("shell runner must forward uid/gid to the child process")
-    if "uid: SHELL_UID" not in source or "gid: SHELL_GID" not in source:
-        errors.append("shell_execute must run with the dedicated tce-shell UID/GID")
-
-    if not re.search(r"(?m)^SHELL_UID=.*$", installer) or not re.search(r"(?m)^SHELL_GID=.*$", installer):
-        errors.append("installer must persist the dedicated shell UID/GID in server.env")
+    shell_invocation = re.search(
+        r'run\("/usr/bin/sudo",\s*\["-n",\s*"-u",\s*"tce-shell",\s*"-H",\s*"--",\s*"/bin/bash",\s*"-lc",\s*command\]',
+        source,
+    )
+    if shell_invocation is None:
+        errors.append("shell_execute must run bash as the separate unprivileged tce-shell account")
+    if "await realpath(requested)" not in source:
+        errors.append("shell working-directory validation must resolve symlinks before checking allowed roots")
+    if "mode: 0o600" not in source:
+        errors.append("MCP audit records must be private to the tce-mcp account")
+    if "groupadd --system tce-shell" not in installer or "useradd --system --gid tce-shell" not in installer:
+        errors.append("installer must create tce-shell with a separate primary group")
+    if "package-lock.json is required" not in installer or "npm ci --include=dev --ignore-scripts" not in installer:
+        errors.append("installer must require a committed lockfile and use npm ci")
+    if "tce-mcp ALL=(tce-shell) NOPASSWD: /bin/bash -lc *" not in sudoers:
+        errors.append("sudoers must allow shell execution only as the separate tce-shell account")
+    root_rules = [
+        line.strip() for line in sudoers.splitlines()
+        if line.strip() and not line.lstrip().startswith("#") and "(root)" in line
+    ]
+    if root_rules != ["tce-mcp ALL=(root) NOPASSWD: /usr/local/sbin/tce-mcp-docker *"]:
+        errors.append("tce-mcp root access must be limited to the read-only Docker wrapper")
+    if "UMask=0077" not in service:
+        errors.append("MCP systemd service must use a private 0077 umask")
+    if "reconcile-vps.yml" not in readme:
+        errors.append("README must state that production mutations remain in reconcile-vps.yml")
 
     return errors
 
@@ -95,23 +114,29 @@ def load_mcp_files() -> dict[str, str]:
 def self_test() -> None:
     safe = {
         "src/index.ts": (
-            'const SHELL_UID = 1001; const SHELL_GID = 1001;\n'
-            'async function run(file, args, options = {}) {\n'
-            '  await execFileAsync(file, args, {\n'
-            '    uid: options.uid,\n'
-            '    gid: options.gid\n'
-            '  });\n'
-            '}\n'
-            'run("/bin/bash", ["-lc", "id"], { uid: SHELL_UID, gid: SHELL_GID });\n'
+            'async function validateCwd(requested) { return await realpath(requested); }\n'
+            'await appendFile(AUDIT_FILE, record, { mode: 0o600 });\n'
+            'run("/usr/bin/sudo", ["-n", "-u", "tce-shell", "-H", "--", "/bin/bash", "-lc", command]);\n'
             'server.registerTool("k8s_get", {});\n'
         ),
         "ops/tce-mcp-docker": 'case "$action" in\n  ps) exec docker ps ;;\n  logs) exec docker logs "$1" ;;\nesac\n',
         "ops/k8s-rbac.yaml": 'verbs: ["get", "list", "watch"]\n',
-        "scripts/install.sh": 'SHELL_UID="$(id -u tce-shell)"\nSHELL_GID="$(id -g tce-shell)"\n',
-        "README.md": "Read-only host and Kubernetes inspection tools.\n",
+        "scripts/install.sh": (
+            'groupadd --system tce-shell\n'
+            'useradd --system --gid tce-shell tce-shell\n'
+            'echo "package-lock.json is required"\n'
+            'npm ci --include=dev --ignore-scripts --no-audit --no-fund\n'
+        ),
+        "ops/tce-vps-control-mcp.sudoers": (
+            'tce-mcp ALL=(root) NOPASSWD: /usr/local/sbin/tce-mcp-docker *\n'
+            'tce-mcp ALL=(tce-shell) NOPASSWD: /bin/bash -lc *\n'
+        ),
+        "ops/tce-vps-control-mcp.service": "UMask=0077\n",
+        "README.md": "Read-only diagnostics; production changes use reconcile-vps.yml.\n",
+        "package.json": '{"name":"@tce/vps-control-mcp"}',
     }
     if validate_files(safe):
-        raise SystemExit("Self-test failed: a read-only, isolated MCP fixture was rejected.")
+        raise SystemExit("Self-test failed: a read-only, unprivileged MCP fixture was rejected.")
 
     unsafe = dict(safe)
     unsafe["src/index.ts"] += 'server.registerTool("docker_restart", {});\n'
@@ -123,11 +148,13 @@ def self_test() -> None:
 
     broken_identity = dict(safe)
     broken_identity["src/index.ts"] = broken_identity["src/index.ts"].replace(
-        "    uid: options.uid,\n    gid: options.gid\n", ""
-    ).replace("uid: SHELL_UID, gid: SHELL_GID", "")
+        'run("/usr/bin/sudo", ["-n", "-u", "tce-shell", "-H", "--", "/bin/bash", "-lc", command]);\n',
+        "",
+    )
     broken_identity["scripts/install.sh"] = "useradd tce-shell\n"
+    broken_identity["ops/tce-vps-control-mcp.sudoers"] = "tce-mcp ALL=(root) NOPASSWD: ALL\n"
     if not validate_files(broken_identity):
-        raise SystemExit("Self-test failed: missing shell UID/GID isolation was accepted.")
+        raise SystemExit("Self-test failed: missing shell identity isolation was accepted.")
 
     print("VPS MCP GitOps-only/read-only contract self-test passed.")
 
