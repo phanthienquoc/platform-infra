@@ -13,6 +13,7 @@ run-name: >-
     paths:
       - "apps/**"
       - "!apps/**/*.md"
+      - '!apps/tce-vps-control-mcp/**'
       - "platform/**"
       - "environments/prod/**"
       - "scripts/**"
