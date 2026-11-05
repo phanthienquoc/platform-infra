@@ -237,6 +237,20 @@ if int(recovery_age_budget.group(1)) != recovery_schedule_gap * 3:
         "MAX_RECOVERY_AGE_MINUTES must equal three maximum recovery schedule intervals "
         "so missed native schedule delivery remains observable."
     )
+
+# The watchdog must measure recovery freshness from native schedule runs only.
+# workflow_run / workflow_dispatch successes are useful fallback evidence but cannot
+# satisfy the independent cron-delivery contract.
+native_recovery_endpoint = '"repos/${GITHUB_REPOSITORY}/actions/workflows/recover-stale-ops.yml/runs"'
+if watchdog.count(native_recovery_endpoint) != 1:
+    fail("The schedule watchdog must query the recovery workflow's run history exactly once.")
+native_recovery_query = watchdog.split(native_recovery_endpoint, 1)[1].split(")", 1)[0]
+for required in ("-f event=schedule", "-f branch=master", "-F per_page=1"):
+    if required not in native_recovery_query:
+        fail(f"The schedule watchdog native recovery query is missing: {required}")
+if "-f event=workflow_run" in native_recovery_query or "-f event=workflow_dispatch" in native_recovery_query:
+    fail("The schedule watchdog must not count fallback events as native recovery schedule evidence.")
+
 for required in (
     "github.event.action == 'tce-schedule-heartbeat'",
     "github.event.client_payload.source_repository == 'phanthienquoc/TCE-dashboard'",
