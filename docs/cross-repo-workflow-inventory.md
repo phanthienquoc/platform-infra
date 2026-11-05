@@ -3310,3 +3310,19 @@ Repository master refs and open PRs were re-read directly. Platform Infra `420ff
 - Native Platform schedule: inspection #41934713847 (23:33:56Z, PASS but stale); reconcile #41950932898 (01:47:55Z, FAIL Stock health); recovery #41949145532 (01:31:53Z, PASS); watchdog #41951133668 (01:49:44Z, FAIL inspection freshness). Manual inspection #41958436222 and manual recovery #41958394974 do not count as native events.
 - Latest snapshot: node Ready ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2, disk 56%, about 19 GiB RAM available; Media/MicroFE/NATS healthy; Stock Admin/new Backend ImagePullBackOff; old Backend/Frontend 1/1; TCE/Auth/Keycloak 0/0; host restart_required=yes.
 - Preserve one production apply authority (reconcile-vps.yml), immutable app-owned GHCR publication, Platform-owned GitOps/credentials/rollout, and all useful CI/security/backup/manual/release/scheduled workflows. No production mutation or cron change. TCE market-scan schedule unchanged.
+
+
+## Cross-repo workflow inventory audit correction — production-side effects of reconcile run #41958192072 (2026-11-05 10:10 ICT)
+
+The prior 10:04 checkpoint incorrectly described the reconcile run as having no credential mutation. The run was a workflow_dispatch with mode=apply, target_app=all and ALLOW_IMAGE_CHANGES=false. Its job-step API records the following successful steps:
+
+- Validate GHCR pull access before mutating cluster credentials.
+- Provision Auth runtime Secret from the platform-infra production Environment.
+- Bootstrap shared GHCR pull credentials.
+- Execute the managed image-pull-blocked workload restart policy.
+- Verify cluster after reconciliation.
+
+The shared preflight reported DRIFT=false; Apply production manifests and post-apply drift verification were skipped. Therefore, this run did perform controlled production credential reconciliation (Auth runtime Secret and shared GHCR pull Secret), despite making no production manifest/image-reference change. The Stock lane still failed: Admin and new Backend remained ImagePullBackOff on tag 12d63b4 because the ARM64 manifest is absent. The run did not establish Stock recovery or a healthy overall deployment.
+
+Do not describe this reconcile as zero production-side operations. The evidence does not show a database migration, image digest promotion, manifest apply, desired replica change or host reboot. The workflow-step summary shows the managed restart step completed, but this audit does not infer that every blocked Pod was restarted; the subsequent inspection still shows the Stock Admin/Backend failures.
+
