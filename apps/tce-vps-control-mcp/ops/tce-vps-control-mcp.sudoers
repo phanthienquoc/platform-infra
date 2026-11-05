@@ -1,5 +1,7 @@
 # Install as /etc/sudoers.d/tce-vps-control-mcp (mode 0440).
-# The wrapper is root-owned and validates every argument before invoking Docker.
+# The wrapper is root-owned and supports only read-only Docker ps/logs.
 tce-mcp ALL=(root) NOPASSWD: /usr/local/sbin/tce-mcp-docker *
+# Arbitrary shell commands run only as the separate unprivileged tce-shell account.
+tce-mcp ALL=(tce-shell) NOPASSWD: /bin/bash -lc *
 Defaults:tce-mcp !setenv
 Defaults:tce-mcp secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
