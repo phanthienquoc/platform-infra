@@ -18,16 +18,26 @@ node -e 'process.exit(Number(process.versions.node.split(".")[0]) >= 22 ? 0 : 1)
 }
 command -v npm >/dev/null || { echo "npm is required." >&2; exit 1; }
 
-id tce-mcp >/dev/null 2>&1 || useradd --system --home-dir /var/lib/tce-vps-control-mcp --create-home --shell /usr/sbin/nologin tce-mcp\nid tce-shell >/dev/null 2>&1 || useradd --system --gid tce-mcp --home-dir /var/lib/tce-shell --create-home --shell /usr/sbin/nologin tce-shell
+getent group tce-mcp >/dev/null 2>&1 || groupadd --system tce-mcp
+id tce-mcp >/dev/null 2>&1 || useradd --system --gid tce-mcp --home-dir /var/lib/tce-vps-control-mcp --create-home --shell /usr/sbin/nologin tce-mcp
+getent group tce-shell >/dev/null 2>&1 || groupadd --system tce-shell
+id tce-shell >/dev/null 2>&1 || useradd --system --gid tce-shell --home-dir /var/lib/tce-shell --create-home --shell /usr/sbin/nologin tce-shell
+[[ "$(id -gn tce-mcp)" == "tce-mcp" ]] || { echo "tce-mcp must use its dedicated primary group." >&2; exit 1; }
+[[ "$(id -gn tce-shell)" == "tce-shell" ]] || { echo "tce-shell must use its dedicated primary group." >&2; exit 1; }
 
 install -d -o root -g root -m 0755 "$INSTALL_DIR"
 install -d -o root -g root -m 0750 "$CONFIG_DIR"
-install -d -o tce-mcp -g tce-mcp -m 0750 "$AUDIT_DIR"
+install -d -o tce-mcp -g tce-mcp -m 0700 "$AUDIT_DIR"
+install -d -o tce-shell -g tce-shell -m 0750 /var/lib/tce-shell
 
-cp -a "$APP_DIR/package.json" "$APP_DIR/tsconfig.json" "$APP_DIR/src" "$INSTALL_DIR/"
+[[ -f "$APP_DIR/package-lock.json" ]] || {
+  echo "package-lock.json is required; refusing a non-reproducible production installation." >&2
+  exit 1
+}
+cp -a "$APP_DIR/package.json" "$APP_DIR/package-lock.json" "$APP_DIR/tsconfig.json" "$APP_DIR/src" "$INSTALL_DIR/"
 chown -R root:root "$INSTALL_DIR"
 cd "$INSTALL_DIR"
-npm install --include=dev --no-audit --no-fund
+npm ci --include=dev --ignore-scripts --no-audit --no-fund
 npm run build
 npm prune --omit=dev
 
