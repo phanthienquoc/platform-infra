@@ -3812,3 +3812,13 @@ The same run explicitly reported production GitOps promotion disabled; the Platf
 - Stock immutable publisher #41563856933: https://github.com/phanthienquoc/stockdividend/actions/runs/41563856933
 - Media CI #41617592783: https://github.com/phanthienquoc/media-generation/actions/runs/41617592783
 - Authentication CI #41670642852: https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41670642852
+
+
+## Checkpoint — 2026-11-05 17:57 ICT
+
+- Platform master advanced to 3eb956ee8527119699cea8a1e17cafc758e98293 after read-only inspection PR #1265. Inspection fallback #42013436672 and exact-head validation #42013546013 passed; native schedule history remains stale as recorded in the tracker.
+- Fresh snapshot generated 17:46:16 ICT: node Ready/ARM64; disk 56%; about 19 GiB RAM available; Media/MicroFE healthy 1/1; Stock Admin and new Backend still ImagePullBackOff on 12d63b4; TCE/Auth/Keycloak 0/0; host restart required.
+- TCE WF-12 native #42013061466 failed WF-06 freshness after 432 minutes without a native WF-06 run; Platform heartbeat dispatch returned HTTP 204.
+- TCE PR #1023 now isolates Actions:write in new WF-13 workflow_run recovery. WF-12 was restored to actions:read after the existing contract validator rejected the interim write permission. Current head c82afdbd836acff29fd60b0307478f02b8cd0f18; WF-05/WF-02 exact-head checks still pending/in progress. Do not merge yet.
+- Stock immutable ARM64 publisher #41563856933 remains PASS, but production promotion stays disabled pending authorization and provenance.
+- No production image/manifest/database/replica/host change. TCE market-scan schedule unchanged.
