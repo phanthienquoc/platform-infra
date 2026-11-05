@@ -1,18 +1,27 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-05 18:10 ICT (2026-11-05 11:10 UTC)
-Platform Infra master at checkpoint: aed8655f98dbc486b5c96525b3fffd2b544a350a
-Latest checkpoint: docs/cross-repo-workflow-inventory-checkpoints/2026-11-05-1810-ict.md
+Last reviewed: 2026-11-05 19:31 ICT (2026-11-05 12:31 UTC)
+Platform Infra master at checkpoint: 1d8e7c375a3ed45a9ec52eb1072c94d865b87d7b
+Latest checkpoint: docs/cross-repo-workflow-inventory-checkpoints/2026-11-05-1931-ict.md
 
 ## Repository readiness
 
 | Repository | Master SHA | Open PRs | Latest verified CI / publication |
 |---|---|---|---|
-| phanthienquoc/platform-infra | aed8655f98dbc486b5c96525b3fffd2b544a350a | #1222, #544, #541, #539 (all draft) | Tracker/inventory PR #1266 merged; post-merge validate-manifests #42016668480 PASS. |
-| phanthienquoc/TCE-dashboard | a7b26b21782e4031364a9559b6eefdc2e654cc1e | None | PR #1023 merged after exact-head WF-05 #42016023371 and WF-02 #42016023242 PASS. Post-merge WF-05 #42016555379 and WF-02 #42016555285 PASS; WF-01 build #42016555183 still running. |
-| phanthienquoc/stockdividend | 50ba0dfb67eb3dfaa376db0c752bbef5b0817bec | None | CI #41563856934 and immutable ARM64 publisher #41563856933 PASS; three full-source-SHA digests verified; production paired promotion remains disabled. |
-| phanthienquoc/media-generation | e4c7d8990aafc7d837e918c9caf39722d623de7c | None | CI #41617592783 PASS; backend/frontend 1/1 in the 17:46 inspection snapshot. |
-| phanthienquoc/phanthienquoc-authentication | f978a3f378ee22d4630909c2d182275b21ac9e9a | #75 ready; #76 draft | CI #41670642852 PASS; Supabase production side-effect and migration provenance gate remains closed. |
+| phanthienquoc/platform-infra | `1d8e7c375a3e` | #1268 draft; #544/#541/#539 draft | PR #1268 current head `0a2769a`: exact-head `validate-github-actions` #42028865777, `validate-manifests` #42028865526 and dedicated MCP validation #42028865517 all PASS; generated package-lock artifact reviewed but awaits commit. |
+| phanthienquoc/TCE-dashboard | `a7b26b21782e` | None | WF-06 native #42019530614 (18:30 ICT) FAIL; latest native WF-12 #42013061466 (17:43 ICT) FAIL/stale; WF-13 #42019590810 was skipped because its source WF-12 event was `workflow_run`, not `schedule`. |
+| phanthienquoc/stockdividend | `50ba0dfb67eb` | None | CI #41563856934 and immutable ARM64 publisher #41563856933 PASS; three SHA-256 digests verified; production paired promotion remains disabled pending authorization/provenance. |
+| phanthienquoc/media-generation | `e4c7d8990aaf` | None | CI #41617592783 PASS; last K3s evidence at 17:46 ICT showed backend/frontend 1/1, but that inspection is now stale. |
+| phanthienquoc/phanthienquoc-authentication | `f978a3f378ee` | #75 ready; #76 draft | CI #41670642852 PASS; Supabase production integration binding and migration provenance remain unresolved. |
+
+## Current runtime blockers
+
+- **Platform native schedule delivery:** latest native inspect-vps #41980605875 at 13:28:06 ICT passed but is stale; reconcile-vps #41995809261 at 15:36:40 ICT failed Stock health; recover-stale-ops #41994805588 at 15:29:01 ICT passed but is stale; schedule watchdog #41997764646 at 15:51:58 ICT failed inspection freshness. No newer native schedule runs were found in the inspected Actions history at 19:31 ICT. The latest K3s snapshot is the 17:46:16 ICT fallback and is now older than the 75-minute freshness budget.
+- **Stock production:** the deployed Admin/Backend tag `12d63b4` still lacks a compatible ARM64 manifest. Publisher #41563856933 verified immutable ARM64 full-source-SHA digests for Scraper/Admin/Backend, but production paired promotion remains disabled until explicit release authorization and protected publisher-run Actions:read provenance are available.
+- **TCE health and recovery:** native WF-06 #42019530614 at 18:30:38 ICT failed its strict public healthcheck. Latest native WF-12 remains #42013061466 at 17:43:23 ICT and failed freshness. WF-13 #42019590810 was skipped because it followed a WF-12 `workflow_run` event sourced from WF-06, not a native WF-12 `schedule` event. No end-to-end WF-13 dispatch has been evidenced. Keep HTTP 200 gates and TCE/Auth desired replicas 0/0.
+- **Authentication:** #75/#76 remain gated on the actual Supabase production deployment binding and migration provenance. Do not merge or run migrations until both are reconciled.
+- **VPS maintenance:** the last snapshot reports host restart required and pending Docker/containerd upgrades. No approved maintenance window is evidenced; do not reboot or upgrade packages.
+- **VPS Control MCP PR #1268:** current head `0a2769a98e041e738b7553748250d3555e7da3fd`; exact-head `validate-github-actions` #42028865777, `validate-manifests` #42028865526 and dedicated MCP validation #42028865517 all PASS. The tracker structural contract failure on earlier head `1380e66` is resolved. The CI-generated lockfile artifact #13413128069 was downloaded and reviewed (lockfile v3, 94 total package entries including root, 93 package entries with integrity hashes and HTTPS npm registry tarballs); it is not yet committed, so PR #1268 remains draft.
 
 ## Current operational status
 
@@ -34,6 +43,16 @@ Latest checkpoint: docs/cross-repo-workflow-inventory-checkpoints/2026-11-05-181
 - TCE #1023: merged; exact validated head c82afdbd836acff29fd60b0307478f02b8cd0f18; PR WF-05/WF-02 checks PASS.
 - Authentication #75 ready: a8e8a1d99e86a679b8d2ea7c7e7fa91302ffcc05; historical validation PASS; merge blocked by Supabase production side-effect gate.
 - Authentication #76 draft: f19cacb0bf2b454b3152bd3a501f6f88d0a14a58; historical validation PASS; migration planning is not authorization.
+
+## Current actions
+
+1. Tracker structure repair and exact-head validation are complete on PR #1268 head `0a2769a98e041e738b7553748250d3555e7da3fd`: #42028865777, #42028865526 and #42028865517 all PASS.
+2. Commit the reviewed `apps/tce-vps-control-mcp/package-lock.json` generated by the dedicated Node 22 validation workflow; keep PR #1268 draft until the lockfile is in the PR and every required exact-head check passes.
+3. Obtain a fresh read-only K3s snapshot through the existing `inspect-vps.yml` workflow_dispatch path when the authorized GitHub Actions dispatch path is available. Do not count a manual fallback as native schedule evidence.
+4. Wait for a qualifying failed native WF-12 schedule event, then verify WF-13 dispatches exactly one correlated master WF-06 workflow_dispatch run; do not count workflow_run-on-workflow_run or Platform heartbeat acceptance as end-to-end recovery.
+5. Keep Stock Admin/Backend paired digest promotion blocked until release authorization and protected publisher provenance access are confirmed.
+6. Investigate TCE HTTP 503 and Auth Supabase binding/migration provenance without changing replicas, database state, production images or cron declarations.
+7. Wait for an approved VPS maintenance window before package upgrades or reboot.
 
 ## Exact next actions
 
