@@ -3944,3 +3944,18 @@ The same run explicitly reported production GitOps promotion disabled; the Platf
 - **Stock:** publisher #41563856933 ARM64 build/push and immutable manifest checks PASS; Platform handoff/atomic promotion SKIPPED. No release authorization/provenance; no production promotion.
 - **Media/Auth:** Media CI #41617592783 PASS and 1/1 in latest snapshot. Auth CI #41670642852 PASS; #75/#76 remain gated by Supabase production binding/migration provenance.
 - **Safety:** no production image/manifest/database/replica/host/cron mutation. `reconcile-vps.yml` sole apply authority, `inspect-vps.yml` read-only, TCE market-scan schedule unchanged.
+
+
+## Workflow inventory runtime update — 2026-11-06 00:03 ICT / 2026-11-05 17:03 UTC
+
+- **Repository heads:** Platform Infra `6c2b826175d135b41fcb69f28ca2268391c357c2`; TCE Dashboard `c5415f8ac0aa1ffa0b17c18d1b05952c68f9f65c`; StockDividend `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media Generation `e4c7d8990aafc7d837e918c9caf39722d623de7c`; Authentication `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
+- **Open PRs:** Platform #544/#541/#539 draft; Authentication #75 ready/#76 draft; none in TCE, StockDividend or Media.
+- **Platform #1282:** merged as `6c2b826175d135b41fcb69f28ca2268391c357c2`; exact-head validate-manifests #42069918051 and post-merge #42070150263 PASS.
+- **Native Platform schedule:** recover-stale-ops #42068414686 PASS; reconcile-vps #42068683835 completed with Stock-only health failure; watchdog #42070623710 failed only native inspection freshness (native reconcile age 11m and recovery age 12m passed). Native inspect-vps remains #42049660972 at 21:55:03 ICT, 127m old at watchdog.
+- **Inspection fallback:** recovery controller #42070696343 PASS; it did not dispatch a duplicate inspection because workflow_dispatch snapshot #42063840567 was 38m old. Native schedule remains stale.
+- **K3s:** snapshot #42063840567 at 23:23:06 ICT by workflow_dispatch; node Ready/ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2, Docker 29.1.3, disk 56%, ~19 GiB RAM, GitOps drift clean, restart_required=yes. Media/MicroFE/NATS 1/1; Stock Admin and new Backend ImagePullBackOff on `12d63b4`; old Backend/Frontend 1/1; TCE/Auth/Keycloak 0/0.
+- **TCE:** native WF-06 #42019530614 HTTP 503, WF-12 #42013061466 freshness FAIL, WF-07 #41982802263 PASS; no post-merge WF-13 E2E dispatch. No TCE cron changed.
+- **Stock:** publisher #41563856933 ARM64 build/push and immutable manifest checks PASS; Platform handoff/atomic promotion SKIPPED. No release authorization/provenance; no production promotion.
+- **Media:** CI #41617592783 PASS; backend/frontend 1/1 in snapshot.
+- **Authentication:** Supabase project `gtqovpusfyyvxpeezxlo` ACTIVE_HEALTHY / FUNCTIONS_DEPLOYED; 84 remote migrations exactly match 84 Auth master SQL files, zero mismatch/duplicate. PR #75/#76 are 11 commits behind master; owner-confirmed Deploy to production ON means keep merge blocked pending authoritative integration side-effect confirmation.
+- **Safety:** no production image/manifest/database/replica/host/cron mutation. `reconcile-vps.yml` sole apply authority, `inspect-vps.yml` read-only, TCE market-scan schedule unchanged.
