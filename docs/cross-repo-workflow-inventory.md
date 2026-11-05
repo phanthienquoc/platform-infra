@@ -3544,3 +3544,124 @@ No production manifest apply, image promotion, database migration, desired repli
 - Stock publisher #41563856933: https://github.com/phanthienquoc/stockdividend/actions/runs/41563856933
 - Media CI #41617592783: https://github.com/phanthienquoc/media-generation/actions/runs/41617592783
 - Auth CI #41670642852: https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41670642852
+
+
+# Cross-repo deployment checkpoint — 2026-11-05 13:58 ICT / 06:58 UTC
+
+## Repository heads, open PRs and latest Actions evidence
+
+| Repository | Current master | Open PRs | Latest verified evidence |
+|---|---|---|---|
+| `phanthienquoc/platform-infra` | `499ed173d9e58f04a2a3b42033661e1a8b0302b1` | #1222, #544, #541, #539 (all draft) | Native inspection #41980605875 PASS; snapshot PR #1259 merged at exact validated head; manual reconcile #41980764155 failed only Stock health. |
+| `phanthienquoc/TCE-dashboard` | `52cecd5584e6c0a3daf0e2bcff6c89ca064e203d` | None | WF-07 native schedule #41982802263 PASS; WF-12 workflow_run #41982820872 FAIL because WF-06 schedule is stale; latest WF-06 native #41962074678 failed four HTTP 200 probes with 503. |
+| `phanthienquoc/stockdividend` | `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec` | None | CI #41563856934 and immutable ARM64 publisher #41563856933 PASS (Nov 3); no newer runs. Production Admin/Backend tags remain incompatible with ARM64. |
+| `phanthienquoc/media-generation` | `e4c7d8990aafc7d837e918c9caf39722d623de7c` | None | CI #41617592783 PASS (Nov 3); latest K3s snapshot shows backend/frontend 1/1 and digest-pinned. |
+| `phanthienquoc/phanthienquoc-authentication` | `f978a3f378ee22d4630909c2d182275b21ac9e9a` | #75 ready; #76 draft | CI #41670642852 PASS (Nov 3); Supabase integration/migration provenance gate remains closed. |
+
+### Open PR head checks
+
+- Platform #1222 draft, head `f018e39eda52770539fc10671fba0d04baec8046`: #41821355040 PASS (historical); keep draft because Docker/Kubernetes mutation scope, shell UID/GID isolation and reproducible build/test/lockfile evidence remain unresolved.
+- Platform #544 draft, head `c95e7daecb83b65577b54303427fe4ea81adfe06`: #38575430454 PASS (historical).
+- Platform #541 draft, head `b8f7c6ba04e3d971336a899b2efd5894662083b3`: #38567431761 PASS (historical).
+- Platform #539 draft, head `2dc48b97017ecb08e49682633303a2f1d5e991a1`: #38548718033 PASS (historical).
+- Authentication #75 ready, head `a8e8a1d99e86a679b8d2ea7c7e7fa91302ffcc05`: #40446492086 PASS (historical); do not merge until Supabase deployment side effects are resolved.
+- Authentication #76 draft, head `f19cacb0bf2b454b3152bd3a501f6f88d0a14a58`: #41329425940 PASS (historical); migration drift planning is not migration authorization.
+
+PR #1259 inspection snapshot:
+- Native schedule run #41980605875 succeeded at 06:28:06Z / 13:28:06 ICT.
+- Snapshot generated at 06:28:14Z / 13:28:14 ICT.
+- PR #1259 exact head `91bee4bfa3c2faf6433dbdabcea78d094bd64df2` passed exact-head `validate-manifests` #41980684859.
+- PR #1259 was squash-merged at 06:29:17Z as master commit `499ed173d9e58f04a2a3b42033661e1a8b0302b1`.
+- No separate post-merge validation run for #1259 was verified in this checkpoint.
+
+## Platform native schedule and recovery evidence
+
+| Workflow | Latest native `event=schedule` | Result |
+|---|---|---|
+| `inspect-vps.yml` | #41980605875, 13:28:06 ICT | PASS; fresh read-only snapshot and exact-head snapshot PR #1259 merged. |
+| `reconcile-vps.yml` | #41950932898, 08:47:55 ICT | FAIL in Stock health lane; manual #41980764155 at 13:29:35 ICT also failed Stock health. |
+| `recover-stale-ops.yml` | #41949145532, 08:31:53 ICT | PASS at run time, but stale; no newer native scheduled recovery event in the Actions listing. |
+| `reconcile-schedule-watchdog.yml` | #41951133668, 08:49:44 ICT | FAIL at run time. Workflow_run watchdog #41980748672 at 13:29:27 ICT also failed because native recovery #41949145532 was 297 minutes old, beyond the 45-minute budget. |
+
+The inspection native schedule has resumed for at least one cycle; do not claim continuous recovery until subsequent native slots are observed. The watchdog run #41982861974 (workflow_run, 13:48 ICT) was skipped and is not native schedule evidence.
+
+TCE WF-07 scheduled run #41982802263 at 13:47:35 ICT sent an authenticated schedule heartbeat. TCE WF-12 run #41982820872 at 13:47:46 ICT:
+- Failed its WF-06 freshness check: latest native WF-06 #41962074678 was 196 minutes old versus the 25-minute budget.
+- Successfully validated and dispatched the Platform heartbeat (HTTP 204).
+- Payload identified source event `schedule`, source workflow `.github/workflows/wf-07-tce-integration-check.yml`, source run #41982802263 attempt 1, TCE master SHA `52cecd5584e6c0a3daf0e2bcff6c89ca064e203d`, and heartbeat run #41982820872 attempt 1.
+
+Platform recovery controller #41982836006 (repository_dispatch, 13:47:55 ICT) validated that external heartbeat and completed successfully. It did not dispatch another reconcile because manual reconcile #41980764155 was only 16 minutes old (20-minute fallback budget), and it did not dispatch inspection because native inspection #41980605875 was only 19 minutes old (75-minute budget). This repository_dispatch is fallback coordination, not native recovery schedule evidence. WF-07 integration success is not WF-06 application health.
+
+## TCE schedule and public health
+
+- WF-06 latest native schedule: #41962074678 at 10:30:58 ICT; TCE web, TCE API, Auth liveness and Auth readiness all returned HTTP 503 instead of HTTP 200. No newer WF-06 native schedule appears in the latest Actions listing.
+- WF-12 latest native schedule: #41958165099 at 09:54:09 ICT, failed freshness. Latest workflow_run #41982820872 also failed because WF-06 was stale.
+- WF-07 integration schedule #41982802263 at 13:47:35 ICT passed Binance Testnet public and private API checks (HTTP 200); the order integration job was skipped by design.
+- Keep strict HTTP 200 and the 25-minute WF-06 schedule freshness contract. Do not change any TCE cron declaration or market-scan schedule.
+
+## Fresh K3s snapshot and live runtime state
+
+Snapshot `debug/vps-latest.md` generated at `2026-11-05T06:28:14Z` / 13:28:14 ICT, approximately 30 minutes old at this checkpoint; it is current point-in-time evidence, not continuous health.
+
+- Node `tce-k3s-01`: Ready, ARM64; K3s `v1.36.3+k3s1`; containerd `2.3.2-k3s2`.
+- Disk 56%; available RAM about 19 GiB; Docker 29.1.3; host `restart_required=yes`.
+- Media backend/frontend: 1/1, digest-pinned.
+- MicroFE Shell/WS and NATS: 1/1, digest-pinned.
+- Keycloak and MicroFE Auth: 0/0.
+- TCE namespace has no Pods; TCE frontend/service desired state 0/0.
+- Stock Admin has two Pods 0/1 `ImagePullBackOff`; new Stock Backend is 0/1 `ImagePullBackOff`; previous Backend and Frontend remain 1/1.
+- Stock Admin image `admin:12d63b4` and new Backend image `backend:12d63b4` have no resolved image digest and containerd reports `no match for platform in manifest`. Existing Backend/Frontend still use older `23b2878` images with resolved digests.
+
+## Reconciliation side effects and release gates
+
+Manual reconciliation #41980764155 ran with `mode=apply`, `target_app=all`, `ALLOW_IMAGE_CHANGES=false`:
+- Shared preflight, GHCR pull-access validation, Auth runtime Secret provisioning, shared GHCR pull-credential bootstrap and managed image-pull restart policy all succeeded.
+- Auth, MicroFE, TCE and Media lanes succeeded; Keycloak lane was skipped.
+- Stock workload health failed for both Admin Pods and the new Backend; final deployment summary correctly failed.
+- Production manifest apply, image-change guard and drift-clear verification were skipped. No image promotion or production manifest apply is evidenced.
+- This was not a read-only reconcile: Auth runtime Secret and shared GHCR pull credentials were provisioned/verified.
+
+Release gates:
+- **StockDividend:** keep paired Admin/Backend promotion disabled until explicit release authorization and protected Actions:read publisher provenance access are confirmed. Never promote one component independently.
+- **Media Generation:** CI passed; snapshot confirms both workloads 1/1 and digest-pinned. No new app release was initiated.
+- **Authentication:** keep #75/#76 gated on Supabase integration binding and migration provenance; no migration or activation.
+- **VPS:** pending package upgrades include containerd 2.4.2 and Docker 29.9.3; host requires restart. Wait for an approved maintenance window.
+
+## Exact next actions
+
+1. Verify the next native Platform slots without changing cron: inspection 14:02 ICT, reconciliation 14:07 ICT, recovery 14:10 ICT, watchdog 14:12 ICT. Keep native schedule evidence separate from dispatch/workflow_run fallback.
+2. Keep Stock Admin/Backend paired promotion blocked until explicit release authorization and protected publisher-run read access are available.
+3. Investigate WF-06 delivery and the four HTTP 503 endpoints with fresh evidence; preserve HTTP 200 and desired replicas 0/0 unless activation is separately authorized.
+4. Resolve Auth Supabase deployment binding and migration provenance before merging #75/#76 or running migrations.
+5. Keep Platform MCP PR #1222 draft until mutation authority, shell isolation and reproducible build/test evidence are complete.
+6. Wait for an approved VPS maintenance window before package upgrades or reboot.
+
+## Ownership and safety contract
+
+- App repositories own tests, builds, immutable GHCR publication, and source-run/tag/digest provenance.
+- Platform Infra owns production manifests, shared GHCR pull credentials, digest/provenance verification, paired promotion, GitOps reconciliation, rollout and health verification.
+- `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only.
+- Preserve useful CI, tests, security, backup, manual, release and scheduled workflows unless redundancy/obsolescence is proven.
+- Do not create a second direct SSH/Compose or MCP Docker/Kubernetes mutation authority.
+- `locally-uncensored-private` remains retired.
+- No production image promotion, manifest apply, database migration, desired replica change, host package upgrade, reboot or cron expression change was performed in this checkpoint. Earlier controlled reconciliation #41980764155 provisioned Auth runtime Secret and shared GHCR credentials. TCE market-scan schedule remains unchanged.
+
+### Evidence
+
+- PR #1259: https://github.com/phanthienquoc/platform-infra/pull/1259
+- Native inspection #41980605875: https://github.com/phanthienquoc/platform-infra/actions/runs/41980605875
+- Exact-head inspection validation #41980684859: https://github.com/phanthienquoc/platform-infra/actions/runs/41980684859
+- Manual reconcile #41980764155: https://github.com/phanthienquoc/platform-infra/actions/runs/41980764155
+- Platform watchdog #41980748672: https://github.com/phanthienquoc/platform-infra/actions/runs/41980748672
+- TCE WF-07 schedule #41982802263: https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41982802263
+- TCE WF-12 workflow_run #41982820872: https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41982820872
+- Platform recovery via repository_dispatch #41982836006: https://github.com/phanthienquoc/platform-infra/actions/runs/41982836006
+- Native Platform inspection previous #41934713847: https://github.com/phanthienquoc/platform-infra/actions/runs/41934713847
+- Native Platform recovery #41949145532: https://github.com/phanthienquoc/platform-infra/actions/runs/41949145532
+- Native Platform reconcile #41950932898: https://github.com/phanthienquoc/platform-infra/actions/runs/41950932898
+- Native Platform watchdog #41951133668: https://github.com/phanthienquoc/platform-infra/actions/runs/41951133668
+- Native TCE WF-06 #41962074678: https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41962074678
+- Native TCE WF-12 #41958165099: https://github.com/phanthienquoc/TCE-dashboard/actions/runs/41958165099
+- Stock immutable publisher #41563856933: https://github.com/phanthienquoc/stockdividend/actions/runs/41563856933
+- Media CI #41617592783: https://github.com/phanthienquoc/media-generation/actions/runs/41617592783
+- Authentication CI #41670642852: https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41670642852
