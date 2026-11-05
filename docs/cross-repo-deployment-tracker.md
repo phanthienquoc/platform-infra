@@ -1,8 +1,87 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-06 01:58 ICT (2026-11-05 18:58 UTC)
-Platform Infra master at checkpoint: ffbfecaa19730a5cef9861c313a2e1597ac05eaf
-Latest checkpoint: docs/cross-repo-workflow-inventory-checkpoints/2026-11-06-0158-ict.md
+## Current review — 2026-11-06 03:27 ICT (2026-11-05 20:27 UTC)
+
+This review re-read all five default-branch commits, open PRs, latest Actions runs, Platform native schedule history, the latest reconciliation and lane summaries, the current read-only VPS snapshot, Stock's publisher contract/run, and TCE's newly merged recovery change. It supersedes the 01:58 review below.
+
+### Repository refs, open PRs and CI evidence
+
+| Repository | Current default-branch SHA | Open PRs | Latest evidence |
+|---|---|---|---|
+| Platform Infra | `9d533e503d412e583873a91aefd66263c297fafa` | #544/#541/#539 (draft) | Inspection-state PR #1288 merged at 03:01:43 ICT; exact inspection branch validation #42099407335 PASS. Latest master read-only inspection #42099284088 PASS. |
+| TCE Dashboard | `162390fe4811131c11d3f39d264e0722a826dc0f` | None | PR #1025 merged at 03:22:34 ICT; exact-head WF-05 #42102448205 and WF-02 #42102448276 PASS; post-merge WF-01 #42102796954, WF-05 #42102795916 and WF-02 #42102795382 PASS. |
+| StockDividend | `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec` | None | CI #41563856934 and publisher #41563856933 PASS (Nov 3); publisher verified all three immutable full-SHA ARM64 image manifests, while production promotion was held/skipped. |
+| Media Generation | `e4c7d8990aafc7d837e918c9caf39722d623de7c` | None | Latest master CI #41617592783 PASS (Nov 3); no newer app build in the latest run page. |
+| Authentication | `f978a3f378ee22d4630909c2d182275b21ac9e9a` | #75 (ready), #76 (draft) | Latest master CI #41670642852 PASS (Nov 3); no newer master build. Supabase Preview checks on the open PRs remain SKIPPED. |
+
+Open PR heads were re-read:
+- Platform #544: `c95e7daecb83b65577b54303427fe4ea81adfe06` (draft); #541: `b8f7c6ba04e3d971336a899b2efd5894662083b3` (draft); #539: `2dc48b97017ecb08e49682633303a2f1d5e991a1` (draft).
+- Authentication #75: `a8e8a1d99e86a679b8d2ea7c7e7fa91302ffcc05` (ready); #76: `f19cacb0bf2b454b3152bd3a501f6f88d0a14a58` (draft). Their passing checks are historical and Supabase Preview is skipped; do not merge or run migrations on that evidence.
+- No open PRs in TCE Dashboard, StockDividend or Media Generation. Do not treat Nov 3 app CI as fresh validation.
+
+### TCE PR #1025 — new stale-WF-06 recovery path
+
+- PR [#1025](https://github.com/phanthienquoc/TCE-dashboard/pull/1025) merged as `162390fe4811131c11d3f39d264e0722a826dc0f` at 03:22:34 ICT.
+- It closes the gap where a successful native WF-07 schedule causes WF-12 to detect a stale native WF-06 schedule, but WF-13 previously ignored the resulting workflow_run event.
+- WF-12 remains read-only. It requests WF-13 only after a successful native WF-07 schedule leads to a failed stale-WF-06 verification; the request is correlated to the exact WF-12 run and its failed job/step evidence. WF-13 remains the only WF-06 fallback dispatcher.
+- Exact-head WF-05/WF-02 checks and all three post-merge master checks passed.
+- Important ordering: WF-07 #42098832858 (02:57:39 ICT), WF-12 workflow_run #42098855352 (02:57:48 ICT, failure), and WF-13 #42098897759 (02:58:04 ICT, skipped) all ran before PR #1025 merged. They do not exercise the new code. No qualifying post-merge native WF-07/WF-12 event has yet proved the new path end-to-end.
+- Latest native TCE evidence remains WF-06 #42089383865 (01:58:27 ICT, failure) and WF-12 #42083178274 (01:19:51 ICT, failure). The earlier WF-06 fallback #42089448641 also failed all four strict public probes with HTTP 503. Keep HTTP 200 gates and every TCE cron declaration unchanged.
+
+### Platform native schedule evidence — separate native schedules from fallbacks
+
+| Platform workflow | Latest native `event=schedule` run | Result |
+|---|---|---|
+| inspect-vps | #42049660972 — Nov 5 21:55:03 ICT | PASS, stale |
+| reconcile-vps | #42068683835 — Nov 5 23:51:03 ICT | FAIL at Stock health gate |
+| recover-stale-ops | #42068414686 — Nov 5 23:49:29 ICT | PASS |
+| reconcile-schedule-watchdog | #42070623710 — Nov 6 00:02:22 ICT | FAIL, inspection freshness |
+
+The latest 100 Platform Actions runs through #42099407335 (03:01:17 ICT) contain no later native `event=schedule` run. Do not attribute the missing native inspect event to runner queue without new evidence. The workflow's existing cron remains `2,32 * * * *`; the recovery controller still distinguishes native schedule freshness from workflow_dispatch fallback freshness. Preserve all cron declarations.
+
+### Latest reconciliation and current read-only K3s snapshot
+
+- Reconcile #42098901197 (workflow_dispatch, 02:58:05 ICT; source Platform SHA `fff1767db7e8e3d14b78ed84a5f7e03bef9341cd`) failed only in the StockDividend lane. Shared GHCR preflight, Auth runtime Secret provisioning and pull-credential bootstrap passed. Media, MicroFE, TCE and Auth lanes passed; Keycloak was skipped. Production manifest apply and image changes were skipped with `allow_image_changes=false`.
+- Stock failure was isolated to Admin (two Pods) and the new Backend Pod on image tag `12d63b4`; containerd reports `no match for platform in manifest`. The failure is architecture compatibility, not evidence of a shared pull-secret problem. Existing Stock Backend and Frontend remained 1/1 in this snapshot.
+- Recovery #42099209509 passed and dispatched read-only inspection #42099284088, which passed. Snapshot `debug/vps-latest.md` was generated 03:00:41 ICT. At this review it is about 27 minutes old and within the 75-minute fallback budget, but it is a workflow_dispatch snapshot, not native schedule evidence.
+- Snapshot-time host/runtime: node `tce-k3s-01` Ready/ARM64; K3s v1.36.3+k3s1; containerd 2.3.2-k3s2; Docker 29.1.3; disk 56%; about 19 GiB available RAM; `restart_required=yes`.
+- Snapshot-time workloads: Media backend/frontend 1/1; MicroFE Shell/WS and NATS 1/1; Stock Admin (two Pods) and new Backend ImagePullBackOff; old Backend and Frontend 1/1; TCE frontend/service 0/0; microfe-auth and Keycloak 0/0. These are observations from the 03:00 snapshot, not a claim about later live state.
+
+### Stock immutable publisher and paired promotion gate
+
+- Current Stock publisher workflow uses an ARM64 runner, builds Scraper/Admin/Backend for `linux/arm64`, tags each image with the full source SHA, and verifies each registry manifest/digest before any promotion handoff.
+- Publisher #41563856933 passed the ARM64 runner check, all three builds, and immutable ARM64 registry verification. Its production-release hold returned `release_enabled=false`; handoff validation and atomic paired promotion were skipped.
+- The current production tag `12d63b4` remains architecture-incompatible. Do not repoint production to a new digest or promote Admin/Backend separately. The exact next gate is explicit release authorization (`STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=true`) plus protected publisher-run provenance/Actions:read verification and the existing paired digest contract. Do not enable the release variable or dispatch promotion without authorization.
+
+### Authentication, Media and Keycloak gates
+
+- Media's latest CI is historical (Nov 3); its 1/1 workload status is only from the 03:00 snapshot.
+- Authentication's latest master CI is historical (Nov 3). PR #75/#76 remain gated because Supabase Preview is skipped and the production integration side-effect binding is not authoritatively verified. Do not merge or run migrations.
+- Keycloak remains 0/0 in the current snapshot. Platform PR #544/#541/#539 are still drafts; the Keycloak runtime DB credential and SSO ingress prerequisites are not proven. Do not activate the lane.
+
+### Next dependency-safe actions
+
+1. Wait for the next native WF-07 schedule after PR #1025 merge; verify native WF-07 → read-only WF-12 stale-WF-06 evidence → exactly one WF-13 → one read-only WF-06 fallback, with source run/attempt/SHA correlation. Do not count pre-merge #42098855352/#42098897759 as proof.
+2. Keep strict TCE/Auth HTTP 200 health gates. Investigate ingress/service/endpoints using fresh runtime evidence; the 0/0 snapshot and 503 probes are correlated, not a proven root cause.
+3. Keep Stock paired promotion closed until explicit authorization and protected publisher provenance are both verified.
+4. Continue distinguishing native Platform schedule freshness from the fresh workflow_dispatch inspection fallback; preserve cron declarations and do not dispatch duplicate inspection while the fallback remains within 75 minutes.
+5. Keep Authentication migrations and Keycloak activation gated on authoritative credentials/integration evidence.
+6. Wait for an approved VPS maintenance window before host restart or Docker/containerd package changes.
+
+### Safety invariants
+
+- App repos own tests/builds/immutable GHCR publication and source-run/tag/digest provenance.
+- Platform Infra owns production manifests, shared GHCR pull credentials, provenance/digest verification, paired promotion, GitOps reconciliation, rollout and health verification.
+- `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only.
+- No duplicate SSH/Compose/MCP Docker/Kubernetes mutation authority was added.
+- No production image, manifest, database, desired replica, host package, reboot or cron mutation occurred in this review.
+- Preserve useful CI, tests, security, backup, manual, release and scheduled workflows.
+- TCE market-scan schedule unchanged.
+
+
+Last reviewed: 2026-11-06 03:27 ICT (2026-11-05 20:27 UTC)
+Platform Infra master at checkpoint: 9d533e503d412e583873a91aefd66263c297fafa
+Latest checkpoint: docs/cross-repo-workflow-inventory-checkpoints/2026-11-06-0327-ict.md
 
 ## Current review — 2026-11-06 01:58 ICT (2026-11-05 18:58 UTC)
 
