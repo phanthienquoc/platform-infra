@@ -1,58 +1,57 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-05 15:01 ICT (2026-11-05 08:01 UTC)
-Platform Infra master at checkpoint: 543dc4c4cca08ae7261f9d53aabaf5df6d39bb3a
-Latest checkpoint: docs/cross-repo-workflow-inventory-checkpoints/2026-11-05-1501-ict.md
+Last reviewed: 2026-11-05 16:01 ICT (2026-11-05 09:01 UTC)
+Platform Infra master at checkpoint: 6fa3b63a70d7d57b0b46eb7ffdfff286991095b6
+Latest checkpoint: docs/cross-repo-workflow-inventory-checkpoints/2026-11-05-1601-ict.md
 
 ## Repository readiness
 
 | Repository | Master SHA | Open PRs | Latest verified CI / publication |
 |---|---|---|---|
-| phanthienquoc/platform-infra | 543dc4c4cca08ae7261f9d53aabaf5df6d39bb3a | #1222, #544, #541, #539 (all draft) | Post-merge validate-manifests #41984819070 PASS; native inspection #41980605875 PASS at 13:28 but stale; native reconcile #41950932898 and manual reconcile #41980764155 failed Stock health. |
-| phanthienquoc/TCE-dashboard | 52cecd5584e6c0a3daf0e2bcff6c89ca064e203d | None | WF-07 native #41982802263 PASS; WF-12 workflow_run #41982820872 failed WF-06 freshness but heartbeat HTTP 204; WF-06 #41962074678 failed four strict HTTP 200 probes with 503. |
-| phanthienquoc/stockdividend | 50ba0dfb67eb3dfaa376db0c752bbef5b0817bec | None | CI #41563856934 and immutable ARM64 publisher #41563856933 PASS; full-SHA Scraper/Admin/Backend digests verified; production promotion gate disabled and paired dispatch skipped. |
-| phanthienquoc/media-generation | e4c7d8990aafc7d837e918c9caf39722d623de7c | None | CI #41617592783 PASS; last snapshot shows backend/frontend 1/1 and digest-pinned, but snapshot is stale. |
-| phanthienquoc/phanthienquoc-authentication | f978a3f378ee22d4630909c2d182275b21ac9e9a | #75 ready; #76 draft | CI #41670642852 PASS; Supabase deploy-to-production integration/migration provenance gate remains closed. |
+| phanthienquoc/platform-infra | 6fa3b63a70d7d57b0b46eb7ffdfff286991095b6 | #1222, #544, #541, #539 (all draft) | Native reconcile #41995809261 failed only Stock health; native recovery #41994805588 PASS; native watchdog #41997764646 FAIL on inspection freshness; workflow_dispatch inspection #41995133938 PASS. |
+| phanthienquoc/TCE-dashboard | 52cecd5584e6c0a3daf0e2bcff6c89ca064e203d | None | WF-07 #41982802263 PASS; WF-12 workflow_run #41982820872 failed WF-06 freshness but heartbeat HTTP 204; WF-06 #41962074678 failed four strict public endpoint checks. |
+| phanthienquoc/stockdividend | 50ba0dfb67eb3dfaa376db0c752bbef5b0817bec | None | CI #41563856934 and immutable ARM64 publisher #41563856933 PASS; three full-SHA digests verified; production paired promotion disabled. |
+| phanthienquoc/media-generation | e4c7d8990aafc7d837e918c9caf39722d623de7c | None | CI #41617592783 PASS; backend/frontend 1/1 in the 15:31 inspection snapshot. |
+| phanthienquoc/phanthienquoc-authentication | f978a3f378ee22d4630909c2d182275b21ac9e9a | #75 ready; #76 draft | CI #41670642852 PASS; Supabase production side-effect and migration provenance gate remains closed. |
 
 ## Current operational status
 
-- **Platform schedule delivery is still incomplete:** native inspection #41980605875 passed at 13:28:06 ICT, but no subsequent native inspect run appears in the current schedule history. Native reconcile #41950932898 (08:47), recovery #41949145532 (08:31), and watchdog #41951133668 (08:49) remain the latest scheduled runs. The 13:29 workflow_run watchdog #41980748672 confirms reconcile workflow enabled, no runner queue delay, and stale native reconcile/recovery; it does not establish why GitHub stopped delivering those schedule events.
-- **Snapshot is stale:** `debug/vps-latest.md` was generated 13:28:14 ICT and is about 93 minutes old at 15:01, beyond the 75-minute budget. Do not represent it as current live health.
-- **TCE schedule/health:** WF-07 native #41982802263 passed at 13:47 and WF-12 forwarded an authenticated Platform heartbeat (HTTP 204), but WF-12 #41982820872 failed because WF-06 #41962074678 was 196 minutes old. WF-06's four strict probes returned 503. Platform recovery #41982836006 was repository_dispatch fallback, not native recovery.
-- **Stock publication is healthy but production promotion is intentionally gated:** publisher #41563856933 verified linux/arm64 immutable full-SHA digests for all three components. Its promotion gate was disabled and atomic digest dispatch skipped. Production still references old `12d63b4` tags with no ARM64 manifest. Do not describe this as a failed new publisher.
-- **Latest K3s point-in-time evidence (13:28):** node Ready/ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2, disk 56%, ~19 GiB available RAM, host restart_required=yes. Media/MicroFE/NATS 1/1; Stock Admin and new Backend ImagePullBackOff; TCE/Auth/Keycloak 0/0.
-- **Controlled reconciliation side effects:** #41980764155 provisioned/verified Auth runtime Secret and shared GHCR pull credentials; manifest apply and image changes were skipped; Stock health failed. Do not describe this run as read-only.
-- **Auth remains blocked:** #75 is test/docs only but owner-provided Supabase integration evidence says Deploy to production is ON for master and the branch has unresolved MIGRATIONS_FAILED history. Do not merge #75/#76 or run migrations until effects/provenance are resolved.
+- **Platform schedule delivery is partial:** native reconcile #41995809261 (15:36 ICT), recovery #41994805588 (15:29 ICT) and watchdog #41997764646 (15:51 ICT) were delivered. Native inspection remains stale at #41980605875 (13:28 ICT). Read-only workflow_dispatch fallback #41995133938 (15:31 ICT) is fresh but does not satisfy native schedule freshness.
+- **Watchdog evidence:** #41997764646 measured native inspection age at 144 minutes. It separately found fallback #41995133938 age 19 minutes and avoided duplicate inspection dispatch. Native recovery #41994805588 was 22 minutes old and successful. workflow_run recovery #41997798431 passed after the watchdog but is not a native schedule tick.
+- **Latest K3s snapshot:** debug/vps-latest.md generated 15:31:43 ICT, about 30 minutes old at review and within the 75-minute budget. Node Ready/ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2, disk 56%, ~19 GiB available RAM, host restart_required=yes. Media/MicroFE/NATS 1/1; Stock Admin and new Backend ImagePullBackOff; existing Backend and Frontend 1/1; TCE/Auth/Keycloak 0/0.
+- **Stock reconcile failure:** #41995809261 passed shared GHCR access, Auth runtime Secret and pull credential provisioning. Auth/TCE/MicroFE/Media lanes passed; Stock health failed because Admin and new Backend use 12d63b4 images with no matching platform manifest. ALLOW_IMAGE_CHANGES=false; manifest apply and image changes were skipped.
+- **TCE schedule/health:** WF-07 #41982802263 passed; WF-12 #41982820872 failed because WF-06 #41962074678 was 196 minutes old. Heartbeat dispatch returned HTTP 204 and Platform receiver #41982836006 accepted it. WF-06's four endpoint jobs failed; TCE web log confirms HTTP 503 vs expected 200.
+- **Stock publication:** publisher #41563856933 verified immutable linux/arm64 full-SHA digests for Scraper/Admin/Backend. Promotion and atomic digest dispatch were explicitly skipped. This is a production release authorization/provenance gate, not a new publisher failure.
+- **Authentication remains gated:** #75/#76 cannot be merged and no migration can run until Supabase production integration side effects and migration provenance are reconciled.
 
 ## Current PR heads and validation
 
-- Platform #1222 draft: `f018e39eda52770539fc10671fba0d04baec8046`, #41821355040 PASS (historical); blocked on mutation authority, shell UID/GID isolation and reproducible tests/build/lockfile/ShellCheck.
-- Platform #544 draft: `c95e7daecb83b65577b54303427fe4ea81adfe06`, #38575430454 PASS (historical).
-- Platform #541 draft: `b8f7c6ba04e3d971336a899b2efd5894662083b3`, #38567431761 PASS (historical).
-- Platform #539 draft: `2dc48b97017ecb08e49682633303a2f1d5e991a1`, #38548718033 PASS (historical).
-- Authentication #75 ready: `a8e8a1d99e86a679b8d2ea7c7e7fa91302ffcc05`, #40446492086 PASS (historical); merge blocked by Supabase production side-effect gate.
-- Authentication #76 draft: `f19cacb0bf2b454b3152bd3a501f6f88d0a14a58`, #41329425940 PASS (historical); migration planning is not authorization.
+- Platform #1222 draft: f018e39eda52770539fc10671fba0d04baec8046, #41821355040 PASS (historical); blocked on mutation authority, shell UID/GID isolation and reproducible build/test/lockfile/ShellCheck.
+- Platform #544 draft: c95e7daecb83b65577b54303427fe4ea81adfe06, #38575430454 PASS (historical).
+- Platform #541 draft: b8f7c6ba04e3d971336a899b2efd5894662083b3, #38567431761 PASS (historical).
+- Platform #539 draft: 2dc48b97017ecb08e49682633303a2f1d5e991a1, #38548718033 PASS (historical).
+- Authentication #75 ready: a8e8a1d99e86a679b8d2ea7c7e7fa91302ffcc05, #40446492086 PASS (historical); merge blocked by Supabase production side-effect gate.
+- Authentication #76 draft: f19cacb0bf2b454b3152bd3a501f6f88d0a14a58, #41329425940 PASS (historical); migration planning is not authorization.
 
 ## Exact next actions
 
-1. Obtain a fresh read-only K3s inspection; the 13:28 snapshot is stale. Verify the next native Platform schedule slots (inspection 15:02, reconcile 15:07, recovery 15:10, watchdog 15:12 ICT) without changing cron expressions.
-2. Keep Stock paired Admin/Backend promotion disabled until explicit production release authorization and protected source-run Actions:read provenance are available.
-3. Keep TCE/Auth desired replicas 0/0 and strict HTTP 200 gates; investigate WF-06 schedule delivery and 503 endpoints without activating workloads.
-4. Resolve Auth Supabase production integration side effects and migration provenance before merging #75/#76 or running migrations.
-5. Keep Platform MCP PR #1222 draft until mutation authority, shell isolation and reproducible build/test/security evidence are complete.
-6. Wait for an approved VPS maintenance window before Docker/containerd/Ubuntu package upgrades or reboot.
+1. Restore/verify native inspect-vps schedule delivery; continue existing read-only workflow_dispatch fallback only when policy allows and never count it as native delivery.
+2. Keep Stock paired Admin/Backend promotion disabled until explicit release authorization and protected publisher-run Actions:read provenance access are confirmed.
+3. Investigate TCE WF-06 schedule delivery and HTTP 503 endpoints without activating 0/0 workloads or weakening strict HTTP 200 checks.
+4. Resolve Supabase deployment binding and migration provenance before merging Authentication #75/#76 or running migrations.
+5. Keep Platform MCP PR #1222 draft until shell isolation, mutation boundaries and reproducible build/test/security evidence are complete.
+6. Wait for an approved VPS maintenance window before Docker/containerd/Ubuntu upgrades or reboot.
 
 ## Ownership and safety invariants
 
 - App repositories own tests, builds, immutable GHCR publication and source-run/tag/digest provenance.
 - Platform Infra owns production manifests, shared GHCR pull credentials, digest/provenance verification, paired promotion, GitOps reconciliation, rollout and health verification.
-- `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only.
-- Preserve useful CI, test, security, backup, manual, release and scheduled workflows unless redundancy/obsolescence is proven.
+- reconcile-vps.yml remains the sole production apply authority; inspect-vps.yml remains read-only.
+- Preserve useful CI, tests, security, backup, manual, release and scheduled workflows unless redundancy/obsolescence is proven.
 - Do not create a second direct SSH/Compose or MCP Docker/Kubernetes mutation authority.
-- `locally-uncensored-private` remains retired.
-- No image promotion, production manifest apply, database migration, desired replica change, host package upgrade, reboot or cron change occurred in this checkpoint. Earlier controlled reconciliation #41980764155 did provision Auth runtime Secret and shared GHCR pull credentials; do not describe it as read-only.
+- locally-uncensored-private remains retired.
+- No production image promotion, manifest apply, database migration, desired replica change, host package upgrade, reboot or cron declaration change occurred in this checkpoint.
 - TCE market-scan schedule remains unchanged.
-
 
 ## Checkpoint update — 2026-11-05 07:56 ICT (00:56 UTC)
 
