@@ -3326,3 +3326,21 @@ The shared preflight reported DRIFT=false; Apply production manifests and post-a
 
 Do not describe this reconcile as zero production-side operations. The evidence does not show a database migration, image digest promotion, manifest apply, desired replica change or host reboot. The workflow-step summary shows the managed restart step completed, but this audit does not infer that every blocked Pod was restarted; the subsequent inspection still shows the Stock Admin/Backend failures.
 
+
+
+## Cross-repo workflow inventory runtime checkpoint — 2026-11-05 11:04 ICT / 04:04 UTC
+
+- **Platform Infra:** master `c0d5c5ff18472800f15b352cd950c4c3d959cd1f`; PRs #1222/#544/#541/#539 remain draft. Manual reconcile #41962132547 (10:31 ICT) performed GHCR pull credential and Auth runtime Secret reconciliation, found no manifest drift, skipped manifest apply, skipped restart for permanent Stock architecture failures, and failed the Stock health lane. Manual recovery #41962345391 (10:33 ICT) passed but reused a fresh manual inspection fallback; native inspection remains stale. Latest native schedule runs: inspect #41934713847 PASS (06:33), recovery #41949145532 PASS (08:31), reconcile #41950932898 FAIL Stock health (08:47), watchdog #41951133668 FAIL inspection freshness (08:49). No newer Platform `event=schedule` runs through 11:04 ICT.
+- **TCE Dashboard:** master `52cecd5584e6c0a3daf0e2bcff6c89ca064e203d`; no PR. Native WF-06 #41962074678 ran at 10:30 ICT and failed all four public HTTP 200 probes with 503. WF-12 workflow_run #41962097006 passed and confirmed WF-06 is active and its scheduled delivery is fresh; this is not a native WF-12 schedule run. Latest native WF-12 remains #41958165099 at 09:54 ICT, failed freshness. WF-07 Backup #41936628258 PASS. Keep market-scan and all cron declarations unchanged.
+- **StockDividend:** master `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; no PR. CI #41563856934 and immutable ARM64 publisher #41563856933 PASS; production Admin/Backend tag `12d63b4` still has no ARM64 manifest. Paired promotion remains disabled and un-dispatched.
+- **Media Generation:** master `e4c7d8990aafc7d837e918c9caf39722d623de7c`; no PR. CI #41617592783 PASS; latest live reconcile listing shows backend/frontend 1/1 with digest-pinned images.
+- **Authentication:** master `f978a3f378ee22d4630909c2d182275b21ac9e9a`; #75 ready, #76 draft. Auth CI #41670642852 PASS; PR-head CI #40446492086/#41329425940 PASS historically. Supabase Preview remains SKIPPED; migration provenance and GitHub deployment binding remain unverified.
+- **Latest live K3s evidence:** Platform reconcile #41962132547 at 10:32 ICT: node Ready/ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2; Media/MicroFE/NATS 1/1; Stock Admin (two Pods) and new Backend ImagePullBackOff; previous Backend and Frontend 1/1. The committed inspection snapshot from 09:56:52 ICT is 68 minutes old at this checkpoint, close to the 75-minute freshness budget. Host restart_required=yes.
+- Preserve app-owned test/build/immutable GHCR and Platform-owned manifests/shared credentials/promotion/reconcile/rollout. `reconcile-vps.yml` remains sole production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose/MCP mutation authority. No production image promotion, manifest apply, migration, desired replica change, package upgrade or reboot was initiated by this documentation update. The earlier reconcile did perform controlled Auth runtime Secret and shared GHCR credential reconciliation; do not mislabel it as read-only. Preserve all CI/security/backup/manual/release/scheduled workflows. TCE market-scan schedule unchanged.
+
+### Exact evidence
+- Platform reconcile #41962132547: https://github.com/phanthienquoc/platform-infra/actions/runs/41962132547
+- Platform recovery #41962345391: https://github.com/phanthienquoc/platform-infra/actions/runs/41962345391
+- Platform native inspect/reconcile/recovery/watchdog: #41934713847 / #41950932898 / #41949145532 / #41951133668
+- TCE WF-06 schedule #41962074678 and WF-12 workflow_run #41962097006
+- Stock publisher #41563856933; Media CI #41617592783; Auth CI #41670642852
