@@ -19,11 +19,6 @@ case "$action" in
     [[ "$2" =~ ^[0-9]{1,4}$ ]] && (( 10#$2 >= 1 && 10#$2 <= 1000 )) || exit 64
     exec /usr/bin/docker logs --tail "$2" "$1" 2>&1
     ;;
-  restart)
-    [[ $# -eq 1 ]] || exit 64
-    valid_container "$1" || exit 64
-    exec /usr/bin/docker restart "$1"
-    ;;
   *)
     echo "Unsupported Docker operation." >&2
     exit 64
