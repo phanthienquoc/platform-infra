@@ -1,18 +1,18 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-05 11:58 ICT (2026-11-05 04:58 UTC)
-Platform Infra master at checkpoint: afb49ba5dcc95f273b940463fe4cdd8d92001bd2
-Latest checkpoint: docs/cross-repo-workflow-inventory-checkpoints/2026-11-05-1158-ict.md
+Last reviewed: 2026-11-05 13:03 ICT (2026-11-05 06:03 UTC)
+Platform Infra master at checkpoint: 837944e2b3e6416f3e8f7a8107e1e2bea2d07fe3
+Latest checkpoint: docs/cross-repo-workflow-inventory-checkpoints/2026-11-05-1303-ict.md
 
 ## Repository readiness
 
 | Repository | Master SHA | Open PRs | Latest verified CI / publication |
 |---|---|---|---|
-| phanthienquoc/platform-infra | afb49ba5dcc95f273b940463fe4cdd8d92001bd2 | #1222, #544, #541, #539 (all draft) | PR #1256 merged; exact-head #41965908624 and post-merge #41965978011 PASS. Latest native watchdog #41951133668 still fails inspection freshness; last reconcile #41950932898 fails Stock health. |
-| phanthienquoc/TCE-dashboard | 52cecd5584e6c0a3daf0e2bcff6c89ca064e203d | None | WF-06 native #41962074678 at 10:30 ICT delivered but all four public probes returned 503; WF-12 native #41958165099 at 09:54 ICT failed freshness. |
-| phanthienquoc/stockdividend | 50ba0dfb67eb3dfaa376db0c752bbef5b0817bec | None | CI #41563856934 and immutable ARM64 publisher #41563856933 PASS on Nov 3; production paired promotion remains disabled; tag 12d63b4 lacks ARM64 manifest. |
-| phanthienquoc/media-generation | e4c7d8990aafc7d837e918c9caf39722d623de7c | None | CI #41617592783 PASS on Nov 3; last live reconcile #41962132547 showed backend/frontend 1/1, now stale. |
-| phanthienquoc/phanthienquoc-authentication | f978a3f378ee22d4630909c2d182275b21ac9e9a | #75 ready; #76 draft | Master CI #41670642852 PASS on Nov 3; Supabase Preview remains SKIPPED and migration gate stays closed. |
+| phanthienquoc/platform-infra | 837944e2b3e6416f3e8f7a8107e1e2bea2d07fe3 | #1222, #544, #541, #539 (all draft) | PR #1257 merged; exact-head #41971521055 and post-merge #41971589134 PASS. Latest known native inspection #41934713847 is stale; reconcile #41950932898 failed Stock health. |
+| phanthienquoc/TCE-dashboard | 52cecd5584e6c0a3daf0e2bcff6c89ca064e203d | None | Latest known native WF-06 #41962074678 (10:30 ICT) failed four HTTP 200 probes with 503; native WF-12 #41958165099 failed freshness. |
+| phanthienquoc/stockdividend | 50ba0dfb67eb3dfaa376db0c752bbef5b0817bec | None | CI #41563856934 and immutable ARM64 publisher #41563856933 PASS on Nov 3; paired promotion remains disabled; production tag 12d63b4 lacks ARM64 manifest. |
+| phanthienquoc/media-generation | e4c7d8990aafc7d837e918c9caf39722d623de7c | None | CI #41617592783 PASS on Nov 3; last live listing showed backend/frontend 1/1 but is stale. |
+| phanthienquoc/phanthienquoc-authentication | f978a3f378ee22d4630909c2d182275b21ac9e9a | #75 ready; #76 draft | CI #41670642852 PASS on Nov 3; Supabase Preview skipped; migration/integration gate remains closed. |
 
 Current Platform Infra PR heads and last returned validation runs:
 - #1222 draft, head f018e39eda52770539fc10671fba0d04baec8046; validate-manifests #41821355040 PASS. The PR remains unsafe for deployment: it still proposes Docker/Kubernetes mutation tools, the previously reviewed source/installer newline defects and missing SHELL_UID/GID forwarding remain unresolved, and reproducible build/tests/lockfile evidence is absent.
@@ -21,13 +21,6 @@ Current Platform Infra PR heads and last returned validation runs:
 - #539 draft, head 2dc48b97017ecb08e49682633303a2f1d5e991a1; validate-manifests #38548718033 PASS.
 - #1247 merged at master SHA 8170761b5d9cc98bfeec291294ef9e1f4c21bac2 after exact-head lint/validate PASS. Its post-merge push validations were still queued at checkpoint.
 - The older PR-associated runs listed above are historical evidence, not new production-health evidence.
-
-Current Platform Infra PR heads and last returned validation runs:
-- #1222 draft, head f018e39eda52770539fc10671fba0d04baec8046; validate-manifests #41821355040 PASS. The PR remains unsafe for deployment: it still proposes Docker/Kubernetes mutation tools, the previously reviewed source/installer newline defects and missing SHELL_UID/GID forwarding remain unresolved, and reproducible build/tests/lockfile evidence is absent.
-- #544 draft, head c95e7daecb83b65577b54303427fe4ea81adfe06; validate-manifests #38575430454 PASS.
-- #541 draft, head b8f7c6ba04e3d971336a899b2efd5894662083b3; validate-manifests #38567431761 PASS.
-- #539 draft, head 2dc48b97017ecb08e49682633303a2f1d5e991a1; validate-manifests #38548718033 PASS.
-- These are the last PR-associated runs returned for the exact heads, not new post-merge or production-health evidence. Combined-status lookup returned no status contexts for the current master heads.
 
 ## Current actions
 
