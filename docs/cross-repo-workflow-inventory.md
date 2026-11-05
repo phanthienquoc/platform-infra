@@ -1,3 +1,16 @@
+## Workflow inventory runtime update — 2026-11-06 00:18 ICT / 2026-11-05 17:18 UTC
+
+- **Repository heads:** Platform Infra `be13f089e665de5ad23df6209c3a0831a6a5e295`; TCE Dashboard `c5415f8ac0aa1ffa0b17c18d1b05952c68f9f65c`; StockDividend `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media Generation `e4c7d8990aafc7d837e918c9caf39722d623de7c`; Authentication `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
+- **Open PRs:** Platform #544/#541/#539 draft; Authentication #75 ready/#76 draft; none in TCE, StockDividend or Media.
+- **Platform #1283:** merged as `be13f089e665de5ad23df6209c3a0831a6a5e295`; exact-head validate-manifests #42071477343 and post-merge #42071588610 PASS. Documentation-only; no production apply.
+- **Platform native schedules:** inspect-vps #42049660972 PASS at 21:55:03 ICT and remains stale; reconcile-vps #42068683835 at 23:51:03 ICT failed only Stock health; recover-stale-ops #42068414686 PASS at 23:49:29 ICT; watchdog #42070623710 at 00:02:22 ICT failed only native inspection freshness. Recovery workflow_run #42070696343 PASS and skipped duplicate inspection because fallback #42063840567 was 38m old. The fallback snapshot is 55m old at this review and is not native schedule evidence.
+- **K3s:** snapshot #42063840567 at 23:23:06 ICT; node Ready/ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2, Docker 29.1.3, disk 56%, ~19 GiB RAM, GitOps drift clean, restart_required=yes. Media/MicroFE/NATS 1/1; Stock Admin and new Backend ImagePullBackOff on `12d63b4`; old Backend/Frontend 1/1; TCE/Auth/Keycloak 0/0.
+- **TCE:** PR #1024 merged as `c5415f8ac0aa1ffa0b17c18d1b05952c68f9f65c`; exact-head WF-05/WF-02 and post-merge WF-01/WF-02/WF-05 PASS. Native WF-06 #42019530614 returned HTTP 503 on all four public probes; native WF-12 #42013061466 failed freshness; no post-merge WF-13 E2E dispatch. Preserve all TCE cron declarations and the market-scan schedule.
+- **Stock:** CI #41563856934 and immutable ARM64 publisher #41563856933 PASS; Platform paired promotion remains disabled because production tag `12d63b4` lacks ARM64 manifest and explicit authorization/provenance is unavailable.
+- **Media/Auth:** Media CI #41617592783 PASS and backend/frontend 1/1 in snapshot. Auth CI #41670642852 PASS; Supabase ACTIVE_HEALTHY / FUNCTIONS_DEPLOYED and migrations match 84/84. Auth #75/#76 remain blocked on Deploy-to-production integration side effects.
+- **MCP:** #1268 merged with committed package-lock; #1280 excludes diagnostics-only MCP from recovery bootstrap. No Docker/Kubernetes mutation authority.
+- **Safety:** app repos own tests/builds/immutable GHCR; Platform owns manifests/credentials/promotion/reconcile/rollout/health. `reconcile-vps.yml` sole apply authority; `inspect-vps.yml` read-only. No production image/manifest/database/replica/host/cron mutation. TCE market-scan schedule unchanged.
+
 ## Workflow inventory runtime update — 2026-11-05 16:57 ICT / 09:57 UTC
 
 - **Repository heads:** Platform Infra 249047cb1da8a5b136c34dd02d5bd4593cf1fab3; TCE Dashboard 52cecd5584e6c0a3daf0e2bcff6c89ca064e203d; StockDividend 50ba0dfb67eb3dfaa376db0c752bbef5b0817bec; Media Generation e4c7d8990aafc7d837e918c9caf39722d623de7c; Authentication f978a3f378ee22d4630909c2d182275b21ac9e9a.
