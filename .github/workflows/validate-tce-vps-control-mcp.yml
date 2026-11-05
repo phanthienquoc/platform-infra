@@ -31,11 +31,7 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Generate lockfile for review
-        working-directory: apps/tce-vps-control-mcp
-        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-
-      - name: Install exact lockfile dependencies
+      - name: Install exact committed lockfile dependencies
         working-directory: apps/tce-vps-control-mcp
         run: npm ci --ignore-scripts --no-audit --no-fund
 
@@ -59,11 +55,3 @@ jobs:
           bash -n apps/tce-vps-control-mcp/scripts/install.sh
           bash -n apps/tce-vps-control-mcp/ops/tce-mcp-docker
           shellcheck apps/tce-vps-control-mcp/scripts/install.sh apps/tce-vps-control-mcp/ops/tce-mcp-docker
-
-      - name: Upload generated package lock for review
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
-        with:
-          name: tce-vps-control-mcp-package-lock
-          path: apps/tce-vps-control-mcp/package-lock.json
-          if-no-files-found: error
-          retention-days: 7
