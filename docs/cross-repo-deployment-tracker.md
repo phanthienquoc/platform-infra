@@ -1,28 +1,29 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-05 23:53 ICT (2026-11-05 16:53 UTC)
-Platform Infra master at checkpoint: cd5f9001f826a3a25cf992289176df827ac28c77
-Latest checkpoint: docs/cross-repo-workflow-inventory-checkpoints/2026-11-05-2353-ict.md
+Last reviewed: 2026-11-06 00:03 ICT (2026-11-05 17:03 UTC)
+Platform Infra master at checkpoint: 6c2b826175d135b41fcb69f28ca2268391c357c2
+Latest checkpoint: docs/cross-repo-workflow-inventory-checkpoints/2026-11-06-0003-ict.md
 
 ## Repository readiness
 
 | Repository | Master SHA | Open PRs | Latest verified CI / publication |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `cd5f9001f826` | #544/#541/#539 draft | PR #1281 merged; post-merge validate-manifests #42068869578 PASS on merge SHA. Native recovery #42068414686 PASS and verified fallback reconcile dispatch #42068463484; native reconcile #42068683835 failed only Stock health. |
+| phanthienquoc/platform-infra | `6c2b826175d1` | #544/#541/#539 draft | PR #1282 merged; post-merge validate-manifests #42070150263 PASS. Native watchdog #42070623710 still fails only native inspect freshness; reconcile #42068683835 is now fresh (Stock lane failure) and recovery #42068414686 PASS. |
 | phanthienquoc/TCE-dashboard | `c5415f8ac0aa` | None | PR #1024 merged; post-merge WF-01 #42053388961, WF-02 #42053388868, WF-05 #42053388841 PASS. Latest native WF-06 #42019530614 and WF-12 #42013061466 still fail; no post-merge WF-13 E2E dispatch. |
 | phanthienquoc/stockdividend | `50ba0dfb67eb` | None | CI #41563856934 PASS; immutable ARM64 publisher #41563856933 built Scraper/Admin/Backend and verified manifests. Platform handoff and atomic paired promotion SKIPPED; release authorization/provenance gate remains closed. |
 | phanthienquoc/media-generation | `e4c7d8990aaf` | None | CI #41617592783 PASS; snapshot #42063840567 at 23:23 ICT showed backend/frontend 1/1 with digest-pinned images. |
-| phanthienquoc/phanthienquoc-authentication | `f978a3f378ee` | #75 ready; #76 draft | CI #41670642852 PASS. #75 validate #40446492086 and #76 validate #41329425940 are historical; Supabase Preview checks SKIPPED and production integration side-effect gate unresolved. |
+| phanthienquoc/phanthienquoc-authentication | `f978a3f378ee` | #75 ready; #76 draft | CI #41670642852 PASS. Supabase project ACTIVE_HEALTHY / FUNCTIONS_DEPLOYED; local/remote migration ledger exact match 84/84. PR #75/#76 are 11 commits behind master; Deploy-to-production side-effect gate still unresolved. |
 
 ## Current runtime blockers
 
-- **Platform schedule delivery:** Native recovery schedule delivery resumed: recover-stale-ops #42068414686 completed PASS at 23:49:29 ICT. Its job detected the latest master reconciliation #42063703873 was 27m old and dispatched the existing reconcile-vps authority with the verified payload `ref=master`, `sha=d4705442de747c80ace35d14f7dee209e25fe6ac`, `mode=apply`, `allow_image_changes=false`, `target_app=all`; it correlated the fallback run #42068463484. Native reconcile-vps #42068683835 then ran at 23:51:03 ICT and failed only the Stock health lane. Watchdog #42068511916 (workflow_run after the recovery tick) failed at 23:50:05 ICT because, at that time, the latest native reconcile #41995809261 was 493m old and latest native inspect-vps #42049660972 was 115m old; it did verify native recovery #42068414686 PASS. The later #42068683835 schedule run post-dates that watchdog. No newer native inspect-vps schedule was returned.
+- **Platform schedule delivery:** Latest native watchdog #42070623710 ran at 00:02:22 ICT and failed only the inspection freshness gate. It verified native reconcile #42068683835 at age 11m (freshness PASS despite its Stock health conclusion=FAIL) and native recovery #42068414686 at age 12m (PASS). Native inspect-vps remains #42049660972 from 21:55:03 ICT, age 127m at the watchdog. The workflow_run recovery controller #42070696343 succeeded but correctly did not dispatch another inspection because workflow_dispatch fallback #42063840567 was only 38m old; this fallback does not satisfy native schedule freshness. Native recovery schedule delivery and native reconciliation delivery are now evidenced; native inspect-vps schedule delivery remains stale.
 
-- **K3s / Stock runtime:** Latest read-only snapshot #42063840567 was generated 2026-11-05 23:23:06 ICT by workflow_dispatch. At this checkpoint it is about 30m old and within the 75-minute freshness budget, but it is not native schedule evidence. Node `tce-k3s-01` Ready/ARM64; K3s v1.36.3+k3s1; containerd 2.3.2-k3s2; Docker 29.1.3; disk 56%; about 19 GiB RAM available; GitOps drift clean; host restart_required=yes. Media backend/frontend, MicroFE Shell/WS and NATS are 1/1. Stock Admin (two Pods) and new Backend remain ImagePullBackOff on `12d63b4` with no matching platform manifest; previous Backend and Frontend remain 1/1 on `23b2878`. TCE/Auth/Keycloak remain 0/0. No host reboot or package upgrade.
+- **K3s / Stock runtime:** Latest read-only snapshot #42063840567 was generated 2026-11-05 23:23:06 ICT by workflow_dispatch. At 00:03 ICT it is about 40m old and within the 75-minute fallback freshness budget, but it is not native schedule evidence. Node `tce-k3s-01` Ready/ARM64; K3s v1.36.3+k3s1; containerd 2.3.2-k3s2; Docker 29.1.3; disk 56%; about 19 GiB RAM available; GitOps drift clean; host restart_required=yes. Media backend/frontend, MicroFE Shell/WS and NATS are 1/1. Stock Admin (two Pods) and new Backend remain ImagePullBackOff on `12d63b4` with no matching platform manifest; previous Backend and Frontend remain 1/1 on `23b2878`. TCE/Auth/Keycloak remain 0/0. No host reboot or package upgrade.
 
 - **TCE health/schedule:** Latest native WF-06 #42019530614 (18:30:38 ICT) failed all four strict public probes with HTTP 503; latest native WF-12 #42013061466 (17:43:23 ICT) failed freshness; WF-07 #41982802263 (13:47:35 ICT) passed. No newer TCE native schedule runs were returned. PR #1024 merged the WF-13 recovery fix and exact-head/post-merge build checks passed, but no qualifying post-merge native event has exercised WF-13. Keep strict HTTP 200 checks, do not activate TCE/Auth workloads while desired replicas are 0/0, and do not change any TCE cron or market-scan schedule.
 
-- **Authentication:** PR #75/#76 remain gated on the actual Supabase production integration binding and migration provenance. Do not merge or run migrations until both are authoritatively reconciled.
+- **Authentication:** Read-only Supabase project `gtqovpusfyyvxpeezxlo` reports `ACTIVE_HEALTHY` / PostgreSQL 17.6.1.084; its only listed default branch `main` / Git `master` reports `FUNCTIONS_DEPLOYED`. Auth master `f978a3f378ee22d4630909c2d182275b21ac9e9a` contains 84 migration SQL files, and the remote ledger contains 84 exact version/name matches (zero local-only, remote-only or duplicate prefixes). PR #75 changes three Markdown files and two tests only; no `supabase/**`, runtime or workflow files. However the owner-provided GitHub Integration screenshot still says Deploy to production ON for Auth `master`, and the actual integration binding/effect is not exposed through the authorized API. PR #75 is 28 ahead/11 behind master; #76 is 3 ahead/11 behind. Keep both open (#76 draft); do not merge until the integration side-effect gate is authoritatively cleared and branches are refreshed.
+
 - **VPS maintenance:** latest inspection still reports host restart required and pending Docker/containerd maintenance. No approved maintenance window is evidenced; do not reboot or upgrade packages.
 - **VPS Control MCP:** PR #1268 is merged as `29e26d829d4f02d44be2747a411a8c68d4ff48db` with its committed lockfile and diagnostics-only permission boundary. PR #1280 is merged as `d4705442de747c80ace35d14f7dee209e25fe6ac`; it excludes MCP-only paths from recovery bootstrap and adds resolver/validator regression coverage. No Docker/Kubernetes mutation authority was added.
 
@@ -31,34 +32,35 @@ Latest checkpoint: docs/cross-repo-workflow-inventory-checkpoints/2026-11-05-235
 
 ## Current operational status
 
-- **Platform master:** `cd5f9001f826a3a25cf992289176df827ac28c77`. PR #1281 merged as this SHA; post-merge validate-manifests #42068869578 PASS. PR #1280 and diagnostics-only MCP #1268 are also merged. No production apply was triggered by the documentation-only #1281 merge.
-- **Platform native schedules:** recover-stale-ops #42068414686 (23:49:29 ICT) PASS and verified fallback reconcile dispatch #42068463484 with exact master SHA and safe payload. Native reconcile-vps #42068683835 (23:51:03 ICT) completed with only Stock health failing. Watchdog #42068511916 (23:50:05 ICT) failed before that newer native reconcile started because the previous native reconcile was 493m old and native inspection was 115m old. Latest native inspect-vps remains #42049660972 at 21:55:03 ICT.
-- **Fallback reconciliation:** #42068463484 passed shared preflight, GHCR access and credential bootstrap; manifest drift was false and production apply/image changes were skipped. TCE, Auth, MicroFE and Media lanes passed; Stock lane failed on Admin/Backend ImagePullBackOff. Recovery controller #42068810024 then passed and skipped another inspection dispatch because snapshot #42063840567 was still within the 75-minute freshness budget.
-- **K3s:** snapshot #42063840567 generated at 23:23:06 ICT by workflow_dispatch. Node Ready/ARM64; K3s v1.36.3+k3s1; containerd 2.3.2-k3s2; Docker 29.1.3; disk 56%; ~19 GiB RAM available; GitOps drift clean; restart_required=yes. Media backend/frontend, MicroFE Shell/WS and NATS 1/1. Stock Admin (two Pods) and new Backend ImagePullBackOff on `12d63b4`; old Backend/Frontend 1/1 on `23b2878`. TCE/Auth/Keycloak 0/0. No reboot or host package upgrade.
-- **TCE:** master `c5415f8ac0aa1ffa0b17c18d1b05952c68f9f65c`; PR #1024 recovery fix and post-merge WF-01 #42053388961/WF-02 #42053388868/WF-05 #42053388841 PASS. Latest native WF-06 #42019530614 and WF-12 #42013061466 remain failed; no post-merge WF-13 native E2E dispatch. TCE frontend/service and Auth/Keycloak remain 0/0; strict HTTP 200 gates stay intact.
-- **StockDividend:** master `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; CI #41563856934 and immutable publisher #41563856933 PASS. Publisher built and verified ARM64 manifests for Scraper/Admin/Backend, but Platform handoff validation and atomic paired production promotion were SKIPPED. Production tag `12d63b4` still lacks matching ARM64 manifests; both native and fallback reconciliations failed only the Stock health lane. No paired promotion without explicit authorization and protected provenance.
+- **Platform master:** `6c2b826175d135b41fcb69f28ca2268391c357c2`. PR #1282 merged as this SHA; post-merge validate-manifests #42070150263 PASS. PR #1281/#1280 and diagnostics-only MCP #1268 are also merged. No production apply was triggered by the documentation-only #1282 merge.
+- **Platform native schedules:** watchdog #42070623710 (00:02:22 ICT) failed only native inspect freshness; it passed the newer native reconcile #42068683835 freshness at 11m and recovery #42068414686 freshness at 12m. Native inspect-vps remains #42049660972 (21:55:03 ICT, age 127m). Recovery controller #42070696343 passed but skipped another inspection fallback because #42063840567 was 38m old. Native recovery and reconcile schedules are delivering; native inspect schedule remains stale.
+- **Fallback and native reconciliation:** recovery schedule #42068414686 verified fallback reconcile #42068463484 with exact payload `ref=master`, SHA `d4705442de747c80ace35d14f7dee209e25fe6ac`, `mode=apply`, `allow_image_changes=false`, `target_app=all`. Fallback #42068463484 and native schedule #42068683835 both passed shared preflight, GHCR access and credential bootstrap; GitOps drift was false and production apply/image changes were skipped. Both failed only Stock health. TCE/Auth/MicroFE/Media lanes passed their scoped checks.
+- **K3s:** latest snapshot #42063840567 generated at 23:23:06 ICT by workflow_dispatch; about 40m old at this checkpoint. Node Ready/ARM64; K3s v1.36.3+k3s1; containerd 2.3.2-k3s2; Docker 29.1.3; disk 56%; ~19 GiB RAM; GitOps drift clean; restart_required=yes. Media backend/frontend, MicroFE Shell/WS and NATS 1/1. Stock Admin (two Pods) and new Backend ImagePullBackOff on `12d63b4`; old Backend/Frontend 1/1 on `23b2878`. TCE/Auth/Keycloak 0/0. No reboot or host package upgrade.
+- **TCE:** master `c5415f8ac0aa1ffa0b17c18d1b05952c68f9f65c`; PR #1024 recovery fix and post-merge WF-01 #42053388961/WF-02 #42053388868/WF-05 #42053388841 PASS. Latest native WF-06 #42019530614 (HTTP 503 on all four public probes) and WF-12 #42013061466 (freshness failure); WF-07 #41982802263 PASS. No post-merge WF-13 native E2E dispatch. No TCE schedule change.
+- **StockDividend:** master `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; CI #41563856934 and immutable publisher #41563856933 PASS. Publisher built and verified ARM64 manifests for Scraper/Admin/Backend, but Platform handoff validation and atomic paired production promotion were SKIPPED. Production tag `12d63b4` still lacks matching ARM64 manifests; no paired promotion without explicit authorization and protected provenance.
 - **Media Generation:** master `e4c7d8990aafc7d837e918c9caf39722d623de7c`; CI #41617592783 PASS; backend/frontend 1/1 in the 23:23 snapshot.
-- **Authentication:** master `f978a3f378ee22d4630909c2d182275b21ac9e9a`; CI #41670642852 PASS. PR #75/#76 remain gated on Supabase production binding and migration provenance; no migration executed.
+- **Authentication:** master `f978a3f378ee22d4630909c2d182275b21ac9e9a`; CI #41670642852 PASS. Supabase project `gtqovpusfyyvxpeezxlo` is ACTIVE_HEALTHY / FUNCTIONS_DEPLOYED; remote/local migration set matches 84/84 exactly. PR #75/#76 remain open and 11 commits behind master; PR #75 Deploy-to-production side-effect gate remains unresolved.
 
 
 ## Current PR heads and validation
 
-- Platform #1281 merged as `cd5f9001f826a3a25cf992289176df827ac28c77`. Exact-head validate-manifests #42068751747 PASS; post-merge validate-manifests #42068869578 PASS. The PR updated the tracker/inventory/checkpoint only.
+- Platform #1282 merged as `6c2b826175d135b41fcb69f28ca2268391c357c2`; exact-head validate-manifests #42069918051 PASS and post-merge validate-manifests #42070150263 PASS. This PR updated tracker/inventory/checkpoint only.
+- Platform #1281 merged as `cd5f9001f826a3a25cf992289176df827ac28c77`; exact-head validate-manifests #42068751747 and post-merge #42068869578 PASS.
 - Platform #1280 merged as `d4705442de747c80ace35d14f7dee209e25fe6ac`; exact-head validate-github-actions #42066670909 and validate-manifests #42066667137 PASS; post-merge #42067822505 and #42067839646 PASS.
 - Platform #1268 merged as `29e26d829d4f02d44be2747a411a8c68d4ff48db`; diagnostics-only MCP lockfile committed, no Docker/Kubernetes mutation capability. Platform #544/#541/#539 remain old draft proposals and are not deployment approvals.
 - TCE #1024 merged as `c5415f8ac0aa1ffa0b17c18d1b05952c68f9f65c`; exact-head WF-05/WF-02 and post-merge WF-01/WF-02/WF-05 checks passed. No post-merge native WF-13 recovery E2E is evidenced.
-- Authentication #75 is ready at `a8e8a1d99e86a679b8d2ea7c7e7fa91302ffcc05`; validate #40446492086 passed on 2026-10-27 and Supabase Preview was skipped. The PR body reports Supabase Deploy to production ON; keep it open because merge-triggered migration effects remain unverified. Authentication #76 remains draft at `f19cacb0bf2b454b3152bd3a501f6f88d0a14a58`; validate #41329425940 is historical and Supabase Preview skipped.
-- StockDividend and Media Generation have no open PRs. Their latest master CI/publisher evidence is #41563856934/#41563856933 and #41617592783 respectively; do not treat these historical checks as fresh.
+- Authentication #75 is ready at `a8e8a1d99e86a679b8d2ea7c7e7fa91302ffcc05` (28 ahead/11 behind master); #76 remains draft at `f19cacb0bf2b454b3152bd3a501f6f88d0a14a58` (3 ahead/11 behind). PR #75 changed only 3 Markdown files and 2 tests; no migration/runtime/workflow files. Its historical validate #40446492086 and #76 validate #41329425940 are not fresh.
+- StockDividend and Media Generation have no open PRs. Their latest master CI/publisher evidence remains #41563856934/#41563856933 and #41617592783 respectively; do not treat these historical checks as fresh.
 
 
 ## Current actions
 
-1. Observe the next native inspect-vps schedule tick; the recovery controller now has a successful native tick, but inspection delivery remains stale. Keep native schedule and fallback evidence distinct.
-2. Re-check the next watchdog after native reconcile #42068683835; it should now see the newer native reconcile, while the inspection freshness failure remains until a new native inspect run is delivered.
-3. Obtain a fresh read-only K3s inspection through the existing inspect-vps authority; do not dispatch or run a second production apply while reconciliation is active.
+1. Observe the next native inspect-vps schedule tick. Recovery and reconciliation schedules are delivering, but inspect-vps remains stale; workflow_dispatch fallback #42063840567 is fresh and must not be counted as native evidence.
+2. Re-check the next watchdog after native reconcile #42068683835; the latest watchdog already passes reconcile freshness and recovery freshness, failing only inspection freshness.
+3. Obtain a fresh read-only K3s inspection through the existing inspect-vps authority when native delivery resumes; do not dispatch or run a second production apply while a fresh fallback exists.
 4. Keep Stock Admin/Backend paired promotion disabled until explicit release authorization and protected publisher-run Actions:read provenance are confirmed.
 5. Observe a qualifying native TCE WF-06/WF-12 failure after PR #1024 and verify WF-13 dispatches exactly one master WF-06 fallback with source-run and SHA correlation; do not change any TCE cron or market-scan schedule.
-6. Resolve the actual Supabase production integration binding and migration side effects before merging Authentication #75/#76 or running migrations.
+6. Keep Authentication #75/#76 open; exact 84/84 migration source/ledger match is now verified, but the Supabase Deploy-to-production binding/effect remains unresolved and both branches are 11 commits behind master.
 7. Wait for an approved VPS maintenance window before Docker/containerd/Ubuntu package upgrades or reboot.
 
 
@@ -947,6 +949,76 @@ Latest read-only snapshot #42063840567 was generated at 23:23:06 ICT by workflow
 3. Keep Stock paired Admin/Backend promotion closed until explicit authorization and protected publisher provenance.
 4. Verify a qualifying native TCE failure triggers exactly one WF-13 → WF-06 fallback with full source run/SHA correlation.
 5. Keep Auth PRs and migrations blocked until Supabase integration side effects are authoritatively known.
+6. Wait for an approved host maintenance window.
+
+## Safety
+
+- App repos own tests/builds/immutable GHCR publication and source-run/tag/digest provenance.
+- Platform Infra owns manifests, shared GHCR pull credentials, provenance/digest checks, paired promotion, reconciliation, rollout and health verification.
+- `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only.
+- No production image/manifest/database/replica/host/cron mutation occurred. No reboot or package upgrade.
+- No duplicate SSH/Compose/MCP mutation authority.
+- TCE market-scan schedule unchanged.
+
+
+# Cross-repo deployment checkpoint — 2026-11-06 00:03 ICT / 2026-11-05 17:03 UTC
+
+## Repository heads and PRs
+
+All five default-branch refs, open PRs, latest Actions runs/checks, deployment tracker, explicit native schedule history and read-only Supabase migration state were re-read.
+
+| Repository | Default branch SHA | Open PRs |
+|---|---|---|
+| Platform Infra | `6c2b826175d135b41fcb69f28ca2268391c357c2` | #544/#541/#539 draft |
+| TCE Dashboard | `c5415f8ac0aa1ffa0b17c18d1b05952c68f9f65c` | None |
+| StockDividend | `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec` | None |
+| Media Generation | `e4c7d8990aafc7d837e918c9caf39722d623de7c` | None |
+| Authentication | `f978a3f378ee22d4630909c2d182275b21ac9e9a` | #75 ready; #76 draft |
+
+## Platform Infra PR #1282 merged
+
+- PR [#1282](https://github.com/phanthienquoc/platform-infra/pull/1282) merged with squash as `6c2b826175d135b41fcb69f28ca2268391c357c2`.
+- Exact-head validate-manifests [#42069918051](https://github.com/phanthienquoc/platform-infra/actions/runs/42069918051) PASS.
+- Post-merge validate-manifests [#42070150263](https://github.com/phanthienquoc/platform-infra/actions/runs/42070150263) PASS.
+- The PR changed only tracker/inventory/checkpoint documentation. No production manifest or runtime resource changed.
+
+## Native schedule evidence after PR #1282
+
+- Native recover-stale-ops #42068414686 PASS at 23:49:29 ICT. It dispatched fallback reconcile #42068463484 with exact payload `ref=master`, SHA `d4705442de747c80ace35d14f7dee209e25fe6ac`, `mode=apply`, `allow_image_changes=false`, `target_app=all`.
+- Native reconcile #42068683835 at 23:51:03 ICT completed FAILURE only on Stock health. Shared preflight passed, drift was false, production apply/image changes were skipped; TCE/Auth/MicroFE/Media lanes passed their scoped checks.
+- Native watchdog [#42070623710](https://github.com/phanthienquoc/platform-infra/actions/runs/42070623710) ran at 00:02:22 ICT and failed only native inspect freshness. It passed native reconcile #42068683835 at age 11m (freshness pass despite Stock health conclusion=FAIL) and native recovery #42068414686 at age 12m (PASS). It failed because native inspect-vps #42049660972 at 21:55:03 ICT was 127m old.
+- Recovery controller [#42070696343](https://github.com/phanthienquoc/platform-infra/actions/runs/42070696343) completed PASS after the watchdog. It confirmed the latest workflow_dispatch inspection fallback #42063840567 was 38m old and correctly avoided a duplicate read-only inspection. This fallback does not satisfy native schedule freshness.
+- Latest native inspect-vps remains #42049660972 at 21:55:03 ICT; no later `event=schedule` inspect run was returned. The workflow is active (watchdog passed its enabled-state check); event delivery is still missing, not a runner queue failure.
+
+## K3s and app runtime
+
+Latest read-only snapshot #42063840567 was generated at 23:23:06 ICT by workflow_dispatch, not native schedule. It is about 40m old at this checkpoint and within the 75-minute fallback freshness budget.
+
+- Node `tce-k3s-01` Ready/ARM64; K3s v1.36.3+k3s1; containerd 2.3.2-k3s2; Docker 29.1.3; disk 56%; ~19 GiB RAM available; GitOps drift clean; restart_required=yes.
+- Media backend/frontend, MicroFE Shell/WS and NATS 1/1.
+- Stock Admin (two Pods) and new Backend ImagePullBackOff on `12d63b4` due no matching platform manifest; old Backend/Frontend 1/1 on `23b2878`.
+- TCE/Auth/Keycloak remain 0/0. The TCE/Auth reconciliation lane success is not evidence that the public WF-06 HTTP endpoints are healthy.
+- Latest native TCE WF-06 #42019530614 failed all four public HTTP probes with 503; latest native WF-12 #42013061466 failed freshness; WF-07 #41982802263 passed. No post-merge WF-13 native E2E dispatch is evidenced.
+- Stock immutable publisher #41563856933 passed ARM64 build/push and manifest verification for Scraper/Admin/Backend, but Platform handoff and atomic paired production promotion were SKIPPED. No explicit release authorization or protected publisher Actions:read provenance is available; do not promote.
+- Media CI #41617592783 PASS; snapshot showed backend/frontend 1/1. Auth CI #41670642852 PASS.
+
+## Authentication — fresh read-only migration verification
+
+Using the connected Supabase read-only API and GitHub recursive Git tree for Authentication master:
+
+- Project `gtqovpusfyyvxpeezxlo`: `ACTIVE_HEALTHY`, PostgreSQL 17.6.1.084, ap-southeast-1.
+- Its only listed default branch `main` / Git `master` reports `FUNCTIONS_DEPLOYED` (not the earlier historical `MIGRATIONS_FAILED` status).
+- Authentication master `f978a3f378ee22d4630909c2d182275b21ac9e9a` has 84 SQL migration files; remote ledger has 84 rows; exact version/name set match 84/84, zero local-only, zero remote-only, zero duplicate prefixes.
+- PR #75 changes exactly five files: three Markdown planning/task files and two tests. No `supabase/**`, runtime or workflow files. PR #75 is 28 commits ahead/11 behind master; #76 is 3 ahead/11 behind.
+- Owner-provided GitHub Integration screenshot still reports Deploy to production ON for Auth repository `master`; the connected integration target/effect is not exposed by the authorized Supabase API. Keep #75/#76 open; do not merge until this external side-effect gate is authoritatively cleared. A fresh read-only evidence comment was added to PR #75 (#6664113606). No Supabase writes or migration actions occurred.
+
+## Next actions
+
+1. Observe the next native inspect-vps tick; keep workflow_dispatch fallback freshness separate from native schedule evidence.
+2. Re-check the next watchdog; it should continue to pass reconcile/recovery freshness while failing inspection until a native inspect run arrives.
+3. Keep Stock paired Admin/Backend promotion closed until explicit authorization and protected publisher provenance.
+4. Verify a qualifying native TCE failure triggers exactly one WF-13 → WF-06 fallback with source-run/SHA correlation.
+5. Keep Auth PRs gated on Supabase integration side effects; exact migration set alignment is now verified, but PRs are stale by 11 commits and require conflict-aware refresh before any future merge.
 6. Wait for an approved host maintenance window.
 
 ## Safety
