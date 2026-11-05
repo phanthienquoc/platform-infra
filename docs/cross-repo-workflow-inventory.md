@@ -1,3 +1,15 @@
+## Workflow inventory runtime update — 2026-11-06 03:42 ICT / 2026-11-05 20:42 UTC
+
+- **Repository heads:** Platform Infra `04fab34ea9e1a8d2803881b4587e8f15b89e4cd6`; TCE Dashboard `512b69d837e2a65c39867a062529a7fa0eada4cc`; StockDividend `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media Generation `e4c7d8990aafc7d837e918c9caf39722d623de7c`; Authentication `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
+- **Open PRs:** Platform #544/#541/#539 draft; Auth #75 ready/#76 draft; none in TCE, StockDividend or Media.
+- **TCE #1026:** merged as `512b69d837e2a65c39867a062529a7fa0eada4cc`. WF-12 now requires a successful native WF-07 source before running the stale-WF-06 verification path; failed WF-07 still sends the existing heartbeat. Exact-head WF-02/WF-05 passed; post-merge WF-12/WF-02/WF-05 passed; WF-01 build was still in progress at 03:42.
+- **TCE recovery E2E:** no post-merge native WF-07/WF-12 event yet. Pre-merge #42098855352/#42098897759 are not proof for #1025/#1026. Native WF-06 #42089383865 and WF-12 #42083178274 remain old failures.
+- **TCE/Auth 503:** directly explained by ingress routes to TCE frontend/service and Auth Deployment, all explicitly `replicas: 0` under temporary operator shutdown comments; Keycloak is also zero. Keep shutdown and strict HTTP 200 gates until explicit operator authorization.
+- **Platform:** PR #1290 merged as `04fab34ea9e1a8d2803881b4587e8f15b89e4cd6`; exact-head #42104850991 and post-merge #42104919461 passed. Native schedule history remains stale; read-only fallback #42099284088 generated 03:00:41 ICT and is ~41m old at this review.
+- **Stock:** current production overlay remains tag-pinned to `12d63b4` for Admin/Backend and fails ARM64 manifest compatibility. Publisher #41563856933 verified new immutable ARM64 full-SHA images but release hold was false; no paired promotion authorization.
+- **Media/Auth:** latest master CI #41617592783/#41670642852 is historical Nov 3. Auth Preview remains skipped; no migration.
+- **Ownership/safety:** app repos own tests/builds/immutable GHCR; Platform owns production manifests, shared pull credentials, provenance/digest validation, promotion, reconciliation, rollout and health. No duplicate SSH/Compose/MCP mutation authority; no production image/manifest/credential/database/replica/host/cron mutation. TCE market-scan schedule unchanged.
+
 ## Workflow inventory runtime update — 2026-11-06 03:34 ICT / 2026-11-05 20:34 UTC
 
 - **Platform PR #1289:** merged as `f5d62e4a4f9abd992458849929a14a85a3250614`; exact-head #42104285775 PASS and post-merge #42104477168 PASS.
