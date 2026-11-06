@@ -11,21 +11,15 @@ if grep -nE '^  type: (LoadBalancer|NodePort)$' "$output"; then
 fi
 
 ingress_count="$(grep -c '^kind: Ingress$' "$output" || true)"
-if [ "$ingress_count" -ne 4 ]; then
-  echo "Expected exactly 4 production Ingress resources, found $ingress_count."
+if [ "$ingress_count" -ne 2 ]; then
+  echo "Expected exactly 2 production Ingress resources after Stock/Media retirement, found $ingress_count."
   exit 1
 fi
 
 mapfile -t hosts < <(grep -Eo '[A-Za-z0-9.-]+\.mrcute\.space' "$output" | sort -u)
 allowed='
 tce.mrcute.space
-mrcute.space
-www.mrcute.space
-admin.mrcute.space
-api.mrcute.space
-media.mrcute.space
 auth.mrcute.space
-sso.mrcute.space
 app.mrcute.space
 ws.mrcute.space
 '

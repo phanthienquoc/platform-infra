@@ -68,7 +68,7 @@ fi
 removed_images="$(extract_removed_image_lines < "$diff_output")"
 
 if [[ -n "$removed_images" ]]; then
-  legacy_debug_image="$(printf '%s\n' "$removed_images" | grep -F  legacy_debug_image="$(printf '%s\n' "$removed_images" | grep -F -- '-            image: rancher/kubectl:v1.36.3' || true)"
+  legacy_debug_image="$(printf '%s\n' "$removed_images" | grep -F -- '-            image: rancher/kubectl:v1.36.3' || true)"
   desired_debug_image="$(kubectl kustomize environments/prod 2>/dev/null | grep -F -- 'image: rancher/kubectl:v1.36.2' || true)"
 
   if [[ -n "$legacy_debug_image" && -n "$desired_debug_image" ]]; then
