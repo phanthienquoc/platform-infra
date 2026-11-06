@@ -1,3 +1,75 @@
+# Cross-repo deployment checkpoint — 2026-11-06 18:27 ICT / 11:27 UTC
+
+This checkpoint follows a fresh audit of default-branch heads, all open PRs, current Actions run history, exact PR-head checks, and the latest committed read-only K3s snapshot. Evidence only: no publisher, production promotion, replica activation, runner retirement, namespace deletion, reboot, or external-data deletion was authorized.
+
+## Repository heads, open PRs, and current CI
+
+| Repository | Default branch SHA | Open PRs | Latest relevant workflow evidence |
+|---|---|---|---|
+| Platform Infra | `0b0832d8c52a4751d518d137877997ff4d586c29` | #1314, #544, #541, #539 (all drafts) | Current-head manifest validation [#42210042886](https://github.com/phanthienquoc/platform-infra/actions/runs/42210042886) PASS. Latest Actions lint [#42209733500](https://github.com/phanthienquoc/platform-infra/actions/runs/42209733500) PASS on preceding code-identical merge head `c19d8e2d6e09fbe9e4eef923b420d512a246d961`; current HEAD change after it is documentation-only. |
+| TCE Dashboard | `512b69d837e2a65c39867a062529a7fa0eada4cc` | None | WF-06 native schedule [#42176208184](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42176208184) FAIL (four HTTP 503 probes); WF-07 native schedule [#42176751608](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42176751608) PASS; WF-12 native schedule [#42158209117](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42158209117) FAIL. |
+| StockDividend | `3aeaf519b7a786d13dcecee763acaca357c47ddd` | None | CI [#42167088130](https://github.com/phanthienquoc/stockdividend/actions/runs/42167088130) PASS, all 7 jobs including non-publishing ARM64 build. Last publisher [#41563856933](https://github.com/phanthienquoc/stockdividend/actions/runs/41563856933) is from Nov 3. |
+| Media Generation | `3a8846a4f273eeb20a55b214d5ad80804c2d8d52` | None | CI [#42136991059](https://github.com/phanthienquoc/media-generation/actions/runs/42136991059) PASS; no newer publisher run observed. |
+| Authentication | `3a8031196f21c4240b617bbd0a623fce2dc56c5e` | #75 ready, #76 draft | CI [#42167100692](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/42167100692) PASS, including non-publishing ARM64 build. No new release publisher. |
+
+### Open PR check freshness
+
+- Platform #1314: exact head `db152c9a...`, validation PASS on Nov 6 04:20Z; draft and unrelated to deployment.
+- Platform #544/#541/#539: exact-head validation PASS on Oct 14; all drafts and stale.
+- Authentication #75: exact head `a8e8a1d9...`, validation PASS on Oct 27; Supabase Preview SKIPPED.
+- Authentication #76: exact head `f19cacb0...`, validation PASS on Nov 1; Supabase Preview SKIPPED.
+- These are historical checks, not current merge authorization. No open deployment PR exists.
+
+## Platform promotion receiver hardening
+
+[PR #1336](https://github.com/phanthienquoc/platform-infra/pull/1336) merged at 11:22:08Z as `c19d8e2d6e09fbe9e4eef923b420d512a246d961`. Exact-head validation [#42209633143](https://github.com/phanthienquoc/platform-infra/actions/runs/42209633143) and [#42209633160](https://github.com/phanthienquoc/platform-infra/actions/runs/42209633160) passed; post-merge [#42209733392](https://github.com/phanthienquoc/platform-infra/actions/runs/42209733392) and [#42209733500](https://github.com/phanthienquoc/platform-infra/actions/runs/42209733500) passed.
+
+The generic legacy `image-published` repository-dispatch event was removed. The receiver now accepts the dedicated TCE, Auth and MicroFE event types; Auth requires the provenance-bound `auth-image-published` payload. Stock and Media remain app-owned publishers with no Platform production dispatch. No image was published or promoted by this hardening.
+
+## Native schedule evidence — event type verified
+
+- Platform native reconcile: [#42199267592](https://github.com/phanthienquoc/platform-infra/actions/runs/42199267592), `schedule`, SUCCESS at 10:00:15Z.
+- Platform native recovery: [#42199274660](https://github.com/phanthienquoc/platform-infra/actions/runs/42199274660), `schedule`, SUCCESS at 10:00:18Z.
+- Platform native freshness watchdog: [#42201400071](https://github.com/phanthienquoc/platform-infra/actions/runs/42201400071), `schedule`, SUCCESS at 10:16:28Z.
+- Platform native inspect: [#42193617816](https://github.com/phanthienquoc/platform-infra/actions/runs/42193617816), `schedule`, SUCCESS at 09:15:08Z. A newer manual read-only inspect [#42208147735](https://github.com/phanthienquoc/platform-infra/actions/runs/42208147735) generated the snapshot at 11:09:51Z; it is not native schedule evidence. Manual reconcile [#42207918291](https://github.com/phanthienquoc/platform-infra/actions/runs/42207918291) is also fallback evidence, not native schedule proof.
+- TCE native WF-06 latest: #42176208184 at 06:43:04Z, FAILURE. TCE native WF-07 latest: #42176751608 at 06:48:12Z, SUCCESS. TCE native WF-12 latest: #42158209117 at 03:43:01Z, FAILURE.
+- WF-12 #42176769424 and WF-13 #42176787185 were `workflow_run` events, not native schedules. Do not count workflow_run, workflow_dispatch or repository_dispatch as cron delivery.
+- The TCE native schedule history is stale by this checkpoint. WF-06 probes continue to require HTTP 200 and returned 503 for TCE web, TCE API, Auth liveness and Auth readiness. The Platform advisory observer run [#42208198166](https://github.com/phanthienquoc/platform-infra/actions/runs/42208198166) reported WF-06 age 16,022 seconds against a 1,500-second budget; it is warning-only and cannot trigger production recovery.
+- Existing cron declarations remain unchanged. Do not alter the TCE market-scan schedule. The available read-only evidence does not identify whether the remaining native event gap is GitHub scheduler delivery or an Actions policy/configuration issue.
+
+## Latest read-only K3s snapshot
+
+Source: [inspect-vps #42208147735](https://github.com/phanthienquoc/platform-infra/actions/runs/42208147735), generated 2026-11-06 11:09:51Z (about 18 minutes old at this checkpoint).
+
+- Node is ARM64; K3s v1.36.3+k3s1; disk 56%, about 19 GiB available RAM; `restart_required=yes`. Do not reboot without separate approval.
+- GitOps drift is clean.
+- Media backend/frontend are 1/1 Running and digest-pinned.
+- Stock Admin has two Pods in ImagePullBackOff; the newer Stock Backend Pod is also ImagePullBackOff. The failing `12d63b4` Admin/Backend tags have no matching ARM64 manifest. The legacy Backend and Frontend on `23b2878` remain running. This is an image-platform mismatch, not evidence of invalid pull credentials.
+- TCE frontend/service and Auth/Keycloak remain desired 0/0. Public OIDC probes return HTTP 503, consistent with the maintenance state.
+- Only PVC/PV listed is unrelated `k3s-debug/k3s-debug-logs`; no Stock/Media PVC/PV or VolumeSnapshot references were found. External database/object-storage backups, retention approval and DNS ownership remain unverified.
+- Dedicated Media runner service remains active and enabled; `Runner.Listener` remains present. Shared Platform runner is also active. Do not stop/unregister the shared runner or retire Media without operator confirmation of idle state and explicit stop/disable/unregister.
+
+## Immutable publication and ownership
+
+- **TCE:** WF-03 app-owned full-source-SHA publisher checks ARM64/digest and sends `tce-release-requested` with web/service digests, source run ID, workflow path, event and source SHA. Platform validates provenance/digest and owns promotion. No new publisher run observed.
+- **StockDividend:** `deploy.yml` is publisher-only, with full-SHA tag, immutable digest and ARM64 verification; no Platform dispatch. Latest publisher #41563856933 is historical. Current CI ARM64 job is build-only. No release authorization or new digest/provenance; do not promote `12d63b4`.
+- **Media:** WF-03 is publisher-only, with ARM64 build, checksum-verified artifacts, full-SHA tag and digest verification; no Platform dispatch. No new publisher run observed.
+- **Authentication:** manual-only `release.yml` sends `auth-image-published` with `auth_digest`, source run ID, workflow path, event and full source SHA; Platform verifies exact source-run provenance, tag/digest mapping and ARM64. No new publisher run has exercised this current contract.
+- App repositories own tests/builds and immutable GHCR publication. Platform owns production manifests, shared pull credentials, provenance/digest validation, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only.
+
+## Next dependency-safe actions
+
+1. Keep observing native Platform and TCE schedules independently; do not treat fallback dispatches as native delivery. Inspect Actions settings through an authorized admin surface if the native schedule gap persists; the read-only GitHub connector did not expose the Actions permissions endpoint.
+2. Keep TCE/Auth at desired 0/0 and HTTP 200 assertions strict until service owners authorize activation.
+3. Obtain explicit Stock release authorization before manual publication; then require full-source-SHA, GHCR digest, provenance and linux/arm64 manifest before separate Platform promotion.
+4. Operator must confirm the dedicated Media runner is idle, then stop/disable/unregister it and verify no Listener remains. Never touch the shared Platform runner.
+5. Require same-window storage preflight plus independent external database/object-storage backup, retention and DNS ownership review before protected Stock/Media namespace decommission.
+
+**No production workload, replica, image, manifest, credential, namespace, PVC/PV, external data, DNS, runner or host was mutated in this checkpoint.** TCE market-scan schedule unchanged.
+
+
+---
+
 ## Current review — 2026-11-06 18:22 ICT (2026-11-06 11:22 UTC)
 
 This checkpoint adds the immutable-publication and dispatch-payload audit after the Auth promotion hardening. It is evidence-only: no publisher was triggered and no production image was promoted.
