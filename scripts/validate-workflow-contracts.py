@@ -1107,6 +1107,7 @@ for required in (
     "PV claims remain",
     "VolumeSnapshot references remain",
     "volumesnapshotcontent",
+    "volumesnapshot|volumesnapshotcontent",
     "decommission-stock-media",
 ):
     if required not in decommission_script:
@@ -1118,6 +1119,7 @@ for required in (
     "PVCs remain",
     "PV claims remain",
     "namespace_storage_snapshot_refs()",
+    'namespace_storage_snapshot_refs "$namespace"',
     "volumesnapshots.snapshot.storage.k8s.io",
     "volumesnapshotcontents.snapshot.storage.k8s.io",
     "VolumeSnapshot references remain",
