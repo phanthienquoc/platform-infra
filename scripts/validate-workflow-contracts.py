@@ -564,7 +564,7 @@ for required in (
     '[[ "$APP" == "auth-service" && "$COMPONENT" == "auth" ]]',
     '[[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/release.yml" ]]',
     '[[ "$SOURCE_EVENT" == "workflow_dispatch" ]]',
-    '[[ "$SOURCE_HEAD_SHA" == "$SOURCE_COMMIT" ]]',
+    '[[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ && "$SOURCE_HEAD_SHA" == "$SOURCE_COMMIT" ]]',
     '[[ "$AUTH_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]',
     "Verify Auth publisher run provenance",
     "bash scripts/verify-auth-publisher-run.sh",
