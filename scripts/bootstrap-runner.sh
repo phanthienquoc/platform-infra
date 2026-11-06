@@ -452,6 +452,9 @@ echo "Runner bootstrap complete: $RUNNER_NAME"
     done
 
     # Delete only the two explicitly named namespaces after both preflights pass.
+    if [[ "${#existing_namespaces[@]}" -eq 0 ]]; then
+      echo "Both StockDividend and Media namespaces are already absent."
+    fi
     for namespace in "${existing_namespaces[@]}"; do
       "${KUBECTL[@]}" delete namespace "$namespace" --wait=true --timeout=180s
       if namespace_json="$("${KUBECTL[@]}" get namespace "$namespace" -o json 2>&1)"; then
