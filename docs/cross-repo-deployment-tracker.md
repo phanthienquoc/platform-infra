@@ -1,3 +1,63 @@
+Last reviewed: 2026-11-06 09:33 ICT (2026-11-06 02:33 UTC)
+
+## Current review — 2026-11-06 09:33 ICT (2026-11-06 02:33 UTC)
+
+This review follows the merge of Platform PR #1304 and the successful post-merge production reconciliation. It records verified CI, GitOps, credential and rollout evidence separately from the still-unfinished Stock/Media namespace decommission and image-digest migration work.
+
+### Current repository refs and open PRs
+
+| Repository | Default-branch SHA | Open PRs | Current disposition |
+|---|---|---|---|
+| Platform Infra | d6f45057f4a7eaba4c81d897aa64d9e5feb67fa1 | #544/#541/#539 draft | PR #1304 merged; post-merge validations and reconcile passed. |
+| TCE Dashboard | 512b69d837e2a65c39867a062529a7fa0eada4cc | None | CI/workflow state unchanged; strict public WF-06 still reports the documented zero-replica HTTP 503 condition. |
+| StockDividend | 6fcefa6b3792dab92b6d5c438001633d25f1ca28 | None | Latest master CI #42137523269 passed; production publisher/release was not triggered. |
+| Media Generation | 3a8846a4f273eeb20a55b214d5ad80804c2d8d52 | None | Latest master CI #42136991059 passed; production publisher/release was not triggered. |
+| Authentication | f978a3f378ee22d4630909c2d182275b21ac9e9a | #75 ready; #76 draft | Master CI #41670642852 passed; #75/#76 remain gated on Supabase integration side effects. |
+
+### Platform PR #1304 and production reconciliation
+
+- PR #1304 added scripts/resolve-push-deployment-scope.sh to the push paths for the sole production reconcile workflow, enforced that trigger in validate-workflow-contracts.py, and added a full changed-path regression fixture from the Stock/Media retirement.
+- Exact PR head 29dffd589c800ef3e3a545be128182ace615718a passed all three visible checks: validate-github-actions #42149835243, keycloak-ci #42149835246 and validate-manifests #42149835326. GitHub accepted the squash merge with expected head SHA; merge commit is d6f45057f4a7eaba4c81d897aa64d9e5feb67fa1.
+- Post-merge master checks on that exact commit passed: validate-github-actions #42150629257, keycloak-ci #42150629258 and validate-manifests #42150629301.
+- Reconcile run #42150629183 completed SUCCESS on the merge commit. The push resolver produced scope all; mode was apply and ALLOW_IMAGE_CHANGES=false. GHCR pull-access validation, Auth runtime Secret provisioning, shared GHCR pull-credential reconciliation, blocked-image-pull restart checks and TCE release-pair validation passed.
+- Preflight found Kubernetes drift. The image-change guard passed and reported no existing workload image replacement; production manifests applied successfully and post-apply GitOps drift verification was clean.
+- MicroFE, TCE and Auth deployment lanes passed. Keycloak lane was skipped by the current all-scope contract. TCE and Auth health checks explicitly accepted their intentional zero-replica state; no replicas were restored. MicroFE Shell/WS rollout and health passed.
+- Recovery controller #42150853420 completed SUCCESS for source reconciliation #42150629183.
+- Non-blocking telemetry issue: "Publish TCE deployment started event" could not connect to 127.0.0.1:18080 (curl exit 7). The step is continue-on-error, so this did not invalidate the reconcile or rollout gates. Verify whether the local event bridge is expected to be running before relying on this notification.
+- The reconcile's cluster listing still showed Media workloads running and Stock workloads present (including Stock Admin ImagePullBackOff and older Backend/Frontend pods). The GitOps retirement does not prune those resources; namespace deletion has not run.
+
+### Cross-repository publication and dispatch boundary
+
+- StockDividend master CI #42137523269 passed all six jobs, including backend test/build, admin build, scraper build/syntax and production release-hold contract. No production publication or Platform dispatch was triggered.
+- Media Generation master CI #42136991059 passed its application test/build job. No production release was triggered and no Platform dispatch receiver remains.
+- TCE WF-03 remains manual-only and validates the full source SHA, paired web/service registry digests, ARM64 manifests and the source run/workflow/event/SHA payload before dispatch. No TCE production publisher run was initiated.
+- Authentication release.yml remains manual-only and sends source run ID, workflow path, event, full source SHA and registry digest. Platform validates publisher provenance before promotion. No Auth release was initiated.
+- Platform remains the owner of production manifests, shared GHCR pull credentials, digest/provenance validation, GitOps promotion/reconciliation, rollout and health. App repositories retain tests/builds/immutable GHCR publication. No duplicate SSH/Compose/app-owned Kubernetes deployment authority was added.
+
+### Outstanding GitOps digest pinning gap
+
+- The current TCE production Kustomize file still contains the legacy paired tag prod-v0.1.0-e75e338 (7-character source prefix), rather than registry digest references. The live TCE verification in reconcile #42150629183 confirmed desired/live tag pairing, not registry digest pinning.
+- The current Auth Kustomize file likewise still uses legacy tag prod-v1.0.0-ceb2688. The new TCE/Auth publisher contracts produce full-source-SHA tags and registry digests, and Platform has digest-promotion helpers, but no new authorized publisher dispatch has converted these existing manifest references.
+- Do not invent or reuse a cached digest as current registry evidence. Next safe action is to obtain registry-confirmed digests tied to successful publisher provenance, then create atomic TCE web/service and Auth digest-promotion PRs. Keep image changes disabled in routine reconciliation.
+
+### TCE, Auth and decommission safety
+
+- TCE native WF-06 #42133793538 failed four strict public HTTP 200 probes with HTTP 503 while TCE/Auth/Keycloak were intentionally at zero replicas. WF-13 fallback #42133822204 passed read-only. Do not weaken health gates, restore replicas or change any TCE schedule.
+- Auth PR #75 validation evidence is historical; Supabase Preview is skipped and the connected production integration's merge-triggered migration effect is not authoritatively verified. Do not merge #75/#76, run migrations or publish an Auth release on current evidence.
+- The latest committed read-only inspection remains run #42145981473, snapshot generated 2026-11-06T01:46:04Z. It is stale for destructive action and showed the dedicated Media runner service active. It showed only the k3s-debug PVC/PV claim, but that historical observation is not a same-window storage preflight.
+- The manual-only decommission-stock-media workflow has no execution run. No Stock/Media namespace, PVC/PV, DNS, GHCR package, external database/object storage or runner registration was deleted. Before namespace deletion, obtain fresh storage inventory, confirm backups/external-data ownership and independently verify the dedicated Media runner is idle, stopped and unregistered. Do not remove the shared Platform runner.
+- reconcile-vps.yml remains the sole routine production apply authority; inspect-vps.yml remains read-only. TCE market-scan schedule and all other TCE schedules are unchanged.
+
+### Next actions
+
+1. Obtain fresh read-only K3s/PVC/PV/StorageClass and runner evidence; only then consider the protected manual Stock/Media namespace workflow with its exact typed confirmations.
+2. Obtain registry-confirmed full-SHA digest evidence for the currently deployed TCE and Auth images; promote the paired TCE digests and Auth digest atomically through Platform PRs.
+3. Diagnose the optional local deployment-event bridge at 127.0.0.1:18080 without weakening rollout/health gates.
+4. Keep Stock/Media production publication closed unless explicitly authorized; keep Auth #75/#76 gated on the Supabase production integration effect.
+5. Preserve every TCE schedule, especially the market-scan schedule.
+
+---
+
 Last reviewed: 2026-11-06 09:15 ICT (2026-11-06 02:15 UTC)
 
 ## Current review — 2026-11-06 09:15 ICT (2026-11-06 02:15 UTC)
