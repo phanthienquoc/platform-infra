@@ -1463,7 +1463,7 @@ if 'MAX_TCE_WF06_AGE_MINUTES: "25"' not in watchdog:
 tce_schedule_step = watchdog.find("name: Observe native TCE WF-06 schedule delivery")
 if tce_schedule_step < 0 or "if: always()" not in watchdog[tce_schedule_step:]:
     fail("The Platform watchdog must observe TCE native schedule delivery even when another diagnostic fails.")
-tce_schedule_block = watchdog[tce_schedule_step:].split("\\n      - name:", 1)[0]
+tce_schedule_block = watchdog[tce_schedule_step:].split("\n      - name:", 1)[0]
 for required in (
     "https://api.github.com/repos/phanthienquoc/TCE-dashboard/actions/workflows/wf-06-tce-healthcheck.yml/runs?event=schedule&per_page=10",
     '--http-status "$api_status"',
