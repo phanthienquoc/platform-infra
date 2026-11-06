@@ -30,8 +30,8 @@ for required in \
   'get pvc -n "$namespace" -o json' \
   'get pv -o json' \
   'delete namespace "$namespace" --wait=true --timeout=180s' \
-  'get namespace tce-prod' \
-  'get namespace microfe-platform'; do
+  'for namespace in tce-prod microfe-platform; do' \
+  '"${KUBECTL[@]}" get namespace "$namespace"'; do
   grep -Fq "$required" "$wrapper" || {
     echo "Missing guarded runner contract: $required" >&2
     exit 1
