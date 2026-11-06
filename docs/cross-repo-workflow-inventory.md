@@ -4472,3 +4472,52 @@ Generated 2026-11-06T06:45:26Z; current master snapshot commit `f29465020b25e1b2
 ### Schedule classification
 
 The successful WF-12 run #42176769424 was triggered by a WF-07 `workflow_run`, not a native WF-12 schedule tick. Its internal WF-06 freshness check passed against the latest native WF-06 run #42176208184. WF-13 and Platform watchdog/recovery `workflow_run` events that were skipped are not native scheduled runs. Do not use workflow_dispatch, repository_dispatch or workflow_run as substitutes for native scheduled-run evidence.
+
+
+## Runtime workflow inventory — 2026-11-06 15:03 ICT / 08:03 UTC
+
+This entry supersedes the 13:58 ICT schedule/readiness classification wherever newer Actions history is available.
+
+### Current workflow ownership and default-branch heads
+
+| Repository | Default-branch SHA | Latest CI evidence | Deployment/publication ownership |
+|---|---|---|---|
+| `phanthienquoc/platform-infra` | `6687e665f1d62cbe97cff757b63ef7b1b154b4ee` | `validate` PASS #42178567534 | Sole production manifests, shared GHCR pull Secret, digest/provenance receiver, GitOps promotion/reconcile, rollout and health owner. `reconcile-vps.yml` is the only production apply authority; `inspect-vps.yml` is read-only. |
+| `phanthienquoc/TCE-dashboard` | `512b69d837e2a65c39867a062529a7fa0eada4cc` | WF-06 schedule #42176208184 failed public HTTP probes; WF-07 schedule #42176751608 passed; WF-12 workflow_run #42176769424 passed freshness at 06:48Z | App CI/tests and TCE release publisher own source build and immutable image request. Platform validates source run, full SHA, digests and ARM64 before promotion. |
+| `phanthienquoc/stockdividend` | `3aeaf519b7a786d13dcecee763acaca357c47ddd` | CI #42167088130: 7/7 checks PASS, including build-only ARM64 and release-hold | Stock owns CI and GHCR publication; manual publisher remains gated by `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED`. No Platform production dispatch. |
+| `phanthienquoc/media-generation` | `3a8846a4f273eeb20a55b214d5ad80804c2d8d52` | CI #42136991059 PASS (historical) | Media owns build, checksum-verified artifacts, full-SHA tag, GHCR digest and ARM64 verification. No Platform production dispatch. |
+| `phanthienquoc/phanthienquoc-authentication` | `3a8031196f21c4240b617bbd0a623fce2dc56c5e` | CI #42167100692: validation/build PASS; Supabase Preview SKIPPED | Auth owns manual-only release publisher with Buildx provenance/SBOM and digest handoff. Platform owns digest validation and GitOps promotion. |
+
+### Open PR and check inventory
+
+- Platform Infra: #1314 draft (mail-service documentation, unrelated to deployment; validation passed on old head); #544/#541/#539 remain old Keycloak drafts. No deployment PR is open.
+- TCE Dashboard: no open PR.
+- StockDividend: no open PR.
+- Media Generation: no open PR.
+- Authentication: #75 ready (validation passed 2026-10-27, Supabase Preview skipped); #76 draft (validation passed 2026-11-01, Supabase Preview skipped). Both branches have stale base commits. Neither is authorized for merge/release.
+
+### Native schedule delivery evidence (UTC)
+
+| Workflow | Latest native scheduled run | Conclusion | Current interpretation |
+|---|---|---|---|
+| Platform reconcile-vps | #42152655025, 02:48:33 | SUCCESS | No later native scheduled run observed by 08:03Z. |
+| Platform recovery | #42152661024, 02:48:36 | SUCCESS | Later #42176781772 was repository_dispatch, not schedule. |
+| Platform schedule watchdog | #42152865619, 02:50:36 | SUCCESS | No later native scheduled watchdog observed. |
+| Platform inspect-vps | #42145981473, 01:45:56 | SUCCESS | Latest snapshot refresh #42176445915 was workflow_dispatch, not schedule. |
+| TCE WF-06 | #42176208184, 06:43:04 | FAILURE | Four strict public endpoint probes returned HTTP 503; no later native WF-06 schedule by 08:03Z (age ~81m, budget 25m). |
+| TCE WF-07 integration | #42176751608, 06:48:12 | SUCCESS | No later native scheduled integration run observed by 08:03Z. |
+| TCE WF-12 watchdog | #42158209117, 03:43:01 | FAILURE | #42176769424 at 06:48:22 was a workflow_run after WF-07; it passed freshness at that time but is not a native schedule. |
+
+The relevant YAML schedule declarations remain present: Platform reconcile `7,22,37,52`, inspect `2,32`, schedule watchdog `12,27,42,57`, recovery `10,25,40,55`; TCE WF-06 `*/15` and WF-12 `7,22,37,52`. The observed gap is in native event history, not a proposed cron change. Read-only evidence cannot determine whether the gap is GitHub scheduler delivery delay or a workflow/repository Actions setting. Do not count workflow_run, repository_dispatch or workflow_dispatch as native schedule evidence.
+
+### Runtime snapshot freshness and release gates
+
+- Latest K3s snapshot remains inspect-vps #42176445915, generated 06:45:26Z; age ~78m at this checkpoint. It records Media 1/1 Running, Stock Admin/new Backend ImagePullBackOff due missing ARM64 manifest on `12d63b4`, TCE/Auth/Keycloak 0/0, and the dedicated Media runner active/enabled with `Runner.Listener` present.
+- Snapshot lists no Stock/Media PVC/PV or VolumeSnapshot references; external database/object-storage backups and DNS/data-retention ownership are not established.
+- Stock CI ARM64 checks use non-publishing builds; latest known publisher #41563856933 is from 2026-11-03. No new digest/provenance or release authorization.
+- Media master CI is historical; no newer publisher run.
+- Auth master CI includes non-publishing ARM64 build; Supabase Preview skipped; no release publisher/digest.
+- TCE health failure (HTTP 503) is consistent with the snapshot's desired 0/0 replicas. Keep HTTP 200 assertions strict and do not activate without owner approval.
+- Media runner guard must remain fail-closed until the dedicated runner is idle, stopped, disabled, unregistered and Listener-free. Never retire the shared Platform runner.
+
+Preserve useful app CI/tests/builds, immutable publishers, security checks, purposeful manual/release/scheduled jobs, and Platform reconciliation/recovery/inspection. No duplicate SSH/Compose production apply authority was introduced. No cron, image, manifest, Secret, replica, namespace, storage, DNS, runner or host change occurred. TCE market-scan schedule unchanged.
