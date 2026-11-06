@@ -14,8 +14,13 @@ set -euo pipefail
 printf '%s\n' "$*" >> "$FAKE_LOG"
 case "$*" in
   "get namespace tce-prod"|"get namespace microfe-platform") exit 0 ;;
+  "inventory-namespace stock-prod"|"inventory-namespace media-prod") exit 0 ;;
   "get namespaces -o json")
-    printf '%s\n' '{"items":[{"metadata":{"name":"stock-prod"}},{"metadata":{"name":"media-prod"}},{"metadata":{"name":"tce-prod"}},{"metadata":{"name":"microfe-platform"}}]}'
+    if [[ "${MOCK_MISSING_NS:-0}" == "1" ]]; then
+      printf '%s\n' '{"items":[{"metadata":{"name":"stock-prod"}},{"metadata":{"name":"tce-prod"}},{"metadata":{"name":"microfe-platform"}}]}'
+    else
+      printf '%s\n' '{"items":[{"metadata":{"name":"stock-prod"}},{"metadata":{"name":"media-prod"}},{"metadata":{"name":"tce-prod"}},{"metadata":{"name":"microfe-platform"}}]}'
+    fi
     ;;
   "get all -n stock-prod -o wide"|"get all -n media-prod -o wide"|"get pvc -n stock-prod -o wide"|"get pvc -n media-prod -o wide"|"get storageclasses -o wide") exit 0 ;;
   "get pvc -n stock-prod -o json"|"get pvc -n media-prod -o json")
@@ -54,6 +59,10 @@ if MOCK_PVC=1 PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" CONFIRMATION=DELETE-S
 fi
 if MOCK_PV=1 PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" CONFIRMATION=DELETE-STOCK-PROD-AND-MEDIA-PROD DATA_RETENTION_REVIEW=BACKUP-AND-EXTERNAL-DATA-REVIEWED bash "$SCRIPT" delete >/dev/null 2>&1; then
   echo "FAIL: PV claim presence did not block deletion" >&2
+  exit 1
+fi
+if MOCK_MISSING_NS=1 PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" bash "$SCRIPT" plan >/dev/null 2>&1; then
+  echo "FAIL: missing target namespace did not block decommission" >&2
   exit 1
 fi
 CONFIRMATION=DELETE-STOCK-PROD-AND-MEDIA-PROD DATA_RETENTION_REVIEW=BACKUP-AND-EXTERNAL-DATA-REVIEWED PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" bash "$SCRIPT" delete

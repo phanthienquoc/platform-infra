@@ -1,6 +1,6 @@
 # StockDividend and Media Generation decommission plan
 
-Status: GitOps removal and guarded decommission workflow implemented on a dedicated PR branch; namespace deletion and dedicated-runner cleanup have **not** been executed.
+Status: GitOps removal and guarded decommission workflow are implemented on a dedicated PR branch; namespace deletion and dedicated-runner cleanup have **not** been executed.
 
 ## Objective
 
@@ -29,30 +29,30 @@ Because the snapshot is stale, do not use it as authorization to delete current 
 
 ### Phase 1 — preflight and preservation
 
-1. Run the platform's read-only VPS/K3s inspection and record its run ID, timestamp, node health, namespace contents, Deployments, StatefulSets, Jobs/CronJobs, Services, Ingresses, PVCs, PVs, and relevant Secrets.
+1. Run the platform's read-only VPS/K3s inspection and record its run ID, timestamp, node health, all namespaced API object names, Deployments, StatefulSets, Jobs/CronJobs, Services, Ingresses, PVCs, PVs, StorageClasses, and Secret names. Never print Secret or ConfigMap values.
 2. Confirm the exact objects currently present in `stock-prod` and `media-prod`; include legacy StockDividend resources such as `stock-frontend`, which are not in the current GitOps Kustomize set but are still live.
 3. Inspect PVC/PV reclaim policies and external storage before namespace deletion. Back up any persistent application data or credentials that must be retained. Do not delete PVs or external databases/storage as an implicit side effect.
 4. Confirm with the service owner that the four StockDividend hostnames and `media.mrcute.space` can be retired. DNS records and external provider resources are not owned by Kubernetes namespace deletion.
-5. Record the active `media-generation` self-hosted Actions runner service and unregister/stop it separately after confirming no workflow is running on it. Do not remove the shared `platform-infra` runner.
+5. Record the active `media-generation` self-hosted Actions runner service and unregister/stop it separately after confirming no workflow is running on it. The last snapshot named systemd unit `actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service`, user `media-runner`, and directory `/opt/media-actions-runner`; re-verify all three before acting. Do not remove the shared `platform-infra` runner.
 
 ### Phase 2 — remove GitOps ownership
 
-The implementation branch removes both application manifest trees from the production Kustomize root, deletes their manifest directories, removes their reconcile/health/recovery/GHCR scopes and dispatch receivers, and retires their app-specific publisher/provenance helpers. StockDividend and Media Generation application repositories remain intact as source/image-publisher repositories; their workflows no longer send Platform production dispatches. The shared `reconcile-vps.yml` remains the only routine production apply authority. The PR also adds a manual-only namespace decommission workflow and storage preflight; it does not execute that workflow.
+The implementation branch removes both application manifest trees from the production Kustomize root and deletes their manifest directories. It removes their reconcile/health/recovery/GHCR scopes, dispatch receivers, dedicated-runner bootstrap helper, and app-specific publisher/provenance helpers. StockDividend and Media Generation application repositories remain intact as source/image-publisher repositories; their workflows no longer send Platform production dispatches. The shared `reconcile-vps.yml` remains the only routine production apply authority. The PR adds a manual-only namespace decommission workflow and an all-namespaced-resource inventory; it does not execute that workflow.
 
 ### Phase 3 — controlled K3s decommission
 
-1. After the GitOps-removal PR is merged and runner bootstrap policy v15 is installed, invoke `.github/workflows/decommission-stock-media.yml` manually from `master` in the protected `production` Environment.
-2. Type both exact confirmations: `DELETE-STOCK-PROD-AND-MEDIA-PROD` and `BACKUP-AND-EXTERNAL-DATA-REVIEWED`. The second confirmation is the operator's attestation that required backups and external-data ownership have been reviewed; it is not inferred by the workflow.
-3. The workflow runs `scripts/decommission-stock-media-namespaces.sh plan` and then `delete`. Both passes enumerate namespaced workloads, PVCs, PV claim references and StorageClasses. The root-owned `platform-kubectl decommission-stock-media` command repeats the PVC/PV checks, accepts only the two fixed namespaces, deletes only those namespaces, and verifies `tce-prod` and `microfe-platform` remain.
-4. The operation aborts if either target namespace is missing, any PVC exists, any PV claim still references either namespace, a typed confirmation is wrong, or the installed runner policy is not v15. Review the fresh inventory and resolve storage before retrying; never delete PVs as a workaround.
-5. Capture a fresh post-decommission `inspect-vps.yml` run and verify the two namespaces are absent and TCE/Auth/MicroFE/Keycloak remain unchanged.
-6. Dedicated Media runner stop/unregister remains a separate action. Confirm no active job and remove only the app-specific runner registration/service; keep the shared Platform Infra runner online.
+1. After the GitOps-removal PR is merged and runner bootstrap policy v15 is installed, verify the dedicated Media runner is idle in the Media repository Actions runner settings. Stop its exact systemd service, unregister it with a short-lived removal token from the Media repository, uninstall only that runner service, and verify the runner is absent from GitHub. Remove its sudoers entry and local runner directory only after any required logs/artifacts are retained. Never stop or unregister the shared Platform Infra runner.
+2. Invoke `.github/workflows/decommission-stock-media.yml` manually from `master` in the protected `production` Environment.
+3. Type all three exact confirmations: `DELETE-STOCK-PROD-AND-MEDIA-PROD`, `BACKUP-AND-EXTERNAL-DATA-REVIEWED`, and `MEDIA-RUNNER-STOPPED-AND-UNREGISTERED`. The backup and runner values are operator attestations; the workflow does not infer those external facts.
+4. The workflow runs `scripts/decommission-stock-media-namespaces.sh plan` and then `delete`. Both passes enumerate all namespaced API object names (without printing Secret/ConfigMap values), common workload status, PVCs, PV claim references and StorageClasses. The root-owned `platform-kubectl decommission-stock-media` command repeats the PVC/PV checks, accepts only the two fixed namespaces, deletes only those namespaces, and verifies `tce-prod` and `microfe-platform` remain.
+5. The operation aborts if either target namespace is missing, any PVC exists, any PV claim still references either namespace, any typed confirmation is wrong, or the installed runner policy is not v15. Review the fresh inventory and resolve storage before retrying; never delete PVs as a workaround.
+6. Capture a fresh post-decommission `inspect-vps.yml` run and verify the two namespaces are absent and TCE/Auth/MicroFE/Keycloak remain unchanged.
 
 ## Current execution state
 
 - The manual decommission workflow is intentionally not triggered by this PR or by routine reconciliation.
 - No live K3s namespace deletion, PVC/PV deletion, DNS change, GHCR package deletion, external database change, or runner unregister has been performed by this implementation.
-- The latest committed VPS snapshot is stale and does not provide the required same-window storage preflight. The manual workflow must be run only after the current inventory and data-retention review are accepted.
+- The latest committed VPS snapshot is stale and does not provide the required same-window storage preflight. The dedicated Media runner was last observed active in that snapshot; its current state is unverified. The manual workflow must be run only after the runner is independently stopped/unregistered and the current inventory/data-retention review is accepted.
 
 ## Rollback and safety
 

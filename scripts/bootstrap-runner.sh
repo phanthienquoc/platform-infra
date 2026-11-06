@@ -94,6 +94,30 @@ case "${1:-}" in
     done
     exit 0
     ;;
+  inventory-namespace)
+    [[ "$#" -eq 2 ]] || {
+      echo "platform-kubectl: inventory-namespace requires exactly one namespace" >&2
+      exit 2
+    }
+    namespace="$2"
+    case "$namespace" in
+      stock-prod|media-prod) ;;
+      *)
+        echo "platform-kubectl: inventory-namespace is restricted to the two retired namespaces" >&2
+        exit 2
+        ;;
+    esac
+    "${KUBECTL[@]}" get namespace "$namespace" >/dev/null
+    resources="$("${KUBECTL[@]}" api-resources --verbs=list --namespaced -o name)"
+    while IFS= read -r resource; do
+      [[ -n "$resource" ]] || continue
+      objects="$("${KUBECTL[@]}" get "$resource" -n "$namespace" -o name)"
+      if [[ -n "$objects" ]]; then
+        printf "%s\n" "$objects"
+      fi
+    done <<< "$resources"
+    exit 0
+    ;;
   decommission-stock-media)
     [[ "$#" -eq 1 ]] || {
       echo "platform-kubectl: decommission-stock-media takes no arguments; confirmations must be provided on stdin" >&2
@@ -303,7 +327,6 @@ case "${1:-}" in
         restart_if_blocked tce-prod tce-frontend
         ;;
       all)
-      all)
         restart_if_blocked microfe-platform microfe-auth
         restart_if_blocked microfe-platform microfe-shell
         restart_if_blocked microfe-platform microfe-ws
@@ -325,9 +348,7 @@ case "${1:-}" in
     echo "platform-kubectl: logs are not allowed by the production wrapper" >&2
     exit 2
     ;;
-    echo "platform-kubectl: only media-generation logs in media-prod are allowed" >&2
-    exit 2
-    ;;
+
   apply)
     if [[ "${2:-}" == "-f" && "${4:-}" == "" ]]; then
       case "${3:-}" in

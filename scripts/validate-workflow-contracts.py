@@ -692,7 +692,7 @@ if tce_promotion.index("Verify TCE release payload and publisher provenance") > 
     fail("TCE publisher provenance must pass before GHCR access or image promotion.")
 if tce_promotion.index("Verify TCE tag-to-digest mapping") > tce_promotion.index("Update TCE production image digests"):
     fail("TCE registry tag/digest correlation must pass before GitOps mutation.")
-if "needs: promote-tce-digests" not in promotion.split("  coordinate-tce-release:", 1)[1].split("  fanout-media-release:", 1)[0]:
+if "needs: promote-tce-digests" not in promotion.split("  coordinate-tce-release:", 1)[1].split("  promote:", 1)[0]:
     fail("TCE release coordinator must wait for the atomic digest promotion job.")
 if "WEB_DIGEST_ON_MASTER" not in promotion or "SERVICE_DIGEST_ON_MASTER" not in promotion:
     fail("TCE coordinator must verify both promoted digests on master before reconciliation.")
@@ -1014,6 +1014,7 @@ for required in (
     "environment: production",
     "DELETE-STOCK-PROD-AND-MEDIA-PROD",
     "BACKUP-AND-EXTERNAL-DATA-REVIEWED",
+    "MEDIA-RUNNER-STOPPED-AND-UNREGISTERED",
     "Run fresh read-only storage preflight",
     "Delete only the two approved namespaces",
 ):
@@ -1022,8 +1023,9 @@ for required in (
 if "push:" in decommission_workflow or "schedule:" in decommission_workflow or "repository_dispatch:" in decommission_workflow:
     fail("Namespace decommission must remain manual-only.")
 for required in (
+    "inventory-namespace",
     "get all -n",
-    "get pvc -n",
+    "get pvc -n"
     "get pv -o json",
     "get storageclasses -o wide",
     "PVC inventory is not empty",
@@ -1048,6 +1050,16 @@ if "Reject retired StockDividend and Media production manifests" not in read("va
     fail("Manifest validation must reject reintroduced StockDividend/Media production trees.")
 
 runner_bootstrap = read("bootstrap-runner.yml")
+if "bootstrap-media-runner.sh" in runner_bootstrap:
+    fail("Shared Platform runner bootstrap must not provision the retired dedicated Media runner.")
+for retired_helper in (
+    "bootstrap-media-runner.sh",
+    "verify-media-publisher-run.sh",
+    "verify-stockdividend-publisher-run.sh",
+    "verify-stockdividend-gitops-digests.py",
+):
+    if (ROOT / "scripts" / retired_helper).exists():
+        fail(f"Retired Stock/Media helper must be removed: {retired_helper}")
 if '      - "scripts/bootstrap-runner.sh"' not in runner_bootstrap:
     fail("A runner helper change must trigger the approved VPS runner bootstrap workflow.")
 if "platform/keycloak/**" not in reconcile:

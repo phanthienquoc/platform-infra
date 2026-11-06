@@ -11,6 +11,10 @@ on:
         description: Type BACKUP-AND-EXTERNAL-DATA-REVIEWED after reviewing backups and external data ownership
         required: true
         type: string
+      runner_retirement:
+        description: Type MEDIA-RUNNER-STOPPED-AND-UNREGISTERED after confirming the dedicated Media runner is idle, stopped and removed from GitHub
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -44,6 +48,7 @@ jobs:
         env:
           CONFIRMATION: ${{ inputs.confirmation }}
           DATA_RETENTION_REVIEW: ${{ inputs.data_retention_review }}
+          RUNNER_RETIREMENT: ${{ inputs.runner_retirement }}
         run: |
           set -euo pipefail
           test "$GITHUB_REF" = "refs/heads/master" || {
@@ -56,6 +61,10 @@ jobs:
           }
           test "$DATA_RETENTION_REVIEW" = "BACKUP-AND-EXTERNAL-DATA-REVIEWED" || {
             echo "::error::Backup/external-data review confirmation does not match."
+            exit 1
+          }
+          test "$RUNNER_RETIREMENT" = "MEDIA-RUNNER-STOPPED-AND-UNREGISTERED" || {
+            echo "::error::Dedicated Media runner must be confirmed idle, stopped and unregistered before namespace deletion."
             exit 1
           }
 

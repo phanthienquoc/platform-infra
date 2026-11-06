@@ -26,7 +26,9 @@ preflight() {
       return 1
     }
     echo
-    echo "### Inventory: $namespace"
+    echo "### All namespaced API objects in $namespace (names only; no Secret/ConfigMap values)"
+    run_kubectl inventory-namespace "$namespace"
+    echo "### Common workload status: $namespace"
     run_kubectl get all -n "$namespace" -o wide
     run_kubectl get pvc -n "$namespace" -o wide
     pvc_json="$(run_kubectl get pvc -n "$namespace" -o json)"
