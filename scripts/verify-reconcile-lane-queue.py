@@ -146,7 +146,7 @@ def self_test() -> int:
         ),
         (
             "queued lane inside budget is tolerated",
-            {"jobs": [{"id": 2, "name": "Deploy lane — Media Generation", "status": "queued", "runner_id": 0, "created_at": "2026-11-02T16:50:00Z"}]},
+            {"jobs": [{"id": 2, "name": "Deploy lane — Auth", "status": "queued", "runner_id": 0, "created_at": "2026-11-02T16:50:00Z"}]},
             "schedule",
             0,
         ),
@@ -158,7 +158,7 @@ def self_test() -> int:
         ),
         (
             "queued lane 15m01s beyond the budget fails scheduled enforcement",
-            {"jobs": [{"id": 12, "name": "Deploy lane — StockDividend", "status": "queued", "runner_id": 0, "created_at": "2026-11-02T16:44:59Z"}]},
+            {"jobs": [{"id": 12, "name": "Deploy lane — Keycloak", "status": "queued", "runner_id": 0, "created_at": "2026-11-02T16:44:59Z"}]},
             "schedule",
             1,
         ),
@@ -176,13 +176,13 @@ def self_test() -> int:
         ),
         (
             "push smoke warns without failing",
-            {"jobs": [{"id": 4, "name": "Deploy lane — StockDividend", "status": "queued", "runner_id": 0, "created_at": "2026-11-02T16:40:00Z"}]},
+            {"jobs": [{"id": 4, "name": "Deploy lane — Keycloak", "status": "queued", "runner_id": 0, "created_at": "2026-11-02T16:40:00Z"}]},
             "push",
             0,
         ),
         (
             "completed lane preserves historical runner assignment delay",
-            {"jobs": [{"id": 5, "name": "Deploy lane — Media Generation", "status": "completed", "runner_id": 2, "created_at": "2026-11-02T16:27:00Z", "started_at": "2026-11-02T16:58:00Z"}]},
+            {"jobs": [{"id": 5, "name": "Deploy lane — Auth", "status": "completed", "runner_id": 2, "created_at": "2026-11-02T16:27:00Z", "started_at": "2026-11-02T16:58:00Z"}]},
             "schedule",
             1,
         ),
@@ -200,7 +200,7 @@ def self_test() -> int:
         ),
         (
             "rerun queue age is not inferred from the original attempt",
-            {"jobs": [{"id": 8, "name": "Deploy lane — Media Generation", "status": "queued", "runner_id": 0, "run_attempt": 2, "created_at": "2026-11-02T16:30:00Z"}]},
+            {"jobs": [{"id": 8, "name": "Deploy lane — Auth", "status": "queued", "runner_id": 0, "run_attempt": 2, "created_at": "2026-11-02T16:30:00Z"}]},
             "schedule",
             0,
         ),
@@ -219,7 +219,7 @@ def self_test() -> int:
         "jobs": [
             {
                 "id": 9,
-                "name": "Deploy lane — Media Generation",
+                "name": "Deploy lane — Auth",
                 "status": "completed",
                 "runner_id": 2,
                 "created_at": "2026-11-02T16:27:00Z",
