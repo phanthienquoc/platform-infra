@@ -14,9 +14,7 @@ run_diff() {
   # declaratively-managed Namespace objects exist.
   for namespace_manifest in \
     platform/microfe/namespace.yaml \
-    apps/stockdividend/base/namespace.yaml \
-    apps/tce-dashboard/base/namespace.yaml \
-    apps/media-generation/base/namespace.yaml; do
+    apps/tce-dashboard/base/namespace.yaml; do
     echo "== Ensuring namespace from $namespace_manifest =="
     sudo /usr/local/sbin/platform-kubectl apply -f "$namespace_manifest"
   done
