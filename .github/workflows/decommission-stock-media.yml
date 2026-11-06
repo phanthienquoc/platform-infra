@@ -1,0 +1,87 @@
+name: Decommission StockDividend and Media K3s namespaces
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Type exactly: DECOMMISSION stock-prod media-prod"
+        required: true
+        type: string
+      storage_ack:
+        description: "Type exactly: I UNDERSTAND THE OPERATION ABORTS ON ANY PVC OR PV CLAIM"
+        required: true
+        type: string
+      external_data_ack:
+        description: "Type exactly: EXTERNAL DATA STORES AND DNS WILL BE LEFT IN PLACE"
+        required: true
+        type: string
+      runner_ack:
+        description: "Type exactly: MEDIA RUNNER WILL REMAIN ACTIVE FOR SEPARATE CLEANUP"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stock-media-k3s-decommission
+  cancel-in-progress: false
+
+jobs:
+  decommission:
+    if: github.ref == 'refs/heads/master'
+    name: Decommission exact Stock and Media namespaces
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    environment: production
+    timeout-minutes: 25
+    steps:
+      - name: Checkout approved platform policy
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Verify typed confirmation and current runner policy
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          STORAGE_ACK: ${{ inputs.storage_ack }}
+          EXTERNAL_DATA_ACK: ${{ inputs.external_data_ack }}
+          RUNNER_ACK: ${{ inputs.runner_ack }}
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_REF" == "refs/heads/master" ]] || {
+            echo "::error::Namespace decommission may run only from master."
+            exit 1
+          }
+          [[ "$CONFIRMATION" == "DECOMMISSION stock-prod media-prod" ]] || {
+            echo "::error::Exact namespace confirmation did not match."
+            exit 1
+          }
+          [[ "$STORAGE_ACK" == "I UNDERSTAND THE OPERATION ABORTS ON ANY PVC OR PV CLAIM" ]] || {
+            echo "::error::Storage safety acknowledgement did not match."
+            exit 1
+          }
+          [[ "$EXTERNAL_DATA_ACK" == "EXTERNAL DATA STORES AND DNS WILL BE LEFT IN PLACE" ]] || {
+            echo "::error::External data/DNS acknowledgement did not match."
+            exit 1
+          }
+          [[ "$RUNNER_ACK" == "MEDIA RUNNER WILL REMAIN ACTIVE FOR SEPARATE CLEANUP" ]] || {
+            echo "::error::Runner lifecycle acknowledgement did not match."
+            exit 1
+          }
+
+          expected="platform-kubectl policy: rollout-status-v15-active-workloads-only"
+          actual="$(sudo /usr/local/sbin/platform-kubectl policy-version)"
+          [[ "$actual" == "$expected" ]] || {
+            echo "::error::The guarded decommission wrapper is not installed at the expected policy version."
+            echo "Expected: $expected"
+            echo "Actual:   $actual"
+            exit 1
+          }
+
+      - name: Preflight and remove only the two approved namespaces
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$CONFIRMATION" | sudo /usr/local/sbin/platform-kubectl decommission-stock-media
