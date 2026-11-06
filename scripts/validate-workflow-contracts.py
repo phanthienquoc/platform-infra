@@ -452,13 +452,14 @@ for digest_reference in (
     if digest_reference not in manifest_validation:
         fail(f"Manifest validation must accept verified immutable MicroFE digests: {digest_reference}")
 
-# Application GitOps promotions may use immutable digest references as well as legacy full-SHA release tags.
+# Remaining Platform image validators must cover TCE, Auth and MicroFE without retired Stock/Media image lanes.
 for required in (
-    "(backend|admin)(:[0-9a-f]{7,64}|@sha256:[0-9a-f]{64})",
-    "(backend|frontend)(:([0-9a-f]{7,64}|prod-v[0-9]+\\.[0-9]+\\.[0-9]+-[0-9a-f]{7,64})|@sha256:[0-9a-f]{64})",
+    "tce-dashboard/(web|service)",
+    "auth-service/auth",
+    "microfe-(auth|shell|ws)",
 ):
     if required not in manifest_validation:
-        fail(f"Manifest validation is missing immutable application digest support: {required}")
+        fail(f"Manifest validation is missing an active immutable image contract: {required}")
 
 # The VPS inspection automation must validate the exact generated PR head before merge.
 if "workflow_dispatch:" not in manifest_validation:
