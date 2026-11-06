@@ -1,3 +1,53 @@
+## Workflow inventory runtime update — 2026-11-06 10:08 ICT (2026-11-06 03:08 UTC)
+
+This inventory checkpoint follows the successful merge of Platform PR #1307. It records current repository heads, exact-head validation, the remaining digest-promotion and K3s decommission gates, and the latest live cluster evidence retrieved in this pass.
+
+### Current repository refs and open PRs
+
+| Repository | Default-branch SHA | Open PRs | Current disposition |
+|---|---|---|---|
+| Platform Infra | `67e8d8746934ec40b60b0fe0f62c5e4b3bcccfc2` | #544/#541/#539 drafts | PR #1307 merged; TCE source publisher job/step provenance is now enforced. |
+| TCE Dashboard | `512b69d837e2a65c39867a062529a7fa0eada4cc` | None | PR #1026 merged; WF-02 and WF-05 checks passed. No production release dispatched. |
+| StockDividend | `6fcefa6b3792dab92b6d5c438001633d25f1ca28` | None | PR #32 removed the retired Platform handoff; CI passed. Publisher remains build/publish-only. |
+| Media Generation | `3a8846a4f273eeb20a55b214d5ad80804c2d8d52` | None | PR #72 removed the retired Platform handoff; CI passed. Publisher remains build/publish-only. |
+| Authentication | `f978a3f378ee22d4630909c2d182275b21ac9e9a` | #75 ready; #76 draft | PR #87 established digest/provenance handoff; #75/#76 remain gated on Supabase integration and migration review. |
+
+### Exact workflow and merge evidence
+
+- Platform PR [#1307](https://github.com/phanthienquoc/platform-infra/pull/1307) strengthened `verify-tce-publisher-run.sh`: a successful top-level TCE Actions run is no longer sufficient. The verifier now requires the exact release dependency jobs, native ARM64 frontend/backend build and artifact-integrity steps, GHCR publication, registry digest/ARM64 verification, and Platform dispatch correlation to be completed-success.
+- Exact PR head `248802e05fa397b37d573749bf75be8bc57e2e45` passed `validate-github-actions` [#42154577734](https://github.com/phanthienquoc/platform-infra/actions/runs/42154577734) and `validate-manifests` [#42154577576](https://github.com/phanthienquoc/platform-infra/actions/runs/42154577576). PR #1307 was squash-merged as `67e8d8746934ec40b60b0fe0f62c5e4b3bcccfc2`.
+- Platform production reconcile [#42150629183](https://github.com/phanthienquoc/platform-infra/actions/runs/42150629183) completed SUCCESS: policy v15 verified, scope `all`, mode `apply`, `ALLOW_IMAGE_CHANGES=false`; MicroFE, TCE and Auth lanes passed, Keycloak lane skipped, and post-apply GitOps drift was clean. Recovery controller [#42150853420](https://github.com/phanthienquoc/platform-infra/actions/runs/42150853420) also completed SUCCESS.
+- TCE PR #1026: WF-02 [#42105124810](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42105124810) and WF-05 [#42105124578](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42105124578) passed.
+- StockDividend PR #32: CI [#42137106072](https://github.com/phanthienquoc/stockdividend/actions/runs/42137106072) passed.
+- Media Generation PR #72: CI [#42135150058](https://github.com/phanthienquoc/media-generation/actions/runs/42135150058) passed.
+- Authentication PR #87: auth-service CI [#41642031980](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41642031980) passed. This is historical PR evidence, not a new Auth production release run.
+- No TCE, StockDividend, Media Generation, or Auth production publisher was dispatched in this checkpoint. App CI success is not production-release authorization.
+
+### Stock/Media retirement: GitOps is removed; K3s workloads remain
+
+- Platform PR #1301 retired Stock/Media GitOps ownership; PRs #1303/#1304 fixed push-scope classification/reconciliation; PR #1305 removed obsolete Stock/Media smoke/helper contracts. Stock PR #32 and Media PR #72 removed app-to-Platform production handoffs.
+- The live Pod listing in reconcile #42150629183 at 2026-11-06T02:30:17Z still showed Media backend and frontend 1/1 Running. Stock Admin had two 0/1 ErrImagePull/ImagePullBackOff Pods; the legacy Backend and Frontend remained 1/1; a newer Backend Pod was 0/1 ImagePullBackOff. These are now orphaned from Platform GitOps ownership and were not deleted by reconcile.
+- The latest committed read-only storage snapshot available here is inspect #42145981473, generated at 2026-11-06T01:46:04Z. It showed no PVC/PV claim in either target namespace, but that observation is not a same-window deletion preflight. The snapshot last showed the dedicated Media runner service active; no later stop/unregister proof was retrieved.
+- The manual-only `decommission-stock-media` workflow has not run. Namespace deletion remains blocked on a fresh same-window object/PVC/PV/StorageClass inventory, backup and external-data ownership review, and independent confirmation that the dedicated Media runner is idle, stopped and unregistered. The protected production Environment and three typed confirmations remain mandatory. Preserve PVs, external databases/object storage, DNS, GHCR packages, app repositories and the shared Platform runner.
+
+### Immutable digest promotion remains outstanding
+
+- TCE production Kustomize still uses legacy paired tag `prod-v0.1.0-e75e338` for web/service; Auth still uses `prod-v1.0.0-ceb2688`. New publishers produce full-source-SHA tags and registry digests, and Platform validates provenance, but no new authorized TCE/Auth release was initiated to replace these references.
+- Do not copy a digest from a historical node snapshot or infer it from a tag. Obtain a successful exact publisher run and registry-confirmed digest through the normal app-owned release workflow, then let Platform create the narrow digest-promotion PR. Routine reconcile keeps image changes disabled.
+- Auth PR #75/#76 remain gated on authoritative Supabase production integration side-effect and migration-drift evidence. No migration or Auth activation was run.
+
+### Next dependency-safe actions
+
+1. Obtain a fresh read-only `inspect-vps` result and confirm current PVC/PV/StorageClass inventory and dedicated Media runner state.
+2. After the service owner confirms backups/external-data retention and the Media runner is independently idle/stopped/unregistered, use only the protected manual namespace-decommission workflow. Do not delete storage or external resources implicitly.
+3. Keep TCE/Auth digest promotion manual and provenance-bound; do not dispatch a production publisher without explicit release authorization.
+4. Resolve Auth #75/#76 production Supabase/migration gates and verify one real qualifying TCE WF-13 recovery sequence without changing any cron declaration.
+
+No TCE market-scan schedule, production image reference, desired replica count, shared credential, external database, DNS record, K3s namespace or PV was changed in this checkpoint. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only.
+
+
+---
+
 ## Workflow inventory runtime update — 2026-11-06 09:33 ICT / 02:33 UTC
 
 ### Current five-repository ownership and evidence
