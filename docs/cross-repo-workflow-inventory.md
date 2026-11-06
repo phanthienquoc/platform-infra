@@ -4929,3 +4929,53 @@ App repos own CI/tests/builds/immutable GHCR publication. Platform owns producti
 - No current-master Stock/Media/Auth immutable publication/digest/provenance verified. No image promotion authorized.
 
 No workflow deletion, cron change, publisher, GHCR push, dispatch, production manifest/image/replica change, runner retirement, storage/DNS/data deletion or host reboot performed. TCE market-scan schedule unchanged.
+
+
+---
+
+## Cross-repo runtime and schedule update — 2026-11-07 00:03 ICT / 2026-11-06 17:03 UTC
+
+### Current ownership and heads
+
+- Platform Infra master: `3776186bad238683d2ee1f5c41c182c876edd21c`; open drafts #1314/#544/#541/#539.
+- TCE master: `f4240ada56da700af00100fb3f01278b9b883951`; no open PR.
+- Stock master: `bc20dcfb9893ea246a5e46bef26cce1c92a940c9`; no open PR.
+- Media master: `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; no open PR.
+- Auth master: `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`; PR #75 ready and #76 draft, both still gated by stale base and Supabase deployment/migration side-effect uncertainty.
+
+### Native schedules versus fallback
+
+- Platform native inspect-vps #42256652947 succeeded at 16:54:09Z and generated a read-only snapshot at 16:54:18Z.
+- Latest native Platform reconcile remains #42199267592 at 10:00:15Z; latest native recovery #42199274660 at 10:00:18Z; latest native watchdog #42201400071 at 10:16:28Z.
+- Watchdog workflow_run #42256928371 failed because native reconcile and recovery were each 415m old against 45m freshness budgets. It separately confirmed inspect-vps #42256652947 was fresh. Its TCE observer warned WF-06 native run #42235639842 was 8,283s old against 1,500s.
+- Recovery workflow_run #42256928538 successfully dispatched the existing reconcile authority with ref master, source SHA `3776186bad238683d2ee1f5c41c182c876edd21c`, mode apply, allow_image_changes false and target_app all. It correlated to reconcile #42256950100. Recovery after reconcile #42257152475 passed.
+- TCE native WF-06 #42235639842 failed, WF-12 #42211610532 failed stale freshness, and WF-07 #42176751608 passed. No newer native schedule events were observed. Follow-up workflow_run/dispatch events are not schedule proof.
+
+### Reconciliation contract evidence
+
+Reconcile #42256950100 succeeded:
+- GHCR pull access passed; shared `ghcr-pull` Secret remained unchanged.
+- Auth runtime Secret was provisioned and verified; secret values were suppressed.
+- Restart-blocked-image-pulls check found no failures for MicroFE or TCE.
+- GitOps diff was clean and manifest apply was skipped.
+- Image changes were disabled; no publication or promotion occurred.
+- TCE/Auth maintenance and MicroFE active health gates passed; Keycloak lane skipped.
+
+### Runtime snapshot #42256652947
+
+- K3s node Ready/ARM64, v1.36.3+k3s1, containerd 2.3.2-k3s2.
+- Disk 56%, 21 GiB free of 45 GiB; RAM 23 GiB total, 19 GiB available; host uptime about 189 days.
+- `restart_required=yes`; pending containerd.io 2.4.2 and Docker 29.9.3 upgrades require approved maintenance.
+- Media backend/frontend and MicroFE Shell/WS/NATS 1/1 Running.
+- Stock Admin (two pods) and new Backend remain ImagePullBackOff because tag `12d63b4` has no linux/arm64 manifest; old Backend and Frontend run.
+- TCE/Auth/Keycloak are 0/0 maintenance; GitOps drift clean.
+- Platform and Media runner Listener processes remain active/enabled. No idle confirmation; do not unregister. Shared Platform runner is never part of Media retirement.
+- No Stock/Media VolumeSnapshot references listed. External DB/object-storage backup, retention and DNS ownership remain unverified.
+
+### Release evidence and next actions
+
+No new current-master Stock/Media/Auth immutable GHCR publication/digest/provenance verified; TCE WF-03 remains manual-only. Stock CI #42241252700 passed 7/7 including non-publishing ARM64 builds; Media #42239703151 passed; TCE current-master CI #42239871779/#42239871781/#42239871823 passed; Auth #42215394539 passed validation/build with Supabase Preview skipped.
+
+Next: investigate native schedule delivery without changing cron; retain strict TCE HTTP 200 and zero-replica maintenance; require authorized full-SHA ARM64 Stock publication before promotion; reconcile Auth PRs only after Supabase side-effect review; retire only the dedicated Media runner after operator idle confirmation; verify external backups and DNS before decommission; schedule host upgrades/reboot separately.
+
+App repos own tests/builds/immutable GHCR publication. Platform owns manifests, shared pull credentials, digest/provenance validation, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the sole apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
