@@ -388,6 +388,8 @@ for required in (
     "apps/**/*.md|apps/**/docs/*",
     "assert_failure apps/stockdividend/README.md",
     "assert_failure apps/stockdividend/docs/production-runtime.md",
+    "assert_failure apps/media-generation/README.md",
+    "assert_failure apps/media-generation/overlays/prod/kustomization.yaml",
     "apps/tce-vps-control-mcp/*",
     "assert_failure apps/tce-vps-control-mcp/package.json",
     "assert_scope tce-dashboard apps/tce-dashboard/overlays/prod/kustomization.yaml apps/tce-vps-control-mcp/package.json",
@@ -976,6 +978,14 @@ for required_deployment in (
 ):
     if required_deployment not in restart_block:
         fail(f"Runner image-pull recovery is missing a production Deployment mapping: {required_deployment}")
+
+production_root = read("environments/prod/kustomization.yaml")
+for retired_root in ("../../apps/stockdividend/overlays/prod", "../../apps/media-generation/overlays/prod"):
+    if retired_root in production_root:
+        fail(f"Production Kustomize root still includes retired application: {retired_root}")
+for retired_dir in (ROOT / "apps" / "stockdividend", ROOT / "apps" / "media-generation"):
+    if retired_dir.exists():
+        fail(f"Retired application manifest tree must be removed from Platform Infra: {retired_dir.relative_to(ROOT)}")
 
 # Stock and Media are no longer active GitOps workloads. Keep only temporary
 # pull-secret refresh and an exact, guarded namespace-decommission action.
