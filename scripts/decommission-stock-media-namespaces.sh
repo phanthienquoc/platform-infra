@@ -64,8 +64,12 @@ case "$MODE" in
       echo "DATA_RETENTION_REVIEW must equal BACKUP-AND-EXTERNAL-DATA-REVIEWED." >&2
       exit 2
     }
+    [[ "${RUNNER_RETIREMENT:-}" == "MEDIA-RUNNER-STOPPED-AND-UNREGISTERED" ]] || {
+      echo "RUNNER_RETIREMENT must equal MEDIA-RUNNER-STOPPED-AND-UNREGISTERED." >&2
+      exit 2
+    }
     preflight
-    printf '%s\n%s\n' "$CONFIRMATION" "$DATA_RETENTION_REVIEW" | "${KUBECTL[@]}" decommission-stock-media
+    printf '%s\n%s\n%s\n' "$CONFIRMATION" "$DATA_RETENTION_REVIEW" "$RUNNER_RETIREMENT" | "${KUBECTL[@]}" decommission-stock-media
     ;;
   *)
     echo "Usage: $0 plan|delete" >&2
