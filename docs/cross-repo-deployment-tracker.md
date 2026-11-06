@@ -2475,3 +2475,18 @@ No production workload, image, replica, manifest, credential, namespace, PVC/PV,
 - The connector still does not provide repo-wide default-branch Actions run listings/status contexts; default-branch combined statuses were empty. Last-known TCE health, Stock/Media runtime and K3s evidence remain the prior checkpoint's evidence, not a fresh operational observation.
 
 No production workload, image, replica, manifest, Secret, namespace, PVC/PV, external database, DNS, runner or host was changed. TCE market-scan schedule unchanged.
+
+
+## Runtime checkpoint — 2026-11-06 19:55 ICT / 12:55 UTC
+
+Current heads: Platform `bfb5cbcac5b8f8307d91c1e62973f0bd9f89f3f5`; TCE `512b69d837e2a65c39867a062529a7fa0eada4cc`; Stock `3aeaf519b7a786d13dcecee763acaca357c47ddd`; Media `3a8846a4f273eeb20a55b214d5ad80804c2d8d52`; Auth `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`. Open PRs: Platform #1314/#544/#541/#539 (draft); Auth #75 ready/#76 draft; none in TCE/Stock/Media. Auth #75/#76 are respectively 13 commits behind current master and have only historical CI; do not merge without rebase and exact-head checks.
+
+Platform current-head manifest validation #42215611596 PASS. Latest native schedule evidence is older: reconcile #42199267592 (10:00:15Z), recovery #42199274660 (10:00:18Z), watchdog #42201400071 (10:16:28Z), inspect #42193617816 (09:15:08Z). Manual reconcile #42211637997 and recovery #42211812418 succeeded but do not count as native schedule delivery. Watchdog URL-construction regression from #42207900645 was fixed in #6f5d329; read-only smoke #42208198166 and actionlint/regression run #42208198270 passed.
+
+TCE WF-12 native schedule #42211610532 failed at 11:37:17Z because native WF-06 #42176208184 was 294 minutes old (25-minute budget); heartbeat dispatch succeeded. WF-13 recovery #42211627712 dispatched WF-06 fallback #42211645157, which still failed all four strict HTTP 200 endpoint probes (HTTP 503). WF-07 native #42176751608 passed. No cron changes.
+
+Latest app CI: Stock #42167088130 PASS 7/7; Media #42136991059 PASS; Auth #42215394539 PASS on current head. Latest publishers remain historical: Stock #41563856933 (Nov 3), Media #41158598649 (Oct 31), Auth #41040510320 (Oct 30). No current-head immutable GHCR publication/digest/provenance was verified.
+
+Latest K3s snapshot #42208147735 was a manual inspect at 11:09:51Z and is ~1h45 old. It recorded Media 1/1, Stock Admin/new Backend ImagePullBackOff on missing ARM64 manifest for tag `12d63b4`, TCE/Auth/Keycloak 0/0, clean GitOps, no Stock/Media PVC/PV or snapshots (only unrelated debug PVC), Media runner active/enabled with Listener, and restart_required=yes. External backup/data/DNS ownership remains unverified; no fresh inspect dispatch was available. Do not decommission from this snapshot.
+
+App-owned CI/build/publish and Platform-only GitOps ownership remain unchanged. `reconcile-vps.yml` is the sole apply authority; `inspect-vps.yml` is read-only. No production mutation; TCE market-scan schedule unchanged. Full evidence: [checkpoint 2026-11-06 19:55 ICT](cross-repo-workflow-inventory-checkpoints/2026-11-06-1955-ict.md).
