@@ -2413,3 +2413,54 @@ This short addendum supersedes the Platform native-reconcile freshness status re
 - PR #1330 merged as `6bb2989ccf59cee35d2713b78684c6cad81d82e5`; exact-head validation #42199576132 and post-merge validation #42199644564 both PASS. Current Platform master is that merge SHA.
 
 Stock ARM64 publication, Media runner retirement, external-data/backup/DNS review, and Authentication Supabase release gates are unchanged. No workload, image, replica, credential, namespace, storage, runner, DNS, database, host or TCE market-scan schedule was changed.
+
+
+# Cross-repo deployment readiness — 2026-11-06 19:04 ICT / 12:04 UTC
+
+## Current repository heads and open pull requests
+
+| Repository | Current default-branch head | Open PRs |
+|---|---|---|
+| `phanthienquoc/platform-infra` | `e9401235569a75c0a5e8afc761f4389ae44b6721` | #1314, #544, #541, #539 (documentation/draft work) |
+| `phanthienquoc/TCE-dashboard` | `512b69d837e2a65c39867a062529a7fa0eada4cc` | None |
+| `phanthienquoc/stockdividend` | `3aeaf519b7a786d13dcecee763acaca357c47ddd` | None |
+| `phanthienquoc/media-generation` | `3a8846a4f273eeb20a55b214d5ad80804c2d8d52` | None |
+| `phanthienquoc/phanthienquoc-authentication` | `3a8031196f21c4240b617bbd0a623fce2dc56c5e` | #75 ready, #76 draft, #89 open |
+
+The current Authentication PR #89 is on `fix/auth-release-ref-gate-20261106-1904-ict`, exact head `019b1dc96dba3f45a6f637e3fd54059d3ee0bcc1`. It adds a mandatory zero-permission `validate-release-ref` job that rejects manual release dispatches outside `refs/heads/master`, makes verify/publish depend on that gate, and scopes `packages:write` to the publish job. It updates `scripts/validate-release-contract.mjs` and README. No publisher was dispatched and no image was published.
+
+## Latest verifiable workflow/check evidence
+
+- Platform Infra PR #1337 post-merge validation [#42210875736](https://github.com/phanthienquoc/platform-infra/actions/runs/42210875736) completed successfully; its `validate` job passed on the current Platform master head.
+- TCE WF-06 native healthcheck [#42176208184](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42176208184) failed all four public probes (TCE web/API and Auth liveness/readiness returned HTTP 503). WF-07 #42176751608 passed; WF-12 #42158209117 is the latest native schedule evidence in the prior checkpoint and failed freshness. Do not count WF-12 workflow_run #42176769424 or WF-13 workflow_run #42176787185 as native schedule delivery.
+- StockDividend CI [#42167088130](https://github.com/phanthienquoc/stockdividend/actions/runs/42167088130) passed all seven jobs, including tests/builds, release-hold contract and non-publishing native ARM64 image builds.
+- Media Generation CI [#42136991059](https://github.com/phanthienquoc/media-generation/actions/runs/42136991059) passed its application test/build job; this is historical evidence, not a new release.
+- Authentication default-branch CI [#42167100692](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/42167100692) passed validation and non-publishing ARM64 build. New PR #89 CI [#42215166348](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/42215166348) is in progress: both `validate` and `Build production container on ARM64 without publishing` were running when inspected.
+
+The connected GitHub status endpoint returned no combined status contexts for the five default-branch heads. The workflow-run lookup for those default-branch commits also returned no records (its exposed wrapper filters to PR-triggered runs). Therefore this checkpoint does **not** claim a complete latest repo-wide Actions history or that no newer native schedules occurred. The last schedule/reconcile evidence below remains the last independently recorded evidence in the inventory, not a fresh run-history query.
+
+## Runtime, schedule and immutable publication gates
+
+- Last independently recorded Platform native reconcile is #42199267592 (10:00:15Z, SUCCESS) with `ALLOW_IMAGE_CHANGES=false` and no manifest drift; native recovery #42199274660 succeeded/no-op. Later #42207918291 was a manual dispatch, not native schedule evidence. Do not infer current schedule freshness without a new Actions run listing.
+- Last K3s snapshot remains inspect-vps #42208147735, generated 11:09:51Z. At 12:04Z it is about 6h54m old and must not be used for decommission approval. It recorded Media backend/frontend 1/1 Running; Stock Admin/new Backend ImagePullBackOff because deployed tag `12d63b4` lacks a linux/arm64 manifest; legacy Stock Backend/Frontend running; TCE/Auth/Keycloak desired 0/0; GitOps drift clean; only unrelated `k3s-debug/k3s-debug-logs` PVC/PV; dedicated Media runner active/enabled with `Runner.Listener`; `restart_required=yes`.
+- TCE WF-06 still declares `*/15 * * * *`, requires HTTP 200 for all four public endpoints, and has no SSH/VPS inspection. WF-12 remains `7,22,37,52 * * * *`, read-only with Actions read permission. Do not change either cron or the TCE market-scan schedule.
+- Stock `deploy.yml` owns three ARM64 GHCR images and full-source-SHA/digest verification. Manual publication remains gated by `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=true`; no new publisher run or release authorization was verified. Do not promote `12d63b4`.
+- Media `wf-03-media-production-deploy.yml` owns ARM64 build, checksum-verified artifacts, immutable full-SHA release tags and GHCR digest/ARM64 verification; no Platform dispatch is sent. No new publisher run was verified.
+- Auth release remains manual-only, with full-SHA tags, BuildKit provenance/SBOM, digest verification and `auth-image-published` provenance payload. PR #89 hardens non-master dispatch rejection; its CI is still in progress. No Auth release publisher was run.
+- Dedicated Media runner retirement remains blocked until operator confirms idle, stops/disables/unregisters that dedicated runner and verifies no Listener remains. Never stop or unregister the shared Platform runner.
+- No Stock/Media namespace deletion until a fresh same-window K3s/storage inspection and independent external database/object-storage backup, retention and DNS ownership review pass.
+
+## Ownership and safety
+
+App repositories own tests, builds and immutable GHCR publication. Platform Infra owns production manifests, shared GHCR pull credentials, publisher provenance/digest verification, GitOps promotion/reconciliation, rollout and health verification. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. Preserve useful CI, tests, security, manual/release/scheduled jobs. No duplicate direct SSH/Compose deployment authority was introduced.
+
+No production workload, image, replica, manifest, credential, namespace, PVC/PV, external database, DNS, runner or host was mutated by this checkpoint. TCE market-scan schedule unchanged.
+
+## Next actions
+
+1. Finish PR #89 CI; merge only after exact-head required checks pass and re-read the current head immediately before squash merge.
+2. Obtain a current Actions run listing for all five repositories, with event type, workflow path, head SHA and conclusion; classify native schedules separately from dispatch/fallback.
+3. Run a fresh read-only `inspect-vps` before any decommission decision.
+4. Keep Stock publication gated until explicit release authorization; require new full-SHA GHCR digest and ARM64 manifest evidence before any separate promotion.
+5. Require operator-confirmed Media runner idle/stop/disable/unregister plus fresh storage/external-data/DNS review before namespace decommission.
+6. Keep TCE/Auth at desired 0/0 until service-owner activation approval; retain strict HTTP 200 health gates.
