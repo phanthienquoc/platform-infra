@@ -383,6 +383,8 @@ if "- apps/**" not in reconcile_push_paths or "- '!apps/**/*.md'" not in reconci
     fail("Production reconciliation push paths must exclude Markdown-only app documentation.")
 if "'!apps/tce-vps-control-mcp/**'" not in reconcile_push_paths:
     fail("Production reconciliation push paths must exclude the diagnostics-only VPS MCP.")
+if "- scripts/resolve-push-deployment-scope.sh" not in reconcile_push_paths:
+    fail("Changes to the push-scope resolver must trigger the sole production reconciliation workflow.")
 scope_resolver = (ROOT / "scripts" / "resolve-push-deployment-scope.sh").read_text(encoding="utf-8")
 for required in (
     "apps/**/*.md|apps/**/docs/*",
