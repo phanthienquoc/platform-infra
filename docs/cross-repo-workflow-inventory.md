@@ -5001,3 +5001,20 @@ Earlier merged retirement PRs removed Stock/Media production GitOps manifests, r
 Platform native reconcile #42199267592 and recovery #42199274660 remain stale; watchdog #42256928371 failed native freshness. Fallback reconcile #42256950100 passed with `mode=apply`, `allow_image_changes=false`, `target_app=all`; this does not satisfy native schedule freshness. TCE WF-06 #42235639842 and WF-12 #42211610532 remain failed; WF-06 strict endpoints return HTTP 503. No cron changed; TCE market-scan schedule unchanged.
 
 No current-master Stock/Media/Auth GHCR publication with verified digest/provenance was performed. No image promotion authorized. Auth #75/#76 remain gated pending branch reconciliation and Supabase production migration/integration review. TCE, Stock and Media have no open PRs; Platform #1314/#544/#541/#539 remain drafts.
+
+
+---
+
+## Cross-repo readiness update — 2026-11-07 00:56 ICT / 2026-11-06 17:56 UTC
+
+- Current master heads: Platform `4857d666d92c96711ce7d397ec0f4019651f9ecb`; TCE `f4240ada56da700af00100fb3f01278b9b883951`; Stock `bc20dcfb9893ea246a5e46bef26cce1c92a940c9`; Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; Auth `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`.
+- Open PRs: Platform #1314/#544/#541/#539 drafts; Auth #75 ready and #76 draft but gated; TCE/Stock/Media none.
+- Latest CI: Platform PR #1352 post-merge #42259845104 PASS; TCE #42239871779/#42239871781/#42239871823 PASS; Stock #42241252700 PASS 7/7; Media #42239703151 PASS; Auth #42215394539 PASS.
+- **Platform native schedule delivery recovered:** reconcile #42261665655 (`schedule`, 17:26:34Z) PASS; recovery #42261712724 (`schedule`, 17:26:53Z) PASS; watchdog #42263224767 (`schedule`, 17:36:43Z) PASS. Watchdog verified native inspect #42256652947 at 16:54:09Z was 42m old, within its 75m budget. This supersedes the older 10:00Z native reconcile/recovery evidence.
+- Watchdog TCE observer remains warning-only and reports WF-06 #42235639842 age 10,730s against 1,500s. TCE WF-12 #42211610532 FAIL; WF-07 #42176751608 PASS. Four WF-06 public endpoints still fail HTTP 200. No cron changes.
+- Scheduled reconcile used `ALLOW_IMAGE_CHANGES=false`; GHCR package access passed, shared `ghcr-pull` Secret unchanged, Auth runtime Secret provisioned/verified, TCE image pairing passed, no GitOps drift and manifest apply skipped. MicroFE active health passed; TCE/Auth were treated as zero-replica maintenance; Keycloak skipped.
+- Full K3s snapshot #42256652947 generated 16:54:18Z: node Ready/ARM64, K3s v1.36.3+k3s1, disk 56%, ~21 GiB free, ~19 GiB RAM available, restart required. Media/MicroFE active; Stock Admin/new Backend ImagePullBackOff due missing ARM64 manifest for `12d63b4`; TCE/Auth/Keycloak 0/0. Runner active/Listener and external backup/DNS unknown.
+- No current-master Stock/Media/Auth publisher digest/provenance; no publisher/dispatch/promotion. Stock/Media remain app-owned publishers and intentionally retired from Platform GitOps.
+- Decommission plan mode was not dispatched; no runner/namespace deletion. No external-data/DNS proof or same-run preflight.
+- `reconcile-vps.yml` remains the sole apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+- Full evidence: `docs/cross-repo-workflow-inventory-checkpoints/2026-11-07-0056-ict.md`.
