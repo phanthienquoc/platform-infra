@@ -1280,6 +1280,11 @@ if scheduled_crons(reconcile) != ["7,22,37,52 * * * *"]:
     fail("reconcile-vps must retain a 15-minute cadence offset to minutes 7/22/37/52.")
 if scheduled_crons(watchdog) != ["12,27,42,57 * * * *"]:
     fail("The read-only watchdog must run 5 minutes after each offset reconciliation slot.")
+watchdog_concurrency = watchdog.split("concurrency:", 1)[1].split("\njobs:", 1)[0]
+if "group: reconcile-schedule-freshness-watchdog-${{ github.event_name }}" not in watchdog_concurrency:
+    fail("The watchdog must isolate native schedule enforcement from workflow_run/push/manual diagnostics so event-driven runs cannot replace a pending scheduled run.")
+if "cancel-in-progress: false" not in watchdog_concurrency:
+    fail("The watchdog must not cancel an in-progress run when another event of the same class arrives.")
 if scheduled_crons(inspection) != ["2,32 * * * *"]:
     fail("VPS inspection must retain its 30-minute cadence at minutes 2 and 32.")
 
