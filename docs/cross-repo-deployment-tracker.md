@@ -1,3 +1,60 @@
+## Current review — 2026-11-06 13:03 ICT (2026-11-06 06:03 UTC)
+
+This checkpoint revalidates all five default branches, open PRs, recent Actions runs, the TCE schedule/health failures, and the latest committed read-only K3s snapshot. It records observed state only; it does not authorize image publication, replica changes, runner retirement, or namespace deletion.
+
+### Current default-branch heads and open PRs
+
+| Repository | Default-branch SHA | Open PRs | Current disposition |
+|---|---|---|---|
+| Platform Infra | `fb5c28f99148e6d4af8c43ffa2685c24e76635e5` | #1314 draft; #544/#541/#539 drafts | PRs #1320, #1321 and #1322 are merged; current master validation passes. |
+| TCE Dashboard | `512b69d837e2a65c39867a062529a7fa0eada4cc` | None | Strict public probes remain HTTP 503; WF-06 native schedule delivery is stale. |
+| StockDividend | `3aeaf519b7a786d13dcecee763acaca357c47ddd` | None | Master CI passes ARM64 build-only checks for Admin, Backend and Scraper; no authorized GHCR publication observed. |
+| Media Generation | `3a8846a4f273eeb20a55b214d5ad80804c2d8d52` | None | Latest master CI passes (historical run); no new publisher. Workloads remain active pending approved retirement. |
+| Authentication | `3a8031196f21c4240b617bbd0a623fce2dc56c5e` | #75 ready; #76 draft | Master CI passes ARM64 build-only; release remains manual-only. |
+
+### Platform Infra state
+
+- PR #1322 updated the tracker/inventory after #1320 storage inventory and #1321 read-only inspection. Current master is `fb5c28f99148e6d4af8c43ffa2685c24e76635e5`.
+- Latest master validation [#42168557657](https://github.com/phanthienquoc/platform-infra/actions/runs/42168557657) completed SUCCESS on this exact SHA. PR #1322 exact-head validation [#42168470421](https://github.com/phanthienquoc/platform-infra/actions/runs/42168470421) also passed before merge.
+- Latest production reconcile in current run history remains [#42167232258](https://github.com/phanthienquoc/platform-infra/actions/runs/42167232258), SUCCESS at 05:14:26Z on an earlier commit, with `ALLOW_IMAGE_CHANGES=false`. Later PRs changed inspection/docs rather than production image or workload manifests; no new apply was required by this checkpoint.
+- Unrelated open drafts: Platform #1314 mail-service plan and #544/#541/#539 Keycloak documentation. Authentication #75/#76 remain open. No PR is open in TCE, StockDividend or Media.
+
+### TCE health and schedule delivery — exact failure diagnosis
+
+- WF-06 workflow file remains active and its schedule declaration is unchanged at `*/15 * * * *`. The public health contract still expects HTTP 200 for all four endpoints.
+- Latest observed native scheduled WF-06 run is [#42133793538](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42133793538), created 2026-11-06 00:01:48Z, conclusion FAILURE.
+- WF-06 [#42158243093](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42158243093) at 03:43:21Z is a `workflow_dispatch` fallback, not a native schedule. Its four independent jobs all returned HTTP 503 (expected 200): TCE web, TCE API `/api/health`, Auth liveness `/api/health`, and Auth readiness `/api/ready`.
+- WF-12 [#42158209117](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42158209117) ran on its own native schedule at 03:43:01Z. It confirmed WF-06 is active, then detected that the latest native scheduled WF-06 run was 221 minutes old (budget 25 minutes). Its authenticated Platform heartbeat dispatch succeeded; the schedule-freshness job correctly failed.
+- WF-13 [#42158228852](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42158228852) completed the read-only fallback dispatch. A fallback dispatch is explicitly not native schedule evidence and did not restore HTTP 200 health.
+- The committed K3s snapshot still reports TCE frontend/service and Auth/Keycloak desired at 0/0. The 503s are therefore consistent with the recorded inactive runtime state; do not weaken the 200 assertions or turn a dispatch fallback into a green native schedule.
+- This is a GitHub scheduled-event delivery gap plus intentionally inactive public services, not evidence that the app CI/build is failing. Do not change any TCE market-scan schedule or cron declaration.
+
+### Other app CI and release evidence
+
+- StockDividend master CI [#42167088130](https://github.com/phanthienquoc/stockdividend/actions/runs/42167088130) SUCCESS, including ARM64 build-only checks for Admin, Backend and Scraper. These jobs use non-publishing CI and do not prove a GHCR release, digest, provenance or production authorization. The deployed Stock Admin/new Backend image issue remains unresolved; no promotion of tag `12d63b4`.
+- Media Generation master CI [#42136991059](https://github.com/phanthienquoc/media-generation/actions/runs/42136991059) SUCCESS but is historical. No new release/publisher run or Platform handoff was observed.
+- Authentication master CI [#42167100692](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/42167100692) SUCCESS, including ARM64 build-only validation. No new publisher run, registry digest/provenance or promotion was observed. Keep PR #75/#76 gated by authoritative Supabase production integration side-effect/migration evidence.
+
+### Latest committed K3s/storage evidence
+
+- Latest read-only inspection remains [#42168105492](https://github.com/phanthienquoc/platform-infra/actions/runs/42168105492), snapshot generated 2026-11-06 05:23:12Z. No newer inspect-vps run was present in the inspected Platform Actions history.
+- Node `tce-k3s-01`: Ready, ARM64, K3s `v1.36.3+k3s1`, containerd `2.3.2-k3s2`; disk 56%, about 19 GiB available RAM, `restart_required=yes`. No reboot/upgrade is authorized.
+- GitOps drift clean. Media backend/frontend remain 1/1 Running. Stock Admin (two Pods) and newer Backend remain ImagePullBackOff; legacy Backend/Frontend remain 1/1.
+- Only `k3s-debug/k3s-debug-logs` PVC/PV appears in the snapshot; no Stock/Media PVC/PV claims or VolumeSnapshot/VolumeSnapshotContent references were listed. This does not prove external database/object-storage backups or DNS/data ownership.
+- Dedicated Media runner is still active and enabled with `/opt/media-actions-runner/bin/Runner.Listener` present. Decommission guard must continue to block. Do not touch the shared Platform runner.
+
+### Dependency-safe next actions
+
+1. Investigate missing native WF-06 schedule events through GitHub Actions scheduling/operational support; retain the existing 15-minute healthcheck cadence and strict HTTP 200 probes. WF-13 fallback is recovery-only, not schedule proof.
+2. Keep TCE/Auth services at their declared 0/0 until the service owner authorizes activation; do not change TCE market-scan schedule.
+3. Operator verifies the dedicated Media runner is idle, then stops/disables/unregisters only that runner and confirms no Listener remains. No automation may attest this on the operator's behalf.
+4. Repeat read-only K3s/storage preflight in the same maintenance window and obtain backup/external-data/DNS ownership review before considering the protected namespace-decommission workflow.
+5. Keep Stock/Auth promotion blocked until an authorized publisher run proves exact full-source SHA, GHCR digest, ARM64 manifest and provenance; routine reconcile keeps image changes disabled.
+
+**Ownership and safety:** app repositories own tests/builds and immutable GHCR publication. Platform Infra owns production manifests, shared GHCR pull credentials, provenance/digest validation, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No production image, desired replica, namespace, PVC/PV, DNS, external database, runner, host or TCE market-scan schedule was changed by this checkpoint.
+
+---
+
 ## Current review — 2026-11-06 12:26 ICT (2026-11-06 05:26 UTC)
 
 This checkpoint follows Platform PRs #1320 and #1321. Both changes are merged; the second merge produced a fresh read-only VPS/K3s snapshot. This update records current evidence only and does not authorize release, runner retirement, namespace deletion, or any other production mutation.
