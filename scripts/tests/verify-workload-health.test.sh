@@ -62,7 +62,7 @@ case "$resource" in
         if [ "$namespace" = "tce-prod" ]; then
           exit 0
         fi
-        printf 'pod-1||Running|true:: \\n'
+        printf 'pod-1||Running|true:: \n'
         ;;
       *)
         exit 3
@@ -106,11 +106,11 @@ case "$resource" in
         ;;
       mixed)
         if [ "$namespace" = "tce-prod" ]; then
-          printf 'tce-frontend|0|0|0\\n'
-          printf 'tce-service|0|0|0\\n'
+          printf 'tce-frontend|0|0|0\n'
+          printf 'tce-service|0|0|0\n'
         else
-          printf 'microfe-shell|1|1|1\\n'
-          printf 'microfe-ws|1|1|1\\n'
+          printf 'microfe-shell|1|1|1\n'
+          printf 'microfe-ws|1|1|1\n'
         fi
         ;;
       terminating-only|image-pull|no-pods)
