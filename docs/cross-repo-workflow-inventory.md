@@ -4850,3 +4850,36 @@ No production workload, image, replica, manifest, namespace, PVC/PV, external da
 The current native schedule evidence remains: Platform reconcile #42199267592, recovery #42199274660, watchdog #42201400071, inspect #42193617816; TCE WF-06 #42235639842 failed HTTP 503, WF-07 #42176751608 passed, WF-12 #42211610532 failed stale freshness. Manual dispatch and workflow_run follow-ups remain separate from native schedule evidence.
 
 No publisher, GHCR push, Platform dispatch, production manifest change, workload activation, runner retirement, namespace deletion or host maintenance was triggered by the permission audit. TCE market-scan schedule unchanged.
+
+
+---
+
+## Permission audit completion — 2026-11-06 22:15 ICT / 15:15 UTC
+
+### Current heads and open PRs
+
+| Repository | Master SHA | Open PRs |
+|---|---|---|
+| Platform Infra | 6d08b835ddee5fe5324fe68fa825fac1a42cf43a | #1314/#544/#541/#539 drafts |
+| TCE Dashboard | f4240ada56da700af00100fb3f01278b9b883951 | None |
+| StockDividend | bc20dcfb9893ea246a5e46bef26cce1c92a940c9 | None |
+| Media Generation | 54f3a76a5f8861842fd1bae698c4cb0fa8c9034d | None |
+| Authentication | 3b60ff46b8959d18aee1956f99d6b62589b8b9c5 | #75 ready/#76 draft |
+
+### Publisher token permissions — verified across all app repos
+
+- Stock PR #34 merged as bc20dcfb9893ea246a5e46bef26cce1c92a940c9. Exact-head CI #42240653857 passed all seven jobs. deploy.yml defaults to contents: read and grants packages: write only to build-and-push. Post-merge CI #42241252700 was in progress at 15:15Z. No deploy/publisher run was triggered by the workflow-only change.
+- Media PR #73 merged as 54f3a76a5f8861842fd1bae698c4cb0fa8c9034d. WF-03 defaults to contents: read; packages: write only on publish-immutable-images. Exact-head #42238974848 and post-merge #42239703151 passed.
+- TCE PR #1027 merged as f4240ada56da700af00100fb3f01278b9b883951. WF-03 defaults to contents: read and scopes actions: read/packages: write to platform-infra-release; WF-08B defaults to contents: read and scopes packages: write to build-shell/build-ws. Exact-head checks and post-merge WF-01 #42239871779, backend #42239871781 and Prettier #42239871823 passed.
+- Auth release.yml already defaults to read-only permissions, has a zero-permission non-master ref gate, and scopes packages: write to the publish job. Auth PR #89 is merged as 3b60ff46b8959d18aee1956f99d6b62589b8b9c5.
+- No production publisher, GHCR push or Platform dispatch was triggered by these permission changes.
+
+### Operational gates
+
+- Platform latest native schedules remain reconcile #42199267592, recovery #42199274660, watchdog #42201400071 and inspect #42193617816. Newer #42235712359/#42235938727 are manual dispatches.
+- TCE latest native schedules remain WF-06 #42235639842 FAIL (four HTTP 503), WF-07 #42176751608 PASS, WF-12 #42211610532 FAIL (stale). Follow-up workflow_run events are not native schedule proof.
+- GitHub Status reported Actions operational/no unresolved incidents at 14:29:25Z; no causal link to the schedule gap is established.
+- K3s full inspection #42231216533 and partial reconcile #42235712359 show Stock Admin/new Backend ImagePullBackOff (missing ARM64 manifest for 12d63b4), Media 1/1, MicroFE active, TCE/Auth/Keycloak 0/0, active Media runner and unrelated debug-only PVC/PV.
+- External database/object-storage backup, retention and DNS ownership remain unverified; no Stock/Media decommission. No current-master publisher/digest/provenance is established for Stock/Media/Auth; TCE remains manual-only.
+
+App repos own CI/tests/builds/immutable GHCR publication. Platform owns production manifests, shared pull credentials, provenance/digest validation, GitOps promotion/reconciliation, rollout and health. reconcile-vps.yml remains the sole production apply authority; inspect-vps.yml remains read-only. TCE market-scan schedule unchanged.
