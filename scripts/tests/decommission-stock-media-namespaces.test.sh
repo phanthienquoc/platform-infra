@@ -27,9 +27,9 @@ case "$*" in
     fi
     ;;
   "get ingress -n stock-prod -o json")
-    printf '%s\\n' '{"items":[{"metadata":{"name":"stock","namespace":"stock-prod"},"spec":{"rules":[{"host":"stock.example.test"}],"tls":[{"hosts":["stock.example.test"],"secretName":"stock-example-tls"}]},"status":{"loadBalancer":{"ingress":[{"ip":"10.0.0.120"}]}}}]}'
+    printf '%s\n' '{"items":[{"metadata":{"name":"stock","namespace":"stock-prod"},"spec":{"rules":[{"host":"stock.example.test"}],"tls":[{"hosts":["stock.example.test"],"secretName":"stock-example-tls"}]},"status":{"loadBalancer":{"ingress":[{"ip":"10.0.0.120"}]}}}]}'
     ;;
-  "get ingress -n media-prod -o json") printf '%s\\n' '{"items":[]}' ;;
+  "get ingress -n media-prod -o json") printf '%s\n' '{"items":[]}' ;;
   "get all -n stock-prod -o wide"|"get all -n media-prod -o wide"|"get pvc -n stock-prod -o wide"|"get pvc -n media-prod -o wide"|"get storageclasses -o wide") exit 0 ;;
   "get pvc -n stock-prod -o json"|"get pvc -n media-prod -o json")
     if [[ "${MOCK_PVC:-0}" == "1" ]]; then printf '%s\n' '{"items":[{"metadata":{"name":"keep-me"}}]}'; else printf '%s\n' '{"items":[]}'; fi
@@ -56,8 +56,8 @@ esac
 MOCK
 chmod +x "$fake"
 
-plan_output="$(PLATFORM_KUBECTL_BIN=\"$fake\" FAKE_LOG=\"$log\" bash \"$SCRIPT\" plan)"
-printf '%s\\n' "$plan_output"
+plan_output="$(PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" bash "$SCRIPT" plan)"
+printf '%s\n' "$plan_output"
 grep -Fq "stock.example.test" <<< "$plan_output"
 grep -Fq "stock-example-tls" <<< "$plan_output"
 grep -Fq "DNS ownership is not inferred" <<< "$plan_output"
