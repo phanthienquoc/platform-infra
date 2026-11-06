@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-11-06T01:46:04+00:00
+Generated: 2026-11-06T03:09:17+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,14 +11,14 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.5Gi       2.3Gi        83Mi        17Gi        19Gi
+Mem:            23Gi       3.5Gi       2.3Gi        84Mi        17Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   25G   21G  56% /
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   25G   21G  56% /
 disk_pressure: normal (56%)
- 01:46:04 up 188 days, 11:36,  0 users,  load average: 0.13, 0.27, 0.27
+ 03:09:17 up 188 days, 12:59,  0 users,  load average: 0.14, 0.40, 0.36
 
 ### Top disk consumers (best-effort, runner-readable paths)
 4.0K	/var/lib/docker
@@ -42,14 +42,14 @@ disk_pressure: normal (56%)
 
 ## Runner
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
-3388 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+80168 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
 1057701 /opt/media-actions-runner/bin/Runner.Listener run --startuptype service
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
   actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-media-generation.media-generation-k3s-01)
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service           loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
 runner_service_enabled: enabled
-runner_policy: platform-kubectl policy: rollout-status-v14-stockdividend-managed-workloads
+runner_policy: platform-kubectl policy: rollout-status-v15-core-workloads
 
 ## Docker
 Docker version 29.1.3, build f52814d
@@ -63,8 +63,8 @@ Build Cache     31        0         519.4MB   154.4MB
 ## Updates
 Listing...
 apparmor/jammy-updates 3.0.4-2ubuntu2.5 arm64 [upgradable from: 3.0.4-2ubuntu2.4]
-apt-utils/jammy-security 2.4.15ubuntu0.1 arm64 [upgradable from: 2.4.14]
-apt/jammy-security 2.4.15ubuntu0.1 arm64 [upgradable from: 2.4.14]
+apt-utils/jammy-updates,jammy-security 2.4.15ubuntu0.1 arm64 [upgradable from: 2.4.14]
+apt/jammy-updates,jammy-security 2.4.15ubuntu0.1 arm64 [upgradable from: 2.4.14]
 cloud-init/jammy-updates 26.1-0ubuntu1~22.04.1 all [upgradable from: 25.2-0ubuntu1~22.04.1]
 containerd.io/jammy 2.4.2-3~ubuntu.22.04~jammy arm64 [upgradable from: 2.2.1-1~ubuntu.22.04~jammy]
 docker-buildx-plugin/jammy 0.38.1-1~ubuntu.22.04~jammy arm64 [upgradable from: 0.30.1-1~ubuntu.22.04~jammy]
@@ -76,7 +76,7 @@ fwupd/jammy-updates 2.0.20-1ubuntu2~22.04.2 arm64 [upgradable from: 1.7.9-1~22.0
 iproute2/jammy-updates 5.15.0-1ubuntu2.2 arm64 [upgradable from: 5.15.0-1ubuntu2]
 landscape-common/jammy-updates 23.02-0ubuntu1~22.04.7 arm64 [upgradable from: 23.02-0ubuntu1~22.04.6]
 libapparmor1/jammy-updates 3.0.4-2ubuntu2.5 arm64 [upgradable from: 3.0.4-2ubuntu2.4]
-libapt-pkg6.0/jammy-security 2.4.15ubuntu0.1 arm64 [upgradable from: 2.4.14]
+libapt-pkg6.0/jammy-updates,jammy-security 2.4.15ubuntu0.1 arm64 [upgradable from: 2.4.14]
 libaudit-common/jammy-updates 1:3.0.7-1ubuntu0.1 all [upgradable from: 1:3.0.7-1build1]
 libaudit1/jammy-updates 1:3.0.7-1ubuntu0.1 arm64 [upgradable from: 1:3.0.7-1build1]
 libglib2.0-0/jammy-updates 2.72.4-0ubuntu2.11 arm64 [upgradable from: 2.72.4-0ubuntu2.10]
@@ -90,6 +90,7 @@ libnetplan0/jammy-updates 0.107.1-3ubuntu0.22.04.5 arm64 [upgradable from: 0.106
 libnftables1/jammy-updates 1.0.2-1ubuntu3.1 arm64 [upgradable from: 1.0.2-1ubuntu3]
 libopeniscsiusr/jammy-updates 2.1.5-1ubuntu1.3 arm64 [upgradable from: 2.1.5-1ubuntu1.1]
 libxmlb2/jammy-updates 0.3.24-1~ubuntu0.22.04.1 arm64 [upgradable from: 0.3.6-2build1]
+linux-tools-common/jammy-updates 5.15.0-203.213 all [upgradable from: 5.15.0-202.212]
 lshw/jammy-updates 02.19.git.2021.06.19.996aaad9c7-2ubuntu0.22.04.1 arm64 [upgradable from: 02.19.git.2021.06.19.996aaad9c7-2build1]
 nano/jammy-updates 6.2-1ubuntu0.3 arm64 [upgradable from: 6.2-1ubuntu0.2]
 netplan.io/jammy-updates 0.107.1-3ubuntu0.22.04.5 arm64 [upgradable from: 0.106.1-7ubuntu0.22.04.4]
@@ -98,7 +99,7 @@ open-iscsi/jammy-updates 2.1.5-1ubuntu1.3 arm64 [upgradable from: 2.1.5-1ubuntu1
 open-vm-tools/jammy-updates 2:12.3.5-3~ubuntu0.22.04.4 arm64 [upgradable from: 2:12.3.5-3~ubuntu0.22.04.3]
 python3-attr/jammy-updates 21.2.0-1ubuntu1 all [upgradable from: 21.2.0-1]
 python3-distupgrade/jammy-updates 1:22.04.21 all [upgradable from: 1:22.04.20]
-python3-twisted/jammy-security 22.1.0-2ubuntu2.8 all [upgradable from: 22.1.0-2ubuntu2.7]
+python3-twisted/jammy-updates,jammy-security 22.1.0-2ubuntu2.8 all [upgradable from: 22.1.0-2ubuntu2.7]
 snapd/jammy-updates 2.77.1+ubuntu22.04.1 arm64 [upgradable from: 2.76.3+ubuntu22.04.1]
 sosreport/jammy-updates 4.11.2-0ubuntu0~22.04.1 arm64 [upgradable from: 4.9.2-0ubuntu0~22.04.1]
 tmux/jammy-updates 3.2a-4ubuntu0.3 arm64 [upgradable from: 3.2a-4ubuntu0.2]
@@ -125,7 +126,7 @@ kube-node-lease    Active   76d
 kube-public        Active   76d
 kube-system        Active   76d
 media-prod         Active   36d
-microfe-platform   Active   30d
+microfe-platform   Active   31d
 stock-prod         Active   47d
 tce-prod           Active   76d
 NAMESPACE          NAME                                        READY   STATUS             RESTARTS      AGE     IP            NODE         NOMINATED NODE   READINESS GATES
@@ -139,15 +140,15 @@ kube-system        local-path-provisioner-58d557dc48-jbhhp     1/1     Running  
 kube-system        metrics-server-6dc596dfb8-s2bzm             1/1     Running            0             76d     10.42.0.4     tce-k3s-01   <none>           <none>
 kube-system        svclb-traefik-859779c1-7bwx2                2/2     Running            0             76d     10.42.0.7     tce-k3s-01   <none>           <none>
 kube-system        traefik-59b7647586-gml84                    1/1     Running            0             76d     10.42.0.8     tce-k3s-01   <none>           <none>
-media-prod         media-generation-665d86ff54-4664l           1/1     Running            0             4d21h   10.42.0.155   tce-k3s-01   <none>           <none>
-media-prod         media-generation-frontend-58d8bbc67-lwhhf   1/1     Running            0             4d21h   10.42.0.154   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-shell-7b44b44dfb-ln4sw              1/1     Running            0             4d23h   10.42.0.153   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-ws-5bc979dd77-txd28                 1/1     Running            0             4d23h   10.42.0.152   tce-k3s-01   <none>           <none>
+media-prod         media-generation-665d86ff54-4664l           1/1     Running            0             4d22h   10.42.0.155   tce-k3s-01   <none>           <none>
+media-prod         media-generation-frontend-58d8bbc67-lwhhf   1/1     Running            0             4d22h   10.42.0.154   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-shell-7b44b44dfb-ln4sw              1/1     Running            0             5d1h    10.42.0.153   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-ws-5bc979dd77-txd28                 1/1     Running            0             5d1h    10.42.0.152   tce-k3s-01   <none>           <none>
 microfe-platform   nats-7bc8d9f768-q682m                       1/1     Running            0             27d     10.42.0.178   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-5864bcb497-6b6hm                0/1     ImagePullBackOff   0             4d2h    10.42.0.182   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-59cddb87b7-qgkjr                0/1     ImagePullBackOff   0             4d3h    10.42.0.180   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-5864bcb497-6b6hm                0/1     ImagePullBackOff   0             4d4h    10.42.0.182   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-59cddb87b7-qgkjr                0/1     ImagePullBackOff   0             4d4h    10.42.0.180   tce-k3s-01   <none>           <none>
 stock-prod         stock-backend-57ccb8ff6-d25jq               1/1     Running            0             47d     10.42.0.55    tce-k3s-01   <none>           <none>
-stock-prod         stock-backend-6bc874575d-xcg2j              0/1     ImagePullBackOff   0             4d2h    10.42.0.183   tce-k3s-01   <none>           <none>
+stock-prod         stock-backend-6bc874575d-xcg2j              0/1     ImagePullBackOff   0             4d4h    10.42.0.183   tce-k3s-01   <none>           <none>
 stock-prod         stock-frontend-79c57845df-z747s             1/1     Running            0             47d     10.42.0.56    tce-k3s-01   <none>           <none>
 
 ### Pod imageID evidence
@@ -183,9 +184,9 @@ kube-system        traefik                     1/1     1            1           
 media-prod         media-generation            1/1     1            1           36d
 media-prod         media-generation-frontend   1/1     1            1           36d
 microfe-platform   keycloak                    0/0     0            0           20d
-microfe-platform   microfe-auth                0/0     0            0           30d
-microfe-platform   microfe-shell               1/1     1            1           30d
-microfe-platform   microfe-ws                  1/1     1            1           30d
+microfe-platform   microfe-auth                0/0     0            0           31d
+microfe-platform   microfe-shell               1/1     1            1           31d
+microfe-platform   microfe-ws                  1/1     1            1           31d
 microfe-platform   nats                        1/1     1            1           27d
 stock-prod         stock-admin                 0/1     1            0           43d
 stock-prod         stock-backend               1/1     1            1           47d
@@ -287,9 +288,9 @@ kube-system        traefik                     LoadBalancer   10.43.213.239   10
 media-prod         media-generation            ClusterIP      10.43.252.95    <none>        3000/TCP                     36d
 media-prod         media-generation-frontend   ClusterIP      10.43.48.52     <none>        80/TCP                       36d
 microfe-platform   keycloak                    ClusterIP      10.43.142.95    <none>        80/TCP,9000/TCP              20d
-microfe-platform   microfe-auth                ClusterIP      10.43.83.168    <none>        80/TCP                       30d
-microfe-platform   microfe-shell               ClusterIP      10.43.6.23      <none>        80/TCP                       30d
-microfe-platform   microfe-ws                  ClusterIP      10.43.86.34     <none>        8080/TCP                     30d
+microfe-platform   microfe-auth                ClusterIP      10.43.83.168    <none>        80/TCP                       31d
+microfe-platform   microfe-shell               ClusterIP      10.43.6.23      <none>        80/TCP                       31d
+microfe-platform   microfe-ws                  ClusterIP      10.43.86.34     <none>        8080/TCP                     31d
 microfe-platform   nats                        ClusterIP      10.43.147.69    <none>        4222/TCP,8222/TCP            27d
 stock-prod         backend                     ClusterIP      10.43.46.139    <none>        8080/TCP                     47d
 stock-prod         stock-admin                 ClusterIP      10.43.97.150    <none>        3000/TCP                     43d
@@ -318,5 +319,5 @@ keycloak   0/0     0            0           20d   keycloak     quay.io/keycloak/
 error: timed out waiting for the condition
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.086634s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049184s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.086089s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.050151s remote_ip=132.226.175.206
