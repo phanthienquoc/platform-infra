@@ -5127,3 +5127,16 @@ No current-master Stock/Media/Auth GHCR publication with verified digest/provena
 - Latest reconcile #42289699488 passed GHCR read preflight; shared `ghcr-pull` unchanged; Auth runtime Secret provisioned and verified with values suppressed; GitOps diff clean; manifest apply skipped; `ALLOW_IMAGE_CHANGES=false`.
 - Stock/Media remain outside Platform GitOps and have no production dispatch. App repos own tests/builds/immutable GHCR publication; Platform owns manifests, shared pull credentials, provenance/digest checks, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` is sole apply authority; `inspect-vps.yml` read-only.
 - Decommission `mode=plan` was not dispatched because this GitHub connector surface is read-only for workflow dispatch. Do not infer DNS or external backup ownership from Ingress/PVC data. No destructive action or maintenance occurred. TCE market-scan schedule unchanged.
+
+
+---
+
+## Post-merge / recovery follow-up — 2026-11-07 05:05 ICT
+
+- PR #1361 merged at `41eb3613bd7dc98077b72bbf97b6c5ac75be6069`; exact-head validation #42301828188 and post-merge validation #42301887584 both PASS.
+- Native inspect-vps #42301267072 passed (22:00:18Z; snapshot 22:00:26Z). Native Platform reconcile #42261665655 and recovery #42261712724 were still 275m old. Watchdog #42301543752 failed the 45m native freshness gates; it verified reconcile-vps was active and the fresh inspect runner queue wait was 0m. No scheduled deployment lane exceeded 15m queue budget.
+- Recovery #42301543422 successfully dispatched fallback reconcile with `ref=master`, exact SHA `bec6fd045a6f811456d5c591c9548d3e72304dd1`, `mode=apply`, `allow_image_changes=false`, `target_app=all`. Correlated reconcile #42301561507 passed GHCR read access, Auth runtime Secret provision/verify, TCE release pairing and workload lanes; shared `ghcr-pull` unchanged; GitOps clean; manifest apply skipped; no image promotion.
+- Watchdog observed TCE native WF-06 #42289627961 age 5,217s versus 1,500s budget. Its four endpoint checks returned HTTP 503. WF-07 #42279415510 and WF-12 #42271573506 remain the latest native schedule observations; workflow_run follow-ups are not cron proof.
+- Native schedule delivery is still unresolved even though recovery is functional. Do not change cron or weaken freshness/health gates. An authorized Actions administration surface is needed to inspect schedule settings.
+- K3s/host snapshot #42301267072: Ready ARM64 node, 56% disk, ~19 GiB RAM available, restart required, pending Docker/containerd upgrades; Media/MicroFE running; Stock Admin/new Backend ImagePullBackOff from missing ARM64 manifest for `12d63b4`; TCE/Auth/Keycloak 0/0; GitOps clean. Platform and Media runners active with Listener; no idle evidence.
+- Decommission plan mode not dispatched; connector has no workflow-dispatch action. DNS/provider ownership and external DB/object-storage backup/retention remain unverified. No destructive action. TCE market-scan schedule unchanged.
