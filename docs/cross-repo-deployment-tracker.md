@@ -3360,3 +3360,54 @@ Source: [inspect-vps #42301267072](https://github.com/phanthienquoc/platform-inf
 8. Schedule Docker/containerd upgrades and reboot separately.
 
 No GHCR publication, image promotion, production manifest apply, replica activation, runner retirement, namespace/PVC/PV deletion, external database/storage/DNS mutation, or host reboot occurred. TCE market-scan schedule unchanged.
+
+
+---
+
+## Post-merge and scheduled-recovery follow-up — 2026-11-07 05:05 ICT / 2026-11-06 22:05 UTC
+
+This follow-up records evidence that arrived after checkpoint #1361 was merged.
+
+### PR #1361 validation
+
+- [PR #1361](https://github.com/phanthienquoc/platform-infra/pull/1361) merged by squash at `41eb3613bd7dc98077b72bbf97b6c5ac75be6069`.
+- Exact PR head: `08f50b6c78cbb4b395406d32d4cbb1e61d3bc3b6`.
+- Exact-head PR validation [#42301828188](https://github.com/phanthienquoc/platform-infra/actions/runs/42301828188) passed all manifest, immutable-image, retired Stock/Media, secret-policy, network-boundary and shell checks.
+- Post-merge push validation [#42301887584](https://github.com/phanthienquoc/platform-infra/actions/runs/42301887584) also passed on merge SHA `41eb3613bd7dc98077b72bbf97b6c5ac75be6069`.
+
+### Native schedule watchdog and recovery evidence
+
+- Native inspect-vps [#42301267072](https://github.com/phanthienquoc/platform-infra/actions/runs/42301267072) passed at 22:00:18Z; snapshot generated at 22:00:26Z.
+- The subsequent schedule-watchdog workflow_run [#42301543752](https://github.com/phanthienquoc/platform-infra/actions/runs/42301543752) failed its native freshness gates. Its logs explicitly confirmed `reconcile-vps workflow state: active`, but latest native reconcile #42261665655 and native recovery #42261712724 were each 275 minutes old, against 45-minute budgets.
+- The same watchdog confirmed the new native inspection was 2 minutes old with 0-minute runner queue wait. It found no scheduled deployment lane exceeding the 15-minute queue budget. This points to a native schedule-delivery gap, not evidence of the inspection runner being queued. The connected read surface still cannot inspect Actions administration/schedule settings.
+- The watchdog's TCE observer reported native WF-06 #42289627961 was 5,217 seconds old, above its 1,500-second freshness budget. TCE WF-06 remains a separate service-health failure (four HTTP 503 responses).
+
+### Fallback dispatch payload and reconcile result
+
+Recovery controller [#42301543422](https://github.com/phanthienquoc/platform-infra/actions/runs/42301543422) succeeded and verified a fallback dispatch to the existing sole apply authority with the exact payload:
+
+```text
+ref=master
+sha=bec6fd045a6f811456d5c591c9548d3e72304dd1
+mode=apply
+allow_image_changes=false
+target_app=all
+```
+
+Correlated reconcile [#42301561507](https://github.com/phanthienquoc/platform-infra/actions/runs/42301561507) completed successfully:
+- GHCR pull access passed for Auth, MicroFE Shell/WS and TCE web/service.
+- Auth runtime Secret provisioning ran and verification passed; secret values were suppressed.
+- Shared `ghcr-pull` Secret was reported unchanged in both `microfe-platform` and `tce-prod`.
+- TCE release pairing passed.
+- GitOps diff was clean; production manifest apply was skipped.
+- `ALLOW_IMAGE_CHANGES=false`; no image promotion occurred.
+- MicroFE, Auth and TCE deployment lanes completed successfully; Keycloak lane was skipped.
+
+This is successful fallback reconciliation evidence, not native schedule recovery and not an image promotion. Do not mark the native reconcile/recovery schedules fresh.
+
+### Current blockers and safety
+
+- Latest full host/K3s snapshot remains #42301267072 at 22:00:26Z: node Ready/ARM64, disk 56% (21 GiB free), RAM ~19 GiB available, Docker 29.1.3, containerd 2.3.2-k3s2, `restart_required=yes`, pending Docker/containerd upgrades. Media/MicroFE active; Stock Admin/new Backend ImagePullBackOff on `12d63b4` due missing ARM64 manifest; TCE/Auth/Keycloak 0/0; GitOps drift clean.
+- Platform and dedicated Media runners remain active/enabled with Listener present; this is not idle confirmation.
+- The GitHub connector has no workflow-dispatch action, so the read-only decommission `mode=plan` was not dispatched. Do not proceed to delete mode without its same-run preflight, dedicated Media runner retirement evidence, authoritative DNS/provider records and external backup/retention verification.
+- No namespace, PVC/PV, external data, DNS, runner or host mutation occurred. No image publication or promotion occurred. TCE market-scan schedule unchanged.
