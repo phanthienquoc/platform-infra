@@ -1417,11 +1417,11 @@ if "GHCR_EXPECTED_DIGEST" not in ghcr_reference_validator.read_text(encoding="ut
 # producer tags (full source SHA and versioned full-SHA tag) to the dispatch digest.
 auth_ghcr_validation = promotion.split(
     "name: Validate promoted image in GHCR", 1
-)[1].split("name: Update Kustomize image tag or paired digests", 1)[0]
+)[1].split("name: Update Auth Kustomize image digest", 1)[0]
 for required in (
     "SOURCE_COMMIT: ${{ steps.input.outputs.source_commit }}",
     '[[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]',
-    '[[ "$TAG" =~ ^prod-v[0-9]+[.][0-9]+[.][0-9]+-[0-9a-f]{40}$ ]]',
+    '[[ "$TAG" =~ ^prod-v[0-9]+[.][0-9]+[.][0-9]+-[0-9a-f]{40}$ && "${TAG##*-}" == "$SOURCE_COMMIT" ]]',
     '"${TAG##*-}" == "$SOURCE_COMMIT"',
     'for immutable_tag in "$SOURCE_COMMIT" "$TAG"; do',
     'GHCR_EXPECTED_DIGEST="$AUTH_DIGEST"',
