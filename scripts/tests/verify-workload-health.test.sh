@@ -58,6 +58,12 @@ case "$resource" in
       scaled-down-stale-pod)
         printf 'tce-frontend-abc||Running|true:: \n'
         ;;
+      mixed)
+        if [ "$namespace" = "tce-prod" ]; then
+          exit 0
+        fi
+        printf 'pod-1||Running|true:: \\n'
+        ;;
       *)
         exit 3
         ;;
@@ -97,6 +103,15 @@ case "$resource" in
         [ "$TARGET_APP" = "tce-dashboard" ] || exit 3
         printf 'tce-frontend|0|0|0\n'
         printf 'tce-service|0|0|0\n'
+        ;;
+      mixed)
+        if [ "$namespace" = "tce-prod" ]; then
+          printf 'tce-frontend|0|0|0\\n'
+          printf 'tce-service|0|0|0\\n'
+        else
+          printf 'microfe-shell|1|1|1\\n'
+          printf 'microfe-ws|1|1|1\\n'
+        fi
         ;;
       terminating-only|image-pull|no-pods)
         printf 'tce-frontend|1|0|0\n'
@@ -149,6 +164,7 @@ run_case() {
 }
 
 run_case healthy 0 tce-dashboard
+grep -Fq "Targeted workload health gate passed for 1 active scope(s)." "$tmp_dir/healthy-tce-dashboard.log"
 run_case terminating-only 1 tce-dashboard
 run_case image-pull 1 tce-dashboard
 run_case no-pods 1 tce-dashboard
@@ -156,6 +172,15 @@ run_case healthy 0 auth-service
 run_case healthy 0 keycloak
 run_case healthy 0 microfe
 run_case scaled-down 0 tce-dashboard
+grep -Fq "zero-replica maintenance" "$tmp_dir/scaled-down-tce-dashboard.log"
+grep -Fq "no live workload health is asserted" "$tmp_dir/scaled-down-tce-dashboard.log"
+if grep -Fq "Targeted workload health gate passed" "$tmp_dir/scaled-down-tce-dashboard.log"; then
+  echo "A zero-replica maintenance scope must not be reported as live workload health." >&2
+  cat "$tmp_dir/scaled-down-tce-dashboard.log" >&2
+  exit 1
+fi
 run_case scaled-down-not-converged 1 tce-dashboard
 run_case scaled-down-stale-pod 1 tce-dashboard
+run_case mixed 0 all
+grep -Fq "1 active scope(s); 1 scope(s) are intentionally scaled to zero" "$tmp_dir/mixed-all.log"
 echo "Workload health gate regression tests passed."
