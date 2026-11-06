@@ -1,3 +1,43 @@
+## Current review — 2026-11-06 10:21 ICT (2026-11-06 03:21 UTC)
+
+Incremental cross-repository update after Platform PR #1311. This checkpoint records the latest exact heads, workflow outcomes and the current fail-closed Stock/Media retirement gate. It does not authorize a production release or destructive cluster action.
+
+### Current default-branch heads and open PRs
+
+| Repository | Default-branch SHA | Open PRs | Current state |
+|---|---|---|---|
+| Platform Infra | `40db4f6378d7f9cf21d830100fe0548e2197cc65` | #544/#541/#539 (draft) | PR #1310 runner guard and PR #1311 readiness documentation merged. |
+| TCE Dashboard | `512b69d837e2a65c39867a062529a7fa0eada4cc` | None | App CI/workflow state unchanged; no production publisher dispatched. |
+| StockDividend | `6fcefa6b3792dab92b6d5c438001633d25f1ca28` | None | CI passed; immutable publisher remains separate and no new release was requested. |
+| Media Generation | `3a8846a4f273eeb20a55b214d5ad80804c2d8d52` | None | CI passed; no production release or Platform handoff remains. |
+| Authentication | `f978a3f378ee22d4630909c2d182275b21ac9e9a` | #75 ready / #76 draft | CI head is historical; Supabase integration/migration gates remain unresolved. |
+
+### Latest workflow evidence
+
+- Platform master validation [#42156021306](https://github.com/phanthienquoc/platform-infra/actions/runs/42156021306) completed SUCCESS on exact head `40db4f6378d7f9cf21d830100fe0548e2197cc65`. The run validated manifest rendering, immutable image policy, Auth digest contract, shell scripts and secret/network boundaries.
+- The latest production reconcile [#42155789344](https://github.com/phanthienquoc/platform-infra/actions/runs/42155789344) completed SUCCESS on `a75980906ddec00c84dc64112fa87835906a6569`: MicroFE, Auth and TCE lanes passed; Keycloak was skipped; final gate and inspection-recovery trigger passed. This is evidence for that run/head, not a fresh rollout after the later docs-only PR #1311.
+- TCE native WF-06 [#42133793538](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42133793538) failed all four public probes with HTTP 503 (TCE web/API and Auth liveness/readiness). WF-12 [#42133822319](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42133822319) passed and WF-13 [#42133822204](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42133822204) completed its read-only fallback successfully; subsequent WF-13 [#42133843652](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42133843652) was skipped for a successful watchdog source. This is healthcheck evidence, not a production rollout. TCE market-scan schedule and all cron declarations remain untouched.
+- StockDividend CI [#42137523269](https://github.com/phanthienquoc/stockdividend/actions/runs/42137523269) and Media CI [#42136991059](https://github.com/phanthienquoc/media-generation/actions/runs/42136991059) passed. Authentication CI [#41670642852](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41670642852) passed on 2026-11-03; no newer Auth publisher run was observed.
+- No new TCE, StockDividend, Media or Auth production publisher was dispatched. App CI success is not release authorization. TCE/Auth GitOps still use legacy tags; digest promotion requires a new exact publisher run, registry-confirmed digest/provenance and the normal Platform promotion path. Routine reconcile keeps image changes disabled.
+
+### Stock/Media K3s decommission gate
+
+- The latest committed read-only snapshot [inspect-vps #42154756357](https://github.com/phanthienquoc/platform-infra/actions/runs/42154756357) was generated at 2026-11-06T03:09:17Z. It shows the dedicated Media runner systemd service active and a Media `Runner.Listener` process; Media backend/frontend remain 1/1 Running. Stock Admin and the newer Backend remain ImagePullBackOff; the older Backend and Frontend remain 1/1. The snapshot reports no PVC/PV claims in `stock-prod` or `media-prod`, but the manual workflow must repeat the storage preflight in the same maintenance window.
+- Platform PR [#1310](https://github.com/phanthienquoc/platform-infra/pull/1310) added a fail-closed check requiring the dedicated Media service to be inactive and its Listener process absent. The protected workflow also requires typed backup/external-data and runner-retirement attestations. It does not stop or unregister the runner.
+- The manual `decommission-stock-media` workflow has not run. With the observed runner state, it must abort before namespace deletion. The service owner must first confirm no active job, stop the dedicated Media runner and unregister it from the Media repository. Do not stop the shared Platform runner.
+- Do not delete PVs, external databases/object storage, DNS, GHCR packages, application repositories or source code. Do not change TCE/Auth desired replicas, production images, Keycloak or TCE market-scan schedules.
+
+### Next dependency-safe actions
+
+1. Obtain a new read-only VPS inspection after the Media runner is safely retired; repeat namespaced-object, PVC/PV and StorageClass preflight immediately before any deletion.
+2. Require the service owner’s backup/external-data review and GitHub runner-unregistration confirmation before using the protected manual workflow.
+3. Keep TCE/Auth digest promotion gated on an authorized, successful exact-source publisher run and registry digest verification; do not infer or reuse a historical digest.
+4. Investigate the TCE/Auth public HTTP 503 health probes against the intentionally zero-replica state without changing any market-scan cron declaration.
+
+`reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No K3s namespace, PV, DNS, external database, production image, desired replica count or schedule was changed in this checkpoint.
+
+---
+
 Last reviewed: 2026-11-06 10:18 ICT (2026-11-06 03:18 UTC)
 
 ## Current review — 2026-11-06 10:18 ICT (2026-11-06 03:18 UTC)
