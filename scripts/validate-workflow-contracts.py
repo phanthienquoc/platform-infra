@@ -1071,6 +1071,8 @@ for required in (
     "DELETE-STOCK-PROD-AND-MEDIA-PROD",
     "BACKUP-AND-EXTERNAL-DATA-REVIEWED",
     "MEDIA-RUNNER-STOPPED-AND-UNREGISTERED",
+    "Verify dedicated Media runner is stopped",
+    "run: bash scripts/verify-media-runner-retired.sh",
     "Run fresh read-only storage preflight",
     "Delete only the two approved namespaces",
 ):
@@ -1078,6 +1080,21 @@ for required in (
         fail(f"Guarded namespace decommission workflow is missing: {required}")
 if "push:" in decommission_workflow or "schedule:" in decommission_workflow or "repository_dispatch:" in decommission_workflow:
     fail("Namespace decommission must remain manual-only.")
+runner_guard_step = decommission_workflow.find("name: Verify dedicated Media runner is stopped")
+storage_preflight_step = decommission_workflow.find("name: Run fresh read-only storage preflight")
+namespace_delete_step = decommission_workflow.find("name: Delete only the two approved namespaces")
+if not (0 <= runner_guard_step < storage_preflight_step < namespace_delete_step):
+    fail("Dedicated Media runner state must be checked before storage preflight and namespace deletion.")
+runner_guard_script = (ROOT / "scripts" / "verify-media-runner-retired.sh").read_text(encoding="utf-8")
+for required in (
+    "actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service",
+    "systemctl is-active",
+    "Runner.Listener",
+    "pgrep -f",
+    "GitHub registration remains operator-attested",
+):
+    if required not in runner_guard_script:
+        fail(f"Dedicated Media runner retirement guard is missing: {required}")
 for required in (
     "inventory-namespace",
     "get all -n",
@@ -1102,6 +1119,8 @@ for required in (
         fail(f"Root-owned namespace decommission guard is missing: {required}")
 if "scripts/tests/decommission-stock-media-namespaces.test.sh" not in github_actions:
     fail("Namespace decommission safety regression tests must run in validate-github-actions.")
+if "scripts/tests/verify-media-runner-retired.test.sh" not in github_actions:
+    fail("Media runner retirement guard regression tests must run in validate-github-actions.")
 if "Reject retired StockDividend and Media production manifests" not in read("validate-manifests.yml"):
     fail("Manifest validation must reject reintroduced StockDividend/Media production trees.")
 
