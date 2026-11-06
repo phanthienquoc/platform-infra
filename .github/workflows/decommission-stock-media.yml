@@ -3,19 +3,27 @@ name: decommission-stock-media
 on:
   workflow_dispatch:
     inputs:
+      mode:
+        description: Run a read-only preflight or the explicitly authorized deletion operation
+        required: true
+        default: plan
+        type: choice
+        options:
+          - plan
+          - delete
       confirmation:
         description: Type DELETE-STOCK-PROD-AND-MEDIA-PROD to authorize only the two retired namespaces
-        required: true
+        required: false
         type: string
       data_retention_review:
         description: Type BACKUP-AND-EXTERNAL-DATA-REVIEWED after reviewing backups and external data ownership
-        required: true
+        required: false
         type: string
       runner_retirement:
         description: >-
           Type MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED after confirming the dedicated
           Media runner is idle, stopped, disabled and removed from GitHub
-        required: true
+        required: false
         type: string
 
 permissions:
@@ -26,8 +34,70 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  validate_mode:
+    runs-on: ubuntu-latest
+    permissions: {}
+    timeout-minutes: 2
+    steps:
+      - name: Validate production ref and requested mode
+        env:
+          MODE: ${{ inputs.mode }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/master" || {
+            echo "::error::Stock/Media decommission must run from master."
+            exit 1
+          }
+          case "$MODE" in
+            plan|delete) ;;
+            *) echo "::error::Unsupported decommission mode: $MODE"; exit 1 ;;
+          esac
+
+  plan:
+    needs: validate_mode
+    if: ${{ needs.validate_mode.result == 'success' && inputs.mode == 'plan' }}
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    timeout-minutes: 15
+    steps:
+      - name: Checkout platform-infra
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify installed runner policy
+        run: |
+          set -euo pipefail
+          policy="$(sudo /usr/local/sbin/platform-kubectl policy-version)"
+          test "$policy" = "platform-kubectl policy: rollout-status-v15-core-workloads" || {
+            echo "::error::Runner bootstrap policy v15 is required before preflight."
+            exit 1
+          }
+
+      - name: Report dedicated Media runner state
+        run: |
+          set -euo pipefail
+          service="actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service"
+          process_pattern='[/]opt/media-actions-runner/bin/Runner.Listener'
+          command -v systemctl >/dev/null
+          command -v pgrep >/dev/null
+          service_state="$(systemctl is-active "$service" 2>/dev/null || true)"
+          enabled_state="$(systemctl is-enabled "$service" 2>/dev/null || true)"
+          if pgrep -f "$process_pattern" >/dev/null 2>&1; then
+            listener_state=present
+          else
+            listener_state=absent
+          fi
+          printf 'Media runner service=%s enabled=%s listener=%s\n' \
+            "${service_state:-unknown}" "${enabled_state:-unknown}" "$listener_state"
+          echo "GitHub runner registration must be verified separately by the operator."
+          echo "This plan mode does not stop, disable, unregister or remove the runner."
+
+      - name: Run fresh read-only storage preflight
+        run: bash scripts/decommission-stock-media-namespaces.sh plan
+
   decommission:
-    if: github.ref == 'refs/heads/master'
+    needs: validate_mode
+    if: ${{ needs.validate_mode.result == 'success' && inputs.mode == 'delete' }}
     runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
     environment: production
     timeout-minutes: 15
@@ -46,7 +116,7 @@ jobs:
             exit 1
           }
 
-      - name: Validate exact confirmation and production ref
+      - name: Validate exact deletion confirmations
         env:
           CONFIRMATION: ${{ inputs.confirmation }}
           DATA_RETENTION_REVIEW: ${{ inputs.data_retention_review }}
