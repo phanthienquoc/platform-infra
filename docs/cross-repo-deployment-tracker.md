@@ -2847,3 +2847,64 @@ Current workflow source still declares TCE WF-06 `*/15 * * * *` and WF-12 `7,22,
 7. Reconcile Auth #75/#76 to current master, inspect Supabase production side effects and rerun exact-head checks before considering merge.
 
 No workflow, cron, publisher, GHCR push, Platform dispatch, production manifest, image, workload, replica, namespace, PVC/PV, external database, DNS, runner or host was changed by this checkpoint. TCE market-scan schedule unchanged.
+
+
+---
+
+## Cross-repo readiness checkpoint — 2026-11-07 00:03 ICT / 2026-11-06 17:03 UTC
+
+This checkpoint supersedes the 23:01 ICT operational snapshot where newer evidence exists. It records the fresh inspect-vps snapshot, the schedule watchdog failure, and the verified workflow_dispatch recovery path. Native schedule evidence remains distinct from fallback evidence.
+
+### Current default-branch heads and open PRs
+
+| Repository | Default-branch head | Open PRs | Current disposition |
+|---|---|---|---|
+| Platform Infra | `3776186bad238683d2ee1f5c41c182c876edd21c` | #1314/#544/#541/#539 (draft) | Inspection-state update #1348 merged; latest operational watchdog reports stale native reconcile/recovery. |
+| TCE Dashboard | `f4240ada56da700af00100fb3f01278b9b883951` | None | CI passes; native WF-06/WF-12 delivery stale and WF-06 probes fail HTTP 503. |
+| StockDividend | `bc20dcfb9893ea246a5e46bef26cce1c92a940c9` | None | CI 7/7 passes, including non-publishing ARM64 builds; deployed tag 12d63b4 remains incompatible with ARM64. |
+| Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | CI passes; dedicated runner remains active and not approved for retirement. |
+| Authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` | #75 ready; #76 draft | CI passes; Supabase Preview skipped and production integration/migration side effect remains unverified. |
+
+Platform #1314 remains a mailbox planning draft; #544/#541/#539 remain Keycloak/identity planning drafts. Auth #75/#76 target stale base SHA `2189c97252bfe7ee53f50a68cf51008fa0d27c91`; do not merge without branch reconciliation and authoritative Supabase integration-side-effect review.
+
+### Latest current-master checks
+
+- Platform current head #3776186 has fresh operational run activity. Schedule watchdog #42256928371 failed on stale native reconcile/recovery freshness; reconcile fallback #42256950100 and recovery #42257152475 succeeded. Manifest validation #42256836967 was on the inspection PR branch, not current master.
+- TCE WF-01 #42239871779, WF-05 #42239871781, WF-02 #42239871823 passed on current master.
+- Stock CI #42241252700 passed 7/7 on current master.
+- Media CI #42239703151 passed on current master.
+- Auth CI #42215394539 passed validation and non-publishing ARM64 build; Supabase Preview was skipped.
+
+### Native scheduled delivery
+
+| Workflow | Latest native scheduled run | Result |
+|---|---|---|
+| Platform inspect-vps | #42256652947, 16:54:09Z | PASS |
+| Platform reconcile-vps | #42199267592, 10:00:15Z | PASS but 415m stale at watchdog |
+| Platform recover-stale-ops | #42199274660, 10:00:18Z | PASS but 415m stale at watchdog |
+| Platform schedule watchdog | #42201400071, 10:16:28Z | PASS but no newer native run |
+| TCE WF-06 | #42235639842, 14:37:53Z | FAIL; HTTP 503 |
+| TCE WF-12 | #42211610532, 11:37:17Z | FAIL; stale WF-06 freshness |
+| TCE WF-07 | #42176751608, 06:48:12Z | PASS |
+
+Platform watchdog workflow_run #42256928371 confirmed the native inspect event was fresh but failed reconcile/recovery freshness (both latest native events were 415m old against 45m budgets). The TCE observer warned WF-06 was 8,283 seconds old against a 1,500-second budget. This is an operational schedule-delivery signal, not a reason to weaken the gate. No cron was changed.
+
+### Fallback reconciliation evidence
+
+Recovery workflow_run #42256928538 dispatched the existing `reconcile-vps.yml` authority using exact payload `ref=master`, source SHA `3776186bad238683d2ee1f5c41c182c876edd21c`, `mode=apply`, `allow_image_changes=false`, `target_app=all`. It correlated the request to #42256950100.
+
+Reconcile #42256950100 passed GHCR pull preflight, provisioned/verified Auth runtime Secret with values suppressed, left shared `ghcr-pull` unchanged, found no MicroFE/TCE image-pull failures, found clean GitOps diff and correctly skipped manifest apply. Image changes were disabled; no promotion occurred. TCE/Auth maintenance and MicroFE active health gates passed; Keycloak lane skipped. Recovery after reconcile #42257152475 succeeded. None of these workflow_dispatch/workflow_run events count as native schedule recovery.
+
+### Fresh K3s state
+
+Read-only inspect #42256652947 generated `debug/vps-latest.md` at 16:54:18Z. Node Ready/ARM64; K3s v1.36.3+k3s1; containerd 2.3.2-k3s2; disk 56% (21 GiB available of 45 GiB); RAM 23 GiB total/19 GiB available; host uptime about 189 days; `restart_required=yes`. Pending containerd/Docker upgrades require a separate approved maintenance window.
+
+Media backend/frontend and MicroFE Shell/WS/NATS are 1/1 Running. Stock Admin has two ImagePullBackOff pods; the new Backend is ImagePullBackOff; older Backend/Frontend run. The Stock failure explicitly says no linux/arm64 manifest for tag `12d63b4`, not an authentication failure. TCE/Auth/Keycloak are 0/0 maintenance. GitOps drift is clean. Platform and Media runners are active/enabled with Listener processes; no idle confirmation, so no retirement. No Stock/Media VolumeSnapshot references were listed; external backup/retention/DNS ownership remain unverified.
+
+### Immutable publication and ownership
+
+No current-master Stock/Media/Auth GHCR publication with verified digest/provenance was observed; TCE WF-03 remains manual-only. No publisher or promotion was triggered. App repos retain CI/build/immutable publication ownership; Platform retains manifests, shared pull credentials, digest/provenance verification, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the only apply authority; `inspect-vps.yml` is read-only.
+
+Next actions: investigate native schedule delivery without cron edits; keep TCE/Auth/Keycloak maintenance and strict HTTP 200; require authorized Stock ARM64 publication before promotion; reconcile Auth PRs and verify Supabase side effects; retire only the dedicated Media runner after operator idle confirmation; verify external backups/DNS before decommission; schedule host updates/reboot separately.
+
+TCE market-scan schedule unchanged. The verified production secret operation was Auth runtime Secret provision/verification; shared GHCR pull Secret remained unchanged. No image, manifest, namespace, PVC/PV, external data, DNS, runner or host was deleted or reconfigured.
