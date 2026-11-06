@@ -4755,3 +4755,81 @@ App repositories remain owners of CI/tests/builds/immutable GHCR publication; Pl
 - Platform latest native schedule evidence remains reconcile #42199267592, recovery #42199274660, watchdog #42201400071, inspect #42193617816. Latest TCE native evidence remains WF-06 #42176208184 (FAIL), WF-07 #42176751608 (PASS), WF-12 #42211610532 (FAIL). Dispatch and workflow_run fallbacks are not native schedule proof.
 - Latest Stock/Media/Auth publishers remain old-source runs #41563856933 (Nov 3), #41158598649 (Oct 31), #41040510320 (Oct 30); no current-master immutable publication/digest/provenance verified.
 - App-owned build/publish and Platform-only GitOps ownership unchanged. `reconcile-vps.yml` sole apply authority; `inspect-vps.yml` read-only. TCE market-scan schedule unchanged.
+
+
+---
+
+## Cross-repo workflow inventory — 2026-11-06 21:56 ICT / 14:56 UTC
+
+### Current repository and PR inventory
+
+| Repository | Current master SHA | Open PRs | Latest relevant evidence |
+|---|---|---|---|
+| Platform Infra | 2afad0630d9f18cadd5ec238eb0fd6efcc4adca2 | #1314/#544/#541/#539 drafts | Manifest validation #42231791306 PASS; manual reconcile #42235712359 PASS; latest native schedule remains #42201400071 watchdog. |
+| TCE Dashboard | f4240ada56da700af00100fb3f01278b9b883951 | None | Permission-hardening PR #1027 merged; exact-head CI passes. WF-06 native #42235639842 FAIL (HTTP 503); WF-12 native #42211610532 FAIL (stale). |
+| StockDividend | 3aeaf519b7a786d13dcecee763acaca357c47ddd | None | CI #42167088130 PASS 7/7; latest publisher #41563856933 is old-source. |
+| Media Generation | 54f3a76a5f8861842fd1bae698c4cb0fa8c9034d | None | PR #73 merged; exact-head CI #42238974848 PASS and post-merge master CI #42239703151 PASS. Latest publisher #41158598649 is old-source. |
+| Authentication | 3b60ff46b8959d18aee1956f99d6b62589b8b9c5 | #75 ready/#76 draft | CI #42215394539 PASS; publisher #41040510320 is old-source. |
+
+### Workflow ownership and permission boundaries
+
+| Repository / workflow | Trigger and responsibility | Permission boundary / handoff |
+|---|---|---|
+| Platform reconcile-vps.yml | Only production apply authority; handles GitOps, shared pull credentials, rollout and health. | Platform Environment; image changes require explicit authorization; current run used ALLOW_IMAGE_CHANGES=false. |
+| Platform inspect-vps.yml | Read-only K3s/host/storage/runner snapshot. | No apply, image promotion or deletion authority. |
+| Platform gitops-image-promotion.yml | Receives only dedicated tce-release-requested, auth-image-published, and microfe-images-published events. | Verifies source run provenance, immutable digest, ARM64 manifest and scoped GitOps change. No Stock/Media promotion lane. |
+| Platform reconcile-schedule-watchdog.yml / recover-stale-ops.yml | Observes native schedule freshness and guarded recovery. | Manual/workflow_run/repository_dispatch are not native schedule proof; advisory TCE observation cannot trigger production recovery. |
+| TCE WF-03 | Manual-only production publisher, master-only. | Workflow-level contents: read; actions: read and packages: write only on platform-infra-release. Publishes full-SHA/digest/ARM64 and sends provenance-bound tce-release-requested. |
+| TCE WF-06 / WF-12 | WF-06 public HTTP 200 healthcheck every 15m; WF-12 native schedule freshness watchdog plus guarded workflow_run observation. | No SSH/Kubernetes apply. WF-06 remains strict HTTP 200. Cron unchanged: */15 * * * * and 7,22,37,52 * * * *. |
+| TCE WF-08B | PR/push/manual MicroFE Shell/WS tests and ARM64 publication. | Workflow-level contents: read; packages: write only on build-shell and build-ws. Auth is not published by this workflow. Provenance-bound microfe-images-published remains unchanged. |
+| Stock deploy.yml | Master push/manual immutable ARM64 image publisher. | packages: write scoped to the build/publish job; full-source-SHA digest and ARM64 checks. No Platform dispatch or direct production deployment. Manual publication requires explicit release variable. |
+| Media WF-03 | Master push/manual immutable ARM64 publisher with checksum-verified frontend/backend artifacts. | Workflow-level contents: read; packages: write only on publish-immutable-images. Contract validator enforces the single publisher grant. No Platform dispatch or direct production deployment. |
+| Auth release.yml | Manual-only master release; fails closed on non-master ref. | packages: write scoped to publish job; full-SHA tags, BuildKit provenance/SBOM, digest/ARM64 verification and auth-image-published provenance payload. |
+
+### Permission-hardening PRs merged
+
+- Media PR [#73](https://github.com/phanthienquoc/media-generation/pull/73) merged as 54f3a76a5f8861842fd1bae698c4cb0fa8c9034d. Exact-head CI [#42238974848](https://github.com/phanthienquoc/media-generation/actions/runs/42238974848) passed validator, tests, typecheck and build. Post-merge master CI [#42239703151](https://github.com/phanthienquoc/media-generation/actions/runs/42239703151) passed. WF-03 no longer grants GHCR write to non-publisher jobs.
+- TCE PR [#1027](https://github.com/phanthienquoc/TCE-dashboard/pull/1027) merged as f4240ada56da700af00100fb3f01278b9b883951. Exact-head WF-01P #42239660880, WF-08B #42239660838, backend unit tests #42239660759 and Prettier #42239660758 all passed. Post-merge backend unit tests #42239871781 and Prettier #42239871823 passed; WF-01 build/verify #42239871779 was still running at the 14:56Z inventory cutoff after its release-contract and required-secret checks passed. WF-03 and WF-08B no longer grant GHCR write at workflow scope.
+- Neither PR triggered a publisher, pushed a GHCR image, sent a Platform dispatch, changed production manifests or modified the TCE market-scan schedule.
+
+### Current native schedule inventory
+
+| Repository / workflow | Latest native schedule | Result | Classification |
+|---|---|---|---|
+| Platform reconcile | #42199267592, 10:00:15Z | PASS | Native |
+| Platform recovery | #42199274660, 10:00:18Z | PASS | Native |
+| Platform watchdog | #42201400071, 10:16:28Z | PASS | Native |
+| Platform inspect | #42193617816, 09:15:08Z | PASS | Native; later manual inspect is separate |
+| TCE WF-06 | #42235639842, 14:37:53Z | FAIL | Native; four public endpoints returned 503 |
+| TCE WF-07 | #42176751608, 06:48:12Z | PASS | Native |
+| TCE WF-12 | #42211610532, 11:37:17Z | FAIL | Native; stale WF-06 freshness |
+
+TCE WF-12 #42235672509 and WF-13 #42235672609 are workflow_run follow-ups to WF-06, not native scheduled runs. Platform reconcile #42235712359 and recovery #42235938727 are manual dispatches. Do not count them as native schedule recovery.
+
+### Latest production/cluster evidence
+
+- Full read-only inspect #42231216533 generated debug/vps-latest.md at 14:08:18Z. Node Ready/ARM64; K3s v1.36.3+k3s1; disk 56%; about 19 GiB available RAM; restart required; pending OS/container updates.
+- The same snapshot shows Platform and Media runner services active/enabled with Listener processes; Media retirement remains blocked pending operator idle confirmation.
+- K3s storage lists only unrelated k3s-debug/k3s-debug-logs PVC/PV; no Stock/Media PVC/PV or VolumeSnapshot references. External database/object-storage backup, retention and DNS ownership are not established.
+- Reconcile #42235712359 listed Pods at 14:38:47Z: Media backend/frontend 1/1; MicroFE Shell/WS/NATS running; Stock Admin two Pods and new Backend Pod ImagePullBackOff; legacy Stock Backend/Frontend 1/1; TCE/Auth/Keycloak desired 0/0.
+- Stock tag 12d63b4 fails with no match for platform in manifest for Admin/new Backend; do not treat as GHCR credential failure.
+- Reconcile #42235712359 passed GHCR pull access, left shared ghcr-pull unchanged, provisioned/verified Auth runtime Secret with values suppressed, passed TCE image pairing, found no Kubernetes drift and skipped manifest apply. MicroFE active health passed; TCE/Auth were correctly classified as zero-replica maintenance, not live health. No image change was allowed.
+
+### Publication and promotion inventory
+
+- Stock latest publisher #41563856933 (Nov 3), Media #41158598649 (Oct 31), Auth #41040510320 (Oct 30) are all older than current app master heads. No current-master publication/digest/provenance is established.
+- TCE WF-03 is manual-only; no current publisher or promotion request was sent.
+- Media and Stock remain publisher-only; their old Platform handoff paths remain retired. Do not restore a direct app-to-Platform deployment authority without an explicit architecture change.
+- App repos own CI/tests/builds/immutable publication; Platform owns production manifests, shared pull credentials, digest/provenance validation, GitOps promotion/reconciliation, rollout and health. reconcile-vps.yml remains the sole apply authority; inspect-vps.yml remains read-only.
+
+### Next dependency-safe actions
+
+1. Investigate native Platform/TCE schedule delivery without changing cron or TCE market-scan.
+2. Keep strict HTTP 200 public health checks and zero-replica TCE/Auth maintenance until service-owner activation approval.
+3. Require Stock release authorization and current full-SHA/digest/provenance/linux/arm64 publication before Platform promotion.
+4. Retire only the dedicated Media runner after operator confirms idle; never unregister the shared Platform runner.
+5. Require same-window storage plus external database/object-storage backup, retention and DNS ownership review before Stock/Media decommission.
+6. Reconcile Auth #75/#76 to current master and verify Supabase production side effects before merge.
+7. Schedule host/container upgrades and reboot only through an approved maintenance window.
+
+No production workload, image, replica, manifest, namespace, PVC/PV, external database, DNS, runner or host was deleted or reconfigured. The latest reconcile did provision/verify the Auth runtime Secret; shared GHCR pull Secret remained unchanged. TCE market-scan schedule unchanged.
