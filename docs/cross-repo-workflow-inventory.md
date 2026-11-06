@@ -4565,3 +4565,12 @@ PR checks on Platform #1314 and Auth #75/#76 are historical and their bases are 
 - Inspected Stock, Media and TCE production publisher workflows contain no duplicate SSH/SCP/kubectl/Compose production apply path. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` is read-only.
 
 Keep TCE/Auth at 0/0 until owner approval; preserve strict HTTP 200 checks, all existing cron expressions and the TCE market-scan schedule. Require operator-confirmed idle/stop/disable/unregister of the dedicated Media runner, same-window storage inspection, and external backup/data/DNS ownership review before namespace decommission. No production mutation occurred in this checkpoint.
+
+
+## Schedule status addendum — 2026-11-06 17:03 ICT / 10:03 UTC
+
+- Platform native scheduled reconcile resumed: #42199267592 (10:00:15Z) SUCCESS; native recovery #42199274660 (10:00:18Z) SUCCESS/no-op. Earlier watchdog failure #42193856388 records the prior stale interval and is superseded by this native schedule evidence.
+- Reconcile used `ALLOW_IMAGE_CHANGES=false`, found no manifest drift, and correctly skipped manifest apply. Auth/TCE desired-zero maintenance gates passed; MicroFE health passed; Keycloak skipped. No new image promotion or rollout is claimed.
+- Latest native inspect remains #42193617816 (09:15:08Z), ~48m old at this checkpoint and within its 75m freshness budget.
+- TCE still has no native WF-06/WF-07/WF-12 schedule later than 06:48Z/03:43Z in the returned history. WF-06 probes remain HTTP 503 and TCE/Auth remain 0/0. Preserve strict HTTP 200 and TCE market-scan schedule.
+- PR #1330 merged as `6bb2989ccf59cee35d2713b78684c6cad81d82e5`; exact-head and post-merge validation PASS.
