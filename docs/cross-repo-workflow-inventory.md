@@ -5140,3 +5140,17 @@ No current-master Stock/Media/Auth GHCR publication with verified digest/provena
 - Native schedule delivery is still unresolved even though recovery is functional. Do not change cron or weaken freshness/health gates. An authorized Actions administration surface is needed to inspect schedule settings.
 - K3s/host snapshot #42301267072: Ready ARM64 node, 56% disk, ~19 GiB RAM available, restart required, pending Docker/containerd upgrades; Media/MicroFE running; Stock Admin/new Backend ImagePullBackOff from missing ARM64 manifest for `12d63b4`; TCE/Auth/Keycloak 0/0; GitOps clean. Platform and Media runners active with Listener; no idle evidence.
 - Decommission plan mode not dispatched; connector has no workflow-dispatch action. DNS/provider ownership and external DB/object-storage backup/retention remain unverified. No destructive action. TCE market-scan schedule unchanged.
+
+
+
+---
+
+## Operational update — 2026-11-07 06:02 ICT / 2026-11-06 23:02 UTC
+
+- Platform native reconcile #42304064211 and recovery #42304248066 passed; native watchdog #42304321570 was cancelled before any job record. Workflow_run diagnostics immediately followed and were skipped. The static watchdog concurrency group was shared across event types; timing suggests a pending schedule may have been replaced, but cancellation actor is not exposed. A PR now isolates concurrency by `github.event_name`; cron remains `12,27,42,57 * * * *`.
+- Reconcile #42304064211 verified GHCR read access, Auth runtime Secret, unchanged shared `ghcr-pull`, TCE release pairing and clean GitOps diff; apply skipped with `ALLOW_IMAGE_CHANGES=false`; no promotion.
+- TCE WF-06 latest native #42289627961 and manual #42289687171 both fail four strict HTTP 200 probes with 503. WF-12 native #42271573506 freshness fails; WF-07 #42279415510 passes. Do not weaken health/freshness gates or change any cron.
+- K3s snapshot #42301267072: node Ready/ARM64; Media/MicroFE active; Stock Admin/new Backend ImagePullBackOff due missing ARM64 manifest for `12d63b4`; TCE/Auth/Keycloak 0/0; disk 56%, ~21 GiB free; RAM ~19 GiB available; restart required and host upgrades pending. Platform/Media runners active with Listener; no idle proof.
+- Current heads: Platform `f46bfe898359bee3a83bd90cf157005bc9e96cef`, TCE `f4240ada56da700af00100fb3f01278b9b883951`, Stock `bc20dcfb9893ea246a5e46bef26cce1c92a940c9`, Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`, Auth `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`. Open PRs: Platform #1314/#544/#541/#539; Auth #75/#76 gated; no TCE/Stock/Media PRs.
+- App repositories continue to own tests/builds/immutable GHCR publishing; Platform owns manifests, shared pull credentials, digest/provenance verification, GitOps promotion/reconciliation, rollout and health. Stock/Media remain retired from Platform GitOps. No publisher, promotion, namespace deletion, runner retirement, DNS/database/storage mutation or host reboot occurred. TCE market-scan schedule unchanged.
+
