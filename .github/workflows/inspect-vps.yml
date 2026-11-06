@@ -63,6 +63,7 @@ jobs:
           set -euo pipefail
           test -s debug/vps-latest.md
           grep -q "^### Pod failure evidence$" debug/vps-latest.md
+          grep -q "^### Persistent storage inventory$" debug/vps-latest.md
           grep -q "^### Recent failure events$" debug/vps-latest.md
           grep -q "^### GitOps drift$" debug/vps-latest.md
           grep -q "^runner_policy:" debug/vps-latest.md
