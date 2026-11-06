@@ -4739,3 +4739,19 @@ App repositories remain owners of CI/tests/builds/immutable GHCR publication; Pl
 - Manual reconcile #42211637997 succeeded with image changes disabled and clean GitOps diff; it verified GHCR pull access, reported pull Secrets unchanged, provisioned/verified Auth runtime Secret, and skipped manifest apply. Its 11:37:57Z K3s listing showed Media 1/1, MicroFE running, Stock Admin two ImagePullBackOff Pods, Stock newer Backend ImagePullBackOff, legacy Backend/Frontend running, node Ready/ARM64. It did not include fresh storage or runner-retirement inventory.
 - Latest publishers remain old-source: Stock #41563856933 (Nov 3), Media #41158598649 (Oct 31), Auth #41040510320 (Oct 30). No current-master publication/digest/provenance verified.
 - App repos own CI/build/publish; Platform owns manifests, credentials, digest/provenance, promotion/reconcile and rollout. `reconcile-vps.yml` remains the only production apply authority. No direct SSH/Compose deployment authority added. TCE market-scan schedule unchanged.
+
+
+
+## Post-merge health semantics and fresh K3s evidence — 2026-11-06 21:10 ICT / 14:10 UTC
+
+- Platform PR #1341 merged as `1e48033533d4606e8da4e54135e0167cbc787c52`; exact-head lint/regression and manifest validation passed. The workload-health helper now reports zero-replica scopes as intentional maintenance and explicitly states that no live health is asserted. Post-merge validation #42230952977 and #42230952863 passed.
+- Push reconciliation #42230952994 passed with `ALLOW_IMAGE_CHANGES=false`, clean GitOps diff and manifest apply skipped. Auth runtime Secret provision/verification ran; GHCR pull Secrets were unchanged. TCE/Auth zero-replica maintenance notices and MicroFE active health passed.
+- Fresh read-only inspection #42231216533 generated 14:08:18Z; PR #1342 merged as `5824a4af4dd91e498134ea8eafd2e026725344c0` after exact-head validation #42231396933 passed.
+- Fresh snapshot: node Ready/ARM64; disk 56%, available RAM ~19 GiB, `restart_required=yes`; Media backend/frontend 1/1; MicroFE Shell/WS/NATS running; Stock Admin (two Pods) and newer Backend Pod ImagePullBackOff; legacy Stock Backend/Frontend running; TCE/Auth/Keycloak desired 0/0; GitOps drift clean.
+- Storage: only unrelated debug PVC/PV; no Stock/Media PVC/PV or VolumeSnapshot references. External database/object storage backup, retention and DNS ownership remain unverified.
+- Both Media and Platform runner services remain active/enabled with Listener processes. No runner retirement performed.
+- Stock pull failures explicitly say `no match for platform in manifest` for tag `12d63b4`; do not treat as GHCR credential failure or promote the tag.
+- Public OIDC probes for both SSO realms return HTTP 503 while Keycloak is 0/0. This is not live health; keep activation gated.
+- Platform latest native schedule evidence remains reconcile #42199267592, recovery #42199274660, watchdog #42201400071, inspect #42193617816. Latest TCE native evidence remains WF-06 #42176208184 (FAIL), WF-07 #42176751608 (PASS), WF-12 #42211610532 (FAIL). Dispatch and workflow_run fallbacks are not native schedule proof.
+- Latest Stock/Media/Auth publishers remain old-source runs #41563856933 (Nov 3), #41158598649 (Oct 31), #41040510320 (Oct 30); no current-master immutable publication/digest/provenance verified.
+- App-owned build/publish and Platform-only GitOps ownership unchanged. `reconcile-vps.yml` sole apply authority; `inspect-vps.yml` read-only. TCE market-scan schedule unchanged.
