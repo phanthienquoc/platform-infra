@@ -13,8 +13,8 @@ on:
         type: string
       runner_retirement:
         description: >-
-          Type MEDIA-RUNNER-STOPPED-AND-UNREGISTERED after confirming the dedicated
-          Media runner is idle, stopped and removed from GitHub
+          Type MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED after confirming the dedicated
+          Media runner is idle, stopped, disabled and removed from GitHub
         required: true
         type: string
 
@@ -65,8 +65,8 @@ jobs:
             echo "::error::Backup/external-data review confirmation does not match."
             exit 1
           }
-          test "$RUNNER_RETIREMENT" = "MEDIA-RUNNER-STOPPED-AND-UNREGISTERED" || {
-            echo "::error::Dedicated Media runner must be confirmed idle, stopped and unregistered before namespace deletion."
+          test "$RUNNER_RETIREMENT" = "MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED" || {
+            echo "::error::Dedicated Media runner must be confirmed idle, stopped, disabled and unregistered before namespace deletion."
             exit 1
           }
 
