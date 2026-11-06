@@ -1,7 +1,7 @@
 # GitHub Credentials Key Inventory
 
-**Audited:** 2026-11-02  
-**Purpose:** Reusable index of GitHub Actions secret and variable names referenced by workflows across TCE Dashboard, StockDividend, Authentication, and Platform Infra.  
+**Audited:** 2026-11-06  
+**Purpose:** Reusable index of GitHub Actions secret and variable names referenced by workflows across TCE Dashboard, StockDividend, Media Generation, Authentication, and Platform Infra.  
 **Safety:** This document intentionally contains names and usage metadata only. It MUST NOT contain credential values, environment-file contents, generated tokens, or copies of GitHub secret values.
 
 ## Source coverage
@@ -10,6 +10,7 @@ Inventoried the workflow files currently present in these repositories:
 
 - [TCE Dashboard workflows](https://github.com/phanthienquoc/TCE-dashboard/tree/master/.github/workflows)
 - [StockDividend workflows](https://github.com/phanthienquoc/stockdividend/tree/master/.github/workflows)
+- [Media Generation workflows](https://github.com/phanthienquoc/media-generation/tree/master/.github/workflows)
 - [Authentication workflows](https://github.com/phanthienquoc/phanthienquoc-authentication/tree/master/.github/workflows)
 - [Platform Infra workflows](https://github.com/phanthienquoc/platform-infra/tree/master/.github/workflows)
 
@@ -21,7 +22,7 @@ GitHub Actions can resolve secrets/variables from repository, organization, and 
 |---|---|---|
 | `BINANCE_TESTNET_API_KEY` | TCE Dashboard: `wf-07-tce-integration-check.yml` | Binance **testnet-only** integration checks; never use production credentials for this key. |
 | `BINANCE_TESTNET_API_SECRET` | TCE Dashboard: `wf-07-tce-integration-check.yml` | Binance testnet secret paired with the testnet API key. |
-| `GHCR_READ_TOKEN` | Platform Infra: `gitops-image-promotion.yml`, `reconcile-vps.yml` | Canonical read-only credential stored in the protected `production` Environment and used by both GHCR-consuming promotion jobs plus production reconciliation. Use a **classic PAT** owned by the configured `GHCR_USERNAME`, with `read:packages`, package-level access to every required private image across `microfe-platform`, `stock-prod`, `tce-prod`, and `media-prod`, and SSO authorization where required. A non-empty secret is not proof of registry access; the workflow distinguishes registry-login rejection from manifest/package access denial. No `GITHUB_TOKEN` fallback. Jobs consuming this Environment secret must declare `environment: production`. |
+| `GHCR_READ_TOKEN` | Platform Infra: `gitops-image-promotion.yml`, `reconcile-vps.yml` | Canonical read-only credential stored in the protected `production` Environment and used by both GHCR-consuming promotion jobs plus production reconciliation. Use a **classic PAT** owned by the configured `GHCR_USERNAME`, with `read:packages`, package-level access to every required private image across `microfe-platform` and `tce-prod`, and SSO authorization where required. A non-empty secret is not proof of registry access; the workflow distinguishes registry-login rejection from manifest/package access denial. No `GITHUB_TOKEN` fallback. Jobs consuming this Environment secret must declare `environment: production`. |
 | `JWT_SECRET` | TCE Dashboard: `wf-01-tce-build-verify.yml`; Platform Infra: `provision-auth-runtime-secret.yml`, `reconcile-vps.yml` | Server-side JWT signing secret. Platform Infra consumes it from the protected `production` Environment when provisioning the Auth runtime. Do not print or rotate casually; coordinate session compatibility. |
 | `KEYCLOAK_ADMIN_PASSWORD` | Platform Infra: `reconcile-vps.yml` | Keycloak administrator password. Treat as high sensitivity. |
 | `KEYCLOAK_ADMIN_USERNAME` | Platform Infra: `reconcile-vps.yml` | Keycloak administrator login identifier; currently referenced through the secret context. |
@@ -31,10 +32,9 @@ GitHub Actions can resolve secrets/variables from repository, organization, and 
 | `MFA_ENCRYPTION_KEY` | TCE Dashboard: `wf-01-tce-build-verify.yml`; Platform Infra: `provision-auth-runtime-secret.yml`, `reconcile-vps.yml` | Backend MFA-encryption key. Platform Infra maps the production Environment secret into the Auth runtime secret. Preserve ciphertext compatibility. |
 | `MFA_ENCRYPTION_KEY_PROD` | TCE Dashboard: `wf-10-tce-k3s-bootstrap.yml` | Separate TCE production bootstrap key name; do not assume it is a synonym for `MFA_ENCRYPTION_KEY`. |
 | `MFA_ENCRYPTION_KEY_STG` | TCE Dashboard: `wf-10-tce-k3s-bootstrap.yml` | Separate TCE staging bootstrap key name; do not reuse the production value by assumption. |
-| `PLATFORM_INFRA_TOKEN` | TCE Dashboard: `wf-03-tce-production-deploy.yml`, `wf-08b-tce-microfe-build-publish.yml`, `wf-12-tce-healthcheck-schedule-watchdog.yml`; StockDividend: `wf-platform-infra-release.yml` | Cross-repository release/GitOps handoff token. TCE WF-12 also sends the authenticated `tce-schedule-heartbeat` repository dispatch to Platform Infra; the receiver only evaluates freshness and dispatches existing Platform workflows. StockDividend requires `Contents: write` access to `phanthienquoc/platform-infra` for `repository_dispatch`; TCE release workflows use it for their release handoff. This is separate from `GHCR_READ_TOKEN` and Authentication's `PLATFORM_INFRA_DISPATCH_TOKEN`. |
-| `PLATFORM_INFRA_DISPATCH_TOKEN` | Media Generation: `wf-03-media-production-deploy.yml`; Authentication: `release.yml` | Cross-repository release handoff token used to dispatch release events to Platform Infra. Media also queries Platform Infra Actions runs to verify the handoff, so its repository secret needs `Contents: write` and `Actions: read` on `phanthienquoc/platform-infra`; Auth needs dispatch permission (`Contents: write`). Same secret name does not imply the repositories use the same token value. Keep it distinct from TCE/StockDividend's `PLATFORM_INFRA_TOKEN` . |
+| `PLATFORM_INFRA_TOKEN` | TCE Dashboard: `wf-03-tce-production-deploy.yml`, `wf-08b-tce-microfe-build-publish.yml`, `wf-12-tce-healthcheck-schedule-watchdog.yml` | TCE cross-repository release/GitOps handoff token. WF-12 also sends the authenticated `tce-schedule-heartbeat` repository dispatch to Platform Infra; the receiver only evaluates freshness and dispatches existing Platform workflows. TCE requires `Contents: write` and `Actions: read` on `phanthienquoc/platform-infra`. StockDividend and Media Generation remain publisher-only and no longer dispatch production promotions to Platform Infra. This is separate from `GHCR_READ_TOKEN` and Authentication's `PLATFORM_INFRA_DISPATCH_TOKEN`. |
+| `PLATFORM_INFRA_DISPATCH_TOKEN` | Authentication: `release.yml` | Cross-repository release handoff token used by Authentication to dispatch the immutable Auth image digest to Platform Infra. Grant `Contents: write` on `phanthienquoc/platform-infra`. Keep it distinct from TCE's `PLATFORM_INFRA_TOKEN`. |
 | `RUNNER_REGISTRATION_PAT` | Platform Infra: `bootstrap-runner.yml` | PAT used to request a short-lived self-hosted runner registration token. Prefer minimal repository/action-runner administration scope; never store the generated short-lived token. |
-| `STOCKDIVIDEND_ACTIONS_READ_TOKEN` | Platform Infra: `gitops-image-promotion.yml` | Read-only Actions API access to attest the publisher run in private `phanthienquoc/stockdividend` before accepting paired image digests. Store in the protected `production` Environment, restrict to the StockDividend repository, and grant `Actions: read` only; do not grant Contents write, Packages, or workflow-dispatch permissions. |
 | `SUPABASE_SERVICE_ROLE_KEY` | TCE Dashboard: `wf-01-tce-build-verify.yml`; Platform Infra: `provision-auth-runtime-secret.yml`, `reconcile-vps.yml` | Privileged Supabase backend credential. Keep server-only; never expose in frontend, logs, artifacts, command output, or this inventory. |
 | `SUPABASE_URL` | TCE Dashboard: `wf-01-tce-build-verify.yml`; Platform Infra: `provision-auth-runtime-secret.yml`, `reconcile-vps.yml` | Supabase project URL used by backend runtime. May be non-secret configuration, but retain the currently configured protected source until environment ownership is verified. |
 | `TELEGRAM_BOT_TOKEN` | Platform Infra: `reconcile-vps.yml` | Telegram bot credential used for infrastructure notifications; referenced via the **secret** context here. |
@@ -70,7 +70,7 @@ These are sourced from Platform Infra's protected GitHub Actions Environment nam
 
 ## Naming inconsistencies and recommended follow-up
 
-1. **Release handoff and automation tokens differ:** TCE and StockDividend use `PLATFORM_INFRA_TOKEN`; Media Generation and Authentication use repository-level `PLATFORM_INFRA_DISPATCH_TOKEN` secrets; Platform Infra GitOps promotion uses its workflow-scoped `GITHUB_TOKEN` with least-privilege Actions/Contents/Pull Requests permissions and an explicit exact-head `workflow_dispatch` validation. Media's dispatch verifier also reads Actions runs, so its token needs `Actions: read` in addition to dispatch permission. These names and roles do not imply that the repositories share a token value. Do not reuse any application handoff token as the Kubernetes GHCR pull credential.
+1. **Release handoff and automation tokens differ:** TCE uses `PLATFORM_INFRA_TOKEN`; Authentication uses `PLATFORM_INFRA_DISPATCH_TOKEN`; StockDividend and Media Generation remain immutable-image publishers without Platform production dispatch. Platform Infra GitOps promotion uses its workflow-scoped `GITHUB_TOKEN` with least-privilege Actions/Contents/Pull Requests permissions and an explicit exact-head `workflow_dispatch` validation. Do not reuse any application handoff token as the Kubernetes GHCR pull credential.
 2. **Telegram token storage differs:** TCE reads `TELEGRAM_BOT_TOKEN` via `vars`; Platform Infra reads the same key via `secrets`. Avoid placing a bot token in an unprotected variable; migrate through a carefully tested change if TCE still needs it.
 3. **MFA key names differ by purpose:** `MFA_ENCRYPTION_KEY`, `MFA_ENCRYPTION_KEY_PROD`, and `MFA_ENCRYPTION_KEY_STG` are not interchangeable without verifying each workflow's environment/cluster mapping.
 4. **Secret names do not prove configured existence:** this is a source-code inventory. The GitHub connector used for this audit cannot read secret values and this inventory does not claim to validate which keys are configured in repository, organization, or environment settings.
@@ -98,9 +98,14 @@ These are sourced from Platform Infra's protected GitHub Actions Environment nam
 
 ### StockDividend
 
-- `deploy.yml`
-- `wf-platform-infra-release.yml`
+- `ci.yml`
+- `deploy.yml` (immutable publisher only; no Platform production dispatch)
 - `run_scraper.yml`
+
+### Media Generation
+
+- `ci.yml`
+- `wf-03-media-production-deploy.yml` (immutable publisher only; no Platform production dispatch)
 
 ### Authentication
 
