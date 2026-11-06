@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-11-06T00:34:27+00:00
+Generated: 2026-11-06T01:46:04+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,14 +11,14 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.5Gi       2.3Gi        84Mi        17Gi        19Gi
+Mem:            23Gi       3.5Gi       2.3Gi        83Mi        17Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   25G   21G  56% /
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   25G   21G  56% /
 disk_pressure: normal (56%)
- 00:34:27 up 188 days, 10:24,  0 users,  load average: 0.11, 0.16, 0.19
+ 01:46:04 up 188 days, 11:36,  0 users,  load average: 0.13, 0.27, 0.27
 
 ### Top disk consumers (best-effort, runner-readable paths)
 4.0K	/var/lib/docker
@@ -42,9 +42,9 @@ disk_pressure: normal (56%)
 
 ## Runner
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
+3388 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
 1057701 /opt/media-actions-runner/bin/Runner.Listener run --startuptype service
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-4144338 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
   actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-media-generation.media-generation-k3s-01)
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service           loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
@@ -116,38 +116,38 @@ restart_required: yes
 Client Version: v1.36.3+k3s1
 Kustomize Version: v5.8.1
 NAME         STATUS   ROLES           AGE   VERSION        INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION              CONTAINER-RUNTIME
-tce-k3s-01   Ready    control-plane   75d   v1.36.3+k3s1   10.0.0.120    <none>        Ubuntu 22.04.5 LTS   6.8.0-1049-oracle (arm64)   containerd://2.3.2-k3s2
+tce-k3s-01   Ready    control-plane   76d   v1.36.3+k3s1   10.0.0.120    <none>        Ubuntu 22.04.5 LTS   6.8.0-1049-oracle (arm64)   containerd://2.3.2-k3s2
 NAME               STATUS   AGE
 cert-manager       Active   72d
-default            Active   75d
+default            Active   76d
 k3s-debug          Active   28d
-kube-node-lease    Active   75d
-kube-public        Active   75d
-kube-system        Active   75d
+kube-node-lease    Active   76d
+kube-public        Active   76d
+kube-system        Active   76d
 media-prod         Active   36d
 microfe-platform   Active   30d
 stock-prod         Active   47d
-tce-prod           Active   75d
+tce-prod           Active   76d
 NAMESPACE          NAME                                        READY   STATUS             RESTARTS      AGE     IP            NODE         NOMINATED NODE   READINESS GATES
 cert-manager       cert-manager-75b96c9588-lgn7d               1/1     Running            0             72d     10.42.0.98    tce-k3s-01   <none>           <none>
 cert-manager       cert-manager-cainjector-b644b66f7-l8jdq     1/1     Running            1 (72d ago)   72d     10.42.0.100   tce-k3s-01   <none>           <none>
 cert-manager       cert-manager-webhook-76d97df888-wwq49       1/1     Running            0             72d     10.42.0.99    tce-k3s-01   <none>           <none>
-kube-system        coredns-54996dc9b4-d68pf                    1/1     Running            0             75d     10.42.0.6     tce-k3s-01   <none>           <none>
-kube-system        helm-install-traefik-crd-mq7w8              0/1     Completed          0             75d     10.42.0.3     tce-k3s-01   <none>           <none>
-kube-system        helm-install-traefik-s2twj                  0/1     Completed          1 (75d ago)   75d     10.42.0.2     tce-k3s-01   <none>           <none>
-kube-system        local-path-provisioner-58d557dc48-jbhhp     1/1     Running            1 (75d ago)   75d     10.42.0.5     tce-k3s-01   <none>           <none>
-kube-system        metrics-server-6dc596dfb8-s2bzm             1/1     Running            0             75d     10.42.0.4     tce-k3s-01   <none>           <none>
-kube-system        svclb-traefik-859779c1-7bwx2                2/2     Running            0             75d     10.42.0.7     tce-k3s-01   <none>           <none>
-kube-system        traefik-59b7647586-gml84                    1/1     Running            0             75d     10.42.0.8     tce-k3s-01   <none>           <none>
-media-prod         media-generation-665d86ff54-4664l           1/1     Running            0             4d20h   10.42.0.155   tce-k3s-01   <none>           <none>
-media-prod         media-generation-frontend-58d8bbc67-lwhhf   1/1     Running            0             4d20h   10.42.0.154   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-shell-7b44b44dfb-ln4sw              1/1     Running            0             4d22h   10.42.0.153   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-ws-5bc979dd77-txd28                 1/1     Running            0             4d22h   10.42.0.152   tce-k3s-01   <none>           <none>
+kube-system        coredns-54996dc9b4-d68pf                    1/1     Running            0             76d     10.42.0.6     tce-k3s-01   <none>           <none>
+kube-system        helm-install-traefik-crd-mq7w8              0/1     Completed          0             76d     10.42.0.3     tce-k3s-01   <none>           <none>
+kube-system        helm-install-traefik-s2twj                  0/1     Completed          1 (76d ago)   76d     10.42.0.2     tce-k3s-01   <none>           <none>
+kube-system        local-path-provisioner-58d557dc48-jbhhp     1/1     Running            1 (76d ago)   76d     10.42.0.5     tce-k3s-01   <none>           <none>
+kube-system        metrics-server-6dc596dfb8-s2bzm             1/1     Running            0             76d     10.42.0.4     tce-k3s-01   <none>           <none>
+kube-system        svclb-traefik-859779c1-7bwx2                2/2     Running            0             76d     10.42.0.7     tce-k3s-01   <none>           <none>
+kube-system        traefik-59b7647586-gml84                    1/1     Running            0             76d     10.42.0.8     tce-k3s-01   <none>           <none>
+media-prod         media-generation-665d86ff54-4664l           1/1     Running            0             4d21h   10.42.0.155   tce-k3s-01   <none>           <none>
+media-prod         media-generation-frontend-58d8bbc67-lwhhf   1/1     Running            0             4d21h   10.42.0.154   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-shell-7b44b44dfb-ln4sw              1/1     Running            0             4d23h   10.42.0.153   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-ws-5bc979dd77-txd28                 1/1     Running            0             4d23h   10.42.0.152   tce-k3s-01   <none>           <none>
 microfe-platform   nats-7bc8d9f768-q682m                       1/1     Running            0             27d     10.42.0.178   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-5864bcb497-6b6hm                0/1     ImagePullBackOff   0             4d1h    10.42.0.182   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-59cddb87b7-qgkjr                0/1     ImagePullBackOff   0             4d1h    10.42.0.180   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-5864bcb497-6b6hm                0/1     ImagePullBackOff   0             4d2h    10.42.0.182   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-59cddb87b7-qgkjr                0/1     ImagePullBackOff   0             4d3h    10.42.0.180   tce-k3s-01   <none>           <none>
 stock-prod         stock-backend-57ccb8ff6-d25jq               1/1     Running            0             47d     10.42.0.55    tce-k3s-01   <none>           <none>
-stock-prod         stock-backend-6bc874575d-xcg2j              0/1     ImagePullBackOff   0             4d1h    10.42.0.183   tce-k3s-01   <none>           <none>
+stock-prod         stock-backend-6bc874575d-xcg2j              0/1     ImagePullBackOff   0             4d2h    10.42.0.183   tce-k3s-01   <none>           <none>
 stock-prod         stock-frontend-79c57845df-z747s             1/1     Running            0             47d     10.42.0.56    tce-k3s-01   <none>           <none>
 
 ### Pod imageID evidence
@@ -176,10 +176,10 @@ NAMESPACE          NAME                        READY   UP-TO-DATE   AVAILABLE   
 cert-manager       cert-manager                1/1     1            1           72d
 cert-manager       cert-manager-cainjector     1/1     1            1           72d
 cert-manager       cert-manager-webhook        1/1     1            1           72d
-kube-system        coredns                     1/1     1            1           75d
-kube-system        local-path-provisioner      1/1     1            1           75d
-kube-system        metrics-server              1/1     1            1           75d
-kube-system        traefik                     1/1     1            1           75d
+kube-system        coredns                     1/1     1            1           76d
+kube-system        local-path-provisioner      1/1     1            1           76d
+kube-system        metrics-server              1/1     1            1           76d
+kube-system        traefik                     1/1     1            1           76d
 media-prod         media-generation            1/1     1            1           36d
 media-prod         media-generation-frontend   1/1     1            1           36d
 microfe-platform   keycloak                    0/0     0            0           20d
@@ -280,10 +280,10 @@ NAMESPACE          NAME                        TYPE           CLUSTER-IP      EX
 cert-manager       cert-manager                ClusterIP      10.43.138.27    <none>        9402/TCP                     72d
 cert-manager       cert-manager-cainjector     ClusterIP      10.43.135.132   <none>        9402/TCP                     72d
 cert-manager       cert-manager-webhook        ClusterIP      10.43.52.112    <none>        443/TCP,9402/TCP             72d
-default            kubernetes                  ClusterIP      10.43.0.1       <none>        443/TCP                      75d
-kube-system        kube-dns                    ClusterIP      10.43.0.10      <none>        53/UDP,53/TCP,9153/TCP       75d
-kube-system        metrics-server              ClusterIP      10.43.120.41    <none>        443/TCP                      75d
-kube-system        traefik                     LoadBalancer   10.43.213.239   10.0.0.120    80:30225/TCP,443:30415/TCP   75d
+default            kubernetes                  ClusterIP      10.43.0.1       <none>        443/TCP                      76d
+kube-system        kube-dns                    ClusterIP      10.43.0.10      <none>        53/UDP,53/TCP,9153/TCP       76d
+kube-system        metrics-server              ClusterIP      10.43.120.41    <none>        443/TCP                      76d
+kube-system        traefik                     LoadBalancer   10.43.213.239   10.0.0.120    80:30225/TCP,443:30415/TCP   76d
 media-prod         media-generation            ClusterIP      10.43.252.95    <none>        3000/TCP                     36d
 media-prod         media-generation-frontend   ClusterIP      10.43.48.52     <none>        80/TCP                       36d
 microfe-platform   keycloak                    ClusterIP      10.43.142.95    <none>        80/TCP,9000/TCP              20d
@@ -318,5 +318,5 @@ keycloak   0/0     0            0           20d   keycloak     quay.io/keycloak/
 error: timed out waiting for the condition
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.138928s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.086634s remote_ip=132.226.175.206
 https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049184s remote_ip=132.226.175.206
