@@ -4979,3 +4979,25 @@ No new current-master Stock/Media/Auth immutable GHCR publication/digest/provena
 Next: investigate native schedule delivery without changing cron; retain strict TCE HTTP 200 and zero-replica maintenance; require authorized full-SHA ARM64 Stock publication before promotion; reconcile Auth PRs only after Supabase side-effect review; retire only the dedicated Media runner after operator idle confirmation; verify external backups and DNS before decommission; schedule host upgrades/reboot separately.
 
 App repos own tests/builds/immutable GHCR publication. Platform owns manifests, shared pull credentials, digest/provenance validation, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the sole apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
+
+---
+
+## Post-merge workflow inventory update — 2026-11-07 00:13 ICT / 2026-11-06 17:13 UTC
+
+### Platform PRs and decommission contract
+
+- PR #1349 merged as `4267436fdc16232ccfa832e0dc83544e96516eac`; post-merge validation #42259072387 passed.
+- PR #1351 merged as `d083613ecf5a064d0c60d019ff2c173d87e68791`; exact-head and post-merge `validate-github-actions` and `validate-manifests` passed (#42259386872, #42259545328, #42259387019, #42259545139).
+- Manual-only `decommission-stock-media.yml` now has a default read-only `mode=plan` and a separate protected `mode=delete`. Plan mode reports Media runner state and runs storage preflight without production Environment, deletion confirmations or delete command. Delete mode still requires all three typed attestations, production Environment, host-side runner-retired guard and same-run storage preflight.
+- Workflow contract tests prove plan mode cannot invoke deletion. No plan or delete dispatch was run; no K3s resource or runner was changed.
+
+### Stock/Media ownership boundary
+
+Earlier merged retirement PRs removed Stock/Media production GitOps manifests, routine reconcile/health/recovery scope and app-to-Platform production handoffs. Keep those removals. Stock/Media app repos remain source, test/build and immutable GHCR publisher repos; do not reintroduce production manifests or duplicate direct SSH/Compose deployment authorities. Their K3s namespaces remain active pending the guarded manual decommission. The current snapshot still shows Media 1/1 and Stock Admin/new Backend ImagePullBackOff on tag `12d63b4` (no linux/arm64 manifest).
+
+### Schedule and release evidence
+
+Platform native reconcile #42199267592 and recovery #42199274660 remain stale; watchdog #42256928371 failed native freshness. Fallback reconcile #42256950100 passed with `mode=apply`, `allow_image_changes=false`, `target_app=all`; this does not satisfy native schedule freshness. TCE WF-06 #42235639842 and WF-12 #42211610532 remain failed; WF-06 strict endpoints return HTTP 503. No cron changed; TCE market-scan schedule unchanged.
+
+No current-master Stock/Media/Auth GHCR publication with verified digest/provenance was performed. No image promotion authorized. Auth #75/#76 remain gated pending branch reconciliation and Supabase production migration/integration review. TCE, Stock and Media have no open PRs; Platform #1314/#544/#541/#539 remain drafts.
