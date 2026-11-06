@@ -14,7 +14,11 @@ set -euo pipefail
 printf '%s\n' "$*" >> "$FAKE_LOG"
 case "$*" in
   "get namespace tce-prod"|"get namespace microfe-platform") exit 0 ;;
-  "inventory-namespace stock-prod"|"inventory-namespace media-prod") exit 0 ;;
+  "inventory-namespace stock-prod"|"inventory-namespace media-prod")
+    [[ "${MOCK_SNAPSHOT:-0}" != "1" ]] || printf "%s\n" "volumesnapshot.snapshot.storage.k8s.io/keep-me"
+    [[ "${MOCK_SNAPSHOT_CONTENT:-0}" != "1" ]] || printf "%s\n" "volumesnapshotcontent.snapshot.storage.k8s.io/keep-me"
+    exit 0
+    ;;
   "get namespaces -o json")
     if [[ "${MOCK_MISSING_NS:-0}" == "1" ]]; then
       printf '%s\n' '{"items":[{"metadata":{"name":"stock-prod"}},{"metadata":{"name":"tce-prod"}},{"metadata":{"name":"microfe-platform"}}]}'
@@ -63,6 +67,18 @@ if MOCK_PV=1 PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" CONFIRMATION=DELETE-ST
 fi
 if MOCK_MISSING_NS=1 PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" bash "$SCRIPT" plan >/dev/null 2>&1; then
   echo "FAIL: missing target namespace did not block decommission" >&2
+  exit 1
+fi
+if MOCK_SNAPSHOT=1 CONFIRMATION=DELETE-STOCK-PROD-AND-MEDIA-PROD DATA_RETENTION_REVIEW=BACKUP-AND-EXTERNAL-DATA-REVIEWED PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" bash "$SCRIPT" delete >/dev/null 2>&1; then
+  echo "FAIL: namespaced VolumeSnapshot did not block deletion" >&2
+  exit 1
+fi
+if MOCK_SNAPSHOT_CONTENT=1 CONFIRMATION=DELETE-STOCK-PROD-AND-MEDIA-PROD DATA_RETENTION_REVIEW=BACKUP-AND-EXTERNAL-DATA-REVIEWED PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" bash "$SCRIPT" delete >/dev/null 2>&1; then
+  echo "FAIL: cluster-scoped VolumeSnapshotContent did not block deletion" >&2
+  exit 1
+fi
+if grep -q "^decommission-stock-media$" "$log"; then
+  echo "FAIL: snapshot preflight invoked the root namespace deletion command" >&2
   exit 1
 fi
 CONFIRMATION=DELETE-STOCK-PROD-AND-MEDIA-PROD DATA_RETENTION_REVIEW=BACKUP-AND-EXTERNAL-DATA-REVIEWED PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" bash "$SCRIPT" delete
