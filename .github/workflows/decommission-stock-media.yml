@@ -70,7 +70,7 @@ jobs:
             exit 1
           }
 
-      - name: Verify dedicated Media runner is stopped
+      - name: Verify dedicated Media runner is retired
         run: bash scripts/verify-media-runner-retired.sh
 
       - name: Run fresh read-only storage preflight
