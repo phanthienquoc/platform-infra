@@ -1,0 +1,80 @@
+name: decommission-stock-media
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type DELETE-STOCK-PROD-AND-MEDIA-PROD to authorize only the two retired namespaces
+        required: true
+        type: string
+      data_retention_review:
+        description: Type BACKUP-AND-EXTERNAL-DATA-REVIEWED after reviewing backups and external data ownership
+        required: true
+        type: string
+      runner_retirement:
+        description: >-
+          Type MEDIA-RUNNER-STOPPED-AND-UNREGISTERED after confirming the dedicated
+          Media runner is idle, stopped and removed from GitHub
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platform-stock-media-decommission
+  cancel-in-progress: false
+
+jobs:
+  decommission:
+    if: github.ref == 'refs/heads/master'
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    environment: production
+    timeout-minutes: 15
+    steps:
+      - name: Checkout platform-infra
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify installed runner policy
+        run: |
+          set -euo pipefail
+          policy="$(sudo /usr/local/sbin/platform-kubectl policy-version)"
+          test "$policy" = "platform-kubectl policy: rollout-status-v15-core-workloads" || {
+            echo "::error::Runner bootstrap policy v15 is required before decommission."
+            exit 1
+          }
+
+      - name: Validate exact confirmation and production ref
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          DATA_RETENTION_REVIEW: ${{ inputs.data_retention_review }}
+          RUNNER_RETIREMENT: ${{ inputs.runner_retirement }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/master" || {
+            echo "::error::Namespace decommission must run from master."
+            exit 1
+          }
+          test "$CONFIRMATION" = "DELETE-STOCK-PROD-AND-MEDIA-PROD" || {
+            echo "::error::Typed namespace confirmation does not match."
+            exit 1
+          }
+          test "$DATA_RETENTION_REVIEW" = "BACKUP-AND-EXTERNAL-DATA-REVIEWED" || {
+            echo "::error::Backup/external-data review confirmation does not match."
+            exit 1
+          }
+          test "$RUNNER_RETIREMENT" = "MEDIA-RUNNER-STOPPED-AND-UNREGISTERED" || {
+            echo "::error::Dedicated Media runner must be confirmed idle, stopped and unregistered before namespace deletion."
+            exit 1
+          }
+
+      - name: Run fresh read-only storage preflight
+        run: bash scripts/decommission-stock-media-namespaces.sh plan
+
+      - name: Delete only the two approved namespaces
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          DATA_RETENTION_REVIEW: ${{ inputs.data_retention_review }}
+        run: bash scripts/decommission-stock-media-namespaces.sh delete

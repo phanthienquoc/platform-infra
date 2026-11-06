@@ -1,12 +1,11 @@
 # Credentials and Token Scope Guide
 
-Last reviewed: 2026-11-01
+Last reviewed: 2026-11-06
 
 This file documents credential purpose and safe selection only. **Never store secret values, PATs, passwords, environment files, or token fragments in this repository.**
 
 ## GitOps promotion and GHCR credentials are separate
 
-- `STOCKDIVIDEND_ACTIONS_READ_TOKEN` is used only by `gitops-image-promotion.yml` to read Actions run metadata for the private `phanthienquoc/stockdividend` publisher before accepting paired digests. Store it in the protected `production` Environment as a fine-grained token restricted to that repository with `Actions: read` (GitHub default metadata read only). It must not have Contents write, Packages, or workflow-dispatch permissions. It is not interchangeable with `PLATFORM_INFRA_TOKEN` or `GHCR_READ_TOKEN`.
 - `GHCR_READ_TOKEN` is a registry credential used by `gitops-image-promotion.yml` and `reconcile-vps.yml` to authenticate to GHCR and pull/read private container packages. Its documented minimum scope is `read:packages`, with package access to every production image and the correct `GHCR_USERNAME`.
 - Platform Infra GitOps promotion uses the workflow-scoped `GITHUB_TOKEN` with explicit `actions: write`, `contents: write`, and `pull-requests: write` permissions. It does **not** need `packages` permission: private registry reads use `GHCR_READ_TOKEN` through package-scoped Registry V2 preflight. It creates the promotion PR, explicitly dispatches `validate-manifests.yml` on the PR branch, waits for a successful run tied to the exact head SHA, rechecks the open PR/head/base, then squash-merges with an exact-head guard.
 - The scheduled-ops recovery workflow uses its own workflow-scoped `GITHUB_TOKEN` with `actions: write` and `contents: read` only. It may dispatch the existing `reconcile-vps.yml` or read-only `inspect-vps.yml` after their latest master run exceeds the configured freshness budget; it never runs kubectl/SSH/Compose itself and does not grant package permissions.
@@ -17,9 +16,8 @@ This file documents credential purpose and safe selection only. **Never store se
 ## Cross-repository application handoff credentials
 
 Keep application dispatch credentials separate from platform-owned GHCR pull access:
-- `PLATFORM_INFRA_TOKEN`: TCE Dashboard and StockDividend release handoff to Platform Infra. TCE WF-08B dispatches MicroFE image digests and polls Platform Actions runs to correlate promotion/reconciliation, so its repository secret needs `Contents: write` and `Actions: read` on `phanthienquoc/platform-infra`. TCE WF-12 also uses it to send the `tce-schedule-heartbeat` repository dispatch. StockDividend only validates Platform repository access and sends its repository dispatch, so `Contents: write` is sufficient there. These are per-repository secrets; do not assume the two repositories share one token value. Neither token needs `Packages` or workflow-dispatch permission.
-- `PLATFORM_INFRA_DISPATCH_TOKEN`: Media Generation and Authentication release handoff. Media also reads Platform Infra Actions runs to verify dispatch correlation, so its repository secret needs `Contents: write` and `Actions: read`; Authentication needs dispatch permission (`Contents: write`). The same secret name does not imply the repositories share a token value.
-- Platform Infra verifies Media Generation publisher provenance by reading the public `phanthienquoc/media-generation` Actions run endpoint without a cross-repository token. This is intentionally limited to the public source repository; if Media becomes private, promotion must fail closed until a dedicated Actions:read credential is designed and configured.
+- `PLATFORM_INFRA_TOKEN`: TCE Dashboard release handoff to Platform Infra. TCE WF-08B dispatches MicroFE image digests and polls Platform Actions runs to correlate promotion/reconciliation, so its repository secret needs `Contents: write` and `Actions: read` on `phanthienquoc/platform-infra`. TCE WF-12 also uses it to send the `tce-schedule-heartbeat` repository dispatch. StockDividend and Media Generation are publisher-only and no longer send production handoffs to Platform Infra. The TCE token does not need `Packages` or workflow-dispatch permission.
+- `PLATFORM_INFRA_DISPATCH_TOKEN`: Authentication release handoff only. Its repository secret needs `Contents: write` on `phanthienquoc/platform-infra`. Media Generation is publisher-only and does not dispatch production promotions to Platform Infra.
 - Platform Infra verifies TCE publisher provenance by reading the public `phanthienquoc/TCE-dashboard` Actions run endpoint without a cross-repository token. TCE's existing `PLATFORM_INFRA_TOKEN` remains the producer-side credential for dispatching to and reading Platform Infra workflows; it is not used by the Platform consumer to read TCE run metadata. If TCE becomes private, fail closed until a dedicated Actions:read credential is configured.
 
 ## Other production credentials

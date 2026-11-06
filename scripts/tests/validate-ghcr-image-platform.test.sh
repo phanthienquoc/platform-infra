@@ -125,28 +125,28 @@ run_case() {
   fi
 }
 
-image="ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-abcdef123456789"
-expected_url="https://ghcr.io/v2/phanthienquoc/media-generation/frontend/manifests/prod-v0.3.0-abcdef123456789"
+image="ghcr.io/phanthienquoc/tce-dashboard/web:prod-v0.3.0-abcdef123456789"
+expected_url="https://ghcr.io/v2/phanthienquoc/tce-dashboard/web/manifests/prod-v0.3.0-abcdef123456789"
 run_case index-arm64 "$image" 0 index-arm64
-grep -Fxq 'repository:phanthienquoc/media-generation/frontend:pull' "$scope_log"
+grep -Fxq 'repository:phanthienquoc/tce-dashboard/web:pull' "$scope_log"
 grep -Fxq "$expected_url" "$manifest_log"
 grep -Fq 'linux/arm64 manifest index' "$tmp_dir/index-arm64.log"
 
 digest="sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-run_case index-arm64 "ghcr.io/phanthienquoc/media-generation/frontend@$digest" 0 digest-index-arm64
-grep -Fxq "https://ghcr.io/v2/phanthienquoc/media-generation/frontend/manifests/$digest" "$manifest_log"
+run_case index-arm64 "ghcr.io/phanthienquoc/tce-dashboard/web@$digest" 0 digest-index-arm64
+grep -Fxq "https://ghcr.io/v2/phanthienquoc/tce-dashboard/web/manifests/$digest" "$manifest_log"
 
-run_case single-arm64 "ghcr.io/phanthienquoc/stockdividend/admin:full-source-sha" 0 single-arm64
+run_case single-arm64 "ghcr.io/phanthienquoc/auth-service/auth:full-source-sha" 0 single-arm64
 grep -Fq '/blobs/sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' "$blob_log"
 grep -Fq 'single-image config linux/arm64' "$tmp_dir/single-arm64.log"
 
 run_case index-amd64 "$image" 1 index-amd64
 grep -Fq 'does not publish linux/arm64 in its manifest index' "$tmp_dir/index-amd64.log"
 
-run_case single-amd64 "ghcr.io/phanthienquoc/stockdividend/admin:wrong-arch" 1 single-amd64
+run_case single-amd64 "ghcr.io/phanthienquoc/auth-service/auth:wrong-arch" 1 single-amd64
 grep -Fq 'does not support linux/arm64' "$tmp_dir/single-amd64.log"
 
-run_case unknown "ghcr.io/phanthienquoc/stockdividend/admin:unknown-manifest" 1 unknown
+run_case unknown "ghcr.io/phanthienquoc/auth-service/auth:unknown-manifest" 1 unknown
 grep -Fq 'neither an image index nor a valid single-image manifest' "$tmp_dir/unknown.log"
 
 : > "$scope_log"

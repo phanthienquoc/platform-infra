@@ -110,8 +110,8 @@ def validate(objects: list[dict[str, Any]]) -> str:
     if config.get("JWT_ISSUER") != "https://auth.mrcute.space":
         fail("JWT_ISSUER must match https://auth.mrcute.space")
     audiences = {part.strip() for part in config.get("JWT_AUDIENCE", "").split(",") if part.strip()}
-    if not {"tce-dashboard", "media-generation"}.issubset(audiences):
-        fail("JWT_AUDIENCE must include tce-dashboard and media-generation")
+    if "tce-dashboard" not in audiences:
+        fail("JWT_AUDIENCE must include tce-dashboard; the retired Media audience is not accepted")
 
     expected_probes = {
         "startupProbe": "/api/health",
@@ -198,7 +198,7 @@ def fixture() -> list[dict[str, Any]]:
             "data": {
                 "PORT": "4010",
                 "JWT_ISSUER": "https://auth.mrcute.space",
-                "JWT_AUDIENCE": "tce-dashboard,media-generation",
+                "JWT_AUDIENCE": "tce-dashboard",
             },
         },
     ]
@@ -228,7 +228,7 @@ def self_test() -> None:
         ("mutable image tag", lambda docs: docs[2]["spec"]["template"]["spec"]["containers"][0].update({"image": "ghcr.io/phanthienquoc/auth-service/auth:latest"})),
         ("missing runtime secret", lambda docs: docs[2]["spec"]["template"]["spec"]["containers"][0]["env"].pop()),
         ("wrong JWT issuer", lambda docs: docs[3]["data"].update({"JWT_ISSUER": "https://wrong.example"})),
-        ("missing JWT audience", lambda docs: docs[3]["data"].update({"JWT_AUDIENCE": "tce-dashboard"})),
+        ("missing JWT audience", lambda docs: docs[3]["data"].update({"JWT_AUDIENCE": ""})),
         ("missing readiness probe", lambda docs: docs[2]["spec"]["template"]["spec"]["containers"][0].pop("readinessProbe")),
     ]
     for name, mutate in cases:

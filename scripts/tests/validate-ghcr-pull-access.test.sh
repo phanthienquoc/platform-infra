@@ -67,17 +67,17 @@ scope_log="$tmp_dir/scopes.log"
 resource_log="$tmp_dir/resources.log"
 : > "$scope_log"
 : > "$resource_log"
-if ! env PATH="$tmp_dir/bin:$PATH" GHCR_TEST_SCOPE_LOG="$scope_log" GHCR_TEST_RESOURCE_LOG="$resource_log" GHCR_USERNAME=test-user GHCR_TOKEN=test-only-secret TARGET_APP=stockdividend bash "$validator" >"$tmp_dir/success.log" 2>&1; then
+if ! env PATH="$tmp_dir/bin:$PATH" GHCR_TEST_SCOPE_LOG="$scope_log" GHCR_TEST_RESOURCE_LOG="$resource_log" GHCR_USERNAME=test-user GHCR_TOKEN=test-only-secret TARGET_APP=tce-dashboard bash "$validator" >"$tmp_dir/success.log" 2>&1; then
   cat "$tmp_dir/success.log" >&2
-  echo "Expected stockdividend package access preflight to pass." >&2
+  echo "Expected tce-dashboard package access preflight to pass." >&2
   exit 1
 fi
 
-grep -Fxq 'repository:phanthienquoc/stockdividend/admin:pull' "$scope_log"
-grep -Fxq 'repository:phanthienquoc/stockdividend/backend:pull' "$scope_log"
-grep -Fxq 'phanthienquoc/stockdividend/admin' "$resource_log"
-grep -Fxq 'phanthienquoc/stockdividend/backend' "$resource_log"
-if grep -Eq 'media-generation|tce-dashboard|auth-service' "$scope_log" "$resource_log"; then
+grep -Fxq 'repository:phanthienquoc/tce-dashboard/web:pull' "$scope_log"
+grep -Fxq 'repository:phanthienquoc/tce-dashboard/service:pull' "$scope_log"
+grep -Fxq 'phanthienquoc/tce-dashboard/web' "$resource_log"
+grep -Fxq 'phanthienquoc/tce-dashboard/service' "$resource_log"
+if grep -Eq 'stockdividend|media-generation|auth-service' "$scope_log" "$resource_log"; then
   echo "Targeted preflight checked unrelated packages." >&2
   cat "$scope_log" "$resource_log" >&2
   exit 1
@@ -89,11 +89,11 @@ fi
 
 : > "$scope_log"
 : > "$resource_log"
-if env PATH="$tmp_dir/bin:$PATH" GHCR_TEST_SCOPE_LOG="$scope_log" GHCR_TEST_RESOURCE_LOG="$resource_log" GHCR_TEST_DENY_TOKEN_PACKAGE=phanthienquoc/stockdividend/admin GHCR_USERNAME=test-user GHCR_TOKEN=test-only-secret TARGET_APP=stockdividend bash "$validator" >"$tmp_dir/token-failure.log" 2>&1; then
+if env PATH="$tmp_dir/bin:$PATH" GHCR_TEST_SCOPE_LOG="$scope_log" GHCR_TEST_RESOURCE_LOG="$resource_log" GHCR_TEST_DENY_TOKEN_PACKAGE=phanthienquoc/tce-dashboard/web GHCR_USERNAME=test-user GHCR_TOKEN=test-only-secret TARGET_APP=tce-dashboard bash "$validator" >"$tmp_dir/token-failure.log" 2>&1; then
   echo "Expected denied token authorization to fail the preflight." >&2
   exit 1
 fi
-grep -Fq 'cannot obtain pull access for ghcr.io/phanthienquoc/stockdividend/admin' "$tmp_dir/token-failure.log"
+grep -Fq 'cannot obtain pull access for ghcr.io/phanthienquoc/tce-dashboard/web' "$tmp_dir/token-failure.log"
 if grep -q 'test-only-secret\|test-only-token' "$tmp_dir/token-failure.log"; then
   echo "Failed token preflight leaked a test token to output." >&2
   exit 1
@@ -101,12 +101,12 @@ fi
 
 : > "$scope_log"
 : > "$resource_log"
-if env PATH="$tmp_dir/bin:$PATH" GHCR_TEST_SCOPE_LOG="$scope_log" GHCR_TEST_RESOURCE_LOG="$resource_log" GHCR_TEST_DENY_RESOURCE_PACKAGE=phanthienquoc/stockdividend/admin GHCR_USERNAME=test-user GHCR_TOKEN=test-only-secret TARGET_APP=stockdividend bash "$validator" >"$tmp_dir/resource-failure.log" 2>&1; then
+if env PATH="$tmp_dir/bin:$PATH" GHCR_TEST_SCOPE_LOG="$scope_log" GHCR_TEST_RESOURCE_LOG="$resource_log" GHCR_TEST_DENY_RESOURCE_PACKAGE=phanthienquoc/tce-dashboard/web GHCR_USERNAME=test-user GHCR_TOKEN=test-only-secret TARGET_APP=tce-dashboard bash "$validator" >"$tmp_dir/resource-failure.log" 2>&1; then
   echo "Expected package resource denial to fail even when the token endpoint returned a token." >&2
   exit 1
 fi
-grep -Fq 'cannot read ghcr.io/phanthienquoc/stockdividend/admin' "$tmp_dir/resource-failure.log"
-grep -Fxq 'phanthienquoc/stockdividend/admin' "$resource_log"
+grep -Fq 'cannot read ghcr.io/phanthienquoc/tce-dashboard/web' "$tmp_dir/resource-failure.log"
+grep -Fxq 'phanthienquoc/tce-dashboard/web' "$resource_log"
 if grep -q 'test-only-secret\|test-only-token' "$tmp_dir/resource-failure.log"; then
   echo "Failed package preflight leaked a test token to output." >&2
   exit 1

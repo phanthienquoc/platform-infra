@@ -6,9 +6,9 @@ metadata:
 data:
   NODE_ENV: production
   PORT: "4010"
-  CORS_ORIGINS: "https://tce.mrcute.space,https://media.mrcute.space"
+  CORS_ORIGINS: "https://tce.mrcute.space"
   JWT_ISSUER: "https://auth.mrcute.space"
-  JWT_AUDIENCE: "tce-dashboard,media-generation"
+  JWT_AUDIENCE: "tce-dashboard"
   JWT_ACCESS_TTL_SECONDS: "900"
   JWT_REFRESH_TTL_SECONDS: "2592000"
   PASSKEY_RP_ID: "mrcute.space"

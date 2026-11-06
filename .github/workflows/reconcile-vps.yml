@@ -27,8 +27,6 @@ run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target
           - all
           - auth-service
           - tce-dashboard
-          - stockdividend
-          - media-generation
           - microfe
           - keycloak
           - auth-shutdown
@@ -120,7 +118,7 @@ jobs:
         run: |
           set -euo pipefail
           case "$TARGET_APP" in
-            all|auth-service|tce-dashboard|stockdividend|media-generation|microfe|keycloak|auth-shutdown) ;;
+            all|auth-service|tce-dashboard|microfe|keycloak|auth-shutdown) ;;
             *) echo "::error::Unsupported deployment scope: $TARGET_APP"; exit 1 ;;
           esac
           echo "Deployment scope: $TARGET_APP"
@@ -139,16 +137,16 @@ jobs:
         if: ${{ env.RECONCILE_MODE == 'apply' }}
         run: |
           set -euo pipefail
-          expected="platform-kubectl policy: rollout-status-v14-stockdividend-managed-workloads"
+          expected="platform-kubectl policy: rollout-status-v15-core-workloads"
           for attempt in $(seq 1 24); do
             if policy="$(sudo /usr/local/sbin/platform-kubectl policy-version 2>/dev/null)" && [[ "$policy" == "$expected" ]]; then
-              echo "Runner policy v14 (managed StockDividend workloads) is ready."
+              echo "Runner policy v15 (core platform workloads) is ready."
               exit 0
             fi
-            echo "Waiting for runner bootstrap policy v14 (attempt $attempt/24)..."
+            echo "Waiting for runner bootstrap policy v15 (attempt $attempt/24)..."
             sleep 5
           done
-          echo "Runner policy is not updated to managed-workload v14; refusing production apply." >&2
+          echo "Runner policy is not updated to core-workload v15; refusing production apply." >&2
           exit 1
       - name: Validate GHCR pull access before mutating cluster credentials
         if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app != 'keycloak' && steps.scope.outputs.target_app != 'auth-shutdown' }}
@@ -213,61 +211,6 @@ jobs:
           set -euo pipefail
           chmod +x scripts/verify-tce-gitops-release.sh
           ./scripts/verify-tce-gitops-release.sh
-
-      - name: Resolve paired Media image references
-        if: ${{ steps.scope.outputs.target_app != 'keycloak' && (steps.scope.outputs.target_app == 'media-generation' || steps.scope.outputs.target_app == 'all') }}
-        run: |
-          set -euo pipefail
-          FILE="apps/media-generation/overlays/prod/kustomization.yaml"
-          MEDIA_BACKEND_REF="$(awk '
-            $0 == "- name: ghcr.io/phanthienquoc/media-generation/backend" { in_image=1; next }
-            in_image && /^- name:/ { exit }
-            in_image && /newTag:/ { print "tag:" $2; exit }
-            in_image && /digest:/ { print "digest:" $2; exit }
-          ' "$FILE")"
-          MEDIA_FRONTEND_REF="$(awk '
-            $0 == "- name: ghcr.io/phanthienquoc/media-generation/frontend" { in_image=1; next }
-            in_image && /^- name:/ { exit }
-            in_image && /newTag:/ { print "tag:" $2; exit }
-            in_image && /digest:/ { print "digest:" $2; exit }
-          ' "$FILE")"
-
-          test -n "$MEDIA_BACKEND_REF" || { echo "::error::Unable to resolve Media backend image reference"; exit 1; }
-          test -n "$MEDIA_FRONTEND_REF" || { echo "::error::Unable to resolve Media frontend image reference"; exit 1; }
-
-          if [[ "$MEDIA_BACKEND_REF" =~ ^tag:prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}$ ]] &&
-             [[ "$MEDIA_FRONTEND_REF" =~ ^tag:prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}$ ]]; then
-            MEDIA_BACKEND_TAG="${MEDIA_BACKEND_REF#tag:}"
-            MEDIA_FRONTEND_TAG="${MEDIA_FRONTEND_REF#tag:}"
-            test "$MEDIA_BACKEND_TAG" = "$MEDIA_FRONTEND_TAG" || {
-              echo "::error::Legacy Media backend/frontend tags must be paired"; exit 1;
-            }
-            MEDIA_TAG="$MEDIA_BACKEND_TAG"
-          elif [[ "$MEDIA_BACKEND_REF" =~ ^digest:sha256:[0-9a-f]{64}$ ]] &&
-               [[ "$MEDIA_FRONTEND_REF" =~ ^digest:sha256:[0-9a-f]{64}$ ]]; then
-            MEDIA_BACKEND_DIGEST="${MEDIA_BACKEND_REF#digest:}"
-            MEDIA_FRONTEND_DIGEST="${MEDIA_FRONTEND_REF#digest:}"
-            MEDIA_TAG="${RELEASE_TAG:-digest-pinned}"
-            if [[ -n "${RELEASE_TAG:-}" ]]; then
-              [[ "$RELEASE_TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{40}$ ]] || {
-                echo "::error::Digest-pinned Media reconciliation requires a full-SHA release label"; exit 1;
-              }
-            fi
-            echo "Media backend digest: $MEDIA_BACKEND_DIGEST"
-            echo "Media frontend digest: $MEDIA_FRONTEND_DIGEST"
-            echo "MEDIA_BACKEND_DIGEST=$MEDIA_BACKEND_DIGEST" >> "$GITHUB_ENV"
-            echo "MEDIA_FRONTEND_DIGEST=$MEDIA_FRONTEND_DIGEST" >> "$GITHUB_ENV"
-          else
-            echo "::error::Media backend/frontend must both be full release tags or both SHA-256 digests"
-            echo "backend=$MEDIA_BACKEND_REF frontend=$MEDIA_FRONTEND_REF"
-            exit 1
-          fi
-
-          {
-            echo "MEDIA_BACKEND_REF=$MEDIA_BACKEND_REF"
-            echo "MEDIA_FRONTEND_REF=$MEDIA_FRONTEND_REF"
-            echo "MEDIA_TAG=$MEDIA_TAG"
-          } >> "$GITHUB_ENV"
 
       - name: Apply Auth and Keycloak shutdown only
         if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app == 'auth-shutdown' }}
@@ -362,11 +305,7 @@ jobs:
           test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
           test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
 
-          if [ "$TARGET_APP" = "media-generation" ]; then
-            TAG="${RELEASE_TAG:-${MEDIA_TAG:-unknown}}"
-          else
-            TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
-          fi
+          TAG="${RELEASE_TAG:-$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')}"
           test -n "$TAG" || TAG="unknown"
 
           # Keep this template identical in structure to the rollout summary.
@@ -637,65 +576,6 @@ jobs:
           chmod +x scripts/verify-workload-health.sh
           ./scripts/verify-workload-health.sh
 
-  deploy-stockdividend:
-    name: Deploy lane — StockDividend
-    needs: reconcile
-    if: ${{ needs.reconcile.result == 'success' && needs.reconcile.outputs.mode == 'apply' && (needs.reconcile.outputs.target_app == 'all' || needs.reconcile.outputs.target_app == 'stockdividend') }}
-    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
-    environment: production
-    concurrency:
-      group: deploy-stockdividend
-      cancel-in-progress: false
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Verify StockDividend rollout
-        if: ${{ needs.reconcile.outputs.drift == 'true' }}
-        run: |
-          set -u
-          rc=0
-          sudo /usr/local/sbin/platform-kubectl rollout status deployment/stock-admin -n stock-prod --timeout=180s || rc=1
-          sudo /usr/local/sbin/platform-kubectl rollout status deployment/stock-backend -n stock-prod --timeout=180s || rc=1
-          exit "$rc"
-      - name: Verify StockDividend workload health
-        env:
-          TARGET_APP: stockdividend
-        run: |
-          set -euo pipefail
-          chmod +x scripts/verify-workload-health.sh
-          ./scripts/verify-workload-health.sh
-
-  deploy-media-generation:
-    name: Deploy lane — Media Generation
-    needs: reconcile
-    if: ${{ needs.reconcile.result == 'success' && needs.reconcile.outputs.mode == 'apply' && (needs.reconcile.outputs.target_app == 'all' || needs.reconcile.outputs.target_app == 'media-generation') }}
-    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
-    environment: production
-    concurrency:
-      group: deploy-media-generation
-      cancel-in-progress: false
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Verify Media Generation rollout
-        if: ${{ needs.reconcile.outputs.drift == 'true' }}
-        run: |
-          set -u
-          rc=0
-          sudo /usr/local/sbin/platform-kubectl rollout status deployment/media-generation -n media-prod --timeout=180s || rc=1
-          sudo /usr/local/sbin/platform-kubectl rollout status deployment/media-generation-frontend -n media-prod --timeout=180s || rc=1
-          sudo /usr/local/sbin/platform-kubectl get deployments -n media-prod -o wide
-          exit "$rc"
-      - name: Verify Media workload health
-        env:
-          TARGET_APP: media-generation
-        run: |
-          set -euo pipefail
-          chmod +x scripts/verify-workload-health.sh
-          ./scripts/verify-workload-health.sh
-
   deployment-lane-summary:
     name: Deployment lane summary / final gate
     needs:
@@ -703,8 +583,6 @@ jobs:
       - deploy-auth-service
       - deploy-microfe
       - deploy-tce-dashboard
-      - deploy-stockdividend
-      - deploy-media-generation
       - deploy-keycloak
     if: ${{ always() && needs.reconcile.result == 'success' && needs.reconcile.outputs.mode == 'apply' }}
     runs-on: ubuntu-latest
@@ -715,8 +593,6 @@ jobs:
           AUTH_RESULT: ${{ needs.deploy-auth-service.result }}
           MICROFE_RESULT: ${{ needs.deploy-microfe.result }}
           TCE_RESULT: ${{ needs.deploy-tce-dashboard.result }}
-          STOCK_RESULT: ${{ needs.deploy-stockdividend.result }}
-          MEDIA_RESULT: ${{ needs.deploy-media-generation.result }}
           KEYCLOAK_RESULT: ${{ needs.deploy-keycloak.result }}
         run: |
           set -euo pipefail
@@ -735,8 +611,6 @@ jobs:
           check_lane auth-service "$AUTH_RESULT"
           check_lane microfe "$MICROFE_RESULT"
           check_lane tce-dashboard "$TCE_RESULT"
-          check_lane stockdividend "$STOCK_RESULT"
-          check_lane media-generation "$MEDIA_RESULT"
           if [ "$TARGET_APP" = "keycloak" ]; then
             if [ "$KEYCLOAK_RESULT" != "success" ]; then
               echo "::error::Deployment lane keycloak finished with result: $KEYCLOAK_RESULT"

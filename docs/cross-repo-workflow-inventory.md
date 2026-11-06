@@ -1,3 +1,17 @@
+## Workflow inventory runtime update — 2026-11-06 08:38 ICT / 01:38 UTC
+
+- **Default-branch refs:** Platform Infra `b1a0c185e3f97630aa2bf55945bb5f674200bf97`; TCE Dashboard `512b69d837e2a65c39867a062529a7fa0eada4cc`; StockDividend `6fcefa6b3792dab92b6d5c438001633d25f1ca28`; Media Generation `3a8846a4f273eeb20a55b214d5ad80804c2d8d52`; Authentication `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
+- **Open PRs:** Platform #1301 ready, #1296/#544/#541/#539 draft; Auth #75 ready/#76 draft; none in TCE, StockDividend or Media.
+- **Stock publisher:** PR #32 merged; post-merge StockDividend CI #42137523269 PASS. The app retains ARM64 immutable publication and manual release hold; no new publisher run, Platform dispatch, or production promotion after merge.
+- **Media publisher:** PR #72 merged; post-merge Media CI #42136991059 PASS. The app retains paired immutable full-source-SHA GHCR digest verification and no longer sends Platform dispatches; no production release was triggered.
+- **Platform decommission PR #1301:** exact head `dce6ae5341ce925177156f5fd9b537c453589323`, 10 commits ahead/0 behind. It removes 19 Stock/Media manifest files and six obsolete app-specific helper files, removes their active reconcile/health/recovery/GHCR/dispatch contracts, and adds a manual-only storage-gated namespace workflow. Exact-head checks #42145176538/#42145176539/#42145176540 are queued; do not merge until all required checks pass on the final head.
+- **Decommission guard:** workflow requires `DELETE-STOCK-PROD-AND-MEDIA-PROD`, `BACKUP-AND-EXTERNAL-DATA-REVIEWED`, and `MEDIA-RUNNER-STOPPED-AND-UNREGISTERED`. Preflight inventories all namespaced object names without printing Secret/ConfigMap values, then checks PVCs, PV claims and StorageClasses. Namespace deletion remains unexecuted; PVs, DNS, GHCR packages, external data and app repositories are preserved.
+- **Previous branch runs:** #42141922040 and #42142089191 were on older branch commits; they are not current-head checks. Master validation runs #42137791277/#42137885767 passed before this PR.
+- **Runtime evidence:** read-only snapshot #42131886966 was generated at 23:46:15Z and is stale for deletion; it omits PVC/PV/StorageClass inventory and last showed the dedicated Media runner active. Current runner state is unverified; no K3s namespace deletion or runner unregister was performed.
+- **TCE:** native WF-06 #42133793538 failed four strict public HTTP 200 probes with 503 while TCE/Auth/Keycloak remain operator-scaled to zero; WF-13 fallback #42133822204 passed and remained read-only. TCE market-scan schedule unchanged.
+- **Authentication:** PR #75/#76 remain gated; their last validate runs #40446492086/#41329425940 are historical and Supabase Preview is SKIPPED. No migration or release.
+- **Ownership:** app repos own tests/builds/immutable GHCR publication; Platform owns remaining manifests/shared pull credentials/provenance/promotion/reconcile/rollout/health. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. Preserve useful CI/security/manual/release/scheduled workflows and avoid duplicate SSH/Compose deployment paths.
+
 ## Workflow inventory runtime update — 2026-11-06 07:29 ICT / 00:29 UTC
 
 - **Default-branch refs:** Platform Infra `3346be7997d017bd45eb0782331a7dafb9bb571c`; TCE Dashboard `512b69d837e2a65c39867a062529a7fa0eada4cc`; StockDividend `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; Media Generation `3a8846a4f273eeb20a55b214d5ad80804c2d8d52`; Authentication `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
