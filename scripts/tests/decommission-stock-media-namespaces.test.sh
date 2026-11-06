@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "\${BASH_SOURCE[0]}")/../.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SCRIPT="$ROOT/scripts/decommission-stock-media-namespaces.sh"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
@@ -19,10 +19,10 @@ case "$*" in
     ;;
   "get all -n stock-prod -o wide"|"get all -n media-prod -o wide"|"get pvc -n stock-prod -o wide"|"get pvc -n media-prod -o wide"|"get storageclasses -o wide") exit 0 ;;
   "get pvc -n stock-prod -o json"|"get pvc -n media-prod -o json")
-    if [[ "\${MOCK_PVC:-0}" == "1" ]]; then printf '%s\n' '{"items":[{"metadata":{"name":"keep-me"}}]}'; else printf '%s\n' '{"items":[]}'; fi
+    if [[ "${MOCK_PVC:-0}" == "1" ]]; then printf '%s\n' '{"items":[{"metadata":{"name":"keep-me"}}]}'; else printf '%s\n' '{"items":[]}'; fi
     ;;
   "get pv -o json")
-    if [[ "\${MOCK_PV:-0}" == "1" ]]; then
+    if [[ "${MOCK_PV:-0}" == "1" ]]; then
       printf '%s\n' '{"items":[{"metadata":{"name":"pv-stock"},"spec":{"claimRef":{"namespace":"stock-prod"},"persistentVolumeReclaimPolicy":"Retain","storageClassName":"local-path"}}]}'
     else
       printf '%s\n' '{"items":[]}'

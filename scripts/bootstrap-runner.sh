@@ -106,29 +106,29 @@ case "${1:-}" in
       exit 2
     }
     for namespace in stock-prod media-prod; do
-      "\${KUBECTL[@]}" get namespace "$namespace" >/dev/null
-      pvc_json="$("\${KUBECTL[@]}" get pvc -n "$namespace" -o json)"
+      "${KUBECTL[@]}" get namespace "$namespace" >/dev/null
+      pvc_json="$("${KUBECTL[@]}" get pvc -n "$namespace" -o json)"
       pvc_count="$(jq -r '.items | length' <<< "$pvc_json")"
       [[ "$pvc_count" == "0" ]] || {
         echo "platform-kubectl: PVCs remain in $namespace; aborting namespace deletion" >&2
         exit 1
       }
-      pv_claims="$("\${KUBECTL[@]}" get pv -o json | jq -r --arg namespace "$namespace" '.items[]? | select(.spec.claimRef.namespace == $namespace) | .metadata.name')"
+      pv_claims="$("${KUBECTL[@]}" get pv -o json | jq -r --arg namespace "$namespace" '.items[]? | select(.spec.claimRef.namespace == $namespace) | .metadata.name')"
       [[ -z "$pv_claims" ]] || {
         echo "platform-kubectl: PV claims remain for $namespace; aborting namespace deletion" >&2
         printf '%s\n' "$pv_claims" >&2
         exit 1
       }
     done
-    "\${KUBECTL[@]}" delete namespace stock-prod media-prod --wait=true --timeout=300s
+    "${KUBECTL[@]}" delete namespace stock-prod media-prod --wait=true --timeout=300s
     for namespace in stock-prod media-prod; do
-      if "\${KUBECTL[@]}" get namespace "$namespace" >/dev/null 2>&1; then
+      if "${KUBECTL[@]}" get namespace "$namespace" >/dev/null 2>&1; then
         echo "platform-kubectl: namespace $namespace still exists after deletion" >&2
         exit 1
       fi
     done
-    "\${KUBECTL[@]}" get namespace tce-prod >/dev/null
-    "\${KUBECTL[@]}" get namespace microfe-platform >/dev/null
+    "${KUBECTL[@]}" get namespace tce-prod >/dev/null
+    "${KUBECTL[@]}" get namespace microfe-platform >/dev/null
     echo "StockDividend and Media namespaces are absent; TCE and MicroFE namespaces remain."
     exit 0
     ;;

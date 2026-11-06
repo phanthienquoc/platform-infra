@@ -563,7 +563,6 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Verify Auth publisher run provenance
-      - name: Verify Auth publisher run provenance
         if: ${{ github.event_name == 'repository_dispatch' && github.event.action == 'auth-image-published' }}
         env:
           SOURCE_RUN_ID: ${{ steps.input.outputs.source_run_id }}
@@ -575,13 +574,13 @@ jobs:
 
       - name: Validate promoted image in GHCR
         env:
-          GHCR_USERNAME: \${{ vars.GHCR_USERNAME || github.repository_owner }}
-          GHCR_TOKEN: \${{ secrets.GHCR_READ_TOKEN }}
-          APP: \${{ steps.input.outputs.app }}
-          COMPONENT: \${{ steps.input.outputs.component }}
-          TAG: \${{ steps.input.outputs.tag }}
-          SOURCE_COMMIT: \${{ steps.input.outputs.source_commit }}
-          AUTH_DIGEST: \${{ steps.input.outputs.auth_digest }}
+          GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}
+          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+          APP: ${{ steps.input.outputs.app }}
+          COMPONENT: ${{ steps.input.outputs.component }}
+          TAG: ${{ steps.input.outputs.tag }}
+          SOURCE_COMMIT: ${{ steps.input.outputs.source_commit }}
+          AUTH_DIGEST: ${{ steps.input.outputs.auth_digest }}
         run: |
           set -euo pipefail
           if [[ -z "$GHCR_USERNAME" || -z "$GHCR_TOKEN" ]]; then
@@ -595,7 +594,7 @@ jobs:
               echo "::error::Auth source commit must be a full 40-character SHA before registry verification."
               exit 1
             }
-            [[ "$TAG" =~ ^prod-v[0-9]+[.][0-9]+[.][0-9]+-[0-9a-f]{40}$ && "\${TAG##*-}" == "$SOURCE_COMMIT" ]] || {
+            [[ "$TAG" =~ ^prod-v[0-9]+[.][0-9]+[.][0-9]+-[0-9a-f]{40}$ && "${TAG##*-}" == "$SOURCE_COMMIT" ]] || {
               echo "::error::Auth release tag must end with the exact source commit SHA."
               exit 1
             }
@@ -610,7 +609,7 @@ jobs:
 
       - name: Update Auth Kustomize image digest
         env:
-          AUTH_DIGEST: \${{ steps.input.outputs.auth_digest }}
+          AUTH_DIGEST: ${{ steps.input.outputs.auth_digest }}
         run: |
           set -euo pipefail
           test -n "$AUTH_DIGEST" || { echo "::error::Auth promotion requires an immutable digest."; exit 1; }

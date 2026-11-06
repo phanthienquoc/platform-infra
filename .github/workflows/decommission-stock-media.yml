@@ -42,8 +42,8 @@ jobs:
 
       - name: Validate exact confirmation and production ref
         env:
-          CONFIRMATION: \${{ inputs.confirmation }}
-          DATA_RETENTION_REVIEW: \${{ inputs.data_retention_review }}
+          CONFIRMATION: ${{ inputs.confirmation }}
+          DATA_RETENTION_REVIEW: ${{ inputs.data_retention_review }}
         run: |
           set -euo pipefail
           test "$GITHUB_REF" = "refs/heads/master" || {
@@ -64,6 +64,6 @@ jobs:
 
       - name: Delete only the two approved namespaces
         env:
-          CONFIRMATION: \${{ inputs.confirmation }}
-          DATA_RETENTION_REVIEW: \${{ inputs.data_retention_review }}
+          CONFIRMATION: ${{ inputs.confirmation }}
+          DATA_RETENTION_REVIEW: ${{ inputs.data_retention_review }}
         run: bash scripts/decommission-stock-media-namespaces.sh delete
