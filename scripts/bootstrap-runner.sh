@@ -31,6 +31,39 @@ set -euo pipefail
 
 KUBECTL=(/usr/local/bin/k3s kubectl)
 
+namespace_storage_snapshot_refs() {
+  [[ "$#" -eq 1 ]] || {
+    echo "platform-kubectl: namespace_storage_snapshot_refs requires exactly one namespace" >&2
+    return 2
+  }
+  local namespace="$1" namespaced_resources cluster_resources resource objects content_json
+  case "$namespace" in
+    stock-prod|media-prod) ;;
+    *)
+      echo "platform-kubectl: snapshot inventory is restricted to the two retired namespaces" >&2
+      return 2
+      ;;
+  esac
+
+  namespaced_resources="$("${KUBECTL[@]}" api-resources --api-group=snapshot.storage.k8s.io --verbs=list --namespaced -o name)"
+  while IFS= read -r resource; do
+    [[ "$resource" == "volumesnapshots.snapshot.storage.k8s.io" ]] || continue
+    objects="$("${KUBECTL[@]}" get "$resource" -n "$namespace" -o name)"
+    [[ -z "$objects" ]] || printf '%s\n' "$objects"
+  done <<< "$namespaced_resources"
+
+  cluster_resources="$("${KUBECTL[@]}" api-resources --api-group=snapshot.storage.k8s.io --verbs=list --namespaced=false -o name)"
+  while IFS= read -r resource; do
+    [[ "$resource" == "volumesnapshotcontents.snapshot.storage.k8s.io" ]] || continue
+    content_json="$("${KUBECTL[@]}" get "$resource" -o json)"
+    jq -r --arg namespace "$namespace" '
+      .items[]?
+      | select(.spec.volumeSnapshotRef.namespace == $namespace)
+      | "volumesnapshotcontent.snapshot.storage.k8s.io/\(.metadata.name)"
+    ' <<< "$content_json"
+  done <<< "$cluster_resources"
+}
+
 case "${1:-}" in
   version)
     [[ "$#" -eq 1 ]] || exit 2
@@ -111,11 +144,13 @@ case "${1:-}" in
     resources="$("${KUBECTL[@]}" api-resources --verbs=list --namespaced -o name)"
     while IFS= read -r resource; do
       [[ -n "$resource" ]] || continue
+      [[ "$resource" == "volumesnapshots.snapshot.storage.k8s.io" ]] && continue
       objects="$("${KUBECTL[@]}" get "$resource" -n "$namespace" -o name)"
       if [[ -n "$objects" ]]; then
         printf "%s\n" "$objects"
       fi
     done <<< "$resources"
+    namespace_storage_snapshot_refs "$namespace"
     exit 0
     ;;
   decommission-stock-media)
@@ -141,6 +176,13 @@ case "${1:-}" in
       [[ -z "$pv_claims" ]] || {
         echo "platform-kubectl: PV claims remain for $namespace; aborting namespace deletion" >&2
         printf '%s\n' "$pv_claims" >&2
+        exit 1
+      }
+
+      snapshot_refs="$(namespace_storage_snapshot_refs "$namespace")"
+      [[ -z "$snapshot_refs" ]] || {
+        echo "platform-kubectl: VolumeSnapshot references remain for $namespace; aborting namespace deletion" >&2
+        printf '%s\n' "$snapshot_refs" >&2
         exit 1
       }
     done

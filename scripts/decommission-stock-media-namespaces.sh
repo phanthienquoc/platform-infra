@@ -11,7 +11,7 @@ run_kubectl() {
 }
 
 preflight() {
-  local namespaces_json namespace pvc_json pvc_count pv_json pv_claims
+  local namespaces_json namespace pvc_json pvc_count pv_json pv_claims namespace_inventory snapshot_refs
   echo "### Platform namespace preservation check"
   for namespace in tce-prod microfe-platform; do
     run_kubectl get namespace "$namespace" >/dev/null
@@ -26,8 +26,15 @@ preflight() {
       return 1
     }
     echo
-    echo "### All namespaced API objects in $namespace (names only; no Secret/ConfigMap values)"
-    run_kubectl inventory-namespace "$namespace"
+    echo "### Namespaced objects and storage snapshot references in $namespace (names only; no Secret/ConfigMap values)"
+    namespace_inventory="$(run_kubectl inventory-namespace "$namespace")"
+    printf '%s\n' "$namespace_inventory"
+    snapshot_refs="$(grep -E '^(volumesnapshot|volumesnapshotcontent)\.snapshot\.storage\.k8s\.io/' <<< "$namespace_inventory" || true)"
+    [[ -z "$snapshot_refs" ]] || {
+      echo "VolumeSnapshot references remain for $namespace; backup/reclaim review is required:" >&2
+      printf '%s\n' "$snapshot_refs" >&2
+      return 1
+    }
     echo "### Common workload status: $namespace"
     run_kubectl get all -n "$namespace" -o wide
     run_kubectl get pvc -n "$namespace" -o wide
@@ -47,7 +54,7 @@ preflight() {
   echo
   echo "### StorageClass inventory"
   run_kubectl get storageclasses -o wide
-  echo "Preflight passed: target namespaces have no PVCs or PV claims."
+  echo "Preflight passed: target namespaces have no PVCs, PV claims or VolumeSnapshot references."
 }
 
 case "$MODE" in
