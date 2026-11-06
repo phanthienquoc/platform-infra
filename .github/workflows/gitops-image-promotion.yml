@@ -477,9 +477,6 @@ jobs:
           EVENT_COMPONENT: ${{ github.event.client_payload.component }}
           EVENT_TAG: ${{ github.event.client_payload.tag }}
           EVENT_COMMIT: ${{ github.event.client_payload.commit }}
-          EVENT_BACKEND_DIGEST: ${{ github.event.client_payload.backend_digest }}
-          EVENT_ADMIN_DIGEST: ${{ github.event.client_payload.admin_digest }}
-          EVENT_FRONTEND_DIGEST: ${{ github.event.client_payload.frontend_digest }}
           EVENT_AUTH_DIGEST: ${{ github.event.client_payload.auth_digest }}
           EVENT_RELEASE: ${{ github.event.client_payload.release }}
           EVENT_SOURCE_RUN_ID: ${{ github.event.client_payload.source_run_id }}
@@ -492,9 +489,6 @@ jobs:
         run: |
           set -euo pipefail
 
-          BACKEND_DIGEST=""
-          ADMIN_DIGEST=""
-          FRONTEND_DIGEST=""
           AUTH_DIGEST=""
           SOURCE_COMMIT=""
           SOURCE_RUN_ID=""
@@ -559,9 +553,6 @@ jobs:
             echo "app=$APP"
             echo "component=$COMPONENT"
             echo "tag=$TAG"
-            echo "backend_digest=$BACKEND_DIGEST"
-            echo "admin_digest=$ADMIN_DIGEST"
-            echo "frontend_digest=$FRONTEND_DIGEST"
             echo "auth_digest=$AUTH_DIGEST"
             echo "source_commit=$SOURCE_COMMIT"
             echo "source_run_id=$SOURCE_RUN_ID"
