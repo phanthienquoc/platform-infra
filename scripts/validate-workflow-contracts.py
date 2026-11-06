@@ -587,6 +587,17 @@ for required in ("auth_digest:", "source_commit:", "INPUT_AUTH_DIGEST: ${{ input
     if required not in promotion:
         fail(f"Manual Auth promotion must require immutable digest/source inputs: {required}")
 
+# The legacy generic image-published event allowed tag-only Auth handoffs.
+# Current in-scope producers use the provenance-bound auth-image-published contract.
+if "- image-published" in promotion:
+    fail("Generic image-published dispatch is retired; Auth must use auth-image-published with source-run provenance.")
+if "if: (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master') || (github.event_name == 'repository_dispatch' && github.event.action == 'auth-image-published')" not in promotion:
+    fail("Auth promotion job must accept only manual master runs or the provenance-bound auth-image-published event.")
+if 'if [[ "$GITHUB_EVENT_NAME" == "repository_dispatch" && "$EVENT_ACTION" != "auth-image-published" ]]; then' not in promotion:
+    fail("Auth promotion input resolver must reject every unsupported repository_dispatch event.")
+if "only auth-image-published with publisher provenance" not in promotion:
+    fail("Auth promotion must fail closed for legacy or unknown dispatch actions.")
+
 # MicroFE digest promotions must use the shared GitOps promotion workflow.
 if "microfe-images-published" not in promotion:
     fail("gitops-image-promotion.yml must consume microfe-images-published.")
