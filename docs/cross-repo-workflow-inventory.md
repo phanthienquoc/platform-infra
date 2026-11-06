@@ -4694,3 +4694,29 @@ No production workload, image, replica, manifest, credential, namespace, PVC/PV,
 - The connector still does not provide repo-wide default-branch Actions run listings/status contexts; default-branch combined statuses were empty. Last-known TCE health, Stock/Media runtime and K3s evidence remain the prior checkpoint's evidence, not a fresh operational observation.
 
 No production workload, image, replica, manifest, Secret, namespace, PVC/PV, external database, DNS, runner or host was changed. TCE market-scan schedule unchanged.
+
+
+## Runtime workflow inventory — 2026-11-06 19:55 ICT / 12:55 UTC
+
+| Repository | Current master SHA | Open PRs | Latest current-head CI / operational evidence |
+|---|---|---|---|
+| Platform Infra | `bfb5cbcac5b8f8307d91c1e62973f0bd9f89f3f5` | #1314/#544/#541/#539 (draft) | Manifest validation #42215611596 PASS. Latest native reconcile #42199267592 at 10:00:15Z; latest native watchdog #42201400071 at 10:16:28Z; latest native inspect #42193617816 at 09:15:08Z. Later reconcile #42211637997 was manual. |
+| TCE Dashboard | `512b69d837e2a65c39867a062529a7fa0eada4cc` | None | WF-12 native #42211610532 FAIL: WF-06 native run #42176208184 is 294m old. WF-13 fallback #42211627712 dispatched WF-06 manual #42211645157, which returned 503 on all four public probes. WF-07 native #42176751608 PASS. |
+| StockDividend | `3aeaf519b7a786d13dcecee763acaca357c47ddd` | None | CI #42167088130 PASS 7/7. Latest publisher #41563856933 (Nov 3) is on old source SHA `50ba0dfb...`. |
+| Media Generation | `3a8846a4f273eeb20a55b214d5ad80804c2d8d52` | None | CI #42136991059 PASS. Latest publisher #41158598649 (Oct 31) is on old source SHA `32f3bf56...`. |
+| Authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` | #75 ready/#76 draft | Current CI #42215394539 PASS. Latest release publisher #41040510320 (Oct 30) predates current master/release gate. |
+
+### Confirmed watchdog implementation correction
+
+Platform watchdog run #42207900645 exposed a malformed multi-line shell URL assignment in the read-only TCE schedule observer. Commit #6f5d329 changed the construction to a single argument:
+`TCE_API_BASE="https://api.github.com/repos/phanthienquoc/TCE-dashboard/actions/workflows"`
+`tce_runs_url="${TCE_API_BASE}/wf-06-tce-healthcheck.yml/runs?event=schedule&per_page=10"`
+The same commit added a contract assertion for the safe URL form and excluded the read-only helper from recovery push triggers. Subsequent read-only smoke #42208198166 passed, and actionlint/yamllint/shellcheck/ops regression run #42208198270 passed.
+
+### Schedule and production classification
+
+Native schedules must be distinguished from manual and workflow-run fallbacks. Platform manual reconcile #42211637997 (11:37:32Z) and recovery #42211812418 (11:39:02Z) succeeded but do not refresh schedule freshness. TCE WF-12 #42211610532 is a native schedule and failed stale-WF-06 verification; its Platform heartbeat succeeded. WF-13 #42211627712 is workflow_run and the subsequent WF-06 #42211645157 is workflow_dispatch; neither is native schedule evidence. Preserve all cron expressions and the TCE market-scan schedule.
+
+Latest K3s inspection #42208147735 is manual and about 1h45 old at this checkpoint. Its prior observations (Stock ARM64 ImagePullBackOff, Media 1/1, TCE/Auth 0/0, active/enabled Media runner, unrelated debug PVC only) are not fresh decommission evidence. External database/object-storage backup and DNS ownership remain unverified. No publisher for Stock/Media/Auth has produced a current-master immutable digest/provenance in the inspected history.
+
+App repositories remain owners of CI/tests/builds/immutable GHCR publication; Platform Infra remains owner of production manifests, shared pull credentials, digest/provenance validation, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` is the only apply authority; `inspect-vps.yml` is read-only. No production mutation; TCE market-scan unchanged.
