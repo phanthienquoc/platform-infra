@@ -50,7 +50,9 @@ esac
 MOCK
 chmod +x "$fake"
 
+# shellcheck disable=SC2034
 KUBECTL=("$fake")
+# shellcheck disable=SC1090
 source "$helper"
 
 output="$(MOCK_SNAPSHOT=1 MOCK_CONTENT_TARGET=1 namespace_storage_snapshot_refs stock-prod)"
