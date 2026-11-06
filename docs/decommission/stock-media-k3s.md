@@ -62,7 +62,7 @@ Merged Platform PR #1301 removed both application manifest trees from the produc
 
 - The manual decommission workflow is intentionally not triggered by this PR or by routine reconciliation.
 - No live K3s namespace deletion, PVC/PV deletion, DNS change, GHCR package deletion, external database change, or runner unregister has been performed by this implementation.
-- The latest committed read-only snapshot is Platform PR #1308 (2026-11-06T03:09:17Z). It confirms no target-namespace PVC/PV claims, but the manual workflow must repeat its same-window preflight. It also confirms the dedicated Media runner remains active. The workflow must be run only after accepted backup/external-data review and independent runner stop/unregister evidence.
+- The latest committed read-only snapshot is inspection PR #1324 / run #42176445915 (2026-11-06T06:45:26Z). It confirms no target-namespace PVC/PV claims or VolumeSnapshot references, but the manual workflow must repeat its same-window preflight. It also confirms the dedicated Media runner remains active and enabled. The workflow must be run only after accepted backup/external-data/DNS review and independent runner stop/unregister evidence.
 
 ## Rollback and safety
 
@@ -79,3 +79,17 @@ Merged Platform PR #1301 removed both application manifest trees from the produc
 - The dedicated Media runner is unregistered/stopped; the shared Platform Infra runner remains healthy.
 - TCE and all other platform-owned workloads pass their existing health checks.
 - The tracker records the PR, exact merge SHA, decommission workflow/run IDs, pre/post inspection evidence, and any DNS/storage follow-up still owned outside Platform Infra.
+
+
+## Latest runtime evidence — 2026-11-06 13:58 ICT / 06:45 UTC
+
+This section supersedes the 10:18 ICT runtime snapshot above. Source: read-only `inspect-vps` run [#42176445915](https://github.com/phanthienquoc/platform-infra/actions/runs/42176445915), generated at `2026-11-06T06:45:26Z`, committed by inspection PR #1324 as `f29465020b25e1b2f5318733b5918e2d3e8a582b`.
+
+- K3s node `tce-k3s-01` is Ready, ARM64, K3s `v1.36.3+k3s1`; disk usage is 56%, available RAM about 19 GiB, and the host reports `restart_required=yes`. No reboot or package upgrade is authorized by this decommission plan.
+- Both target namespaces remain Active. `media-prod` backend/frontend are 1/1 Running with digest-pinned images. `stock-prod` remains Active: two Admin Pods and the newer Backend Pod are ImagePullBackOff because image tag `12d63b4` has no matching ARM64 manifest; the legacy Backend and Frontend are 1/1 Running.
+- Storage inventory lists only `k3s-debug/k3s-debug-logs`. No Stock/Media PVC/PV claim or VolumeSnapshot/VolumeSnapshotContent reference is listed. This is in-cluster evidence only; it does not prove external database/object-storage backup, data ownership, DNS ownership or retention approval.
+- The dedicated Media runner is still unsafe to retire automatically: `actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service` is active and enabled, and `/opt/media-actions-runner/bin/Runner.Listener` remains. The shared Platform runner is also active and must remain untouched.
+- TCE frontend/service and Auth/Keycloak remain desired at 0/0. Their state is outside this decommission; do not scale them or alter the TCE market-scan schedule.
+- Production reconcile [#42176253693](https://github.com/phanthienquoc/platform-infra/actions/runs/42176253693) completed SUCCESS before the inspection, with Platform-owned MicroFE/Auth/TCE lanes passing and Keycloak skipped. It did not delete or manage Stock/Media namespaces.
+
+The manual decommission workflow remains blocked by the active/enabled Media runner and the absence of independent backup/external-data/DNS ownership approval. Do not run it based on this snapshot alone.
