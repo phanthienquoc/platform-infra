@@ -46,25 +46,11 @@ case "$resource" in
       healthy)
         printf 'pod-1||Running|true:: \n'
         ;;
-      legacy-stock-frontend)
-        [[ "$namespace" == "stock-prod" ]] || exit 3
-        [[ "$pod_selector" == "app in (stock-admin,stock-backend)" ]] || {
-          echo "StockDividend pod health must be scoped to Admin and Backend, got: $pod_selector" >&2
-          exit 4
-        }
-        printf 'stock-admin-abc||Running|true:: \n'
-        printf 'stock-backend-abc||Running|true:: \n'
-        ;;
-      scaled-down-stockdividend-legacy-frontend)
-        [[ "$namespace" == "stock-prod" ]] || exit 3
-        [[ "$pod_selector" == "app in (stock-admin,stock-backend)" ]] || exit 4
-        exit 0
-        ;;
       terminating-only)
         printf 'pod-1|2026-10-30T13:00:00Z|Running|true:: \n'
         ;;
       image-pull)
-        printf 'pod-1||Pending|false:ImagePullBackOff::manifest unknown [container=stock-admin, image=ghcr.io/phanthienquoc/stockdividend/admin:missing, imageID=, last=/] \n'
+        printf 'pod-1||Pending|false:ImagePullBackOff::manifest unknown [container=tce-service, image=ghcr.io/phanthienquoc/tce-dashboard/service@sha256:missing, imageID=, last=/] \n'
         ;;
       no-pods|scaled-down|scaled-down-not-converged)
         exit 0
@@ -84,10 +70,6 @@ case "$resource" in
     case "$HEALTH_GATE_TEST_SCENARIO" in
       healthy)
         case "$TARGET_APP" in
-          stockdividend)
-            printf 'stock-admin|1|1|1\n'
-            printf 'stock-backend|1|1|1\n'
-            ;;
           auth-service) printf 'microfe-auth|1|1|1\n' ;;
           keycloak) printf 'keycloak|1|1|1\n' ;;
           microfe)
@@ -100,18 +82,6 @@ case "$resource" in
             ;;
           *) exit 3 ;;
         esac
-        ;;
-      legacy-stock-frontend)
-        [ "$TARGET_APP" = "stockdividend" ] || exit 3
-        printf 'stock-admin|1|1|1\n'
-        printf 'stock-backend|1|1|1\n'
-        printf 'stock-frontend|1|1|0\n'
-        ;;
-      scaled-down-stockdividend-legacy-frontend)
-        [ "$TARGET_APP" = "stockdividend" ] || exit 3
-        printf 'stock-admin|0|0|0\n'
-        printf 'stock-backend|0|0|0\n'
-        printf 'stock-frontend|1|1|0\n'
         ;;
       scaled-down)
         [ "$TARGET_APP" = "tce-dashboard" ] || exit 3
@@ -129,7 +99,7 @@ case "$resource" in
         printf 'tce-service|0|0|0\n'
         ;;
       terminating-only|image-pull|no-pods)
-        printf 'stock-admin|1|0|0\n'
+        printf 'tce-service|1|0|0\n'
         ;;
       *)
         exit 3
@@ -147,7 +117,7 @@ chmod +x "$tmp_dir/kubectl-mock"
 run_case() {
   local scenario="$1"
   local expected_status="$2"
-  local target_app="${3:-stockdividend}"
+  local target_app="${3:-tce-dashboard}"
   local actual_status=0
 
   if HEALTH_GATE_TEST_SCENARIO="$scenario" \
@@ -170,7 +140,7 @@ run_case() {
       echo "Image-pull diagnostics must preserve the registry error message." >&2
       exit 1
     }
-    grep -Fq "image=ghcr.io/phanthienquoc/stockdividend/admin:missing" "$tmp_dir/$scenario-$target_app.log" || {
+    grep -Fq "image=ghcr.io/phanthienquoc/tce-dashboard/service@sha256:missing" "$tmp_dir/$scenario-$target_app.log" || {
       cat "$tmp_dir/$scenario-$target_app.log" >&2
       echo "Image-pull diagnostics must include the exact image reference." >&2
       exit 1
@@ -178,12 +148,10 @@ run_case() {
   fi
 }
 
-run_case healthy 0 stockdividend
-run_case legacy-stock-frontend 0 stockdividend
-run_case scaled-down-stockdividend-legacy-frontend 0 stockdividend
-run_case terminating-only 1 stockdividend
-run_case image-pull 1 stockdividend
-run_case no-pods 1 stockdividend
+run_case healthy 0 tce-dashboard
+run_case terminating-only 1 tce-dashboard
+run_case image-pull 1 tce-dashboard
+run_case no-pods 1 tce-dashboard
 run_case healthy 0 auth-service
 run_case healthy 0 keycloak
 run_case healthy 0 microfe
