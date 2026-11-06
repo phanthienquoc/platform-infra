@@ -132,7 +132,7 @@ self_test() {
   # Manual-only and retired helper changes must never trigger an automatic
   # production apply by themselves. When paired with the retirement manifest
   # deletion, the app-tree/environment paths still force a cluster-wide pass.
-  assert_failure scripts/bootstrap-media-runner.sh scripts/decommission-stock-media-namespaces.sh scripts/resolve-push-deployment-scope.sh scripts/validate-metrics-hpa.sh scripts/validate-metrics.sh scripts/validate-network-boundaries.sh scripts/verify-reconcile-lane-queue.py scripts/verify-media-publisher-run.sh scripts/verify-stockdividend-publisher-run.sh scripts/verify-stockdividend-gitops-digests.py
+  assert_failure scripts/bootstrap-media-runner.sh scripts/decommission-stock-media-namespaces.sh scripts/validate-metrics-hpa.sh scripts/validate-metrics.sh scripts/validate-network-boundaries.sh scripts/verify-reconcile-lane-queue.py scripts/verify-media-publisher-run.sh scripts/verify-stockdividend-publisher-run.sh scripts/verify-stockdividend-gitops-digests.py
   assert_scope all apps/stockdividend/README.md apps/media-generation/README.md environments/prod/kustomization.yaml scripts/bootstrap-media-runner.sh scripts/decommission-stock-media-namespaces.sh scripts/resolve-push-deployment-scope.sh scripts/validate-metrics-hpa.sh scripts/validate-metrics.sh scripts/validate-network-boundaries.sh scripts/verify-reconcile-lane-queue.py scripts/verify-media-publisher-run.sh scripts/verify-stockdividend-publisher-run.sh scripts/verify-stockdividend-gitops-digests.py
   local keycloak_zero keycloak_one
   keycloak_zero="$(KEYCLOAK_REPLICAS_OVERRIDE=0 resolve_scope platform/keycloak/deployment.yaml)"
