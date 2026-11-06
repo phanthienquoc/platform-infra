@@ -1078,25 +1078,57 @@ decommission_workflow = read("decommission-stock-media.yml")
 decommission_script = (ROOT / "scripts" / "decommission-stock-media-namespaces.sh").read_text(encoding="utf-8")
 decommission_wrapper = bootstrap_script
 for required in (
-    "workflow_dispatch",
-    "environment: production",
+    "workflow_dispatch:",
+    "mode:",
+    "default: plan",
+    "options:",
+    "validate_mode:",
+    "permissions: {}",
+    "inputs.mode == 'plan'",
+    "inputs.mode == 'delete'",
+    "Report dedicated Media runner state",
+    "Run fresh read-only storage preflight",
+    "Delete only the two approved namespaces",
     "DELETE-STOCK-PROD-AND-MEDIA-PROD",
     "BACKUP-AND-EXTERNAL-DATA-REVIEWED",
     "MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED",
-    "Verify dedicated Media runner is retired",
-    "run: bash scripts/verify-media-runner-retired.sh",
-    "Run fresh read-only storage preflight",
-    "Delete only the two approved namespaces",
+    "environment: production",
 ):
     if required not in decommission_workflow:
         fail(f"Guarded namespace decommission workflow is missing: {required}")
 if "push:" in decommission_workflow or "schedule:" in decommission_workflow or "repository_dispatch:" in decommission_workflow:
     fail("Namespace decommission must remain manual-only.")
-runner_guard_step = decommission_workflow.find("name: Verify dedicated Media runner is retired")
-storage_preflight_step = decommission_workflow.find("name: Run fresh read-only storage preflight")
-namespace_delete_step = decommission_workflow.find("name: Delete only the two approved namespaces")
+
+plan_job_start = decommission_workflow.find("  plan:")
+delete_job_start = decommission_workflow.find("  decommission:")
+if not (0 <= plan_job_start < delete_job_start):
+    fail("Read-only plan job must be separate from the destructive decommission job.")
+plan_job = decommission_workflow[plan_job_start:delete_job_start]
+delete_job = decommission_workflow[delete_job_start:]
+if "bash scripts/decommission-stock-media-namespaces.sh plan" not in plan_job:
+    fail("Plan mode must run the read-only namespace/storage preflight.")
+if "bash scripts/decommission-stock-media-namespaces.sh delete" in plan_job:
+    fail("Plan mode must never invoke namespace deletion.")
+if "DELETE-STOCK-PROD-AND-MEDIA-PROD" in plan_job or "BACKUP-AND-EXTERNAL-DATA-REVIEWED" in plan_job or "MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED" in plan_job:
+    fail("Read-only plan mode must not require destructive operator attestations.")
+if "environment: production" in plan_job:
+    fail("Read-only plan mode must not request the production deployment environment.")
+for required in (
+    "Validate exact deletion confirmations",
+    "Verify dedicated Media runner is retired",
+    "run: bash scripts/verify-media-runner-retired.sh",
+    "Run fresh read-only storage preflight",
+    "Delete only the two approved namespaces",
+    "run: bash scripts/decommission-stock-media-namespaces.sh delete",
+    "environment: production",
+):
+    if required not in delete_job:
+        fail(f"Destructive decommission job is missing: {required}")
+runner_guard_step = delete_job.find("name: Verify dedicated Media runner is retired")
+storage_preflight_step = delete_job.find("name: Run fresh read-only storage preflight")
+namespace_delete_step = delete_job.find("name: Delete only the two approved namespaces")
 if not (0 <= runner_guard_step < storage_preflight_step < namespace_delete_step):
-    fail("Dedicated Media runner state must be checked before storage preflight and namespace deletion.")
+    fail("Dedicated Media runner state must be checked before destructive storage preflight and namespace deletion.")
 runner_guard_script = (ROOT / "scripts" / "verify-media-runner-retired.sh").read_text(encoding="utf-8")
 for required in (
     "actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service",
