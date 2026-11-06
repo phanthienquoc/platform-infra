@@ -515,22 +515,6 @@ if "if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/ma
 if "github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/master'" not in promotion:
     fail("The application promotion job must only run manual promotions from master.")
 
-# StockDividend's publisher emits the full 40-character source SHA; reject abbreviated tags.
-stockdividend_tag_block = re.search(
-    r"(?s)            stockdividend\)\n(.*?)\n              ;;",
-    promotion,
-)
-if stockdividend_tag_block is None or '[[ "$TAG" =~ ^[0-9a-f]{40}$ ]]' not in stockdividend_tag_block.group(1):
-    fail("StockDividend promotion must require a full 40-character source commit SHA.")
-if "StockDividend tag must be a full 40-character source commit SHA" not in promotion:
-    fail("StockDividend promotion must explain its full-SHA requirement.")
-full_sha_pattern = re.compile(r"^[0-9a-f]{40}$")
-if not full_sha_pattern.fullmatch("a" * 40):
-    fail("StockDividend full-SHA validator rejected a valid source SHA.")
-for invalid_tag in ("a" * 7, "a" * 39, "a" * 41, "g" * 40):
-    if full_sha_pattern.fullmatch(invalid_tag):
-        fail(f"StockDividend full-SHA validator accepted an invalid tag length/character: {invalid_tag}")
-
 # Promotion PRs use the repository-scoped GITHUB_TOKEN. Because GITHUB_TOKEN-created
 # PRs do not trigger pull_request workflows, explicitly dispatch manifest validation on
 # the exact PR branch and require a successful run for the exact head before merging.
@@ -567,291 +551,17 @@ credentials_key = (ROOT / "docs" / "credentials-key.md").read_text(encoding="utf
 if "`PLATFORM_INFRA_AUTOMATION_TOKEN`" in credentials_key:
     fail("credentials-key.md must not list the retired GitOps automation PAT.")
 
-# StockDividend publishes a paired, digest-only promotion payload after all ARM64 images verify.
-if "stockdividend-images-published" not in promotion:
-    fail("GitOps promotion must consume the atomic StockDividend digest event.")
-
-# Pin the receiver side of the cross-repository publisher payload contract. The
-# StockDividend repository self-test validates the sender's jq payload shape.
-stock_dispatch_types = promotion.split("  repository_dispatch:", 1)[1].split(
-    "  workflow_dispatch:", 1
-)[0]
-if "- stockdividend-images-published" not in stock_dispatch_types:
-    fail("GitOps promotion must subscribe to the exact StockDividend publisher event type.")
-for required in (
-    "EVENT_ACTION: ${{ github.event.action }}",
-    "EVENT_APP: ${{ github.event.client_payload.app }}",
-    "EVENT_COMMIT: ${{ github.event.client_payload.commit }}",
-    "EVENT_BACKEND_DIGEST: ${{ github.event.client_payload.backend_digest }}",
-    "EVENT_ADMIN_DIGEST: ${{ github.event.client_payload.admin_digest }}",
-    "EVENT_SOURCE_RUN_ID: ${{ github.event.client_payload.source_run_id }}",
-    "EVENT_SOURCE_WORKFLOW_PATH: ${{ github.event.client_payload.source_workflow_path }}",
-    "EVENT_SOURCE_EVENT: ${{ github.event.client_payload.source_event }}",
-    "EVENT_SOURCE_HEAD_SHA: ${{ github.event.client_payload.source_head_sha }}",
+# StockDividend and Media publishers are GHCR-only now; Platform must not accept their dispatches.
+for retired_contract in (
+    "stockdividend-images-published",
+    "media-images-published",
+    "apps/stockdividend",
+    "apps/media-generation",
+    "stock-prod",
+    "media-prod",
 ):
-    if required not in promotion:
-        fail(f"StockDividend publisher payload receiver is missing binding: {required}")
-stock_event_block = promotion.split(
-    'if [[ "$EVENT_ACTION" == "stockdividend-images-published" ]]; then', 1
-)[1].split('elif [[ "$EVENT_ACTION" == "media-images-published" ]]; then', 1)[0]
-for required in (
-    'APP="$EVENT_APP"',
-    'COMPONENT="release"',
-    'TAG="$EVENT_COMMIT"',
-    'SOURCE_COMMIT="$EVENT_COMMIT"',
-    'BACKEND_DIGEST="$EVENT_BACKEND_DIGEST"',
-    'ADMIN_DIGEST="$EVENT_ADMIN_DIGEST"',
-    'SOURCE_RUN_ID="$EVENT_SOURCE_RUN_ID"',
-    'SOURCE_WORKFLOW_PATH="$EVENT_SOURCE_WORKFLOW_PATH"',
-    'SOURCE_EVENT="$EVENT_SOURCE_EVENT"',
-    'SOURCE_HEAD_SHA="$EVENT_SOURCE_HEAD_SHA"',
-    '[[ "$APP" == "stockdividend" ]]',
-    '[[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/deploy.yml" ]]',
-    '[[ "$SOURCE_EVENT" == "push" || "$SOURCE_EVENT" == "workflow_dispatch" ]]',
-    '[[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ && "$SOURCE_HEAD_SHA" == "$TAG" && "$SOURCE_HEAD_SHA" == "$SOURCE_COMMIT" ]]',
-    '[[ "$BACKEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]',
-    '[[ "$ADMIN_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]',
-):
-    if required not in stock_event_block:
-        fail(f"StockDividend publisher payload receiver is missing validation: {required}")
-if "EVENT_BACKEND_DIGEST" not in promotion or "EVENT_ADMIN_DIGEST" not in promotion:
-    fail("StockDividend atomic promotion must consume backend and admin digests.")
-if '[[ "$BACKEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]' not in promotion:
-    fail("StockDividend backend digest must be validated before GHCR access.")
-if '[[ "$ADMIN_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]' not in promotion:
-    fail("StockDividend admin digest must be validated before GHCR access.")
-if "Update Kustomize image tag or paired digests" not in promotion:
-    fail("StockDividend/Media digest promotion must update both production image entries atomically.")
-if "stockdividend/release" not in promotion or "scripts/promote-paired-image-digests.py" not in promotion:
-    fail("StockDividend/Media paired releases must use the tested immutable digest-promotion helper.")
-
-paired_digest_helper = (ROOT / "scripts" / "promote-paired-image-digests.py").read_text(encoding="utf-8")
-for required in (
-    '"stockdividend": {',
-    '"media-generation": {',
-    'def promote_text(',
-    'def promote_file(',
-    'if len(fields) != 1:',
-    'duplicate image entry:',
-    'os.replace(temporary_path, path)',
-    'def self_test()',
-    'Paired StockDividend/Media digest-promotion self-tests passed.',
-):
-    if required not in paired_digest_helper:
-        fail(f"Paired image digest-promotion helper is missing contract: {required}")
-if "python3 scripts/promote-paired-image-digests.py --self-test" not in read("validate-manifests.yml"):
-    fail("Paired StockDividend/Media digest-promotion regression tests must run in validate-manifests.")
-if "EVENT_COMMIT" not in promotion or "EVENT_BACKEND_DIGEST" not in promotion or "EVENT_ADMIN_DIGEST" not in promotion:
-    fail("StockDividend promotion must resolve source commit and both image digests from the dispatch payload.")
-
-# Independently bind each StockDividend full-SHA registry tag to the digest in
-# the cross-repository dispatch payload before accepting the digest reference.
-stockdividend_ghcr_validation = promotion.split(
-    "      - name: Validate promoted image in GHCR", 1
-)[1].split("      - name: Update Kustomize image tag or paired digests", 1)[0]
-for required in (
-    'if [[ "$APP" == "stockdividend" || "$APP" == "media-generation" ]]; then',
-    'tag_reference="$image:$TAG"',
-    'GHCR_EXPECTED_DIGEST="$digest"',
-    'GHCR_IMAGE_REFERENCE="$tag_reference"',
-    'GHCR_IMAGE_REFERENCE="$digest_reference"',
-    "bash scripts/validate-ghcr-image-reference.sh",
-):
-    if required not in stockdividend_ghcr_validation:
-        fail(f"StockDividend GHCR promotion must verify full-SHA tag-to-digest correlation: {required}")
-if stockdividend_ghcr_validation.index('GHCR_IMAGE_REFERENCE="$tag_reference"') > stockdividend_ghcr_validation.index('GHCR_IMAGE_REFERENCE="$digest_reference"'):
-    fail("StockDividend full-SHA tag-to-digest verification must run before digest-reference validation.")
-
-# StockDividend reconciliation dispatch must wait for the exact paired digests on master.
-stockdividend_readiness = promotion.split("      - name: Determine release readiness", 1)[1].split(
-    "      - name: Trigger VPS reconciliation", 1
-)[0]
-for required in (
-    'ADMIN_DIGEST: ${{ steps.input.outputs.admin_digest }}',
-    'if [ "$APP" = "stockdividend" ]; then',
-    'if [ "$COMPONENT" != "release" ]; then',
-    'FILE="apps/stockdividend/overlays/prod/kustomization.yaml"',
-    "git fetch --no-tags origin master",
-    "python3 scripts/verify-stockdividend-gitops-digests.py",
-    '--backend-digest "$BACKEND_DIGEST"',
-    '--admin-digest "$ADMIN_DIGEST"',
-    "refusing reconciliation dispatch",
-):
-    if required not in stockdividend_readiness:
-        fail(f"StockDividend paired digest convergence gate is missing: {required}")
-merge_promotion_index = promotion.index("      - name: Merge promotion PR")
-readiness_index = promotion.index("      - name: Determine release readiness")
-reconciliation_dispatch_index = promotion.index("      - name: Trigger VPS reconciliation")
-if not merge_promotion_index < readiness_index < reconciliation_dispatch_index:
-    fail("StockDividend digest convergence must be verified after the promotion PR merge and before reconciliation dispatch.")
-if "python3 scripts/verify-stockdividend-gitops-digests.py --self-test" not in read("validate-github-actions.yml"):
-    fail("StockDividend GitOps digest-pair regression tests must run in validate-github-actions.")
-if "ready=true" not in stockdividend_readiness or "git fetch --no-tags origin master" not in stockdividend_readiness:
-    fail("StockDividend readiness must be based on the GitOps master digest pair, not only the promotion PR merge response.")
-
-# StockDividend handoffs must be tied to a real, successful publisher Actions run.
-for required in (
-    "EVENT_SOURCE_RUN_ID",
-    "EVENT_SOURCE_WORKFLOW_PATH",
-    "EVENT_SOURCE_EVENT",
-    "EVENT_SOURCE_HEAD_SHA",
-    'SOURCE_RUN_ID="$EVENT_SOURCE_RUN_ID"',
-    'SOURCE_WORKFLOW_PATH="$EVENT_SOURCE_WORKFLOW_PATH"',
-    'SOURCE_EVENT="$EVENT_SOURCE_EVENT"',
-    'SOURCE_HEAD_SHA="$EVENT_SOURCE_HEAD_SHA"',
-    "Verify StockDividend publisher run provenance",
-    "STOCKDIVIDEND_ACTIONS_READ_TOKEN: ${{ secrets.STOCKDIVIDEND_ACTIONS_READ_TOKEN }}",
-    "bash scripts/verify-stockdividend-publisher-run.sh",
-):
-    if required not in promotion:
-        fail(f"StockDividend promotion is missing source-run provenance contract: {required}")
-if promotion.index("Verify StockDividend publisher run provenance") > promotion.index("Validate promoted image in GHCR"):
-    fail("StockDividend source-run provenance must pass before any promoted image is read or GitOps PR is created.")
-stockdividend_provenance = (ROOT / "scripts" / "verify-stockdividend-publisher-run.sh").read_text(encoding="utf-8")
-for required in (
-    "STOCKDIVIDEND_ACTIONS_READ_TOKEN",
-    'GH_TOKEN="$STOCKDIVIDEND_ACTIONS_READ_TOKEN" gh api "repos/phanthienquoc/stockdividend/actions/runs/$SOURCE_RUN_ID"',
-    "phanthienquoc/stockdividend/actions/runs/$SOURCE_RUN_ID",
-    '"$repository" == "phanthienquoc/stockdividend"',
-    '"$head_repository" == "phanthienquoc/stockdividend"',
-    '"$workflow_path" == "$SOURCE_WORKFLOW_PATH"',
-    '"$event" == "$SOURCE_EVENT"',
-    '"$branch" == "master"',
-    '"$head_sha" == "$SOURCE_HEAD_SHA"',
-    '"$conclusion" == "success"',
-    'actions/runs/$SOURCE_RUN_ID/jobs?per_page=100',
-    "verify_job_success",
-    "verify_step_success",
-    "Require master for production image publication",
-    "Gate production GitOps promotion",
-    "build-and-push",
-    "Validate Platform Infra release handoff before promotion",
-    "Dispatch atomic StockDividend digest promotion",
-    "Verify native ARM64 runner",
-    "Build and push Scraper",
-    "Build and push Admin",
-    "Build and push Backend",
-    "Verify immutable image manifests for ARM64",
-    'verify_step_success "Require master for production image publication" "Reject non-master release refs"',
-    'verify_step_success "Gate production GitOps promotion" "Require explicit production promotion enablement"',
-    'verify_step_success "Validate Platform Infra release handoff before promotion" "Require token and verify Platform Infra repository access"',
-    'verify_step_success "Dispatch atomic StockDividend digest promotion" "Dispatch atomic StockDividend digest promotion"',
-):
-    if required not in stockdividend_provenance:
-        fail(f"StockDividend source-run verifier is missing required metadata guard: {required}")
-stockdividend_provenance_tests = (ROOT / "scripts" / "tests" / "verify-stockdividend-publisher-run.test.sh").read_text(encoding="utf-8")
-for required in (
-    'expect_failure "master ref validation step skipped"',
-    'expect_failure "production release gate step skipped"',
-    'expect_failure "Platform Infra access verification step skipped"',
-    'expect_failure "atomic digest dispatch step skipped"',
-):
-    if required not in stockdividend_provenance_tests:
-        fail(f"StockDividend provenance tests are missing skipped-step regression: {required}")
-if "scripts/tests/verify-stockdividend-publisher-run.test.sh" not in (ROOT / ".github" / "workflows" / "validate-github-actions.yml").read_text(encoding="utf-8"):
-    fail("StockDividend source-run provenance regression tests must run in validate-github-actions.")
-if "STOCKDIVIDEND_ACTIONS_READ_TOKEN" not in (ROOT / "docs" / "credentials.md").read_text(encoding="utf-8") or "STOCKDIVIDEND_ACTIONS_READ_TOKEN" not in (ROOT / "docs" / "credentials-key.md").read_text(encoding="utf-8"):
-    fail("The private StockDividend Actions read token must be documented in both credential inventories.")
-
-
-# Media Generation publishes a paired digest event tied to a real, successful publisher Actions run.
-
-if "media-release-requested" in promotion:
-    fail("Legacy Media tag-only dispatch is retired; only the paired digest event is accepted.")
-for obsolete in ("  fanout-media-release:", "  coordinate-media-release:"):
-    if obsolete in promotion:
-        fail(f"Obsolete Media tag-only promotion job remains: {obsolete.strip()}")
-
-if "media-images-published" not in promotion:
-    fail("GitOps promotion must consume the paired Media digest event.")
-if "EVENT_FRONTEND_DIGEST" not in promotion or "EVENT_BACKEND_DIGEST" not in promotion:
-    fail("Media digest promotion must consume frontend and backend digest payload fields.")
-if "media-generation/release" not in promotion:
-    fail("Media digest promotion must use the paired release target, not independent component updates.")
-if '[[ "$FRONTEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]' not in promotion:
-    fail("Media frontend digest must be validated before GHCR access.")
-if '[[ "$BACKEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]' not in promotion:
-    fail("Media backend digest must be validated before GHCR access.")
-if '[[ "$TAG" == *-"$SOURCE_COMMIT" ]]' not in promotion:
-    fail("Media release label must correlate to its full source commit SHA.")
-
-# Media's full-SHA release tag must independently resolve to each digest in
-# the paired dispatch payload before the digest-only reference is accepted.
-media_ghcr_validation = promotion.split(
-    "      - name: Validate promoted image in GHCR", 1
-)[1].split("      - name: Update Kustomize image tag or paired digests", 1)[0]
-for required in (
-    'if [[ "$APP" == "stockdividend" || "$APP" == "media-generation" ]]; then',
-    'tag_reference="$image:$TAG"',
-    'GHCR_EXPECTED_DIGEST="$digest"',
-    'GHCR_IMAGE_REFERENCE="$tag_reference"',
-    'GHCR_IMAGE_REFERENCE="$digest_reference"',
-):
-    if required not in media_ghcr_validation:
-        fail(f"Media GHCR promotion must verify full-SHA release tag-to-digest correlation: {required}")
-if media_ghcr_validation.index('GHCR_IMAGE_REFERENCE="$tag_reference"') > media_ghcr_validation.index('GHCR_IMAGE_REFERENCE="$digest_reference"'):
-    fail("Media release tag-to-digest verification must run before digest-reference validation.")
-for required in (
-    "EVENT_SOURCE_RUN_ID",
-    "EVENT_SOURCE_WORKFLOW_PATH",
-    "EVENT_SOURCE_EVENT",
-    "EVENT_SOURCE_HEAD_SHA",
-    'SOURCE_RUN_ID="$EVENT_SOURCE_RUN_ID"',
-    'SOURCE_WORKFLOW_PATH="$EVENT_SOURCE_WORKFLOW_PATH"',
-    'SOURCE_EVENT="$EVENT_SOURCE_EVENT"',
-    'SOURCE_HEAD_SHA="$EVENT_SOURCE_HEAD_SHA"',
-    '[[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/wf-03-media-production-deploy.yml" ]]',
-    '[[ "$SOURCE_EVENT" == "push" || "$SOURCE_EVENT" == "workflow_dispatch" ]]',
-    "Verify Media publisher run provenance",
-    "bash scripts/verify-media-publisher-run.sh",
-):
-    if required not in promotion:
-        fail(f"Media promotion is missing source-run provenance contract: {required}")
-if promotion.index("Verify Media publisher run provenance") > promotion.index("Validate promoted image in GHCR"):
-    fail("Media source-run provenance must pass before any promoted image is read or GitOps PR is created.")
-media_provenance = (ROOT / "scripts" / "verify-media-publisher-run.sh").read_text(encoding="utf-8")
-for required in (
-    "https://api.github.com/repos/phanthienquoc/media-generation/actions/runs/$SOURCE_RUN_ID",
-    '"$repository" == "phanthienquoc/media-generation"',
-    '"$head_repository" == "phanthienquoc/media-generation"',
-    '"$workflow_path" == "$SOURCE_WORKFLOW_PATH"',
-    '"$event" == "$SOURCE_EVENT"',
-    '"$branch" == "master"',
-    '"$head_sha" == "$SOURCE_HEAD_SHA"',
-    '"$conclusion" == "success"',
-    '$API_URL/jobs?per_page=100',
-    "verify_job_success",
-    "verify_step_success",
-    "Require master for production release",
-    "Resolve production image tag",
-    "Build frontend (native ARM64)",
-    "Build backend (native ARM64)",
-    "Publish immutable images and promote platform-infra",
-    "Verify native architecture",
-    "Build frontend image",
-    "Verify frontend architecture",
-    "Export and validate frontend image",
-    "Validate backend inputs",
-    "Build backend image",
-    "Verify backend architecture",
-    "Export and validate backend image",
-    "Load and validate exact release images",
-    "Publish exact release images",
-    "Verify immutable registry digests and ARM64 manifests",
-    "Notify platform-infra",
-):
-    if required not in media_provenance:
-        fail(f"Media source-run verifier is missing required metadata guard: {required}")
-if "Authorization" in media_provenance:
-    fail("Public Media source-run verification must not introduce a cross-repository credential.")
-if "scripts/tests/verify-media-publisher-run.test.sh" not in (ROOT / ".github" / "workflows" / "validate-github-actions.yml").read_text(encoding="utf-8"):
-    fail("Media source-run provenance regression tests must run in validate-github-actions.")
-if "MEDIA_FRONTEND_REF" not in reconcile or "MEDIA_BACKEND_REF" not in reconcile:
-    fail("Shared reconciliation must resolve both Media image references.")
-if "digest:sha256:[0-9a-f]{64}" not in reconcile:
-    fail("Shared reconciliation must validate digest-pinned Media image references.")
-if "Resolve paired Media image references" not in reconcile:
-    fail("Shared reconciliation must support paired Media tags and digests.")
+    if retired_contract in promotion:
+        fail(f"Retired Stock/Media promotion contract remains in GitOps receiver: {retired_contract}")
 
 # MicroFE digest promotions must use the shared GitOps promotion workflow.
 if "microfe-images-published" not in promotion:
@@ -1040,8 +750,6 @@ required_lanes = (
     "  deploy-auth-service:",
     "  deploy-microfe:",
     "  deploy-tce-dashboard:",
-    "  deploy-stockdividend:",
-    "  deploy-media-generation:",
     "  deploy-keycloak:",
 )
 for lane in required_lanes:
@@ -1203,27 +911,27 @@ for repository in (
 
 
 # Auth shutdown must be an isolated, allowlisted maintenance operation.
-if "rollout-status-v14-stockdividend-managed-workloads" not in bootstrap_script:
+if "rollout-status-v15-active-workloads-only" not in bootstrap_script:
     fail("Runner bootstrap must publish the versioned scoped image-pull restart policy.")
 if '  scale)' not in bootstrap_script or 'scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform' not in bootstrap_script:
     fail("Runner bootstrap must allow only the exact Auth/Keycloak scale-to-zero command.")
 
-if "rollout-status-v14-stockdividend-managed-workloads" not in reconcile:
-    fail("Production reconciliation must require the current v14 managed-workload runner policy.")
+if "rollout-status-v15-active-workloads-only" not in reconcile:
+    fail("Production reconciliation must require the current v15 active-workload runner policy.")
 
 # Keep operator-facing diagnostics aligned with the enforced runner policy version.
 for required in (
-    "Runner policy v14 (managed StockDividend workloads) is ready.",
-    "Waiting for runner bootstrap policy v14",
-    "Runner policy is not updated to managed-workload v14",
+    "Runner policy v15 (active workloads only) is ready.",
+    "Waiting for runner bootstrap policy v15",
+    "Runner policy is not updated to active-workload v15",
 ):
     if required not in reconcile:
         fail(f"Reconciliation diagnostics are missing the current v14 policy label: {required}")
 if "runner bootstrap policy v13" in reconcile or "image-pull restart v13" in reconcile:
     fail("Reconciliation diagnostics must not report the retired v13 runner policy after v14 is required.")
 auth_provision = read("provision-auth-runtime-secret.yml")
-if "rollout-status-v14-stockdividend-managed-workloads" not in auth_provision:
-    fail("Standalone Auth secret provisioning must accept the current v14 runner policy.")
+if "rollout-status-v15-active-workloads-only" not in auth_provision:
+    fail("Standalone Auth secret provisioning must accept the current v15 runner policy.")
 
 restart_step = reconcile.split("- name: Restart target workloads blocked on image pulls", 1)[1].split(
     "- name: Validate TCE release pairing", 1
@@ -1255,7 +963,7 @@ for required in (
     if required not in restart_block:
         fail(f"Runner image-pull recovery is missing permanent/transient error handling: {required}")
 for required_target in (
-    "microfe)","auth-service)","tce-dashboard)","stockdividend)","media-generation)","all)",
+    "microfe)","auth-service)","tce-dashboard)","all)",
 ):
     if required_target not in restart_block:
         fail(f"Runner image-pull recovery is missing an explicit target mapping: {required_target}")
@@ -1265,31 +973,47 @@ for required_deployment in (
     "microfe-platform microfe-auth",
     "tce-prod tce-service",
     "tce-prod tce-frontend",
-    "stock-prod stock-admin",
-    "stock-prod stock-backend",
-    "media-prod media-generation",
-    "media-prod media-generation-frontend",
 ):
     if required_deployment not in restart_block:
         fail(f"Runner image-pull recovery is missing a production Deployment mapping: {required_deployment}")
 
-# StockDividend's current source tree and production Kustomize/Ingress own only
-# Admin and Backend. Keep the legacy stock-frontend Pod untouched, but exclude
-# that unowned Deployment from rollout, restart, rollback, and health authorities.
+# Stock and Media are no longer active GitOps workloads. Keep only temporary
+# pull-secret refresh and an exact, guarded namespace-decommission action.
 health_gate = (ROOT / "scripts" / "verify-workload-health.sh").read_text(encoding="utf-8")
-runner_script_content = (ROOT / "scripts" / "bootstrap-runner.sh").read_text(encoding="utf-8")
 readiness_script_content = (ROOT / "scripts" / "validate-recovery-readiness.sh").read_text(encoding="utf-8")
-stockdividend_readme = (ROOT / "apps" / "stockdividend" / "README.md").read_text(encoding="utf-8")
-if 'app in (stock-admin,stock-backend)' not in health_gate:
-    fail("StockDividend health checks must be scoped to the GitOps-owned Admin and Backend pods.")
-if "deployment/stock-frontend" in reconcile:
-    fail("The StockDividend rollout lane must not wait for the unowned legacy stock-frontend Deployment.")
-if "stock-prod stock-frontend" in runner_script_content or "deployment/stock-frontend" in runner_script_content:
-    fail("Runner image-pull recovery must not restart or expose rollout authority for legacy stock-frontend.")
-if "deployment/stock-frontend stock-prod" in readiness_script_content:
-    fail("Recovery readiness must not require rollback history for the unowned legacy stock-frontend Deployment.")
-if "stock-frontend" not in stockdividend_readme or "legacy" not in stockdividend_readme.lower():
-    fail("StockDividend runtime documentation must identify the legacy stock-frontend ownership boundary.")
+for retired in ("stock-prod", "media-prod", "stockdividend", "media-generation"):
+    if retired in reconcile or retired in health_gate or retired in readiness_script_content:
+        fail(f"Retired workload still appears in active reconcile/health/recovery path: {retired}")
+if "ghcr_namespaces=(microfe-platform stock-prod tce-prod media-prod)" not in bootstrap_script:
+    fail("Temporary shared GHCR pull-secret refresh must remain for residual namespaces until decommission.")
+for retired_permission in (
+    "restart_if_blocked stock-prod",
+    "restart_if_blocked media-prod",
+    "deployment/stock-admin",
+    "deployment/media-generation",
+    "apps/stockdividend/base/namespace.yaml",
+    "apps/media-generation/base/namespace.yaml",
+):
+    if retired_permission in bootstrap_script:
+        fail(f"Runner must not retain active deployment authority for retired workload: {retired_permission}")
+for required in (
+    "  decommission-stock-media)",
+    "DECOMMISSION stock-prod media-prod",
+    'get pvc -n "$namespace" -o json',
+    'get pv -o json',
+    'delete namespace "$namespace" --wait=true --timeout=180s',
+):
+    if required not in bootstrap_script:
+        fail(f"Runner is missing guarded namespace-decommission control: {required}")
+if "delete pvc" in bootstrap_script or "delete pv" in bootstrap_script:
+    fail("Namespace decommission must never delete PVCs or PVs.")
+decommission_workflow = read("decommission-stock-media.yml")
+if "workflow_dispatch:" not in decommission_workflow or "push:" in decommission_workflow or "schedule:" in decommission_workflow:
+    fail("Stock/Media namespace decommission must be manually dispatched only.")
+if "environment: production" not in decommission_workflow or "platform-kubectl decommission-stock-media" not in decommission_workflow:
+    fail("Stock/Media namespace decommission must use the production Environment and exact runner action.")
+if "EXTERNAL DATA STORES AND DNS WILL BE LEFT IN PLACE" not in decommission_workflow:
+    fail("Decommission workflow must explicitly preserve external data stores and DNS.")
 
 runner_bootstrap = read("bootstrap-runner.yml")
 if '      - "scripts/bootstrap-runner.sh"' not in runner_bootstrap:
@@ -1312,8 +1036,6 @@ for path_contract in (
     "platform/microfe/*",
     "platform/auth-service/*",
     "apps/tce-dashboard/*",
-    "apps/stockdividend/*",
-    "apps/media-generation/*",
     "platform/keycloak/*",
     "environments/prod/*",
 ):
