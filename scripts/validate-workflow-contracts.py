@@ -1093,7 +1093,8 @@ for required in (
 ):
     if required not in inspection_script:
         fail(f"VPS inspection is missing persistent storage evidence: {required}")
-if "pv|pvc" not in bootstrap_script:
+bootstrap_allowlist = (ROOT / "scripts" / "bootstrap-runner.sh").read_text(encoding="utf-8")
+if "pv|pvc" not in bootstrap_allowlist:
     fail("The read-only platform-kubectl allowlist must permit PVC and PV inventory queries.")
 
 # GHCR pulls use one platform-owned credential across production namespaces.
