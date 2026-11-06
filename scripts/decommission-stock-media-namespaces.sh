@@ -11,7 +11,7 @@ run_kubectl() {
 }
 
 preflight() {
-  local namespaces_json namespace pvc_json pvc_count pv_json pv_claims namespace_inventory snapshot_refs
+  local namespaces_json namespace pvc_json pvc_count pv_json pv_claims namespace_inventory snapshot_refs ingress_json
   echo "### Platform namespace preservation check"
   for namespace in tce-prod microfe-platform; do
     run_kubectl get namespace "$namespace" >/dev/null
@@ -35,6 +35,24 @@ preflight() {
       printf '%s\n' "$snapshot_refs" >&2
       return 1
     }
+    echo "### Ingress hosts/TLS secret references and published addresses (names only): $namespace"
+    ingress_json="$(run_kubectl get ingress -n "$namespace" -o json)"
+    if jq -e '.items | length > 0' <<< "$ingress_json" >/dev/null; then
+      jq -r '
+        .items[]?
+        | [
+            .metadata.name // "",
+            ([.spec.rules[]?.host] | unique | join(",")),
+            ([.spec.tls[]?.hosts[]?] | unique | join(",")),
+            ([.spec.tls[]?.secretName] | unique | join(",")),
+            ([.status.loadBalancer.ingress[]? | (.ip // .hostname // "")] | map(select(length > 0)) | unique | join(","))
+          ]
+        | @tsv
+      ' <<< "$ingress_json"
+    else
+      echo "none"
+    fi
+    echo "DNS ownership is not inferred; reconcile these hostnames with authoritative DNS/provider records before deletion."
     echo "### Common workload status: $namespace"
     run_kubectl get all -n "$namespace" -o wide
     run_kubectl get pvc -n "$namespace" -o wide

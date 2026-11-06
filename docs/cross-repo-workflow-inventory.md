@@ -5018,3 +5018,17 @@ No current-master Stock/Media/Auth GHCR publication with verified digest/provena
 - Decommission plan mode was not dispatched; no runner/namespace deletion. No external-data/DNS proof or same-run preflight.
 - `reconcile-vps.yml` remains the sole apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
 - Full evidence: `docs/cross-repo-workflow-inventory-checkpoints/2026-11-07-0056-ict.md`.
+
+
+---
+
+## Cross-repo operational update — 2026-11-07 02:04 ICT / 2026-11-06 19:04 UTC
+
+- Current heads: Platform `6d0c687538b74b90addff09c0b9cd5e0ceddebff` (inspection snapshot only), TCE `f4240ada56da700af00100fb3f01278b9b883951`, Stock `bc20dcfb9893ea246a5e46bef26cce1c92a940c9`, Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`, Auth `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`.
+- Open PRs: Platform #1314/#544/#541/#539 (draft planning); Auth #75 (ready but gated) and #76 (draft, gated); no TCE/Stock/Media PRs.
+- Latest directly verified job summaries: Platform post-merge #42266874368 PASS; native Platform reconcile/recovery/watchdog #42261665655/#42261712724/#42263224767 PASS. TCE build #42239871779 PASS; WF-06 #42235639842 has four HTTP probe failures; WF-12 #42211610532 freshness gate fails while heartbeat succeeds; WF-07 #42176751608 PASS. Stock #42241252700 7/7 PASS; Media #42239703151 PASS; Auth #42215394539 validation + non-publishing ARM64 build PASS.
+- Current combined commit-status API returned no status contexts for the five default-branch heads. Do not treat an empty status list as a passing Actions run. The available commit-workflow-runs view is PR-event-only; it does not enumerate native schedule history.
+- Latest committed inspection snapshot: Platform commit #1354 / `6d0c687`, generated 18:34:19Z. K3s node Ready/ARM64; disk 56%, 21 GiB free; about 19 GiB RAM available; `restart_required=yes`. Docker 29.1.3 with Docker/containerd updates pending. Media and Platform runners active/enabled with Listener present. Media/MicroFE workloads healthy; Stock Admin/new Backend still ImagePullBackOff on tag `12d63b4` due missing linux/arm64 manifest; TCE/Auth/Keycloak 0/0; public OIDC 503; GitOps drift clean.
+- Storage snapshot lists only unrelated debug PVC/PV and no Stock/Media VolumeSnapshot references. External database/object-storage backup, retention and DNS ownership remain unverified.
+- Decommission workflow remains manual-only and protected. New branch adds read-only Ingress rule/TLS host/Secret-name/address inventory to `mode=plan`, with an explicit DNS ownership warning; it does not read Secret values or mutate DNS. Regression test and workflow contract validator updated. Live plan mode has not been dispatched.
+- No publisher, GHCR push, Platform dispatch, image promotion, manifest apply, workload activation, runner retirement, namespace deletion, storage/DNS/database mutation or host reboot occurred. TCE market-scan schedule unchanged.

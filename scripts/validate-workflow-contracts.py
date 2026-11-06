@@ -1144,6 +1144,9 @@ for required in (
 for required in (
     "inventory-namespace",
     "get all -n",
+    "get ingress -n",
+    "Ingress hosts/TLS secret references",
+    "DNS ownership is not inferred",
     "get pvc -n",
     "get pv -o json",
     "get storageclasses -o wide",
