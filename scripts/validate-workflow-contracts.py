@@ -1105,6 +1105,8 @@ for required in (
     "get storageclasses -o wide",
     "PVC inventory is not empty",
     "PV claims remain",
+    "VolumeSnapshot references remain",
+    "volumesnapshotcontent",
     "decommission-stock-media",
 ):
     if required not in decommission_script:
@@ -1115,10 +1117,18 @@ for required in (
     "BACKUP-AND-EXTERNAL-DATA-REVIEWED",
     "PVCs remain",
     "PV claims remain",
+    "namespace_storage_snapshot_refs()",
+    "volumesnapshots.snapshot.storage.k8s.io",
+    "volumesnapshotcontents.snapshot.storage.k8s.io",
+    "VolumeSnapshot references remain",
     "delete namespace stock-prod media-prod",
 ):
     if required not in decommission_wrapper:
         fail(f"Root-owned namespace decommission guard is missing: {required}")
+decommission_test = (ROOT / "scripts" / "tests" / "decommission-stock-media-namespaces.test.sh").read_text(encoding="utf-8")
+for required in ("MOCK_SNAPSHOT", "MOCK_SNAPSHOT_CONTENT", "namespaced VolumeSnapshot", "cluster-scoped VolumeSnapshotContent"):
+    if required not in decommission_test:
+        fail(f"Decommission storage regression tests must cover snapshot references: {required}")
 if "scripts/tests/decommission-stock-media-namespaces.test.sh" not in github_actions:
     fail("Namespace decommission safety regression tests must run in validate-github-actions.")
 if "scripts/tests/verify-media-runner-retired.test.sh" not in github_actions:
