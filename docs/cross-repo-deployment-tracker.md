@@ -2756,3 +2756,27 @@ Stock #34 changes only GITHUB_TOKEN permission defaults and regression validatio
 The latest full K3s inspection remains #42231216533 (14:08:18Z); the newer partial pod listing is reconcile #42235712359 (14:38:47Z). Neither authorizes decommission. Media runner is still active/enabled with Listener present; Stock Admin/new Backend still lack ARM64 manifest for tag 12d63b4; TCE/Auth/Keycloak remain 0/0. External database/object-storage backup, retention and DNS ownership remain unverified.
 
 TCE WF-06/WF-12 cron declarations and the TCE market-scan schedule remain unchanged. No production workload, image, replica, manifest, namespace, PVC/PV, external data, DNS, runner or host was changed by the documentation checkpoint.
+
+
+---
+
+## Cross-repo permission audit completion — 2026-11-06 22:15 ICT / 15:15 UTC
+
+- Stock PR [#34](https://github.com/phanthienquoc/stockdividend/pull/34) merged as bc20dcfb9893ea246a5e46bef26cce1c92a940c9. Exact head 1dd618e42d7fb64fe048bbffc53c55eb20f3a37a passed all seven jobs in [CI #42240653857](https://github.com/phanthienquoc/stockdividend/actions/runs/42240653857), including the release-contract validator, Go test/build, Admin build, scraper validation/container build, and all three non-publishing native ARM64 image builds. The workflow-level default is now contents: read; packages: write exists only on build-and-push.
+- Post-merge Stock CI [#42241252700](https://github.com/phanthienquoc/stockdividend/actions/runs/42241252700) was queued/in progress at 15:15Z. The deploy workflow has paths-ignore for .github/** and the release validator, so this permission-only merge is not a production publication trigger. No new deploy/publisher run or GHCR image push was observed.
+- Platform PR #1345 merged as 6d08b835ddee5fe5324fe68fa825fac1a42cf43a. Exact-head validation #42241066054 PASS; post-merge validation [#42241159907](https://github.com/phanthienquoc/platform-infra/actions/runs/42241159907) PASS.
+- Current default-branch heads: Platform 6d08b835ddee5fe5324fe68fa825fac1a42cf43a; TCE f4240ada56da700af00100fb3f01278b9b883951; Stock bc20dcfb9893ea246a5e46bef26cce1c92a940c9; Media 54f3a76a5f8861842fd1bae698c4cb0fa8c9034d; Auth 3b60ff46b8959d18aee1956f99d6b62589b8b9c5.
+- Open PRs: Platform #1314/#544/#541/#539 (draft); Auth #75 ready/#76 draft; none in TCE, Stock or Media.
+- The app-repository GHCR permission audit is now complete: Stock deploy.yml, Media WF-03, TCE WF-03/WF-08B and Auth release.yml all use read-only workflow defaults and scope packages: write to only the image-publishing job(s). TCE WF-03 also scopes actions: read to its publisher/handoff job. Each app retains its release/provenance/ARM64 contract; no app-to-Platform direct production authority was added.
+
+### Current native schedule and runtime state
+
+- Latest Platform native schedule history: reconcile #42199267592 at 10:00:15Z PASS; recovery #42199274660 at 10:00:18Z PASS; watchdog #42201400071 at 10:16:28Z PASS; inspect #42193617816 at 09:15:08Z PASS. Later reconcile #42235712359 and recovery #42235938727 are manual dispatches, not schedule proof.
+- Latest TCE native schedule history: WF-06 #42235639842 at 14:37:53Z FAIL (four HTTP 503 probes); WF-07 #42176751608 at 06:48:12Z PASS; WF-12 #42211610532 at 11:37:17Z FAIL (stale native WF-06 freshness). WF-12 #42235672509 and WF-13 #42235672609 are workflow_run follow-ups, not native schedule events. No newer native schedule events appeared in the latest 100-run histories.
+- GitHub Status summary at 14:29:25Z showed Actions operational and no unresolved incidents. Resolved Nov 5/early Nov 6 incidents do not establish the cause of subsequent schedule gaps.
+- Full K3s inspection remains #42231216533 at 14:08:18Z; partial reconcile pod listing #42235712359 at 14:38:47Z. Node Ready/ARM64; Media and MicroFE active workloads running; Stock Admin/new Backend ImagePullBackOff because tag 12d63b4 lacks linux/arm64 manifest; TCE/Auth/Keycloak desired 0/0. Media runner remains active/enabled with Listener present. Only unrelated debug PVC/PV; no Stock/Media PVC/PV or VolumeSnapshot references. External database/object-storage backup, retention and DNS ownership remain unverified.
+- Reconcile #42235712359 used ALLOW_IMAGE_CHANGES=false, verified shared GHCR pull access, left ghcr-pull unchanged, provisioned/verified Auth runtime Secret with values suppressed, passed TCE image pairing, found clean GitOps diff and skipped manifest apply. No new rollout or image promotion.
+
+No image publisher was run for Stock, Media, TCE or Auth. Historical publishers remain older than current master; do not promote old tags or digests. TCE/Auth stay at 0/0 until service-owner activation approval; public HTTP 200 checks remain strict. Media runner retirement and Stock/Media decommission remain blocked by operator idle confirmation and external-data/backup/DNS ownership review. Host package upgrades/reboot require a separate maintenance window.
+
+TCE WF-06/WF-12 cron declarations and TCE market-scan schedule unchanged. No production workload, image, replica, manifest, namespace, PVC/PV, external data, DNS, runner or host was changed by the permission audit. The latest reconcile did provision/verify the Auth runtime Secret; shared GHCR pull Secret remained unchanged.
