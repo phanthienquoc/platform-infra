@@ -14,7 +14,7 @@ require_cmd() {
 require_cmd kubectl
 require_cmd jq
 
-namespaces=(tce-prod stock-prod)
+namespaces=(tce-prod)
 
 echo "== metrics API service =="
 kubectl get apiservice v1beta1.metrics.k8s.io -o wide

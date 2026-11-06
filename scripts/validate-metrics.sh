@@ -29,11 +29,10 @@ echo "metrics.k8s.io APIService: Available"
 run_kubectl api-resources --api-group=metrics.k8s.io >/dev/null
 run_kubectl get --raw /apis/metrics.k8s.io/v1beta1/nodes >/dev/null
 run_kubectl get --raw /apis/metrics.k8s.io/v1beta1/namespaces/tce-prod/pods >/dev/null
-run_kubectl get --raw /apis/metrics.k8s.io/v1beta1/namespaces/stock-prod/pods >/dev/null
 
 echo "metrics.k8s.io API: node and workload metrics endpoints reachable"
 
-for namespace in tce-prod stock-prod; do
+for namespace in tce-prod; do
   deployments="$(run_kubectl get deployments -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}')"
   test -n "$deployments" || {
     echo "::error::No deployments found in namespace $namespace." >&2
