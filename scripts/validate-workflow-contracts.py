@@ -746,7 +746,7 @@ for required in (
     'Build frontend (native ARM64)',
     'Build backend (native ARM64)',
     'Publish immutable images and promote platform-infra',
-    'Verify immutable release tag',
+    'Resolve immutable release tag',
     'Build frontend image',
     'Verify frontend architecture',
     'Build backend image',
