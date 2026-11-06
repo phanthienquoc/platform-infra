@@ -1,3 +1,45 @@
+## Current review — 2026-11-06 18:10 ICT (2026-11-06 11:10 UTC)
+
+This inventory checkpoint records the current five-repository workflow ownership and the new read-only cross-repository TCE schedule observation. It does not create another deployment authority.
+
+### Platform Infra workflow inventory changes
+
+| Workflow / script | Responsibility | Current contract |
+|---|---|---|
+| `.github/workflows/reconcile-schedule-watchdog.yml` | Platform schedule freshness and advisory cross-repo TCE WF-06 delivery observation | Existing Platform gates remain authoritative. The TCE observer queries public Actions history for `event=schedule`, expected WF-06 path, `master`, original attempt 1, full source SHA and a 25-minute freshness budget. It runs `--warn-only`; a TCE outage cannot trigger a Platform production-reconcile loop. |
+| `scripts/verify-tce-schedule-delivery.py` | Parse and verify native TCE WF-06 schedule evidence | Regression fixtures cover fresh-but-unhealthy runs, stale/missing schedules, dispatch-only history, wrong branch, reruns, future timestamps, malformed SHA and API errors. Delivery freshness is separate from HTTP endpoint health. |
+| `.github/workflows/recover-stale-ops.yml` | Existing Platform recovery controller | Explicitly excludes the read-only TCE observer script from the deployment-relevant `scripts/**` push filter. A read-only helper change must not trigger production reconciliation. |
+| `.github/workflows/reconcile-vps.yml` | Sole production GitOps apply authority | Existing GHCR credential bootstrap, Auth runtime Secret, immutable image guard, manifest apply, rollout and health contracts remain unchanged. Image changes remain disabled for routine recovery. |
+| `.github/workflows/inspect-vps.yml` | Read-only VPS/K3s inspection | Snapshot #42208147735 generated 11:09:51Z and merged via inspection PR #1334; no production mutation. |
+
+### Cross-repo app workflow ownership
+
+- **TCE Dashboard:** app-owned WF-06 healthcheck retains strict HTTP 200; WF-12 verifies native WF-06 freshness and sends authenticated Platform heartbeat; WF-13 remains a guarded read-only recovery fallback. Platform now independently observes WF-06 native event freshness but does not dispatch into TCE or alter its schedules. Current WF-06 native evidence is stale; WF-06 last run failed HTTP 503.
+- **StockDividend:** app repo owns tests, build and immutable GHCR publication. Current ARM64 CI is build-only; no publisher run/digest/provenance was observed. The deployed `12d63b4` Admin/new Backend tags still lack an ARM64 manifest.
+- **Media Generation:** app repo owns tests, build, checksum, ARM64 publication and digest verification. No new publisher run was observed. Media workloads remain active; dedicated runner remains active/enabled with Listener present.
+- **Authentication:** app repo owns service CI and manual-only release publisher with full-SHA/digest/provenance/SBOM contracts. Latest CI is build-only; no new publisher run. PR #75/#76 remain gated because Supabase Preview is skipped and production migration/integration side effects are not verified.
+- **Platform Infra:** owns production manifests, shared GHCR pull credentials, Auth runtime Secret, digest/provenance verification, GitOps promotion/reconciliation, rollout and health. No app repo owns a direct SSH/Compose/kubectl production deployment authority.
+
+### Current workflow-run evidence
+
+- Platform PR #1332 merged as `e605cb50c48f7a0d1fd9ec1db4ac6ea80aa2cf06`; PR #1333 merged as `6f5d32988e0cd6ece0fec77d36c1118428d390c3`; inspection PR #1334 merged as `50aed8dc59e596765279e3504633df11aa5f84d5`. Exact-head validation and required checks passed for each.
+- Post-merge Platform validation #42208198270 and #42208198279 passed. Watchdog push smoke #42208198166 passed with a warning that TCE WF-06 native schedule run #42176208184 was 16,022 seconds old (25-minute budget).
+- Platform native scheduled reconcile/recovery/watchdog/inspection evidence remains stale; later workflow_dispatch runs #42207918291 and #42208147735 are fallback/inspection evidence only.
+- TCE WF-06 native run #42176208184 failed at 06:43:04Z; WF-07 #42176751608 succeeded at 06:48:12Z; WF-12 native #42158209117 failed at 03:43:01Z. WF-12 #42176769424 is workflow_run, not schedule.
+- Stock CI #42167088130 and Auth CI #42167100692 passed ARM64 build-only checks; Media CI #42136991059 passed but is older. No new immutable GHCR publisher/digest/provenance was observed in any app repo.
+
+### Current runtime and operator gates
+
+- Latest snapshot #42208147735 (11:09:51Z): node Ready/ARM64, K3s v1.36.3+k3s1, disk 56%, ~19 GiB RAM available, restart_required=yes, GitOps drift clean.
+- Media backend/frontend 1/1 Running and digest-pinned. Stock Admin/new Backend remain ImagePullBackOff because the deployed tags lack ARM64 manifests; old Backend/Frontend 1/1. TCE/Auth/Keycloak desired 0/0; public OIDC probes 503.
+- Only `k3s-debug/k3s-debug-logs` PVC/PV is listed; no Stock/Media PVC/PV or VolumeSnapshot references. External database/object storage backups and DNS ownership remain unverified.
+- Media dedicated runner remains active/enabled and Listener-present. Decommission is blocked; shared Platform runner must not be touched.
+- No namespace, PVC/PV, database, DNS, image, desired replica or runner was removed/changed by this checkpoint.
+
+**Non-negotiable:** `reconcile-vps.yml` remains the only production apply authority. Read-only schedule observation does not dispatch or mutate. App-owned immutable publication is required before Platform promotion. Preserve useful CI/security/manual/release/scheduled workflows. TCE market-scan schedule unchanged.
+
+---
+
 ## Current review — 2026-11-06 13:03 ICT (2026-11-06 06:03 UTC)
 
 This checkpoint revalidates all five default branches, open PRs, recent Actions runs, the TCE schedule/health failures, and the latest committed read-only K3s snapshot. It records observed state only; it does not authorize image publication, replica changes, runner retirement, or namespace deletion.
