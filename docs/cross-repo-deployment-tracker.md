@@ -1,3 +1,51 @@
+Last reviewed: 2026-11-06 09:10 ICT (2026-11-06 02:10 UTC)
+
+## Current review — 2026-11-06 09:10 ICT (2026-11-06 02:10 UTC)
+
+This review follows the StockDividend/Media GitOps retirement merge, inspects the five repository heads and active PRs, and records the first post-merge reconciliation regression plus its dedicated fix.
+
+### Current repository refs and open PRs
+
+| Repository | Default-branch SHA | Open PRs | Current disposition |
+|---|---|---|---|
+| Platform Infra | `d05f806c636f3e785ffe603efff204767308efa0` | #1303 open; #544/#541/#539 draft | #1301 merged; #1296 closed as superseded. #1303 fixes the post-merge push-scope regression. |
+| TCE Dashboard | `512b69d837e2a65c39867a062529a7fa0eada4cc` | None | Strict public health probes still return 503 while TCE/Auth/Keycloak remain operator-scaled to zero. |
+| StockDividend | `6fcefa6b3792dab92b6d5c438001633d25f1ca28` | None | PR #32 merged; latest master CI #42137523269 passed. No production publisher run or release promotion was triggered. |
+| Media Generation | `3a8846a4f273eeb20a55b214d5ad80804c2d8d52` | None | PR #72 merged; latest master CI #42136991059 passed. No production publisher run or release promotion was triggered. |
+| Authentication | `f978a3f378ee22d4630909c2d182275b21ac9e9a` | #75 ready; #76 draft | Master CI #41670642852 passed. PR #75 validation passed, but Supabase Preview is skipped and the production integration side-effect gate remains unresolved. |
+
+### Platform retirement merge and reconciliation regression
+
+- Platform PR [#1301](https://github.com/phanthienquoc/platform-infra/pull/1301) was squash-merged as `d05f806c636f3e785ffe603efff204767308efa0` from exact head `1e2f1d75009e5f79ef856b52f2b3ea7cc5cee545`. Exact-head `validate-github-actions` #42146647078, `validate-manifests` #42146647030 and `keycloak-ci` #42146647019 passed. Superseded plan-only PR #1296 was closed.
+- The merge removed the StockDividend/Media manifest trees and their Platform reconcile, health, recovery, GHCR and publisher contracts. It added the manually invoked `decommission-stock-media` workflow. It did not delete K3s namespaces, PVs, DNS, GHCR packages, external data or runner registrations.
+- Post-merge push reconciliation #42146800843 failed at `Resolve push deployment scope` because the resolver did not classify the deleted `scripts/bootstrap-media-runner.sh`. The job stopped before preflight, credential bootstrap, manifest apply, rollout or application lanes; no cluster mutation occurred. The accompanying Platform manifest validation #42146800900, GitHub Actions validation #42146800878, Keycloak CI #42146800876 and runner bootstrap #42146800844 passed.
+- PR [#1303](https://github.com/phanthienquoc/platform-infra/pull/1303) updates the resolver and its regression tests. It treats retired/manual-only helper and validator-only paths as non-deploying, keeps the shared GHCR pull-access validator and production manifest/health paths cluster-wide, and makes a change to the resolver itself resolve to `all` so the merge can trigger a safe reconciliation attempt.
+- The resolver's code-only revision passed exact-head `validate-github-actions` #42148457914 and `validate-manifests` #42148457910. The tracker/inventory update is included in the same PR, so checks must be re-read on the final updated head before merge.
+
+### App-owned publication and dispatch boundaries
+
+- StockDividend `deploy.yml` retains app-owned CI/build/publication, immutable full-source-SHA image tags, registry digest resolution and ARM64 checks, plus the explicit manual publication hold. The merged workflow no longer contains a Platform repository-dispatch handoff.
+- Media Generation `wf-03-media-production-deploy.yml` retains app-owned image publication with full-source-SHA tags and paired registry digest/ARM64 verification. The merged workflow no longer dispatches Platform.
+- TCE WF-03 remains manual-only for production release, uses full-source-SHA tags, verifies the web/service digest pair and ARM64 manifests, and validates the `tce-release-requested` payload before dispatching Platform. Platform's receiver validates source run/workflow/event/SHA, digest formats and tag-to-digest correlation before creating an atomic promotion PR.
+- Authentication `release.yml` remains manual-only and sends the Auth digest with source run ID, workflow path, event and full source SHA. Platform validates that provenance and the digest before updating the Auth GitOps reference. No TCE/Auth release workflow was dispatched in this review.
+
+### TCE, Authentication and runtime safety
+
+- TCE native WF-06 #42133793538 failed all four strict public HTTP 200 probes with HTTP 503 (Auth liveness/readiness and TCE API/web). This matches the operator-requested zero-replica state. WF-13 fallback #42133822204 passed as a read-only recovery path. Do not weaken HTTP 200 gates, restore replicas, or change any TCE schedule; the market-scan schedule is unchanged.
+- Auth PR #75 remains gated: its validation check passed, but Supabase Preview is `SKIPPED` and the connected production integration's merge-triggered migration effect is not authoritatively verified. Do not merge #75/#76, run migrations or dispatch an Auth release on current evidence.
+- `decommission-stock-media.yml` is manual-only, requires the protected production Environment and three exact confirmations, and has no execution runs. The last committed VPS snapshot is stale and lacks fresh PVC/PV/StorageClass inventory. The dedicated Media runner's current state is unverified. Do not dispatch namespace deletion until a same-window inventory, backup/external-data review and idle/stopped/unregistered runner confirmation are complete.
+- `reconcile-vps.yml` remains the sole routine production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose deployment authority was added. No K3s, credential, image, DNS, PV, database, object-storage or schedule mutation was performed.
+
+### Next actions
+
+1. Poll PR #1303's exact current head after the tracker update; squash-merge only if all required checks pass on that head.
+2. Verify the merge-triggered push reconciliation now resolves to `all`; inspect its preflight and lane results. Keep the zero-replica health failures explicit rather than weakening health gates.
+3. Obtain a fresh read-only K3s/storage inventory, confirm backups/external-data ownership and independently retire the dedicated Media runner before considering the manual namespace workflow.
+4. Keep Stock production publication/promotion closed without explicit release authorization; keep Auth #75/#76 gated on the Supabase integration side-effect question.
+5. Preserve all TCE schedules, especially the market-scan schedule.
+
+---
+
 Last reviewed: 2026-11-06 08:38 ICT (2026-11-06 01:38 UTC)
 
 ## Current review — 2026-11-06 08:38 ICT (2026-11-06 01:38 UTC)

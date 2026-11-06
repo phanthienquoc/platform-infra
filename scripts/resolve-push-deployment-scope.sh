@@ -40,12 +40,13 @@ resolve_scope() {
       platform/keycloak/*|apps/keycloak/*)
         keycloak_changed=1
         ;;
-      environments/prod/*|platform/cert-manager/*|platform/k3s-debug-logs/*|scripts/reconcile-vps.sh|scripts/guard-reconcile-images.sh|scripts/validate-ghcr-pull-access.sh|scripts/verify-workload-health.sh)
+      environments/prod/*|platform/cert-manager/*|platform/k3s-debug-logs/*|scripts/reconcile-vps.sh|scripts/guard-reconcile-images.sh|scripts/validate-ghcr-pull-access.sh|scripts/verify-workload-health.sh|scripts/resolve-push-deployment-scope.sh)
         cluster_wide=1
         ;;
-      .github/workflows/*|scripts/bootstrap-runner.sh|scripts/validate-recovery-readiness.sh|scripts/validate-*.py|scripts/tests/*|docs/*|debug/vps-latest.md)
-        # CI, documentation, and inspection snapshots may accompany a manifest change
-        # but do not introduce a production workload scope of their own.
+      .github/workflows/*|scripts/bootstrap-runner.sh|scripts/bootstrap-media-runner.sh|scripts/decommission-stock-media-namespaces.sh|scripts/validate-*.py|scripts/validate-*.sh|scripts/verify-reconcile-lane-queue.py|scripts/verify-media-publisher-run.sh|scripts/verify-stockdividend-publisher-run.sh|scripts/verify-stockdividend-gitops-digests.py|scripts/tests/*|docs/*|debug/vps-latest.md)
+        # CI, documentation, inspection snapshots and manual-only/retired helpers
+        # do not introduce a production workload scope of their own. Keep the
+        # shared GHCR access validator above cluster-wide because it gates apply.
         ;;
       *)
         fail "Unclassified production-trigger path '$path'; refusing broad push reconciliation."
@@ -125,8 +126,14 @@ self_test() {
   assert_scope all apps/stockdividend/base/kustomization.yaml environments/prod/kustomization.yaml
   assert_scope all apps/media-generation/base/kustomization.yaml environments/prod/kustomization.yaml
   assert_scope all scripts/verify-workload-health.sh
+  assert_scope all scripts/resolve-push-deployment-scope.sh
   assert_scope all scripts/verify-workload-health.sh scripts/bootstrap-runner.sh scripts/validate-recovery-readiness.sh
   assert_failure scripts/bootstrap-runner.sh scripts/validate-recovery-readiness.sh
+  # Manual-only and retired helper changes must never trigger an automatic
+  # production apply by themselves. When paired with the retirement manifest
+  # deletion, the app-tree/environment paths still force a cluster-wide pass.
+  assert_failure scripts/bootstrap-media-runner.sh scripts/decommission-stock-media-namespaces.sh scripts/validate-metrics-hpa.sh scripts/validate-metrics.sh scripts/validate-network-boundaries.sh scripts/verify-reconcile-lane-queue.py scripts/verify-media-publisher-run.sh scripts/verify-stockdividend-publisher-run.sh scripts/verify-stockdividend-gitops-digests.py
+  assert_scope all apps/stockdividend/README.md apps/media-generation/README.md environments/prod/kustomization.yaml scripts/bootstrap-media-runner.sh scripts/decommission-stock-media-namespaces.sh scripts/resolve-push-deployment-scope.sh scripts/validate-metrics-hpa.sh scripts/validate-metrics.sh scripts/validate-network-boundaries.sh scripts/verify-reconcile-lane-queue.py scripts/verify-media-publisher-run.sh scripts/verify-stockdividend-publisher-run.sh scripts/verify-stockdividend-gitops-digests.py
   local keycloak_zero keycloak_one
   keycloak_zero="$(KEYCLOAK_REPLICAS_OVERRIDE=0 resolve_scope platform/keycloak/deployment.yaml)"
   keycloak_one="$(KEYCLOAK_REPLICAS_OVERRIDE=1 resolve_scope platform/keycloak/deployment.yaml)"
