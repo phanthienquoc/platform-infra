@@ -1,3 +1,26 @@
+## Workflow inventory runtime update — 2026-11-06 12:26 ICT / 05:26 UTC
+
+- **Default-branch heads:** Platform Infra `70dc56818596dd329e0eb055394d2bfde125b8ac`; TCE Dashboard `512b69d837e2a65c39867a062529a7fa0eada4cc`; StockDividend `3aeaf519b7a786d13dcecee763acaca357c47ddd`; Media Generation `3a8846a4f273eeb20a55b214d5ad80804c2d8d52`; Authentication `3a8031196f21c4240b617bbd0a623fce2dc56c5e`.
+- **Open PRs:** Platform #1314 (draft mail-service plan) and #544/#541/#539 (Keycloak documentation drafts); Authentication #75 (ready) and #76 (draft); no PRs in TCE, StockDividend or Media Generation. Platform #1320/#1321 merged after exact-head validation.
+- **Platform PR #1320:** added names-only Stock/Media VolumeSnapshot and VolumeSnapshotContent inventory to the read-only VPS snapshot, using the root-owned `platform-kubectl inventory-namespace` wrapper. Exact-head `validate-manifests` #42167697233 and `validate-github-actions` #42167697100 PASS; squash merge `7943360e08e12d882c762484f95570682a1ef041`.
+- **Platform PR #1321:** refreshed `debug/vps-latest.md` through read-only `inspect-vps` #42168105492. Inspection generated at 05:23:12Z, exact inspection PR validation #42168230639 PASS, squash merge `70dc56818596dd329e0eb055394d2bfde125b8ac`. Post-merge manifest/action validation #42168105545/#42168105411 PASS.
+- **Platform production:** latest returned reconcile #42167232258 PASS at 05:14:26Z with `ALLOW_IMAGE_CHANGES=false`; it predates the two read-only inspection merges. No production reconcile or image promotion was needed for these changes. Recovery/watchdog workflow_run events after inspection were skipped by guards, not native schedule evidence.
+- **K3s snapshot #42168105492:** node Ready/ARM64, K3s v1.36.3+k3s1, disk 56%, ~19 GiB available RAM, GitOps drift clean, restart_required=yes. Media backend/frontend 1/1; Stock Admin 0/1 with two ImagePullBackOff Pods, new Backend tag `12d63b4` ImagePullBackOff (no ARM64 manifest), old Backend/Frontend 1/1. TCE frontend/service and Auth/Keycloak desired 0/0. Do not reboot or change replicas.
+- **Storage/decommission evidence:** only `k3s-debug/k3s-debug-logs` PVC/PV is listed; Stock/Media VolumeSnapshot references are `none`. This does not establish external database/object-storage backup or ownership. Media runner service remains active/enabled and `Runner.Listener` exists; retirement guard still blocks decommission. No namespace/resource/storage/runner deletion was performed.
+- **TCE:** WF-06 #42158243093 fails all four public HTTP probes with 503. WF-12 #42158209117 fails stale native schedule freshness despite successful Platform heartbeat. WF-13 #42158228852 successfully dispatches a read-only fallback that also fails health. Keep strict HTTP 200 checks; do not alter market-scan cron.
+- **Stock:** master CI #42167088130 PASS, including native ARM64 non-publishing builds for Admin/Backend/Scraper. The exploratory branch run #42166117405 is superseded by the same contract now on master. No new GHCR publication, digest/provenance, release authorization or production promotion; deployed tag `12d63b4` remains invalid for ARM64.
+- **Media:** master CI #42136991059 PASS (historical); no new publisher. Keep app CI/publisher ownership and no Platform dispatch.
+- **Authentication:** master CI #42167100692 PASS, including native ARM64 non-publishing build and architecture check. Release remains manual-only; no new publisher/digest/provenance. PR #75/#76 still gated on Supabase production integration side-effect evidence and exact-head checks.
+- **Ownership:** preserve app-owned CI/tests/builds and immutable GHCR publication; Platform-owned manifests, shared pull credentials, digest/provenance validation, GitOps promotion/reconcile, rollout and health. `reconcile-vps.yml` is the sole production apply authority; `inspect-vps.yml` is read-only. Preserve useful CI/security/manual/release/scheduled jobs and avoid duplicate SSH/Compose deployment paths. TCE market-scan schedule unchanged.
+
+### Next actions
+
+1. Operator retires only the dedicated Media runner after verifying it is idle; unregister and verify no Listener remains.
+2. Obtain same-window fresh storage inventory and independent external-data/backup/DNS review before protected namespace decommission.
+3. Fix TCE healthcheck schedule delivery without changing market-scan cron or weakening HTTP 200 assertions.
+4. Keep Stock/Auth image publication and promotion gated until fresh authorized publisher evidence proves full-SHA tag, registry digest, ARM64 manifest and provenance.
+
+
 ## Workflow inventory runtime update — 2026-11-06 10:21 ICT / 03:21 UTC
 
 - **Default-branch heads:** Platform Infra `40db4f6378d7f9cf21d830100fe0548e2197cc65`; TCE Dashboard `512b69d837e2a65c39867a062529a7fa0eada4cc`; StockDividend `6fcefa6b3792dab92b6d5c438001633d25f1ca28`; Media Generation `3a8846a4f273eeb20a55b214d5ad80804c2d8d52`; Authentication `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
