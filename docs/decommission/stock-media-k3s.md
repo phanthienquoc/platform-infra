@@ -93,3 +93,13 @@ This section supersedes the 10:18 ICT runtime snapshot above. Source: read-only 
 - Production reconcile [#42176253693](https://github.com/phanthienquoc/platform-infra/actions/runs/42176253693) completed SUCCESS before the inspection, with Platform-owned MicroFE/Auth/TCE lanes passing and Keycloak skipped. It did not delete or manage Stock/Media namespaces.
 
 The manual decommission workflow remains blocked by the active/enabled Media runner and the absence of independent backup/external-data/DNS ownership approval. Do not run it based on this snapshot alone.
+
+
+## Workflow mode hardening — 2026-11-07
+
+The manual `decommission-stock-media` workflow now separates inspection from deletion:
+
+- `mode=plan` is the default. It runs the fresh read-only storage inventory and reports the dedicated Media runner service/enabled/Listener state. It does not require destructive attestations, request the production environment, or call the delete command.
+- `mode=delete` remains a separate protected production operation. It requires all three exact operator confirmations, verifies the dedicated Media runner is stopped/disabled and has no Listener, repeats the storage preflight in the same run, and only then deletes the two fixed namespaces.
+- The workflow remains `workflow_dispatch` only. No schedule, push, repository-dispatch or automatic decommission path is added.
+- Plan mode does not infer GitHub runner registration or external backup/DNS ownership; those remain operator checks. It does not stop or unregister any runner.
