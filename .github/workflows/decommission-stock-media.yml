@@ -12,7 +12,9 @@ on:
         required: true
         type: string
       runner_retirement:
-        description: Type MEDIA-RUNNER-STOPPED-AND-UNREGISTERED after confirming the dedicated Media runner is idle, stopped and removed from GitHub
+        description: >-
+          Type MEDIA-RUNNER-STOPPED-AND-UNREGISTERED after confirming the dedicated
+          Media runner is idle, stopped and removed from GitHub
         required: true
         type: string
 
@@ -31,7 +33,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout platform-infra
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
 
