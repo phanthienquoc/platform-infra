@@ -1131,6 +1131,11 @@ decommission_test = (ROOT / "scripts" / "tests" / "decommission-stock-media-name
 for required in ("MOCK_SNAPSHOT", "MOCK_SNAPSHOT_CONTENT", "namespaced VolumeSnapshot", "cluster-scoped VolumeSnapshotContent"):
     if required not in decommission_test:
         fail(f"Decommission storage regression tests must cover snapshot references: {required}")
+snapshot_test = ROOT / "scripts" / "tests" / "namespace-storage-snapshot-refs.test.sh"
+if not snapshot_test.is_file():
+    fail("Namespace storage snapshot regression test is missing.")
+if "scripts/tests/namespace-storage-snapshot-refs.test.sh" not in github_actions:
+    fail("Namespace storage snapshot regression test must run in validate-github-actions.")
 if "scripts/tests/decommission-stock-media-namespaces.test.sh" not in github_actions:
     fail("Namespace decommission safety regression tests must run in validate-github-actions.")
 if "scripts/tests/verify-media-runner-retired.test.sh" not in github_actions:
