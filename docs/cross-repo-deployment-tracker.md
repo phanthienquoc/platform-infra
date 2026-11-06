@@ -3431,3 +3431,18 @@ This is successful fallback reconciliation evidence, not native schedule recover
 - No new Stock/Media/Auth/TCE immutable publisher run, GHCR push, promotion or app-to-Platform production dispatch was executed. Stock/Media remain outside Platform GitOps. No decommission plan dispatch was performed because the connected GitHub action surface has no workflow-dispatch operation.
 - No namespace/PVC/PV deletion, runner retirement, external database/object-storage/DNS mutation, manifest apply, replica activation, host upgrade or reboot occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
 
+
+
+
+---
+
+## Post-merge watchdog concurrency follow-up — 2026-11-07 06:08 ICT / 2026-11-06 23:08 UTC
+
+- PR [#1363](https://github.com/phanthienquoc/platform-infra/pull/1363) merged by squash at `a13459958e3385a933871e05a308d163448c33dd`; exact validated head `8e2e3c5aafe04b92cf4e3d82f4011256837095c2`.
+- Exact-head PR validation: [validate-manifests #42309628519](https://github.com/phanthienquoc/platform-infra/actions/runs/42309628519) PASS and [validate-github-actions #42309628570](https://github.com/phanthienquoc/platform-infra/actions/runs/42309628570) PASS. The latter ran actionlint, yamllint, ShellCheck, ops regression tests and the updated workflow contract validator.
+- Post-merge validation on merge SHA: [validate-manifests #42309702733](https://github.com/phanthienquoc/platform-infra/actions/runs/42309702733) PASS and [validate-github-actions #42309702820](https://github.com/phanthienquoc/platform-infra/actions/runs/42309702820) PASS.
+- Post-merge read-only watchdog push smoke [#42309702803](https://github.com/phanthienquoc/platform-infra/actions/runs/42309702803) PASS. It explicitly reported latest native reconcile #42304064211 age 46m (>45m), inspection #42301267072 age 67m, and native recovery #42304248066 age 44m. Because this was a push smoke, stale history was warning-only; this is not native schedule recovery.
+- Follow-up workflow_run diagnostics #42309732514 and #42309745139 were skipped. They now use a separate concurrency group from push/schedule events. No native schedule run newer than watchdog #42304321570 (cancelled at 22:23:18Z) was observed by this checkpoint.
+- The event-scoped watchdog concurrency mitigation is merged and CI-validated. The cancellation actor for #42304321570 remains unproven because the Actions read response exposes no actor/reason; the timing only established a plausible pending-run contention hazard. Do not claim that the native schedule service is fixed until a subsequent event=schedule watchdog completes.
+- No cron, TCE market-scan schedule, production workload, GHCR publisher, manifest, Secret, runner, namespace, external data, DNS or host state changed. No image publication/promotion or destructive action occurred.
+
