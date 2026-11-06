@@ -4533,3 +4533,35 @@ Preserve useful app CI/tests/builds, immutable publishers, security checks, purp
 - Last snapshot still recorded Stock Admin/new Backend ARM64 pull failure on `12d63b4`, Media 1/1, TCE/Auth/Keycloak 0/0, and dedicated Media runner active/enabled with Listener. External backup/data/DNS ownership remains unverified. No fresh publisher/digest/provenance or release authorization was retrieved.
 - Ownership remains app-owned CI/build/immutable GHCR publication and Platform-owned production manifests, shared pull credentials, digest/provenance validation, GitOps reconcile, rollout and health. `reconcile-vps.yml` sole apply authority; `inspect-vps.yml` read-only. No production mutation; TCE market-scan unchanged.
 - Full evidence and next actions: [checkpoint 2026-11-06 16:03 ICT](cross-repo-workflow-inventory-checkpoints/2026-11-06-1603-ict.md).
+
+
+## Runtime workflow inventory — 2026-11-06 16:58 ICT / 09:58 UTC
+
+### Current repositories and Actions evidence
+
+| Repository | Default-branch SHA | Open PRs | Latest observed evidence |
+|---|---|---|---|
+| Platform Infra | `ca49cef285c7b18136e006a928de8596a769cd59` | #1314/#544/#541/#539 (drafts) | Scheduled inspect #42193617816 SUCCESS; watchdog #42193856388 FAILURE on stale native reconcile; recovery reconcile #42193876822 SUCCESS, no drift, image changes disabled. |
+| TCE Dashboard | `512b69d837e2a65c39867a062529a7fa0eada4cc` | None | WF-06 native #42176208184 FAILURE (four HTTP 503); WF-07 native #42176751608 SUCCESS; WF-12 #42176769424 was workflow_run, not schedule. |
+| StockDividend | `3aeaf519b7a786d13dcecee763acaca357c47ddd` | None | CI #42167088130 PASS (7/7); latest publisher #41563856933 on Nov 3. |
+| Media Generation | `3a8846a4f273eeb20a55b214d5ad80804c2d8d52` | None | CI #42136991059 PASS; no newer publisher observed. |
+| Authentication | `3a8031196f21c4240b617bbd0a623fce2dc56c5e` | #75 ready/#76 draft | CI #42167100692 PASS for validation and non-publishing ARM64 build; Supabase Preview skipped; no publisher run. |
+
+PR checks on Platform #1314 and Auth #75/#76 are historical and their bases are stale. Do not merge on those checks. Platform #544/#541/#539 remain unrelated Keycloak drafts.
+
+### Scheduled operations and recovery
+
+- Native inspect #42193617816 succeeded at 09:15:08Z and committed snapshot #1329 at master SHA `ca49cef285c7b18136e006a928de8596a769cd59`.
+- Native reconcile #42152655025 (02:48:33Z) is still the latest scheduled reconcile in the inspected history. Watchdog #42193856388 failed at 09:16:57Z because native reconcile age was 388 minutes; this is the intended stale-delivery alarm, not a code-validation failure.
+- Recovery after inspect #42193856545 succeeded and dispatched reconcile #42193876822. Reconcile used `mode=apply`, `target_app=all`, `ALLOW_IMAGE_CHANGES=false`; secrets and TCE image pairing were verified, Kubernetes diff was clean, so manifest apply and drift verification were correctly skipped. This is not a new image promotion or manifest apply.
+- Auth/TCE lanes passed their configured desired-zero maintenance-state checks with no active pods; rollout steps were skipped. MicroFE health passed; Keycloak was skipped. TCE/Auth remain 0/0 and public probes return 503. Recovery #42194042813 was workflow_dispatch, not native schedule evidence.
+
+### Runtime snapshot and release gates
+
+- Snapshot #42193617816: node Ready/ARM64, K3s v1.36.3+k3s1; `restart_required=yes`. GitOps drift clean. Media backend/frontend 1/1 Running. Stock Admin and newer Backend ImagePullBackOff because deployed `12d63b4` lacks an ARM64 manifest; legacy Backend/Frontend 1/1. TCE/Auth/Keycloak 0/0.
+- Only unrelated `k3s-debug/k3s-debug-logs` PVC/PV is listed; no Stock/Media PVC/PV or VolumeSnapshot references. External backup/database/object-storage/DNS ownership remains unverified.
+- Dedicated Media runner remains active/enabled with `Runner.Listener`; no retirement. Do not touch the shared Platform runner.
+- Stock and Media own ARM64 GHCR publication and digest verification; Stock manual publication remains gated by `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=true`. TCE publisher dispatches digest/source metadata to Platform; Auth release is manual-only with provenance/SBOM. No fresh publisher/digest/provenance was observed.
+- Inspected Stock, Media and TCE production publisher workflows contain no duplicate SSH/SCP/kubectl/Compose production apply path. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` is read-only.
+
+Keep TCE/Auth at 0/0 until owner approval; preserve strict HTTP 200 checks, all existing cron expressions and the TCE market-scan schedule. Require operator-confirmed idle/stop/disable/unregister of the dedicated Media runner, same-window storage inspection, and external backup/data/DNS ownership review before namespace decommission. No production mutation occurred in this checkpoint.
