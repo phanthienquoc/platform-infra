@@ -2738,3 +2738,21 @@ App repositories own tests/builds and immutable GHCR publication. Platform Infra
 7. Schedule OS/container updates and reboot only through a separately approved maintenance window.
 
 No workload, image, desired replica, production manifest, namespace, PVC/PV, external database, DNS, runner or host was deleted or reconfigured. The latest reconcile did provision/verify the Auth runtime Secret; shared GHCR pull Secret remained unchanged. TCE market-scan schedule unchanged.
+
+
+---
+
+## Incremental readiness update — 2026-11-06 22:11 ICT / 15:11 UTC
+
+- Platform Infra PR [#1344](https://github.com/phanthienquoc/platform-infra/pull/1344) merged as b153defe812c20e53904ebc6ea669cdfc7654af5. Exact-head manifest validation [#42240425538](https://github.com/phanthienquoc/platform-infra/actions/runs/42240425538) PASS; post-merge validation [#42240709818](https://github.com/phanthienquoc/platform-infra/actions/runs/42240709818) PASS. It changed only tracker/inventory/checkpoint documentation.
+- Stock PR [#34](https://github.com/phanthienquoc/stockdividend/pull/34) is open on branch fix/stock-ghcr-write-permissions-scope-20261106-2156ict, exact head 1dd618e42d7fb64fe048bbffc53c55eb20f3a37a, 2 commits ahead and 0 behind master. It adds workflow-level contents: read to deploy.yml and keeps packages: write only on build-and-push; the release-contract validator enforces the single publisher grant. PR CI [#42240653857](https://github.com/phanthienquoc/stockdividend/actions/runs/42240653857) was still in progress at 15:11Z: release-contract, backend test/build and scraper syntax jobs passed; ARM64 image builds, scraper container build and Admin build were still running. Do not merge until every required job passes on this exact head.
+- TCE PR #1027 merged as f4240ada56da700af00100fb3f01278b9b883951. Exact-head WF-01P #42239660880, WF-08B #42239660838, backend unit tests #42239660759 and Prettier #42239660758 all passed. Post-merge WF-01 build/verify #42239871779, backend unit tests #42239871781 and Prettier #42239871823 all passed.
+- Media PR #73 merged as 54f3a76a5f8861842fd1bae698c4cb0fa8c9034d. Exact-head CI #42238974848 and post-merge master CI #42239703151 passed.
+- Current heads: Platform b153defe812c20e53904ebc6ea669cdfc7654af5; TCE f4240ada56da700af00100fb3f01278b9b883951; Stock 3aeaf519b7a786d13dcecee763acaca357c47ddd; Media 54f3a76a5f8861842fd1bae698c4cb0fa8c9034d; Auth 3b60ff46b8959d18aee1956f99d6b62589b8b9c5. Open PRs: Platform #1314/#544/#541/#539 drafts; Stock #34; Auth #75 ready/#76 draft; none in TCE or Media.
+- GitHub Status summary was All Systems Operational at 14:29:25Z, with Actions marked operational and no unresolved incidents. The history lists resolved Actions incidents on Nov 5 and early Nov 6, but these do not establish the cause of the later native schedule gaps. Do not attribute schedule failures to GitHub without stronger evidence: https://www.githubstatus.com/history
+
+Stock #34 changes only GITHUB_TOKEN permission defaults and regression validation. It does not change publication triggers, manual release authorization, immutable SHA tags, ARM64 verification, Platform handoff, production manifests or runtime state. No Stock publisher was triggered and no GHCR image was pushed.
+
+The latest full K3s inspection remains #42231216533 (14:08:18Z); the newer partial pod listing is reconcile #42235712359 (14:38:47Z). Neither authorizes decommission. Media runner is still active/enabled with Listener present; Stock Admin/new Backend still lack ARM64 manifest for tag 12d63b4; TCE/Auth/Keycloak remain 0/0. External database/object-storage backup, retention and DNS ownership remain unverified.
+
+TCE WF-06/WF-12 cron declarations and the TCE market-scan schedule remain unchanged. No production workload, image, replica, manifest, namespace, PVC/PV, external data, DNS, runner or host was changed by the documentation checkpoint.

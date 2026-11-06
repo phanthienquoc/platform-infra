@@ -4833,3 +4833,20 @@ TCE WF-12 #42235672509 and WF-13 #42235672609 are workflow_run follow-ups to WF-
 7. Schedule host/container upgrades and reboot only through an approved maintenance window.
 
 No production workload, image, replica, manifest, namespace, PVC/PV, external database, DNS, runner or host was deleted or reconfigured. The latest reconcile did provision/verify the Auth runtime Secret; shared GHCR pull Secret remained unchanged. TCE market-scan schedule unchanged.
+
+
+---
+
+## Incremental permission/readiness inventory — 2026-11-06 22:11 ICT / 15:11 UTC
+
+- **StockDividend:** PR #34 is open. deploy.yml now defaults workflow GITHUB_TOKEN permissions to contents: read and retains contents: read plus packages: write only in build-and-push. The existing release-contract validator checks the top-level read-only block, publisher job permission block and exactly one packages: write grant. CI #42240653857 is in progress; its release-contract, backend test/build and scraper syntax jobs have passed, while ARM64 image builds, scraper container build and Admin build remain in progress. No publisher was run.
+- **TCE Dashboard:** PR #1027 merged as f4240ada56da700af00100fb3f01278b9b883951. WF-03 has workflow-level contents: read and job-scoped actions: read/packages: write on platform-infra-release only. WF-08B has workflow-level contents: read and packages: write only on build-shell/build-ws. Exact-head PR checks and post-merge WF-01/backend/Prettier checks passed. Cron and market-scan unchanged.
+- **Media Generation:** PR #73 merged as 54f3a76a5f8861842fd1bae698c4cb0fa8c9034d. WF-03 has workflow-level contents: read and a single packages: write grant on publish-immutable-images. Exact-head and post-merge CI passed.
+- **Authentication:** release.yml already has workflow-level read-only permissions, an empty-permission non-master ref gate, and packages: write only on the publish job. No new publisher was run.
+- **Stock publisher contract:** the current manual-publication hold, master push/manual trigger, full-source-SHA tag, ARM64 manifest verification and publisher-only ownership remain unchanged. Stock still has no Platform dispatch or direct production deployment authority.
+- **Platform Infra:** PR #1344 merged as b153defe812c20e53904ebc6ea669cdfc7654af5; exact-head #42240425538 and post-merge #42240709818 passed. Tracker/inventory now include the Stock PR and current permission audit.
+- **GitHub status:** summary at 14:29:25Z reports Actions operational and no unresolved incidents. Prior resolved incidents are context only; they do not prove the cause of current schedule delivery gaps.
+
+The current native schedule evidence remains: Platform reconcile #42199267592, recovery #42199274660, watchdog #42201400071, inspect #42193617816; TCE WF-06 #42235639842 failed HTTP 503, WF-07 #42176751608 passed, WF-12 #42211610532 failed stale freshness. Manual dispatch and workflow_run follow-ups remain separate from native schedule evidence.
+
+No publisher, GHCR push, Platform dispatch, production manifest change, workload activation, runner retirement, namespace deletion or host maintenance was triggered by the permission audit. TCE market-scan schedule unchanged.
