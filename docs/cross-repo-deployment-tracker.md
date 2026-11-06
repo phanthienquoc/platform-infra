@@ -3077,3 +3077,13 @@ This is still a PR change, not a live K3s result. No `mode=plan` execution was p
 - Schedule Docker/containerd upgrades and reboot separately.
 
 No production workload, image, replica, manifest, shared credential, namespace, PVC/PV, external data, DNS, runner or host was mutated. TCE market-scan schedule unchanged.
+
+
+## PR #1355 completion — 2026-11-07
+
+- [PR #1355](https://github.com/phanthienquoc/platform-infra/pull/1355) was squash-merged at `1bd5c410fa304915acc3403fd5f528658071964c`.
+- Exact validated PR head: `3a2fba651f9707e70edfe9d44887aa504582f341`; base was `6d0c687538b74b90addff09c0b9cd5e0ceddebff`.
+- Exact-head `validate-github-actions` [#42277123446](https://github.com/phanthienquoc/platform-infra/actions/runs/42277123446) PASS, including ShellCheck, operations regression tests, immutable image-change contract tests and workflow-contract checks.
+- Exact-head `validate-manifests` [#42277123461](https://github.com/phanthienquoc/platform-infra/actions/runs/42277123461) PASS.
+- Post-merge run IDs were not available from the read-only Actions views used in this checkpoint; do not claim post-merge validation until directly observed.
+- The merged change is limited to read-only Stock/Media decommission inventory, regression/contract validation, and documentation. It does not execute plan mode or change K3s/DNS/runner state.
