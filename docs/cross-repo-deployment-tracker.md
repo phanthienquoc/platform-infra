@@ -1,3 +1,72 @@
+## Current review — 2026-11-06 18:22 ICT (2026-11-06 11:22 UTC)
+
+This checkpoint adds the immutable-publication and dispatch-payload audit after the Auth promotion hardening. It is evidence-only: no publisher was triggered and no production image was promoted.
+
+### Current repositories and open PRs
+
+| Repository | Default-branch SHA | Open PRs | Current state |
+|---|---|---|---|
+| Platform Infra | `c19d8e2d6e09fbe9e4eef923b420d512a246d961` | #1314, #544, #541, #539 (draft) | PR #1336 merged; post-merge validations pass. |
+| TCE Dashboard | `512b69d837e2a65c39867a062529a7fa0eada4cc` | None | WF-06 native schedule stale; public probes still fail HTTP 503. |
+| StockDividend | `3aeaf519b7a786d13dcecee763acaca357c47ddd` | None | Publisher-only; no Platform dispatch in current `deploy.yml`. |
+| Media Generation | `3a8846a4f273eeb20a55b214d5ad80804c2d8d52` | None | Publisher-only; no Platform dispatch in current WF-03. |
+| Authentication | `3a8031196f21c4240b617bbd0a623fce2dc56c5e` | #75 ready; #76 draft | Manual release sends the provenance-bound Auth event; no new publisher run. |
+
+Open PR checks remain old: Platform #1314 has a historical validation PASS from 04:20Z; #544/#541/#539 have Oct 14 checks. Auth #75 validation is from Oct 27 and #76 from Nov 1; both Supabase Preview checks are SKIPPED. None is treated as newly merge-ready.
+
+### Auth promotion receiver hardening — merged
+
+[PR #1336](https://github.com/phanthienquoc/platform-infra/pull/1336) removed the generic `image-published` repository-dispatch event from `.github/workflows/gitops-image-promotion.yml`. Final exact head `f320eee277fc690da3ce8f39ee5e60ffe5c252bb` passed [validate-manifests #42209633143](https://github.com/phanthienquoc/platform-infra/actions/runs/42209633143) and [validate-github-actions #42209633160](https://github.com/phanthienquoc/platform-infra/actions/runs/42209633160), then squash-merged as `c19d8e2d6e09fbe9e4eef923b420d512a246d961`. Post-merge [#42209733392](https://github.com/phanthienquoc/platform-infra/actions/runs/42209733392) and [#42209733500](https://github.com/phanthienquoc/platform-infra/actions/runs/42209733500) both passed.
+
+The receiver now accepts only:
+- `tce-release-requested` for the TCE publisher lane;
+- `auth-image-published` for provenance-bound Auth promotion;
+- `microfe-images-published` for the MicroFE lane.
+
+The Auth promotion job is limited to a manual `workflow_dispatch` on master or `repository_dispatch: auth-image-published`. The resolver rejects any other repository-dispatch action. Manual promotion remains available on master and still requires a full source commit and immutable digest.
+
+Organization code search found no current `event_type="image-published"` producer in the in-scope repositories; the only current occurrence was the Auth negative regression assertion. The legacy event had allowed an older tag-only Auth payload to reach the generic receiver without source-run provenance. Removing it is a fail-closed contract change, not a workflow deletion.
+
+### Immutable GHCR publication and payload audit
+
+| App | Current producer contract | Latest historical publisher evidence | Current handoff |
+|---|---|---|---|
+| TCE | WF-03 publishes full-SHA release images, checks ARM64 and digest, then sends `tce-release-requested` with web/service digests and source run/workflow/event/head SHA. Platform receiver verifies source-run provenance and registry digest. | No new publisher run observed after current contract. | Validated by current source contract; no new promotion. |
+| StockDividend | Current `deploy.yml` is publisher-only; full-SHA tag, immutable digest and ARM64 verification. No Platform dispatch or direct SSH/Compose deploy. | [#41563856933](https://github.com/phanthienquoc/stockdividend/actions/runs/41563856933), source `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`, verified ARM64 digests: scraper `sha256:6b3ee2676268baf8ae2e77f68df3b730d797ea6192541710720d04585e99f8a2`; admin `sha256:a5c2dbb1a0b6c417891e18256fd4c00a6e14e53a4c34939c12fc1e43c7f3339e`; backend `sha256:cb0135fc57bc8a2514288105ab35cc59f4cb922555f028dbf97f44c077b76a9a`. | No Platform promotion. These historical digests do not repair deployed tag `12d63b4`, which still lacks ARM64. |
+| Media | Current WF-03 is publisher-only; ARM64, checksum, full-SHA tag and registry digest checks. No Platform dispatch in current workflow. | [#41158598649](https://github.com/phanthienquoc/media-generation/actions/runs/41158598649), source `32f3bf56e1f44c65a5d98f35bed0547f398f8e90`, historical frontend digest `sha256:b55f3cf6dd29503f43731f5b1c519233a223baa32010f038c72c36cb900bc625`, backend digest `sha256:d66de088c4badd604a114315a18dc259a76e8963d4ffce8a4cc2b382ea0e645d`. Its historical Platform pairing run [#41158826992](https://github.com/phanthienquoc/platform-infra/actions/runs/41158826992) failed at “Wait for paired GitOps release”. | Current Media publisher no longer dispatches; Platform has no Media promotion lane. Historical digests are not a current release authorization. |
+| Authentication | Current manual-only `release.yml` sends `auth-image-published` with `auth_digest`, source run ID, workflow path, event and full source head SHA. Platform verifies the exact publisher run, workflow path, event, source SHA, digest/tag mapping and ARM64 before promotion. | [#41040510320](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41040510320), source `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`, digest `sha256:15bd51d68155a3b0cbc732e3baa148fc123aafb11b4290e6f66aa252969cdfc7`. This historical run used legacy `image-published` with only app/component/tag; it is not evidence for the current payload contract. | Current source and receiver contracts are aligned; no new manual publisher run has exercised them yet. |
+
+The current Stock and Media workflows retain app-owned publication but do not send Platform dispatches. Their old Platform handoff paths remain retired; do not reintroduce them without an explicit scope decision. The current Platform GitOps promotion workflow has no Stock/Media lane.
+
+### Current workflow and runtime status
+
+- Platform post-merge validations #42209733392 and #42209733500 passed. The last native reconcile remains #42199267592 at 10:00:15Z; recovery #42199274660 at 10:00:18Z; watchdog #42201400071 at 10:16:28Z; inspect #42193617816 at 09:15:08Z. Later reconcile #42207918291 and inspect #42208147735 are workflow_dispatch fallbacks, not native schedule proof.
+- The advisory TCE observer in watchdog push run [#42208198166](https://github.com/phanthienquoc/platform-infra/actions/runs/42208198166) reported WF-06 run #42176208184 age 16,022s against a 1,500s budget. The step is warning-only and cannot trigger production recovery.
+- TCE WF-06 native #42176208184 (06:43:04Z) failed HTTP 503; WF-07 #42176751608 (06:48:12Z) passed; WF-12 native #42158209117 (03:43:01Z) failed. WF-12 #42176769424 (06:48:22Z) is workflow_run, not schedule.
+- Stock CI #42167088130 passed; Media CI #42136991059 passed; Auth CI #42167100692 passed. These CI runs do not constitute new GHCR publication or promotion.
+
+### Latest read-only K3s evidence
+
+Snapshot [debug/vps-latest.md](../debug/vps-latest.md) was generated at 11:09:51Z by inspect-vps #42208147735:
+- Node Ready/ARM64, K3s v1.36.3+k3s1; disk 56%, ~19 GiB available RAM, `restart_required=yes`; GitOps drift clean.
+- Media backend/frontend 1/1 Running and digest-pinned; MicroFE Shell/WS/NATS 1/1.
+- Stock Admin and new Backend remain ImagePullBackOff due missing ARM64 manifest for deployed tag `12d63b4`; older Backend/Frontend 1/1 on `23b2878`.
+- TCE/Auth/Keycloak desired 0/0; public OIDC probes 503.
+- Only PVC/PV is `k3s-debug/k3s-debug-logs`; no Stock/Media PVC/PV or VolumeSnapshot references. External database/object-storage backups and DNS ownership remain unverified.
+- Media runner remains active/enabled with Listener present; shared Platform runner is also active. No runner retirement or reboot is authorized.
+
+### Next actions
+
+1. Observe native Platform and TCE schedule delivery independently; dispatch fallbacks do not count as schedule proof.
+2. Do not publish or promote Stock/Auth without explicit release authorization and a current full-SHA/digest/provenance run.
+3. Keep Media runner retirement blocked until operator confirms idle, stop/disable/unregister and no Listener remains; do not touch the shared Platform runner.
+4. Require same-window storage, external backup, object-storage and DNS ownership review before any Stock/Media decommission.
+5. Keep TCE/Auth at 0/0 until service-owner approval; retain strict HTTP 200 checks and leave the TCE market-scan schedule unchanged.
+
+**Authority boundary:** app repositories own CI/builds and immutable GHCR publication. Platform Infra owns production manifests, shared pull credentials, digest/provenance validation, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only.
+
+---
+
 ## Current review — 2026-11-06 18:10 ICT (2026-11-06 11:10 UTC)
 
 This checkpoint covers the five production repositories, current PR/check state, native schedule evidence, the new cross-repo TCE schedule observer, and a fresh read-only K3s snapshot. It records evidence only; it does not authorize image publication, replica activation, runner retirement, namespace deletion, reboot, or external-data deletion.
