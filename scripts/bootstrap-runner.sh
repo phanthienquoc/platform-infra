@@ -49,7 +49,7 @@ namespace_storage_snapshot_refs() {
   while IFS= read -r resource; do
     [[ "$resource" == "volumesnapshots.snapshot.storage.k8s.io" ]] || continue
     objects="$("${KUBECTL[@]}" get "$resource" -n "$namespace" -o name)"
-    [[ -z "$objects" ]] || printf '%s\\n' "$objects"
+    [[ -z "$objects" ]] || printf '%s\n' "$objects"
   done <<< "$namespaced_resources"
 
   cluster_resources="$("${KUBECTL[@]}" api-resources --api-group=snapshot.storage.k8s.io --verbs=list --namespaced=false -o name)"
@@ -59,7 +59,7 @@ namespace_storage_snapshot_refs() {
     jq -r --arg namespace "$namespace" '
       .items[]?
       | select(.spec.volumeSnapshotRef.namespace == $namespace)
-      | "volumesnapshotcontent.snapshot.storage.k8s.io/\\(.metadata.name)"
+      | "volumesnapshotcontent.snapshot.storage.k8s.io/\(.metadata.name)"
     ' <<< "$content_json"
   done <<< "$cluster_resources"
 }
@@ -182,7 +182,7 @@ case "${1:-}" in
       snapshot_refs="$(namespace_storage_snapshot_refs "$namespace")"
       [[ -z "$snapshot_refs" ]] || {
         echo "platform-kubectl: VolumeSnapshot references remain for $namespace; aborting namespace deletion" >&2
-        printf '%s\\n' "$snapshot_refs" >&2
+        printf '%s\n' "$snapshot_refs" >&2
         exit 1
       }
     done
