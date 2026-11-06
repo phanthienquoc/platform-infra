@@ -1,3 +1,68 @@
+## Current review — 2026-11-06 12:26 ICT (2026-11-06 05:26 UTC)
+
+This checkpoint follows Platform PRs #1320 and #1321. Both changes are merged; the second merge produced a fresh read-only VPS/K3s snapshot. This update records current evidence only and does not authorize release, runner retirement, namespace deletion, or any other production mutation.
+
+### Current default-branch heads and open PRs
+
+| Repository | Default-branch SHA | Open PRs | Current state |
+|---|---|---|---|
+| Platform Infra | `70dc56818596dd329e0eb055394d2bfde125b8ac` | #1314 draft, #544/#541/#539 drafts | PR #1320 storage snapshot references and PR #1321 fresh inspection snapshot merged. |
+| TCE Dashboard | `512b69d837e2a65c39867a062529a7fa0eada4cc` | None | Public health remains HTTP 503; no production publisher. |
+| StockDividend | `3aeaf519b7a786d13dcecee763acaca357c47ddd` | None | Master CI now includes and passes native ARM64 builds for Admin, Backend and Scraper; no production publication. |
+| Media Generation | `3a8846a4f273eeb20a55b214d5ad80804c2d8d52` | None | Existing CI evidence passes; runtime remains active pending approved retirement. |
+| Authentication | `3a8031196f21c4240b617bbd0a623fce2dc56c5e` | #75 ready, #76 draft | Master CI now includes and passes a native ARM64 image build; release remains manual-only and gated. |
+
+### Platform PRs and validation
+
+- PR #1320 — [Expose VolumeSnapshot references in read-only VPS inspection](https://github.com/phanthienquoc/platform-infra/pull/1320) — merged as `7943360e08e12d882c762484f95570682a1ef041`. Exact-head checks passed: `validate-manifests` #42167697233 and `validate-github-actions` #42167697100.
+- PR #1321 — [Refresh VPS inspection state](https://github.com/phanthienquoc/platform-infra/pull/1321) — merged as `70dc56818596dd329e0eb055394d2bfde125b8ac`. Inspection #42168105492 completed SUCCESS; exact inspection PR head `5a9d73c866f7c41f00c05015e41753c1cebce6d8` passed validation #42168230639. Post-merge manifest validation #42168105545 and GitHub Actions validation #42168105411 both passed.
+- The inspection workflow remained read-only. No reconcile, image promotion, namespace deletion, PVC/PV deletion, runner mutation, DNS, database, or host operation was performed by these PRs.
+- Current unrelated Platform drafts: #1314 mail-service plan and Keycloak docs #544/#541/#539. They are not deployment blockers and are not merged as part of this work.
+
+### Latest production workflow evidence
+
+- Latest production reconcile in the returned history: [#42167232258](https://github.com/phanthienquoc/platform-infra/actions/runs/42167232258), completed SUCCESS at 2026-11-06 05:14:26 UTC on pre-inspection master SHA `2ec1d0f96ccbf679de1b156c3a40acd3221698f0`, with image changes disabled. This is not a reconcile after PR #1320/#1321; those PRs changed inspection/validation only.
+- Post-merge validation: #42168105411 and #42168105545 SUCCESS on `7943360e08e12d882c762484f95570682a1ef041`; exact snapshot PR validation #42168230639 SUCCESS on `5a9d73c866f7c41f00c05015e41753c1cebce6d8`.
+- Workflow-run recovery/watchdog events #42168288577, #42168288702, #42168296862 and #42168300708 were SKIPPED by their event guards; they are not native scheduled ticks. Do not count workflow_dispatch or workflow_run recovery as native schedule evidence.
+
+### Fresh K3s snapshot — inspect-vps #42168105492
+
+Snapshot `debug/vps-latest.md` generated at `2026-11-06T05:23:12Z` (blob `67782b5c4ba9609b0a69fc942a248bf92ae8310e`).
+
+- Node `tce-k3s-01` is Ready, ARM64, K3s `v1.36.3+k3s1`, containerd `2.3.2-k3s2`; disk use 56%, memory available ~19 GiB, `restart_required=yes`. No reboot/upgrade is authorized by this checkpoint.
+- GitOps drift: clean.
+- `media-prod`: namespace Active; backend and frontend both 1/1 Running, with digest-pinned images. Ingress `media.mrcute.space` remains present.
+- `stock-prod`: namespace Active; Admin Deployment 0/1 with two Pods in ImagePullBackOff; new Backend Pod using tag `12d63b4` is ImagePullBackOff because its manifest has no matching ARM64 platform; older Backend and Frontend remain 1/1 Running.
+- Persistent storage: the only listed PVC/PV is `k3s-debug/k3s-debug-logs`; no Stock/Media PVC/PV appears in this snapshot. New read-only inventory reports `stock-prod: none` and `media-prod: none` for VolumeSnapshot/VolumeSnapshotContent references. This is useful in-cluster evidence, not proof that external databases, object storage, DNS, backups, or third-party data are disposable.
+- Dedicated Media runner remains **active and enabled**; `/opt/media-actions-runner/bin/Runner.Listener` is still present. The Platform runner is also active and must not be touched. The retirement guard correctly blocks decommission.
+- `tce-prod` frontend/service and Auth/Keycloak workloads are desired 0/0 in this snapshot; public OIDC probes return 503. Keep strict HTTP 200 health checks; do not activate replicas or change the TCE market-scan schedule.
+
+### Cross-repo CI and publication status
+
+- **TCE Dashboard:** WF-06 #42158243093 failed all four public probes (TCE web/API and Auth liveness/readiness, HTTP 503). WF-12 #42158209117 failed the native schedule-freshness check; its Platform heartbeat dispatch succeeded. WF-13 #42158228852 dispatched a read-only fallback, but the fallback healthcheck also failed. Preserve strict HTTP 200 checks and investigate scheduled delivery separately from application availability.
+- **StockDividend:** master CI #42167088130 SUCCESS, including native ARM64 build-only checks for all three production Dockerfiles. The exploratory branch CI #42166117405 is superseded by the same contract now present and passing on master. No new GHCR publication, registry digest/provenance, release authorization, or Platform promotion was observed. Do not promote the deployed `12d63b4` images.
+- **Media Generation:** master CI #42136991059 SUCCESS (historical). No new release/publisher run. Runtime remains 1/1; the dedicated runner gate is independent of workload readiness.
+- **Authentication:** master CI #42167100692 SUCCESS, including native ARM64 build and local architecture verification. The exploratory branch run #42166445643 is superseded by the master contract. The release workflow remains `workflow_dispatch` only; no publisher run, new digest/provenance, or promotion was observed. PR #75/#76 remain gated by the production Supabase integration side-effect review and stale exact-head checks.
+- Source-contract/CI success is not GHCR publication or release authorization. App repositories own tests/builds and immutable publication; Platform owns manifests, shared pull credentials, provenance/digest validation, promotion, reconcile, rollout and health.
+
+### Stock/Media decommission gate
+
+- The fresh snapshot shows no Stock/Media PVC/PV and no VolumeSnapshot references, but it does not satisfy external-data/backup ownership review.
+- The dedicated Media runner is still active/enabled with a Listener process. Do not supply the runner-retirement confirmation or invoke `.github/workflows/decommission-stock-media.yml`.
+- Required next steps remain: operator verifies no active Media job; stop and disable only the dedicated Media runner service; unregister that runner from the Media repository; verify no Listener remains; independently review backups/external data/DNS ownership; take another same-window read-only inspection; then consider the protected manual decommission workflow with production Environment approval and exact typed confirmations.
+- Never delete app repositories, source code, GHCR packages, external databases/object storage, DNS, or the shared Platform runner as part of namespace retirement.
+
+### Next dependency-safe actions
+
+1. Complete dedicated Media runner retirement through an authorized operator; current live snapshot fails the guard.
+2. Re-run read-only inspection after runner retirement and repeat storage/external-data/backup/DNS review in the same maintenance window.
+3. Only then consider manual deletion of exactly `stock-prod` and `media-prod`; do not delete persistent or external data.
+4. Investigate TCE WF-06 native schedule delivery and 503 health separately; do not relax thresholds or touch market-scan cron.
+5. Keep Stock release blocked until a new authorized publisher run proves full-SHA tags, GHCR digest and ARM64 manifest; keep Auth publication manual-only and PR #75/#76 gated pending authoritative Supabase side-effect evidence.
+
+**Safety:** `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only. No TCE market-scan schedule change.
+
+
 ## Current review — 2026-11-06 10:21 ICT (2026-11-06 03:21 UTC)
 
 Incremental cross-repository update after Platform PR #1311. This checkpoint records the latest exact heads, workflow outcomes and the current fail-closed Stock/Media retirement gate. It does not authorize a production release or destructive cluster action.
