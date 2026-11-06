@@ -5154,3 +5154,18 @@ No current-master Stock/Media/Auth GHCR publication with verified digest/provena
 - Current heads: Platform `f46bfe898359bee3a83bd90cf157005bc9e96cef`, TCE `f4240ada56da700af00100fb3f01278b9b883951`, Stock `bc20dcfb9893ea246a5e46bef26cce1c92a940c9`, Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`, Auth `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`. Open PRs: Platform #1314/#544/#541/#539; Auth #75/#76 gated; no TCE/Stock/Media PRs.
 - App repositories continue to own tests/builds/immutable GHCR publishing; Platform owns manifests, shared pull credentials, digest/provenance verification, GitOps promotion/reconciliation, rollout and health. Stock/Media remain retired from Platform GitOps. No publisher, promotion, namespace deletion, runner retirement, DNS/database/storage mutation or host reboot occurred. TCE market-scan schedule unchanged.
 
+
+
+
+---
+
+## Post-merge watchdog concurrency follow-up — 2026-11-07 06:08 ICT
+
+- PR #1363 merged at `a13459958e3385a933871e05a308d163448c33dd`; exact-head `validate-manifests` #42309628519 and `validate-github-actions` #42309628570 passed; post-merge #42309702733 and #42309702820 passed.
+- Watchdog concurrency is now keyed by `github.event_name`, with a regression assertion in `scripts/validate-workflow-contracts.py`. This isolates native schedule enforcement from workflow_run/push/manual diagnostics; all cron expressions and read-only permissions are unchanged.
+- Post-merge push smoke #42309702803 passed in warning-only mode and reported native reconcile age 46m, inspection age 67m and recovery age 44m. This is not native schedule evidence. No later native event=schedule run was observed; the next scheduled cycle must verify the mitigation.
+- TCE WF-06 still has four strict HTTP 503 endpoint failures; WF-12 native freshness remains failed; WF-07 last observed native run passed. No health gate or cron changed.
+- Stock CI #42241252700 (7/7), Media CI #42239703151 and Auth CI #42215394539 passed; no current-master immutable publisher/digest/provenance run or promotion occurred.
+- K3s snapshot #42301267072 remains the latest full inspection: Ready ARM64 node, Media/MicroFE active, Stock Admin/new Backend ImagePullBackOff on missing ARM64 tag `12d63b4`, TCE/Auth/Keycloak 0/0, restart required and host updates pending. Platform/Media runner idle state, external backup/retention and authoritative DNS ownership remain unverified.
+- No production mutation, image publication/promotion, runner retirement, namespace deletion, DNS/database/storage change or host reboot. TCE market-scan schedule unchanged.
+
