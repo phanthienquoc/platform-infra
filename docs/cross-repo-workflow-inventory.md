@@ -1,3 +1,57 @@
+## Current workflow inventory review — 2026-11-07 03:58 ICT / 2026-11-06 20:58 UTC
+
+This section records current ownership and observed execution evidence. It preserves existing workflow purposes and does not introduce a second production deployment authority.
+
+### Platform Infra
+
+| Workflow / script | Owner and authority | Current evidence / guard |
+|---|---|---|
+| .github/workflows/inspect-vps.yml | Platform; read-only host/K3s inspection | Manual inspection #42289948524 succeeded at 20:37:40Z. Snapshot debug/vps-latest.md generated 20:37:49Z and merged through exact-head PR #1358 as master commit 58721343cf1be9412ccb78bbc09783d685e007df. |
+| .github/workflows/reconcile-vps.yml | Platform; sole production GitOps apply authority | Manual run #42289699488 succeeded. GHCR pull-access preflight passed; shared ghcr-pull Secret unchanged; Auth runtime Secret provisioning reported provisioned and verified; no manifest drift, so apply and rollout steps were skipped. ALLOW_IMAGE_CHANGES=false. |
+| .github/workflows/reconcile-schedule-watchdog.yml | Platform; native schedule freshness enforcement and read-only TCE observer | Last native schedule run #42263224767 at 17:36:43Z. No later native run in the retrieved history by 20:58Z. |
+| .github/workflows/recover-stale-ops.yml | Platform; existing recovery controller | Last native schedule run #42261712724 at 17:26:53Z. Later workflow_dispatch/repository_dispatch fallbacks are not native schedule proof. |
+| .github/workflows/decommission-stock-media.yml | Platform; manual read-only plan and protected namespace deletion | mode=plan is read-only and includes runner, namespaced object, PVC/PV, VolumeSnapshot, Ingress hostname/TLS reference and LoadBalancer address inventory. No plan dispatch occurred in this review. mode=delete remains gated by exact typed confirmations, production Environment and same-run preflight. |
+| scripts/decommission-stock-media-namespaces.sh | Platform; scoped preflight/delete helper | Only target namespaces are stock-prod and media-prod; tce-prod and microfe-platform are preservation checks. Ingress/DNS references are inventory only, not proof of authoritative DNS ownership. |
+
+Platform native schedule history at 20:58Z:
+- inspect-vps #42256652947 at 16:54:09Z — schedule/SUCCESS.
+- reconcile-vps #42261665655 at 17:26:34Z — schedule/SUCCESS.
+- recover-stale-ops #42261712724 at 17:26:53Z — schedule/SUCCESS.
+- reconcile-schedule-watchdog #42263224767 at 17:36:43Z — schedule/SUCCESS.
+- Latest manual reconcile #42289699488 and manual inspection #42289948524 are fallback/manual evidence, not native schedule delivery.
+
+### App repository workflows
+
+| Repository | Workflow ownership | Latest evidence and contract |
+|---|---|---|
+| TCE Dashboard | WF-01/WF-02/WF-05 own app CI; WF-03 owns manual production publication; WF-06 strict public health; WF-12 schedule watchdog/heartbeat; WF-13 read-only fallback; WF-08B owns MicroFE Shell/WS build/publish | Master CI #42239871779, backend tests #42239871781 and formatting #42239871823 passed. WF-06 native #42289627961 failed four HTTP 200 probes with 503. WF-07 native #42279415510 passed. WF-12 native #42271573506 failed freshness; later workflow_run #42289660113 passed but is not native schedule evidence. WF-03 remains workflow_dispatch-only; no new production publisher observed. WF-08B PR #42239660838 passed test/contract jobs with publish/dispatch jobs skipped as expected for pull_request. |
+| StockDividend | App owns CI, build and GHCR publisher; no Platform production dispatch or direct SSH/Compose authority | Master CI #42241252700 passed 7/7 jobs, including non-publishing ARM64 builds. Publisher #41563856933 (2026-11-03 02:04:58Z) published full-source-SHA images and verified ARM64 manifests/digests; Platform promotion gate/dispatch were skipped. Current deployed 12d63b4 Admin/Backend tags still lack linux/arm64 manifests. |
+| Media Generation | App owns CI, ARM64 build, artifact checksum and immutable GHCR publication; no Platform production dispatch | Master CI #42239703151 passed. Latest WF-03 publisher #41158598649 (2026-10-31 02:08:14Z) succeeded with native ARM64 builds, checksummed artifacts and immutable version/full-SHA images. Media workload and dedicated runner remain active; no retirement authorized. |
+| Authentication | App owns service CI and manual-only release publisher; Platform owns runtime Secret and production promotion | Master CI #42215394539 passed, including ARM64 build-only validation; Supabase Preview was skipped. Latest manual release #41040510320 (2026-10-30 10:24:26Z) succeeded. PR #75 ready and #76 draft remain gated by Supabase production deployment/migration side-effect verification. |
+
+### Cross-repo dispatch and image contract
+
+- TCE WF-03 is manual-only and must emit full-source-SHA-derived immutable image references, registry digests, source run ID, workflow path, event and source head SHA. Platform validates source provenance and digest before promotion.
+- TCE WF-08B publishes only MicroFE Shell/WS images, with native ARM64, provenance/SBOM, immutable full-SHA tags and source-run metadata. Auth is not part of this lane. PR publication jobs are skipped.
+- Stock publisher is app-owned and verifies ARM64 plus immutable full-source-SHA digests. The latest publisher's Platform handoff was skipped; no Platform promotion is implied by a successful app publisher.
+- Media WF-03 is app-owned publisher-only. It uses native ARM64 build artifacts, checksum validation and immutable full-source-SHA-derived tags; no Platform dispatch.
+- Auth release is manual-only. It supplies the provenance-bound auth-image-published payload; Platform checks exact publisher run/workflow/event/source SHA and digest before promotion.
+- Platform's shared ghcr-pull credential is read-validated before reconciliation and was explicitly unchanged in run #42289699488. Auth runtime Secret provisioning ran and reported provisioned/verified; values were suppressed.
+- App CI success is not publisher evidence. Publisher success is not Platform promotion or rollout evidence. Platform rollout and health remain separate gates.
+
+### Current production and operator gates
+
+- Latest snapshot debug/vps-latest.md generated 20:37:49Z: K3s node Ready/ARM64; K3s v1.36.3+k3s1; disk 56%, approximately 21 GiB available; RAM available approximately 19 GiB; restart_required=yes.
+- Media backend/frontend 1/1 Running and digest-pinned; MicroFE Shell/WS/NATS Running.
+- Stock Admin (two Pods) and newer Backend remain ImagePullBackOff because 12d63b4 lacks linux/arm64 manifests; legacy Backend/Frontend remain Running.
+- TCE/Auth/Keycloak desired 0/0; public TCE/Auth/OIDC probes return 503. Keep strict HTTP 200 health contracts and do not activate replicas without service-owner authorization.
+- GitOps drift clean. Only PVC/PV is unrelated k3s-debug/k3s-debug-logs; no Stock/Media PVC/PV or VolumeSnapshot reference was found. External database/object-storage backups, retention and authoritative DNS ownership remain unverified.
+- Platform and Media runner services are active/enabled with Listener processes present. Do not retire Media without operator-confirmed idle state; never stop or unregister the shared Platform runner.
+- Docker/containerd updates are pending and restart_required=yes. No upgrade/reboot without a separate maintenance window.
+- No workflow was removed. Preserve useful CI, security, manual, release and scheduled jobs. TCE market-scan schedule unchanged.
+
+---
+
 ## Current review — 2026-11-06 18:10 ICT (2026-11-06 11:10 UTC)
 
 This inventory checkpoint records the current five-repository workflow ownership and the new read-only cross-repository TCE schedule observation. It does not create another deployment authority.
