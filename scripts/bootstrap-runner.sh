@@ -125,10 +125,32 @@ case "${1:-}" in
     }
     IFS= read -r confirmation || true
     IFS= read -r data_review || true
-    [[ "$confirmation" == "DELETE-STOCK-PROD-AND-MEDIA-PROD" && "$data_review" == "BACKUP-AND-EXTERNAL-DATA-REVIEWED" ]] || {
+    IFS= read -r runner_retirement || true
+    [[ "$confirmation" == "DELETE-STOCK-PROD-AND-MEDIA-PROD" && "$data_review" == "BACKUP-AND-EXTERNAL-DATA-REVIEWED" && "$runner_retirement" == "MEDIA-RUNNER-STOPPED-AND-UNREGISTERED" ]] || {
       echo "platform-kubectl: decommission confirmation failed; no namespace was changed" >&2
       exit 2
     }
+    media_runner_service="actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service"
+    command -v systemctl >/dev/null 2>&1 || {
+      echo "platform-kubectl: systemctl is unavailable; refusing namespace deletion" >&2
+      exit 1
+    }
+    command -v pgrep >/dev/null 2>&1 || {
+      echo "platform-kubectl: pgrep is unavailable; refusing namespace deletion" >&2
+      exit 1
+    }
+    media_runner_state="$(systemctl is-active "$media_runner_service" 2>/dev/null || true)"
+    case "$media_runner_state" in
+      inactive|failed|unknown) ;;
+      *)
+        echo "platform-kubectl: dedicated Media runner service is still active or its state is unknown ($media_runner_state); refusing namespace deletion" >&2
+        exit 1
+        ;;
+    esac
+    if pgrep -f '[/]opt/media-actions-runner/bin/Runner.Listener' >/dev/null 2>&1; then
+      echo "platform-kubectl: Media Runner.Listener process remains; refusing namespace deletion" >&2
+      exit 1
+    fi
     for namespace in stock-prod media-prod; do
       "${KUBECTL[@]}" get namespace "$namespace" >/dev/null
       pvc_json="$("${KUBECTL[@]}" get pvc -n "$namespace" -o json)"
