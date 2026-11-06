@@ -6,16 +6,10 @@ TARGET_APP="${TARGET_APP:-all}"
 
 case "$TARGET_APP" in
   all)
-    namespaces=(tce-prod stock-prod media-prod microfe-platform)
+    namespaces=(tce-prod microfe-platform)
     ;;
   tce-dashboard)
     namespaces=(tce-prod)
-    ;;
-  stockdividend)
-    namespaces=(stock-prod)
-    ;;
-  media-generation)
-    namespaces=(media-prod)
     ;;
   microfe|auth-service|keycloak)
     namespaces=(microfe-platform)
@@ -49,12 +43,6 @@ for namespace in "${namespaces[@]}"; do
   echo "Checking workload health in namespace: $namespace"
 
   namespace_label_selector="$label_selector"
-  if [ "$namespace" = "stock-prod" ]; then
-    # The current StockDividend app source, Kustomize base, and production Ingress
-    # own only Admin and Backend. The old stock-frontend Deployment is legacy
-    # cluster residue: keep it running, but do not gate or restart it here.
-    namespace_label_selector='app in (stock-admin,stock-backend)'
-  fi
 
   # An explicit zero-replica Deployment is a supported maintenance state.
   # Verify the Deployment controller converged and no active pods remain before
@@ -73,10 +61,7 @@ for namespace in "${namespaces[@]}"; do
       ;;
   esac
 
-  if [ "$namespace" = "stock-prod" ]; then
-    scale_down_rows="$(printf '%s\n' "$scale_down_rows" | awk -F'|' '$1 == "stock-admin" || $1 == "stock-backend"')"
-  fi
-
+  scale_down_count=0
   scale_down_count=0
   scale_down_all_zero=1
   scale_down_converged=1
@@ -197,10 +182,6 @@ for namespace in "${namespaces[@]}"; do
       ;;
   esac
 
-  if [ "$namespace" = "stock-prod" ]; then
-    deployment_rows="$(printf '%s\n' "$deployment_rows" | awk -F'|' '$1 == "stock-admin" || $1 == "stock-backend"')"
-  fi
-
   if [ -z "$deployment_rows" ]; then
     echo "::error::No deployments found in namespace $namespace for target $TARGET_APP." >&2
     failed=1
@@ -232,11 +213,6 @@ for namespace in "${namespaces[@]}"; do
     failed=1
   fi
 done
-
-if [ "$failed" -ne 0 ] && { [ "$TARGET_APP" = "media-generation" ] || [ "$TARGET_APP" = "all" ]; }; then
-  echo "Media workload diagnostic (read-only):"
-  sudo /usr/local/sbin/platform-kubectl describe-media || true
-fi
 
 if [ "$failed" -ne 0 ]; then
   echo "Workload health gate failed; refusing to report reconciliation as healthy." >&2

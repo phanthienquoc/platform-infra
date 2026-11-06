@@ -39,14 +39,14 @@ case "${1:-}" in
   get)
     shift
     case "${1:-}" in
-      nodes|namespaces|ns|pods|po|deployments|deployment|deploy|services|svc|ingress|ingresses|jobs|cronjobs|pv|pvc)
+      all|nodes|namespaces|ns|pods|po|deployments|deployment|deploy|statefulsets|services|svc|ingress|ingresses|jobs|cronjobs|pv|pvc|storageclasses)
         exec "${KUBECTL[@]}" get "$@"
         ;;
     esac
     ;;
   policy-version)
     [[ "$#" -eq 1 ]] || exit 2
-    echo "platform-kubectl policy: rollout-status-v14-stockdividend-managed-workloads"
+    echo "platform-kubectl policy: rollout-status-v15-core-workloads"
     exit 0
     ;;
   reconcile-ghcr-pull)
@@ -62,7 +62,7 @@ case "${1:-}" in
     }
     # Single platform-owned pull credential for all production GHCR workloads.
     # Keep this allowlist aligned with the private-image production namespaces.
-    ghcr_namespaces=(microfe-platform stock-prod tce-prod media-prod)
+    ghcr_namespaces=(microfe-platform tce-prod)
     for namespace in "${ghcr_namespaces[@]}"; do
       if ! "${KUBECTL[@]}" get namespace "$namespace" >/dev/null 2>&1; then
         echo "Skipping GHCR setup for absent namespace: $namespace"
@@ -264,24 +264,13 @@ case "${1:-}" in
         restart_if_blocked tce-prod tce-service
         restart_if_blocked tce-prod tce-frontend
         ;;
-      stockdividend)
-        restart_if_blocked stock-prod stock-admin
-        restart_if_blocked stock-prod stock-backend
-        ;;
-      media-generation)
-        restart_if_blocked media-prod media-generation
-        restart_if_blocked media-prod media-generation-frontend
-        ;;
+      all)
       all)
         restart_if_blocked microfe-platform microfe-auth
         restart_if_blocked microfe-platform microfe-shell
         restart_if_blocked microfe-platform microfe-ws
         restart_if_blocked tce-prod tce-service
         restart_if_blocked tce-prod tce-frontend
-        restart_if_blocked stock-prod stock-admin
-        restart_if_blocked stock-prod stock-backend
-        restart_if_blocked media-prod media-generation
-        restart_if_blocked media-prod media-generation-frontend
         ;;
       *)
         echo "platform-kubectl: unsupported image-pull restart scope '$2'" >&2
@@ -295,21 +284,16 @@ case "${1:-}" in
     if [[ "${2:-}" == "deployment/keycloak" && "${3:-}" == "-n" && "${4:-}" == "microfe-platform" && "${5:-}" == "--since=2h" && "${6:-}" == "--tail=200" && "${7:-}" == "" ]]; then
       exec "${KUBECTL[@]}" logs deployment/keycloak -n microfe-platform --since=2h --tail=200
     fi
-    if [[ "${2:-}" == "deployment/media-generation" && "${3:-}" == "-n" && "${4:-}" == "media-prod" && ( "${5:-}" == "--tail=200" || "${5:-}" == "--previous" ) ]]; then
-      if [[ "${5:-}" == "--previous" ]]; then exec "${KUBECTL[@]}" logs deployment/media-generation -n media-prod --previous --tail=200; fi
-      exec "${KUBECTL[@]}" logs deployment/media-generation -n media-prod --tail=200
-    fi
-    if [[ "${2:-}" == "deployment/media-generation-frontend" && "${3:-}" == "-n" && "${4:-}" == "media-prod" && ( "${5:-}" == "--tail=200" || "${5:-}" == "--previous" ) ]]; then
-      if [[ "${5:-}" == "--previous" ]]; then exec "${KUBECTL[@]}" logs deployment/media-generation-frontend -n media-prod --previous --tail=200; fi
-      exec "${KUBECTL[@]}" logs deployment/media-generation-frontend -n media-prod --tail=200
-    fi
+    echo "platform-kubectl: logs are not allowed by the production wrapper" >&2
+    exit 2
+    ;;
     echo "platform-kubectl: only media-generation logs in media-prod are allowed" >&2
     exit 2
     ;;
   apply)
     if [[ "${2:-}" == "-f" && "${4:-}" == "" ]]; then
       case "${3:-}" in
-        platform/microfe/namespace.yaml|apps/stockdividend/base/namespace.yaml|apps/tce-dashboard/base/namespace.yaml|apps/media-generation/base/namespace.yaml)
+        platform/microfe/namespace.yaml|apps/tce-dashboard/base/namespace.yaml)
           exec "${KUBECTL[@]}" apply -f "${3}"
           ;;
       esac
@@ -337,17 +321,9 @@ case "${1:-}" in
     }
     exec "${KUBECTL[@]}" -n microfe-platform port-forward svc/microfe-ws 18080:8080
     ;;
-  describe-media)
-    [[ "$#" -eq 1 ]] || exit 2
-    exec "${KUBECTL[@]}" describe deployment/media-generation -n media-prod
-    ;;
   rollout)
-    [[ "${2:-}" == "status" && "${3:-}" == "deployment/stock-admin" && "${4:-}" == "-n" && "${5:-}" == "stock-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/stock-admin -n stock-prod --timeout=180s
-    [[ "${2:-}" == "status" && "${3:-}" == "deployment/stock-backend" && "${4:-}" == "-n" && "${5:-}" == "stock-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/stock-backend -n stock-prod --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/tce-service" && "${4:-}" == "-n" && "${5:-}" == "tce-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/tce-service -n tce-prod --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/tce-frontend" && "${4:-}" == "-n" && "${5:-}" == "tce-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/tce-frontend -n tce-prod --timeout=180s
-    [[ "${2:-}" == "status" && "${3:-}" == "deployment/media-generation" && "${4:-}" == "-n" && "${5:-}" == "media-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/media-generation -n media-prod --timeout=180s
-    [[ "${2:-}" == "status" && "${3:-}" == "deployment/media-generation-frontend" && "${4:-}" == "-n" && "${5:-}" == "media-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/media-generation-frontend -n media-prod --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/microfe-auth" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/microfe-auth -n microfe-platform --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/microfe-shell" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/microfe-shell -n microfe-platform --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/keycloak" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "--timeout=300s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/keycloak -n microfe-platform --timeout=300s
@@ -370,7 +346,7 @@ echo "platform-kubectl: command is not allowlisted" >&2
 exit 2
 EOF
 chmod 0755 /usr/local/sbin/platform-kubectl
-echo "platform-kubectl policy: rollout-status-v14-stockdividend-managed-workloads"
+echo "platform-kubectl policy: rollout-status-v15-core-workloads"
 cat >/usr/local/sbin/platform-crictl <<'EOF'
 #!/usr/bin/env bash
 # Root-owned restricted CRI interface for the platform cleanup helper.

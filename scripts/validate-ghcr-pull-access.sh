@@ -24,7 +24,7 @@ if [ "$TARGET_APP" = "keycloak" ]; then
 fi
 
 case "$TARGET_APP" in
-  all|auth-service|tce-dashboard|stockdividend|media-generation|microfe) ;;
+  all|auth-service|tce-dashboard|microfe) ;;
   *)
     echo "::error::Unsupported deployment scope for GHCR pull-access preflight: $TARGET_APP" >&2
     exit 1
@@ -52,12 +52,6 @@ for package in "${all_packages[@]}"; do
       ;;
     tce-dashboard)
       [[ "$package" == phanthienquoc/tce-dashboard/* ]] && include=1
-      ;;
-    stockdividend)
-      [[ "$package" == phanthienquoc/stockdividend/* ]] && include=1
-      ;;
-    media-generation)
-      [[ "$package" == phanthienquoc/media-generation/* ]] && include=1
       ;;
     microfe)
       [[ "$package" == phanthienquoc/microfe-* ]] && include=1

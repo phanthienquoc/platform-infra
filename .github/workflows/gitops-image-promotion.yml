@@ -10,9 +10,6 @@ on:
         required: true
         type: choice
         options:
-          - stockdividend
-          - tce-dashboard
-          - media-generation
           - auth-service
       component:
         description: Image component
@@ -26,10 +23,8 @@ on:
     types:
       - image-published
       - tce-release-requested
-      - media-images-published
       - auth-image-published
       - microfe-images-published
-      - stockdividend-images-published
 
 permissions:
   contents: read
@@ -481,9 +476,6 @@ jobs:
           EVENT_COMPONENT: ${{ github.event.client_payload.component }}
           EVENT_TAG: ${{ github.event.client_payload.tag }}
           EVENT_COMMIT: ${{ github.event.client_payload.commit }}
-          EVENT_BACKEND_DIGEST: ${{ github.event.client_payload.backend_digest }}
-          EVENT_ADMIN_DIGEST: ${{ github.event.client_payload.admin_digest }}
-          EVENT_FRONTEND_DIGEST: ${{ github.event.client_payload.frontend_digest }}
           EVENT_AUTH_DIGEST: ${{ github.event.client_payload.auth_digest }}
           EVENT_RELEASE: ${{ github.event.client_payload.release }}
           EVENT_SOURCE_RUN_ID: ${{ github.event.client_payload.source_run_id }}
@@ -496,55 +488,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          BACKEND_DIGEST=""
-          ADMIN_DIGEST=""
-          FRONTEND_DIGEST=""
           AUTH_DIGEST=""
           SOURCE_COMMIT=""
           SOURCE_RUN_ID=""
           SOURCE_WORKFLOW_PATH=""
           SOURCE_EVENT=""
           SOURCE_HEAD_SHA=""
-          if [[ "$EVENT_ACTION" == "stockdividend-images-published" ]]; then
-            APP="$EVENT_APP"
-            COMPONENT="release"
-            TAG="$EVENT_COMMIT"
-            SOURCE_COMMIT="$EVENT_COMMIT"
-            BACKEND_DIGEST="$EVENT_BACKEND_DIGEST"
-            ADMIN_DIGEST="$EVENT_ADMIN_DIGEST"
-            SOURCE_RUN_ID="$EVENT_SOURCE_RUN_ID"
-            SOURCE_WORKFLOW_PATH="$EVENT_SOURCE_WORKFLOW_PATH"
-            SOURCE_EVENT="$EVENT_SOURCE_EVENT"
-            SOURCE_HEAD_SHA="$EVENT_SOURCE_HEAD_SHA"
-            [[ "$APP" == "stockdividend" ]] || { echo "::error::StockDividend digest event has invalid app"; exit 1; }
-            [[ "$TAG" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::StockDividend source commit must be a full 40-character SHA"; exit 1; }
-            [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]] || { echo "::error::StockDividend source run ID must be numeric"; exit 1; }
-            [[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/deploy.yml" ]] || { echo "::error::StockDividend source workflow path is not approved"; exit 1; }
-            [[ "$SOURCE_EVENT" == "push" || "$SOURCE_EVENT" == "workflow_dispatch" ]] || { echo "::error::StockDividend source event must be push or workflow_dispatch"; exit 1; }
-            [[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ && "$SOURCE_HEAD_SHA" == "$TAG" && "$SOURCE_HEAD_SHA" == "$SOURCE_COMMIT" ]] || { echo "::error::StockDividend source SHA must match the immutable image tag"; exit 1; }
-            [[ "$BACKEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::Invalid StockDividend backend digest"; exit 1; }
-            [[ "$ADMIN_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::Invalid StockDividend admin digest"; exit 1; }
-          elif [[ "$EVENT_ACTION" == "media-images-published" ]]; then
-            APP="$EVENT_APP"
-            COMPONENT="release"
-            TAG="$EVENT_RELEASE"
-            SOURCE_COMMIT="$EVENT_COMMIT"
-            FRONTEND_DIGEST="$EVENT_FRONTEND_DIGEST"
-            BACKEND_DIGEST="$EVENT_BACKEND_DIGEST"
-            SOURCE_RUN_ID="$EVENT_SOURCE_RUN_ID"
-            SOURCE_WORKFLOW_PATH="$EVENT_SOURCE_WORKFLOW_PATH"
-            SOURCE_EVENT="$EVENT_SOURCE_EVENT"
-            SOURCE_HEAD_SHA="$EVENT_SOURCE_HEAD_SHA"
-            [[ "$APP" == "media-generation" ]] || { echo "::error::Media digest event has invalid app"; exit 1; }
-            [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Media source commit must be a full 40-character SHA"; exit 1; }
-            [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{40}$ ]] || { echo "::error::Media release must contain the full source SHA"; exit 1; }
-            [[ "$TAG" == *-"$SOURCE_COMMIT" ]] || { echo "::error::Media release tag does not match the source commit"; exit 1; }
-            [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]] || { echo "::error::Media source run ID must be numeric"; exit 1; }
-            [[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/wf-03-media-production-deploy.yml" ]] || { echo "::error::Media source workflow path is not approved"; exit 1; }
-            [[ "$SOURCE_EVENT" == "push" || "$SOURCE_EVENT" == "workflow_dispatch" ]] || { echo "::error::Media source event must be push or workflow_dispatch"; exit 1; }
-            [[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ && "$SOURCE_HEAD_SHA" == "$SOURCE_COMMIT" ]] || { echo "::error::Media source SHA must match the immutable image commit"; exit 1; }
-            [[ "$FRONTEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::Invalid Media frontend digest"; exit 1; }
-            [[ "$BACKEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::Invalid Media backend digest"; exit 1; }
+          if [[ "$EVENT_ACTION" == "auth-image-published" ]]; then
           elif [[ "$EVENT_ACTION" == "auth-image-published" ]]; then
             APP="$EVENT_APP"
             COMPONENT="$EVENT_COMPONENT"
@@ -570,7 +520,7 @@ jobs:
           fi
 
           case "$APP/$COMPONENT" in
-            stockdividend/backend|stockdividend/admin|stockdividend/release|tce-dashboard/web|tce-dashboard/service|media-generation/backend|media-generation/frontend|media-generation/release|auth-service/auth) ;;
+            auth-service/auth) ;;
             *)
               echo "::error::Unsupported image target: $APP/$COMPONENT"
               exit 1
@@ -578,29 +528,6 @@ jobs:
           esac
 
           case "$APP" in
-            media-generation)
-              if [[ "$COMPONENT" == "release" ]]; then
-                [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{40}$ ]] || {
-                  echo "::error::Media digest promotion must use a full-SHA release tag"
-                  exit 1
-                }
-                [[ "$TAG" == *-"$SOURCE_COMMIT" ]] || {
-                  echo "::error::Media release tag must correlate to the full source commit"
-                  exit 1
-                }
-              else
-                [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}$ ]] || {
-                  echo "::error::media-generation tag must be prod-v<semver>-<git-sha>"
-                  exit 1
-                }
-              fi
-              ;;
-            tce-dashboard)
-              [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,64}$ ]] || {
-                echo "::error::TCE tag must be prod-v<semver>-<git-sha>"
-                exit 1
-              }
-              ;;
             auth-service)
               if [[ "$EVENT_ACTION" == "auth-image-published" ]]; then
                 [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{40}$ && "$TAG" == *-"$SOURCE_COMMIT" ]] || {
@@ -614,11 +541,9 @@ jobs:
                 }
               fi
               ;;
-            stockdividend)
-              [[ "$TAG" =~ ^[0-9a-f]{40}$ ]] || {
-                echo "::error::StockDividend tag must be a full 40-character source commit SHA"
-                exit 1
-              }
+            *)
+              echo "::error::Unsupported application: $APP"
+              exit 1
               ;;
           esac
 
@@ -637,26 +562,7 @@ jobs:
             echo "source_head_sha=$SOURCE_HEAD_SHA"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Verify StockDividend publisher run provenance
-        if: ${{ github.event_name == 'repository_dispatch' && github.event.action == 'stockdividend-images-published' }}
-        env:
-          STOCKDIVIDEND_ACTIONS_READ_TOKEN: ${{ secrets.STOCKDIVIDEND_ACTIONS_READ_TOKEN }}
-          SOURCE_RUN_ID: ${{ steps.input.outputs.source_run_id }}
-          SOURCE_WORKFLOW_PATH: ${{ steps.input.outputs.source_workflow_path }}
-          SOURCE_EVENT: ${{ steps.input.outputs.source_event }}
-          SOURCE_HEAD_SHA: ${{ steps.input.outputs.source_head_sha }}
-          SOURCE_COMMIT: ${{ steps.input.outputs.source_commit }}
-        run: bash scripts/verify-stockdividend-publisher-run.sh
-
-      - name: Verify Media publisher run provenance
-        if: ${{ github.event_name == 'repository_dispatch' && github.event.action == 'media-images-published' }}
-        env:
-          SOURCE_RUN_ID: ${{ steps.input.outputs.source_run_id }}
-          SOURCE_WORKFLOW_PATH: ${{ steps.input.outputs.source_workflow_path }}
-          SOURCE_EVENT: ${{ steps.input.outputs.source_event }}
-          SOURCE_HEAD_SHA: ${{ steps.input.outputs.source_head_sha }}
-          SOURCE_COMMIT: ${{ steps.input.outputs.source_commit }}
-        run: bash scripts/verify-media-publisher-run.sh
+      - name: Verify Auth publisher run provenance
       - name: Verify Auth publisher run provenance
         if: ${{ github.event_name == 'repository_dispatch' && github.event.action == 'auth-image-published' }}
         env:
@@ -669,178 +575,55 @@ jobs:
 
       - name: Validate promoted image in GHCR
         env:
-          GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}
-          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
-          APP: ${{ steps.input.outputs.app }}
-          COMPONENT: ${{ steps.input.outputs.component }}
-          TAG: ${{ steps.input.outputs.tag }}
-          SOURCE_COMMIT: ${{ steps.input.outputs.source_commit }}
-          BACKEND_DIGEST: ${{ steps.input.outputs.backend_digest }}
-          ADMIN_DIGEST: ${{ steps.input.outputs.admin_digest }}
-          FRONTEND_DIGEST: ${{ steps.input.outputs.frontend_digest }}
-          AUTH_DIGEST: ${{ steps.input.outputs.auth_digest }}
+          GHCR_USERNAME: \${{ vars.GHCR_USERNAME || github.repository_owner }}
+          GHCR_TOKEN: \${{ secrets.GHCR_READ_TOKEN }}
+          APP: \${{ steps.input.outputs.app }}
+          COMPONENT: \${{ steps.input.outputs.component }}
+          TAG: \${{ steps.input.outputs.tag }}
+          SOURCE_COMMIT: \${{ steps.input.outputs.source_commit }}
+          AUTH_DIGEST: \${{ steps.input.outputs.auth_digest }}
         run: |
           set -euo pipefail
-
           if [[ -z "$GHCR_USERNAME" || -z "$GHCR_TOKEN" ]]; then
-            echo "::error::Configure GHCR_READ_TOKEN with read:packages access to the promoted private images."
+            echo "::error::Configure GHCR_READ_TOKEN with read:packages access to the promoted private image."
             exit 1
           fi
           TARGET_APP="$APP" GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" bash scripts/validate-ghcr-pull-access.sh
-
           if [[ "$APP" == "auth-service" && "$COMPONENT" == "auth" && -n "$AUTH_DIGEST" ]]; then
             IMAGE="ghcr.io/phanthienquoc/auth-service/auth"
             [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || {
               echo "::error::Auth source commit must be a full 40-character SHA before registry verification."
               exit 1
             }
-            [[ "$TAG" =~ ^prod-v[0-9]+[.][0-9]+[.][0-9]+-[0-9a-f]{40}$ ]] || {
-              echo "::error::Auth versioned release tag must use prod-v<semver>-<full-sha>."
+            [[ "$TAG" =~ ^prod-v[0-9]+[.][0-9]+[.][0-9]+-[0-9a-f]{40}$ && "\${TAG##*-}" == "$SOURCE_COMMIT" ]] || {
+              echo "::error::Auth release tag must end with the exact source commit SHA."
               exit 1
             }
-            [[ "${TAG##*-}" == "$SOURCE_COMMIT" ]] || {
-              echo "::error::Auth versioned release tag must end with the exact source commit SHA."
-              exit 1
-            }
-            # Independently correlate both producer tags to the dispatch digest.
-            # The source SHA tag and versioned release tag must be immutable aliases
-            # of the same ARM64 image before the digest-only GitOps reference is accepted.
             for immutable_tag in "$SOURCE_COMMIT" "$TAG"; do
-              echo "Verifying Auth immutable tag-to-digest mapping: $IMAGE:$immutable_tag -> $AUTH_DIGEST"
               GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_EXPECTED_DIGEST="$AUTH_DIGEST" GHCR_IMAGE_REFERENCE="$IMAGE:$immutable_tag" bash scripts/validate-ghcr-image-reference.sh
             done
             GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$IMAGE@$AUTH_DIGEST" bash scripts/validate-ghcr-image-reference.sh
-          elif [[ "$APP" == "stockdividend" && "$COMPONENT" == "release" ]] || [[ "$APP" == "media-generation" && "$COMPONENT" == "release" ]]; then
-            if [[ "$APP" == "stockdividend" ]]; then
-              pairs=("backend:$BACKEND_DIGEST" "admin:$ADMIN_DIGEST")
-            else
-              pairs=("backend:$BACKEND_DIGEST" "frontend:$FRONTEND_DIGEST")
-            fi
-            for pair in "${pairs[@]}"; do
-              component="${pair%%:*}"
-              digest="${pair#*:}"
-              [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::Invalid $component digest"; exit 1; }
-              image="ghcr.io/phanthienquoc/$APP/$component"
-              if [[ "$APP" == "stockdividend" || "$APP" == "media-generation" ]]; then
-                tag_reference="$image:$TAG"
-                echo "Verifying $APP immutable release tag-to-digest mapping: $tag_reference -> $digest"
-                GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_EXPECTED_DIGEST="$digest" GHCR_IMAGE_REFERENCE="$tag_reference" bash scripts/validate-ghcr-image-reference.sh
-              fi
-              digest_reference="$image@$digest"
-              echo "Validating exact immutable digest $digest_reference"
-              GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$digest_reference" bash scripts/validate-ghcr-image-reference.sh
-            done
           else
-            if [ "$APP" = "media-generation" ]; then
-              IMAGE="ghcr.io/phanthienquoc/media-generation/${COMPONENT}:${TAG}"
-            elif [ "$APP" = "auth-service" ]; then
-              IMAGE="ghcr.io/phanthienquoc/auth-service/auth:${TAG}"
-            else
-              IMAGE="ghcr.io/phanthienquoc/${APP}/${COMPONENT}:${TAG}"
-            fi
-            echo "Validating $IMAGE"
-            GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$IMAGE" bash scripts/validate-ghcr-image-reference.sh
+            echo "::error::Only the Auth image promotion contract is supported by this workflow."
+            exit 1
           fi
 
-      - name: Update Kustomize image tag or paired digests
+      - name: Update Auth Kustomize image digest
         env:
-          APP: ${{ steps.input.outputs.app }}
-          COMPONENT: ${{ steps.input.outputs.component }}
-          TAG: ${{ steps.input.outputs.tag }}
-          BACKEND_DIGEST: ${{ steps.input.outputs.backend_digest }}
-          ADMIN_DIGEST: ${{ steps.input.outputs.admin_digest }}
-          FRONTEND_DIGEST: ${{ steps.input.outputs.frontend_digest }}
-          AUTH_DIGEST: ${{ steps.input.outputs.auth_digest }}
+          AUTH_DIGEST: \${{ steps.input.outputs.auth_digest }}
         run: |
           set -euo pipefail
-
-          case "$APP" in
-            stockdividend) FILE="apps/stockdividend/overlays/prod/kustomization.yaml" ;;
-            tce-dashboard) FILE="apps/tce-dashboard/overlays/prod/kustomization.yaml" ;;
-            media-generation) FILE="apps/media-generation/overlays/prod/kustomization.yaml" ;;
-            auth-service) FILE="platform/auth-service/kustomization.yaml" ;;
-            *) echo "::error::Unsupported application: $APP"; exit 1 ;;
-          esac
-
-          if [[ "$COMPONENT" == "release" && ( "$APP" == "stockdividend" || "$APP" == "media-generation" ) ]]; then
-            if [[ "$APP" == "stockdividend" ]]; then
-              python3 scripts/promote-paired-image-digests.py \
-                --file "$FILE" \
-                --app "$APP" \
-                --backend-digest "$BACKEND_DIGEST" \
-                --admin-digest "$ADMIN_DIGEST"
-            else
-              python3 scripts/promote-paired-image-digests.py \
-                --file "$FILE" \
-                --app "$APP" \
-                --backend-digest "$BACKEND_DIGEST" \
-                --frontend-digest "$FRONTEND_DIGEST"
-            fi
-            grep -A2 "name: ghcr.io/phanthienquoc/$APP/" "$FILE"
-          elif [[ "$APP" == "auth-service" && "$COMPONENT" == "auth" && -n "$AUTH_DIGEST" ]]; then
-            python3 scripts/promote-auth-image-digest.py --file "$FILE" --digest "$AUTH_DIGEST"
-            grep -A2 "name: ghcr.io/phanthienquoc/auth-service/auth" "$FILE"
-          else
-            python3 - "$FILE" "$APP" "$COMPONENT" "$TAG" <<'PY'
-          import pathlib
-          import sys
-
-          path = pathlib.Path(sys.argv[1])
-          app = sys.argv[2]
-          component = sys.argv[3]
-          tag = sys.argv[4]
-
-          lines = path.read_text().splitlines()
-          expected = (
-              "ghcr.io/phanthienquoc/auth-service/auth"
-              if app == "auth-service"
-              else f"ghcr.io/phanthienquoc/media-generation/{component}"
-              if app == "media-generation"
-              else f"ghcr.io/phanthienquoc/{app}/{component}"
-          )
-
-          for index, line in enumerate(lines):
-              if line.strip() not in {f"- name: {expected}", f"name: {expected}"}:
-                  continue
-
-              end = index + 1
-              while end < len(lines) and not lines[end].lstrip().startswith("- name:"):
-                  end += 1
-              tag_index = next(
-                  (i for i in range(index + 1, end) if lines[i].strip().startswith("newTag:")),
-                  None,
-              )
-              if tag_index is None:
-                  raise SystemExit(f"newTag missing in image entry for {expected}")
-
-              indent = lines[tag_index][:len(lines[tag_index]) - len(lines[tag_index].lstrip())]
-              lines[tag_index] = f"{indent}newTag: {tag}"
-              path.write_text("\n".join(lines) + "\n")
-              break
-          else:
-              raise SystemExit(f"image component not found: {expected}")
-          PY
-            if [ "$APP" = "media-generation" ]; then
-              grep -A1 "name: ghcr.io/phanthienquoc/media-generation/${COMPONENT}" "$FILE"
-            elif [ "$APP" = "auth-service" ]; then
-              grep -A3 "name: ghcr.io/phanthienquoc/auth-service/auth" "$FILE"
-            else
-              grep -A1 "name: ghcr.io/phanthienquoc/${APP}/${COMPONENT}" "$FILE"
-            fi
-          fi
+          test -n "$AUTH_DIGEST" || { echo "::error::Auth promotion requires an immutable digest."; exit 1; }
+          python3 scripts/promote-auth-image-digest.py --file platform/auth-service/kustomization.yaml --digest "$AUTH_DIGEST"
+          grep -A3 "name: ghcr.io/phanthienquoc/auth-service/auth" platform/auth-service/kustomization.yaml
 
       - name: Scope promotion changes
         env:
           APP: ${{ steps.input.outputs.app }}
         run: |
           set -euo pipefail
-          case "$APP" in
-            stockdividend) TARGET_FILE="apps/stockdividend/overlays/prod/kustomization.yaml" ;;
-            tce-dashboard) TARGET_FILE="apps/tce-dashboard/overlays/prod/kustomization.yaml" ;;
-            media-generation) TARGET_FILE="apps/media-generation/overlays/prod/kustomization.yaml" ;;
-            auth-service) TARGET_FILE="platform/auth-service/kustomization.yaml" ;;
-            *) echo "::error::Unsupported promotion app"; exit 1 ;;
-          esac
+          [[ "$APP" == "auth-service" ]] || { echo "::error::Unsupported promotion app"; exit 1; }
+          TARGET_FILE="platform/auth-service/kustomization.yaml"
           test -n "$(git diff --name-only -- "$TARGET_FILE")" || { echo "::error::Expected promotion diff missing for $TARGET_FILE"; git diff --name-only; exit 1; }
           git diff --name-only | while IFS= read -r file; do
             [ "$file" = "$TARGET_FILE" ] || git restore --source=HEAD --worktree --staged -- "$file"
@@ -894,97 +677,12 @@ jobs:
           gh pr merge "$PR_NUMBER" --repo "$REPO" --squash --delete-branch --match-head-commit "$HEAD_SHA"
           echo "Promotion PR #$PR_NUMBER merged at the verified head $HEAD_SHA."
       - name: Determine release readiness
-        if: steps.input.outputs.app == 'stockdividend' || steps.input.outputs.app == 'media-generation' || steps.input.outputs.app == 'auth-service'
+        if: steps.input.outputs.app == 'auth-service'
         id: readiness
-        env:
-          APP: ${{ steps.input.outputs.app }}
-          COMPONENT: ${{ steps.input.outputs.component }}
-          RELEASE: ${{ steps.input.outputs.tag }}
-          BACKEND_DIGEST: ${{ steps.input.outputs.backend_digest }}
-          ADMIN_DIGEST: ${{ steps.input.outputs.admin_digest }}
-          FRONTEND_DIGEST: ${{ steps.input.outputs.frontend_digest }}
-        run: |
-          set -euo pipefail
-
-          if [ "$APP" = "auth-service" ]; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          if [ "$APP" = "stockdividend" ]; then
-            # Paired digest releases must be visible together on GitOps master before
-            # the shared reconciliation is dispatched. Single-component manual
-            # full-SHA promotions retain their existing explicit workflow path.
-            if [ "$COMPONENT" != "release" ]; then
-              echo "ready=true" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-
-            FILE="apps/stockdividend/overlays/prod/kustomization.yaml"
-            for attempt in $(seq 1 12); do
-              git fetch --no-tags origin master
-              if git show "origin/master:$FILE" > /tmp/stockdividend-gitops-kustomization.yaml 2>/dev/null &&
-                python3 scripts/verify-stockdividend-gitops-digests.py \
-                  --file /tmp/stockdividend-gitops-kustomization.yaml \
-                  --backend-digest "$BACKEND_DIGEST" \
-                  --admin-digest "$ADMIN_DIGEST" \
-                  --quiet; then
-                echo "Verified StockDividend backend/admin digest pair on GitOps master for $RELEASE."
-                echo "ready=true" >> "$GITHUB_OUTPUT"
-                exit 0
-              fi
-              echo "Waiting for the exact StockDividend digest pair on GitOps master (attempt $attempt/12)."
-              sleep 5
-            done
-
-            echo "::error::StockDividend paired digests did not converge on GitOps master; refusing reconciliation dispatch."
-            exit 1
-          fi
-
-          FILE="apps/media-generation/overlays/prod/kustomization.yaml"
-          git fetch --no-tags origin master
-
-          if [ "$COMPONENT" = "release" ]; then
-            backend_digest_on_master="$(awk '
-              $0 == "- name: ghcr.io/phanthienquoc/media-generation/backend" { in_image=1; next }
-              in_image && /^- name:/ { exit }
-              in_image && /^[[:space:]]+digest:/ { print $2; exit }
-            ' <(git show "origin/master:$FILE"))"
-            frontend_digest_on_master="$(awk '
-              $0 == "- name: ghcr.io/phanthienquoc/media-generation/frontend" { in_image=1; next }
-              in_image && /^- name:/ { exit }
-              in_image && /^[[:space:]]+digest:/ { print $2; exit }
-            ' <(git show "origin/master:$FILE"))"
-
-            echo "Media backend digest on GitOps master: $backend_digest_on_master"
-            echo "Media frontend digest on GitOps master: $frontend_digest_on_master"
-            if [ "$backend_digest_on_master" = "$BACKEND_DIGEST" ] && [ "$frontend_digest_on_master" = "$FRONTEND_DIGEST" ]; then
-              echo "Media FE/BE digest pair converged for $RELEASE."
-              echo "ready=true" >> "$GITHUB_OUTPUT"
-            else
-              echo "Media FE/BE digest pair is not converged yet."
-              echo "ready=false" >> "$GITHUB_OUTPUT"
-            fi
-            exit 0
-          fi
-
-          BACKEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation\/backend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
-          FRONTEND_TAG="$(git show "origin/master:$FILE" | sed -n '/name: ghcr.io\/phanthienquoc\/media-generation\/frontend$/,/newTag:/p' | awk '/newTag:/ {print $2; exit}')"
-
-          echo "Media backend GitOps tag: $BACKEND_TAG"
-          echo "Media frontend GitOps tag: $FRONTEND_TAG"
-          echo "Incoming $COMPONENT tag: $RELEASE"
-
-          if [ "$BACKEND_TAG" = "$RELEASE" ] && [ "$FRONTEND_TAG" = "$RELEASE" ]; then
-            echo "Media FE/BE pair converged on $RELEASE."
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "Media FE/BE pair is not converged yet; waiting for the other component promotion."
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-          fi
+        run: echo "ready=true" >> "$GITHUB_OUTPUT"
 
       - name: Trigger VPS reconciliation
-        if: (steps.input.outputs.app == 'stockdividend' || steps.input.outputs.app == 'media-generation' || steps.input.outputs.app == 'auth-service') && steps.readiness.outputs.ready == 'true'
+        if: steps.input.outputs.app == 'auth-service' && steps.readiness.outputs.ready == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           APP: ${{ steps.input.outputs.app }}
