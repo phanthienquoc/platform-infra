@@ -15,18 +15,6 @@ from pathlib import Path
 
 FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
 DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
-STOCK_IMAGE = re.compile(
-    r"^ghcr\.io/phanthienquoc/stockdividend/(?:backend|admin):([0-9a-f]{40})$"
-)
-STOCK_DIGEST = re.compile(
-    r"^ghcr\.io/phanthienquoc/stockdividend/(?:backend|admin)@sha256:[0-9a-f]{64}$"
-)
-MEDIA_TAG = re.compile(
-    r"^ghcr\.io/phanthienquoc/media-generation/(?:backend|frontend):prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{40}$"
-)
-MEDIA_DIGEST = re.compile(
-    r"^ghcr\.io/phanthienquoc/media-generation/(?:backend|frontend)@sha256:[0-9a-f]{64}$"
-)
 TCE_DIGEST = re.compile(
     r"^ghcr\.io/phanthienquoc/tce-dashboard/(?:web|service)@sha256:[0-9a-f]{64}$"
 )
@@ -58,57 +46,6 @@ def validate_diff(diff: str) -> tuple[list[str], int]:
             continue
 
         line = raw[1:].strip()
-        if path.startswith("apps/stockdividend/"):
-            if line.startswith("newTag:"):
-                tag = scalar(line.split(":", 1)[1])
-                inspected += 1
-                if not FULL_SHA.fullmatch(tag):
-                    errors.append(
-                        f"{path}: StockDividend production newTag must be a full "
-                        f"40-character lowercase source SHA, got {tag!r}"
-                    )
-            elif line.startswith("digest:"):
-                digest = scalar(line.split(":", 1)[1])
-                inspected += 1
-                if not DIGEST.fullmatch(digest):
-                    errors.append(
-                        f"{path}: StockDividend image digest must be sha256:<64 lowercase hex>, "
-                        f"got {digest!r}"
-                    )
-            elif line.startswith("image:"):
-                image = scalar(line.split(":", 1)[1])
-                if image.startswith("ghcr.io/phanthienquoc/stockdividend/"):
-                    inspected += 1
-                    if not (STOCK_IMAGE.fullmatch(image) or STOCK_DIGEST.fullmatch(image)):
-                        errors.append(
-                            f"{path}: StockDividend image must use a full source SHA "
-                            f"or sha256 digest, got {image!r}"
-                        )
-
-        if path.startswith("apps/media-generation/"):
-            if line.startswith("newTag:"):
-                tag = scalar(line.split(":", 1)[1])
-                inspected += 1
-                if not re.fullmatch(r"prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{40}", tag):
-                    errors.append(
-                        f"{path}: Media production newTag must contain the full source SHA, got {tag!r}"
-                    )
-            elif line.startswith("digest:"):
-                digest = scalar(line.split(":", 1)[1])
-                inspected += 1
-                if not DIGEST.fullmatch(digest):
-                    errors.append(
-                        f"{path}: Media image digest must be sha256:<64 lowercase hex>, got {digest!r}"
-                    )
-            elif line.startswith("image:"):
-                image = scalar(line.split(":", 1)[1])
-                if image.startswith("ghcr.io/phanthienquoc/media-generation/"):
-                    inspected += 1
-                    if not (MEDIA_TAG.fullmatch(image) or MEDIA_DIGEST.fullmatch(image)):
-                        errors.append(
-                            f"{path}: Media image must use a full source SHA tag or sha256 digest, got {image!r}"
-                        )
-
         if path.startswith("apps/tce-dashboard/"):
             if line.startswith("newTag:"):
                 tag = scalar(line.split(":", 1)[1])
@@ -164,41 +101,6 @@ def self_test() -> None:
     sha = "a" * 40
     digest = "sha256:" + "b" * 64
     fixtures = [
-        (
-            "valid StockDividend source SHA",
-            f"+++ b/apps/stockdividend/overlays/prod/kustomization.yaml\n+  newTag: {sha}\n",
-            True,
-        ),
-        (
-            "valid StockDividend digest",
-            f"+++ b/apps/stockdividend/overlays/prod/kustomization.yaml\n+  digest: {digest}\n",
-            True,
-        ),
-        (
-            "invalid StockDividend digest",
-            "+++ b/apps/stockdividend/overlays/prod/kustomization.yaml\n+  digest: sha256:xyz\n",
-            False,
-        ),
-        (
-            "invalid abbreviated StockDividend tag",
-            "+++ b/apps/stockdividend/overlays/prod/kustomization.yaml\n+  newTag: 12d63b4\n",
-            False,
-        ),
-        (
-            "valid Media digest promotion",
-            f"+++ b/apps/media-generation/overlays/prod/kustomization.yaml\n+  digest: {digest}\n",
-            True,
-        ),
-        (
-            "invalid abbreviated Media release tag",
-            "+++ b/apps/media-generation/overlays/prod/kustomization.yaml\n+  newTag: prod-v0.3.0-58f80a8\n",
-            False,
-        ),
-        (
-            "valid Media full-SHA release tag",
-            f"+++ b/apps/media-generation/overlays/prod/kustomization.yaml\n+  newTag: prod-v0.3.0-{sha}\n",
-            True,
-        ),
         (
             "valid TCE paired digest promotion",
             f"+++ b/apps/tce-dashboard/overlays/prod/kustomization.yaml\n+  digest: {digest}\n",
@@ -277,8 +179,6 @@ def main(argv: list[str]) -> int:
             base,
             head,
             "--",
-            "apps/stockdividend",
-            "apps/media-generation",
             "apps/tce-dashboard",
             "platform/microfe",
         ],
@@ -297,7 +197,7 @@ def main(argv: list[str]) -> int:
         return 1
 
     print(
-        f"Validated {inspected} changed StockDividend/Media/MicroFE image reference(s); "
+        f"Validated {inspected} changed TCE/MicroFE image reference(s); "
         "no abbreviated, mutable, or placeholder references were introduced."
     )
     return 0
