@@ -76,6 +76,7 @@ jobs:
           python3 scripts/promote-tce-image-digests.py --self-test
           python3 scripts/resolve-tce-gitops-image-refs.py --self-test
           bash scripts/tests/inspect-vps-cri-contract.test.sh
+          bash scripts/tests/decommission-stock-media-contract.test.sh
           bash scripts/guard-reconcile-images.sh --self-test
 
       - name: Test path-scoped push deployment resolution
