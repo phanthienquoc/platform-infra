@@ -4683,3 +4683,14 @@ No production workload, image, replica, manifest, credential, namespace, PVC/PV,
 4. Keep Stock publication gated until explicit release authorization; require new full-SHA GHCR digest and ARM64 manifest evidence before any separate promotion.
 5. Require operator-confirmed Media runner idle/stop/disable/unregister plus fresh storage/external-data/DNS review before namespace decommission.
 6. Keep TCE/Auth at desired 0/0 until service-owner activation approval; retain strict HTTP 200 health gates.
+
+
+## Post-merge update — 2026-11-06 19:08 ICT / 12:08 UTC
+
+- Authentication PR [#89](https://github.com/phanthienquoc/phanthienquoc-authentication/pull/89) merged by squash as `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`. Exact PR head `019b1dc96dba3f45a6f637e3fd54059d3ee0bcc1` passed Auth CI [#42215166348](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/42215166348): both jobs passed, including npm test/typecheck/build, immutable release contract validation, native ARM64 non-publishing image build and local architecture verification. The merged default-branch head was independently re-read as `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`.
+- The Auth release workflow now fails the workflow on any manual dispatch whose ref is not exactly `refs/heads/master`; verification and publication depend on that zero-permission gate. `packages:write` is scoped to the publish job. The manual-only release trigger, full-SHA tags, ARM64 publication, BuildKit provenance/SBOM, digest checks and provenance-bound `auth-image-published` event remain intact. No release publisher or GHCR push was triggered.
+- Platform Infra PR [#1338](https://github.com/phanthienquoc/platform-infra/pull/1338) merged as `52c45b334d31ee9e00ca9be51b1c039ed0229e79`. Its exact-head `validate-manifests` run [#42215324106](https://github.com/phanthienquoc/platform-infra/actions/runs/42215324106) passed all manifest, script, Auth GitOps, rendered YAML, secret-policy and immutable-image checks. The connected Actions reader did not expose a post-merge push run; do not claim a separate post-merge workflow pass.
+- Current Platform master: `52c45b334d31ee9e00ca9be51b1c039ed0229e79`. Current Auth master: `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`. Open Platform PRs remain #1314/#544/#541/#539; open Auth PRs remain #75/#76. No open PRs were found in TCE, StockDividend or Media Generation.
+- The connector still does not provide repo-wide default-branch Actions run listings/status contexts; default-branch combined statuses were empty. Last-known TCE health, Stock/Media runtime and K3s evidence remain the prior checkpoint's evidence, not a fresh operational observation.
+
+No production workload, image, replica, manifest, Secret, namespace, PVC/PV, external database, DNS, runner or host was changed. TCE market-scan schedule unchanged.
