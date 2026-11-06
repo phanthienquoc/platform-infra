@@ -1,3 +1,42 @@
+## Workflow inventory runtime update — 2026-11-06 09:33 ICT / 02:33 UTC
+
+### Current five-repository ownership and evidence
+
+| Repository | Current default-branch SHA | Workflow ownership | Latest evidence |
+|---|---|---|---|
+| Platform Infra | d6f45057f4a7eaba4c81d897aa64d9e5feb67fa1 | Production manifests, shared GHCR pull credentials, provenance/digest validation, GitOps promotion/reconciliation, rollout and health. | PR #1304 merged; post-merge validations #42150629257/#42150629258/#42150629301 and reconcile #42150629183 passed. |
+| TCE Dashboard | 512b69d837e2a65c39867a062529a7fa0eada4cc | App tests/builds/manual immutable publisher; Platform validates provenance/digests and owns production rollout. | WF-06 #42133793538 failed strict public probes with HTTP 503 under the zero-replica state; WF-13 #42133822204 passed read-only. |
+| StockDividend | 6fcefa6b3792dab92b6d5c438001633d25f1ca28 | App CI/builds/immutable GHCR publication; no Stock GitOps or Platform publisher receiver remains. | Master CI #42137523269 passed. No production publisher dispatch. |
+| Media Generation | 3a8846a4f273eeb20a55b214d5ad80804c2d8d52 | App CI/builds/paired immutable GHCR publication; no Media GitOps or Platform publisher receiver remains. | Master CI #42136991059 passed. No production release dispatch. |
+| Authentication | f978a3f378ee22d4630909c2d182275b21ac9e9a | App CI/manual immutable publisher; Platform verifies provenance and promotes Auth digests. | Master CI #41670642852 passed; PR #75/#76 remain gated. |
+
+### Platform reconcile and rollout evidence
+
+- PR #1304 merged from exact head 29dffd589c800ef3e3a545be128182ace615718a as d6f45057f4a7eaba4c81d897aa64d9e5feb67fa1 after visible exact-head checks #42149835243, #42149835246 and #42149835326 passed.
+- Post-merge validations #42150629257, #42150629258 and #42150629301 passed on the new master SHA.
+- Reconcile #42150629183 resolved scope all, mode apply and ALLOW_IMAGE_CHANGES=false. GHCR access, Auth runtime Secret provisioning, shared pull credential reconciliation, restart checks and TCE pair validation passed. Preflight detected drift; the image guard found no workload image replacement; manifest apply and post-apply drift verification passed.
+- MicroFE, TCE and Auth lanes passed; Keycloak lane skipped. TCE/Auth remained intentionally zero replicas and passed their zero-replica health gates. Recovery controller #42150853420 passed for the source reconcile.
+- Optional TCE deployment-start event failed to connect to local 127.0.0.1:18080; continue-on-error prevented this telemetry issue from changing the deployment result.
+- The run still observed Stock/Media workloads in K3s. GitOps removal does not prune old namespaced resources; the manual decommission workflow has not run.
+
+### App publisher and payload contracts
+
+- StockDividend deploy.yml keeps app-owned CI/builds, immutable source-SHA publication, ARM64 verification and its explicit manual production hold; no Platform repository_dispatch remains.
+- Media wf-03-media-production-deploy.yml keeps paired immutable full-SHA image publication, digest and ARM64 verification; no Platform dispatch remains.
+- TCE wf-03-tce-production-deploy.yml is workflow_dispatch-only, validates master/full-source SHA, paired registry digests, ARM64 and tce-release-requested payload provenance.
+- Authentication release.yml is workflow_dispatch-only, validates immutable tags/digest/ARM64 and sends auth-image-published with source run/workflow/event/SHA evidence.
+- Platform gitops-image-promotion.yml remains the shared digest/provenance receiver; reconcile-vps.yml remains the sole routine production apply authority; inspect-vps.yml remains read-only.
+
+### Known follow-ups
+
+- TCE production Kustomize still uses legacy paired tag prod-v0.1.0-e75e338; Auth still uses legacy tag prod-v1.0.0-ceb2688. Current publisher workflows emit full-source-SHA tags and registry digests, but no new authorized publisher dispatch has pinned these existing manifests to digest. Do not substitute stale containerd cache digests; obtain registry-confirmed provenance before atomic digest promotion.
+- Stock/Media namespaces and workloads remain present after GitOps retirement. Fresh PVC/PV/StorageClass inventory, backup/external-data review and independent Media-runner retirement are still required before the protected manual namespace workflow.
+- The optional local deployment event bridge at 127.0.0.1:18080 refused the connection during reconcile #42150629183. Diagnose without making it a hard deployment gate unless the event contract is deliberately changed.
+- Auth #75/#76 stay gated because Supabase Preview is skipped and production migration side effects remain unresolved.
+- Preserve all TCE schedules, especially the market-scan schedule; no schedule declaration was changed.
+
+---
+
 ## Workflow inventory runtime update — 2026-11-06 09:15 ICT / 02:15 UTC
 
 ### Current workflow ownership and refs
