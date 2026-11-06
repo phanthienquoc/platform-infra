@@ -4616,3 +4616,17 @@ Keep TCE/Auth at 0/0 until owner approval; preserve strict HTTP 200 checks, all 
 - Latest native inspect remains #42193617816 (09:15:08Z), ~48m old at this checkpoint and within its 75m freshness budget.
 - TCE still has no native WF-06/WF-07/WF-12 schedule later than 06:48Z/03:43Z in the returned history. WF-06 probes remain HTTP 503 and TCE/Auth remain 0/0. Preserve strict HTTP 200 and TCE market-scan schedule.
 - PR #1330 merged as `6bb2989ccf59cee35d2713b78684c6cad81d82e5`; exact-head and post-merge validation PASS.
+
+
+---
+
+## Runtime inventory — 2026-11-06 18:27 ICT / 11:27 UTC
+
+- Current default-branch heads: Platform Infra `0b0832d8c52a4751d518d137877997ff4d586c29`; TCE Dashboard `512b69d837e2a65c39867a062529a7fa0eada4cc`; StockDividend `3aeaf519b7a786d13dcecee763acaca357c47ddd`; Media Generation `3a8846a4f273eeb20a55b214d5ad80804c2d8d52`; Authentication `3a8031196f21c4240b617bbd0a623fce2dc56c5e`.
+- Open PRs: Platform #1314/#544/#541/#539 (draft); Auth #75 ready/#76 draft; none in TCE/Stock/Media. All open-PR checks are historical; Auth Supabase Preview is SKIPPED.
+- Platform PR #1336 merged as `c19d8e2d6e09fbe9e4eef923b420d512a246d961`; exact-head and post-merge checks PASS. Current documentation-only master head `0b0832d` has manifest validation #42210042886 PASS; latest actionlint run #42209733500 PASS on preceding code-identical head.
+- Platform native schedule: reconcile #42199267592 SUCCESS 10:00:15Z; recovery #42199274660 SUCCESS 10:00:18Z; watchdog #42201400071 SUCCESS 10:16:28Z; inspect #42193617816 SUCCESS 09:15:08Z. Later reconcile #42207918291 and inspect #42208147735 are manual dispatches. TCE native WF-06 #42176208184 failed 4 strict HTTP 200 probes (503); WF-07 #42176751608 passed; WF-12 #42158209117 failed. WF-12 #42176769424/WF-13 #42176787185 are workflow_run events, not native schedule.
+- Latest K3s snapshot #42208147735 generated 11:09:51Z: GitOps clean; Media 1/1; Stock Admin (two Pods) and newer Backend Pod ImagePullBackOff because tag `12d63b4` lacks ARM64; legacy Backend/Frontend running; TCE/Auth/Keycloak 0/0; only unrelated debug PVC/PV; Media runner active/enabled with Listener. `restart_required=yes`.
+- Stock CI #42167088130 (7/7), Media CI #42136991059 and Auth CI #42167100692 pass, but these are not new GHCR publications. Stock's latest publisher #41563856933 is Nov 3; Media #41158598649 and Auth #41040510320 are historical. Current Auth receiver requires provenance-bound `auth-image-published`; no new current-contract release was run.
+- Preserve app-owned CI/build/immutable publication, Platform-only GitOps apply, useful security/manual/release/scheduled jobs, and all current cron declarations. No production mutation; TCE market-scan schedule unchanged.
+- Full evidence and next actions: [checkpoint 2026-11-06 18:27 ICT](cross-repo-workflow-inventory-checkpoints/2026-11-06-1827-ict.md).
