@@ -33,12 +33,6 @@ resolve_scope() {
       apps/tce-dashboard/*)
         scopes[tce-dashboard]=1
         ;;
-      apps/stockdividend/*)
-        scopes[stockdividend]=1
-        ;;
-      apps/media-generation/*)
-        scopes[media-generation]=1
-        ;;
       platform/keycloak/*|apps/keycloak/*)
         keycloak_changed=1
         ;;
@@ -120,21 +114,17 @@ self_test() {
   assert_scope microfe platform/microfe/kustomization.yaml
   assert_scope auth-service platform/auth-service/deployment.yaml
   assert_scope tce-dashboard apps/tce-dashboard/overlays/prod/kustomization.yaml
-  assert_scope stockdividend apps/stockdividend/overlays/prod/kustomization.yaml
-  assert_scope media-generation apps/media-generation/overlays/prod/kustomization.yaml
   assert_failure apps/tce-vps-control-mcp/package.json
+  assert_failure apps/stockdividend/overlays/prod/kustomization.yaml
+  assert_failure apps/media-generation/overlays/prod/kustomization.yaml
   assert_scope tce-dashboard apps/tce-dashboard/overlays/prod/kustomization.yaml apps/tce-vps-control-mcp/package.json
   assert_failure apps/stockdividend/README.md
   assert_failure apps/stockdividend/docs/production-runtime.md
-  assert_scope stockdividend apps/stockdividend/README.md apps/stockdividend/overlays/prod/kustomization.yaml
-  assert_scope media-generation apps/media-generation/overlays/prod/kustomization.yaml .github/workflows/validate-manifests.yml scripts/validate-workflow-contracts.py docs/cross-repo-deployment-tracker.md debug/vps-latest.md
   assert_failure .github/workflows/validate-manifests.yml scripts/validate-workflow-contracts.py docs/cross-repo-deployment-tracker.md debug/vps-latest.md
-  assert_scope all apps/tce-dashboard/kustomization.yaml apps/media-generation/kustomization.yaml
+  assert_scope all apps/tce-dashboard/kustomization.yaml platform/microfe/kustomization.yaml
   assert_scope all environments/prod/kustomization.yaml
   assert_scope all scripts/verify-workload-health.sh
-  assert_scope stockdividend apps/stockdividend/base/kustomization.yaml scripts/bootstrap-runner.sh
   assert_scope all scripts/verify-workload-health.sh scripts/bootstrap-runner.sh scripts/validate-recovery-readiness.sh
-  assert_scope stockdividend apps/stockdividend/base/kustomization.yaml scripts/bootstrap-runner.sh scripts/validate-recovery-readiness.sh
   assert_failure scripts/bootstrap-runner.sh scripts/validate-recovery-readiness.sh
   local keycloak_zero keycloak_one
   keycloak_zero="$(KEYCLOAK_REPLICAS_OVERRIDE=0 resolve_scope platform/keycloak/deployment.yaml)"
