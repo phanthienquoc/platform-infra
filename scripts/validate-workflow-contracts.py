@@ -386,6 +386,8 @@ if "'!apps/tce-vps-control-mcp/**'" not in reconcile_push_paths:
 if "- scripts/resolve-push-deployment-scope.sh" not in reconcile_push_paths:
     fail("Changes to the push-scope resolver must trigger the sole production reconciliation workflow.")
 scope_resolver = (ROOT / "scripts" / "resolve-push-deployment-scope.sh").read_text(encoding="utf-8")
+if "assert_scope all scripts/resolve-push-deployment-scope.sh" not in scope_resolver:
+    fail("Push-scope resolver changes must resolve to the cluster-wide reconciliation scope.")
 for required in (
     "apps/**/*.md|apps/**/docs/*",
     "apps/tce-vps-control-mcp/*",
