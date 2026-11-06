@@ -46,7 +46,7 @@ case "${1:-}" in
     ;;
   policy-version)
     [[ "$#" -eq 1 ]] || exit 2
-    echo "platform-kubectl policy: rollout-status-v14-stockdividend-managed-workloads"
+    echo "platform-kubectl policy: rollout-status-v15-active-workloads-only"
     exit 0
     ;;
   reconcile-ghcr-pull)
@@ -214,6 +214,266 @@ case "${1:-}" in
     echo "Keycloak runtime Secret exists and passed key/target validation; values suppressed."
     exit 0
     ;;
+  decommission-stock-media)
+    [[ "$#" -eq 1 ]] || {
+      echo "platform-kubectl: decommission-stock-media accepts no extra arguments" >&2
+      exit 2
+    }
+    IFS= read -r confirmation || confirmation=""
+    [[ "$confirmation" == "DECOMMISSION stock-prod media-prod" ]] || {
+      echo "platform-kubectl: exact decommission confirmation did not match" >&2
+      exit 2
+    }
+
+    existing_namespaces=()
+    for namespace in stock-prod media-prod; do
+      if namespace_json="$("${KUBECTL[@]}" get namespace "$namespace" -o json 2>&1)"; then
+        if [[ "$namespace" == "stock-prod" ]]; then
+          part_of="$(jq -r '.metadata.labels["app.kubernetes.io/part-of"] // empty' <<< "$namespace_json")"
+          [[ "$part_of" == "stockdividend" ]] || {
+            echo "platform-kubectl: stock-prod ownership label mismatch; aborting" >&2
+            exit 1
+          }
+        else
+          deployment_names="$("${KUBECTL[@]}" get deployments -n "$namespace" -o json | jq -r '.items[]?.metadata.name')"
+          grep -Eq '^(media-generation|media-generation-frontend)    [[ "$#" -eq 2 ]] || {
+      echo "platform-kubectl: restart-blocked-image-pulls requires exactly one application scope" >&2
+      exit 2
+    }
+
+    restart_if_blocked() {
+      local namespace="$1"
+      local deployment="$2"
+      local selector
+      local waiting_failures
+      local permanent_failures
+
+      selector="$( "${KUBECTL[@]}" -n "$namespace" get deployment "$deployment" -o json |
+        jq -r '.spec.selector.matchLabels // {} | to_entries | map("\(.key)=\(.value)") | join(",")')"
+      [[ -n "$selector" ]] || {
+        echo "platform-kubectl: deployment $namespace/$deployment has no matchLabels selector" >&2
+        return 1
+      }
+
+      waiting_failures="$( "${KUBECTL[@]}" -n "$namespace" get pods -l "$selector" -o json |
+        jq -c '[.items[]? | ((.status.containerStatuses // []) + (.status.initContainerStatuses // []))[]? |
+          select(.state.waiting.reason? == "ImagePullBackOff" or .state.waiting.reason? == "ErrImagePull") |
+          {reason: .state.waiting.reason, message: (.state.waiting.message // "")}]')"
+      permanent_failures="$(jq -r '[.[] |
+        select((.message | ascii_downcase) | test("no match for platform in manifest|manifest unknown|manifest not found")) |
+        "\(.reason): \(.message)"] | unique | join("; ")' <<< "$waiting_failures")"
+
+      if [[ -n "$permanent_failures" ]]; then
+        echo "Permanent image-pull failure for $namespace/$deployment; skipping rollout restart: $permanent_failures"
+      elif [[ "$waiting_failures" != "[]" ]]; then
+        echo "Transient image-pull failure detected for $namespace/$deployment; restarting only that deployment."
+        "${KUBECTL[@]}" -n "$namespace" rollout restart "deployment/$deployment"
+      else
+        echo "No image-pull failures for $namespace/$deployment."
+      fi
+    }
+
+    case "$2" in
+      microfe)
+        restart_if_blocked microfe-platform microfe-shell
+        restart_if_blocked microfe-platform microfe-ws
+        ;;
+      auth-service)
+        restart_if_blocked microfe-platform microfe-auth
+        ;;
+      tce-dashboard)
+        restart_if_blocked tce-prod tce-service
+        restart_if_blocked tce-prod tce-frontend
+        ;;
+      all)
+        restart_if_blocked microfe-platform microfe-auth
+        restart_if_blocked microfe-platform microfe-shell
+        restart_if_blocked microfe-platform microfe-ws
+        restart_if_blocked tce-prod tce-service
+        restart_if_blocked tce-prod tce-frontend
+        ;;
+      *)
+        echo "platform-kubectl: unsupported image-pull restart scope '$2'" >&2
+        exit 2
+        ;;
+    esac
+    exit 0
+    ;;
+  logs)
+    # Read-only Keycloak diagnostics: allow a bounded tail only; never permit env/secret reads.
+    if [[ "${2:-}" == "deployment/keycloak" && "${3:-}" == "-n" && "${4:-}" == "microfe-platform" && "${5:-}" == "--since=2h" && "${6:-}" == "--tail=200" && "${7:-}" == "" ]]; then
+      exec "${KUBECTL[@]}" logs deployment/keycloak -n microfe-platform --since=2h --tail=200
+    fi
+    echo "platform-kubectl: only bounded Keycloak logs are allowed" >&2
+    exit 2
+    ;;
+  apply)
+    if [[ "${2:-}" == "-f" && "${4:-}" == "" ]]; then
+      case "${3:-}" in
+        platform/microfe/namespace.yaml|apps/tce-dashboard/base/namespace.yaml)
+          exec "${KUBECTL[@]}" apply -f "${3}"
+          ;;
+      esac
+    fi
+    if [[ "${2:-}" == "-k" && "${3:-}" == "platform/keycloak" && "${4:-}" == "" ]]; then
+      exec "${KUBECTL[@]}" apply -k platform/keycloak
+    fi
+    [[ "${2:-}" == "-k" && "${3:-}" == "environments/prod" && "${4:-}" == "" ]] || {
+      echo "platform-kubectl: only approved GitOps namespace manifests, -k environments/prod, or -k platform/keycloak are allowed for apply" >&2
+      exit 2
+    }
+    exec "${KUBECTL[@]}" apply -k environments/prod
+    ;;
+  diff)
+    [[ "${2:-}" == "-k" && "${3:-}" == "environments/prod" && "${4:-}" == "" ]] || {
+      echo "platform-kubectl: only -k environments/prod is allowed for diff" >&2
+      exit 2
+    }
+    exec "${KUBECTL[@]}" diff -k environments/prod
+    ;;
+  port-forward)
+    [[ "${2:-}" == "-n" && "${3:-}" == "microfe-platform" && "${4:-}" == "svc/microfe-ws" && "${5:-}" == "18080:8080" && "${6:-}" == "" ]] || {
+      echo "platform-kubectl: only the approved MicroFE WS event port-forward is allowed" >&2
+      exit 2
+    }
+    exec "${KUBECTL[@]}" -n microfe-platform port-forward svc/microfe-ws 18080:8080
+    ;;
+  rollout)
+    [[ "${2:-}" == "status" && "${3:-}" == "deployment/tce-service" && "${4:-}" == "-n" && "${5:-}" == "tce-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/tce-service -n tce-prod --timeout=180s
+    [[ "${2:-}" == "status" && "${3:-}" == "deployment/tce-frontend" && "${4:-}" == "-n" && "${5:-}" == "tce-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/tce-frontend -n tce-prod --timeout=180s
+    [[ "${2:-}" == "status" && "${3:-}" == "deployment/microfe-auth" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/microfe-auth -n microfe-platform --timeout=180s
+    [[ "${2:-}" == "status" && "${3:-}" == "deployment/microfe-shell" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/microfe-shell -n microfe-platform --timeout=180s
+    [[ "${2:-}" == "status" && "${3:-}" == "deployment/keycloak" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "--timeout=300s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/keycloak -n microfe-platform --timeout=300s
+    [[ "${2:-}" == "status" && "${3:-}" == "deployment/microfe-ws" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/microfe-ws -n microfe-platform --timeout=180s
+    ;;
+  scale)
+    [[ "$#" -eq 6 && "${2:-}" == "deployment/microfe-auth" && "${3:-}" == "deployment/keycloak" && "${4:-}" == "--replicas=0" && "${5:-}" == "-n" && "${6:-}" == "microfe-platform" ]] || {
+      echo "platform-kubectl: only scale-to-zero for Auth and Keycloak is allowed" >&2
+      exit 2
+    }
+    exec "${KUBECTL[@]}" scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform
+    ;;
+  get)
+    [[ "${2:-}" == "ingress" && "${3:-}" == "keycloak-public" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "" ]] && exec "${KUBECTL[@]}" get ingress keycloak-public -n microfe-platform
+    [[ "${2:-}" == "ingress" && "${3:-}" == "microfe-public" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "" ]] && exec "${KUBECTL[@]}" get ingress microfe-public -n microfe-platform
+    ;;
+esac
+
+echo "platform-kubectl: command is not allowlisted" >&2
+exit 2
+EOF
+chmod 0755 /usr/local/sbin/platform-kubectl
+echo "platform-kubectl policy: rollout-status-v15-active-workloads-only"
+cat >/usr/local/sbin/platform-crictl <<'EOF'
+#!/usr/bin/env bash
+# Root-owned restricted CRI interface for the platform cleanup helper.
+set -euo pipefail
+CRI_BIN=""
+for candidate in /usr/local/bin/crictl /usr/bin/crictl /var/lib/rancher/k3s/data/current/bin/crictl; do
+  if [[ -x "$candidate" ]]; then CRI_BIN="$candidate"; break; fi
+done
+[[ -n "$CRI_BIN" ]] || { echo "platform-crictl: crictl binary not found" >&2; exit 2; }
+case "${1:-}" in
+  images)
+    [[ "$#" -eq 1 ]] || exit 2
+    exec "$CRI_BIN" images -o json
+    ;;
+  ps)
+    [[ "$#" -eq 1 ]] || exit 2
+    exec "$CRI_BIN" ps -a -o json
+    ;;
+  rmi)
+    [[ "$#" -eq 2 && "${2}" =~ ^sha256:[a-fA-F0-9]{64}$ ]] || {
+      echo "platform-crictl: rmi requires one full sha256 image ID" >&2
+      exit 2
+    }
+    exec "$CRI_BIN" rmi "$2"
+    ;;
+  *)
+    echo "platform-crictl: allowed commands are images, ps, rmi <sha256:image-id>" >&2
+    exit 2
+    ;;
+esac
+EOF
+chmod 0755 /usr/local/sbin/platform-crictl
+cat >/etc/sudoers.d/platform-infra-runner <<EOF
+$RUNNER_USER ALL=(root) NOPASSWD: /usr/local/sbin/platform-kubectl *
+$RUNNER_USER ALL=(root) NOPASSWD: /usr/local/sbin/platform-crictl *
+EOF
+chmod 0440 /etc/sudoers.d/platform-infra-runner
+visudo -cf /etc/sudoers.d/platform-infra-runner
+chown -R "$RUNNER_USER:$RUNNER_USER" "$RUNNER_DIR"
+
+# svc.sh expects to be invoked from the runner root.
+cd "$RUNNER_DIR"
+
+# Keep bootstrap idempotent: a registered runner may already have a service.
+if find /etc/systemd/system -maxdepth 1 -type f -name 'actions.runner.*.service' -print -quit | grep -q .; then
+  echo "Runner service already installed; reusing existing service."
+else
+  ./svc.sh install "$RUNNER_USER"
+fi
+
+./svc.sh start
+
+echo "Runner bootstrap complete: $RUNNER_NAME"
+ <<< "$deployment_names" || {
+            echo "platform-kubectl: media-prod ownership could not be verified; aborting" >&2
+            exit 1
+          }
+        fi
+
+        echo "== Read-only inventory: $namespace =="
+        for resource in deployments pods services ingress jobs cronjobs; do
+          "${KUBECTL[@]}" get "$resource" -n "$namespace" -o wide || true
+        done
+
+        pvc_json="$("${KUBECTL[@]}" get pvc -n "$namespace" -o json)"
+        pvc_count="$(jq -r '.items | length' <<< "$pvc_json")"
+        [[ "$pvc_count" == "0" ]] || {
+          echo "platform-kubectl: $namespace has $pvc_count PVC(s); preserve data and abort" >&2
+          exit 1
+        }
+        existing_namespaces+=("$namespace")
+      else
+        grep -q "NotFound" <<< "$namespace_json" || {
+          echo "platform-kubectl: unable to inspect namespace $namespace; aborting" >&2
+          exit 1
+        }
+        echo "Namespace $namespace is already absent."
+      fi
+
+      pv_json="$("${KUBECTL[@]}" get pv -o json)"
+      pv_claim_count="$(jq -r --arg namespace "$namespace" '[.items[]? | select(.spec.claimRef.namespace == $namespace)] | length' <<< "$pv_json")"
+      [[ "$pv_claim_count" == "0" ]] || {
+        echo "platform-kubectl: $namespace has $pv_claim_count PV claim reference(s); preserve data and abort" >&2
+        exit 1
+      }
+    done
+
+    # Delete only the two explicitly named namespaces after both preflights pass.
+    for namespace in "${existing_namespaces[@]}"; do
+      "${KUBECTL[@]}" delete namespace "$namespace" --wait=true --timeout=180s
+      if namespace_json="$("${KUBECTL[@]}" get namespace "$namespace" -o json 2>&1)"; then
+        echo "platform-kubectl: namespace $namespace still exists after deletion" >&2
+        exit 1
+      else
+        grep -q "NotFound" <<< "$namespace_json" || {
+          echo "platform-kubectl: unable to verify namespace $namespace deletion" >&2
+          exit 1
+        }
+      fi
+    done
+
+    for namespace in tce-prod microfe-platform; do
+      "${KUBECTL[@]}" get namespace "$namespace" >/dev/null || {
+        echo "platform-kubectl: protected platform namespace $namespace is missing" >&2
+        exit 1
+      }
+    done
+    echo "StockDividend and Media namespaces are absent; PVs, external databases/object storage, DNS and the dedicated Media runner were not modified."
+    exit 0
+    ;;
   restart-blocked-image-pulls)
     [[ "$#" -eq 2 ]] || {
       echo "platform-kubectl: restart-blocked-image-pulls requires exactly one application scope" >&2
@@ -264,24 +524,12 @@ case "${1:-}" in
         restart_if_blocked tce-prod tce-service
         restart_if_blocked tce-prod tce-frontend
         ;;
-      stockdividend)
-        restart_if_blocked stock-prod stock-admin
-        restart_if_blocked stock-prod stock-backend
-        ;;
-      media-generation)
-        restart_if_blocked media-prod media-generation
-        restart_if_blocked media-prod media-generation-frontend
-        ;;
       all)
         restart_if_blocked microfe-platform microfe-auth
         restart_if_blocked microfe-platform microfe-shell
         restart_if_blocked microfe-platform microfe-ws
         restart_if_blocked tce-prod tce-service
         restart_if_blocked tce-prod tce-frontend
-        restart_if_blocked stock-prod stock-admin
-        restart_if_blocked stock-prod stock-backend
-        restart_if_blocked media-prod media-generation
-        restart_if_blocked media-prod media-generation-frontend
         ;;
       *)
         echo "platform-kubectl: unsupported image-pull restart scope '$2'" >&2
@@ -295,21 +543,13 @@ case "${1:-}" in
     if [[ "${2:-}" == "deployment/keycloak" && "${3:-}" == "-n" && "${4:-}" == "microfe-platform" && "${5:-}" == "--since=2h" && "${6:-}" == "--tail=200" && "${7:-}" == "" ]]; then
       exec "${KUBECTL[@]}" logs deployment/keycloak -n microfe-platform --since=2h --tail=200
     fi
-    if [[ "${2:-}" == "deployment/media-generation" && "${3:-}" == "-n" && "${4:-}" == "media-prod" && ( "${5:-}" == "--tail=200" || "${5:-}" == "--previous" ) ]]; then
-      if [[ "${5:-}" == "--previous" ]]; then exec "${KUBECTL[@]}" logs deployment/media-generation -n media-prod --previous --tail=200; fi
-      exec "${KUBECTL[@]}" logs deployment/media-generation -n media-prod --tail=200
-    fi
-    if [[ "${2:-}" == "deployment/media-generation-frontend" && "${3:-}" == "-n" && "${4:-}" == "media-prod" && ( "${5:-}" == "--tail=200" || "${5:-}" == "--previous" ) ]]; then
-      if [[ "${5:-}" == "--previous" ]]; then exec "${KUBECTL[@]}" logs deployment/media-generation-frontend -n media-prod --previous --tail=200; fi
-      exec "${KUBECTL[@]}" logs deployment/media-generation-frontend -n media-prod --tail=200
-    fi
-    echo "platform-kubectl: only media-generation logs in media-prod are allowed" >&2
+    echo "platform-kubectl: only bounded Keycloak logs are allowed" >&2
     exit 2
     ;;
   apply)
     if [[ "${2:-}" == "-f" && "${4:-}" == "" ]]; then
       case "${3:-}" in
-        platform/microfe/namespace.yaml|apps/stockdividend/base/namespace.yaml|apps/tce-dashboard/base/namespace.yaml|apps/media-generation/base/namespace.yaml)
+        platform/microfe/namespace.yaml|apps/tce-dashboard/base/namespace.yaml)
           exec "${KUBECTL[@]}" apply -f "${3}"
           ;;
       esac
@@ -337,17 +577,9 @@ case "${1:-}" in
     }
     exec "${KUBECTL[@]}" -n microfe-platform port-forward svc/microfe-ws 18080:8080
     ;;
-  describe-media)
-    [[ "$#" -eq 1 ]] || exit 2
-    exec "${KUBECTL[@]}" describe deployment/media-generation -n media-prod
-    ;;
   rollout)
-    [[ "${2:-}" == "status" && "${3:-}" == "deployment/stock-admin" && "${4:-}" == "-n" && "${5:-}" == "stock-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/stock-admin -n stock-prod --timeout=180s
-    [[ "${2:-}" == "status" && "${3:-}" == "deployment/stock-backend" && "${4:-}" == "-n" && "${5:-}" == "stock-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/stock-backend -n stock-prod --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/tce-service" && "${4:-}" == "-n" && "${5:-}" == "tce-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/tce-service -n tce-prod --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/tce-frontend" && "${4:-}" == "-n" && "${5:-}" == "tce-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/tce-frontend -n tce-prod --timeout=180s
-    [[ "${2:-}" == "status" && "${3:-}" == "deployment/media-generation" && "${4:-}" == "-n" && "${5:-}" == "media-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/media-generation -n media-prod --timeout=180s
-    [[ "${2:-}" == "status" && "${3:-}" == "deployment/media-generation-frontend" && "${4:-}" == "-n" && "${5:-}" == "media-prod" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/media-generation-frontend -n media-prod --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/microfe-auth" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/microfe-auth -n microfe-platform --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/microfe-shell" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "--timeout=180s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/microfe-shell -n microfe-platform --timeout=180s
     [[ "${2:-}" == "status" && "${3:-}" == "deployment/keycloak" && "${4:-}" == "-n" && "${5:-}" == "microfe-platform" && "${6:-}" == "--timeout=300s" && "${7:-}" == "" ]] && exec "${KUBECTL[@]}" rollout status deployment/keycloak -n microfe-platform --timeout=300s
@@ -370,7 +602,7 @@ echo "platform-kubectl: command is not allowlisted" >&2
 exit 2
 EOF
 chmod 0755 /usr/local/sbin/platform-kubectl
-echo "platform-kubectl policy: rollout-status-v14-stockdividend-managed-workloads"
+echo "platform-kubectl policy: rollout-status-v15-active-workloads-only"
 cat >/usr/local/sbin/platform-crictl <<'EOF'
 #!/usr/bin/env bash
 # Root-owned restricted CRI interface for the platform cleanup helper.
