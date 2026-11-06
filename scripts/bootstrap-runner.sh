@@ -225,6 +225,46 @@ case "${1:-}" in
       exit 2
     }
 
+    node_json="$("${KUBECTL[@]}" get nodes -o json)"
+    node_count="$(printf '%s' "$node_json" | jq -r '.items | length')"
+    ready_count="$(printf '%s' "$node_json" | jq -r '[.items[]? | select(any(.status.conditions[]?; .type == "Ready" and .status == "True"))] | length')"
+    [[ "$node_count" -gt 0 && "$ready_count" -eq "$node_count" ]] || {
+      echo "platform-kubectl: not every K3s node is Ready; aborting decommission" >&2
+      exit 1
+    }
+    for protected_namespace in tce-prod microfe-platform; do
+      "${KUBECTL[@]}" get namespace "$protected_namespace" >/dev/null || {
+        echo "platform-kubectl: protected namespace $protected_namespace is missing before decommission" >&2
+        exit 1
+      }
+    done
+
+    assert_exact_names() {
+      local namespace="$1"
+      local resource="$2"
+      local expected="$3"
+      local expected_names
+      local actual_names
+      expected_names="$(printf '%s\n' "$expected" | tr ' ' '\n' | sed '/^$/d' | sort)"
+      actual_names="$("${KUBECTL[@]}" get "$resource" -n "$namespace" -o json | jq -r '.items[]?.metadata.name' | sort)"
+      [[ "$actual_names" == "$expected_names" ]] || {
+        echo "platform-kubectl: unexpected $resource inventory in $namespace; aborting" >&2
+        printf 'Expected:\n%s\nActual:\n%s\n' "$expected_names" "$actual_names" >&2
+        exit 1
+      }
+    }
+
+    assert_empty_kind() {
+      local namespace="$1"
+      local resource="$2"
+      local count
+      count="$("${KUBECTL[@]}" get "$resource" -n "$namespace" -o json | jq -r '.items | length')"
+      [[ "$count" == "0" ]] || {
+        echo "platform-kubectl: unexpected $resource count=$count in $namespace; aborting" >&2
+        exit 1
+      }
+    }
+
     existing_namespaces=()
     for namespace in stock-prod media-prod; do
       if namespace_json="$("${KUBECTL[@]}" get namespace "$namespace" -o json 2>&1)"; then
@@ -246,6 +286,19 @@ case "${1:-}" in
         echo "== Read-only inventory: $namespace =="
         for resource in deployments pods services ingress jobs cronjobs; do
           "${KUBECTL[@]}" get "$resource" -n "$namespace" -o wide || true
+        done
+
+        if [[ "$namespace" == "stock-prod" ]]; then
+          assert_exact_names "$namespace" deployments "stock-admin stock-backend stock-frontend"
+          assert_exact_names "$namespace" services "backend stock-admin stock-backend stock-frontend"
+          assert_exact_names "$namespace" ingress "stock stock-ingress"
+        else
+          assert_exact_names "$namespace" deployments "media-generation media-generation-frontend"
+          assert_exact_names "$namespace" services "media-generation media-generation-frontend"
+          assert_exact_names "$namespace" ingress "media"
+        fi
+        for resource in statefulsets daemonsets jobs cronjobs; do
+          assert_empty_kind "$namespace" "$resource"
         done
 
         pvc_json="$("${KUBECTL[@]}" get pvc -n "$namespace" -o json)"
