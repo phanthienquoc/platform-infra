@@ -1004,10 +1004,10 @@ for required_deployment in (
 for retired_path in ("apps/stockdividend", "apps/media-generation"):
     if (ROOT / retired_path).exists():
         fail(f"Retired production manifest tree must be absent: {retired_path}")
-production_root = read("environments/prod/kustomization.yaml")
-certificates = read("platform/cert-manager/certificates.yaml")
-auth_service_config = read("platform/auth-service/configmap.yaml")
-network_boundaries = read("validate-network-boundaries.sh")
+production_root = (ROOT / "environments" / "prod" / "kustomization.yaml").read_text(encoding="utf-8")
+certificates = (ROOT / "platform" / "cert-manager" / "certificates.yaml").read_text(encoding="utf-8")
+auth_service_config = (ROOT / "platform" / "auth-service" / "configmap.yaml").read_text(encoding="utf-8")
+network_boundaries = (ROOT / "scripts" / "validate-network-boundaries.sh").read_text(encoding="utf-8")
 if "Expected exactly 2 production Ingress resources" not in network_boundaries:
     fail("Network-boundary validation must expect only the remaining TCE and MicroFE Ingress resources.")
 for retired_host in ("mrcute.space", "www.mrcute.space", "admin.mrcute.space", "api.mrcute.space", "media.mrcute.space"):
@@ -1019,7 +1019,7 @@ for retired_reference in ("stock-prod", "media-prod", "stockdividend", "media-ge
 
 # Namespace deletion is a separate manual-only, storage-gated operation.
 decommission_workflow = read("decommission-stock-media.yml")
-decommission_script = read("decommission-stock-media-namespaces.sh")
+decommission_script = (ROOT / "scripts" / "decommission-stock-media-namespaces.sh").read_text(encoding="utf-8")
 decommission_wrapper = bootstrap_script
 for required in (
     "workflow_dispatch",
@@ -1037,7 +1037,7 @@ if "push:" in decommission_workflow or "schedule:" in decommission_workflow or "
 for required in (
     "inventory-namespace",
     "get all -n",
-    "get pvc -n"
+    "get pvc -n",
     "get pv -o json",
     "get storageclasses -o wide",
     "PVC inventory is not empty",
