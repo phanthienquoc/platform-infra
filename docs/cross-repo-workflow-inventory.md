@@ -5111,3 +5111,19 @@ No current-master Stock/Media/Auth GHCR publication with verified digest/provena
 - Latest full K3s snapshot remains inspect-vps #42271888801 / debug/vps-latest.md generated 18:34:19Z (about 86m old); newer partial pod listing from reconcile #42277275721 at 19:10:47Z shows node Ready ARM64, Media/MicroFE Running, Stock Admin/new Backend ImagePullBackOff, legacy Stock Backend/Frontend Running, TCE/Auth 0/0. Full snapshot showed restart_required=yes, pending Docker/containerd updates, disk 56%, about 19 GiB RAM available, and both Media/Platform runner Listener processes active. Refresh before any decommission/maintenance decision.
 - DNS/provider ownership, external DB/object-storage backups and retention remain unverified. Ingress host/TLS inventory is not authoritative DNS proof. No mode=plan run was executed; no destructive action.
 - Ownership unchanged: app repos own tests/builds/immutable GHCR publication; Platform owns manifests/shared pull credentials/provenance verification/GitOps/reconciliation/rollout/health. Stock/Media remain retired from Platform GitOps. reconcile-vps.yml is sole apply authority; inspect-vps.yml is read-only. TCE market-scan schedule unchanged.
+
+
+---
+
+## Cross-repo operational checkpoint — 2026-11-07 05:01 ICT / 2026-11-06 22:01 UTC
+
+- Default heads: Platform `bec6fd045a6f811456d5c591c9548d3e72304dd1`; TCE `f4240ada56da700af00100fb3f01278b9b883951`; Stock `bc20dcfb9893ea246a5e46bef26cce1c92a940c9`; Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; Auth `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`.
+- Platform inspection PR #1360 merged as `bec6fd0`; exact PR head `a1c2464`, validation #42301438886 PASS; native inspect-vps #42301267072 (`event=schedule`) PASS. No separate post-merge validation run observed.
+- Open PRs: Platform #1314/#544/#541/#539; Auth #75 ready and #76 draft, both gated; no TCE/Stock/Media PRs.
+- Latest app CI: TCE build/tests/format #42239871779/#42239871781/#42239871823 PASS on current master; Stock #42241252700 PASS 7/7; Media #42239703151 PASS; Auth #42215394539 PASS. TCE WF-06 is an operational health failure, not a source-build failure.
+- Native schedules remain stale except fresh Platform inspect: Platform reconcile #42261665655 and recovery #42261712724 at 17:26Z; watchdog #42263224767 at 17:36Z. TCE WF-06 #42289627961 at 20:35Z FAIL (four HTTP 503); WF-07 #42279415510 at 19:24Z PASS; WF-12 #42271573506 at 18:32Z FAIL. Workflow-run/manual fallbacks are not native schedule proof.
+- Latest inspection #42301267072 snapshot at 22:00:26Z: K3s node Ready/ARM64; disk 56% (21 GiB free); RAM ~19 GiB available; Docker 29.1.3; containerd 2.3.2-k3s2; `restart_required=yes`; pending Docker/containerd updates. Media/MicroFE Running; Stock Admin/new Backend ImagePullBackOff due missing ARM64 manifest for `12d63b4`; TCE/Auth/Keycloak 0/0; GitOps drift clean.
+- Platform and Media runner services are active/enabled with Listener present; no idle evidence. Only k3s-debug PVC/PV is listed; no Stock/Media VolumeSnapshot. External DB/object-storage backup, retention and authoritative DNS/provider ownership remain unverified.
+- Latest reconcile #42289699488 passed GHCR read preflight; shared `ghcr-pull` unchanged; Auth runtime Secret provisioned and verified with values suppressed; GitOps diff clean; manifest apply skipped; `ALLOW_IMAGE_CHANGES=false`.
+- Stock/Media remain outside Platform GitOps and have no production dispatch. App repos own tests/builds/immutable GHCR publication; Platform owns manifests, shared pull credentials, provenance/digest checks, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` is sole apply authority; `inspect-vps.yml` read-only.
+- Decommission `mode=plan` was not dispatched because this GitHub connector surface is read-only for workflow dispatch. Do not infer DNS or external backup ownership from Ingress/PVC data. No destructive action or maintenance occurred. TCE market-scan schedule unchanged.
