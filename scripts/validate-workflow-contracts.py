@@ -322,6 +322,7 @@ for excluded_path in (
     "scripts/validate-network-boundaries.sh",
     "scripts/validate-auth-gitops-contract.py",
     "scripts/resolve-push-deployment-scope.sh",
+    "scripts/verify-tce-schedule-delivery.py",
 ):
     if f'"!{excluded_path}"' not in recovery_push_paths:
         fail(f"Recovery push must exclude read-only CI/watchdog helper: {excluded_path}")
@@ -1465,8 +1466,8 @@ if tce_schedule_step < 0 or "if: always()" not in watchdog[tce_schedule_step:]:
     fail("The Platform watchdog must observe TCE native schedule delivery even when another diagnostic fails.")
 tce_schedule_block = watchdog[tce_schedule_step:].split("\n      - name:", 1)[0]
 for required in (
-    'tce_runs_url="https://api.github.com/repos/phanthienquoc/TCE-dashboard/actions/workflows/"',
-    '"wf-06-tce-healthcheck.yml/runs?event=schedule&per_page=10"',
+    'TCE_API_BASE="https://api.github.com/repos/phanthienquoc/TCE-dashboard/actions/workflows"',
+    'tce_runs_url="${TCE_API_BASE}/wf-06-tce-healthcheck.yml/runs?event=schedule&per_page=10"',
     '--http-status "$api_status"',
     '--reference-epoch "${reference_epoch:-0}"',
     '--max-age-minutes "$MAX_TCE_WF06_AGE_MINUTES"',

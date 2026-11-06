@@ -20,6 +20,7 @@ run-name: >-
       # VPS inspection is read-only; its own push/schedule workflow owns snapshot refresh.
       - "!scripts/inspect-vps.sh"
       # Read-only CI/watchdog helpers must not trigger a production reconcile.
+      - "!scripts/verify-tce-schedule-delivery.py"
       - "!scripts/verify-reconcile-lane-queue.py"
       - "!scripts/validate-workflow-contracts.py"
       - "!scripts/validate-network-boundaries.sh"
