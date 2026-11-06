@@ -52,6 +52,7 @@ run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target
       - scripts/guard-reconcile-images.sh
       - scripts/validate-ghcr-pull-access.sh
       - scripts/verify-workload-health.sh
+      - scripts/resolve-push-deployment-scope.sh
 
 permissions:
   contents: read
