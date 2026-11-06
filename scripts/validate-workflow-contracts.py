@@ -1127,6 +1127,10 @@ for required in (
 ):
     if required not in decommission_wrapper:
         fail(f"Root-owned namespace decommission guard is missing: {required}")
+inspect_script = (ROOT / "scripts" / "inspect-vps.sh").read_text(encoding="utf-8")
+for required in ("Stock/Media VolumeSnapshot references (names only)", 'inventory-namespace "$namespace"', "volumesnapshot|volumesnapshotcontent"):
+    if required not in inspect_script:
+        fail(f"VPS inspection must expose decommission snapshot references: {required}")
 decommission_test = (ROOT / "scripts" / "tests" / "decommission-stock-media-namespaces.test.sh").read_text(encoding="utf-8")
 for required in ("MOCK_SNAPSHOT", "MOCK_SNAPSHOT_CONTENT", "namespaced VolumeSnapshot", "cluster-scoped VolumeSnapshotContent"):
     if required not in decommission_test:
