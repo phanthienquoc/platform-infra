@@ -322,6 +322,7 @@ for excluded_path in (
     "scripts/validate-network-boundaries.sh",
     "scripts/validate-auth-gitops-contract.py",
     "scripts/resolve-push-deployment-scope.sh",
+    "scripts/verify-tce-schedule-delivery.py",
 ):
     if f'"!{excluded_path}"' not in recovery_push_paths:
         fail(f"Recovery push must exclude read-only CI/watchdog helper: {excluded_path}")
