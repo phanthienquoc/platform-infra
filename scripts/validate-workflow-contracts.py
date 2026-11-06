@@ -1005,7 +1005,7 @@ network_boundaries = read("validate-network-boundaries.sh")
 if "Expected exactly 2 production Ingress resources" not in network_boundaries:
     fail("Network-boundary validation must expect only the remaining TCE and MicroFE Ingress resources.")
 for retired_host in ("mrcute.space", "www.mrcute.space", "admin.mrcute.space", "api.mrcute.space", "media.mrcute.space"):
-    if f"\\n{retired_host}\\n" in network_boundaries:
+    if f"\n{retired_host}\n" in network_boundaries:
         fail(f"Retired Stock/Media hostname remains allowed in production network validation: {retired_host}")
 for retired_reference in ("stock-prod", "media-prod", "stockdividend", "media-generation"):
     if retired_reference in production_root or retired_reference in certificates:
