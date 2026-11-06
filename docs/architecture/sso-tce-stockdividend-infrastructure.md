@@ -1,5 +1,6 @@
 # Historical infrastructure map: SSO, TCE Dashboard, StockDividend
 
+
 > **Historical snapshot — not an active deployment contract.** This document predates the removal of StockDividend and Media Generation from Platform Infra's production GitOps ownership. The active production composition now retains TCE Dashboard, Authentication, MicroFE and Keycloak; the StockDividend sections below are retained only as historical context. See [the decommission runbook](../decommission/stock-media-k3s.md) for the current retirement boundary.
 >
 > Source of truth for active workloads: current GitOps manifests and application README files in the linked repositories. This historical map is not proof that every pod, DNS record, OIDC client or runtime secret is currently healthy. Last reviewed: 2026-11-06 (historical content retained).

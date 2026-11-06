@@ -4,13 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       scope:
-        description: Production smoke scope
+        description: Read-only TCE/Auth production smoke scope
         required: true
         default: tce-dashboard
         type: choice
         options:
           - tce-dashboard
-          - stockdividend
           - all
 
 permissions:

@@ -27,7 +27,8 @@
 - Session revocation closes the connection and requires re-authentication.
 
 ## MicroFE boundary
-- TCE-dashboard, StockDividend, and Media Generation keep domain state and business logic independent.
+- TCE Dashboard keeps domain state and business logic in its application repository.
+- StockDividend and Media Generation are outside this Platform Kubernetes deployment contract.
 - Shared browser surface is limited to platform authentication and realtime contracts.
 - Supabase remains data-plane only; Supabase Realtime is not used.
 

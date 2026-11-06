@@ -104,7 +104,7 @@ fi
 cat > "$tmp/pods.json" <<'JSON'
 {"items":[
   {"status":{"phase":"Running","containerStatuses":[{"name":"app","imageID":"sha256:used","state":{"running":{"startedAt":"2026-11-01T00:00:00Z"}}}]},"spec":{"initContainers":[],"containers":[{"name":"app","image":"ghcr.io/example/app:stable"}],"ephemeralContainers":[]}},
-  {"status":{"phase":"Pending","containerStatuses":[{"name":"admin","imageID":"","state":{"waiting":{"reason":"ImagePullBackOff"}}}]},"spec":{"initContainers":[],"containers":[{"name":"admin","image":"ghcr.io/phanthienquoc/stockdividend/admin:12d63b4"}],"ephemeralContainers":[]}}
+  {"status":{"phase":"Pending","containerStatuses":[{"name":"admin","imageID":"","state":{"waiting":{"reason":"ImagePullBackOff"}}}]},"spec":{"initContainers":[],"containers":[{"name":"admin","image":"ghcr.io/phanthienquoc/tce-dashboard/web:prod-v1.2.3-0123456789abcdef0123456789abcdef01234567"}],"ephemeralContainers":[]}}
 ]}
 JSON
 pull_failed_output="$(
@@ -123,7 +123,7 @@ fi
 
 # A pull-failed Pod with a non-empty imageID remains fail-closed.
 cat > "$tmp/pods.json" <<'JSON'
-{"items":[{"status":{"phase":"Pending","containerStatuses":[{"name":"admin","imageID":"sha256:unknown","state":{"waiting":{"reason":"ImagePullBackOff"}}}]},"spec":{"initContainers":[],"containers":[{"name":"admin","image":"ghcr.io/phanthienquoc/stockdividend/admin:12d63b4"}],"ephemeralContainers":[]}}]}
+{"items":[{"status":{"phase":"Pending","containerStatuses":[{"name":"admin","imageID":"sha256:unknown","state":{"waiting":{"reason":"ImagePullBackOff"}}}]},"spec":{"initContainers":[],"containers":[{"name":"admin","image":"ghcr.io/phanthienquoc/tce-dashboard/web:prod-v1.2.3-0123456789abcdef0123456789abcdef01234567"}],"ephemeralContainers":[]}}]}
 JSON
 set +e
 PATH="$tmp/bin:$PATH" \
