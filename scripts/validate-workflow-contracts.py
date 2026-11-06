@@ -729,13 +729,16 @@ for required in (
     'verify_job_success "Resolve production image tag"',
     'verify_step_success "Resolve production image tag" "Resolve immutable release tag"',
     'verify_job_success "Build frontend (native ARM64)"',
-    'verify_step_success "Build frontend (native ARM64)" "Verify frontend architecture"',
+    'verify_step_success "Build frontend (native ARM64)" "$step"',
     'verify_job_success "Build backend (native ARM64)"',
-    'verify_step_success "Build backend (native ARM64)" "Verify backend architecture"',
+    'verify_step_success "Build backend (native ARM64)" "$step"',
     'verify_job_success "Publish immutable images and promote platform-infra"',
-    'verify_step_success "Publish immutable images and promote platform-infra" "Verify immutable registry digests and ARM64 manifests"',
-    'verify_step_success "Publish immutable images and promote platform-infra" "Notify platform-infra"',
-    'verify_step_success "Publish immutable images and promote platform-infra" "Verify platform-infra release workflow"',
+    'verify_step_success "Publish immutable images and promote platform-infra" "$step"',
+    '"Verify frontend architecture"',
+    '"Verify backend architecture"',
+    '"Verify immutable registry digests and ARM64 manifests"',
+    '"Notify platform-infra"',
+    '"Verify platform-infra release workflow"',
 ):
     if required not in tce_provenance:
         fail(f"TCE source-run verifier must validate required publisher job/step: {required}")
