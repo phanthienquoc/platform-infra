@@ -720,6 +720,46 @@ if "Authorization" in tce_provenance:
     fail("Public TCE source-run verification must not introduce a cross-repository credential.")
 if "scripts/tests/verify-tce-publisher-run.test.sh" not in (ROOT / ".github" / "workflows" / "validate-github-actions.yml").read_text(encoding="utf-8"):
     fail("TCE source-run provenance regression tests must run in validate-github-actions.")
+
+tce_provenance_tests = (ROOT / "scripts" / "tests" / "verify-tce-publisher-run.test.sh").read_text(encoding="utf-8")
+for required in (
+    'jobs_api_url="$API_URL/jobs?per_page=100"',
+    'verify_job_success "Require master for production release"',
+    'verify_job_success "Notify Telegram — release started"',
+    'verify_job_success "Resolve production image tag"',
+    'verify_step_success "Resolve production image tag" "Resolve immutable release tag"',
+    'verify_job_success "Build frontend (native ARM64)"',
+    'verify_step_success "Build frontend (native ARM64)" "$step"',
+    'verify_job_success "Build backend (native ARM64)"',
+    'verify_step_success "Build backend (native ARM64)" "$step"',
+    'verify_job_success "Publish immutable images and promote platform-infra"',
+    'verify_step_success "Publish immutable images and promote platform-infra" "$step"',
+    '"Verify frontend architecture"',
+    '"Verify backend architecture"',
+    '"Verify immutable registry digests and ARM64 manifests"',
+    '"Notify platform-infra"',
+    '"Verify platform-infra release workflow"',
+):
+    if required not in tce_provenance:
+        fail(f"TCE source-run verifier must validate required publisher job/step: {required}")
+for required in (
+    'Build frontend (native ARM64)',
+    'Build backend (native ARM64)',
+    'Publish immutable images and promote platform-infra',
+    'Resolve immutable release tag',
+    'Build frontend image',
+    'Verify frontend architecture',
+    'Build backend image',
+    'Verify backend architecture',
+    'Verify immutable registry digests and ARM64 manifests',
+    'Notify platform-infra',
+    'Verify platform-infra release workflow',
+    'missing backend build job',
+    'duplicate publisher job',
+    'skipped required publisher step',
+):
+    if required not in tce_provenance_tests:
+        fail(f"TCE provenance regression tests must cover publisher job/step evidence: {required}")
 if "promote-tce-image-digests.py --self-test" not in (ROOT / ".github" / "workflows" / "validate-github-actions.yml").read_text(encoding="utf-8"):
     fail("TCE paired digest promotion script self-tests must run in validate-github-actions.")
 
