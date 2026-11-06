@@ -37,7 +37,8 @@ done
 
 echo
 echo "== ReplicaSet retention =="
-for namespace in tce-prod; do
+namespaces=(tce-prod)
+for namespace in "${namespaces[@]}"; do
   run_kubectl get rs -n "$namespace" --sort-by=.metadata.creationTimestamp -o custom-columns='NAME:.metadata.name,READY:.status.readyReplicas,DESIRED:.spec.replicas,AGE:.metadata.creationTimestamp'
 done
 

@@ -32,7 +32,8 @@ run_kubectl get --raw /apis/metrics.k8s.io/v1beta1/namespaces/tce-prod/pods >/de
 
 echo "metrics.k8s.io API: node and workload metrics endpoints reachable"
 
-for namespace in tce-prod; do
+namespaces=(tce-prod)
+for namespace in "${namespaces[@]}"; do
   deployments="$(run_kubectl get deployments -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}')"
   test -n "$deployments" || {
     echo "::error::No deployments found in namespace $namespace." >&2
