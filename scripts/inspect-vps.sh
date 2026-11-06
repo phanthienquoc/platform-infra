@@ -55,6 +55,9 @@ CRI=/usr/local/sbin/platform-crictl
       ] | @tsv
   ' || true
   sudo "$KCTL" get deployments -A || true
+  echo; echo "### Persistent storage inventory"
+  sudo "$KCTL" get pvc -A -o wide || true
+  sudo "$KCTL" get pv -o wide || true
   echo; echo "### Pod failure evidence"
   sudo "$KCTL" get pods -A -o jsonpath='{range .items[*]}{.metadata.namespace}{"\t"}{.metadata.name}{"\t"}{range .status.containerStatuses[*]}{.state.waiting.reason}{"\t"}{.state.waiting.message}{"\n"}{end}{end}' 2>/dev/null | grep -E $'\t(ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError|CreateContainerError|RunContainerError)\t' || true
   echo; echo "### Recent failure events"
