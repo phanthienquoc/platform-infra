@@ -274,8 +274,8 @@ case "${1:-}" in
     # Delete only the two explicitly named namespaces after both preflights pass.
     if [[ "${#existing_namespaces[@]}" -eq 0 ]]; then
       echo "Both StockDividend and Media namespaces are already absent."
-    fi
-    for namespace in "${existing_namespaces[@]}"; do
+    else
+      for namespace in "${existing_namespaces[@]}"; do
       "${KUBECTL[@]}" delete namespace "$namespace" --wait=true --timeout=180s
       if namespace_json="$("${KUBECTL[@]}" get namespace "$namespace" -o json 2>&1)"; then
         echo "platform-kubectl: namespace $namespace still exists after deletion" >&2
@@ -285,7 +285,8 @@ case "${1:-}" in
         echo "platform-kubectl: unable to verify namespace $namespace deletion" >&2
         exit 1
       fi
-    done
+      done
+    fi
 
     for namespace in tce-prod microfe-platform; do
       "${KUBECTL[@]}" get namespace "$namespace" >/dev/null || {
