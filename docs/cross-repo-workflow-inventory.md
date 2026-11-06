@@ -1,3 +1,43 @@
+## Workflow inventory runtime update — 2026-11-06 09:15 ICT / 02:15 UTC
+
+### Current workflow ownership and refs
+
+| Repository | Current default-branch SHA | Ownership boundary | Latest evidence |
+|---|---|---|---|
+| Platform Infra | `e66bdecea35eda2c6740587b87ff69415c4176fa` | Production manifests, shared GHCR pull credentials, provenance/digest validation, GitOps promotion/reconciliation, rollout and health. | PR #1303 merged; PR #1304 adds the missing reconcile push trigger for resolver changes. |
+| TCE Dashboard | `512b69d837e2a65c39867a062529a7fa0eada4cc` | App tests/builds/manual publisher; Platform validates paired digests and owns production rollout. | WF-06 #42133793538 returned HTTP 503 on four strict public probes under the documented zero-replica state; WF-13 #42133822204 passed read-only. |
+| StockDividend | `6fcefa6b3792dab92b6d5c438001633d25f1ca28` | App CI/builds/immutable GHCR publication; no Stock GitOps or publisher receiver remains on Platform. | PR #32 merged; latest master CI #42137523269 passed. No publisher dispatch. |
+| Media Generation | `3a8846a4f273eeb20a55b214d5ad80804c2d8d52` | App CI/builds/paired immutable GHCR publication; no Media GitOps or publisher receiver remains on Platform. | PR #72 merged; latest master CI #42136991059 passed. No production release dispatch. |
+| Authentication | `f978a3f378ee22d4630909c2d182275b21ac9e9a` | App CI/manual immutable publisher; Platform verifies source provenance and promotes the Auth digest. | Master CI #41670642852 passed; PR #75 validation passed, Supabase Preview skipped, #75/#76 gated. |
+
+### Publication and dispatch contracts
+
+- **StockDividend:** `.github/workflows/deploy.yml` retains a manual production publication hold, immutable source-SHA tags, registry digest resolution and ARM64 checks. No Platform `repository_dispatch` remains.
+- **Media Generation:** `.github/workflows/wf-03-media-production-deploy.yml` retains immutable `prod-v<semver>-<full SHA>` tags, paired frontend/backend digest verification and ARM64 checks. No Platform `repository_dispatch` remains.
+- **TCE Dashboard:** `wf-03-tce-production-deploy.yml` is `workflow_dispatch` only for production. It publishes full-source-SHA tags, verifies the web/service digest pair and ARM64 manifests, and validates `tce-release-requested` fields including source run ID, workflow path, event and full source SHA. Platform verifies publisher provenance and tag-to-digest correlation before atomic GitOps promotion.
+- **Authentication:** `release.yml` is `workflow_dispatch` only. It verifies immutable source-SHA/semver tags, registry digest and ARM64, then sends `auth-image-published` with app/component, source commit, tag, digest, source run ID, workflow path, event and full source SHA. Platform verifies the source run and digest before promotion.
+- **Platform:** `gitops-image-promotion.yml` remains the shared image-promotion receiver. `reconcile-vps.yml` remains the sole routine production apply authority. `inspect-vps.yml` remains read-only. No duplicate app-owned SSH/Compose/kubectl deployment authority was added.
+
+### Stock/Media Platform retirement and decommission guard
+
+- PR #1301 removed Stock/Media manifest trees, production composition entries, reconcile/rollout/health/recovery/GHCR contracts and obsolete dedicated helper files. PR #1296 was closed as superseded.
+- PR #1303 fixed the path resolver after master push reconcile #42146800843 failed on the deleted `scripts/bootstrap-media-runner.sh`; the failed run stopped before any cluster mutation. PR #1303's final exact-head `validate-github-actions` #42148684639 and `validate-manifests` #42148684820 passed; merge SHA is `e66bdecea35eda2c6740587b87ff69415c4176fa`.
+- The reconcile push filter did not include the resolver file, so the resolver fix itself did not trigger another production reconcile. PR #1304 adds that path, enforces it in the workflow contract validator, and tests the full PR #1301 changed-path fixture. On merge, the existing production workflow will run with scope `all`, apply mode and image changes disabled, under its protected production Environment.
+- `decommission-stock-media.yml` remains manual-only with no runs. It requires namespace, backup/external-data and dedicated Media-runner confirmations plus fresh storage preflight. No K3s namespace/PV, DNS, GHCR package, external data or runner registration has been deleted.
+
+### Workflow preservation and schedule safety
+
+- Keep app CI/test/security workflows and purposeful manual/release/scheduled workflows. No workflow was removed solely because it was inactive or historical.
+- Preserve strict HTTP 200 health gates. TCE WF-06 HTTP 503 is consistent with operator-requested zero replicas; no replica or health threshold change is authorized here.
+- Preserve every TCE schedule, especially the market-scan schedule. No schedule changed.
+- The last committed K3s snapshot is stale and lacks fresh PVC/PV/StorageClass inventory; no destructive operation is permitted from that snapshot.
+
+### Current next dependency
+
+Poll PR #1304 exact-head checks and squash-merge only after all required checks pass. Then verify the merge-triggered `reconcile-vps` run before any separate manual K3s namespace decommission. Keep Auth #75/#76 gated on the unresolved Supabase production integration effect.
+
+---
+
 ## Workflow inventory runtime update — 2026-11-06 09:10 ICT / 02:10 UTC
 
 ### Five-repository workflow ownership
