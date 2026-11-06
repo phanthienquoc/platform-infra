@@ -1085,6 +1085,18 @@ if "sed 's/\\r$//'" not in ghcr_probe:
 if "contains embedded whitespace or quotes" not in ghcr_probe:
     fail("GHCR preflight must reject embedded whitespace/quotes instead of passing malformed credentials to curl.")
 
+# Read-only inspection must expose PVC/PV reclaim-policy and claim-binding evidence before namespace retirement.
+for required in (
+    'echo; echo "### Persistent storage inventory"',
+    'sudo "$KCTL" get pvc -A -o wide',
+    'sudo "$KCTL" get pv -o wide',
+):
+    if required not in inspection_script:
+        fail(f"VPS inspection is missing persistent storage evidence: {required}")
+bootstrap_allowlist = (ROOT / "scripts" / "bootstrap-runner.sh").read_text(encoding="utf-8")
+if "pv|pvc" not in bootstrap_allowlist:
+    fail("The read-only platform-kubectl allowlist must permit PVC and PV inventory queries.")
+
 # GHCR pulls use one platform-owned credential across production namespaces.
 bootstrap_script = (ROOT / "scripts" / "bootstrap-runner.sh").read_text(encoding="utf-8")
 ghcr_step = reconcile.split("- name: Bootstrap GHCR pull credentials", 1)[1].split(
