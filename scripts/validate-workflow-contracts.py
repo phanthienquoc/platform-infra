@@ -1450,6 +1450,44 @@ if "age_minutes > MAX_RECOVERY_AGE_MINUTES" in recovery_watchdog_block:
     fail("Scheduled recovery freshness must not truncate elapsed time to whole minutes.")
 
 
+# Platform independently observes TCE's native WF-06 schedule delivery.
+# This is advisory only: TCE schedule failure must not trigger a production reconcile loop.
+tce_schedule_verifier = ROOT / "scripts" / "verify-tce-schedule-delivery.py"
+if not tce_schedule_verifier.is_file():
+    fail("The cross-repo TCE native schedule verifier is missing.")
+tce_schedule_verifier_text = tce_schedule_verifier.read_text(encoding="utf-8")
+if "python3 scripts/verify-tce-schedule-delivery.py --self-test" not in github_actions:
+    fail("Workflow validation must execute TCE native schedule delivery regression fixtures.")
+if 'MAX_TCE_WF06_AGE_MINUTES: "25"' not in watchdog:
+    fail("The Platform watchdog must use the same 25-minute native WF-06 freshness budget as TCE WF-12.")
+tce_schedule_step = watchdog.find("name: Observe native TCE WF-06 schedule delivery")
+if tce_schedule_step < 0 or "if: always()" not in watchdog[tce_schedule_step:]:
+    fail("The Platform watchdog must observe TCE native schedule delivery even when another diagnostic fails.")
+tce_schedule_block = watchdog[tce_schedule_step:].split("\\n      - name:", 1)[0]
+for required in (
+    "https://api.github.com/repos/phanthienquoc/TCE-dashboard/actions/workflows/wf-06-tce-healthcheck.yml/runs?event=schedule&per_page=10",
+    '--http-status "$api_status"',
+    '--reference-epoch "${reference_epoch:-0}"',
+    '--max-age-minutes "$MAX_TCE_WF06_AGE_MINUTES"',
+    "--warn-only",
+):
+    if required not in tce_schedule_block:
+        fail(f"Platform TCE schedule observation is missing: {required}")
+for required in (
+    'run.get("event") != "schedule"',
+    'run.get("path") != EXPECTED_PATH',
+    'run.get("head_branch") != EXPECTED_BRANCH',
+    'if attempt != 1:',
+    'FULL_SHA.fullmatch(head_sha)',
+    'age_seconds > max_age_minutes * 60',
+    'latest native WF-06 schedule run is newer than the watchdog API reference clock',
+):
+    if required not in tce_schedule_verifier_text:
+        fail(f"TCE schedule verifier is missing its native-event safety check: {required}")
+if "public endpoint health is a separate signal" not in tce_schedule_verifier_text:
+    fail("TCE schedule delivery must remain separate from public endpoint health.")
+
+
 # Canonical Auth release handoff must prove the exact publisher run and pin the registry digest.
 auth_digest_verifier = ROOT / "scripts" / "verify-auth-publisher-run.sh"
 if not auth_digest_verifier.is_file():
