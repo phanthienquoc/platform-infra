@@ -1023,6 +1023,10 @@ if "environment: production" not in decommission_workflow or "platform-kubectl d
     fail("Stock/Media namespace decommission must use the production Environment and exact runner action.")
 if "EXTERNAL DATA STORES AND DNS WILL BE LEFT IN PLACE" not in decommission_workflow:
     fail("Decommission workflow must explicitly preserve external data stores and DNS.")
+if "I UNDERSTAND THE OPERATION ABORTS ON ANY PVC OR PV CLAIM" not in decommission_workflow:
+    fail("Decommission workflow must require the explicit PVC/PV abort acknowledgement.")
+if "MEDIA RUNNER WILL REMAIN ACTIVE FOR SEPARATE CLEANUP" not in decommission_workflow:
+    fail("Decommission workflow must leave the dedicated Media runner for separate cleanup.")
 
 runner_bootstrap = read("bootstrap-runner.yml")
 if '      - "scripts/bootstrap-runner.sh"' not in runner_bootstrap:
