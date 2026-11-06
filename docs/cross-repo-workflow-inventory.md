@@ -4883,3 +4883,49 @@ No publisher, GHCR push, Platform dispatch, production manifest change, workload
 - External database/object-storage backup, retention and DNS ownership remain unverified; no Stock/Media decommission. No current-master publisher/digest/provenance is established for Stock/Media/Auth; TCE remains manual-only.
 
 App repos own CI/tests/builds/immutable GHCR publication. Platform owns production manifests, shared pull credentials, provenance/digest validation, GitOps promotion/reconciliation, rollout and health. reconcile-vps.yml remains the sole production apply authority; inspect-vps.yml remains read-only. TCE market-scan schedule unchanged.
+
+
+---
+
+## Cross-repo workflow/readiness audit — 2026-11-06 23:01 ICT / 16:01 UTC
+
+### Current default branches and PRs
+
+| Repository | Head SHA | Open PRs |
+|---|---|---|
+| Platform Infra | `1dbe10b330cd4f5ba2a271323e13cbf49cc47bcd` | #1314/#544/#541/#539 drafts |
+| TCE Dashboard | `f4240ada56da700af00100fb3f01278b9b883951` | None |
+| StockDividend | `bc20dcfb9893ea246a5e46bef26cce1c92a940c9` | None |
+| Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None |
+| Authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` | #75 ready, #76 draft; both target stale base `2189c97252bfe7ee53f50a68cf51008fa0d27c91` |
+
+### Latest current-master CI
+
+- Platform: manifest validation #42241598526 PASS.
+- TCE: WF-01 #42239871779, WF-05 #42239871781, WF-02 #42239871823 PASS.
+- Stock: CI #42241252700 PASS on current master.
+- Media: CI #42239703151 PASS on current master.
+- Auth: CI #42215394539 PASS on current master.
+
+### Native schedules — event=schedule only
+
+- Platform: reconcile #42199267592 PASS (10:00:15Z); recovery #42199274660 PASS (10:00:18Z); watchdog #42201400071 PASS (10:16:28Z); inspect #42193617816 PASS (09:15:08Z). No newer native schedule event appeared in the returned 100-run history. Newer reconcile/inspect/recovery runs are push or workflow_dispatch and are not native schedule evidence.
+- TCE: WF-06 #42235639842 FAIL (14:37:53Z; four public HTTP 503 results); WF-12 #42211610532 FAIL (11:37:17Z; last WF-06 native event was 294m old at that time); WF-07 #42176751608 PASS (06:48:12Z). No later native schedule event appeared in the returned 100-run history. WF-12/WF-13 workflow_run follow-ups and heartbeat dispatches are not native schedule proof.
+- Cron source verified: TCE WF-06 `*/15 * * * *`; TCE WF-12 and Platform reconcile `7,22,37,52 * * * *`; Platform inspect `2,32 * * * *`. No schedule edits.
+
+### Workflow ownership / security contracts retained
+
+- TCE WF-03 and WF-08B: app-owned builds/publish; GHCR write scoped only to publisher jobs; WF-03 handoff remains provenance-bound. WF-06 is public HTTP 200 only; WF-12 observes native schedule freshness and heartbeat; no SSH/Kubernetes apply.
+- Stock deploy.yml: app-owned immutable publication; packages: write only on build-and-push; no Platform direct deployment authority. Tag `12d63b4` is blocked by missing linux/arm64 manifest.
+- Media WF-03: packages: write only on publish-immutable-images; no direct production deployment. Dedicated runner retirement still requires fresh idle confirmation.
+- Auth release.yml: master-only fail-closed gate; packages: write only on publish; immutable full-SHA/provenance/ARM64 publication and dedicated auth-image-published handoff.
+- Platform reconcile-vps.yml: sole production apply authority. Platform inspect-vps.yml: read-only. Platform owns manifests, shared pull credentials, digest/provenance verification, GitOps promotion/reconciliation, rollout and health. No duplicate SSH/Compose authority.
+
+### Runtime/operational blockers
+
+- TCE/Auth/Keycloak last observed at 0/0; public TCE web and Auth readiness returned HTTP 503 in WF-06 logs. Zero-replica state is maintenance, not live health; keep strict HTTP 200.
+- Last full K3s snapshot #42231216533 (14:08:18Z) is stale at this checkpoint. Partial Pod listing #42235712359 (14:38:47Z) is not a substitute for fresh host/runner/storage inspection.
+- Media and Platform runners were active/enabled with Listener in the old snapshot. External database/object storage backup, retention and DNS ownership are not verified.
+- No current-master Stock/Media/Auth immutable publication/digest/provenance verified. No image promotion authorized.
+
+No workflow deletion, cron change, publisher, GHCR push, dispatch, production manifest/image/replica change, runner retirement, storage/DNS/data deletion or host reboot performed. TCE market-scan schedule unchanged.
