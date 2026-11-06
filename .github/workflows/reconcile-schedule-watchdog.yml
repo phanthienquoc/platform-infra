@@ -24,8 +24,11 @@ permissions:
   actions: read
   contents: read
 
+# GitHub retains only one pending run per concurrency group. Keep native schedule
+# enforcement separate from workflow_run/push/manual diagnostics so a newer
+# read-only event cannot replace a pending scheduled watchdog run.
 concurrency:
-  group: reconcile-schedule-freshness-watchdog
+  group: reconcile-schedule-freshness-watchdog-${{ github.event_name }}
   cancel-in-progress: false
 
 jobs:
