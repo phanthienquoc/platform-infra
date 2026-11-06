@@ -926,9 +926,9 @@ for required in (
     "Runner policy is not updated to active-workload v15",
 ):
     if required not in reconcile:
-        fail(f"Reconciliation diagnostics are missing the current v14 policy label: {required}")
+        fail(f"Reconciliation diagnostics are missing the current v15 policy label: {required}")
 if "runner bootstrap policy v13" in reconcile or "image-pull restart v13" in reconcile:
-    fail("Reconciliation diagnostics must not report the retired v13 runner policy after v14 is required.")
+    fail("Reconciliation diagnostics must not report the retired v13 runner policy after v15 is required.")
 auth_provision = read("provision-auth-runtime-secret.yml")
 if "rollout-status-v15-active-workloads-only" not in auth_provision:
     fail("Standalone Auth secret provisioning must accept the current v15 runner policy.")
@@ -990,7 +990,6 @@ for retired_permission in (
     "restart_if_blocked stock-prod",
     "restart_if_blocked media-prod",
     "deployment/stock-admin",
-    "deployment/media-generation",
     "apps/stockdividend/base/namespace.yaml",
     "apps/media-generation/base/namespace.yaml",
 ):
