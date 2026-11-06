@@ -39,7 +39,7 @@ case "${1:-}" in
   get)
     shift
     case "${1:-}" in
-      all|nodes|namespaces|ns|pods|po|deployments|deployment|deploy|statefulsets|services|svc|ingress|ingresses|jobs|cronjobs|pv|pvc|storageclasses)
+      all|nodes|namespace|namespaces|ns|pods|po|deployments|deployment|deploy|statefulsets|services|svc|ingress|ingresses|jobs|cronjobs|pv|pvc|storageclasses)
         exec "${KUBECTL[@]}" get "$@"
         ;;
     esac
@@ -92,6 +92,44 @@ case "${1:-}" in
           -p '{"spec":{"template":{"spec":{"imagePullSecrets":[{"name":"ghcr-pull"}]}}}}'
       done <<< "$deployment_names"
     done
+    exit 0
+    ;;
+  decommission-stock-media)
+    [[ "$#" -eq 1 ]] || {
+      echo "platform-kubectl: decommission-stock-media takes no arguments; confirmations must be provided on stdin" >&2
+      exit 2
+    }
+    IFS= read -r confirmation || true
+    IFS= read -r data_review || true
+    [[ "$confirmation" == "DELETE-STOCK-PROD-AND-MEDIA-PROD" && "$data_review" == "BACKUP-AND-EXTERNAL-DATA-REVIEWED" ]] || {
+      echo "platform-kubectl: decommission confirmation failed; no namespace was changed" >&2
+      exit 2
+    }
+    for namespace in stock-prod media-prod; do
+      "\${KUBECTL[@]}" get namespace "$namespace" >/dev/null
+      pvc_json="$("\${KUBECTL[@]}" get pvc -n "$namespace" -o json)"
+      pvc_count="$(jq -r '.items | length' <<< "$pvc_json")"
+      [[ "$pvc_count" == "0" ]] || {
+        echo "platform-kubectl: PVCs remain in $namespace; aborting namespace deletion" >&2
+        exit 1
+      }
+      pv_claims="$("\${KUBECTL[@]}" get pv -o json | jq -r --arg namespace "$namespace" '.items[]? | select(.spec.claimRef.namespace == $namespace) | .metadata.name')"
+      [[ -z "$pv_claims" ]] || {
+        echo "platform-kubectl: PV claims remain for $namespace; aborting namespace deletion" >&2
+        printf '%s\n' "$pv_claims" >&2
+        exit 1
+      }
+    done
+    "\${KUBECTL[@]}" delete namespace stock-prod media-prod --wait=true --timeout=300s
+    for namespace in stock-prod media-prod; do
+      if "\${KUBECTL[@]}" get namespace "$namespace" >/dev/null 2>&1; then
+        echo "platform-kubectl: namespace $namespace still exists after deletion" >&2
+        exit 1
+      fi
+    done
+    "\${KUBECTL[@]}" get namespace tce-prod >/dev/null
+    "\${KUBECTL[@]}" get namespace microfe-platform >/dev/null
+    echo "StockDividend and Media namespaces are absent; TCE and MicroFE namespaces remain."
     exit 0
     ;;
   provision-auth-secret)
