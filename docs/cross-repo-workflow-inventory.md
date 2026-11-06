@@ -4428,3 +4428,47 @@ Reviewed the current default-branch workflow files and Platform receivers; this 
 2. Obtain a fresh same-window read-only inspection and independent backup/external-data/DNS ownership review. Only then consider the protected manual namespace-decommission workflow.
 3. Investigate the missing native Platform scheduled ticks and TCE WF-06 schedule delivery without relaxing freshness thresholds or changing the TCE market-scan schedule.
 4. Keep Stock promotion blocked until a new ARM64-capable immutable publication, verified digest/provenance and explicit release authorization exist; keep Auth PRs gated until Supabase side effects are evidenced.
+
+
+## Runtime inventory update — 2026-11-06 13:58 ICT / 06:58 UTC
+
+### Current branch and PR inventory
+
+| Repository | Default branch SHA | Open PRs | Latest relevant workflow evidence |
+|---|---|---|---|
+| Platform Infra | `f29465020b25e1b2f5318733b5918e2d3e8a582b` | #1314 draft; #544/#541/#539 drafts | Reconcile #42176253693 SUCCESS; inspect #42176445915 SUCCESS and committed as PR #1324. |
+| TCE Dashboard | `512b69d837e2a65c39867a062529a7fa0eada4cc` | None | WF-06 native schedule #42176208184 delivered but HTTP probes failed; WF-12 #42176769424 freshness and heartbeat PASS; WF-13 #42176787185 skipped. |
+| StockDividend | `3aeaf519b7a786d13dcecee763acaca357c47ddd` | None | CI #42167088130 PASS; publisher #41563856933 is the last observed successful publication (Nov 3). |
+| Media Generation | `3a8846a4f273eeb20a55b214d5ad80804c2d8d52` | None | CI #42136991059 PASS (historical); no newer publisher. |
+| Authentication | `3a8031196f21c4240b617bbd0a623fce2dc56c5e` | #75 ready; #76 draft | CI #42167100692 PASS; Supabase Preview SKIPPED; no release run. |
+
+### Workflow ownership and publication contract
+
+- **Platform Infra:** sole production apply authority is `.github/workflows/reconcile-vps.yml`. Read-only inspection is `.github/workflows/inspect-vps.yml`. Production reconcile #42176253693 completed SUCCESS on pre-inspection SHA `8d33b984cee5fa5dd8fbd2172a4ddc899d16bb6f`; its shared reconcile, pull access, Auth runtime Secret, MicroFE/Auth/TCE lanes and final gate passed; Keycloak was skipped. No new image promotion was evidenced.
+- **TCE Dashboard:** WF-06 keeps cron `*/15 * * * *` and requires HTTP 200 for TCE web/API and Auth liveness/readiness. Native schedule #42176208184 was delivered at 06:43:04Z but all four probes failed HTTP 503. WF-12 #42176769424 verified latest WF-06 schedule freshness successfully after WF-07 #42176751608 and sent the Platform heartbeat successfully. WF-13 #42176787185 was skipped because schedule freshness was no longer stale. Treat schedule delivery and endpoint health as separate signals. Do not change market-scan schedules.
+- **StockDividend:** app-owned `deploy.yml` publishes ARM64 scraper/admin/backend images on qualifying master source pushes, tags each with the full source SHA and verifies GHCR digest plus ARM64 manifest. Manual publication requires `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=true`; no Platform dispatch is sent. Master CI ARM64 builds use `push: false` and are not publication evidence.
+- **Media Generation:** app-owned WF-03 validates stable version plus full source SHA, builds native ARM64 images, transfers checksum-verified artifacts, publishes to GHCR, then verifies registry digest and ARM64. It sends no Platform dispatch. No current release run was observed.
+- **Authentication:** app-owned release.yml is manual-only. It validates release metadata, builds ARM64 with Buildx provenance/SBOM, verifies SHA/version tags map to one digest, and dispatches `auth_digest`, source run ID, workflow path, event and full source SHA to Platform. No publisher run was observed; CI's ARM64 job is non-publishing.
+- Preserve all useful app CI, test, security, manual and release workflows. No duplicate direct SSH/Compose production authority was identified in the inspected release paths.
+
+### Latest K3s state — read-only snapshot #42176445915
+
+Generated 2026-11-06T06:45:26Z; current master snapshot commit `f29465020b25e1b2f5318733b5918e2d3e8a582b`.
+
+- Node Ready, ARM64, K3s v1.36.3+k3s1; disk 56%, ~19 GiB available RAM, restart_required=yes. No reboot/upgrade authorization.
+- Media backend/frontend 1/1 Running with digest-pinned images. Media runner service active/enabled and Listener process present; retirement remains blocked.
+- Stock namespace Active; Admin (two Pods) and new Backend ImagePullBackOff due missing ARM64 manifest on `12d63b4`; legacy Backend/Frontend 1/1.
+- TCE frontend/service and Auth/Keycloak desired 0/0.
+- Only PVC/PV listed is `k3s-debug/k3s-debug-logs`; no Stock/Media PVC/PV or VolumeSnapshot references. External backup/data/DNS ownership is not proven.
+
+### Exact open gates
+
+1. No TCE/Auth replica activation without service-owner authorization; keep HTTP 200 probes strict.
+2. No Stock manual publisher dispatch without explicit release authorization; no promotion of the invalid `12d63b4` images.
+3. No Media runner retirement until operator verifies idle, stopped, disabled and unregistered state.
+4. No Stock/Media namespace deletion until fresh same-window preflight and independent backup/external-data/DNS review pass.
+5. Auth #75 remains open because the connected Supabase GitHub integration is configured Deploy-to-production ON for master and merge-trigger side effects are unresolved; #76 remains draft.
+
+### Schedule classification
+
+The successful WF-12 run #42176769424 was triggered by a WF-07 `workflow_run`, not a native WF-12 schedule tick. Its internal WF-06 freshness check passed against the latest native WF-06 run #42176208184. WF-13 and Platform watchdog/recovery `workflow_run` events that were skipped are not native scheduled runs. Do not use workflow_dispatch, repository_dispatch or workflow_run as substitutes for native scheduled-run evidence.
