@@ -1,4 +1,20 @@
-Last reviewed: 2026-11-06 10:10 ICT (2026-11-06 03:10 UTC)
+Last reviewed: 2026-11-06 10:18 ICT (2026-11-06 03:18 UTC)
+
+## Current review — 2026-11-06 10:18 ICT (2026-11-06 03:18 UTC)
+
+Incremental update to the 10:10 checkpoint below. Platform master is now `a75980906ddec00c84dc64112fa87835906a6569` after PR #1310; the four app-repository heads and their open-PR state are unchanged.
+
+- Platform PR [#1310](https://github.com/phanthienquoc/platform-infra/pull/1310) adds a fail-closed guard to the manual Stock/Media namespace workflow. Before storage preflight or deletion it checks that the exact dedicated Media systemd service is inactive and that no `/opt/media-actions-runner/bin/Runner.Listener` process remains. GitHub runner unregistration remains a required operator attestation; the guard does not claim to verify the GitHub registration.
+- Exact PR head `b32b75e4923d9f59ec8a8cc823828e7f5c2c6ba2` passed `validate-github-actions` [#42155669711](https://github.com/phanthienquoc/platform-infra/actions/runs/42155669711) and `validate-manifests` [#42155669700](https://github.com/phanthienquoc/platform-infra/actions/runs/42155669700); PR #1310 was squash-merged as `a75980906ddec00c84dc64112fa87835906a6569`.
+- The latest read-only inspection snapshot #1308 (2026-11-06T03:09:17Z) still shows the Media runner service active. Therefore, the new guard would currently stop the manual decommission workflow before namespace deletion. It does not stop or unregister the runner.
+- The same snapshot shows only the `k3s-debug` PVC/PV claim and no target-namespace PVC/PV claims. The workflow will still repeat its same-window storage preflight; backup/external-data review and runner retirement remain mandatory.
+- Stock/Media namespaces, Services, Ingresses and workloads remain in K3s. Media backend/frontend are 1/1; Stock Admin and the newer Backend remain ImagePullBackOff because their ARM64 image manifests are unavailable; older Stock Backend and legacy Frontend remain 1/1. No workload or namespace was deleted.
+- TCE and Auth still use legacy production tags in GitOps. No new publisher release or digest promotion was initiated. TCE schedule and all cron declarations remain unchanged.
+
+Next action: the service owner must review backups/external-data ownership, stop the dedicated Media runner when idle, unregister it from the Media repository, and then use the protected manual workflow with its exact typed confirmations. Do not remove the shared Platform runner or delete PV/external data/DNS/GHCR packages.
+
+---
+
 
 ## Current review — 2026-11-06 10:10 ICT (2026-11-06 03:10 UTC)
 
