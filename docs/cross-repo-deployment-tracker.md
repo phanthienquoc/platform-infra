@@ -1,3 +1,49 @@
+Last reviewed: 2026-11-06 08:38 ICT (2026-11-06 01:38 UTC)
+
+## Current review — 2026-11-06 08:38 ICT (2026-11-06 01:38 UTC)
+
+This review re-read all five default-branch refs, open PRs, latest Actions run pages and exact-head checks, then inspected the active Platform decommission branch and its validation contracts. It distinguishes app publisher CI from an authorized production image release and branch-only GitOps changes from the current master runtime.
+
+### Repository refs and open PRs
+
+| Repository | Default-branch SHA | Open PRs | Current disposition |
+|---|---|---|---|
+| Platform Infra | `b1a0c185e3f97630aa2bf55945bb5f674200bf97` | #1301 ready; #1296/#544/#541/#539 draft | #1301 proposes the complete Stock/Media GitOps retirement at head `dce6ae5341ce925177156f5fd9b537c453589323`; exact-head validation is queued. Master remains unchanged. |
+| TCE Dashboard | `512b69d837e2a65c39867a062529a7fa0eada4cc` | None | Native WF-06 #42133793538 returned HTTP 503 on four strict public probes while TCE/Auth/Keycloak remain operator-scaled to zero; WF-13 fallback #42133822204 passed and remained read-only. |
+| StockDividend | `6fcefa6b3792dab92b6d5c438001633d25f1ca28` | None | PR #32 merged; post-merge CI #42137523269 PASS. No new production publisher run or Platform dispatch after merge; release hold remains closed. |
+| Media Generation | `3a8846a4f273eeb20a55b214d5ad80804c2d8d52` | None | PR #72 merged; post-merge CI #42136991059 PASS. The app publisher no longer dispatches Platform; no production release was triggered. |
+| Authentication | `f978a3f378ee22d4630909c2d182275b21ac9e9a` | #75 ready; #76 draft | Latest PR validation runs #40446492086/#41329425940 are historical; Supabase Preview remains SKIPPED and the production integration side-effect gate is unresolved. |
+
+### App-owned publisher boundary
+
+- Stock PR [#32](https://github.com/phanthienquoc/stockdividend/pull/32) merged after exact-head review. Post-merge StockDividend CI #42137523269 passed. The app repo retains its own CI, ARM64 immutable image build and manual publication hold; no new publisher run or production tag/digest promotion was initiated.
+- Media PR [#72](https://github.com/phanthienquoc/media-generation/pull/72) merged. Post-merge Media CI #42136991059 passed. The app repo retains paired immutable full-source-SHA GHCR publication/digest verification and no longer sends a Platform dispatch. No production release workflow was manually dispatched.
+- App repos continue to own tests/builds/immutable GHCR publication. Platform owns only remaining production manifests, shared pull credentials, digest/provenance checks, GitOps promotion/reconciliation, rollout and health.
+
+### Platform implementation PR #1301
+
+- PR [#1301](https://github.com/phanthienquoc/platform-infra/pull/1301) is open at exact head `dce6ae5341ce925177156f5fd9b537c453589323`, 10 commits ahead of master and 0 behind.
+- The branch removes all 19 files under `apps/stockdividend` and `apps/media-generation`, excludes both from production composition, removes their reconcile/health/recovery/GHCR and dispatch contracts, and deletes six obsolete app-specific runner/publisher helper files. It preserves app repositories, GHCR packages, TCE, Auth, MicroFE, Keycloak, cert-manager and the shared Platform runner.
+- It adds a manual-only namespace workflow guarded by the protected production Environment and three typed confirmations. The live preflight enumerates all namespaced API object names without printing Secret/ConfigMap values, lists common workload status, checks PVC/PV claims and StorageClasses, and the root-owned wrapper can delete only `stock-prod` and `media-prod`.
+- The first PR check set is queued: Validate Keycloak manifests/boundaries #42145176538, validate-manifests #42145176539, and validate-github-actions #42145176540. Do not merge until all required checks pass against the final exact head.
+- Two earlier branch push runs (#42141922040 and #42142089191) belong to older commits, not the current PR head. They are not evidence of current-head validation.
+- The plan-only PR #1296 is superseded by implementation PR #1301 and should be closed once the implementation PR is accepted.
+
+### Runtime and schedule safety
+
+- The latest committed read-only VPS snapshot is #42131886966, generated at 2026-11-05T23:46:15Z. It is stale for a destructive operation and does not include PVC/PV/StorageClass inventory. The dedicated Media runner was present in that snapshot; its current state is unverified.
+- No K3s namespace, PV, DNS record, GHCR package, external database/object storage, host, or runner registration was changed. Namespace deletion remains a separate manual action after fresh same-window inspection, backup/external-data review, and independently verified Media-runner stop/unregister.
+- TCE WF-06 HTTP 503 is consistent with the operator-requested zero-replica state. Keep strict HTTP 200 gates and all schedules, especially the TCE market-scan schedule, unchanged.
+- `reconcile-vps.yml` remains the sole routine production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose deployment authority was added.
+
+### Next actions
+
+1. Poll #1301 exact-head checks; fix any failing contract and revalidate the updated head.
+2. Squash-merge only after all required checks pass against the current PR head; close superseded draft PR #1296.
+3. After merge, independently stop/unregister the dedicated Media runner, then use the manual namespace workflow only with a fresh live inventory and approved backup/external-data review.
+4. Capture a fresh post-decommission inspection and verify TCE/Auth/MicroFE/Keycloak remain unchanged.
+5. Keep Stock production publication/promotion closed without explicit release authorization; keep Auth #75/#76 gated on the unresolved Supabase integration effect.
+
 ## Current review — 2026-11-06 07:29 ICT (2026-11-06 00:29 UTC)
 
 This review supersedes the 04:56 tracker entry and the 06:04 workflow-inventory checkpoint. It records the current five-repository state, the Media publisher-only merge, the Stock CI repair in progress, and the decommission safety boundary.
@@ -339,9 +385,9 @@ The latest 100 Platform Actions runs through #42099407335 (03:01:17 ICT) contain
 - TCE market-scan schedule unchanged.
 
 
-Last reviewed: 2026-11-06 03:42 ICT (2026-11-05 20:42 UTC)
-Platform Infra master at checkpoint: 04fab34ea9e1a8d2803881b4587e8f15b89e4cd6
-Latest checkpoint: docs/cross-repo-workflow-inventory-checkpoints/2026-11-06-0342-ict.md
+Last reviewed: 2026-11-06 08:38 ICT (2026-11-06 01:38 UTC)
+Platform Infra master at checkpoint: b1a0c185e3f97630aa2bf55945bb5f674200bf97
+Latest checkpoint: docs/cross-repo-workflow-inventory-checkpoints/2026-11-06-0838-ict.md
 
 ## Current review — 2026-11-06 01:58 ICT (2026-11-05 18:58 UTC)
 
@@ -486,13 +532,15 @@ The latest 100 Platform Actions runs contain no newer `event=schedule` inspect-v
 
 | Repository | Master SHA | Open PRs | Latest verified CI / publication |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `37caf7ea6ec1` | #544/#541/#539 draft | PR #1284 merged; exact-head #42074105857 and post-merge #42074228245 PASS. Native watchdog #42070623710 failed inspection freshness; native reconcile #42068683835 failed only Stock health; native recovery #42068414686 PASS. |
-| phanthienquoc/TCE-dashboard | `c5415f8ac0aa` | None | PR #1024 merged; post-merge WF-01 #42053388961, WF-02 #42053388868, WF-05 #42053388841 PASS. Latest native WF-06 #42019530614 fails four HTTP 503 probes; WF-12 #42013061466 fails freshness; no qualifying post-merge WF-13 E2E dispatch. |
-| phanthienquoc/stockdividend | `50ba0dfb67eb` | None | CI #41563856934 and immutable ARM64 publisher #41563856933 PASS (Nov 3). Production tag `12d63b4` still has no matching ARM64 manifest; paired promotion remains disabled pending authorization/provenance. |
-| phanthienquoc/media-generation | `e4c7d8990aaf` | None | CI #41617592783 PASS (Nov 3); read-only snapshot #42063840567 at 23:23 ICT showed backend/frontend 1/1. |
-| phanthienquoc/phanthienquoc-authentication | `f978a3f378ee` | #75 ready; #76 draft | CI #41670642852 PASS. Supabase ACTIVE_HEALTHY / FUNCTIONS_DEPLOYED; local/remote migration ledger matches 84/84. Deploy-to-production integration side-effect gate remains unresolved; PR checks are historical. |
+| phanthienquoc/platform-infra | `b1a0c185e3f9` | #1301 ready; #1296/#544/#541/#539 draft | PR #1301 exact head `dce6ae5341ce` has checks #42145176538/#42145176539/#42145176540 queued; no decommission merge or K3s mutation yet. |
+| phanthienquoc/TCE-dashboard | `512b69d837e2` | None | Native WF-06 #42133793538 failed four strict HTTP 200 probes with 503 under the operator zero-replica state; WF-13 fallback #42133822204 PASS/read-only. TCE market-scan schedule unchanged. |
+| phanthienquoc/stockdividend | `6fcefa6b3792` | None | PR #32 merged; post-merge CI #42137523269 PASS. No new publisher run or production release after merge; manual hold remains closed. |
+| phanthienquoc/media-generation | `3a8846a4f273` | None | PR #72 merged; post-merge CI #42136991059 PASS. No Platform dispatch or production release after merge. |
+| phanthienquoc/phanthienquoc-authentication | `f978a3f378ee` | #75 ready; #76 draft | Auth CI #41670642852 PASS (historical); PR checks #40446492086/#41329425940 are historical and Supabase Preview is SKIPPED. Production integration side-effect gate unresolved. |
 
 ## Current runtime blockers
+
+- **Stock/Media retirement:** Platform PR #1301 is branch-only; master still owns the prior runtime until the PR is merged and the manual decommission is separately authorized. The latest committed snapshot #42131886966 is stale and omits PVC/PV/StorageClass data. No namespace or runner deletion has occurred.
 
 - **Platform schedule delivery:** Native inspect-vps #42049660972 succeeded at 21:55:03 ICT and remains the latest native inspection; no newer `event=schedule` inspect run appears in the latest 100 Actions runs through 00:18 ICT. Native reconcile #42068683835 at 23:51:03 ICT failed only Stock health. Native recovery #42068414686 at 23:49:29 ICT passed. Watchdog #42070623710 at 00:02:22 ICT failed only inspection freshness: reconcile age 11m and recovery age 12m passed, while native inspection age was 127m. Recovery workflow_run #42070696343 passed but skipped a duplicate inspection because fallback snapshot #42063840567 was 38m old then. The fallback snapshot is about 55m old at 00:18 ICT (within the 75m fallback budget) but is not native schedule evidence.
 
@@ -535,13 +583,14 @@ The latest 100 Platform Actions runs contain no newer `event=schedule` inspect-v
 
 ## Current actions
 
-1. Observe the next native inspect-vps schedule tick; keep workflow_dispatch snapshot #42063840567 separate from native schedule evidence. Do not create duplicate inspections while the fallback remains within its 75m budget.
-2. Re-check the next watchdog after a native inspect event; the latest watchdog correctly fails only inspection freshness while reconcile/recovery freshness pass.
-3. Keep Stock Admin/Backend paired promotion disabled until explicit release authorization and protected publisher-run Actions:read provenance are confirmed.
-4. Observe a qualifying native TCE WF-06/WF-12 failure after PR #1024 and verify WF-13 dispatches exactly one master WF-06 fallback with source-run/SHA correlation; do not change any TCE cron or market-scan schedule.
-5. Keep Authentication #75/#76 open; exact 84/84 migration source/ledger match is verified, but the Supabase Deploy-to-production binding/effect remains unresolved and both branches are 11 commits behind master.
-6. Wait for an approved VPS maintenance window before Docker/containerd/Ubuntu package upgrades or reboot.
-7. Continue independent app CI/publication checks without using historical PASS runs as current evidence.
+1. Poll Platform PR #1301 exact-head checks #42145176538, #42145176539 and #42145176540; fix failures and revalidate the updated head before any merge.
+2. Squash-merge #1301 only when all required checks pass on the current head; close the superseded plan-only PR #1296 after the implementation PR is accepted.
+3. Before namespace deletion, obtain a fresh same-window inventory of all namespaced resources, PVCs, PVs and StorageClasses; verify backups/external data and independently stop/unregister the dedicated Media runner.
+4. After the guarded manual decommission, capture a fresh read-only inspection and verify TCE/Auth/MicroFE/Keycloak remain unchanged.
+5. Keep Stock production publication and paired promotion disabled until explicit release authorization and protected publisher provenance are available.
+6. Keep Authentication #75/#76 gated on authoritative Supabase production integration side-effect evidence; do not merge or run migrations.
+7. Observe TCE WF-06/WF-13 recovery while preserving strict HTTP 200 checks and every TCE schedule, especially the market-scan schedule.
+8. Wait for an approved VPS maintenance window before Docker/containerd/Ubuntu package upgrades or reboot.
 
 ## Ownership and safety invariants
 
