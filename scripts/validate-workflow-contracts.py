@@ -516,8 +516,8 @@ if "gh auth setup-git" in inspection_rebase_block:
 # Manual production promotion must originate from master; non-master dispatches fail visibly.
 if "if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/master'" not in promotion:
     fail("Manual GitOps promotion must fail closed when dispatched from a non-master ref.")
-if "github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/master'" not in promotion:
-    fail("The application promotion job must only run manual promotions from master.")
+if "if: (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master') || (github.event_name == 'repository_dispatch' && github.event.action == 'auth-image-published')" not in promotion:
+    fail("The Auth application promotion job must allow only manual master promotion or the provenance-bound Auth dispatch.")
 
 # Promotion PRs use the repository-scoped GITHUB_TOKEN. Because GITHUB_TOKEN-created
 # PRs do not trigger pull_request workflows, explicitly dispatch manifest validation on
@@ -586,6 +586,17 @@ if promotion.index("Verify Auth publisher run provenance") > promotion.index("Va
 for required in ("auth_digest:", "source_commit:", "INPUT_AUTH_DIGEST: ${{ inputs.auth_digest }}", "INPUT_SOURCE_COMMIT: ${{ inputs.source_commit }}"):
     if required not in promotion:
         fail(f"Manual Auth promotion must require immutable digest/source inputs: {required}")
+
+# The legacy generic image-published event allowed tag-only Auth handoffs.
+# Current in-scope producers use the provenance-bound auth-image-published contract.
+if "- image-published" in promotion:
+    fail("Generic image-published dispatch is retired; Auth must use auth-image-published with source-run provenance.")
+if "if: (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master') || (github.event_name == 'repository_dispatch' && github.event.action == 'auth-image-published')" not in promotion:
+    fail("Auth promotion job must accept only manual master runs or the provenance-bound auth-image-published event.")
+if 'if [[ "$GITHUB_EVENT_NAME" == "repository_dispatch" && "$EVENT_ACTION" != "auth-image-published" ]]; then' not in promotion:
+    fail("Auth promotion input resolver must reject every unsupported repository_dispatch event.")
+if "only auth-image-published with publisher provenance" not in promotion:
+    fail("Auth promotion must fail closed for legacy or unknown dispatch actions.")
 
 # MicroFE digest promotions must use the shared GitOps promotion workflow.
 if "microfe-images-published" not in promotion:
