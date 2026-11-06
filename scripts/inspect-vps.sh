@@ -58,6 +58,22 @@ CRI=/usr/local/sbin/platform-crictl
   echo; echo "### Persistent storage inventory"
   sudo "$KCTL" get pvc -A -o wide || true
   sudo "$KCTL" get pv -o wide || true
+  echo; echo "### Stock/Media VolumeSnapshot references (names only)"
+  namespace_list="$(sudo "$KCTL" get namespaces)"
+  for namespace in stock-prod media-prod; do
+    if grep -Eq "^${namespace}[[:space:]]" <<< "$namespace_list"; then
+      namespace_inventory="$(sudo "$KCTL" inventory-namespace "$namespace")"
+      snapshot_refs="$(grep -E '^(volumesnapshot|volumesnapshotcontent)\.snapshot\.storage\.k8s\.io/' <<< "$namespace_inventory" || true)"
+      if [[ -n "$snapshot_refs" ]]; then
+        printf '%s\n' "$namespace:"
+        printf '%s\n' "$snapshot_refs"
+      else
+        echo "$namespace: none"
+      fi
+    else
+      echo "$namespace: namespace absent"
+    fi
+  done
   echo; echo "### Pod failure evidence"
   sudo "$KCTL" get pods -A -o jsonpath='{range .items[*]}{.metadata.namespace}{"\t"}{.metadata.name}{"\t"}{range .status.containerStatuses[*]}{.state.waiting.reason}{"\t"}{.state.waiting.message}{"\n"}{end}{end}' 2>/dev/null | grep -E $'\t(ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError|CreateContainerError|RunContainerError)\t' || true
   echo; echo "### Recent failure events"
