@@ -40,10 +40,10 @@ resolve_scope() {
       platform/keycloak/*|apps/keycloak/*)
         keycloak_changed=1
         ;;
-      environments/prod/*|platform/cert-manager/*|platform/k3s-debug-logs/*|scripts/reconcile-vps.sh|scripts/guard-reconcile-images.sh|scripts/validate-ghcr-pull-access.sh|scripts/verify-workload-health.sh)
+      environments/prod/*|platform/cert-manager/*|platform/k3s-debug-logs/*|scripts/reconcile-vps.sh|scripts/guard-reconcile-images.sh|scripts/validate-ghcr-pull-access.sh|scripts/verify-workload-health.sh|scripts/resolve-push-deployment-scope.sh)
         cluster_wide=1
         ;;
-      .github/workflows/*|scripts/bootstrap-runner.sh|scripts/bootstrap-media-runner.sh|scripts/decommission-stock-media-namespaces.sh|scripts/resolve-push-deployment-scope.sh|scripts/validate-*.py|scripts/validate-*.sh|scripts/verify-reconcile-lane-queue.py|scripts/verify-media-publisher-run.sh|scripts/verify-stockdividend-publisher-run.sh|scripts/verify-stockdividend-gitops-digests.py|scripts/tests/*|docs/*|debug/vps-latest.md)
+      .github/workflows/*|scripts/bootstrap-runner.sh|scripts/bootstrap-media-runner.sh|scripts/decommission-stock-media-namespaces.sh|scripts/validate-*.py|scripts/validate-*.sh|scripts/verify-reconcile-lane-queue.py|scripts/verify-media-publisher-run.sh|scripts/verify-stockdividend-publisher-run.sh|scripts/verify-stockdividend-gitops-digests.py|scripts/tests/*|docs/*|debug/vps-latest.md)
         # CI, documentation, inspection snapshots and manual-only/retired helpers
         # do not introduce a production workload scope of their own. Keep the
         # shared GHCR access validator above cluster-wide because it gates apply.
@@ -126,6 +126,7 @@ self_test() {
   assert_scope all apps/stockdividend/base/kustomization.yaml environments/prod/kustomization.yaml
   assert_scope all apps/media-generation/base/kustomization.yaml environments/prod/kustomization.yaml
   assert_scope all scripts/verify-workload-health.sh
+  assert_scope all scripts/resolve-push-deployment-scope.sh
   assert_scope all scripts/verify-workload-health.sh scripts/bootstrap-runner.sh scripts/validate-recovery-readiness.sh
   assert_failure scripts/bootstrap-runner.sh scripts/validate-recovery-readiness.sh
   # Manual-only and retired helper changes must never trigger an automatic
