@@ -1,6 +1,6 @@
 # StockDividend and Media Generation decommission plan
 
-Status: Stock/Media GitOps ownership retirement and the guarded manual decommission workflow are merged (Platform PRs #1301, #1303, #1304 and #1305; Stock PR #32; Media PR #72). The K3s namespaces/workloads and dedicated Media runner cleanup have **not** been executed.
+Status: Stock/Media GitOps ownership retirement and the guarded manual decommission workflow are merged (Platform PRs #1301, #1303, #1304, #1305 and #1310; Stock PR #32; Media PR #72). The K3s namespaces/workloads and dedicated Media runner cleanup have **not** been executed.
 
 ## Objective
 
@@ -25,13 +25,14 @@ It showed:
 
 Because the snapshot is stale, do not use it as authorization to delete current resources. Obtain a new read-only K3s inspection immediately before the decommission operation.
 
-## Current runtime evidence — 2026-11-06 10:10 ICT / 03:10 UTC
+## Current runtime evidence — 2026-11-06 10:18 ICT / 03:18 UTC
 
 - GitOps ownership is retired on Platform master. Stock PR #32 and Media PR #72 removed app-to-Platform production handoffs. Routine Platform reconcile no longer manages or health-gates these namespaces.
 - Platform inspection-only PR #1308 committed a fresh read-only snapshot generated at 2026-11-06T03:09:17Z. It confirms both `stock-prod` and `media-prod` namespaces remain Active, with their Services and Ingresses still present.
 - Media backend and frontend are each 1/1 Running. Stock Admin has two 0/1 ImagePullBackOff Pods; the newer Backend is 0/1 ImagePullBackOff; the older Backend and legacy Frontend remain 1/1. The newer Stock images fail with `no match for platform in manifest`; this is not evidence of a GHCR pull-secret failure.
 - Fresh storage inventory shows only the `k3s-debug/k3s-debug-logs` PVC/PV claim; neither target namespace has a PVC or PV claim. The protected manual workflow must repeat its same-window preflight immediately before deletion.
 - The dedicated Media Actions runner remains active: `actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service`. Platform runner policy v15 is installed, but that does not retire the Media runner.
+- Platform PR #1310 adds a hard pre-delete host guard: the dedicated Media systemd service must be inactive and no Media `Runner.Listener` process may remain. Because the latest snapshot shows the service active, the manual workflow now fails closed before storage preflight/deletion until the runner is stopped. GitHub unregistration remains a typed operator attestation.
 - Namespace deletion and runner unregister have not been executed. Backup/external-data ownership is not independently confirmed. Do not delete PVs, external data, DNS, GHCR packages, app repositories or the shared Platform runner.
 
 ## Execution sequence
