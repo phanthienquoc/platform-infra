@@ -14,9 +14,19 @@ on:
       component:
         description: Image component
         required: true
-        type: string
+        type: choice
+        options:
+          - auth
       tag:
         description: Immutable image tag
+        required: true
+        type: string
+      source_commit:
+        description: Full 40-character source commit SHA bound to the image
+        required: true
+        type: string
+      auth_digest:
+        description: Immutable Auth image digest (sha256:<64 hex>)
         required: true
         type: string
   repository_dispatch:
@@ -485,17 +495,18 @@ jobs:
           INPUT_APP: ${{ inputs.app }}
           INPUT_COMPONENT: ${{ inputs.component }}
           INPUT_TAG: ${{ inputs.tag }}
+          INPUT_SOURCE_COMMIT: ${{ inputs.source_commit }}
+          INPUT_AUTH_DIGEST: ${{ inputs.auth_digest }}
         run: |
           set -euo pipefail
 
-          AUTH_DIGEST=""
-          SOURCE_COMMIT=""
+          AUTH_DIGEST="${EVENT_AUTH_DIGEST:-$INPUT_AUTH_DIGEST}"
+          SOURCE_COMMIT="${EVENT_COMMIT:-$INPUT_SOURCE_COMMIT}"
           SOURCE_RUN_ID=""
           SOURCE_WORKFLOW_PATH=""
           SOURCE_EVENT=""
           SOURCE_HEAD_SHA=""
           if [[ "$EVENT_ACTION" == "auth-image-published" ]]; then
-          elif [[ "$EVENT_ACTION" == "auth-image-published" ]]; then
             APP="$EVENT_APP"
             COMPONENT="$EVENT_COMPONENT"
             TAG="$EVENT_TAG"
@@ -535,8 +546,12 @@ jobs:
                   exit 1
                 }
               else
-                [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,40}$ ]] || {
-                  echo "::error::Auth manual tag must be prod-v<semver>-<git-sha>"
+                [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ && "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{40}$ && "$TAG" == *-"$SOURCE_COMMIT" ]] || {
+                  echo "::error::Manual Auth tag must end with the supplied full source commit SHA."
+                  exit 1
+                }
+                [[ "$AUTH_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || {
+                  echo "::error::Manual Auth promotion requires an immutable sha256 digest."
                   exit 1
                 }
               fi
@@ -551,9 +566,6 @@ jobs:
             echo "app=$APP"
             echo "component=$COMPONENT"
             echo "tag=$TAG"
-            echo "backend_digest=$BACKEND_DIGEST"
-            echo "admin_digest=$ADMIN_DIGEST"
-            echo "frontend_digest=$FRONTEND_DIGEST"
             echo "auth_digest=$AUTH_DIGEST"
             echo "source_commit=$SOURCE_COMMIT"
             echo "source_run_id=$SOURCE_RUN_ID"
@@ -648,9 +660,6 @@ jobs:
             - component: ${{ steps.input.outputs.component }}
             - release tag: ${{ steps.input.outputs.tag }}
             - source commit: ${{ steps.input.outputs.source_commit }}
-            - backend digest: ${{ steps.input.outputs.backend_digest }}
-            - admin digest: ${{ steps.input.outputs.admin_digest }}
-            - frontend digest: ${{ steps.input.outputs.frontend_digest }}
             - Auth digest: ${{ steps.input.outputs.auth_digest }}
 
       - name: Validate exact promotion PR head
@@ -678,7 +687,18 @@ jobs:
       - name: Determine release readiness
         if: steps.input.outputs.app == 'auth-service'
         id: readiness
-        run: echo "ready=true" >> "$GITHUB_OUTPUT"
+        env:
+          AUTH_DIGEST: ${{ steps.input.outputs.auth_digest }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin master
+          remote_manifest="$(git show origin/master:platform/auth-service/kustomization.yaml)"
+          remote_digest="$(awk '/name: ghcr.io\/phanthienquoc\/auth-service\/auth/{found=1;next} found && /digest:/{print $2;exit}' <<< "$remote_manifest")"
+          test "$remote_digest" = "$AUTH_DIGEST" || {
+            echo "::error::Auth digest on master does not match the exact verified promotion digest."
+            exit 1
+          }
+          echo "ready=true" >> "$GITHUB_OUTPUT"
 
       - name: Trigger VPS reconciliation
         if: steps.input.outputs.app == 'auth-service' && steps.readiness.outputs.ready == 'true'
