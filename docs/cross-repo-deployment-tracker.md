@@ -2115,3 +2115,14 @@ That snapshot recorded:
 6. Require same-window storage preflight plus independent backup/external-data/DNS ownership review before the protected Stock/Media namespace-decommission workflow.
 
 **Ownership and safety:** app repositories own tests/builds and immutable GHCR publication; Platform Infra owns production manifests, shared GHCR pull credentials, digest/provenance validation, GitOps promotion/reconciliation, rollout and health verification. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No production workload, replica, image, credential, namespace, PVC/PV, external data, DNS, runner or host was changed in this checkpoint. TCE market-scan schedule unchanged.
+
+
+## Runtime checkpoint — 2026-11-06 16:03 ICT / 09:03 UTC
+
+A fresh repository/PR audit and source-contract review was completed. Default-branch heads: Platform Infra `f62f8a8c457cce12a9286efa246f6279129c8bab`; TCE Dashboard `512b69d837e2a65c39867a062529a7fa0eada4cc`; StockDividend `3aeaf519b7a786d13dcecee763acaca357c47ddd`; Media Generation `3a8846a4f273eeb20a55b214d5ad80804c2d8d52`; Authentication `3a8031196f21c4240b617bbd0a623fce2dc56c5e`.
+
+Open PRs remain Platform #1314/#544/#541/#539 (all drafts) and Authentication #75 (ready)/#76 (draft); TCE, Stock and Media have none. PR-head runs were retrieved: Platform #1314/#544/#541/#539 and Auth #75/#76 each show their listed validation/CI run as SUCCESS, but all are historical and the PR bases are stale relative to current master. Do not merge based on those old checks.
+
+The latest repo-wide Actions evidence available remains the 15:03 ICT / 08:03 UTC checkpoint above. This run re-queried heads/open PRs and exact PR-head runs; default-head combined status and commit-run queries returned no records through the connected reader. Its commit-run view is PR-triggered only, so no newer repo-wide run IDs or schedule events can be asserted. This is a retrieval limitation, not evidence that scheduled workflows did not execute. The last known TCE evidence remains WF-06 native #42176208184 failed four strict HTTP 200 probes with 503, WF-07 #42176751608 passed, and WF-12 #42176769424 was a workflow_run freshness/heartbeat success rather than native schedule. Last known Platform manual reconcile #42176253693 passed with image changes disabled; last known inspection #42176445915 is now stale.
+
+Source review confirms TCE WF-06 `*/15`, WF-12 `7,22,37,52`, Platform reconcile watchdog `12,27,42,57`; WF-13 is read-only workflow_run fallback only. No cron or market-scan schedule changed. The last K3s snapshot is generated 06:45:26Z and is about 2h18m old; do not use it for destructive authorization. Stock ARM64 image mismatch, inactive TCE/Auth replicas, and active/enabled Media runner remain the last observed gates. See [the 16:03 checkpoint](cross-repo-workflow-inventory-checkpoints/2026-11-06-1603-ict.md) for full evidence and next actions.

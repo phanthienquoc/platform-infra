@@ -4521,3 +4521,15 @@ The relevant YAML schedule declarations remain present: Platform reconcile `7,22
 - Media runner guard must remain fail-closed until the dedicated runner is idle, stopped, disabled, unregistered and Listener-free. Never retire the shared Platform runner.
 
 Preserve useful app CI/tests/builds, immutable publishers, security checks, purposeful manual/release/scheduled jobs, and Platform reconciliation/recovery/inspection. No duplicate SSH/Compose production apply authority was introduced. No cron, image, manifest, Secret, replica, namespace, storage, DNS, runner or host change occurred. TCE market-scan schedule unchanged.
+
+
+## Runtime workflow inventory — 2026-11-06 16:03 ICT / 09:03 UTC
+
+- Default branch heads were re-read: Platform Infra `f62f8a8c457cce12a9286efa246f6279129c8bab`; TCE Dashboard `512b69d837e2a65c39867a062529a7fa0eada4cc`; StockDividend `3aeaf519b7a786d13dcecee763acaca357c47ddd`; Media Generation `3a8846a4f273eeb20a55b214d5ad80804c2d8d52`; Authentication `3a8031196f21c4240b617bbd0a623fce2dc56c5e`.
+- Open PRs: Platform #1314/#544/#541/#539 (draft); Auth #75 (ready)/#76 (draft); no TCE/Stock/Media PRs. Exact PR-head run retrieval returned successful historical validation/CI runs for these six PRs; all bases are stale and none is approved for merge by this checkpoint.
+- The connected GitHub run reader returned no default-branch workflow-run/status records. Its commit-run query is limited to PR-triggered runs; therefore the latest repo-wide schedule/reconcile evidence remains the 15:03 ICT checkpoint and must be treated as stale, not current. Do not infer that no scheduled runs occurred.
+- TCE workflow source re-check: WF-06 remains `*/15 * * * *` with strict HTTP 200 probes; WF-12 remains `7,22,37,52 * * * *` and only forwards verified native schedule heartbeats; WF-13 is workflow_run-only read-only fallback and cannot satisfy schedule freshness. Platform reconcile watchdog remains `12,27,42,57 * * * *`. No cron or TCE market-scan schedule change.
+- Last known Platform reconcile #42176253693 was manual and successful with image changes disabled; last known inspection #42176445915 generated 06:45:26Z and is ~2h18m old. Last known TCE WF-06 #42176208184 failed four 503 probes; WF-07 #42176751608 passed; WF-12 #42176769424 was workflow_run, not native schedule. No newer event conclusion is claimed.
+- Last snapshot still recorded Stock Admin/new Backend ARM64 pull failure on `12d63b4`, Media 1/1, TCE/Auth/Keycloak 0/0, and dedicated Media runner active/enabled with Listener. External backup/data/DNS ownership remains unverified. No fresh publisher/digest/provenance or release authorization was retrieved.
+- Ownership remains app-owned CI/build/immutable GHCR publication and Platform-owned production manifests, shared pull credentials, digest/provenance validation, GitOps reconcile, rollout and health. `reconcile-vps.yml` sole apply authority; `inspect-vps.yml` read-only. No production mutation; TCE market-scan unchanged.
+- Full evidence and next actions: [checkpoint 2026-11-06 16:03 ICT](cross-repo-workflow-inventory-checkpoints/2026-11-06-1603-ict.md).
