@@ -1,3 +1,44 @@
+## Current review — 2026-11-06 07:29 ICT (2026-11-06 00:29 UTC)
+
+This review supersedes the 04:56 tracker entry and the 06:04 workflow-inventory checkpoint. It records the current five-repository state, the Media publisher-only merge, the Stock CI repair in progress, and the decommission safety boundary.
+
+### Repository refs and open PRs
+
+| Repository | Default-branch SHA | Open PRs | Current disposition |
+|---|---|---|---|
+| Platform Infra | `3346be7997d017bd45eb0782331a7dafb9bb571c` | #1296 (draft), #544/#541/#539 (draft) | #1296 is a plan-only decommission runbook; exact-head `validate-manifests` #42131770950 PASS. No production or K3s resources changed. |
+| TCE Dashboard | `512b69d837e2a65c39867a062529a7fa0eada4cc` | None | WF-06 public checks fail on intentional HTTP 503 while TCE/Auth are operator-scaled to zero; WF-13 read-only fallback succeeded. |
+| StockDividend | `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec` | #32 | Retired Platform dispatch removal is in review at exact head `c015961ec45ce7b698ea8fde9e2d7e9b5fe3c4f0`; latest CI #42137106072 is queued/in progress. Do not merge yet. |
+| Media Generation | `3a8846a4f273eeb20a55b214d5ad80804c2d8d52` | None | PR #72 merged by squash; app publisher now builds, publishes and verifies immutable paired GHCR digests without dispatching Platform. Post-merge CI #42136991059 PASS. |
+| Authentication | `f978a3f378ee22d4630909c2d182275b21ac9e9a` | #75 (ready), #76 (draft) | Keep both gated: production Supabase integration side effect is still not authoritatively verified; Preview remains skipped. |
+
+### App publisher contract changes
+
+- Media PR [#72](https://github.com/phanthienquoc/media-generation/pull/72) merged at exact head `9e66bd6bdef065f5ca427cfd5e69b30b59c3cbab`; squash merge `3a8846a4f273eeb20a55b214d5ad80804c2d8d52`. Exact-head PR/push CI #42135150058/#42135140342 both passed; post-merge push CI #42136991059 passed. The workflow retains immutable full-source-SHA tags, registry digest resolution and ARM64 verification, and no longer sends a Platform repository_dispatch.
+- Stock PR [#32](https://github.com/phanthienquoc/stockdividend/pull/32) removes the Platform token check and atomic promotion dispatch while retaining app CI, the manual publication hold, native ARM64 image builds and immutable registry verification. The first contract run failed on stale assertions; the follow-up branch changes restored the validator self-path in `deploy.yml` path exclusions, renamed the CI step, corrected the exact manual-hold assertion and escaped literal GitHub expression markers in the shell test. Latest exact-head run #42137106072 is not complete; merge remains blocked until all exact-head checks pass.
+- Do not enable `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED`, promote either half of the Stock Admin/Backend pair, or change production image references without explicit release authorization and protected publisher provenance.
+
+### Platform schedule and K3s evidence
+
+- Latest native Platform inspect schedule: #42112599830 PASS at 2026-11-05 21:26:04Z. Latest read-only manual inspection: #42131886966 PASS, generated snapshot at 2026-11-05 23:46:15Z; this is not native schedule evidence.
+- Latest native reconcile schedule #42121826106 failed only at the Stock health gate; native recovery #42121354158 passed; native schedule watchdog #42123445690 passed. Do not count workflow_dispatch/workflow_run fallbacks as cron ticks.
+- Snapshot-time node: ARM64, 19 GiB available RAM, disk 56%, K3s service active. Media backend/frontend were 1/1 Running. Stock Admin had two ImagePullBackOff Pods, Stock Backend had one old 1/1 Pod plus one ImagePullBackOff Pod, and legacy Stock Frontend remained 1/1. Both namespaces, Services and Ingresses remained present.
+- The snapshot shows the dedicated Media Actions runner service active. It does not contain PVC/PV or StorageClass inventory, so it is insufficient for namespace deletion or storage-retention decisions. No namespace deletion, runner unregister/stop, DNS change, PV deletion, or external storage/database mutation was performed.
+- The snapshot is about 43 minutes old at this review and is not a live guarantee.
+
+### TCE health and schedule guard
+
+- TCE WF-06 #42133793538 (native schedule) failed all four strict public probes: Auth liveness/readiness and TCE API/web returned HTTP 503 instead of 200.
+- This matches the documented operator-requested zero-replica state for TCE/Auth/Keycloak. WF-13 fallback #42133822204 completed successfully and remains read-only; no replica, ingress, health threshold or cron was changed.
+- Preserve every TCE schedule, especially the market-scan schedule. Do not restore TCE/Auth/Keycloak replicas or weaken HTTP 200 gates without explicit operator authorization.
+
+### Deployment authority and next safe work
+
+- Ownership remains: app repositories own tests/builds and immutable GHCR publication; Platform Infra owns production manifests, shared GHCR pull credentials, publisher provenance/digest validation, GitOps promotion/reconciliation, rollout and health verification.
+- `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only. No app workflow is allowed to add a competing SSH/Compose/kubectl production path.
+- Next: complete and merge Stock PR #32 only after exact-head CI passes; then remove Stock/Media receiver, manifest, health and recovery contracts from Platform in a dedicated PR. Before deleting `stock-prod` or `media-prod`, extend/read a fresh inspection that inventories PVCs/PVs/storage classes, verify backups and DNS ownership, and confirm the dedicated Media runner is idle. Keep deletion a separate manually approved operation.
+- No production image, manifest, credential, database, replica, host, namespace, DNS, PV, or cron mutation was made. TCE market-scan schedule unchanged.
+
 ## Current review — 2026-11-06 04:56 ICT (2026-11-05 21:56 UTC)
 
 This review supersedes the 03:56 ICT entry. It re-reads all five default-branch refs, open PRs, latest Actions run pages, the latest native Platform inspection, the resulting K3s snapshot, the latest reconciliation lane results and the current TCE native-event history. It distinguishes native schedule runs from workflow_dispatch/workflow_run recovery.
