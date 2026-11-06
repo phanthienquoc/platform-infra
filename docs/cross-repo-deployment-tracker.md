@@ -2908,3 +2908,18 @@ No current-master Stock/Media/Auth GHCR publication with verified digest/provena
 Next actions: investigate native schedule delivery without cron edits; keep TCE/Auth/Keycloak maintenance and strict HTTP 200; require authorized Stock ARM64 publication before promotion; reconcile Auth PRs and verify Supabase side effects; retire only the dedicated Media runner after operator idle confirmation; verify external backups/DNS before decommission; schedule host updates/reboot separately.
 
 TCE market-scan schedule unchanged. The verified production secret operation was Auth runtime Secret provision/verification; shared GHCR pull Secret remained unchanged. No image, manifest, namespace, PVC/PV, external data, DNS, runner or host was deleted or reconfigured.
+
+
+---
+
+## Post-merge deployment contract update — 2026-11-07 00:13 ICT / 2026-11-06 17:13 UTC
+
+Platform PR #1349 merged as `4267436fdc16232ccfa832e0dc83544e96516eac`; post-merge validation #42259072387 passed. Platform PR #1351 merged as `d083613ecf5a064d0c60d019ff2c173d87e68791`; exact-head and post-merge `validate-github-actions` #42259386872/#42259545328 and `validate-manifests` #42259387019/#42259545139 all passed. Duplicate PR #1350 was closed after the same change was rebased into #1351.
+
+The guarded manual Stock/Media decommission workflow now defaults to read-only `mode=plan`, which reports runner state and runs namespace/storage inventory without deletion attestations or the production Environment. `mode=delete` remains separate and requires the production Environment, three exact operator attestations, verified Media runner retirement, a fresh same-run storage preflight and deletion limited to the two retired namespaces. The workflow remains manual-only. CI validated the contract, but plan mode was not dispatched against K3s in this checkpoint.
+
+Stock/Media GitOps ownership is intentionally retired; do not restore their production manifests or app-to-Platform dispatches. Their app repositories remain source/CI/build/immutable publisher repositories. The namespaces still exist in K3s and must remain until the manual decommission gates are satisfied. The latest snapshot #42256652947 still shows the dedicated Media runner active and Stock tag `12d63b4` lacking linux/arm64 manifest.
+
+Native Platform reconcile/recovery schedules and TCE WF-06/WF-12 remain stale; successful workflow_run/workflow_dispatch fallback is not native schedule proof. TCE WF-06 remains strict HTTP 200 and returns HTTP 503. No cron changed; TCE market-scan schedule unchanged.
+
+Next: exercise plan mode read-only; resolve operator backup/external-data/DNS and runner-idle gates before deletion; investigate native schedule delivery without cron edits; require authorized Stock ARM64 digest/provenance before promotion; keep Auth PRs gated pending Supabase side-effect review.
