@@ -1070,8 +1070,8 @@ for required in (
     "environment: production",
     "DELETE-STOCK-PROD-AND-MEDIA-PROD",
     "BACKUP-AND-EXTERNAL-DATA-REVIEWED",
-    "MEDIA-RUNNER-STOPPED-AND-UNREGISTERED",
-    "Verify dedicated Media runner is stopped",
+    "MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED",
+    "Verify dedicated Media runner is retired",
     "run: bash scripts/verify-media-runner-retired.sh",
     "Run fresh read-only storage preflight",
     "Delete only the two approved namespaces",
@@ -1080,7 +1080,7 @@ for required in (
         fail(f"Guarded namespace decommission workflow is missing: {required}")
 if "push:" in decommission_workflow or "schedule:" in decommission_workflow or "repository_dispatch:" in decommission_workflow:
     fail("Namespace decommission must remain manual-only.")
-runner_guard_step = decommission_workflow.find("name: Verify dedicated Media runner is stopped")
+runner_guard_step = decommission_workflow.find("name: Verify dedicated Media runner is retired")
 storage_preflight_step = decommission_workflow.find("name: Run fresh read-only storage preflight")
 namespace_delete_step = decommission_workflow.find("name: Delete only the two approved namespaces")
 if not (0 <= runner_guard_step < storage_preflight_step < namespace_delete_step):
@@ -1089,6 +1089,8 @@ runner_guard_script = (ROOT / "scripts" / "verify-media-runner-retired.sh").read
 for required in (
     "actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service",
     "systemctl is-active",
+    "systemctl is-enabled",
+    "disabled|masked|masked-runtime|not-found",
     "Runner.Listener",
     "pgrep -f",
     "GitHub registration remains operator-attested",
