@@ -2490,3 +2490,73 @@ Latest app CI: Stock #42167088130 PASS 7/7; Media #42136991059 PASS; Auth #42215
 Latest K3s snapshot #42208147735 was a manual inspect at 11:09:51Z and is ~1h45 old. It recorded Media 1/1, Stock Admin/new Backend ImagePullBackOff on missing ARM64 manifest for tag `12d63b4`, TCE/Auth/Keycloak 0/0, clean GitOps, no Stock/Media PVC/PV or snapshots (only unrelated debug PVC), Media runner active/enabled with Listener, and restart_required=yes. External backup/data/DNS ownership remains unverified; no fresh inspect dispatch was available. Do not decommission from this snapshot.
 
 App-owned CI/build/publish and Platform-only GitOps ownership remain unchanged. `reconcile-vps.yml` is the sole apply authority; `inspect-vps.yml` is read-only. No production mutation; TCE market-scan schedule unchanged. Full evidence: [checkpoint 2026-11-06 19:55 ICT](cross-repo-workflow-inventory-checkpoints/2026-11-06-1955-ict.md).
+
+
+# Cross-repo deployment readiness — 2026-11-06 21:04 ICT / 14:04 UTC
+
+## Current default-branch heads and open PRs
+
+| Repository | Default-branch SHA | Open PRs | Latest default-branch CI evidence |
+|---|---|---|---|
+| Platform Infra | `40c9adeeefbe3c80beb3c9c97ff1bb78e85badf6` | #1314/#544/#541/#539 (draft); #1341 active implementation | Master validation [#42221880894](https://github.com/phanthienquoc/platform-infra/actions/runs/42221880894) PASS. PR #1341 exact head `67ac9bcb0e79cf1f32b57eeda08fe3a239802e88`: [validate-manifests #42230499865](https://github.com/phanthienquoc/platform-infra/actions/runs/42230499865) PASS; [validate-github-actions #42230499749](https://github.com/phanthienquoc/platform-infra/actions/runs/42230499749) PASS. |
+| TCE Dashboard | `512b69d837e2a65c39867a062529a7fa0eada4cc` | None | Latest WF-06 fallback [#42211645157](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42211645157) FAIL; latest native WF-12 [#42211610532](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42211610532) FAIL. |
+| StockDividend | `3aeaf519b7a786d13dcecee763acaca357c47ddd` | None | Master CI [#42167088130](https://github.com/phanthienquoc/stockdividend/actions/runs/42167088130) PASS (7/7, including non-publishing ARM64 builds). |
+| Media Generation | `3a8846a4f273eeb20a55b214d5ad80804c2d8d52` | None | Master CI [#42136991059](https://github.com/phanthienquoc/media-generation/actions/runs/42136991059) PASS; no newer run in the inspected history. |
+| Authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` | #75 ready; #76 draft | Current master CI [#42215394539](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/42215394539) PASS. |
+
+Authentication PRs are stale/diverged and were not merged: #75 is 28 commits ahead / 13 behind master; #76 is 3 ahead / 13 behind. Their historical checks are not current-head evidence.
+
+## Concrete deployment-contract improvement
+
+[PR #1341](https://github.com/phanthienquoc/platform-infra/pull/1341) updates `scripts/verify-workload-health.sh` and its regression suite. A deliberate zero-replica maintenance scope previously ended with the generic `Targeted workload health gate passed.` message, which could be mistaken for live service health. The helper now emits an explicit GitHub notice that the scope is in zero-replica maintenance and that no live workload health is asserted. Mixed active/maintenance scopes are reported separately. Existing fail-closed checks for replica convergence and remaining active pods are unchanged.
+
+The first PR attempt exposed a test-fixture newline-escaping error (run #42230410219 on the earlier head); the fixture was corrected in commit `67ac9bcb0e79cf1f32b57eeda08fe3a239802e88`. Both required checks passed on that exact final head. PR #1341 remains open pending final head/check re-read and squash merge.
+
+## Native schedule evidence (event=schedule only)
+
+| Repository / workflow | Latest native run in the inspected 100-run history | Result |
+|---|---|---|
+| Platform reconcile | [#42199267592](https://github.com/phanthienquoc/platform-infra/actions/runs/42199267592), 10:00:15Z | PASS |
+| Platform recovery | [#42199274660](https://github.com/phanthienquoc/platform-infra/actions/runs/42199274660), 10:00:18Z | PASS |
+| Platform watchdog | [#42201400071](https://github.com/phanthienquoc/platform-infra/actions/runs/42201400071), 10:16:28Z | PASS |
+| Platform inspection | [#42193617816](https://github.com/phanthienquoc/platform-infra/actions/runs/42193617816), 09:15:08Z | PASS |
+| TCE WF-06 | [#42176208184](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42176208184), 06:43:04Z | FAIL, public endpoints returned HTTP 503 |
+| TCE WF-07 integration | [#42176751608](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42176751608), 06:48:12Z | PASS |
+| TCE WF-12 watchdog | [#42211610532](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42211610532), 11:37:17Z | FAIL, latest native WF-06 was 294 minutes old vs 25-minute budget |
+
+Later Platform reconcile #42211637997 and recovery #42211812418 are workflow_dispatch events, not native schedule evidence. TCE WF-13 #42211627712 is workflow_run; its WF-06 fallback #42211645157 is workflow_dispatch. None refreshes native schedule freshness. Cron declarations and the TCE market-scan schedule remain unchanged.
+
+## Production and runtime evidence
+
+Latest manual Platform reconciliation [#42211637997](https://github.com/phanthienquoc/platform-infra/actions/runs/42211637997) completed successfully with `mode=apply`, `target_app=all`, and `ALLOW_IMAGE_CHANGES=false`. GHCR pull access preflight passed for Auth, MicroFE and TCE images; `ghcr-pull` reported unchanged in the checked namespaces. Auth runtime Secret provision/verification completed with values suppressed. Kubernetes diff was clean and production manifest apply was correctly skipped. This is not an image promotion or new rollout.
+
+The same run captured a K3s pod listing at 11:37:57Z:
+- Node `tce-k3s-01`: Ready, ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2.
+- Media backend/frontend: 1/1 Running.
+- MicroFE Shell/WS/NATS: Running.
+- Stock Admin: two Pods ImagePullBackOff.
+- Stock Backend: legacy Pod 1/1 Running; newer Pod ImagePullBackOff.
+- Stock Frontend: 1/1 Running.
+
+The deployed Stock Admin/new Backend tag `12d63b4` still lacks a linux/arm64 manifest; do not infer a GHCR credential problem and do not promote the tag. The latest dedicated inspect workflow remains [#42208147735](https://github.com/phanthienquoc/platform-infra/actions/runs/42208147735) at 11:09:51Z. The manual reconcile pod listing is newer, but it does not refresh storage or runner-retirement evidence. No newer same-window PVC/PV/VolumeSnapshot, external backup, DNS ownership or Media runner Listener inspection is available.
+
+TCE/Auth desired replicas remain 0/0 by maintenance intent; WF-06 still requires HTTP 200 on all four public endpoints and currently fails HTTP 503. Do not weaken the probe or activate services without service-owner approval.
+
+## Immutable publication and ownership
+
+- Stock latest publisher: [#41563856933](https://github.com/phanthienquoc/stockdividend/actions/runs/41563856933), 2026-11-03, source SHA `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`; older than current master. Current CI ARM64 jobs are build-only.
+- Media latest publisher: [#41158598649](https://github.com/phanthienquoc/media-generation/actions/runs/41158598649), 2026-10-31, source SHA `32f3bf56e1f44c65a5d98f35bed0547f398f8e90`; older than current master.
+- Auth latest publisher: [#41040510320](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/41040510320), 2026-10-30, source SHA `ceb2688d6277b10f1bfe7652223d1d295b7e49d9`; older than current master and the current fail-closed release gate.
+- No current-master Stock/Media/Auth publisher run, digest/provenance pair or new release authorization was observed. No publisher was triggered.
+
+App repositories continue to own tests/builds and immutable GHCR publication. Platform Infra owns production manifests, shared pull credentials, provenance/digest validation, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose production authority was added.
+
+## Next dependency-safe actions
+
+1. Re-read PR #1341 exact head and both required checks, then squash-merge only if the head is unchanged and both remain PASS.
+2. Investigate TCE native WF-06 schedule delivery separately from its expected HTTP 503 maintenance probes; preserve cron and strict HTTP 200.
+3. Obtain a fresh read-only inspection that includes storage and dedicated Media runner state before any decommission decision.
+4. Keep Stock publication gated until explicit release authorization; require current full-source-SHA, immutable digest, provenance and ARM64 manifest before separate Platform promotion.
+5. Keep Auth #75/#76 gated until they are reconciled with master and exact-head checks pass; do not run production migrations from stale PR branches.
+
+No namespace, PVC/PV, image, replica, DNS, external database, runner or host was deleted or reconfigured by this checkpoint. The manual reconcile did run Auth runtime Secret provision/verification and confirmed GHCR pull Secrets unchanged. TCE market-scan schedule unchanged.

@@ -4720,3 +4720,22 @@ Native schedules must be distinguished from manual and workflow-run fallbacks. P
 Latest K3s inspection #42208147735 is manual and about 1h45 old at this checkpoint. Its prior observations (Stock ARM64 ImagePullBackOff, Media 1/1, TCE/Auth 0/0, active/enabled Media runner, unrelated debug PVC only) are not fresh decommission evidence. External database/object-storage backup and DNS ownership remain unverified. No publisher for Stock/Media/Auth has produced a current-master immutable digest/provenance in the inspected history.
 
 App repositories remain owners of CI/tests/builds/immutable GHCR publication; Platform Infra remains owner of production manifests, shared pull credentials, digest/provenance validation, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` is the only apply authority; `inspect-vps.yml` is read-only. No production mutation; TCE market-scan unchanged.
+
+
+
+## Runtime health semantics update — 2026-11-06 21:04 ICT / 14:04 UTC
+
+- Platform PR [#1341](https://github.com/phanthienquoc/platform-infra/pull/1341) changes `scripts/verify-workload-health.sh` so a converged zero-replica deployment is reported as intentional maintenance, with an explicit notice that no live workload health is asserted. Active scopes retain their normal readiness checks; mixed active/maintenance runs report both counts.
+- Regression coverage now includes zero-only maintenance, stale pods during scale-down, non-converged scale-down and a mixed `TARGET_APP=all` case. Existing `validate-github-actions.yml` runs this suite along with actionlint, yamllint and shellcheck.
+- Exact PR head `67ac9bcb0e79cf1f32b57eeda08fe3a239802e88`: `validate-manifests` #42230499865 PASS and `validate-github-actions` #42230499749 PASS. An earlier test attempt failed due double-escaped newline characters in the new mixed-scope fixture; the fixture was corrected and the final exact-head regression suite passed.
+- This is a reporting/observability contract only. It does not change desired replicas, pod selection, scale-down convergence, production manifests or apply authority.
+
+## Cross-repo runtime evidence — 2026-11-06 21:04 ICT / 14:04 UTC
+
+- Current default-branch heads: Platform `40c9adeeefbe3c80beb3c9c97ff1bb78e85badf6`; TCE `512b69d837e2a65c39867a062529a7fa0eada4cc`; Stock `3aeaf519b7a786d13dcecee763acaca357c47ddd`; Media `3a8846a4f273eeb20a55b214d5ad80804c2d8d52`; Auth `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`.
+- Open PRs: Platform #1314/#544/#541/#539 drafts and #1341 implementation; Auth #75 ready/#76 draft; none in TCE/Stock/Media. Auth #75 is 28 ahead/13 behind; #76 is 3 ahead/13 behind master.
+- Latest CI evidence: Platform master #42221880894 PASS; Stock #42167088130 PASS 7/7; Media #42136991059 PASS; Auth #42215394539 PASS. TCE WF-06/WF-12 remain operational failures, not app build failures.
+- Latest native schedule history: Platform reconcile #42199267592 PASS (10:00:15Z), recovery #42199274660 PASS (10:00:18Z), watchdog #42201400071 PASS (10:16:28Z), inspect #42193617816 PASS (09:15:08Z). TCE WF-06 #42176208184 FAIL (06:43:04Z, HTTP 503); WF-07 #42176751608 PASS (06:48:12Z); WF-12 #42211610532 FAIL (11:37:17Z, WF-06 294m stale). Dispatch/workflow_run fallbacks are not native schedule evidence.
+- Manual reconcile #42211637997 succeeded with image changes disabled and clean GitOps diff; it verified GHCR pull access, reported pull Secrets unchanged, provisioned/verified Auth runtime Secret, and skipped manifest apply. Its 11:37:57Z K3s listing showed Media 1/1, MicroFE running, Stock Admin two ImagePullBackOff Pods, Stock newer Backend ImagePullBackOff, legacy Backend/Frontend running, node Ready/ARM64. It did not include fresh storage or runner-retirement inventory.
+- Latest publishers remain old-source: Stock #41563856933 (Nov 3), Media #41158598649 (Oct 31), Auth #41040510320 (Oct 30). No current-master publication/digest/provenance verified.
+- App repos own CI/build/publish; Platform owns manifests, credentials, digest/provenance, promotion/reconcile and rollout. `reconcile-vps.yml` remains the only production apply authority. No direct SSH/Compose deployment authority added. TCE market-scan schedule unchanged.

@@ -28,6 +28,8 @@ else
 fi
 
 failed=0
+active_scopes=0
+maintenance_scopes=0
 label_selector=""
 
 # microfe-auth, microfe-shell, and microfe-ws share a namespace but are
@@ -61,7 +63,6 @@ for namespace in "${namespaces[@]}"; do
       ;;
   esac
 
-  scale_down_count=0
   scale_down_count=0
   scale_down_all_zero=1
   scale_down_converged=1
@@ -110,7 +111,8 @@ for namespace in "${namespaces[@]}"; do
       echo "::error::Deployment scope $namespace/$TARGET_APP is configured at zero replicas but active pods remain." >&2
       failed=1
     else
-      echo "Deployment scope $namespace/$TARGET_APP is intentionally scaled to zero; no active pods remain."
+      maintenance_scopes=$((maintenance_scopes + 1))
+      echo "::notice::Deployment scope $namespace/$TARGET_APP is in intentional zero-replica maintenance; no live workload health is asserted."
     fi
     continue
   fi
@@ -162,6 +164,8 @@ for namespace in "${namespaces[@]}"; do
   if [ "$active_pods" -eq 0 ]; then
     echo "::error::No non-terminating workload pods found in namespace $namespace for target $TARGET_APP." >&2
     failed=1
+  else
+    active_scopes=$((active_scopes + 1))
   fi
 
   # Pod label selectors cannot be reused for Deployment objects unless the
@@ -219,4 +223,12 @@ if [ "$failed" -ne 0 ]; then
   exit 1
 fi
 
-echo "Targeted workload health gate passed."
+if [ "$maintenance_scopes" -gt 0 ]; then
+  if [ "$active_scopes" -gt 0 ]; then
+    echo "::notice::Workload health verified for ${active_scopes} active scope(s); ${maintenance_scopes} scope(s) are intentionally scaled to zero, so no live workload health is asserted for those scopes."
+  else
+    echo "::notice::Verified ${maintenance_scopes} intentionally scaled-to-zero maintenance scope(s); no live workload health is asserted."
+  fi
+else
+  echo "Targeted workload health gate passed for ${active_scopes} active scope(s)."
+fi
