@@ -16,6 +16,11 @@ if grep -Fq "stock-frontend" "$tmp/platform-kubectl"; then
   echo "The runner helper must not expose restart/rollout authority for legacy stock-frontend." >&2
   exit 1
 fi
+restart_block="$(sed -n '/restart-blocked-image-pulls)/,/logs)/p' "$tmp/platform-kubectl")"
+if grep -Eq 'stock-prod|media-prod|stockdividend|media-generation' <<< "$restart_block"; then
+  echo "Retired Stock/Media namespaces must not be restart targets." >&2
+  exit 1
+fi
 
 # Replace only the binary path in the extracted test copy; production has no env override.
 sed -i "s|^KUBECTL=(/usr/local/bin/k3s kubectl)$|KUBECTL=(\"$tmp/bin/mock-kubectl\")|" \
