@@ -134,6 +134,9 @@ self_test() {
   # deletion, the app-tree/environment paths still force a cluster-wide pass.
   assert_failure scripts/bootstrap-media-runner.sh scripts/decommission-stock-media-namespaces.sh scripts/validate-metrics-hpa.sh scripts/validate-metrics.sh scripts/validate-network-boundaries.sh scripts/verify-reconcile-lane-queue.py scripts/verify-media-publisher-run.sh scripts/verify-stockdividend-publisher-run.sh scripts/verify-stockdividend-gitops-digests.py
   assert_scope all apps/stockdividend/README.md apps/media-generation/README.md environments/prod/kustomization.yaml scripts/bootstrap-media-runner.sh scripts/decommission-stock-media-namespaces.sh scripts/resolve-push-deployment-scope.sh scripts/validate-metrics-hpa.sh scripts/validate-metrics.sh scripts/validate-network-boundaries.sh scripts/verify-reconcile-lane-queue.py scripts/verify-media-publisher-run.sh scripts/verify-stockdividend-publisher-run.sh scripts/verify-stockdividend-gitops-digests.py
+  # Full path fixture from the merged Stock/Media retirement PR: deleted app
+  # trees force cluster-wide scope, while retired helpers stay non-deploying.
+  assert_scope all apps/stockdividend/base/kustomization.yaml apps/media-generation/base/kustomization.yaml environments/prod/kustomization.yaml scripts/bootstrap-media-runner.sh scripts/decommission-stock-media-namespaces.sh scripts/resolve-push-deployment-scope.sh scripts/validate-metrics-hpa.sh scripts/validate-metrics.sh scripts/validate-network-boundaries.sh scripts/verify-reconcile-lane-queue.py scripts/verify-media-publisher-run.sh scripts/verify-stockdividend-publisher-run.sh scripts/verify-stockdividend-gitops-digests.py scripts/validate-ghcr-pull-access.sh scripts/verify-workload-health.sh
   local keycloak_zero keycloak_one
   keycloak_zero="$(KEYCLOAK_REPLICAS_OVERRIDE=0 resolve_scope platform/keycloak/deployment.yaml)"
   keycloak_one="$(KEYCLOAK_REPLICAS_OVERRIDE=1 resolve_scope platform/keycloak/deployment.yaml)"
