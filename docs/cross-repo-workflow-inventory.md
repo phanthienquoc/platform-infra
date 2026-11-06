@@ -1,3 +1,42 @@
+## Workflow inventory runtime update — 2026-11-06 09:10 ICT / 02:10 UTC
+
+### Five-repository workflow ownership
+
+| Repository | Current head | Workflow owner boundary | Latest relevant CI / PR evidence |
+|---|---|---|---|
+| Platform Infra | `d05f806c636f3e785ffe603efff204767308efa0` | Production manifests, shared GHCR pull credentials, provenance/digest validation, GitOps promotion/reconciliation, rollout and health. | Retirement PR #1301 merged; post-merge push reconcile #42146800843 exposed a push-scope regression. Fix PR #1303 has passing code-only validation runs #42148457914/#42148457910; docs update requires fresh exact-head checks. |
+| TCE Dashboard | `512b69d837e2a65c39867a062529a7fa0eada4cc` | App tests/builds and manual production publisher; Platform owns paired digest promotion and cluster rollout. | WF-06 #42133793538 failed four strict public probes with HTTP 503 under the documented zero-replica state; WF-13 #42133822204 passed read-only. |
+| StockDividend | `6fcefa6b3792dab92b6d5c438001633d25f1ca28` | App CI/builds/immutable GHCR publication; Platform no longer owns Stock manifests or publisher receiver. | PR #32 merged; latest master CI #42137523269 passed. No production publisher dispatch or Platform handoff. |
+| Media Generation | `3a8846a4f273eeb20a55b214d5ad80804c2d8d52` | App CI/builds/paired immutable GHCR publication; Platform no longer owns Media manifests or publisher receiver. | PR #72 merged; latest master CI #42136991059 passed. No production release dispatch or Platform handoff. |
+| Authentication | `f978a3f378ee22d4630909c2d182275b21ac9e9a` | App CI and manual immutable publisher; Platform validates source provenance and promotes the Auth digest. | Master CI #41670642852 passed; PR #75 validation passed but Supabase Preview is skipped. #75/#76 remain gated. |
+
+### Publication and dispatch contract audit
+
+- **StockDividend:** `.github/workflows/deploy.yml` remains app-owned and retains a manual publication hold, immutable source-SHA release tags, registry digest resolution and ARM64 verification. The merged workflow contains no Platform repository-dispatch event.
+- **Media Generation:** `.github/workflows/wf-03-media-production-deploy.yml` retains immutable `prod-v<semver>-<full SHA>` tags, paired frontend/backend registry digest verification and ARM64 checks. The merged workflow contains no Platform repository-dispatch event.
+- **TCE Dashboard:** `wf-03-tce-production-deploy.yml` is `workflow_dispatch` only for production. It publishes full-source-SHA tags, resolves both web/service digests, verifies ARM64 manifests, and constructs/validates `tce-release-requested` with app, release, both digests, source run ID, workflow path, event and full source SHA. Platform validates provenance and tag-to-digest correlation before paired GitOps promotion.
+- **Authentication:** `release.yml` is `workflow_dispatch` only. It publishes immutable source-SHA and semver/SHA tags, verifies the registry digest and ARM64 manifest, then sends `auth-image-published` with app/component, source commit, tag, digest, source run ID, workflow path, event and full source SHA. Platform validates the publisher run and digest before changing the Auth Kustomize digest.
+- **Platform:** `gitops-image-promotion.yml` remains the only app-image promotion receiver. `reconcile-vps.yml` remains the only routine production apply authority. `inspect-vps.yml` remains read-only. No duplicate app-owned SSH/Compose/kubectl production deployment path was introduced.
+
+### Workflow preservation and retirement status
+
+- Stock/Media-specific GitOps manifests, health/recovery lanes, GHCR namespace setup and obsolete publisher/runner helpers were removed by merged Platform PR #1301. The app repositories and GHCR packages were not deleted.
+- `decommission-stock-media.yml` is intentionally retained as a manual-only, protected-Environment workflow. It has no runs; its three typed confirmations and fresh storage preflight are not a substitute for independent backup, external-data and dedicated-runner checks.
+- Useful CI/test/security, manual release, observability, inspection, reconciliation, recovery, cleanup and TCE scheduled workflows remain. No workflow was removed solely because it was not recently active.
+- TCE WF-06's HTTP 503 result is consistent with the operator-requested zero replicas. Keep the strict health gates and every TCE schedule, especially the market-scan schedule, unchanged.
+
+### Post-merge push-scope regression and repair
+
+- Platform master reconcile #42146800843 failed before any cluster mutation because `scripts/resolve-push-deployment-scope.sh` did not classify the deleted `scripts/bootstrap-media-runner.sh`. Preflight, credential bootstrap, manifest apply and app lanes were skipped.
+- PR #1303 adds explicit non-deploying classifications for retired/manual-only helpers and validator-only paths, keeps GHCR pull-access validation cluster-wide, and makes changes to the resolver itself trigger `all`. Regression tests prove helper-only pushes fail closed while the complete retirement path set resolves cluster-wide.
+- Code-only exact-head checks passed: `validate-github-actions` #42148457914 and `validate-manifests` #42148457910. The tracker update in PR #1303 changes the head, so revalidate the final PR revision before merge.
+
+### Current next dependency
+
+Poll PR #1303 exact-head checks, then squash-merge only after success. Verify the merge-triggered reconciliation run before doing any live K3s operation. Namespace deletion remains separately gated on a fresh PVC/PV/StorageClass inventory, backup/external-data review and confirmed Media runner retirement. No TCE market-scan schedule change.
+
+---
+
 ## Workflow inventory runtime update — 2026-11-06 08:38 ICT / 01:38 UTC
 
 - **Default-branch refs:** Platform Infra `b1a0c185e3f97630aa2bf55945bb5f674200bf97`; TCE Dashboard `512b69d837e2a65c39867a062529a7fa0eada4cc`; StockDividend `6fcefa6b3792dab92b6d5c438001633d25f1ca28`; Media Generation `3a8846a4f273eeb20a55b214d5ad80804c2d8d52`; Authentication `f978a3f378ee22d4630909c2d182275b21ac9e9a`.
