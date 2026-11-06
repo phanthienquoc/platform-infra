@@ -27,8 +27,6 @@ echo "Server-side dry-run accepted the repository production manifests."
 echo
 echo "== Rollback history =="
 for target in \
-  "deployment/stock-backend stock-prod" \
-  "deployment/stock-admin stock-prod" \
   "deployment/tce-service tce-prod" \
   "deployment/tce-frontend tce-prod"; do
   read -r resource namespace <<< "$target"
@@ -39,7 +37,7 @@ done
 
 echo
 echo "== ReplicaSet retention =="
-for namespace in stock-prod tce-prod; do
+for namespace in tce-prod; do
   run_kubectl get rs -n "$namespace" --sort-by=.metadata.creationTimestamp -o custom-columns='NAME:.metadata.name,READY:.status.readyReplicas,DESIRED:.spec.replicas,AGE:.metadata.creationTimestamp'
 done
 
