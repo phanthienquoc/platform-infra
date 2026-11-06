@@ -73,12 +73,12 @@ write_empty_fixture() {
 
 run_helper() {
   local mode="$1"
-  MOCK_MODE="$mode" "$tmp/platform-kubectl" restart-blocked-image-pulls stockdividend
+  MOCK_MODE="$mode" "$tmp/platform-kubectl" restart-blocked-image-pulls tce-dashboard
 }
 
 # Permanent architecture/manifest errors must not create replacement Pods.
-write_waiting_fixture permanent stock-admin ImagePullBackOff "no match for platform in manifest"
-write_waiting_fixture permanent stock-backend ErrImagePull "manifest unknown"
+write_waiting_fixture permanent tce-frontend ImagePullBackOff "no match for platform in manifest"
+write_waiting_fixture permanent tce-service ErrImagePull "manifest unknown"
 permanent_output="$(run_helper permanent 2>&1)"
 grep -Fq "Permanent image-pull failure" <<< "$permanent_output"
 grep -Fq "skipping rollout restart" <<< "$permanent_output"
@@ -98,16 +98,16 @@ grep -Fq "Transient image-pull failure" <<< "$transient_output"
 actual_restarts="$(cat "$MOCK_RESTART_LOG")"
 actual_restart_count="$(wc -l < "$MOCK_RESTART_LOG")"
 [[ "$actual_restart_count" -eq 2 ]] || {
-  echo "Transient failures did not restart exactly two managed StockDividend Deployments." >&2
+  echo "Transient failures did not restart exactly two managed TCE Deployments." >&2
   printf 'actual:\n%s\n' "$actual_restarts" >&2
   exit 1
 }
-grep -Fxq "stock-prod/stock-admin" <<< "$actual_restarts"
+grep -Fxq "tce-prod/stock-admin" <<< "$actual_restarts"
 grep -Fxq "stock-prod/stock-backend" <<< "$actual_restarts"
 
 # A Deployment with mixed permanent and transient Pod errors is fail-closed:
 # restarting it would still create Pods for the permanent bad image reference.
-cat > "$MOCK_FIXTURE_DIR/mixed-stock-admin.json" <<'JSON'
+cat > "$MOCK_FIXTURE_DIR/mixed-tce-frontend.json" <<'JSON'
 {"items":[{"status":{"containerStatuses":[
   {"name":"permanent","state":{"waiting":{"reason":"ImagePullBackOff","message":"no match for platform in manifest"}}},
   {"name":"transient","state":{"waiting":{"reason":"ErrImagePull","message":"connection reset by peer"}}}
