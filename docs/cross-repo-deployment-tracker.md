@@ -1,3 +1,95 @@
+## Current review — 2026-11-07 03:58 ICT / 2026-11-06 20:58 UTC
+
+This review supersedes older status sections below. Evidence was collected from the five default-branch refs, the open-pull-request REST collections, up to 100 recent Actions runs per repository, current default-head check-runs, selected job logs, and the latest committed read-only VPS snapshot. No app publisher, GitOps image promotion, replica activation, runner retirement, namespace deletion, host upgrade, or reboot was initiated.
+
+### Default branches, open PRs, and current CI
+
+| Repository | Default branch SHA | Open PRs | Current default-head validation |
+|---|---|---|---|
+| Platform Infra | 58721343cf1be9412ccb78bbc09783d685e007df | #1314, #544, #541, #539 (all drafts) | Inspection PR #1358 exact-head manifest validation #42290119655 PASS on c75ede5bdb1cd986580f737a8d850d67e7a3c9ad. No check-run contexts are attached to the merge commit; do not label this a post-merge CI run. |
+| TCE Dashboard | f4240ada56da700af00100fb3f01278b9b883951 | None | Master build #42239871779 PASS; Backend tests #42239871781 PASS; formatting #42239871823 PASS. WF-06 health probes fail HTTP 503. |
+| StockDividend | bc20dcfb9893ea246a5e46bef26cce1c92a940c9 | None | Master CI #42241252700 PASS, 7/7 jobs including non-publishing ARM64 image build. |
+| Media Generation | 54f3a76a5f8861842fd1bae698c4cb0fa8c9034d | None | Master CI #42239703151 PASS. Latest publisher remains historical run #41158598649. |
+| Authentication | 3b60ff46b8959d18aee1956f99d6b62589b8b9c5 | #75 ready, #76 draft | Master CI #42215394539 PASS, including ARM64 build-only validation; Supabase Preview is SKIPPED. |
+
+Open PR details and check freshness:
+- Platform #1314 is draft, exact head db152c9a17416d1a7f82165597dfe478321bd055; validate #42161859747 passed 2026-11-06 04:20:14Z.
+- Platform #544, #541 and #539 are drafts with exact-head validate runs from 2026-10-14; these are historical checks.
+- Auth #75 is ready but its base SHA remains 2189c97252bfe7ee53f50a68cf51008fa0d27c91; exact-head validate #40446492086 passed 2026-10-27 and Supabase Preview was skipped.
+- Auth #76 is draft with the same stale base SHA; exact-head validate #41329425940 passed 2026-11-01 and Supabase Preview was skipped.
+- Auth #75/#76 remain gated: the PR evidence records Supabase Deploy to production ON and unresolved merge-triggered migration effects. Do not merge or retarget them until that external side effect is authoritatively verified safe.
+- No open PR exists in TCE, StockDividend or Media Generation.
+
+### Platform operations and native schedule evidence
+
+Latest read-only inspection:
+- inspect-vps workflow_dispatch #42289948524 succeeded at 2026-11-06 20:37:40Z.
+- It generated debug/vps-latest.md at 20:37:49Z, opened inspection PR #1358, validated exact head c75ede5bdb1cd986580f737a8d850d67e7a3c9ad, and squash-merged it as 58721343cf1be9412ccb78bbc09783d685e007df.
+- The PR validation run is #42290119655. It ran against the exact PR head before merge; no separate post-merge check-run context is present on the merge commit.
+- This was a manual inspection, not native schedule evidence.
+
+Latest reconcile:
+- Reconcile VPS workflow_dispatch #42289699488 succeeded at 20:35:51Z from master SHA c3f7ce5323b58a36c93a8d4aa56cf73319548db2.
+- GitHub Actions logs confirm GHCR pull-access preflight passed for Auth, MicroFE Shell/WS and TCE web/service.
+- The shared ghcr-pull Secret was explicitly reported unchanged in both production namespaces.
+- Auth runtime Secret provisioning ran and reported “provisioned”; a subsequent verification confirmed all required keys while suppressing values. Treat this as a production Secret provisioning action, not as evidence that no runtime credential mutation occurred.
+- TCE/Auth/MicroFE maintenance-aware health lanes passed. Rollout steps were skipped, GitOps drift was clean, and manifest apply was skipped because no manifest drift existed. ALLOW_IMAGE_CHANGES=false. No image promotion occurred.
+
+Latest native Platform schedule events found in the Actions history:
+- inspect-vps #42256652947, schedule, SUCCESS, 2026-11-06 16:54:09Z.
+- reconcile-vps #42261665655, schedule, SUCCESS, 2026-11-06 17:26:34Z.
+- recover-stale-ops #42261712724, schedule, SUCCESS, 2026-11-06 17:26:53Z.
+- reconcile-schedule-watchdog #42263224767, schedule, SUCCESS, 2026-11-06 17:36:43Z.
+- No later native Platform schedule run appears in the retrieved Actions history by 20:58Z. Manual workflow_dispatch and repository_dispatch recovery runs do not count as cron delivery. The watchdog’s earlier success proves the reconcile workflow was active at that time, but does not establish current Actions scheduling configuration.
+
+TCE native schedule events:
+- WF-06 #42289627961, schedule, FAILURE, 2026-11-06 20:35:21Z. Four public probes returned HTTP 503: TCE web, TCE API, Auth liveness and Auth readiness; each expected HTTP 200.
+- WF-07 #42279415510, schedule, SUCCESS, 2026-11-06 19:24:59Z.
+- WF-12 #42271573506, schedule, FAILURE, 2026-11-06 18:32:05Z.
+- WF-12 #42289660113 at 20:35:35Z and WF-13 #42289660243 at 20:35:35Z were workflow_run events, not native schedules. WF-12's successful heartbeat and WF-13's successful fallback do not repair or replace the missing native WF-12 schedule events.
+- WF-06 at 20:35:21Z was 23 minutes old at this checkpoint, inside its 25-minute delivery budget, but its endpoint health failed. WF-12 and WF-07 native schedule histories are stale against their expected cadence.
+- Keep the four HTTP 200 assertions strict. TCE/Auth remain intentional zero-replica maintenance in the latest host snapshot; do not scale them up or change cron without service-owner authorization.
+
+### Latest K3s and host snapshot
+
+Source: debug/vps-latest.md, generated by inspect-vps #42289948524 at 2026-11-06 20:37:49Z (about 21 minutes before this checkpoint).
+
+- Host is Ubuntu 22.04.5 LTS, ARM64; K3s v1.36.3+k3s1; containerd 2.3.2-k3s2; node tce-k3s-01 Ready.
+- Disk 56%, approximately 21 GiB available; RAM available approximately 19 GiB. Host uptime was 189 days 6h28m.
+- Docker 29.1.3 is installed; Docker 29.9.3 and containerd.io 2.4.2 are among pending updates. restart_required=yes. Do not upgrade or reboot outside a separately approved maintenance window.
+- Platform and dedicated Media runner services are active and enabled; both Runner.Listener processes are present. Do not stop/unregister the shared Platform runner. Media retirement remains blocked until the dedicated runner is independently confirmed idle and then stopped, disabled and unregistered by the operator.
+- Media backend/frontend are 1/1 Running and digest-pinned. MicroFE Shell/WS/NATS are Running.
+- Stock Admin has two Pods in ImagePullBackOff and the newer Stock Backend Pod is ImagePullBackOff. The failure is “no match for platform in manifest” for tag 12d63b4, not a GHCR authentication failure. Legacy Stock Backend and Frontend remain Running on 23b2878.
+- TCE frontend/service, Auth and Keycloak are desired 0/0. Public TCE/Auth and OIDC probes return 503, consistent with the intentional maintenance state.
+- GitOps drift is clean.
+- Ingress inventory includes media.mrcute.space, Stock hostnames under mrcute.space, tce.mrcute.space, sso.mrcute.space, and MicroFE app/auth/ws hostnames. Kubernetes Ingress is not authoritative DNS ownership evidence; verify provider records before deletion.
+- The only PVC/PV shown is unrelated k3s-debug/k3s-debug-logs. No Stock/Media PVC/PV claim or VolumeSnapshot reference was found. This does not prove external database or object-storage backups, retention or ownership.
+
+### Immutable publication and promotion audit
+
+- TCE WF-03 remains workflow_dispatch-only; no new TCE production publisher run was observed. It builds native ARM64 artifacts, publishes full-SHA-derived immutable tags, verifies digests and emits the provenance-bound tce-release-requested handoff. Platform owns promotion.
+- TCE WF-08B PR run #42239660838 passed its test/contract jobs; publication and dispatch jobs were correctly skipped for pull_request. An older push failure #42239315515 came from feature branch fix/tce-ghcr-write-permissions-scope-20261106-2156ict, not current master; it has zero jobs in the returned Jobs API and is not treated as a current master check.
+- Stock publisher #41563856933 succeeded 2026-11-03 02:04:58Z. Its ARM64 builds and immutable full-source-SHA manifest/digest verification passed; the Platform promotion gate and dispatch were skipped. Current master CI #42241252700 is build-only and does not publish. Do not promote the broken 12d63b4 tag.
+- Media publisher #41158598649 succeeded 2026-10-31 02:08:14Z. It built native ARM64 images, verified artifacts/checksums and published immutable version-plus-full-SHA images. Media has no Platform production dispatch; no newer publisher run was observed.
+- Auth release #41040510320 succeeded 2026-10-30 10:24:26Z via workflow_dispatch. The current master CI #42215394539 is validation/build-only; no new release publisher or promotion was observed.
+- App repositories own tests, builds and immutable GHCR publication. Platform Infra owns production manifests, shared pull credentials, provenance/digest validation, GitOps promotion/reconciliation, rollout and health verification. Stock/Media remain outside Platform production GitOps ownership.
+- reconcile-vps.yml remains the sole production apply authority; inspect-vps.yml remains read-only. Do not create direct SSH/Compose deployment authorities or remove useful CI, security, manual, release or scheduled workflows.
+
+### Exact blockers and next dependency-safe actions
+
+1. Platform native reconcile/recovery/inspection/watchdog schedules have no newer native runs in the retrieved history. The connected GitHub read surface does not expose Actions administration settings; inspect those settings through an authorized admin surface before changing workflow state or cron.
+2. TCE public services remain at desired 0/0 with four HTTP 503 probes. Obtain service-owner activation authorization; keep strict HTTP 200 and existing schedules.
+3. Stock requires explicit release authorization and a fresh ARM64 full-source-SHA publication with digest/provenance before any separate Platform promotion.
+4. Dispatch decommission-stock-media.yml mode=plan on master to collect same-window Ingress, TLS, storage and runner evidence. The connected GitHub action surface used here is read-only for workflow dispatch, so no plan dispatch was executed in this review.
+5. Verify authoritative DNS/provider ownership and external database/object-storage backup and retention evidence. The current Kubernetes snapshot alone is insufficient.
+6. Obtain operator confirmation that the dedicated Media runner is idle before stopping, disabling and unregistering it. Never touch the shared Platform runner.
+7. Keep Auth #75/#76 gated until Supabase GitHub deployment target/effect and migration side effects are verified safe.
+8. Schedule Docker/containerd upgrades and reboot only in an approved maintenance window.
+
+TCE market-scan schedule unchanged.
+
+---
+
 # Cross-repo deployment checkpoint — 2026-11-06 18:27 ICT / 11:27 UTC
 
 This checkpoint follows a fresh audit of default-branch heads, all open PRs, current Actions run history, exact PR-head checks, and the latest committed read-only K3s snapshot. Evidence only: no publisher, production promotion, replica activation, runner retirement, namespace deletion, reboot, or external-data deletion was authorized.
