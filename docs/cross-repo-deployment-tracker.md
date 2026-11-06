@@ -1,3 +1,51 @@
+Last reviewed: 2026-11-06 09:15 ICT (2026-11-06 02:15 UTC)
+
+## Current review — 2026-11-06 09:15 ICT (2026-11-06 02:15 UTC)
+
+This review follows the successful merge of PR #1303 and closes the remaining trigger gap that prevented a new production reconciliation attempt.
+
+### Current repository refs and open PRs
+
+| Repository | Default-branch SHA | Open PRs | Current disposition |
+|---|---|---|---|
+| Platform Infra | `e66bdecea35eda2c6740587b87ff69415c4176fa` | #1304 open; #544/#541/#539 draft | #1301 and #1303 merged; #1296 closed as superseded. #1304 adds the resolver to the sole production reconcile push filter. |
+| TCE Dashboard | `512b69d837e2a65c39867a062529a7fa0eada4cc` | None | Strict public health probes still return 503 while TCE/Auth/Keycloak remain operator-scaled to zero. |
+| StockDividend | `6fcefa6b3792dab92b6d5c438001633d25f1ca28` | None | PR #32 merged; latest master CI #42137523269 passed. Production publication remains untriggered. |
+| Media Generation | `3a8846a4f273eeb20a55b214d5ad80804c2d8d52` | None | PR #72 merged; latest master CI #42136991059 passed. Production publication remains untriggered. |
+| Authentication | `f978a3f378ee22d4630909c2d182275b21ac9e9a` | #75 ready; #76 draft | Master CI #41670642852 passed. PR #75 validation passed, but Supabase Preview is skipped and the production integration side-effect gate remains unresolved. |
+
+### Platform retirement, push-scope fix and remaining trigger gap
+
+- Platform PR #1301 was squash-merged as `d05f806c636f3e785ffe603efff204767308efa0`; its exact-head manifest, GitHub Actions and Keycloak checks passed. PR #1296 was closed as superseded. The merge removed Stock/Media GitOps ownership but did not delete namespaces or persistent/external data.
+- Post-merge reconcile #42146800843 failed before preflight or any cluster mutation because the push-scope resolver rejected deleted `scripts/bootstrap-media-runner.sh`. The failed run skipped GHCR credential bootstrap, manifest apply, rollout and app lanes.
+- PR #1303 fixed the resolver classifications and regression tests, refreshed this tracker/inventory, and was squash-merged at `e66bdecea35eda2c6740587b87ff69415c4176fa`. Exact final-head checks passed: `validate-github-actions` #42148684639 and `validate-manifests` #42148684820.
+- A follow-up inspection of `reconcile-vps.yml` showed its push path filter did not include `scripts/resolve-push-deployment-scope.sh`; therefore merging #1303 alone did not create another reconcile run. No new production reconcile was dispatched or applied after #1303.
+- PR [#1304](https://github.com/phanthienquoc/platform-infra/pull/1304) adds the resolver to the push filter, makes `validate-workflow-contracts.py` enforce that trigger, and adds a full changed-path fixture from PR #1301. Its merge is intentionally expected to trigger the existing `reconcile-vps` workflow with scope `all`, mode `apply`, and `allow_image_changes=false`, subject to the protected production Environment approval and strict health gates. Its exact-head checks are pending; do not merge until they pass.
+
+### App-owned publication and dispatch boundaries
+
+- StockDividend `deploy.yml` retains app-owned CI/build/publication, immutable full-source-SHA image tags, registry digest resolution, ARM64 checks and the explicit manual publication hold. It contains no Platform repository-dispatch handoff.
+- Media Generation `wf-03-media-production-deploy.yml` retains immutable full-source-SHA tags and paired registry digest/ARM64 verification. It contains no Platform repository-dispatch handoff.
+- TCE WF-03 remains manual-only for production, verifies the full-source-SHA web/service digest pair and ARM64 manifests, and validates `tce-release-requested` source provenance before Platform promotion.
+- Authentication `release.yml` remains manual-only and sends the Auth digest with source run ID, workflow path, event and full source SHA. Platform validates that provenance and the registry digest before updating Auth GitOps. No TCE/Auth release workflow was dispatched.
+
+### TCE, Authentication and runtime safety
+
+- TCE native WF-06 #42133793538 failed all four strict public HTTP 200 probes with HTTP 503 while TCE/Auth/Keycloak remain operator-scaled to zero. WF-13 fallback #42133822204 passed read-only. Do not weaken health gates, restore replicas or change any TCE schedule; the market-scan schedule is unchanged.
+- Auth PR #75 remains gated because Supabase Preview is `SKIPPED` and the connected production integration's merge-triggered migration effect is not authoritatively verified. Do not merge #75/#76, run migrations or dispatch an Auth release on current evidence.
+- `decommission-stock-media.yml` is manual-only and has no execution runs. Its protected production Environment, three exact confirmations and fresh storage preflight do not replace independent backup/external-data and dedicated-runner checks. The last committed VPS snapshot is stale and lacks fresh PVC/PV/StorageClass inventory.
+- `reconcile-vps.yml` remains the sole routine production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose authority, K3s namespace/PV/DNS/GHCR/external-data mutation, credential rotation, image promotion or schedule change occurred.
+
+### Next actions
+
+1. Poll PR #1304's exact current head; squash-merge only after all required checks pass.
+2. Verify the merge-triggered `reconcile-vps` push run reaches fresh preflight, resolves scope `all`, and reports rollout/health truthfully. Keep image changes disabled.
+3. Obtain fresh read-only K3s/PVC/PV/StorageClass evidence, confirm backups/external-data ownership and independently retire the dedicated Media runner before considering manual namespace deletion.
+4. Keep Stock production publication closed without explicit release authorization and Auth #75/#76 gated on the Supabase integration side-effect question.
+5. Preserve all TCE schedules, especially the market-scan schedule.
+
+---
+
 Last reviewed: 2026-11-06 09:10 ICT (2026-11-06 02:10 UTC)
 
 ## Current review — 2026-11-06 09:10 ICT (2026-11-06 02:10 UTC)
