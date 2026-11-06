@@ -1484,7 +1484,7 @@ for required in (
 ):
     if required not in tce_schedule_verifier_text:
         fail(f"TCE schedule verifier is missing its native-event safety check: {required}")
-if "public endpoint health is a separate signal" not in tce_schedule_verifier_text:
+if "it does not assert public endpoint health" not in tce_schedule_verifier_text:
     fail("TCE schedule delivery must remain separate from public endpoint health.")
 
 
