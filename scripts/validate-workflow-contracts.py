@@ -855,8 +855,12 @@ if "docker login ghcr.io" in promotion or "docker manifest inspect" in promotion
     fail("Promotion must not depend on registry-wide Docker login for private GHCR reads.")
 if 'GHCR_IMAGE_REFERENCE="$image@$expected"' not in promotion or "bash scripts/validate-ghcr-image-reference.sh" not in promotion:
     fail("MicroFE promotion must verify each exact immutable image digest through Registry V2.")
-if 'GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$IMAGE" bash scripts/validate-ghcr-image-reference.sh' not in promotion:
-    fail("Application promotion must verify the exact immutable tag through Registry V2.")
+if (
+    'for immutable_tag in "$SOURCE_COMMIT" "$TAG"; do' not in promotion
+    or 'GHCR_EXPECTED_DIGEST="$AUTH_DIGEST" GHCR_IMAGE_REFERENCE="$IMAGE:$immutable_tag" bash scripts/validate-ghcr-image-reference.sh' not in promotion
+    or 'GHCR_IMAGE_REFERENCE="$IMAGE@$AUTH_DIGEST" bash scripts/validate-ghcr-image-reference.sh' not in promotion
+):
+    fail("Application promotion must verify both full-SHA/release tags against the attested digest and verify the immutable digest through Registry V2.")
 
 ghcr_image_validator = (ROOT / "scripts" / "validate-ghcr-image-reference.sh").read_text(encoding="utf-8")
 for required in (
