@@ -12,8 +12,8 @@ awk '/^cat >\/usr\/local\/sbin\/platform-kubectl <<.EOF.$/ { capture=1; next } c
   "$bootstrap_script" > "$tmp/platform-kubectl"
 test -s "$tmp/platform-kubectl"
 chmod 700 "$tmp/platform-kubectl"
-if grep -Fq "stock-frontend" "$tmp/platform-kubectl"; then
-  echo "The runner helper must not expose restart/rollout authority for legacy stock-frontend." >&2
+if grep -Eq "restart_if_blocked stock-prod|restart_if_blocked media-prod|rollout status deployment/(stock|media)" "$tmp/platform-kubectl"; then
+  echo "The runner helper must not expose retired Stock/Media restart or rollout authority." >&2
   exit 1
 fi
 
@@ -73,12 +73,12 @@ write_empty_fixture() {
 
 run_helper() {
   local mode="$1"
-  MOCK_MODE="$mode" "$tmp/platform-kubectl" restart-blocked-image-pulls stockdividend
+  MOCK_MODE="$mode" "$tmp/platform-kubectl" restart-blocked-image-pulls tce-dashboard
 }
 
 # Permanent architecture/manifest errors must not create replacement Pods.
-write_waiting_fixture permanent stock-admin ImagePullBackOff "no match for platform in manifest"
-write_waiting_fixture permanent stock-backend ErrImagePull "manifest unknown"
+write_waiting_fixture permanent tce-frontend ImagePullBackOff "no match for platform in manifest"
+write_waiting_fixture permanent tce-service ErrImagePull "manifest unknown"
 permanent_output="$(run_helper permanent 2>&1)"
 grep -Fq "Permanent image-pull failure" <<< "$permanent_output"
 grep -Fq "skipping rollout restart" <<< "$permanent_output"
@@ -90,30 +90,30 @@ grep -Fq "skipping rollout restart" <<< "$permanent_output"
 
 # Transient authentication, network and rate-limit failures remain retryable
 # because reconciliation refreshes the shared GHCR pull Secret before this helper.
-write_waiting_fixture transient stock-admin ImagePullBackOff "failed to fetch oauth token: 401 Unauthorized after pull-secret refresh"
-write_waiting_fixture transient stock-backend ErrImagePull "connection reset by peer"
+write_waiting_fixture transient tce-frontend ImagePullBackOff "failed to fetch oauth token: 401 Unauthorized after pull-secret refresh"
+write_waiting_fixture transient tce-service ErrImagePull "connection reset by peer"
 : > "$MOCK_RESTART_LOG"
 transient_output="$(run_helper transient 2>&1)"
 grep -Fq "Transient image-pull failure" <<< "$transient_output"
 actual_restarts="$(cat "$MOCK_RESTART_LOG")"
 actual_restart_count="$(wc -l < "$MOCK_RESTART_LOG")"
 [[ "$actual_restart_count" -eq 2 ]] || {
-  echo "Transient failures did not restart exactly two managed StockDividend Deployments." >&2
+  echo "Transient failures did not restart exactly two managed TCE Deployments." >&2
   printf 'actual:\n%s\n' "$actual_restarts" >&2
   exit 1
 }
-grep -Fxq "stock-prod/stock-admin" <<< "$actual_restarts"
-grep -Fxq "stock-prod/stock-backend" <<< "$actual_restarts"
+grep -Fxq "tce-prod/tce-frontend" <<< "$actual_restarts"
+grep -Fxq "tce-prod/tce-service" <<< "$actual_restarts"
 
 # A Deployment with mixed permanent and transient Pod errors is fail-closed:
 # restarting it would still create Pods for the permanent bad image reference.
-cat > "$MOCK_FIXTURE_DIR/mixed-stock-admin.json" <<'JSON'
+cat > "$MOCK_FIXTURE_DIR/mixed-tce-frontend.json" <<'JSON'
 {"items":[{"status":{"containerStatuses":[
   {"name":"permanent","state":{"waiting":{"reason":"ImagePullBackOff","message":"no match for platform in manifest"}}},
   {"name":"transient","state":{"waiting":{"reason":"ErrImagePull","message":"connection reset by peer"}}}
 ]}}]}
 JSON
-write_empty_fixture mixed stock-backend
+write_empty_fixture mixed tce-service
 : > "$MOCK_RESTART_LOG"
 mixed_output="$(run_helper mixed 2>&1)"
 grep -Fq "skipping rollout restart" <<< "$mixed_output"
@@ -124,11 +124,11 @@ grep -Fq "skipping rollout restart" <<< "$mixed_output"
 }
 
 # Non-image-pull waiting reasons must not trigger this recovery path.
-write_waiting_fixture unrelated stock-admin CrashLoopBackOff "application process exited"
-write_empty_fixture unrelated stock-backend
+write_waiting_fixture unrelated tce-frontend CrashLoopBackOff "application process exited"
+write_empty_fixture unrelated tce-service
 : > "$MOCK_RESTART_LOG"
 unrelated_output="$(run_helper unrelated 2>&1)"
-grep -Fq "No image-pull failures for stock-prod/stock-admin" <<< "$unrelated_output"
+grep -Fq "No image-pull failures for tce-prod/tce-frontend" <<< "$unrelated_output"
 [[ ! -s "$MOCK_RESTART_LOG" ]] || {
   echo "A non-image-pull failure unexpectedly triggered a rollout restart." >&2
   cat "$MOCK_RESTART_LOG" >&2
