@@ -5181,3 +5181,15 @@ No current-master Stock/Media/Auth GHCR publication with verified digest/provena
 - TCE: WF-12 native #42312029821 freshness failed; WF-06 native #42289627961 and manual fallback #42312062418 failed four strict HTTP 200 probes with HTTP 503; WF-07 native #42311204446 passed. WF-13 workflow_run success is not schedule proof. Preserve all cron and health budgets, including the TCE market-scan schedule.
 - Production snapshot: inspect-vps #42312238041 generated 23:29:38Z via workflow_dispatch. K3s node Ready/ARM64; Media/MicroFE Running; Stock Admin/new Backend ImagePullBackOff due missing `linux/arm64` manifest for `12d63b4`; TCE/Auth/Keycloak 0/0; GitOps clean. Disk 56%, ~21 GiB free, RAM ~19 GiB available; host restart required and updates pending. Platform/Media runners active with Listener; no idle proof.
 - Safety gates remain: no namespace/PVC/PV deletion, runner retirement, external database/object-storage/DNS mutation, manifest apply, image promotion, replica activation or host reboot. Decommission `mode=plan` not run because workflow dispatch is unavailable. DNS/provider ownership and external backup/retention are unverified.
+
+
+---
+
+## Cross-repo operational checkpoint — 2026-11-07 07:05 ICT
+
+- TCE PR #1028 merged at `fc8766426138a5a681c040b58af3529e93b66ea4`. It isolates WF-12 native schedule concurrency from workflow_run/push/manual diagnostics with `tce-wf06-schedule-watchdog-${{ github.event_name }}`; the WF-05 contract script enforces this. Exact-head WF-05/WF-02 passed; post-merge read-only WF-12 push smoke passed. Await a native WF-12 schedule event before claiming the schedule path is verified.
+- Platform PR #1363's watchdog event-scoped concurrency remains on master, but native watchdog #42304321570 is still the latest event=schedule watchdog and was cancelled. No later native Platform schedule run through 00:05Z; manual fallbacks do not count.
+- App ownership unchanged: app repositories own tests/builds/immutable GHCR publication; Platform owns shared pull credentials, provenance/digest verification, production manifests, GitOps promotion/reconciliation, rollout and health. No new publisher or promotion occurred.
+- TCE WF-06 still fails four strict HTTP 200 public probes (HTTP 503); WF-12 latest native #42312029821 failed freshness; WF-07 #42311204446 passed. Preserve strict health/freshness gates and all schedules, including the TCE market-scan schedule.
+- Latest K3s snapshot #42312238041: Ready ARM64 node; Media/MicroFE active; Stock Admin/new Backend ImagePullBackOff on missing ARM64 tag `12d63b4`; TCE/Auth/Keycloak 0/0; GitOps clean; host restart required. Runner idle, DNS ownership and external backup/retention remain unverified.
+- No decommission plan, destructive action, image publication/promotion, manifest apply, replica activation, runner retirement, DNS/database/storage mutation or host maintenance.
