@@ -5068,3 +5068,15 @@ App repositories own tests/builds and immutable GHCR publication. Platform Infra
 - Latest K3s inspection #42387216070 generated 15:36:46Z and is 141m old. Last-known state: node Ready/ARM64, disk 56%, ~19 GiB RAM available; Media/MicroFE running; Stock Admin and one Backend ImagePullBackOff on `12d63b4`; TCE/Auth/Keycloak 0/0; runners active; shared ghcr-pull unchanged; Auth runtime Secret provisioned; GitOps drift clean. External backup/retention and authoritative DNS ownership remain unverified.
 - Latest scheduled reconciliation #42387275904 passed preflight and secret/credential checks but skipped manifest apply and rollout; fallback #42392174350 also skipped rollout. No new publication, promotion, production rollout, decommission or host maintenance occurred.
 - Exact evidence and owner actions: `docs/cross-repo-deployment-checkpoints/2026-11-08-0057-ict.md`. Preserve the sole production apply authority and all app/platform ownership boundaries. TCE market-scan schedule unchanged.
+
+
+---
+
+## PR #1410 post-merge verification — 2026-11-08 01:04 ICT / 18:04 UTC
+
+- Platform Infra PR #1410 [docs(deploy): refresh cross-repo readiness at 00:57 ICT](https://github.com/phanthienquoc/platform-infra/pull/1410) was squash-merged from exact head `ed033efee66dce658beff3ddff0ca1ea85839fe5` as `7369a8221294b62d501e3aff857c68b63ab9ba5f`.
+- Exact-head PR validation [#42399264103](https://github.com/phanthienquoc/platform-infra/actions/runs/42399264103) completed success. All contract, shell, manifest-rendering, secret-policy, immutable-image, isolated-Keycloak and network-boundary checks passed; only the expected failure-report step was skipped.
+- Post-merge master validation [#42399354714](https://github.com/phanthienquoc/platform-infra/actions/runs/42399354714) completed success on the merge SHA. Master was re-read and matches the merge SHA.
+- PR #1410 records the 00:57 ICT five-repository refs, open PRs, native schedule ages/inter-arrival gaps, TCE heartbeat vs HTTP 503 distinction, Stock missing-secret preflight gate, and 141-minute-old K3s snapshot. No production workflow, cron, manifest, secret, image, workload, runner, DNS, database or host change was made.
+- The next implementation work remains dependency-blocked: GitHub Actions administrator must investigate native schedule delivery; Stock owner must add `VNSTOCK_API_KEY` and run preflight-only; Platform operator must obtain fresh K3s inspection; TCE/Auth service owner must approve restoration; Auth owner must verify Supabase integration side effects; Stock/Media owners must provide backup/DNS evidence.
+- Current Platform master: `7369a8221294b62d501e3aff857c68b63ab9ba5f`. TCE market-scan schedule unchanged.
