@@ -1,3 +1,34 @@
+## Current workflow inventory — 2026-11-08 03:05 ICT / 2026-11-07 20:05 UTC
+
+| Repository | App-owned workflows | Platform-owned responsibilities / boundary | Current evidence |
+|---|---|---|---|
+| Platform Infra | No app image builds; app release receivers only | Sole production manifests, shared GHCR pull credentials, runtime Secret provisioning, digest/provenance validation, GitOps promotion/reconciliation, rollout/health, read-only inspection, protected Stock/Media decommission | Master `554ef89d...`; PR #1415 merged; post-merge manifest/lint/recovery/bootstrap checks PASS. PR #1416 adds runner-token log masking. |
+| TCE Dashboard | CI/tests; WF-03 publisher; WF-06 public health; WF-07 backup/integration; WF-08B MicroFE publisher; WF-12 watchdog; WF-13 recovery | No production SSH/Compose/K3s apply; Platform receives digest-bound events and owns apply/reconciliation | Master `7ab52078...`; WF-06 native #42399835467 failed four HTTP 503 probes; WF-12 workflow_run is not native schedule evidence. |
+| StockDividend | CI, ARM64 image publisher, weekend scraper with safe credential preflight | Retired from active Platform GitOps; legacy workloads await protected decommission | Master `783ae36f...`; CI 7/7; scraper fails closed on missing `VNSTOCK_API_KEY`. |
+| Media Generation | CI and app-owned ARM64 publisher with full-SHA release tag/digest verification | No active Platform GitOps handoff; legacy namespace and dedicated runner await protected decommission | Master `54f3a76a...`; CI PASS; backend/frontend and runner remain present in last inspection. |
+| Authentication | CI; manual-only ARM64 release publisher with full-SHA/versioned tags, provenance/SBOM and digest handoff | Platform owns production manifests/runtime Secrets and digest-pinned GitOps apply | Master `3b60ff46...`; CI PASS; PR #75/#76 remain Supabase migration-gated. |
+
+### Current workflow ownership and gates
+
+- Native schedule evidence is restricted to original `event=schedule`, `master`, attempt 1, exact workflow path and full source SHA. Manual, workflow_run and repository_dispatch are separate evidence classes.
+- Platform reconcile cron remains `7,22,37,52 * * * *`; watchdog/recovery schedules and all freshness budgets remain unchanged. First post-gap native events still have out-of-budget inter-arrival gaps. Last native inspection is stale; manual inspection is not a substitute.
+- TCE WF-06 remains `*/15 * * * *`; strict HTTP 200 probes remain unchanged. Heartbeat transport does not imply service health. TCE market-scan schedule unchanged.
+- Stock scraper weekend cron remains `0 1 * * 0,6` UTC. Missing API key must be fixed by Stock owner; preflight-only must pass before ingestion.
+- TCE/Auth publishers retain app ownership, ARM64/full-SHA/digest/provenance contracts; Platform alone owns production GitOps. Stock/Media have no active Platform handoff.
+- `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` is read-only.
+
+### Protected Stock/Media decommission
+
+PR #1415 is merged. Delete remains manual-only, protected by production Environment approval, exact namespace confirmation, backup/external-data review, the new separate authoritative DNS/provider ownership attestation, dedicated Media runner retirement, and fresh PVC/PV/VolumeSnapshot preflight. The Ingress host inventory is not proof of DNS ownership. No namespace deletion or runner retirement has occurred.
+
+### Runner registration token handling
+
+PR #1416 adds log masking for the short-lived runner registration token before it is written to `GITHUB_OUTPUT`, with a workflow-contract assertion. The preceding successful bootstrap run #42409167152 exposed the generated token in an environment dump; the owner must inspect runner registrations/audit log for unexpected registrations. Do not repeat or store the token value in repository docs.
+
+TCE market-scan schedule unchanged.
+
+---
+
 ## Current workflow inventory — 2026-11-08 02:55 ICT / 2026-11-07 19:55 UTC
 
 This inventory supersedes the older 21:56/22:06 summaries below. The complete five-repository evidence is in [2026-11-08-0255-ict.md](cross-repo-workflow-inventory-checkpoints/2026-11-08-0255-ict.md).
