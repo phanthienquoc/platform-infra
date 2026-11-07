@@ -6,7 +6,7 @@ This is the rolling inventory. Timestamped detailed evidence is retained under d
 
 | Repository | App-owned workflows | Platform-owned responsibilities / boundary | Current evidence |
 |---|---|---|---|
-| Platform Infra | No application image builds; receives app release events | Sole production manifests, shared GHCR pull credentials, runtime Secrets, digest/provenance validation, GitOps promotion/reconciliation, rollout/health, read-only inspection and protected Stock/Media decommission | Master 206597ce; inspection PR #1421 merged; latest manual reconcile #42417693554 passed with no drift/apply skipped; native schedule runs remain stale. |
+| Platform Infra | No application image builds; receives app release events | Sole production manifests, shared GHCR pull credentials, runtime Secrets, digest/provenance validation, GitOps promotion/reconciliation, rollout/health, read-only inspection and protected Stock/Media decommission | Master c6ca9f; inspection PR #1421 merged; latest manual reconcile #42417693554 passed with no drift/apply skipped; native schedule runs remain stale. |
 | TCE Dashboard | CI/tests; WF-03 publisher; WF-06 public health; WF-07 backup/integration; WF-08B MicroFE publisher; WF-12 watchdog; WF-13 recovery | No production SSH/Compose/K3s apply; Platform receives digest-bound events and owns production apply/reconciliation | Master 7ab52078; native WF-06 #42417660167 failed four HTTP 503 probes; native WF-12 #42411262379 stale/failing; workflow_run heartbeat is not native evidence. |
 | StockDividend | CI/tests; ARM64 immutable image publisher; weekend scraper with safe credential preflight | Retired from active Platform GitOps; legacy workloads await protected decommission | Master 783ae36; CI 7/7; scraper #42349150261 failed closed because VNSTOCK_API_KEY is missing. |
 | Media Generation | CI/tests; immutable ARM64 publisher with full-SHA release tag and digest verification | No active Platform GitOps handoff; legacy namespace and dedicated runner await protected decommission | Master 54f3a76; CI PASS; backend/frontend and dedicated runner remain active in latest inspection. |
@@ -37,3 +37,10 @@ Stock/Media remain retired from active Platform GitOps but legacy namespaces/wor
 A prior short-lived runner registration token appeared in an Actions environment dump. PR #1416 masks the token before GITHUB_OUTPUT and later bootstrap verification showed the masked value. Platform owner must still inspect runner registrations and audit log; the connector cannot certify registry cleanliness.
 
 Detailed evidence: docs/cross-repo-deployment-checkpoints/2026-11-08-0455-ict.md
+
+
+---
+
+## PR #1422 merge record — 2026-11-08 05:00 ICT
+
+Rolling inventory compaction merged at `c6ca9f92d35b69f99e0ff1308c3ac097e2cffa5b`. PR #1422 exact-head validation #42418449005 and post-merge validation #42418489331 passed. Historical detailed evidence remains archived in 50 timestamped checkpoint files; the inventory is now a concise current ownership/evidence view. No workflow, cron, production manifest, publisher, dispatch or deployment authority changed. TCE market-scan schedule unchanged.

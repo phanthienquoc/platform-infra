@@ -8,13 +8,13 @@ This is the rolling operational summary. Detailed immutable run/PR checkpoints a
 
 | Repository | Default-branch SHA | Open PRs | Latest relevant evidence |
 |---|---|---|---|
-| Platform Infra | 206597ce321f9e228317120b100f65649a82f06c | #1314/#544/#541/#539 (draft planning/docs) | Inspection #42417844482 PASS; inspection PR #1421 merged at this SHA; validation #42417934488 PASS; manual reconcile #42417693554 PASS; recovery #42417863091 PASS. |
+| Platform Infra | c6ca9f92d35b69f99e0ff1308c3ac097e2cffa5b | #1314/#544/#541/#539 (draft planning/docs) | Inspection #42417844482 PASS; inspection PR #1421 merged at this SHA; validation #42417934488 PASS; manual reconcile #42417693554 PASS; recovery #42417863091 PASS. |
 | TCE Dashboard | 7ab52078c4250829e158f05b2695ceb9d11bdbe3 | None | Native WF-06 #42417660167 FAIL (four public endpoints HTTP 503); native WF-07 #42417842240 PASS; latest native WF-12 #42411262379 FAIL/stale; workflow_run WF-12 #42417856773 PASS is not native evidence. |
 | StockDividend | 783ae36f128ba5dffeba8ac1d242602f160ecfd0 | None | CI #42375688209 PASS (7/7); weekend scraper #42349150261 FAIL closed because VNSTOCK_API_KEY is missing. |
 | Media Generation | 54f3a76a5f8861842fd1bae698c4cb0fa8c9034d | None | CI #42239703151 PASS; no new immutable publisher/digest handoff. |
 | Authentication | 3b60ff46b8959d18aee1956f99d6b62589b8b9c5 | #75 ready, #76 draft; both Supabase migration-gated | CI #42215394539 PASS; no new release/digest handoff. |
 
-Platform PR #1421 (automated read-only inspection update) merged at 21:53:06 UTC from head b4997657bbcb913a7a21868abdd35e4f1531c351, producing master 206597ce321f9e228317120b100f65649a82f06c. Validation #42417934488 passed. The PR updates debug/vps-latest.md only.
+Platform PR #1421 (automated read-only inspection update) merged at 21:53:06 UTC from head b4997657bbcb913a7a21868abdd35e4f1531c351, producing master c6ca9f92d35b69f99e0ff1308c3ac097e2cffa5b. Validation #42417934488 passed. The PR updates debug/vps-latest.md only.
 
 ## Native schedule delivery — event=schedule only
 
@@ -82,3 +82,10 @@ Protected Stock/Media decommission remains manual-only. Delete requires producti
 No GHCR publication/promotion, production manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, new secret write, DNS/database/storage mutation or host maintenance occurred in this review. Auth runtime Secret provisioning/verification in #42417693554 was performed by the existing authorized reconciliation workflow; values were suppressed. TCE market-scan schedule unchanged.
 
 Detailed evidence: docs/cross-repo-deployment-checkpoints/2026-11-08-0455-ict.md
+
+
+---
+
+## PR #1422 post-merge evidence — 2026-11-08 05:00 ICT / 2026-11-07 22:00 UTC
+
+Platform PR #1422 merged by squash from exact head `d8c295bb6dc855c3114d7aa220bcd54d293e9c17` as master `c6ca9f92d35b69f99e0ff1308c3ac097e2cffa5b` at 22:00:02 UTC. Exact-head validation run #42418449005 passed; post-merge master validation #42418489331 also passed. The PR compacted the rolling tracker and workflow inventory into current operational summaries while preserving all 49 earlier timestamped checkpoint files and adding `2026-11-08-0455-ict.md`; 50 detailed checkpoint files now remain in the archive. No production workflow, schedule, manifest, secret, image, workload or host state changed. The merge is documentation-only. TCE market-scan schedule unchanged.
