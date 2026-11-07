@@ -291,7 +291,7 @@ if int(recovery_age_budget.group(1)) != recovery_schedule_gap * 3:
         "so missed native schedule delivery remains observable."
     )
 watchdog_age_budget = re.search(
-    r'(?m)^[ \\t]*MAX_WATCHDOG_AGE_MINUTES:[ \\t]*"([0-9]+)"',
+    r'(?m)^[ \t]*MAX_WATCHDOG_AGE_MINUTES:[ \t]*"([0-9]+)"',
     watchdog,
 )
 if watchdog_age_budget is None:
@@ -1737,8 +1737,12 @@ for required in (
 ):
     if required not in watchdog:
         fail(f"Native schedule inter-arrival watchdog contract is missing: {required}")
-if "tce_runs_file=\"$RUNNER_TEMP/tce-wf06-scheduled-runs.json\"" not in watchdog or "--warn-only" not in watchdog:
-    fail("Cross-repository TCE schedule inter-arrival observations must remain warning-only for Platform.")
+tce_wf06_gap_observer = native_schedule_gap_block.split('tce_runs_file="$RUNNER_TEMP/tce-wf06-scheduled-runs.json"', 1)[1]
+if '--workflow-path ".github/workflows/wf-06-tce-healthcheck.yml"' not in tce_wf06_gap_observer or "--warn-only" not in tce_wf06_gap_observer:
+    fail("TCE WF-06 schedule inter-arrival observation must remain warning-only for Platform.")
+tce_wf12_gap_observer = native_schedule_gap_block.split('tce_wf12_runs_file="$RUNNER_TEMP/tce-wf12-scheduled-runs.json"', 1)[1]
+if '--workflow-path ".github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml"' not in tce_wf12_gap_observer or "--warn-only" not in tce_wf12_gap_observer:
+    fail("TCE WF-12 schedule inter-arrival observation must remain warning-only for Platform.")
 
 # Optional VPS MCP must remain read-only and subordinate to the sole GitOps apply authority.
 vps_mcp_contract = ROOT / "scripts" / "validate-vps-control-mcp-contract.py"
