@@ -3472,3 +3472,16 @@ This is successful fallback reconciliation evidence, not native schedule recover
 - TCE native WF-12 #42312029821 freshness FAILED; WF-07 #42311204446 passed. Native WF-06 #42289627961 and manual fallback #42312062418 failed four HTTP 200 probes with 503. WF-13 #42312046154 is workflow_run only.
 - Latest K3s snapshot #42312238041 generated 23:29:38Z: node Ready/ARM64, Media/MicroFE Running, Stock Admin/new Backend ImagePullBackOff due missing ARM64 manifest for `12d63b4`, legacy Stock Backend/Frontend Running, TCE/Auth/Keycloak 0/0, GitOps clean; disk 56%, ~21 GiB free, RAM ~19 GiB available, host restart required and updates pending. Platform/Media runners active with Listener; not idle.
 - No new immutable GHCR publication/digest/provenance or promotion. Decommission plan not dispatched; external backup/retention and DNS ownership unverified. No destructive or production mutation. Sole apply authority remains `reconcile-vps.yml`; `inspect-vps.yml` read-only. TCE market-scan schedule unchanged.
+
+
+---
+
+## Cross-repo operational checkpoint — 2026-11-07 07:07 ICT / 2026-11-07 00:07 UTC
+
+- Default heads: Platform `037919459c5300b74224071fd220e07a9b2ef901`; TCE `fc8766426138a5a681c040b58af3529e93b66ea4`; Stock `bc20dcfb9893ea246a5e46bef26cce1c92a940c9`; Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; Auth `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`.
+- Platform PR #1364 merged as `037919459c5300b74224071fd220e07a9b2ef901`; exact-head validation #42316121268 and post-merge #42316173098 passed.
+- TCE PR #1028 merged as `fc8766426138a5a681c040b58af3529e93b66ea4`; exact-head WF-05 #42315901962/WF-02 #42315901997 and post-merge WF-05 #42316036385/WF-02 #42316036410 passed; read-only WF-12 push smoke #42316036263 passed. WF-01 build #42316036320 remained in progress at 00:07:08Z.
+- Platform native schedule latest remains reconcile #42304064211 PASS, recovery #42304248066 PASS, watchdog #42304321570 CANCELLED, inspect #42301267072 PASS; no newer event=schedule through 00:07:08Z. TCE native WF-12 latest #42312029821 freshness FAIL; WF-06 latest native #42289627961 and manual fallback #42312062418 fail four HTTP 503 probes; WF-07 #42311204446 passed.
+- TCE WF-12 concurrency now event-scoped; next native event is required to verify it. Platform watchdog concurrency is also event-scoped; no post-fix native run has verified it. Do not count push, manual or workflow_run fallback as schedule proof.
+- Latest K3s snapshot #42312238041 generated 23:29:38Z: Ready ARM64 node, Media/MicroFE Running, Stock Admin/new Backend ImagePullBackOff due missing ARM64 manifest for `12d63b4`, TCE/Auth/Keycloak 0/0, GitOps clean, disk 56%, ~21 GiB free, RAM ~19 GiB available, host restart required and updates pending. Platform/Media runners active with Listener; not idle.
+- No new immutable GHCR publication/digest/provenance or promotion. Decommission plan not dispatched; external backup/retention and DNS ownership unverified. No destructive or production mutation. Sole apply authority `reconcile-vps.yml`; `inspect-vps.yml` read-only. TCE market-scan schedule unchanged.
