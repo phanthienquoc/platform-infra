@@ -5645,3 +5645,12 @@ Two original native events inside budget are still required. Dispatch/workflow_r
 - Docker/containerd and OS updates are available; `restart_required=yes`. No maintenance window or reboot was authorized.
 
 App repositories continue to own tests/builds and immutable GHCR publication. Platform Infra owns production manifests, shared GHCR pull credentials, digest/provenance verification, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
+---
+
+## Post-merge validation — 2026-11-07 16:10 ICT / 09:10 UTC
+
+- Platform Infra PR #1388 merged as `6339a927f37b4412d07cb2a24d0edf02be55b924` from exact head `4bf9aad9ba538b7458996dd84343df2fb772c40e`.
+- Exact-head validation #42358519891 and post-merge validation #42358556570 both completed success. All production-manifest, immutable-image, secret-policy, Keycloak-isolation and network-boundary validation steps passed.
+- The native schedule state remains partial: first post-gap reconcile/recovery/inspection events succeeded, while watchdog #42357048356 failed closed on the historical 24,521-second reconcile gap. No second native cycle had appeared by 09:10:21Z. Continue requiring two original scheduled runs within existing budgets.
+- No workflow/cron, image, manifest, secret, workload, runner, DNS, database/storage or host state was changed. TCE market-scan schedule unchanged.
