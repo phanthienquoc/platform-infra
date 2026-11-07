@@ -1,3 +1,39 @@
+## Current workflow inventory review — 2026-11-07 09:56 ICT / 2026-11-07 02:56 UTC
+
+This review supersedes older workflow evidence below. It records the native schedule verifier's fail-closed single-run contract and preserves workflow ownership and production authority boundaries.
+
+### Platform Infra
+| Workflow / script | Owner and authority | Current evidence / guard |
+|---|---|---|
+| .github/workflows/inspect-vps.yml | Platform; read-only VPS/K3s/storage/runner inspection | Latest native schedule #42326168875 at 01:50:19Z. Do not use stale/partial reconciliation inventory as a substitute for full host inspection. |
+| .github/workflows/reconcile-vps.yml | Platform; sole production GitOps apply authority | Latest native schedule #42327720407 at 02:08:35Z; target=all, mode=apply, allow_image_changes=false. GHCR preflight passed, shared ghcr-pull unchanged, Auth runtime Secret verified, TCE release pairing passed, GitOps clean, apply skipped. |
+| .github/workflows/recover-stale-ops.yml | Platform; scheduled recovery and verified fallback dispatch | Native schedule #42327707405 at 02:08:25Z. Schedule has a concurrency class isolated from diagnostics. |
+| .github/workflows/reconcile-schedule-watchdog.yml | Platform; schedule freshness enforcement and read-only TCE observer | Latest native run #42327836310 at 02:09:55Z. Event-scoped concurrency and inter-arrival detector are merged. PR #1374 adds fail-closed behavior when fewer than two original native schedule runs exist; strict Platform checks fail, while --warn-only observers remain advisory. |
+| scripts/verify-native-schedule-gap.py | Platform; original native event inter-arrival verifier | Requires at least two original event=schedule runs matching exact workflow path and master branch; checks full 40-character SHA, run_attempt=1, timestamp ordering and maximum gap. A single-run history is insufficient evidence and now fails strict mode. |
+| .github/workflows/decommission-stock-media.yml | Platform; manual read-only plan and protected namespace deletion | No plan dispatch in this run. mode=plan remains the only acceptable first step; deletion remains gated by external data, DNS and runner-retirement evidence. |
+
+### App repository workflows
+| Repository / workflow | Owner and authority | Current evidence / guard |
+|---|---|---|
+| TCE WF-01/WF-02/WF-05 | App CI, build, format and tests | Latest verified build #42316036320, backend tests #42316036385 and Prettier #42316036410 passed. |
+| TCE WF-03 | App-owned manual-only immutable TCE publisher | No new publication; must emit full-source-SHA ARM64 images and versioned digest/provenance handoff. |
+| TCE WF-06 | Strict public HTTP health contract | Native #42317701397 failed all four HTTP 200 probes with HTTP 503. Keep strict 200. |
+| TCE WF-12 / WF-13 | App-owned schedule watchdog, heartbeat and read-only recovery | WF-12 latest native #42312029821 failed; heartbeat workflow_run is not native schedule proof. Event-scoped concurrency remains; no post-merge native run yet. |
+| TCE WF-08B | Separate MicroFE Shell/WS publisher | Preserve as a separate publisher; it does not publish TCE app/Auth images. |
+| StockDividend CI / publisher | App-owned tests, builds and immutable GHCR publication | Master CI #42241252700 passed 7/7. Deployed tag 12d63b4 still lacks linux/arm64 manifest evidence; no new release. |
+| Media Generation CI / publisher | App-owned tests, native ARM64 build, checksum and immutable publication | Master CI #42239703151 passed; historical publisher evidence only. No new publication. |
+| Authentication CI / release.yml | App-owned tests and manual-only immutable publisher | Master CI #42215394539 passed; PR #75/#76 remain gated by Supabase integration/migration side-effect verification. No new publication. |
+
+### Shared contracts
+- App repositories own tests/builds, immutable full-source-SHA GHCR publication, SBOM/provenance/checksum/digest evidence and release metadata.
+- Platform owns production manifests, shared GHCR pull credentials, private-package preflight, digest/provenance validation, GitOps promotion/reconciliation, rollout and runtime health.
+- Stock/Media remain outside Platform GitOps. No direct SSH/Compose deployment authority is allowed.
+- Keep all useful CI/test/security, manual, release and scheduled workflows unless redundancy/obsolescence is demonstrated.
+- TCE/Auth remain in intentional maintenance; do not weaken strict health checks or activate replicas without service-owner approval.
+- TCE market-scan schedule unchanged.
+
+---
+
 ## Current workflow inventory review — 2026-11-07 08:15 ICT / 2026-11-07 01:15 UTC
 
 This review supersedes older workflow evidence below. It records the recovery-controller concurrency mitigation and preserves the existing production authority boundaries.
