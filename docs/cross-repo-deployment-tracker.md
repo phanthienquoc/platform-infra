@@ -4315,3 +4315,52 @@ No image publication/promotion, manifest apply, replica activation, namespace/PV
 - Next: (1) finish PR #36 exact-head checks; (2) operator adds the missing Stock repository secret; (3) verify a later native scraper run reaches authenticated non-guest entitlement; (4) investigate native Platform schedule delivery with Actions administration evidence; (5) retain strict TCE/Auth HTTP 200 and zero-replica maintenance until service-owner approval; (6) obtain Stock ARM64 full-source-SHA publisher evidence before any Platform promotion; (7) complete DNS/external-backup/runner retirement evidence before Stock/Media decommission.
 - No image publication/promotion, manifest apply, replica activation, namespace/PVC/PV deletion, runner retirement, DNS/database/object-storage mutation, secret write, host upgrade or reboot occurred in this checkpoint.
 - No cron expression changed. TCE market-scan schedule unchanged.
+
+
+---
+
+# Cross-repo post-merge checkpoint — 2026-11-07 14:08 ICT / 07:08 UTC
+
+## Changes merged since the previous checkpoint
+
+- Platform Infra PR [#1382](https://github.com/phanthienquoc/platform-infra/pull/1382) merged by squash as `88e1921ab67ffb2a6d3ad957ad18f6dd56bcb94b`. Exact-head validation #42349726330 passed; post-merge validation [#42349784407](https://github.com/phanthienquoc/platform-infra/actions/runs/42349784407) passed.
+- StockDividend PR [#36](https://github.com/phanthienquoc/stockdividend/pull/36) merged by squash as `7b88c804f1c015a3ff12a1ddc32ae7f85de0adb9`. Exact-head CI [#42349533563](https://github.com/phanthienquoc/stockdividend/actions/runs/42349533563) passed all 7/7 jobs. Post-merge CI [#42349827620](https://github.com/phanthienquoc/stockdividend/actions/runs/42349827620) is still running; backend tests, admin build, backend image/migration check, scraper syntax, and release contract passed, while scraper container and native ARM64 non-publishing builds were still in progress at 07:08Z.
+- Stock PR #36 adds operator documentation for the missing `VNSTOCK_API_KEY` repository secret, links the fail-fast workflow error to the guide, and protects the documentation link with a CI assertion. It does not set the secret.
+
+## Current default branch heads
+
+| Repository | Default branch head |
+|---|---|
+| Platform Infra | `88e1921ab67ffb2a6d3ad957ad18f6dd56bcb94b` |
+| TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` |
+| StockDividend | `7b88c804f1c015a3ff12a1ddc32ae7f85de0adb9` |
+| Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` |
+| Authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` |
+
+Open PRs after the merges: Platform #1314/#544/#541/#539 remain planning/documentation; Authentication #75 is ready but gated and #76 remains draft/gated; TCE, Stock and Media have no open PRs.
+
+## Stock scraper remains blocked on operator-owned secret setup
+
+- Native scraper run [#42349150261](https://github.com/phanthienquoc/stockdividend/actions/runs/42349150261) failed before dependencies or browser installation. Its job log shows `VNSTOCK_API_KEY` was empty and explicitly reports the repository secret is missing. No entitlement check, scrape, MongoDB write or Telegram notification ran.
+- Required operator action: add the exact `VNSTOCK_API_KEY` under StockDividend Settings → Secrets and variables → Actions → Repository secrets. Do not use an Environment-only secret because the job does not target an Environment. The next scheduled run is the safest passive verification; a manual run performs real ingestion side effects.
+- Cron `0 1 * * 0,6` and manual trigger remain unchanged. No secret was read or written by automation.
+- Latest Stock Actions run list after PR #36 merge shows CI #42349827620 only; no `deploy.yml` publisher run was triggered. The changed docs/workflow/validator paths remain ignored by the publisher. No GHCR image was published or promoted.
+
+## Native schedule and production status
+
+- Platform native schedules have not advanced: watchdog #42327836310, reconcile #42327720407, recovery #42327707405 and inspection #42326168875 remain latest native events. Successful reconcile #42346682137 and recovery #42346792089 are fallback dispatch/heartbeat runs, not native schedule evidence.
+- TCE native WF-06 #42346646839 failed all four strict public HTTP 200 probes with HTTP 503; WF-07 #42344977873 passed; WF-12 #42332584617 remains latest native watchdog event and failed freshness. WF-12 #42346663030 is a workflow_run diagnostic, not schedule proof.
+- Latest successful reconciliation #42346682137 used `target_app=all`, `mode=apply`, `ALLOW_IMAGE_CHANGES=false`; GHCR read preflight and Auth runtime Secret verification passed, shared `ghcr-pull` unchanged, TCE release pairing and GitOps diff passed, manifest apply and image promotion skipped. TCE/Auth lanes explicitly recorded intentional zero-replica maintenance.
+- Latest read-only K3s snapshot remains inspection #42345149215 / `debug/vps-latest.md`, generated 06:01:30Z. Node Ready/ARM64, disk 56% (~20 GiB free), RAM ~19 GiB available, Docker 29.1.3, containerd runtime 2.3.2-k3s2; package update 2.2.1→2.4.2 pending and restart required. Media/MicroFE running; Stock Admin/new Backend ImagePullBackOff on `12d63b4`; older Stock Backend/Frontend running; TCE/Auth/Keycloak 0/0; Keycloak OIDC probes 503.
+- Platform/Media runners remain active with Listener processes. External database/object-storage backup retention and authoritative DNS ownership remain unverified. No decommission or runner retirement is authorized.
+
+## Next actions and safety
+
+1. Wait for Stock post-merge CI #42349827620 to complete; record exact final result.
+2. Operator configures `VNSTOCK_API_KEY`; verify a later native scheduled scraper reaches authenticated non-guest entitlement.
+3. Investigate Platform native schedule delivery through an Actions administration surface; do not treat dispatch/workflow_run as schedule proof.
+4. Keep TCE/Auth 0/0 and strict HTTP 200 health checks until service-owner approval.
+5. Require a Stock full-source-SHA ARM64 publisher run and registry digest/provenance verification before Platform promotion.
+6. Verify DNS, external database/object-storage backups and runner retirement before any Stock/Media decommission.
+
+No image publication/promotion, manifest apply, replica activation, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation, secret write, host upgrade or reboot occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
