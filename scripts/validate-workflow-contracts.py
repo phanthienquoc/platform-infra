@@ -226,6 +226,26 @@ expected_recovery_sources = """    workflows:
 if expected_recovery_sources not in recovery or "types: [completed]" not in recovery:
     fail("Recovery controller must run after master reconciliation, scheduled inspection, and schedule-watchdog completion.")
 
+# Recovery is the independent observer for the schedule watchdog itself. This check is
+# warning-only so a missing watchdog never blocks the recovery controller's fallback work.
+watchdog_observer_marker = "      - name: Observe schedule watchdog workflow state\n"
+if watchdog_observer_marker not in recovery:
+    fail("Recovery must observe the schedule watchdog's enabled state.")
+watchdog_observer = recovery.split(watchdog_observer_marker, 1)[1].split("\n      - name:", 1)[0]
+for required in (
+    "actions/workflows/reconcile-schedule-watchdog.yml",
+    "state=unavailable",
+    '[[ "$state" != "active" ]]',
+    "::warning::",
+    "continuing recovery",
+):
+    if required not in watchdog_observer:
+        fail(f"Schedule watchdog state observation is incomplete: {required}")
+if "exit 1" in watchdog_observer:
+    fail("Schedule watchdog state observation must remain warning-only and never block recovery.")
+if recovery.find(watchdog_observer_marker) > recovery.find("- name: Resolve GitHub Actions API reference clock"):
+    fail("Schedule watchdog state must be observed before reconciliation recovery begins.")
+
 watchdog_recovery_gate = """             (github.event.workflow_run.workflow_id == 402675709 &&
               github.event.workflow_run.event == 'schedule' &&
               github.event.workflow_run.conclusion == 'failure')"""
