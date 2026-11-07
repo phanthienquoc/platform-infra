@@ -6133,3 +6133,40 @@ Platform PR #1410 merged from exact head `ed033efee66dce658beff3ddff0ca1ea85839f
 - Manual reconcile #42399872920 passed GHCR read preflight, provisioned Auth runtime Secret (values suppressed), left shared `ghcr-pull` unchanged, matched TCE desired/live release tags and found no manifest drift. Apply, promotion and rollout were skipped; 0/0 maintenance lanes do not assert live health.
 - No new immutable publisher/digest handoff or production image promotion. Keep app repositories as the only tests/builds/publishers. Platform remains the sole production apply authority. No direct SSH/Compose authority. TCE market-scan schedule unchanged.
 - Full evidence: `docs/cross-repo-deployment-checkpoints/2026-11-08-0202-ict.md`.
+
+
+---
+
+## Workflow inventory refresh — 2026-11-08 04:02 ICT / 2026-11-07 21:02 UTC
+
+### Current workflow evidence
+
+| Repository | Native schedule / latest CI | Ownership and interpretation |
+|---|---|---|
+| Platform Infra | Native reconcile #42407410735 PASS (stale); inspect #42409592778 PASS; watchdog #42406561460 FAIL; recovery #42406469813 PASS. Manual reconcile #42411280188 PASS. | Sole production manifests, shared GHCR pull credentials, digest/provenance validation, GitOps promotion/reconciliation, rollout and health. Inspection remains read-only. |
+| TCE Dashboard | WF-12 native #42411262379 FAIL; WF-06 native #42399835467 FAIL; fallback manual WF-06 #42411286211 FAIL (four HTTP 503). | App CI/tests and immutable publisher; strict public HTTP 200 checks; no direct SSH/Compose/K3s apply. Heartbeat dispatch accepted by Platform but is not service/schedule recovery. |
+| StockDividend | CI #42375688209 PASS 7/7; native scraper #42349150261 FAIL due missing VNSTOCK_API_KEY. | App-owned CI/build/immutable GHCR. Retired from active Platform GitOps. Scraper remains owner-secret gated and has a safe preflight-only path. |
+| Media Generation | CI #42239703151 PASS; no recent publisher run. | App-owned CI/build/immutable ARM64 GHCR. Retired from active Platform GitOps; no Platform dispatch by design. Dedicated runner retirement remains gated. |
+| Authentication | CI #42215394539 PASS; PR #75 #40446492086 PASS; PR #76 #41329425940 PASS. | App-owned CI and manual immutable ARM64 release. Platform owns runtime manifests/secrets/promotion. PRs #75/#76 remain Supabase migration/integration side-effect gated. |
+
+### Schedule classification
+
+Platform event=schedule evidence only: reconcile #42407410735 (19:41:08Z), inspection #42409592778 (20:08:29Z), watchdog #42406561460 (19:30:43Z), recovery #42406469813 (19:29:42Z). Inter-arrival gaps 14,624s / 16,311s / 15,011s / 15,306s exceed the 45/75/45/45-minute budgets. At 21:02:57Z, reconcile/watchdog/recovery are stale; inspection is still within its 75-minute age budget. Do not count fallback/manual runs.
+
+TCE WF-12 #42411262379 observed WF-06 native #42399835467 at age 8,386s vs 1,500s budget. WF-12 heartbeat job passed, Platform repository_dispatch #42411268909 succeeded, WF-13 fallback #42411274910 succeeded, and manual WF-06 #42411286211 failed four public endpoints with HTTP 503. This is transport/fallback evidence only. WF-06 remains `*/15 * * * *`; WF-12 remains `7,22,37,52 * * * *`; no schedule changes. Stock scraper cron remains `0 1 * * 0,6` UTC. Media/Auth do not need native publisher schedules.
+
+### GitOps/K3s
+
+Inspection #42409592778: node Ready/ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2, disk 56%, ~20 GiB free, ~19 GiB available RAM. Media/MicroFE Running; Stock Admin x2 and new Backend ImagePullBackOff on `12d63b4` without ARM64 imageID; legacy Stock Backend/Frontend Running; TCE/Auth/Keycloak 0/0. Platform and Media runner services active/enabled. External backup/retention and authoritative DNS ownership remain unverified; host `restart_required=yes`.
+
+Manual reconcile #42411280188 passed GHCR and Auth Secret preflight, left shared `ghcr-pull` unchanged and found no GitOps drift. Manifest apply and rollout were skipped; Stock ImagePullBackOff remains. No new immutable publisher/digest handoff or production image promotion was observed.
+
+### Newly discovered single-apply-authority violation
+
+Current source had two read-only-boundary defects:
+1. `scripts/reconcile-vps.sh run_diff()` applied the MicroFE and TCE Namespace manifests before `kubectl diff`, so `mode=plan` could mutate.
+2. `.github/workflows/bootstrap-runner.yml` used its SSH verification step to apply the MicroFE Namespace and create `k3s-debug`, bypassing `reconcile-vps.yml`.
+
+A focused Platform branch now removes these mutations, makes missing namespaces explicit drift, fails closed on API errors, keeps the only production apply in the explicit `reconcile-vps.sh apply` path, and adds shell regression/contract validation. No production cluster mutation was performed. The PR remains subject to exact-head required checks.
+
+Preserve all useful CI/test/security and purposeful manual/release/scheduled workflows. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. Do not add SSH/Compose deploy paths. TCE market-scan schedule unchanged.
