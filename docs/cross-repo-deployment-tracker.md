@@ -7,7 +7,7 @@ This review supersedes earlier status sections below. All five default branches,
 | Repository | Default branch SHA | Open PRs | Latest check evidence |
 |---|---|---|---|
 | Platform Infra | ddef203c7901b7fc2184b55b8e8ee1ba79458937 | #1314, #544, #541, #539 (all draft/docs) | Current master validate #42333048076 PASS. |
-| TCE Dashboard | 22d3d1fe465955b7e3171132cfd17cab70d17278 | #1030 (open; staging-only WF-10 contract) | App build #42332539095 PASS; backend tests #42332539027 PASS; Prettier #42332538988 PASS. Latest native WF-12 #42332584617 failed freshness; WF-06 fallback #42332606574 failed all four HTTP probes with 503. PR #1030 exact-head checks #42336965227/#42336965241/#42336965293 were queued/in progress at inspection. |
+| TCE Dashboard | 7ab52078c4250829e158f05b2695ceb9d11bdbe3 | None | PR #1030 exact-head WF-01P #42336965293, WF-05 #42336965241 and WF-02 #42336965227 all PASS; squash merged as 7ab52078. Post-merge WF-01 #42337126761, WF-05 #42337126734 and WF-02 #42337126665 were queued at 04:08Z. Latest native WF-12 #42332584617 failed freshness; WF-06 fallback #42332606574 failed all four HTTP probes with 503. |
 | StockDividend | bc20dcfb9893ea246a5e46bef26cce1c92a940c9 | None | CI #42241252700 PASS, 7/7 jobs including non-publishing ARM64 build and release-hold contract. |
 | Media Generation | 54f3a76a5f8861842fd1bae698c4cb0fa8c9034d | None | CI #42239703151 PASS. |
 | Authentication | 3b60ff46b8959d18aee1956f99d6b62589b8b9c5 | #75 ready/gated; #76 draft/gated | Master CI #42215394539: validation and ARM64 non-publishing build PASS; Supabase Preview skipped. |
@@ -35,13 +35,13 @@ StockDividend's weekend scraper latest schedule run remains #41284033242 (2026-1
 
 ### TCE workflow ownership correction — PR #1030
 
-PR #1030 is open on branch fix/wf10-staging-only-bootstrap-20261107-1102-ict, exact head b9eef1030f9e4becac31a731bc5a169ff32775f8.
+PR #1030 was squash-merged at 04:08:42Z as 7ab52078c4250829e158f05b2695ceb9d11bdbe3 from exact head b9eef1030f9e4becac31a731bc5a169ff32775f8.
 
 The retained wf-10-tce-k3s-bootstrap.yml previously created/labeled both tce-stg and tce-prod, and applied separate staging and production MFA secrets via direct SSH. The change removes the production namespace and production MFA operations, removes the MFA_ENCRYPTION_KEY_PROD reusable-workflow input, and explicitly leaves production namespace/runtime-secret ownership to Platform GitOps. WF-10 remains a staging-only manual/reusable bootstrap; its staging MFA secret and staging namespace setup are preserved.
 
 Evidence: WF-10 had no run in the latest 100 TCE Actions runs inspected, and no reference to its reusable-workflow path was found in the five deployment repositories. This PR does not delete the manual bootstrap or alter production state. The TCE release-contract validator now rejects any reintroduction of tce-prod, TCE_PROD_NAMESPACE, or MFA_ENCRYPTION_KEY_PROD in WF-10.
 
-At 04:06Z PR #1030 had three exact-head workflows queued/in progress: WF-01P #42336965293, WF-05 #42336965241, and WF-02 #42336965227. Do not merge until all required checks complete successfully and the exact head remains b9eef1030f9e4becac31a731bc5a169ff32775f8.
+Exact-head PR checks passed: WF-01P #42336965293, WF-05 #42336965241, and WF-02 #42336965227. PR was merged with expected head b9eef1030f9e4becac31a731bc5a169ff32775f8. Post-merge master checks #42337126761 (WF-01), #42337126734 (WF-05), and #42337126665 (WF-02) were queued at 04:08Z and require follow-through.
 
 ### Production reconciliation and latest read-only inspection
 
