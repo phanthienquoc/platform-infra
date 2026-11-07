@@ -92,7 +92,7 @@ The previous snapshot reported disk 56% (~21 GiB free), RAM available ~19 GiB, D
 
 ### Remaining blockers and next actions
 
-1. Observe at least one native Platform recovery/watchdog/reconcile schedule after #1369 and #1369? The recovery-controller isolation is #1369; do not infer recovery from push/manual runs.
+1. Observe at least one native Platform recovery-controller schedule after #1369, then verify subsequent watchdog/reconcile schedule events; do not infer recovery from push/manual runs.
 2. Obtain a fresh read-only VPS/K3s/storage/runner inspection.
 3. Run decommission-stock-media.yml with mode=plan only; compare Ingress/TLS/LoadBalancer data with authoritative DNS and review external database/object-storage backups and retention.
 4. Keep namespace deletion gated until data-retention review and dedicated Media runner idle/stop/disable/unregister evidence exist.
