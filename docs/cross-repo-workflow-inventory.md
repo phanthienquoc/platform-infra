@@ -5963,3 +5963,31 @@ Keep app repositories as the only tests/builds/immutable GHCR publishers. Platfo
 Latest inspection #42387216070 is ~81m old. Node Ready/ARM64; disk 56%; ~19 GiB RAM available. Media/MicroFE running; Stock Admin and one Backend pod ImagePullBackOff on tag `12d63b4` without ARM64 manifest; another Backend pod on `23b2878` running; TCE/Auth/Keycloak 0/0 maintenance. GitOps drift clean; shared `ghcr-pull` unchanged; Auth runtime Secret provisioned from protected Environment with values suppressed. External backup/retention and authoritative DNS ownership remain unverified.
 
 No new image publication/promotion, manifest apply, live service restoration, decommission, runner retirement, secret write, DNS/database/storage mutation or host maintenance. `reconcile-vps.yml` remains sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged. Full evidence: `docs/cross-repo-deployment-checkpoints/2026-11-07-2357-ict.md`.
+
+
+---
+
+## Cross-repo workflow inventory refresh — 2026-11-08 00:57 ICT / 17:57 UTC
+
+| Repository | Current SHA | Latest relevant CI / operations | Open PRs | Deployment ownership |
+|---|---|---|---|---|
+| Platform Infra | `8818263081199dd663c81912f7273f046899efa8` | #42394909702 master validation PASS; latest native reconcile #42387275904 PASS but stale; watchdog #42385910055 FAIL | #1314/#544/#541/#539 drafts | Sole production manifests, shared GHCR pull credentials, digest/provenance gate, GitOps apply/reconcile, rollout/health and protected decommission |
+| TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | WF-12 native #42392155494 FAIL stale WF-06; WF-06 native #42376773663 FAIL and manual #42392183179 HTTP 503 | None | App CI/tests, strict public health, backup/integration, manual immutable publishers; no production SSH/Compose/K3s apply |
+| StockDividend | `783ae36f128ba5dffeba8ac1d242602f160ecfd0` | CI #42375688209 7/7 PASS; scraper #42349150261 failed missing secret | None | App CI, ARM64 builds and immutable GHCR publisher; retired from active Platform GitOps; weekend scraper requires owner-managed VNSTOCK_API_KEY |
+| Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | CI #42239703151 PASS; no new publisher handoff | None | App CI and immutable ARM64 publisher; retired from active Platform GitOps; runner decommission gated by backup/DNS evidence |
+| Authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` | CI #42215394539 PASS; no new release | #75 ready, #76 draft | App CI and manual immutable ARM64 publisher; Platform owns runtime manifests/secrets/promotion; Supabase integration side-effect gate remains |
+
+### Native schedule and evidence classification
+
+- Platform native runs: reconcile #42387275904, inspection #42387216070, watchdog #42385910055, recovery #42385416779. All exceeded current freshness budgets by the 00:57 ICT review; native inter-arrival gaps are 24,008s / 25,037s / 23,511s / 23,289s respectively. Fallback/manual runs are not counted.
+- TCE: WF-06 latest native #42376773663; WF-12 latest native #42392155494. Heartbeat HTTP 204 and Platform recovery #42392163106 prove dispatch only. Public endpoints remain HTTP 503; keep expected HTTP 200.
+- Stock: scraper cron unchanged; last native run #42349150261 failed at missing secret before dependencies/ingestion. Safe preflight-only is available after owner adds the secret.
+- Media/Auth: no native scheduled publisher requirement. Do not add schedules just to normalize the inventory.
+
+### Platform GitOps / K3s boundary
+
+Inspection #42387216070 is stale at 141m. Last-known K3s: node Ready/ARM64; Media and MicroFE Running; Stock Admin and one Backend ImagePullBackOff on `12d63b4`; TCE/Auth/Keycloak 0/0 maintenance. Shared `ghcr-pull` unchanged, Auth runtime Secret provisioned, GitOps drift clean. External backups/retention and authoritative DNS ownership are not verified.
+
+Latest reconcile #42387275904 passed GHCR preflight and Auth secret/credential checks but skipped manifest apply and rollout. Manual fallback #42392174350 is not native schedule evidence and also did not establish a new live rollout. No image publication/promotion, namespace deletion, runner retirement, secret write or host mutation occurred.
+
+Preserve useful CI/test/security and purposeful manual/release/scheduled workflows. No direct SSH/Compose production authority. `reconcile-vps.yml` remains the sole production apply authority and `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
