@@ -83,7 +83,10 @@ def verify_interarrival(
         raise ValueError(f"latest native schedule run #{latest['id']} is newer than the watchdog API reference clock")
 
     if len(candidates) < 2:
-        return latest, None, None
+        raise ValueError(
+            f"only one original native schedule run for {workflow_path} is available; "
+            "at least two runs are required to verify the inter-arrival contract"
+        )
 
     previous_epoch, previous = candidates[-2]
     gap_seconds = latest_epoch - previous_epoch
@@ -156,15 +159,11 @@ def self_test() -> None:
     expect_error("short source SHA", "200", {"workflow_runs": [run(10, "2026-11-07T01:50:00Z", head_sha="abc1234")]})
     expect_error("API rate limit", "403", {})
 
-    latest, previous, gap = verify_interarrival(
+    expect_error(
+        "single-run history",
         "200",
         {"workflow_runs": [run(11, "2026-11-07T01:50:00Z")]},
-        ".github/workflows/reconcile-vps.yml",
-        "master",
-        reference,
-        20,
     )
-    assert latest["id"] == 11 and previous is None and gap is None
     print("Native schedule inter-arrival verifier self-tests passed.")
 
 

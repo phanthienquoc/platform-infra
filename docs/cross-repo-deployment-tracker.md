@@ -1,3 +1,95 @@
+## Current review — 2026-11-07 09:56 ICT / 2026-11-07 02:56 UTC
+
+This review supersedes older status sections below. The five repositories, open PRs, default refs, latest Actions runs, native schedule histories and deployment tracker were inspected before changes. This update records a fail-closed correction to the native schedule inter-arrival verifier. No image publication/promotion, manifest apply, replica activation, namespace deletion, runner retirement, DNS/database/storage mutation, host upgrade or reboot was initiated.
+
+### Default branches, open PRs and latest validation
+
+| Repository | Default branch SHA | Open PRs | Latest evidence |
+|---|---|---|---|
+| Platform Infra | 587d5fde27cae2e76a0cba4554b37f4a60bf5b3b | #1314, #544, #541, #539 | Post-merge validate-manifests #42328243276 passed on current master; PR #1372 and #1373 are merged. |
+| TCE Dashboard | fc8766426138a5a681c040b58af3529e93b66ea4 | None | Build #42316036320, backend tests #42316036385 and Prettier #42316036410 passed. Native WF-06 #42317701397 failed all four strict HTTP 200 probes with HTTP 503. |
+| StockDividend | bc20dcfb9893ea246a5e46bef26cce1c92a940c9 | None | Master CI #42241252700 passed 7/7 jobs. |
+| Media Generation | 54f3a76a5f8861842fd1bae698c4cb0fa8c9034d | None | Master CI #42239703151 passed. |
+| Authentication | 3b60ff46b8959d18aee1956f99d6b62589b8b9c5 | #75 ready/gated, #76 draft/gated | Master CI #42215394539 passed. |
+
+Open PR boundaries:
+- Platform #1314 remains a managed-mail documentation draft; #544, #541 and #539 remain Keycloak/identity documentation drafts with human review gates.
+- Auth #75 and #76 remain gated. #75 is not draft; #76 is draft. Both target master at old base 2189c97252bfe7ee53f50a68cf51008fa0d27c91. Their merge-triggered Supabase deployment/migration side effect remains unresolved; do not merge or retarget until the integration target/effect is authoritatively verified safe.
+- TCE, StockDividend and Media Generation have no open PRs.
+- Platform PR #1372 (native schedule inter-arrival detector) and #1373 (tracker refresh) are merged. Current master is 587d5fde27cae2e76a0cba4554b37f4a60bf5b3b.
+
+### Native schedule evidence at 02:56 UTC
+
+Platform native schedule runs:
+- Watchdog #42327836310 — schedule/SUCCESS, 02:09:55Z.
+- Reconcile VPS #42327720407 — schedule/SUCCESS, 02:08:35Z.
+- Recovery controller #42327707405 — schedule/SUCCESS, 02:08:25Z.
+- Inspect VPS #42326168875 — schedule/SUCCESS, 01:50:19Z.
+- No later native schedule run appeared in the latest event=schedule Actions query. The latest watchdog/reconcile/recovery events are before PR #1372 was merged; they do not verify post-merge behavior.
+
+TCE native schedule runs:
+- WF-06 #42317701397 — schedule/FAILURE, 00:21:14Z.
+- WF-12 #42312029821 — schedule/FAILURE, 2026-11-06 23:27:30Z.
+- WF-07 Backup #42311204446 — schedule/SUCCESS, 2026-11-06 23:20:15Z.
+- No post-merge native WF-12 run is present. WF-12 workflow_run heartbeat success is diagnostic evidence only, not a native schedule.
+
+StockDividend has a weekend-only scraper schedule; the latest returned native run is #41284033242 on 2026-11-01. No scheduled workflow was returned for Media Generation or Authentication in the queried history.
+
+### Native schedule verifier correction — current PR branch
+
+The existing scripts/verify-native-schedule-gap.py rejected long inter-arrival gaps, wrong workflow paths/branches, rerun-only history, malformed SHA and API errors. However, if exactly one original native schedule run existed, verify_interarrival returned success with a notice. In strict Platform watchdog mode this could produce a false green because no interval had actually been measured.
+
+The current branch fix/native-schedule-single-run-fail-closed-20261107-0956-ict changes that behavior:
+- Fewer than two original native schedule runs now raises a verification error.
+- The existing --warn-only behavior remains advisory for push smoke and cross-repository TCE observations; it emits a warning and returns success without claiming the interval passed.
+- The self-test now includes a single-run history failure fixture.
+- No cron expression, event filter, freshness budget, concurrency group, deployment dispatch, or TCE market-scan schedule changes.
+
+The change is being validated through the existing validate-github-actions workflow, which runs scripts/verify-native-schedule-gap.py --self-test and scripts/validate-workflow-contracts.py.
+
+### TCE health
+
+Native WF-06 #42317701397 returned HTTP 503 for:
+- https://tce.mrcute.space/
+- https://tce.mrcute.space/api/health
+- https://auth.mrcute.space/api/health
+- https://auth.mrcute.space/api/ready
+
+Expected status remains HTTP 200. TCE/Auth remain intentionally at zero replicas in maintenance. Do not weaken the health contract or activate replicas without service-owner approval.
+
+### Production reconciliation and runtime evidence
+
+Latest native successful reconciliation remains #42327720407:
+- event=schedule, target_app=all, mode=apply, allow_image_changes=false.
+- GHCR read preflight passed; shared ghcr-pull remained unchanged.
+- Auth runtime Secret was provisioned/verified with values suppressed.
+- TCE release pairing passed; GitOps diff was clean; manifest apply/rollout skipped; no image promotion.
+- This is a native schedule run, but it predates the latest Platform schedule-gap verifier merge.
+
+Latest full read-only inspection is #42326168875 (schedule/SUCCESS, 01:50:19Z). It is newer than the previous snapshot; use its job/artifact evidence before maintenance decisions. Do not infer decommission safety from namespace inventory alone.
+
+Known runtime issues remain:
+- Stock Admin and the newer Stock Backend image remain ImagePullBackOff due missing linux/arm64 manifest evidence for deployed tag 12d63b4; older Stock Backend/Frontend were previously observed running.
+- Media backend/frontend and MicroFE Shell/WS/NATS were previously observed running.
+- TCE/Auth/Keycloak remain at zero replicas/maintenance.
+- External database/object-storage backup and retention, and authoritative DNS ownership, remain unverified.
+- Dedicated Media runner idle/stop/disable/unregister evidence remains absent.
+
+### GHCR ownership and next actions
+
+- App repositories own tests/builds and immutable full-source-SHA GHCR publication with architecture, digest and provenance evidence.
+- Platform owns production manifests, shared GHCR pull credentials, preflight, digest/provenance verification, GitOps promotion/reconciliation, rollout and health.
+- Historical Stock, Media and Auth publisher evidence remains historical only; no new publication/promotion occurred in this review.
+- TCE WF-03 remains manual-only; WF-08B remains a separate MicroFE publisher.
+- Next: verify a native Platform schedule after #1372/#1369/#1363, ensure at least two original runs exist before declaring inter-arrival PASS, obtain a fresh read-only inspection, resolve Stock ARM64 publication with release authorization, and keep Auth #75/#76 gated pending Supabase integration safety.
+- Run Stock/Media decommission mode=plan only when workflow-dispatch capability is available; validate authoritative DNS and external backup/retention before any destructive step.
+- TCE/Auth activation remains blocked on explicit service-owner approval and passing HTTP 200 probes.
+- Host upgrade/reboot requires a separate maintenance window.
+
+No namespace/PVC/PV deletion, runner retirement, DNS/database/object-storage mutation, image publication/promotion, manifest apply, replica activation, host upgrade or reboot occurred. reconcile-vps.yml remains the sole production apply authority; inspect-vps.yml remains read-only. TCE market-scan schedule unchanged.
+
+---
+
 ## Current review — 2026-11-07 08:15 ICT / 2026-11-07 01:15 UTC
 
 This review supersedes older status sections below. Evidence was collected from current default-branch commits, open PR metadata, the latest Actions run collections, native-schedule event histories, PR #1369 exact-head and post-merge checks, selected TCE endpoint logs, and the latest successful reconciliation/inspection snapshots. No image publication/promotion, manifest apply, replica activation, namespace deletion, runner retirement, DNS/database/storage mutation, host upgrade or reboot was initiated.
