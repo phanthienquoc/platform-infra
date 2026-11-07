@@ -5991,3 +5991,10 @@ Inspection #42387216070 is stale at 141m. Last-known K3s: node Ready/ARM64; Medi
 Latest reconcile #42387275904 passed GHCR preflight and Auth secret/credential checks but skipped manifest apply and rollout. Manual fallback #42392174350 is not native schedule evidence and also did not establish a new live rollout. No image publication/promotion, namespace deletion, runner retirement, secret write or host mutation occurred.
 
 Preserve useful CI/test/security and purposeful manual/release/scheduled workflows. No direct SSH/Compose production authority. `reconcile-vps.yml` remains the sole production apply authority and `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
+
+---
+
+## PR #1410 merge evidence — 2026-11-08 01:04 ICT / 18:04 UTC
+
+Platform PR #1410 merged from exact head `ed033efee66dce658beff3ddff0ca1ea85839fe5` as `7369a8221294b62d501e3aff857c68b63ab9ba5f`. Exact-head validation #42399264103 and post-merge master validation #42399354714 both passed. The merge updates only the cross-repo deployment tracker, workflow inventory and timestamped checkpoint. No production deployment authority, workflow trigger, cron, image publication, manifest, secret or runtime state changed. Current Platform master matches the merge SHA. TCE market-scan schedule unchanged.
