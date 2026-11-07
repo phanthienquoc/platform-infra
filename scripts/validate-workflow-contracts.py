@@ -228,10 +228,10 @@ if expected_recovery_sources not in recovery or "types: [completed]" not in reco
 
 # Recovery is the independent observer for the schedule watchdog itself. This check is
 # warning-only so a missing watchdog never blocks the recovery controller's fallback work.
-watchdog_observer_marker = "      - name: Observe schedule watchdog workflow state\\n"
+watchdog_observer_marker = "      - name: Observe schedule watchdog workflow state\n"
 if watchdog_observer_marker not in recovery:
     fail("Recovery must observe the schedule watchdog's enabled state.")
-watchdog_observer = recovery.split(watchdog_observer_marker, 1)[1].split("\\n      - name:", 1)[0]
+watchdog_observer = recovery.split(watchdog_observer_marker, 1)[1].split("\n      - name:", 1)[0]
 for required in (
     "actions/workflows/reconcile-schedule-watchdog.yml",
     "state=unavailable",
