@@ -102,7 +102,7 @@ for required in (
 plan_case = reconcile_script.split("  plan)\n", 1)[1].split("  apply)\n", 1)[0]
 if "run_diff" not in plan_case or re.search(r"\b(?:apply|create)\b", plan_case):
     fail("reconcile-vps.sh plan must only perform the read-only diff path.")
-apply_case = reconcile_script.split("  apply)\n", 1)[1].split("  *)", 1)[0]
+apply_case = reconcile_script.split("  apply)\n", 1)[1].split("\n  *)", 1)[0]
 if "run_diff" not in apply_case or "run_kubectl apply -k environments/prod" not in apply_case:
     fail("Only explicit reconcile-vps.sh apply may apply the production Kustomize root.")
 
