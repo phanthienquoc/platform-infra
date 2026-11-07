@@ -1,3 +1,9 @@
+## Final merge evidence — 2026-11-07 22:06 ICT / 15:06 UTC
+
+Platform PR #1404 merged as `60ae5657551460f791a0d78f726575ee3ba7a028`; exact-head validation #42384636492 and post-merge validation #42384687767 passed. Current Platform master is `60ae565...`. The latest complete cross-repo operational inventory remains the 21:56 ICT snapshot. No deployment ownership, workflow trigger, cron, publication, promotion or production runtime behavior changed. TCE market-scan schedule unchanged.
+
+---
+
 ## Post-merge inventory confirmation — 2026-11-07 22:00 ICT / 15:00 UTC
 
 Platform PR #1403 merged as `b7ffad1c1537a927be4e4712555aca2a6be74751`; exact-head validation #42384489144 and post-merge validation #42384535327 passed. The 21:56 ICT inventory remains the current cross-repo workflow snapshot. No workflow ownership, trigger, cron, publication, promotion or production deployment behavior changed. TCE market-scan schedule unchanged.
