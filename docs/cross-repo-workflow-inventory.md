@@ -5169,3 +5169,15 @@ No current-master Stock/Media/Auth GHCR publication with verified digest/provena
 - K3s snapshot #42301267072 remains the latest full inspection: Ready ARM64 node, Media/MicroFE active, Stock Admin/new Backend ImagePullBackOff on missing ARM64 tag `12d63b4`, TCE/Auth/Keycloak 0/0, restart required and host updates pending. Platform/Media runner idle state, external backup/retention and authoritative DNS ownership remain unverified.
 - No production mutation, image publication/promotion, runner retirement, namespace deletion, DNS/database/storage change or host reboot. TCE market-scan schedule unchanged.
 
+
+
+---
+
+## Cross-repo operational checkpoint — 2026-11-07 06:58 ICT
+
+- Current default heads: Platform `63be27e4062d5e0bc315936575a4cd3681dab599`; TCE `f4240ada56da700af00100fb3f01278b9b883951`; Stock `bc20dcfb9893ea246a5e46bef26cce1c92a940c9`; Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; Auth `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`.
+- Platform ownership: `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` is read-only. The watchdog concurrency group is event-scoped after PR #1363; cron is unchanged. Latest native reconcile/recovery passed at 22:21/22:22Z, but native watchdog #42304321570 was cancelled at 22:23Z and no later native schedule event was observed by 23:58Z. Later inspect/reconcile/recovery runs were workflow_dispatch fallbacks, not schedule proof.
+- App ownership: TCE, Stock, Media and Auth own source tests/builds and immutable GHCR publication. Platform owns shared pull credentials, exact publisher-run/source-SHA/digest/provenance validation, production manifests, GitOps promotion/reconciliation, rollout and health. No new immutable publication/promotion was found.
+- TCE: WF-12 native #42312029821 freshness failed; WF-06 native #42289627961 and manual fallback #42312062418 failed four strict HTTP 200 probes with HTTP 503; WF-07 native #42311204446 passed. WF-13 workflow_run success is not schedule proof. Preserve all cron and health budgets, including the TCE market-scan schedule.
+- Production snapshot: inspect-vps #42312238041 generated 23:29:38Z via workflow_dispatch. K3s node Ready/ARM64; Media/MicroFE Running; Stock Admin/new Backend ImagePullBackOff due missing `linux/arm64` manifest for `12d63b4`; TCE/Auth/Keycloak 0/0; GitOps clean. Disk 56%, ~21 GiB free, RAM ~19 GiB available; host restart required and updates pending. Platform/Media runners active with Listener; no idle proof.
+- Safety gates remain: no namespace/PVC/PV deletion, runner retirement, external database/object-storage/DNS mutation, manifest apply, image promotion, replica activation or host reboot. Decommission `mode=plan` not run because workflow dispatch is unavailable. DNS/provider ownership and external backup/retention are unverified.
