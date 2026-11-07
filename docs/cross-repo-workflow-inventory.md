@@ -1,3 +1,44 @@
+## Current workflow ownership review — 2026-11-07 10:11 ICT / 2026-11-07 03:11 UTC
+
+This section supersedes older evidence below and records the current ownership boundary after Platform PRs #1374/#1375 and TCE PR #1029.
+
+### Platform Infra authority
+| Workflow / script | Owner / authority | Current state |
+|---|---|---|
+| `.github/workflows/reconcile-vps.yml` | Sole production GitOps apply/reconciliation authority | Latest successful run #42332015427: target=all, mode=apply, allow_image_changes=false; GHCR preflight and Auth runtime Secret verification passed, shared ghcr-pull unchanged, GitOps clean, apply/promotion skipped. |
+| `.github/workflows/inspect-vps.yml` | Read-only K3s/VPS/runner/storage inspection | Inspection #42332606240 dispatched from validated TCE heartbeat recovery; snapshot generated 03:08:46Z and PR #1375 merged. This does not count as native schedule evidence. |
+| `.github/workflows/recover-stale-ops.yml` | Validates TCE heartbeat and recovers stale reconciliation/inspection delivery | TCE heartbeat #42332584617 accepted by #42332591614; exact repo/event/path/run/attempt/SHA validated. Recent reconciliation prevented duplicate apply; stale inspection triggered read-only workflow_dispatch. |
+| `.github/workflows/reconcile-schedule-watchdog.yml` | Native schedule freshness and inter-arrival enforcement | Event-scoped concurrency and inter-arrival verifier merged. Strict mode now requires at least two original native runs; push smoke remains warn-only. No native Platform schedule after the latest fixes was present at 03:11Z. |
+| `scripts/verify-native-schedule-gap.py` | Native schedule history verifier | Strict fail-closed on fewer than two original schedule runs; requires exact workflow path, master branch, original attempt, valid SHA and bounded inter-arrival. |
+| `.github/workflows/vps-image-cleanup.yml` / `scripts/cleanup-k3s-images.sh` | Platform-owned K3s image cleanup, not deployment | Weekly schedule always dry-run; manual dispatch defaults dry-run and deletion requires explicit `dry_run=false`. Protects all Pod and CRI container references; fails closed on unresolved active references. |
+| `.github/workflows/inspect-vps.yml` | Read-only | Must not mutate workloads, credentials or host packages. |
+| `.github/workflows/decommission-stock-media.yml` | Protected decommission plan/apply | No dispatch performed. Plan and external DNS/backup checks are required before deletion. |
+
+### App workflow ownership after TCE WF-04 retirement
+| Repository / workflow | Owner / authority | Current evidence / decision |
+|---|---|---|
+| TCE WF-01 / WF-01P / WF-02 / WF-05 | App CI, build, formatting and tests | PR #1029 exact-head CI passed; post-merge WF-01 #42332539095, WF-05 #42332539027 and WF-02 #42332538988 passed. WF-01 no longer requires production VPS SSH secret. |
+| TCE WF-03 | App-owned manual-only immutable GHCR publisher | Full-source-SHA tags and registry digests; no SSH, tarball-to-VPS or Kubernetes apply. No new publication in this review. |
+| TCE WF-04 | Legacy direct-SSH production cleanup | Removed by PR #1029. It was an automatic WF-03 workflow_run plus manual cleanup, using legacy host/tarball/image-name assumptions. Platform's safe K3s image cleanup supersedes its image-pruning role. Contract validator prevents restoration. |
+| TCE WF-06 | Strict public HTTP 200 health probes | Latest manual fallback #42332606574 failed all four endpoints with HTTP 503. Keep strict 200; no replica activation without owner approval. |
+| TCE WF-07 backup | App-specific scheduled/manual backup | Preserved; do not remove without separate backup destination/retention/restore evidence. Latest native backup #42311204446 succeeded. |
+| TCE WF-09 Nginx audit | Manual read-only audit | Preserved. |
+| TCE WF-09 safe setup | Manual staging-scoped setup | Preserved; not a production deployment authority. |
+| TCE WF-10 K3s bootstrap | Manual/workflow_call bootstrap and TCE staging/MFA configuration | Retained pending a separate ownership transfer; not used for normal release. Review callers and staging secret ownership before retiring. |
+| TCE WF-12 / WF-13 | Scheduled health watchdog and verified read-only fallback | Native WF-12 #42332584617 ran at 03:08:21Z but failed because WF-06 native event was 167m stale. Heartbeat accepted by Platform; WF-13 fallback succeeded; WF-06 fallback failed HTTP 503. |
+| Stock `ci.yml` / `deploy.yml` | App-owned tests, native ARM64 builds, immutable GHCR publication | CI #42241252700 passed 7/7. Publisher builds scraper/admin/backend on ARM64 and verifies full-SHA digest/manifest; no new release. No SSH/kubectl deployment workflow found. |
+| Media CI / publisher | App-owned tests and immutable ARM64 GHCR publication | CI #42239703151 passed; historical publisher only. No SSH/kubectl deployment workflow found. |
+| Auth CI / `release.yml` | App-owned tests and manual immutable publisher | CI #42215394539 passed; no SSH/kubectl deployment workflow found. PR #75/#76 remain gated on Supabase safety. |
+
+### Preserved workflow policy
+- Keep useful CI/test/security workflows and purposeful manual, release and scheduled jobs.
+- Do not restore TCE WF-04 or another direct SSH/Compose production cleanup/deployment path.
+- TCE WF-07 backup, WF-09 read-only audit, WF-09 staging setup and WF-10 bootstrap remain separate utilities until their owners/retention/runtime-secret contracts are verified.
+- App repos own tests/builds and immutable GHCR publication; Platform owns production manifests, shared GHCR pull credentials, promotion/reconciliation, rollout and health.
+- TCE market-scan schedule unchanged.
+
+---
+
 ## Current workflow inventory review — 2026-11-07 09:56 ICT / 2026-11-07 02:56 UTC
 
 This review supersedes older workflow evidence below. It records the native schedule verifier's fail-closed single-run contract and preserves workflow ownership and production authority boundaries.
