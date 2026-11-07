@@ -5551,3 +5551,16 @@ App repos own tests/builds and immutable GHCR publication. Platform Infra owns p
 - TCE native WF-06 #42346646839 returned four HTTP 503s; WF-07 #42344977873 passed; WF-12 #42332584617 is latest native watchdog failure. TCE/Auth remain intentional 0/0 maintenance; cron and strict health gates unchanged.
 - Latest reconcile #42346682137: GHCR preflight and Auth runtime Secret verified; shared `ghcr-pull` unchanged; GitOps clean; manifest apply/image promotion skipped. Latest K3s inspection #42345149215 is 06:01:30Z; Stock `12d63b4` Admin/new Backend ImagePullBackOff, Media/MicroFE Running, TCE/Auth/Keycloak 0/0, node Ready ARM64, restart required. Platform/Media runners active.
 - External backup/retention and DNS ownership remain unverified; no destructive changes. `reconcile-vps.yml` sole apply authority; `inspect-vps.yml` read-only. TCE market-scan schedule unchanged.
+
+
+---
+
+## Final post-merge verification — 2026-11-07 14:11 ICT / 07:11 UTC
+
+- Platform PR #1383 exact-head #42350048383 and post-merge #42350104815 PASS; merge SHA `74cf3b0bff41f8c440f80b043715498b48535b57`.
+- Stock PR #36 exact-head #42349533563 and post-merge #42349827620 PASS 7/7; merge SHA `7b88c804f1c015a3ff12a1ddc32ae7f85de0adb9`. No `deploy.yml` publisher run followed; docs/workflow/validator paths were ignored. No GHCR publication or promotion.
+- Stock native scraper #42349150261 failed preflight because `VNSTOCK_API_KEY` was empty. PR #36 documents the repository-secret setup but does not write it. Operator must add it under Repository secrets; next scheduled run verifies entitlement.
+- Platform native schedules remain stale (watchdog #42327836310, reconcile #42327720407, recovery #42327707405, inspection #42326168875); fallback runs do not substitute for event=schedule evidence.
+- TCE native WF-06 #42346646839 returned four HTTP 503s; WF-07 #42344977873 passed; WF-12 #42332584617 is latest native watchdog failure. TCE/Auth remain 0/0 maintenance.
+- Latest reconcile #42346682137 had clean GitOps, unchanged shared `ghcr-pull`, verified Auth runtime Secret, no manifest apply or image promotion. Latest K3s inspection #42345149215 remains the snapshot; Stock `12d63b4` Admin/new Backend ImagePullBackOff; Media/MicroFE Running; TCE/Auth/Keycloak 0/0; runners active.
+- External backup/retention and DNS ownership remain unverified; no decommission, runner retirement or destructive mutation. `reconcile-vps.yml` sole apply authority; `inspect-vps.yml` read-only. TCE market-scan schedule unchanged.
