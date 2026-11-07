@@ -1704,6 +1704,29 @@ if "stale_reconcile" not in lane_queue_contract or 'status in ("in_progress", "c
 if "Still-queued unassigned lanes remain actionable." not in lane_queue_contract:
     fail("Stale reconciliation handling must continue enforcing currently unassigned deployment lanes.")
 
+# Native schedule delivery must detect long gaps between consecutive original schedule events,
+# even when a delayed latest run makes the ordinary age check look fresh.
+native_schedule_gap_script = ROOT / "scripts" / "verify-native-schedule-gap.py"
+if not native_schedule_gap_script.is_file():
+    fail("The native schedule inter-arrival verifier is missing.")
+if "python3 scripts/verify-native-schedule-gap.py --self-test" not in actions_validation:
+    fail("Workflow validation must execute native schedule inter-arrival regression fixtures.")
+native_schedule_gap_step = watchdog.find("name: Verify native schedule inter-arrival gaps")
+if native_schedule_gap_step < 0 or "if: always()" not in watchdog[native_schedule_gap_step:]:
+    fail("Native schedule inter-arrival diagnostics must run even when freshness checks fail.")
+for required in (
+    'verify_platform_schedule_gap reconcile-vps.yml "$MAX_AGE_MINUTES"',
+    'verify_platform_schedule_gap inspect-vps.yml "$MAX_INSPECTION_AGE_MINUTES"',
+    'verify_platform_schedule_gap recover-stale-ops.yml "$MAX_RECOVERY_AGE_MINUTES"',
+    '--workflow-path ".github/workflows/wf-06-tce-healthcheck.yml"',
+    '--max-gap-minutes "$MAX_TCE_WF06_AGE_MINUTES"',
+    'per_page=100',
+):
+    if required not in watchdog:
+        fail(f"Native schedule inter-arrival watchdog contract is missing: {required}")
+if '            --max-gap-minutes "$MAX_TCE_WF06_AGE_MINUTES" \\\n              --warn-only' not in watchdog:
+    fail("Cross-repository TCE schedule inter-arrival observation must remain warning-only for Platform.")
+
 # Optional VPS MCP must remain read-only and subordinate to the sole GitOps apply authority.
 vps_mcp_contract = ROOT / "scripts" / "validate-vps-control-mcp-contract.py"
 if not vps_mcp_contract.is_file():
