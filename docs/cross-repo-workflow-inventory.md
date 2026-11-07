@@ -5318,3 +5318,15 @@ No current-master Stock/Media/Auth GHCR publication with verified digest/provena
 - Platform native reconcile/recovery/watchdog latest are #42304064211 PASS, #42304248066 PASS and #42304321570 CANCELLED. TCE native WF-12 #42312029821 failed freshness; WF-06 #42289627961 failed and manual fallback #42312062418 returned four HTTP 503s; WF-07 #42311204446 passed. Preserve all cron/health/freshness budgets.
 - Latest full K3s inspection #42312238041 is a workflow_dispatch snapshot, not native schedule: Ready ARM64 node; Media/MicroFE Running; Stock Admin/new Backend ImagePullBackOff on missing ARM64 tag `12d63b4`; TCE/Auth/Keycloak 0/0; GitOps clean; disk 56%, ~21 GiB free; RAM ~19 GiB available; host restart required. Platform/Media runners active with Listener; no idle proof.
 - No new current-master immutable GHCR publication/digest/provenance, image promotion, manifest apply, replica activation, runner retirement, namespace deletion, DNS/database/storage mutation or host reboot. Decommission plan not dispatched; external backup/retention and DNS ownership unverified. TCE market-scan schedule unchanged.
+
+
+---
+
+## Native schedule inter-arrival contract — merged PR #1372
+
+- scripts/verify-native-schedule-gap.py validates the latest two original event=schedule runs using exact workflow path, head_branch=master, a full 40-character head_sha, run_attempt=1, and monotonic created_at timestamps. It rejects dispatch/workflow_run substitution, wrong path/branch, reruns-only history, malformed/future timestamps, API errors and inter-arrival gaps beyond the configured budget. A single historical run is reported as not yet measurable; the existing latest-run freshness check remains authoritative for age.
+- Platform watchdog enforcement uses existing budgets: reconcile-vps.yml 45m, inspect-vps.yml 75m, recover-stale-ops.yml 45m, and reconcile-schedule-watchdog.yml 45m. This supplements, rather than replaces, latest-run freshness and runner queue diagnostics.
+- Cross-repository observations for TCE wf-06-tce-healthcheck.yml and wf-12-tce-healthcheck-schedule-watchdog.yml use 25m inter-arrival budgets and remain warning-only. They cannot gate Platform reconciliation.
+- Push-only watchdog smoke is warning-only for stale/missing schedule data; native schedule, workflow_run and manual enforcement remain fail-closed for Platform history/API gaps. TCE observations remain advisory for all events.
+- PR #1372 exact-head validation: #42327826614 and #42327826619 PASS. Post-merge validation: #42327920371 and #42327920340 PASS. Post-merge read-only watchdog smoke #42327920376 PASS with warnings for the observed multi-hour gaps.
+- No cron expression changed. The TCE market-scan schedule, strict HTTP 200 health contract, production apply serialization and sole reconcile-vps.yml apply authority remain unchanged.
