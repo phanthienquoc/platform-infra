@@ -1,3 +1,45 @@
+## Current workflow ownership review — 2026-11-07 11:02 ICT / 2026-11-07 04:02 UTC
+
+This section supersedes earlier workflow-status summaries below and records the latest ownership audit, including TCE PR #1030.
+
+### Platform Infra
+| Workflow / script | Authority | Current evidence |
+|---|---|---|
+| reconcile-vps.yml | Sole production GitOps apply/reconciliation authority | Latest successful reconciliation #42332015427 used target_app=all, mode=apply, allow_image_changes=false; GHCR preflight and Auth runtime Secret verification passed, shared ghcr-pull unchanged, GitOps clean, apply/promotion skipped. |
+| inspect-vps.yml | Read-only K3s/VPS/runner/storage inspection | Latest dispatch inspection #42332606240 generated snapshot 03:08:46Z; it does not count as native schedule delivery. |
+| recover-stale-ops.yml | Validated heartbeat and stale reconciliation/inspection recovery | TCE heartbeat #42332584617 was accepted by Platform #42332591614 after exact repository/event/path/run/attempt/SHA verification. |
+| reconcile-schedule-watchdog.yml | Native schedule freshness/inter-arrival enforcement | Event-scoped concurrency, inter-arrival verification and single-run fail-closed guard are merged. Latest native watchdog #42327836310 is pre-latest-fix evidence; no newer native event was returned at 04:02Z. |
+| scripts/verify-native-schedule-gap.py | Native schedule history contract | Strict mode requires at least two original schedule runs, exact workflow path, master branch, attempt 1, full SHA, monotonic timestamps and gap within budget. |
+| decommission-stock-media.yml | Protected Stock/Media decommission plan/delete | No run dispatched. Plan is read-only but requires self-hosted runner and actual host/DNS/backup review. Workflow-dispatch capability is not exposed by current connector. |
+| vps-image-cleanup.yml | Platform-owned K3s image cleanup only | Weekly schedule dry-run; manual deletion requires explicit input and Pod/CRI reference checks. |
+
+### TCE Dashboard
+| Workflow | Authority | Current evidence / boundary |
+|---|---|---|
+| WF-01/WF-01P/WF-02/WF-05 | App CI, build, formatting and tests | Current master build #42332539095, backend tests #42332539027 and Prettier #42332538988 passed. |
+| WF-03 | App-owned manual-only immutable GHCR publisher | Publishes full-source-SHA images, verifies registry digests and sends a provenance-rich Platform request. No new release in this review. |
+| WF-04 cleanup | Legacy direct-SSH production cleanup | Removed by merged PR #1029; do not restore. |
+| WF-06 | Strict public HTTP 200 probes | Latest fallback #42332606574 failed all four endpoints with HTTP 503. Do not weaken status expectations or activate 0/0 workloads without owner approval. |
+| WF-07 backup | App-specific scheduled/manual backup | Preserved; native backup #42311204446 succeeded. |
+| WF-09 audit/setup | Read-only audit and manual staging setup | Preserved; staging-only scope. |
+| WF-10 bootstrap | Staging-only K3s/MFA bootstrap | PR #1030 merged as 7ab52078; removes tce-prod namespace and production MFA secret operations, retains tce-stg and MFA_ENCRYPTION_KEY_STG. Exact-head WF-01P/WF-05/WF-02 checks passed; post-merge master CI was queued at 04:08Z. |
+| WF-12/WF-13 | Scheduled health watchdog and verified read-only fallback | Native WF-12 #42332584617 failed because WF-06 was 167m stale; heartbeat was accepted by Platform; WF-13 fallback dispatched once; WF-06 fallback returned four HTTP 503s. |
+
+### StockDividend, Media Generation and Authentication
+- StockDividend: app-owned CI and native ARM64 immutable publisher. Current CI #42241252700 passed 7/7. No new publication. Deployed tag 12d63b4 still lacks ARM64 manifest; release gate remains closed pending authorization.
+- Media Generation: app-owned ARM64 publisher with checksum/digest verification. Current CI #42239703151 passed. No new publication or Platform production handoff; Stock/Media production GitOps scopes remain retired.
+- Authentication: manual-only ARM64 publisher with provenance/SBOM and digest verification; Platform owns promotion and runtime secrets. Current CI #42215394539 passed validation and non-publishing ARM64 build; Supabase Preview skipped. PR #75/#76 remain gated and 13 commits behind master pending migration side-effect review.
+
+### Open PR and merge policy
+- Platform #1314/#544/#541/#539 are draft documentation/planning PRs; their current validation checks pass but no automatic merge is warranted.
+- TCE #1030 merged after exact-head WF-01P/WF-05/WF-02 checks passed; post-merge master CI is being verified.
+- Auth #75 is ready but gated; #76 remains draft/gated. Do not retarget/merge until Supabase production migration side effects are authoritatively understood.
+- Stock and Media have no open PRs.
+
+reconcile-vps.yml remains the only production apply authority. App repositories publish immutable images but do not apply production manifests or mutate K3s. Preserve useful CI, security, backup, manual, release and scheduled workflows. TCE market-scan schedule unchanged.
+
+---
+
 ## Current workflow ownership review — 2026-11-07 10:11 ICT / 2026-11-07 03:11 UTC
 
 This section supersedes older evidence below and records the current ownership boundary after Platform PRs #1374/#1375 and TCE PR #1029.
