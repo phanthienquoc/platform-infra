@@ -5612,3 +5612,36 @@ TCE market-scan schedule unchanged.
 - Exact-head validation run #42353849550 completed success; the full `validate-manifests` job passed.
 - Platform Infra remains the only production GitOps apply authority. The runbook's workflow-state enable procedure requires Actions write permission and owner approval; its diagnostic workflow runs do not count as native schedule evidence.
 - No cron, workflow, production manifest, secret, runner, or live cluster state changed. TCE market-scan schedule unchanged.
+
+
+---
+
+## Workflow inventory update — 2026-11-07 16:03 ICT / 09:03 UTC
+
+### Platform native schedule evidence (fresh API run-list query)
+
+| Workflow | Latest native schedule | Previous native schedule | Current evidence |
+|---|---|---|---|
+| `reconcile-vps.yml` | #42357630554, 08:57:16Z, success | #42327720407, 02:08:35Z | First post-gap native reconcile succeeded; historical gap 24,521s still exceeds 45m |
+| `reconcile-schedule-watchdog.yml` | #42357048356, 08:48:41Z, failure | #42327836310, 02:09:55Z | Fails closed on the 24,521s reconcile inter-arrival gap; historical gap guard is behaving as designed |
+| `recover-stale-ops.yml` | #42356893297, 08:46:27Z, success | #42327707405, 02:08:25Z | First post-gap native recovery succeeded; historical gap 23,882s exceeds 45m |
+| `inspect-vps.yml` | #42356397506, 08:39:21Z, success | #42326168875, 01:50:19Z | Read-only inspection/PR #1387 succeeded; historical gap 24,542s exceeds 75m |
+
+Two original native events inside budget are still required. Dispatch/workflow_run/push events and reruns are not substitutes. Latest watchdog workflow_run #42357736839 failed on the same historical reconcile gap; recovery workflow_run #42357736854 succeeded but is diagnostic only.
+
+### TCE and Stock scheduled workflow evidence
+
+- TCE WF-06 native #42346646839 and #42317701397 both failed four strict HTTP 200 probes (observed HTTP 503); inter-arrival 21,617s versus 25m. Keep health gates unchanged.
+- TCE WF-12 native #42332584617 and #42312029821 both failed freshness; inter-arrival 13,251s versus 25m. Later workflow_run runs are not native proof.
+- TCE WF-07 integration #42344977873 and #42279415510 passed; it does not prove TCE/Auth service health.
+- Stock scraper #42349150261 failed before dependency installation because `VNSTOCK_API_KEY` was empty; previous native #41284033242 was cancelled. Keep weekend cron `0 1 * * 0,6`; repository owner must add the secret.
+- No native schedule event appeared in the latest 100 Actions runs for Media Generation or Authentication.
+
+### Latest production evidence and ownership
+
+- Native scheduled reconciliation #42357630554 passed GHCR read preflight, Auth runtime Secret provisioning/verification, shared `ghcr-pull` reconciliation, TCE release pairing and maintenance-aware Auth/TCE/MicroFE lanes. GitOps diff was clean; manifest apply and image promotion were skipped. No new image was published or promoted.
+- Read-only inspection #42356397506 generated `debug/vps-latest.md` at 08:39:29Z and was merged by inspection PR #1387. K3s node Ready/ARM64; Media and MicroFE pods Running; Stock Admin/new Backend remain ImagePullBackOff on `12d63b4` without `linux/arm64` manifest; TCE/Auth/Keycloak remain 0/0.
+- Platform and Media runner services remain active with Listener processes. Stock/Media have no PVC/PV or VolumeSnapshot references in the snapshot, but external backup/retention and authoritative DNS ownership remain unverified.
+- Docker/containerd and OS updates are available; `restart_required=yes`. No maintenance window or reboot was authorized.
+
+App repositories continue to own tests/builds and immutable GHCR publication. Platform Infra owns production manifests, shared GHCR pull credentials, digest/provenance verification, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.

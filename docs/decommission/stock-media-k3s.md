@@ -119,3 +119,20 @@ The manual `decommission-stock-media` workflow now separates inspection from del
 - `mode=delete` remains a separate protected production operation. It requires all three exact operator confirmations, verifies the dedicated Media runner is stopped/disabled and has no Listener, repeats the storage preflight in the same run, and only then deletes the two fixed namespaces.
 - The workflow remains `workflow_dispatch` only. No schedule, push, repository-dispatch or automatic decommission path is added.
 - Plan mode does not infer GitHub runner registration or external backup/DNS ownership; those remain operator checks. It prints in-cluster Ingress host/TLS references for DNS reconciliation, but does not query or mutate authoritative DNS. It does not stop or unregister any runner.
+
+
+## Latest runtime evidence — 2026-11-07 15:39 ICT / 08:39 UTC
+
+This section supersedes the 13:01 ICT / 06:01 UTC snapshot above. Source: read-only inspection [#42356397506](https://github.com/phanthienquoc/platform-infra/actions/runs/42356397506), generated at `2026-11-07T08:39:29Z`, committed by inspection PR #1387 as master `067b3a2a85bf9b2590829e16c6dc57adf87a4cc8`. The inspection run completed successfully; no workload or production manifest was changed.
+
+- Node `tce-k3s-01` is Ready, ARM64, K3s `v1.36.3+k3s1`, containerd runtime `2.3.2-k3s2`. Host Ubuntu 22.04.5; disk 56% used (~20 GiB free); available RAM ~19 GiB.
+- Docker 29.1.3: 20 images, 11 active, 9.195 GB; 5.773 GB reclaimable. Build cache: 31 entries / 519.4 MB.
+- `restart_required=yes`. containerd 2.2.1→2.4.2, Docker CE/CLI 29.1.3→29.9.3 and other OS package updates are available. Upgrade/reboot requires a separate maintenance window.
+- The dedicated Media runner service remains active and enabled; `/opt/media-actions-runner/bin/Runner.Listener` is present. The shared Platform runner and Listener are also active and must remain untouched.
+- `media-prod`: backend and frontend each 1/1 Running.
+- `stock-prod`: two Admin Pods and the newer Backend Pod are ImagePullBackOff on tag `12d63b4` because GHCR has no matching `linux/arm64` manifest. Older Backend and Frontend remain Running.
+- `microfe-platform`: Shell, WS and NATS 1/1 Running; Keycloak and microfe-auth 0/0. `tce-prod` frontend/service are 0/0 maintenance.
+- Only PVC/PV claim listed is `k3s-debug/k3s-debug-logs`; no Stock/Media VolumeSnapshot or VolumeSnapshotContent references. This is in-cluster evidence only; external database/object-storage backups, retention and ownership remain unverified.
+- Media Ingress still publishes `media.mrcute.space`; Stock Ingresses still publish the four Stock hostnames. Authoritative DNS/provider ownership must be confirmed before decommission.
+
+The protected decommission workflow was not dispatched. The delete gate remains blocked by the active/enabled Media runner and missing external backup/retention and DNS-owner confirmation. No namespace, workload, PVC/PV, runner, DNS record, external database/storage, GHCR package or app repository was deleted.
