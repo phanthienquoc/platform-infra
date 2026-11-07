@@ -85,6 +85,27 @@ if expected_manual_mode not in manual_dispatch:
 if "github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'repository_dispatch') && 'apply'" not in reconcile:
     fail("Scheduled, push and authenticated GitOps reconciliation must retain their existing automatic apply mode.")
 
+# A manual plan must be strictly read-only. Namespace creation is desired-state drift,
+# not a prerequisite that the plan is allowed to satisfy by mutating the cluster.
+reconcile_script = (ROOT / "scripts" / "reconcile-vps.sh").read_text(encoding="utf-8")
+run_diff_block = reconcile_script.split("run_diff() {", 1)[1].split("\n}\n\ncase", 1)[0]
+if re.search(r"(?m)^\s*(?:run_kubectl|sudo).*\b(?:apply|create)\b", run_diff_block):
+    fail("reconcile-vps.sh run_diff must not create or apply Kubernetes resources.")
+for required in (
+    "required_namespaces=(k3s-debug microfe-platform tce-prod)",
+    "grep -Eqi 'NotFound|not found'",
+    "return 2",
+    "Read-only plan reports namespace drift",
+):
+    if required not in run_diff_block:
+        fail(f"Read-only reconcile namespace preflight is missing: {required}")
+plan_case = reconcile_script.split("  plan)\n", 1)[1].split("  apply)\n", 1)[0]
+if "run_diff" not in plan_case or re.search(r"\b(?:apply|create)\b", plan_case):
+    fail("reconcile-vps.sh plan must only perform the read-only diff path.")
+apply_case = reconcile_script.split("  apply)\n", 1)[1].split("  *)", 1)[0]
+if "run_diff" not in apply_case or "run_kubectl apply -k environments/prod" not in apply_case:
+    fail("Only explicit reconcile-vps.sh apply may apply the production Kustomize root.")
+
 # The platform runner is self-hosted and reuses its checkout. All reconcile scripts
 # below are tracked as non-executable files; invoke them through bash instead of
 # chmod'ing the checkout and leaking mode changes into subsequent jobs.
@@ -1289,6 +1310,21 @@ if runner_token_mask < 0 or runner_token_output < 0 or runner_token_mask > runne
     fail("Short-lived runner registration token must be masked before it is written to GITHUB_OUTPUT.")
 if "bootstrap-media-runner.sh" in runner_bootstrap:
     fail("Shared Platform runner bootstrap must not provision the retired dedicated Media runner.")
+bootstrap_verification = runner_bootstrap.split(
+    "name: Verify runner service and read-only cluster access", 1
+)[1]
+if bootstrap_verification is None:
+    fail("Runner bootstrap must retain its read-only runner/cluster verification step.")
+for forbidden in (
+    "platform-kubectl apply",
+    "kubectl create namespace",
+    "kubectl apply -f -",
+    "platform-kubectl diff -k",
+):
+    if forbidden in bootstrap_verification:
+        fail(f"Runner bootstrap must not mutate or reconcile production Kubernetes resources: {forbidden}")
+if "reconcile-vps.yml is the sole production apply authority" not in bootstrap_verification:
+    fail("Runner bootstrap must explicitly defer all production manifest changes to reconcile-vps.yml.")
 for retired_helper in (
     "bootstrap-media-runner.sh",
     "verify-media-publisher-run.sh",
@@ -1434,6 +1470,8 @@ if "validate-image-change-contract.py --self-test" not in manifest_validation:
 if 'validate-image-change-contract.py "$BASE_SHA" "$HEAD_SHA"' not in manifest_validation:
     fail("Manifest validation must inspect changed production image references on pull requests.")
 actions_validation = read("validate-github-actions.yml")
+if "bash scripts/tests/reconcile-vps.test.sh" not in actions_validation:
+    fail("Workflow validation must execute the read-only plan/single-apply regression test.")
 if "validate-image-change-contract.py --self-test" not in actions_validation:
     fail("Workflow validation must run immutable image-change contract regression fixtures.")
 restart_test = ROOT / "scripts" / "tests" / "restart-blocked-image-pulls.test.sh"
