@@ -4893,3 +4893,16 @@ The latest native schedule inventory remains the 19:12 ICT / 12:12 UTC checkpoin
 5. Obtain a fresh read-only K3s inspection before rollout/decommission decisions; host/containerd upgrades remain maintenance-window gated.
 
 No secret write, scraper ingestion, GHCR publication/promotion, production manifest apply, workload activation, namespace/PVC/PV deletion, runner retirement, DNS/database/object-storage mutation or host maintenance occurred. App repositories own tests/builds and immutable GHCR publication; Platform owns production manifests, shared pull credentials, digest/provenance verification, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
+
+---
+
+## Final post-merge checkpoint — 2026-11-07 20:10 ICT / 13:10 UTC
+
+- Platform PR #1399 [docs(deploy): record Stock preflight merge and readiness](https://github.com/phanthienquoc/platform-infra/pull/1399) was squash-merged from exact head `3711eaa57f2b199e1755e4d42424fbc31ba8e48a` as `a84dc19d18bb5ab8d1715f3393d98fc4bda84f4c`.
+- Exact-head `validate-manifests` run #42375923511 completed success. The connector did not surface a post-merge push validation run/status for the merge SHA; no post-merge PASS is claimed.
+- Current Platform master is `a84dc19d18bb5ab8d1715f3393d98fc4bda84f4c`; Stock master is `783ae36f128ba5dffeba8ac1d242602f160ecfd0`. Stock PR #37 is merged and there are no open Stock PRs. Platform retains only draft planning/documentation PRs #1314/#544/#541/#539. TCE and Media have no open PRs; Authentication #75/#76 remain migration-gated.
+- Stock PR #37 exact-head CI #42375305139 completed success, 7/7 jobs. The merged workflow was re-fetched and verified: manual boolean `preflight_only` defaults false, validates authenticated non-guest VNStock status, skips Chromium and scraper ingestion when true, and preserves weekend cron `0 1 * * 0,6`.
+- Native schedule evidence and K3s inspection remain last-known from the 19:12 ICT checkpoint because the connected run-list helper only exposes PR-triggered runs, not general Actions history. Do not claim native schedule recovery or fresh K3s state.
+- Exact next operator action: configure `VNSTOCK_API_KEY` as a Stock repository Actions secret, then use manual `preflight_only=true` to validate it without MongoDB/Telegram side effects. GitHub Actions administrator must independently inspect native Platform/TCE schedule state and delivery.
+- No secret write, ingestion, image publication/promotion, manifest apply, workload activation, runner retirement, decommission, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
