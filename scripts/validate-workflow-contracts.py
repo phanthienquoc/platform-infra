@@ -1172,6 +1172,8 @@ for required in (
     "Delete only the two approved namespaces",
     "DELETE-STOCK-PROD-AND-MEDIA-PROD",
     "BACKUP-AND-EXTERNAL-DATA-REVIEWED",
+    "dns_ownership_review:",
+    "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED",
     "MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED",
     "environment: production",
 ):
@@ -1190,12 +1192,13 @@ if "bash scripts/decommission-stock-media-namespaces.sh plan" not in plan_job:
     fail("Plan mode must run the read-only namespace/storage preflight.")
 if "bash scripts/decommission-stock-media-namespaces.sh delete" in plan_job:
     fail("Plan mode must never invoke namespace deletion.")
-if "DELETE-STOCK-PROD-AND-MEDIA-PROD" in plan_job or "BACKUP-AND-EXTERNAL-DATA-REVIEWED" in plan_job or "MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED" in plan_job:
+if "DELETE-STOCK-PROD-AND-MEDIA-PROD" in plan_job or "BACKUP-AND-EXTERNAL-DATA-REVIEWED" in plan_job or "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED" in plan_job or "MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED" in plan_job:
     fail("Read-only plan mode must not require destructive operator attestations.")
 if "environment: production" in plan_job:
     fail("Read-only plan mode must not request the production deployment environment.")
 for required in (
     "Validate exact deletion confirmations",
+    "DNS_OWNERSHIP_REVIEW",
     "Verify dedicated Media runner is retired",
     "run: bash scripts/verify-media-runner-retired.sh",
     "Run fresh read-only storage preflight",
@@ -1237,6 +1240,8 @@ for required in (
     "volumesnapshotcontent",
     "volumesnapshot|volumesnapshotcontent",
     "decommission-stock-media",
+    "DNS_OWNERSHIP_REVIEW",
+    "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED",
 ):
     if required not in decommission_script:
         fail(f"Namespace decommission preflight is missing: {required}")
@@ -1244,6 +1249,8 @@ for required in (
     "decommission-stock-media)",
     "DELETE-STOCK-PROD-AND-MEDIA-PROD",
     "BACKUP-AND-EXTERNAL-DATA-REVIEWED",
+    "dns_review",
+    "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED",
     "PVCs remain",
     "PV claims remain",
     "namespace_storage_snapshot_refs()",
@@ -1260,7 +1267,7 @@ for required in ("Stock/Media VolumeSnapshot references (names only)", 'inventor
     if required not in inspect_script:
         fail(f"VPS inspection must expose decommission snapshot references: {required}")
 decommission_test = (ROOT / "scripts" / "tests" / "decommission-stock-media-namespaces.test.sh").read_text(encoding="utf-8")
-for required in ("MOCK_SNAPSHOT", "MOCK_SNAPSHOT_CONTENT", "namespaced VolumeSnapshot", "cluster-scoped VolumeSnapshotContent"):
+for required in ("MOCK_SNAPSHOT", "MOCK_SNAPSHOT_CONTENT", "namespaced VolumeSnapshot", "cluster-scoped VolumeSnapshotContent", "DNS_OWNERSHIP_REVIEW", "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED"):
     if required not in decommission_test:
         fail(f"Decommission storage regression tests must cover snapshot references: {required}")
 snapshot_test = ROOT / "scripts" / "tests" / "namespace-storage-snapshot-refs.test.sh"
