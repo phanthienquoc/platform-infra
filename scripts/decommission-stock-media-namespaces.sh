@@ -89,8 +89,12 @@ case "$MODE" in
       echo "DATA_RETENTION_REVIEW must equal BACKUP-AND-EXTERNAL-DATA-REVIEWED." >&2
       exit 2
     }
+    [[ "${DNS_OWNERSHIP_REVIEW:-}" == "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED" ]] || {
+      echo "DNS_OWNERSHIP_REVIEW must equal AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED." >&2
+      exit 2
+    }
     preflight
-    printf '%s\n%s\n' "$CONFIRMATION" "$DATA_RETENTION_REVIEW" | "${KUBECTL[@]}" decommission-stock-media
+    printf '%s\n%s\n%s\n' "$CONFIRMATION" "$DATA_RETENTION_REVIEW" "$DNS_OWNERSHIP_REVIEW" | "${KUBECTL[@]}" decommission-stock-media
     ;;
   *)
     echo "Usage: $0 plan|delete" >&2

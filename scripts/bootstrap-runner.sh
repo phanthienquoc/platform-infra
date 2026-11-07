@@ -160,8 +160,11 @@ case "${1:-}" in
     }
     IFS= read -r confirmation || true
     IFS= read -r data_review || true
-    [[ "$confirmation" == "DELETE-STOCK-PROD-AND-MEDIA-PROD" && "$data_review" == "BACKUP-AND-EXTERNAL-DATA-REVIEWED" ]] || {
-      echo "platform-kubectl: decommission confirmation failed; no namespace was changed" >&2
+    IFS= read -r dns_review || true
+    [[ "$confirmation" == "DELETE-STOCK-PROD-AND-MEDIA-PROD" &&
+       "$data_review" == "BACKUP-AND-EXTERNAL-DATA-REVIEWED" &&
+       "$dns_review" == "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED" ]] || {
+      echo "platform-kubectl: namespace, backup/external-data, or DNS ownership confirmation failed; no namespace was changed" >&2
       exit 2
     }
     for namespace in stock-prod media-prod; do

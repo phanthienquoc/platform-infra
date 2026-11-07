@@ -1,3 +1,87 @@
+## Current review — 2026-11-08 02:55 ICT / 2026-11-07 19:55 UTC
+
+This review supersedes the older operational summaries below. The five default-branch refs, open PRs, latest Actions histories, selected failed-job logs, current deployment tracker/inventory, publisher workflows, reconciliation, and the latest read-only K3s snapshot were rechecked.
+
+### Repository refs, open PRs and latest evidence
+
+| Repository | Master SHA | Open PRs | Latest relevant evidence |
+|---|---|---|---|
+| Platform Infra | `185d4b2b428c55782ef2d618f0deb24f3e56de44` | #1314, #544, #541, #539 (draft docs/planning) | Reconcile #42407410735 (native schedule) PASS; inspection #42406647304 (manual) PASS; watchdog #42406561460 (native schedule) FAIL; recovery #42406469813 (native schedule) PASS. |
+| TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None | Native WF-06 #42399835467 FAIL; manual WF-06 #42399867071 FAIL; WF-12 workflow_run #42399852533 PASS (not native schedule evidence). |
+| StockDividend | `783ae36f128ba5dffeba8ac1d242602f160ecfd0` | None | CI #42375688209 PASS (7/7); native weekend scraper #42349150261 FAIL at missing VNSTOCK_API_KEY preflight. |
+| Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | CI #42239703151 PASS; no new publisher run or Platform GitOps handoff. |
+| Authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` | #75 ready, #76 draft; both remain migration-gated | CI #42215394539 PASS. PR #75 head `a8e8a1d99e86a679b8d2ea7c7e7fa91302ffcc05`; PR #76 head `f19cacb0bf2b454b3152bd3a501f6f88d0a14a58`; both target old base `2189c97252bfe7ee53f50a68cf51008fa0d27c91`. |
+
+Platform PR #1414 was merged from exact head `c4213b25d3e3fad2eadde76f6432979afe5288e9` as `185d4b2b428c55782ef2d618f0deb24f3e56de44`. Its validation run #42406748051 passed all applicable checks; the PR changed only `debug/vps-latest.md`. The current tracker and inventory had not yet recorded that merge or the 19:31 UTC inspection when this review began.
+
+### Native schedule evidence — keep event types separate
+
+| Platform workflow | Latest native event | Previous native event | Inter-arrival | Budget |
+|---|---|---|---:|---:|
+| Reconcile | #42407410735 — 19:41:08 UTC, PASS | #42387275904 — 15:37:24 UTC | 4h 03m 44s | 45m |
+| Watchdog | #42406561460 — 19:30:43 UTC, FAIL | #42385910055 — 15:20:32 UTC | 4h 10m 11s | 45m |
+| Recovery | #42406469813 — 19:29:42 UTC, PASS | #42385416779 — 15:14:36 UTC | 4h 15m 06s | 45m |
+| Inspection | #42387216070 — 15:36:38 UTC, PASS | Older native event | >4h | 75m |
+
+At the 19:55 UTC review, the latest reconcile/watchdog/recovery runs were respectively about 14m/24m/25m old, but the first new events after the long pause still have out-of-budget inter-arrival gaps. The latest inspection #42406647304 is a successful `workflow_dispatch` run, not native schedule proof. The strict watchdog failure is expected until another original native event closes each relevant gap; do not lower budgets or count fallback events as native delivery.
+
+The reconcile schedule remains `7,22,37,52 * * * *`; recovery and watchdog schedules remain unchanged. No schedule expression was edited.
+
+### TCE, Stock and service-health evidence
+
+- TCE WF-06 remains scheduled at `*/15 * * * *`. Latest native run #42399835467 was created 18:09:17 UTC; it is over 105 minutes old at this review, beyond the 25-minute budget. The later manual run #42399867071 also failed. All four public endpoints returned HTTP 503: TCE web, TCE API, Auth liveness and Auth readiness. The failed-job logs explicitly show the strict expected status remains HTTP 200. WF-12 #42399852533 succeeded on `workflow_run`, which proves the heartbeat path but not native schedule delivery or service health. TCE market-scan schedule unchanged.
+- Stock scraper #42349150261 failed before dependency installation because the repository secret `VNSTOCK_API_KEY` was empty. Python setup, entitlement verification, Chromium and ingestion were skipped. The merged `preflight_only=true` path remains safe; the Stock owner must add the repository secret and run a manual preflight before any ingestion. Weekend cron remains `0 1 * * 0,6` UTC (08:00 ICT); the next scheduled window is Sunday 2026-11-08 01:00 UTC.
+- Media CI is green, but Media remains retired from active Platform GitOps while its legacy namespace and dedicated runner are still present. No namespace/runner decommission is authorized.
+- Authentication CI is green, but #75/#76 remain blocked on Supabase production migration provenance/side-effect review. Do not retarget or merge them based only on CI success.
+
+### Latest reconciliation and K3s snapshot
+
+Native reconciliation #42407410735 completed successfully with `ALLOW_IMAGE_CHANGES=false`: GHCR read preflight passed; Auth runtime Secret provisioning/verification passed with values suppressed; shared `ghcr-pull` Secrets were unchanged; MicroFE/TCE had no image-pull failures; TCE release pairing for `prod-v0.1.0-e75e338` passed; GitOps drift was false. Manifest apply and rollout verification were skipped, so this is not a production rollout claim.
+
+Read-only inspection #42406647304 generated `debug/vps-latest.md` at 19:31:52 UTC and was merged through PR #1414. Snapshot evidence:
+
+- K3s node `tce-k3s-01`: Ready, ARM64, K3s `v1.36.3+k3s1`, runtime `containerd://2.3.2-k3s2`.
+- Disk 56% used (about 20 GiB free); available RAM about 19 GiB.
+- Media backend/frontend and MicroFE Shell/WS/NATS were Running.
+- Stock Admin (two pods) and the newer Stock Backend were ImagePullBackOff; older Stock Backend and Stock Frontend were Running.
+- TCE/Auth/Keycloak remained 0/0; public OIDC probes returned HTTP 503.
+- Platform and dedicated Media runner services were active/enabled.
+- Docker 29.1.3 and host containerd.io 2.2.1 had newer packages available; `restart_required=yes`. No upgrade or reboot was performed.
+
+This snapshot is already more recent than the prior 18:11 UTC inspection, but it is still a point-in-time read-only observation and does not prove a later rollout or decommission state.
+
+### Immutable GHCR and dispatch contract review
+
+The publisher/receiver definitions were re-read; no new image publication, digest handoff or promotion occurred.
+
+- TCE WF-08B: app-owned ARM64 Shell/WS publication, full source SHA, BuildKit provenance/SBOM and digest-bound `microfe-images-published` payload with source repository/run/workflow/event/SHA. Platform receiver validates the digests and source correlation.
+- Authentication release: manual-only from master; ARM64 image, full-SHA and versioned release tags, provenance/SBOM, digest/manifest verification and `auth-image-published` payload carrying source run/path/event/SHA and digest.
+- Stock publisher: full-SHA tags and ARM64 registry manifest/digest verification; convenience aliases remain mutable, but Stock has no active Platform GitOps handoff.
+- Media WF-03: full source SHA in the production release tag, native ARM64 image builds and registry digest verification; no Platform dispatch remains in the retired GitOps path.
+- Platform promotion remains the only production GitOps digest receiver for Auth, TCE and MicroFE. Stock/Media production manifests remain excluded.
+
+Static workflow contracts are present; there is no new publisher run to claim an end-to-end publication or promotion.
+
+### New safety gap being closed in this change set
+
+The protected Stock/Media decommission path already defaults to read-only plan, requires production Environment approval, backup/external-data review, dedicated Media runner retirement, fresh PVC/PV/VolumeSnapshot preflight, and exact namespace confirmation. The preflight prints retired Ingress hostnames/TLS references and explicitly says DNS ownership is not inferred. However, the workflow had no separate typed DNS/provider ownership attestation, and the installed `platform-kubectl decommission-stock-media` helper read only the namespace and backup confirmations.
+
+This change set adds a distinct `dns_ownership_review` confirmation (`AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED`) through the workflow, wrapper script, installed CLI source and regression tests. It does not perform decommission. Until the change is merged and authoritative DNS/provider records have actually been reviewed by the owner, namespace deletion remains blocked.
+
+### Exact next actions and safety
+
+1. Complete Platform PR validation for the DNS attestation change; merge only after exact-head required checks pass, then verify the post-merge master run.
+2. Observe another native Platform schedule cycle; confirm new inter-arrival gaps are within the existing budgets. Escalate per-workflow schedule delivery to a GitHub Actions administrator if not.
+3. Stock owner: add `VNSTOCK_API_KEY` and run `run_scraper.yml` with `preflight_only=true`; do not start ingestion until authenticated non-guest entitlement is confirmed.
+4. TCE/Auth owner: decide whether/when to restore live replicas; keep strict HTTP 200 health checks and zero-replica maintenance until approved.
+5. Auth/Supabase owner: resolve migration drift/provenance and side effects before #75/#76 are retargeted or merged.
+6. Stock/Media owners: verify external backups/retention, authoritative DNS/provider ownership, and dedicated Media runner registration/retirement before any protected delete.
+7. Platform operator: obtain another read-only K3s inspection before rollout/decommission decisions; host package upgrade/reboot requires a separate maintenance window.
+
+No image publication/promotion, manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, secret write, DNS/database/storage mutation or host maintenance occurred in this review. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
+---
+
 ## Final cross-repo confirmation — 2026-11-07 22:06 ICT / 15:06 UTC
 
 Platform PR #1404 [post-merge evidence](https://github.com/phanthienquoc/platform-infra/pull/1404) was squash-merged from exact head `38dfb70dd04e5e3978ada1687b983d71ea679845` as `60ae5657551460f791a0d78f726575ee3ba7a028`. Exact-head validation #42384636492 and post-merge master validation #42384687767 both completed success. The master ref was re-read and matched the merge SHA. PR #1404 is closed/merged.
