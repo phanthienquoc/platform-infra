@@ -3431,3 +3431,44 @@ This is successful fallback reconciliation evidence, not native schedule recover
 - No new Stock/Media/Auth/TCE immutable publisher run, GHCR push, promotion or app-to-Platform production dispatch was executed. Stock/Media remain outside Platform GitOps. No decommission plan dispatch was performed because the connected GitHub action surface has no workflow-dispatch operation.
 - No namespace/PVC/PV deletion, runner retirement, external database/object-storage/DNS mutation, manifest apply, replica activation, host upgrade or reboot occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
 
+
+
+
+---
+
+## Post-merge watchdog concurrency follow-up — 2026-11-07 06:08 ICT / 2026-11-06 23:08 UTC
+
+- PR [#1363](https://github.com/phanthienquoc/platform-infra/pull/1363) merged by squash at `a13459958e3385a933871e05a308d163448c33dd`; exact validated head `8e2e3c5aafe04b92cf4e3d82f4011256837095c2`.
+- Exact-head PR validation: [validate-manifests #42309628519](https://github.com/phanthienquoc/platform-infra/actions/runs/42309628519) PASS and [validate-github-actions #42309628570](https://github.com/phanthienquoc/platform-infra/actions/runs/42309628570) PASS. The latter ran actionlint, yamllint, ShellCheck, ops regression tests and the updated workflow contract validator.
+- Post-merge validation on merge SHA: [validate-manifests #42309702733](https://github.com/phanthienquoc/platform-infra/actions/runs/42309702733) PASS and [validate-github-actions #42309702820](https://github.com/phanthienquoc/platform-infra/actions/runs/42309702820) PASS.
+- Post-merge read-only watchdog push smoke [#42309702803](https://github.com/phanthienquoc/platform-infra/actions/runs/42309702803) PASS. It explicitly reported latest native reconcile #42304064211 age 46m (>45m), inspection #42301267072 age 67m, and native recovery #42304248066 age 44m. Because this was a push smoke, stale history was warning-only; this is not native schedule recovery.
+- Follow-up workflow_run diagnostics #42309732514 and #42309745139 were skipped. They now use a separate concurrency group from push/schedule events. No native schedule run newer than watchdog #42304321570 (cancelled at 22:23:18Z) was observed by this checkpoint.
+- The event-scoped watchdog concurrency mitigation is merged and CI-validated. The cancellation actor for #42304321570 remains unproven because the Actions read response exposes no actor/reason; the timing only established a plausible pending-run contention hazard. Do not claim that the native schedule service is fixed until a subsequent event=schedule watchdog completes.
+- No cron, TCE market-scan schedule, production workload, GHCR publisher, manifest, Secret, runner, namespace, external data, DNS or host state changed. No image publication/promotion or destructive action occurred.
+
+
+
+---
+
+## Cross-repo operational checkpoint — 2026-11-07 06:58 ICT / 2026-11-06 23:58 UTC
+
+- Current default heads: Platform `63be27e4062d5e0bc315936575a4cd3681dab599` (inspection PR #1365 exact head `1a9d5f176ca418de25c5d843c0cbf3e738d4bac0)); TCE `f4240ada56da700af00100fb3f01278b9b883951`; Stock `bc20dcfb9893ea246a5e46bef26cce1c92a940c9`; Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; Auth `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`.
+- Open PRs: Platform #1364/#1314/#544/#541/#539; Auth #75/#76; no TCE/Stock/Media PRs. Auth #75/#76 remain gated on current-base and Supabase production side-effect review.
+- Platform inspection #42312238041 and validation #42312376690 passed on workflow_dispatch; fallback recovery #42312196686 and reconcile #42312055649 succeeded. Latest native schedule remains reconcile #42304064211 PASS, recovery #42304248066 PASS, watchdog #42304321570 CANCELLED, inspect #42301267072 PASS. No newer native event=schedule run through 23:58Z. Event-scoped concurrency fix from #1363 is merged, but no post-fix native watchdog run proves schedule recovery.
+- TCE native WF-12 #42312029821 failed freshness; native WF-07 #42311204446 passed. Native WF-06 #42289627961 and manual fallback #42312062418 failed; the latest fallback logged HTTP 503 for all four public TCE/Auth endpoints. WF-13 #42312046154 is workflow_run recovery only. Strict HTTP 200 and cron expressions unchanged.
+- Latest full host/K3s snapshot is inspect-vps #42312238041, generated 23:29:38Z: node Ready/ARM64, disk 56% (~21 GiB free), RAM ~19 GiB available, Docker 29.1.3, K3s containerd 2.3.2-k3s2, restart required and host updates pending. Media/MicroFE active; Stock Admin/new Backend ImagePullBackOff due missing ARM64 manifest for `12d63b4`; legacy Stock backend/frontend Running; TCE/Auth/Keycloak 0/0; GitOps clean. Platform/Media runner services active with Listener, not idle.
+- Latest app CI evidence: TCE build/tests/format #42239871779/#42239871781/#42239871823 PASS; Stock #42241252700 7/7 PASS; Media #42239703151 PASS; Auth #42215394539 PASS. No new current-master immutable GHCR publisher/digest/provenance run or image promotion found.
+- Decommission `mode=plan` remains unexecuted because the connected GitHub surface lacks workflow dispatch. DNS/provider ownership and external DB/object-storage backup/retention remain unverified. No destructive or production mutation. `reconcile-vps.yml` sole apply authority; `inspect-vps.yml` read-only. TCE market-scan schedule unchanged.
+
+
+---
+
+## Cross-repo operational checkpoint — 2026-11-07 07:05 ICT / 2026-11-07 00:05 UTC
+
+- Default heads: Platform `63be27e4062d5e0bc315936575a4cd3681dab599`; TCE `fc8766426138a5a681c040b58af3529e93b66ea4`; Stock `bc20dcfb9893ea246a5e46bef26cce1c92a940c9`; Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; Auth `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`.
+- TCE PR #1028 merged as `fc8766426138a5a681c040b58af3529e93b66ea4`; exact-head WF-05 #42315901962 and WF-02 #42315901997 passed. Post-merge read-only WF-12 push smoke #42316036263 passed; post-merge WF-01/WF-05/WF-02 runs #42316036320/#42316036385/#42316036410 were in progress at 00:05:18Z.
+- TCE WF-12 now uses event-scoped concurrency `tce-wf06-schedule-watchdog-${{ github.event_name }}`; regression assertions are part of the WF-05 contract script. Both TCE cron expressions, strict HTTP 200 and freshness/queue budgets are unchanged. The next native WF-12 run is required to verify the mitigation.
+- Platform native schedule latest remains reconcile #42304064211 PASS, recovery #42304248066 PASS, watchdog #42304321570 CANCELLED, inspect #42301267072 PASS; no newer event=schedule through 00:05Z. Later inspection/recovery/reconcile were workflow_dispatch only. Platform event-scoped watchdog change remains unverified by a subsequent native schedule run.
+- TCE native WF-12 #42312029821 freshness FAILED; WF-07 #42311204446 passed. Native WF-06 #42289627961 and manual fallback #42312062418 failed four HTTP 200 probes with 503. WF-13 #42312046154 is workflow_run only.
+- Latest K3s snapshot #42312238041 generated 23:29:38Z: node Ready/ARM64, Media/MicroFE Running, Stock Admin/new Backend ImagePullBackOff due missing ARM64 manifest for `12d63b4`, legacy Stock Backend/Frontend Running, TCE/Auth/Keycloak 0/0, GitOps clean; disk 56%, ~21 GiB free, RAM ~19 GiB available, host restart required and updates pending. Platform/Media runners active with Listener; not idle.
+- No new immutable GHCR publication/digest/provenance or promotion. Decommission plan not dispatched; external backup/retention and DNS ownership unverified. No destructive or production mutation. Sole apply authority remains `reconcile-vps.yml`; `inspect-vps.yml` read-only. TCE market-scan schedule unchanged.
