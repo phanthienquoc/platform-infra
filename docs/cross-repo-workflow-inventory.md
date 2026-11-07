@@ -22,7 +22,7 @@ This section supersedes earlier workflow-status summaries below and records the 
 | WF-06 | Strict public HTTP 200 probes | Latest fallback #42332606574 failed all four endpoints with HTTP 503. Do not weaken status expectations or activate 0/0 workloads without owner approval. |
 | WF-07 backup | App-specific scheduled/manual backup | Preserved; native backup #42311204446 succeeded. |
 | WF-09 audit/setup | Read-only audit and manual staging setup | Preserved; staging-only scope. |
-| WF-10 bootstrap | Staging-only K3s/MFA bootstrap (pending PR #1030) | PR #1030 removes tce-prod namespace and production MFA secret operations, retains tce-stg and MFA_ENCRYPTION_KEY_STG. Exact-head checks were queued/in progress at 04:06Z; do not treat as merged yet. |
+| WF-10 bootstrap | Staging-only K3s/MFA bootstrap | PR #1030 merged as 7ab52078; removes tce-prod namespace and production MFA secret operations, retains tce-stg and MFA_ENCRYPTION_KEY_STG. Exact-head WF-01P/WF-05/WF-02 checks passed; post-merge master CI was queued at 04:08Z. |
 | WF-12/WF-13 | Scheduled health watchdog and verified read-only fallback | Native WF-12 #42332584617 failed because WF-06 was 167m stale; heartbeat was accepted by Platform; WF-13 fallback dispatched once; WF-06 fallback returned four HTTP 503s. |
 
 ### StockDividend, Media Generation and Authentication
@@ -32,7 +32,7 @@ This section supersedes earlier workflow-status summaries below and records the 
 
 ### Open PR and merge policy
 - Platform #1314/#544/#541/#539 are draft documentation/planning PRs; their current validation checks pass but no automatic merge is warranted.
-- TCE #1030 is open and checks are in progress; merge only after exact-head required checks pass.
+- TCE #1030 merged after exact-head WF-01P/WF-05/WF-02 checks passed; post-merge master CI is being verified.
 - Auth #75 is ready but gated; #76 remains draft/gated. Do not retarget/merge until Supabase production migration side effects are authoritatively understood.
 - Stock and Media have no open PRs.
 
