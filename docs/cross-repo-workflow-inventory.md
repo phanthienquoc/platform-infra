@@ -5925,3 +5925,41 @@ Platform workflow_run #42387468774 (watchdog failure) and #42387468833 (recovery
 - Platform read-only inspection #42387216070 refreshed `debug/vps-latest.md` at 15:36:46Z. Node Ready/ARM64; Media/MicroFE containers running; Stock Admin and one Backend pod ImagePullBackOff due no ARM64 manifest for `12d63b4`; another Backend pod on `23b2878` running; TCE/Auth/Keycloak 0/0; GitOps drift clean; Media and Platform runners active. External backup/retention and DNS ownership remain unverified.
 
 Keep app repositories as the only tests/builds/immutable GHCR publishers. Platform remains owner of production manifests, shared GHCR pull credentials, provenance/digest validation, GitOps promotion/reconciliation, rollout and health. No direct SSH/Compose authority. TCE market-scan schedule unchanged. Full evidence: `docs/cross-repo-deployment-checkpoints/2026-11-07-2259-ict.md`.
+
+
+---
+
+## Workflow inventory refresh — 2026-11-07 23:57 ICT
+
+### Current repository refs and PRs
+| Repository | Master SHA | Open PRs | Latest relevant evidence |
+|---|---|---|---|
+| Platform Infra | `51bcca501c57fd4956a708be0f8d5ccabd4a29a9` | #1314/#544/#541/#539 (draft docs/planning) | PR #1408 merged; exact-head #42389251018 PASS; post-merge #42394147893 PASS |
+| TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None | Native WF-12 #42392155494 FAIL; latest native WF-06 #42376773663 FAIL; manual WF-06 #42392183179 HTTP 503 |
+| StockDividend | `783ae36f128ba5dffeba8ac1d242602f160ecfd0` | None | CI #42375688209 7/7 PASS; native scraper #42349150261 fails missing VNSTOCK_API_KEY |
+| Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | CI #42239703151 PASS; publisher has no Platform handoff by design |
+| Authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` | #75 ready, #76 draft | CI #42215394539 PASS; both PRs old-base/Supabase migration gated |
+
+### Native schedule classification
+| Repository/workflow | Latest native run | Result | Interpretation |
+|---|---|---|---|
+| Platform reconcile-vps.yml | #42387275904, 15:37:24Z | PASS | Native delivery resumed earlier; no later native event, now stale |
+| Platform inspect-vps.yml | #42387216070, 15:36:38Z | PASS | Last fresh-ish read-only snapshot; now ~81m old |
+| Platform watchdog | #42385910055, 15:20:32Z | FAIL | Historical inter-arrival gap, fail-closed |
+| Platform recover-stale-ops.yml | #42385416779, 15:14:36Z | PASS | Native run; later fallback/manual recovery does not count |
+| TCE WF-06 | #42376773663, 13:23:50Z | FAIL | Latest native health run; four public endpoint checks failed with HTTP 503 |
+| TCE WF-12 | #42392155494, 16:36:34Z | FAIL | Correctly detects WF-06 age 192m > 25m; heartbeat job itself passed |
+| Stock weekend scraper | #42349150261, 06:56:29Z | FAIL | Missing VNSTOCK_API_KEY; safe preflight-only mode exists |
+| Media/Auth | — | — | No native schedules by design |
+
+### Dispatch and publication contracts
+- TCE WF-12 sent a scheduled heartbeat to Platform and received HTTP 204. Exact payload correlation included source repository/event/workflow path, source run ID/attempt/full SHA and heartbeat run ID/attempt/full SHA. Platform recovery #42392163106 was triggered as repository_dispatch and completed success. This does not imply service health or native WF-06 delivery.
+- Stock publisher builds native ARM64 images, uses full 40-character source SHA tags and verifies SHA-256 registry digests/platform manifests. The Stock contract validator forbids a Platform dispatch because Stock is retired from active Platform GitOps; no new publication/digest handoff was observed.
+- Media publisher validates ARM64 registry digests and explicitly sends no Platform dispatch while retired from active Platform GitOps.
+- Auth release documentation specifies manual-only publication, full-SHA tags, BuildKit provenance/SBOM, ARM64 digest equivalence and `auth-image-published` dispatch. No new Auth publisher run/digest handoff occurred.
+- Platform remains the only production manifest/promotion/reconciliation authority. Latest successful fallback reconcile #42392174350 used `mode=apply`, `allow_image_changes=false`, `target_app=all`; deployment lane jobs completed success, but this is not native schedule proof or evidence of a new image promotion/live TCE/Auth rollout.
+
+### K3s and safety
+Latest inspection #42387216070 is ~81m old. Node Ready/ARM64; disk 56%; ~19 GiB RAM available. Media/MicroFE running; Stock Admin and one Backend pod ImagePullBackOff on tag `12d63b4` without ARM64 manifest; another Backend pod on `23b2878` running; TCE/Auth/Keycloak 0/0 maintenance. GitOps drift clean; shared `ghcr-pull` unchanged; Auth runtime Secret provisioned from protected Environment with values suppressed. External backup/retention and authoritative DNS ownership remain unverified.
+
+No new image publication/promotion, manifest apply, live service restoration, decommission, runner retirement, secret write, DNS/database/storage mutation or host maintenance. `reconcile-vps.yml` remains sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged. Full evidence: `docs/cross-repo-deployment-checkpoints/2026-11-07-2357-ict.md`.
