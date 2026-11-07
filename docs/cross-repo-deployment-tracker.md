@@ -1,3 +1,136 @@
+## Current review — 2026-11-07 08:05 ICT / 2026-11-07 01:05 UTC
+
+This review supersedes older status sections below. Evidence was collected from the five default-branch refs, open PR search, the latest Actions runs and native-schedule event histories, exact-head and post-merge checks for Platform PR #1367, selected job logs, the latest successful reconciliation inventory, and the latest full read-only VPS snapshot. No image publication/promotion, workload activation, namespace deletion, runner retirement, DNS/database/storage mutation, host upgrade, or reboot was initiated.
+
+### Default branches, open PRs, and current CI
+
+| Repository | Default branch SHA | Open PRs | Latest validation evidence |
+|---|---|---|---|
+| Platform Infra | 483ed524fb87a3869d2cb1b9944a7779c2264566 | #1314, #544, #541, #539 | PR #1367 exact-head validation and post-merge validation all passed (details below). |
+| TCE Dashboard | fc8766426138a5a681c040b58af3529e93b66ea4 | None | Build #42316036320, backend tests #42316036385 and Prettier #42316036410 passed. Native WF-06 health #42317701397 failed all four strict HTTP 200 probes with HTTP 503. |
+| StockDividend | bc20dcfb9893ea246a5e46bef26cce1c92a940c9 | None | Master CI #42241252700 passed 7/7 jobs, including non-publishing ARM64 build validation. |
+| Media Generation | 54f3a76a5f8861842fd1bae698c4cb0fa8c9034d | None | Master CI #42239703151 passed. |
+| Authentication | 3b60ff46b8959d18aee1956f99d6b62589b8b9c5 | #75 ready, #76 draft | Master CI #42215394539 passed; Supabase Preview was skipped. |
+
+Open PR details:
+- Platform #1314 remains a documentation draft; #544, #541 and #539 remain documentation/architecture drafts with human review gates.
+- Auth #75 remains ready but gated; #76 remains draft. Both retain the unresolved Supabase Deploy-to-production / merge-triggered migration side-effect warning. Do not merge or retarget until the external integration effect is authoritatively verified safe.
+- No open PR exists in TCE, StockDividend or Media Generation.
+- The Platform #1367 change is merged; it is not an open PR.
+
+Platform PR #1367 — self-hosted worktree hygiene:
+- PR: https://github.com/phanthienquoc/platform-infra/pull/1367
+- Exact head: 9408f67b419476323b806dbe7af45ebab189177d
+- Exact-head validate-manifests #42322003483 — PASS.
+- Exact-head validate-github-actions #42322003558 — PASS.
+- Exact-head keycloak-ci #42322003580 — PASS.
+- Squash merge: 483ed524fb87a3869d2cb1b9944a7779c2264566.
+- Post-merge validate-manifests #42322070045 — PASS.
+- Post-merge validate-github-actions #42322070183 — PASS.
+- Post-merge keycloak-ci #42322070100 — PASS.
+- Combined status contexts were empty on the five default heads when queried; the run IDs above are the direct Actions evidence, not inferred required-check metadata.
+
+### Native schedule delivery
+
+Platform native schedule history as of 2026-11-07 01:05 UTC:
+- inspect-vps #42301267072 — schedule/SUCCESS, 2026-11-06 22:00:18Z.
+- reconcile-vps #42304064211 — schedule/SUCCESS, 2026-11-06 22:21:19Z.
+- recover-stale-ops #42304248066 — schedule/SUCCESS, 2026-11-06 22:22:43Z.
+- reconcile-schedule-watchdog #42304321570 — schedule/CANCELLED, 2026-11-06 22:23:18Z.
+- No newer native Platform schedule run appeared in the queried history by 01:05Z, including after the event-scoped watchdog concurrency change. Manual, workflow_run and repository_dispatch runs are not native schedule proof.
+
+TCE native schedule history:
+- WF-06 #42317701397 — schedule/FAILURE, 2026-11-07 00:21:14Z.
+- WF-12 #42312029821 — schedule/FAILURE, 2026-11-06 23:27:30Z; no later native WF-12 run was present after PR #1028 merged.
+- WF-07 #42311204446 — schedule/SUCCESS, 2026-11-06 23:20:15Z.
+- WF-12 workflow_run #42317724969 succeeded at 00:21:28Z, verified WF-06 workflow state active, found scheduled run #42317701397 at age 0m / queue 0m, and accepted the TCE heartbeat. It is a workflow_run diagnostic, not a native WF-12 schedule.
+- At 01:05Z the latest WF-06 schedule was approximately 44 minutes old, beyond its 25-minute freshness budget. Platform and TCE workflow logs report the underlying workflows active; the missing native events remain unexplained and require Actions administration/scheduler evidence.
+
+Concurrency fixes:
+- Platform watchdog event-scoped concurrency was merged in #1363.
+- TCE WF-12 event-scoped concurrency was merged in TCE #1028.
+- No native schedule event after those changes has yet demonstrated recovery. Do not change cron expressions or treat push smoke/manual fallback as schedule proof.
+
+### TCE health and heartbeat dispatch
+
+WF-06 run #42317701397 returned HTTP 503 for:
+- https://tce.mrcute.space/
+- https://tce.mrcute.space/api/health
+- https://auth.mrcute.space/api/health
+- https://auth.mrcute.space/api/ready
+
+Expected status remains HTTP 200. Platform reconciliation recognizes tce-prod and Auth as intentional zero-replica maintenance and explicitly does not assert live health for those scopes. Do not weaken WF-06 or activate replicas without service-owner approval.
+
+The TCE heartbeat dispatch in WF-12 run #42317724969 was accepted with HTTP 204 and exact source metadata:
+- source_repository=phanthienquoc/TCE-dashboard
+- source_event=schedule
+- source_workflow_path=.github/workflows/wf-06-tce-healthcheck.yml
+- source_run_id=42317701397
+- source_run_attempt=1
+- heartbeat_run_attempt=1
+- heartbeat_run_id=42317724969
+Platform received the repository_dispatch path; this is a valid cross-repo heartbeat, not evidence that Platform's own cron ran.
+
+### Production reconciliation and K3s evidence
+
+Latest successful reconciliation: https://github.com/phanthienquoc/platform-infra/actions/runs/42317747614
+- Event: workflow_dispatch, not schedule.
+- Source master SHA at dispatch: 874d47f80ba32701b0cbb518521c3ab5fa9907d5.
+- Payload: target_app=all, mode=apply, allow_image_changes=false.
+- GHCR pull preflight passed for Auth, MicroFE Shell/WS and TCE web/service packages.
+- Auth runtime Secret provisioning reported provisioned and subsequent verification confirmed required keys; values were suppressed.
+- Shared ghcr-pull Secret was unchanged.
+- TCE release pairing passed.
+- GitOps diff was clean; manifest apply and rollout were correctly skipped because no drift existed.
+- TCE/Auth maintenance-aware health lanes passed without claiming live service health; Keycloak lane was skipped.
+- Recovery controller #42317887620 completed successfully after the reconciliation.
+
+Pod inventory from #42317747614:
+- K3s node tce-k3s-01 Ready, ARM64, v1.36.3+k3s1, containerd 2.3.2-k3s2.
+- Media backend/frontend 1/1 Running.
+- MicroFE Shell/WS and NATS 1/1 Running.
+- Stock Admin pods and the newer Stock Backend pod remained ImagePullBackOff; the older Stock Backend and Stock Frontend were Running.
+- TCE/Auth remain at zero replicas in maintenance; Keycloak lane skipped.
+
+Latest full inspection: #42312238041, workflow_dispatch at 2026-11-06 23:29:29Z; snapshot generated at 23:29:38Z. At 01:05Z it was approximately 96 minutes old, beyond the 75-minute inspection freshness budget. The reconciliation pod inventory above is newer but does not replace the full host/storage/runner inspection.
+
+The older full snapshot reported disk 56% (~21 GiB free), available RAM ~19 GiB, Docker 29.1.3, K3s containerd 2.3.2-k3s2, pending Docker/containerd updates and restart_required=yes. Treat these host figures as stale until a fresh inspection is captured.
+
+### Worktree hygiene fix
+
+The #42317747614 TCE deployment-lane checkout log showed `M scripts/verify-workload-health.sh`. Git tree inspection confirmed seven shell scripts used by reconcile-vps.yml are tracked as mode 100644, while the workflow chmod'ed them executable on the persistent self-hosted runner.
+
+PR #1367 now:
+- invokes those tracked scripts through `bash scripts/...`;
+- rejects dirty primary and application-lane checkouts;
+- verifies the reconcile job and all four app lanes leave their worktrees clean;
+- adds regression assertions to scripts/validate-workflow-contracts.py.
+
+Exact-head and post-merge validations all passed. This changes no deployment manifests, image references, credentials, runner policy or schedule. A subsequent native reconciliation is still needed to observe the clean-worktree guards on the host runner.
+
+### GHCR publication ownership and evidence
+
+- TCE WF-03 remains manual-only and owns TCE app publication; WF-08B is a separate MicroFE Shell/WS publisher. No new TCE production publication occurred.
+- Stock publisher #41563856933 remains historical evidence for full-source-SHA tags, ARM64 manifests and digest verification; no new release/promotion occurred. Deployed tag 12d63b4 still lacks linux/arm64 manifest evidence.
+- Media publisher #41158598649 remains historical evidence for native ARM64, checksums and immutable tags; no new publication occurred.
+- Auth release #41040510320 remains historical manual-release evidence; current master-only fail-closed release guard is validated by Auth CI, but no new publication occurred.
+- App repositories retain tests/builds/immutable GHCR publication ownership. Platform retains production manifests, shared pull credentials, provenance/digest checks, GitOps promotion, rollout and health verification.
+
+### Remaining blockers and next actions
+
+1. Investigate GitHub Actions native schedule delivery/admin policy for Platform and TCE; preserve all existing cron expressions.
+2. Obtain a fresh read-only VPS/K3s/runner/storage inspection.
+3. Run decommission-stock-media.yml with mode=plan only; compare Ingress/TLS/LoadBalancer data with authoritative DNS and review external database/object-storage backups and retention.
+4. Keep namespace deletion gated until data-retention review and dedicated Media runner idle/stop/disable/unregister evidence exist.
+5. Require Stock release authorization, publish a full-source-SHA ARM64 image and verify digest/provenance before any promotion.
+6. Keep Auth #75/#76 gated until Supabase integration target and merge-triggered migration side effects are authoritatively safe.
+7. Keep TCE/Auth at approved maintenance state until service owners authorize activation and HTTP 200 probes pass.
+8. Schedule Docker/containerd upgrade and reboot in a separate maintenance window.
+
+No namespace/PVC/PV deletion, runner retirement, DNS/database/object-storage mutation, image publication/promotion, replica activation, host upgrade or reboot occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
+---
+
 ## Current review — 2026-11-07 03:58 ICT / 2026-11-06 20:58 UTC
 
 This review supersedes older status sections below. Evidence was collected from the five default-branch refs, the open-pull-request REST collections, up to 100 recent Actions runs per repository, current default-head check-runs, selected job logs, and the latest committed read-only VPS snapshot. No app publisher, GitOps image promotion, replica activation, runner retirement, namespace deletion, host upgrade, or reboot was initiated.
