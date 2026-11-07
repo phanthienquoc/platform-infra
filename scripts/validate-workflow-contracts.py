@@ -245,7 +245,11 @@ if expected_recovery_concurrency not in recovery:
     fail("Native scheduled recovery must use a concurrency group isolated from non-schedule diagnostics.")
 
 # Keep the sole production apply authority globally serialized across all event types.
-if "concurrency:\\n  group: platform-vps-reconcile\\n  cancel-in-progress: false" not in reconcile:
+expected_reconcile_concurrency = """concurrency:
+  group: platform-vps-reconcile
+  cancel-in-progress: false
+"""
+if expected_reconcile_concurrency not in reconcile:
     fail("Production reconcile-vps must retain one cross-event concurrency group to serialize all applies.")
 global_latest_runs_query = 'runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/runs" -F branch=master -F per_page=100)"'
 if recovery.count(global_latest_runs_query) < 1:
