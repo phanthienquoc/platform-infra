@@ -1,3 +1,101 @@
+## Current review — 2026-11-07 13:03 ICT / 06:03 UTC
+
+This review supersedes the older status summaries below. All five default branches, open PRs, latest workflow runs/checks, native schedule histories, deployment tracker/inventory, latest reconciliation and a fresh read-only VPS/K3s inspection were rechecked. The only code/workflow change since the previous checkpoint is Stock PR #35; Platform inspection PR #1380 added a new read-only snapshot. No TCE market-scan schedule was changed.
+
+### Default branches, open PRs and CI
+
+| Repository | Default branch SHA | Open PRs | Latest CI evidence |
+|---|---|---|---|
+| Platform Infra | `958e33281b5121144848676d217a6199d92067f4` | #1314, #544, #541, #539 (draft planning/docs) | Inspection PR #1380 exact-head validate #42345235423 PASS; PR merged as 958e332. |
+| TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None | Master WF-01 #42337126761, WF-05 #42337126734 and WF-02 #42337126665 PASS. |
+| StockDividend | `d30ea9b844c87a8ba75c2388a62f4d21f6d4060c` | None | Post-merge CI #42341257653 PASS, all 7 jobs including non-publishing native ARM64 builds. |
+| Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | Master CI #42239703151 PASS. |
+| Authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` | #75 ready/gated; #76 draft/gated | Master CI #42215394539 PASS. Both PR heads have validate PASS; Supabase Preview is skipped. |
+
+Platform PR #1314/#544/#541/#539 remain draft documentation/planning changes; their existing validate checks passed, but none is a deployment change. Authentication #75/#76 remain on old base `2189c97252bfe7ee53f50a68cf51008fa0d27c91` (13 commits behind current master); do not retarget or merge until Supabase production integration and migration side effects are authoritatively reviewed.
+
+### Native schedule evidence
+
+Platform native schedule history has not advanced since:
+- Watchdog #42327836310 — 02:09:55Z, success.
+- Reconcile VPS #42327720407 — 02:08:35Z, success.
+- Recovery controller #42327707405 — 02:08:25Z, success.
+- Inspection #42326168875 — 01:50:19Z, success.
+
+At approximately 06:03Z these are 3h53m, 3h55m, 3h55m and 4h13m old respectively, beyond the 45/45/45/75-minute budgets. The strict inter-arrival verifier and fail-closed single-run guard are merged, but no post-fix native Platform cycle has demonstrated cadence recovery. Manual, workflow_run and repository_dispatch events are not native schedule evidence.
+
+TCE native events:
+- WF-06 #42317701397 — 00:21:14Z, failure; all four public probes (TCE web/API and Auth liveness/readiness) returned HTTP 503.
+- WF-12 #42332584617 — 03:08:21Z, failure because WF-06 delivery was stale; its Platform heartbeat job succeeded, while the WF-06 freshness check failed.
+- WF-07 third-party integration #42344977873 — 05:59:04Z, success. Binance Testnet private API passed; the third-party order integration job was skipped by its current condition. This is not WF-06/WF-12 health evidence and does not change the TCE market-scan schedule.
+- WF-07 backup latest observed native run remains #42311204446 — 23:20:15Z, success.
+
+StockDividend weekend scraper cron remains `0 1 * * 0,6` (01:00 UTC Saturday/Sunday). Latest native scraper run remains #41284033242 (2026-11-01 07:15:11Z, cancelled). No Saturday 2026-11-07 native run was present in the Actions schedule query at approximately 06:03Z. Prior weekend events were delayed until 06:49Z and 07:15Z, so this is still within the previously observed delayed-delivery window; monitor the next event rather than declaring a missed run prematurely. No cron change was made.
+
+### Verified cross-repo dispatch and Platform recovery
+
+TCE scheduled WF-07 run #42344977873 (attempt 1, master SHA `7ab52078c4250829e158f05b2695ceb9d11bdbe3`) forwarded a heartbeat through TCE WF-12 run #42344986157 (attempt 1). Platform recovery run #42344992100 accepted the exact source repository, workflow path, event=schedule, source run ID/attempt, heartbeat run ID/attempt and full source SHA.
+
+Because the latest native reconciliation was stale, the recovery controller emitted and correlated this exact fallback payload:
+```text
+ref=master
+sha=160bf7926f42d46021a15902114b1fb75ff95cee
+mode=apply
+allow_image_changes=false
+target_app=all
+```
+It verified the created run as Platform reconciliation #42345001520. This is workflow_dispatch recovery, not native schedule proof.
+
+Reconciliation #42345001520 completed successfully:
+- GHCR pull preflight passed for Auth, MicroFE Shell/WS and TCE web/service packages.
+- Auth runtime Secret was provisioned and verified; secret values were suppressed.
+- Shared `ghcr-pull` remained unchanged.
+- TCE release pairing passed for `prod-v0.1.0-e75e338`.
+- GitOps preflight found no manifest drift; manifest apply and image promotion were skipped; image changes were disallowed.
+- TCE/Auth/MicroFE maintenance-aware health lanes passed; rollout checks were skipped; Keycloak lane was skipped.
+- The recovery controller then verified reconciliation completion and dispatched read-only inspection #42345149215. It explicitly did not treat that workflow_dispatch inspection as native schedule delivery.
+
+This proves the authenticated cross-repo heartbeat and recovery correlation path; it does not prove Platform native schedule cadence is healthy.
+
+### Fresh VPS/K3s evidence and decommission gate
+
+Read-only inspection #42345149215 generated `debug/vps-latest.md` at 06:01:30Z. Inspection PR #1380 passed exact-head validation #42345235423 and was squash-merged as `958e33281b5121144848676d217a6199d92067f4`.
+
+- K3s node `tce-k3s-01` is Ready, ARM64, K3s `v1.36.3+k3s1`, containerd runtime `2.3.2-k3s2`.
+- Disk is 56% used (about 20 GiB free); available RAM is about 19 GiB.
+- Docker is 29.1.3. containerd package 2.2.1 is upgradable to 2.4.2; Docker packages also have upgrades available; `restart_required=yes`. Upgrade/reboot requires a separate maintenance window.
+- Shared Platform runner and dedicated Media runner services are active. The Media `Runner.Listener` process is present; the service is active and enabled.
+- `media-prod`: backend and frontend are each 1/1 Running.
+- `stock-prod`: two Admin pods and the newer Backend pod are ImagePullBackOff on tag `12d63b4` due to missing `linux/arm64` manifest; the older Backend and Frontend are Running.
+- The only PVC/PV claim listed is `k3s-debug/k3s-debug-logs`; no Stock/Media PVC, PV claim or VolumeSnapshot/VolumeSnapshotContent reference is present in this snapshot.
+- Media Ingress still publishes `media.mrcute.space`; Stock Ingresses still expose the retired Stock host set. The decommission plan lists `mrcute.space`, `www.mrcute.space`, `admin.mrcute.space` and `api.mrcute.space`; authoritative DNS ownership must be reviewed separately.
+
+The production Kustomize root contains only platform-owned resources and TCE; the validator explicitly rejects reintroduction of Stock/Media production manifests. However, their old live namespaces, Services, Ingresses and workloads remain in K3s. The dedicated Media runner is still active/enabled, so the deletion workflow's runner-retirement gate is not satisfied. External database/object-storage backup and retention plus authoritative DNS ownership are not independently verified.
+
+The manual `decommission-stock-media.yml` workflow has not been dispatched in this run. Its `mode=plan` is read-only and repeats a same-window storage/Ingress inventory; `mode=delete` requires the protected production Environment, three exact operator attestations, runner inactive/disabled/unregistered verification, and a fresh storage preflight. Do not delete namespaces based only on absence of PVCs. No namespace, PVC/PV, DNS, external database, object-storage, GHCR package or runner deletion occurred.
+
+### GHCR publication and ownership
+
+- Stock PR #35 merged as `d30ea9b844c87a8ba75c2388a62f4d21f6d4060c`. Post-merge CI #42341257653 passed 7/7, including native ARM64 non-publishing builds. `run_scraper.yml` now requires repository secret `VNSTOCK_API_KEY` before dependency installation and verifies an authenticated non-guest tier before scraping. GitHub secret presence cannot be read through the current integration; the next native scraper run must verify it. No image was published by PR #35.
+- Latest Stock publisher evidence remains historical run #41563856933 (2026-11-03); no current release/promotion was performed.
+- Latest Media publisher evidence remains historical run #41158598649 (2026-10-31); Media production GitOps handoff remains retired, while live K3s workloads await decommission.
+- Latest Auth manual publisher evidence remains historical run #41040510320 (2026-10-30); no current release/promotion.
+- TCE WF-03 remains manual-only immutable GHCR publisher; no new TCE production release occurred.
+- App repositories own tests/builds and immutable GHCR publication. Platform owns production manifests, shared GHCR pull credentials, digest/provenance checks, GitOps promotion/reconciliation, rollout and health.
+
+### Exact next actions and safety
+
+1. Observe the next native Platform watchdog/reconcile/recovery/inspection events; confirm event=schedule and inter-arrival within budget. If no cadence recovery, escalate to GitHub Actions schedule/repository administration; the current connector does not expose Actions settings or workflow-dispatch administration.
+2. Keep TCE/Auth strict HTTP 200 health gates and intentional 0/0 maintenance until service-owner approval.
+3. Observe the next Stock weekend scraper event after its historical delivery window; confirm `VNSTOCK_API_KEY` exists via the workflow's fail-fast check without exposing its value.
+4. Keep Stock/Media decommission blocked until the Media runner is stopped/disabled/unregistered and external backup/retention/DNS ownership is reviewed. Run mode=plan before any delete operation.
+5. Keep Auth #75/#76 gated pending Supabase production migration side-effect review.
+6. Schedule Docker/containerd upgrade and reboot in a separate maintenance window.
+
+No image publication/promotion or manifest apply occurred in this review. The recovery reconciliation did provision/verify the Auth runtime Secret and confirmed shared `ghcr-pull` was unchanged. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
+---
+
 ## Current review — 2026-11-07 11:02 ICT / 2026-11-07 04:02 UTC
 
 This review supersedes earlier status sections below. All five default branches, open PRs, latest default-branch check-runs, native schedule histories, and the existing deployment tracker/inventory were inspected. A TCE workflow ownership correction is under PR #1030; its checks are still running. No production mutation was performed.
