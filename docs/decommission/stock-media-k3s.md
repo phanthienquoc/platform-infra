@@ -1,3 +1,19 @@
+
+
+## Latest runtime evidence — 2026-11-07 13:01 ICT / 06:01 UTC
+
+This section supersedes the prior Nov 6 snapshot. Source: read-only inspection run [#42345149215](https://github.com/phanthienquoc/platform-infra/actions/runs/42345149215), generated at `2026-11-07T06:01:30Z`, committed by inspection PR [#1380](https://github.com/phanthienquoc/platform-infra/pull/1380) as `958e33281b5121144848676d217a6199d92067f4`. Exact-head manifest validation #42345235423 passed before merge. The PR changed only `debug/vps-latest.md`; no production manifest or workload was changed.
+
+- Node `tce-k3s-01` remains Ready, ARM64, K3s `v1.36.3+k3s1`, containerd runtime `2.3.2-k3s2`. Disk is 56% used with about 20 GiB free; available RAM is about 19 GiB.
+- Docker is 29.1.3. Containerd package 2.2.1 is upgradable to 2.4.2; Docker CE/CLI and buildx/compose packages also have updates available. `restart_required=yes`; do not upgrade/reboot without a separate maintenance window.
+- The dedicated Media runner service `actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service` is active and enabled, and `/opt/media-actions-runner/bin/Runner.Listener` is present. The shared Platform runner is also active and must remain untouched.
+- Both target namespaces remain Active. `media-prod` backend and frontend are each 1/1 Running. `stock-prod` has two Admin Pods and the newer Backend Pod in ImagePullBackOff on tag `12d63b4` because GHCR reports no matching `linux/arm64` manifest; the older Backend and Frontend remain Running.
+- The only PVC/PV claim in the fresh snapshot is `k3s-debug/k3s-debug-logs`. No Stock/Media PVC, PV claim, VolumeSnapshot or VolumeSnapshotContent reference is listed. This is in-cluster evidence only and does not prove external database/object-storage backup, retention or ownership.
+- The Media Ingress still publishes `media.mrcute.space`; Stock Ingresses remain in `stock-prod` for the retired Stock host set. The plan's host inventory includes `mrcute.space`, `www.mrcute.space`, `admin.mrcute.space` and `api.mrcute.space`. Reconcile these against authoritative DNS/provider records before any deletion; the cluster snapshot does not prove DNS ownership.
+
+The protected `decommission-stock-media.yml` workflow was not dispatched. Its read-only `mode=plan` must still be run on the self-hosted Platform runner immediately before deletion. The delete path remains blocked because the dedicated Media runner is active/enabled and external backup/retention plus authoritative DNS ownership are not independently confirmed. No namespace, PVC/PV, runner, DNS record, external database, object-storage resource, GHCR package or application repository was deleted.
+
+The production Kustomize root and validator already exclude/reject Stock/Media manifests; this is GitOps ownership retirement, not live-cluster decommission completion. Do not infer completion from the absence of PVCs. Preserve `tce-prod`, `microfe-platform`, TCE/Auth/MicroFE/Keycloak, the shared Platform runner and the TCE market-scan schedule.
 # StockDividend and Media Generation decommission plan
 
 Status: Stock/Media GitOps ownership retirement and the guarded manual decommission workflow are merged (Platform PRs #1301, #1303, #1304, #1305 and #1310; Stock PR #32; Media PR #72). The K3s namespaces/workloads and dedicated Media runner cleanup have **not** been executed.
