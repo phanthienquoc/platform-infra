@@ -5748,3 +5748,24 @@ Platform PR #1395 merged as c843eb47824c910d6226c8c8db2a2aaf3dc59834 after exact
 - No cron, concurrency, trigger, permission, TCE market-scan schedule or production deployment behavior changed.
 
 Native schedule evidence is still stale through 12:12Z: Platform last events are #42357630554/#42357048356/#42356893297/#42356397506; TCE last WF-06/WF-12 events are #42346646839/#42363949566. The new observer improves detection only; it cannot re-enable workflows or repair scheduler delivery. Current workflow state must be reviewed by a GitHub Actions administrator.
+
+
+---
+
+## Workflow inventory update — 2026-11-07 19:58 ICT / 12:58 UTC
+
+### StockDividend safe credential verification
+
+- PR #37 adds `workflow_dispatch.inputs.preflight_only` (boolean, default false) to `.github/workflows/run_scraper.yml`.
+- `preflight_only=true` checks the repository secret without logging it, installs the Python client, verifies `vnstock.status()` is authenticated/non-guest, and skips Chromium plus the scraper ingestion step. It cannot write MongoDB or send Telegram notifications.
+- The default and native weekend schedule continue to run the existing ingestion path. Cron remains `0 1 * * 0,6`.
+- CI contract validation now asserts the boolean input, the entitlement-before-browser ordering, and both skip guards. PR #37 exact head is `d749beb8ac599ac08c4f4b47702efd6711ee9eaf`; run #42375305139 had all observed jobs pass except the native ARM64 image build, which was still in progress at the latest job inspection. No merge until all exact-head checks complete successfully.
+- Stock owner action remains adding `VNSTOCK_API_KEY` under repository Actions secrets. The safe preflight is a verification path after that secret is configured; it does not set or reveal secrets.
+
+### Cross-repository state and evidence boundary
+
+Platform master `0666dc133d4da16a2287bdd3d5c0bded0291b8e6`; TCE `7ab52078c4250829e158f05b2695ceb9d11bdbe3`; Stock `7b88c804f1c015a3ff12a1ddc32ae7f85de0adb9`; Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; Authentication `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`. Open PRs: Platform #1314/#544/#541/#539 (draft planning/docs), Stock #37, Auth #75/#76 (migration-gated); TCE and Media none.
+
+The available GitHub connector run-list helper is PR-triggered only and does not enumerate native schedule runs. Consequently, the last verified native schedule IDs remain those in the 19:12 ICT checkpoint; do not label them fresh or infer schedule recovery. Latest available K3s inspection remains #42364093834 from 10:28:35Z. A fresh native schedule query and fresh read-only VPS inspection are still required before any operational conclusion or destructive decommission step.
+
+App repositories own CI/tests/builds and immutable GHCR publication. Platform owns production manifests, shared pull credentials, digest/provenance validation, GitOps promotion/reconciliation, rollout and health. Stock/Media remain retired from active Platform production GitOps. No direct SSH/Compose authority, image publication/promotion, manifest apply, secret write or production mutation was introduced. TCE market-scan schedule unchanged.
