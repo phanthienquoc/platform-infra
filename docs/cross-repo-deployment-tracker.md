@@ -4405,3 +4405,85 @@ No image publication/promotion, manifest apply, replica activation, namespace/PV
 5. Verify DNS ownership, external DB/object-storage backups/retention and runner retirement before Stock/Media decommission.
 
 No image publication/promotion, manifest apply, replica activation, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation, secret write, host upgrade or reboot occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
+
+---
+
+## Automation checkpoint — 2026-11-07 14:59 ICT / 07:59 UTC
+
+This checkpoint records the current repository/PR inspection, the latest available known workflow-job evidence, and a new operator runbook for schedule-delivery recovery. It does **not** claim that native schedule delivery has recovered: the GitHub connector used in this run can fetch jobs for known run IDs, but exposes no Actions workflow-run listing or workflow-dispatch operation. Its commit-run helper is PR-trigger-only and returned zero runs for the five default-branch heads; combined commit status returned no contexts. Therefore the schedule IDs below remain the last known evidence from the prior tracker checkpoint, not a freshly enumerated latest-run list.
+
+### Default branches and open PRs inspected
+
+| Repository | Default branch head | Open PRs |
+|---|---|---|
+| Platform Infra | `0bfe124aff904aaa22feeed64c49fdb6f5deffe7` | #1314, #544, #541, #539 (draft documentation/planning) |
+| TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None |
+| StockDividend | `7b88c804f1c015a3ff12a1ddc32ae7f85de0adb9` | None |
+| Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None |
+| Authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` | #75 ready/gated; #76 draft/gated |
+
+Authentication PR details rechecked:
+- #75 head `a8e8a1d99e86a679b8d2ea7c7e7fa91302ffcc05`, base `2189c97252bfe7ee53f50a68cf51008fa0d27c91`; its PR-triggered CI #40446492086 is success.
+- #76 head `f19cacb0bf2b454b3152bd3a501f6f88d0a14a58`, same old base; its PR-triggered CI #41329425940 is success.
+- Both remain 13 commits behind current Authentication master per the existing migration review. Supabase Preview remains skipped; do not rebase/merge until production migration side effects and integration target are authoritatively reviewed.
+
+### Latest available CI job checks inspected
+
+| Repository | Run | Job evidence |
+|---|---:|---|
+| Platform Infra | #42350321623 | `validate` completed success |
+| TCE Dashboard | #42337126761 | Build + Verify completed success |
+| TCE Dashboard | #42337126734 | Backend unit tests completed success |
+| TCE Dashboard | #42337126665 | Formatting completed success; formatter commit skipped |
+| StockDividend | #42349827620 | All 7 jobs completed success, including scraper container and non-publishing ARM64 build |
+| Media Generation | #42239703151 | Test/build completed success |
+| Authentication | #42215394539 | Validation and non-publishing ARM64 build completed success |
+
+These are the latest known CI run IDs in the tracker that could be checked by job ID. They are not a substitute for a fresh Actions run-list query.
+
+### Last known production and native schedule evidence
+
+- Platform reconciliation #42346682137 completed success: GHCR read preflight passed; Auth runtime Secret was verified with values suppressed; shared `ghcr-pull` unchanged; TCE release pairing passed; GitOps diff clean; manifest apply and image promotion skipped. No new image promotion is authorized by this checkpoint.
+- Platform read-only inspection #42345149215 completed success and generated `debug/vps-latest.md` at 06:01:30Z. At 07:59Z this snapshot is nearly two hours old; obtain a new read-only inspection before relying on it for rollout/decommission decisions.
+- Last native Platform schedule IDs recorded by the prior checkpoint remain watchdog #42327836310, reconcile #42327720407, recovery #42327707405, and inspection #42326168875. The prior checkpoint found all beyond the 45/45/45/75-minute budgets. A current run-list could not be obtained in this automation run, so do not claim that no newer event exists or that cadence has recovered.
+- Last known TCE evidence: WF-06 #42346646839 failed all four strict HTTP 200 endpoint probes with HTTP 503; WF-12 #42332584617 failed its WF-06 freshness check while its Platform heartbeat job succeeded; WF-07 integration #42344977873 passed. These are prior known IDs, not a newly enumerated latest schedule history.
+- Stock scraper #42349150261 failed at the secret preflight because `VNSTOCK_API_KEY` was empty. PR #36 documents the repository-secret setup; it does not create the secret. The next native run must prove presence and authenticated non-guest tier. Do not manually dispatch the scraper because it writes MongoDB and may send Telegram notifications.
+
+### Current K3s and release blockers
+
+The last available read-only snapshot still shows:
+- ARM64 K3s node Ready.
+- Media backend/frontend Running.
+- Stock Admin and the newer Stock Backend ImagePullBackOff on deployed tag `12d63b4`, which lacks a `linux/arm64` manifest; older Backend and Frontend remain Running.
+- TCE/Auth/Keycloak remain 0/0 maintenance.
+- Media runner service remains active/enabled with a Listener; runner-retirement gate is not satisfied.
+- No Stock/Media PVC/PV or VolumeSnapshot references were present, but external database/object-storage backup/retention and authoritative DNS ownership remain unverified.
+- Host restart is required and Docker/containerd upgrades remain pending a maintenance window.
+
+No current immutable GHCR publication, digest/provenance verification, Platform promotion, manifest apply, replica activation, runner retirement, namespace/storage deletion, DNS/database/object-storage mutation, secret write, or host maintenance occurred.
+
+### New operator runbook
+
+Added `docs/runbooks/github-actions-schedule-delivery-recovery.md` on dedicated branch `docs/schedule-delivery-recovery-runbook-20261107-1459-ict`.
+
+The runbook records:
+- Exact checked-in Platform/TCE/Stock schedule expressions and existing freshness/inter-arrival budgets.
+- How to inspect workflow `state` via the Actions API.
+- The approved, Actions-write-only enable operation for workflows that are confirmed to be intentionally scheduled.
+- Read-only native-run listing and watchdog diagnostics.
+- How to validate two original native runs without counting dispatch/workflow_run/reruns.
+- Explicit safety boundaries and recovery acceptance criteria.
+
+It does not change any workflow, cron expression, secret, deployment manifest, or production state. TCE market-scan schedule unchanged.
+
+### Exact next actions
+
+1. A repository/org Actions administrator should run the read-only state inspection from the new runbook for Platform reconcile/inspect/recovery/watchdog, TCE WF-06/WF-12, and Stock scraper.
+2. If any required workflow is disabled, identify the reason and obtain owner approval before using the documented enable API. If already active, inspect repository/org Actions policies, default branch, runner availability, and GitHub Actions service health.
+3. Obtain two consecutive original native schedule runs per required Platform workflow and verify the existing inter-arrival/freshness budgets. A manual watchdog is diagnostic only.
+4. Add Stock `VNSTOCK_API_KEY` as a repository Actions secret; verify the next native scraper event reaches authenticated non-guest tier without exposing the value.
+5. Keep TCE/Auth strict HTTP 200 gates and intentional 0/0 maintenance until service-owner approval. Keep Stock/Media decommission blocked pending runner retirement and external DNS/backup evidence.
+6. Preserve all current cron expressions, especially the TCE market-scan schedule.
+
+`reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No duplicate SSH/Compose deployment authority was added.

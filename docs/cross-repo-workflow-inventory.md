@@ -5564,3 +5564,41 @@ App repos own tests/builds and immutable GHCR publication. Platform Infra owns p
 - TCE native WF-06 #42346646839 returned four HTTP 503s; WF-07 #42344977873 passed; WF-12 #42332584617 is latest native watchdog failure. TCE/Auth remain 0/0 maintenance.
 - Latest reconcile #42346682137 had clean GitOps, unchanged shared `ghcr-pull`, verified Auth runtime Secret, no manifest apply or image promotion. Latest K3s inspection #42345149215 remains the snapshot; Stock `12d63b4` Admin/new Backend ImagePullBackOff; Media/MicroFE Running; TCE/Auth/Keycloak 0/0; runners active.
 - External backup/retention and DNS ownership remain unverified; no decommission, runner retirement or destructive mutation. `reconcile-vps.yml` sole apply authority; `inspect-vps.yml` read-only. TCE market-scan schedule unchanged.
+
+
+---
+
+## Operational inventory update — 2026-11-07 14:59 ICT / 07:59 UTC
+
+### Schedule-delivery administration runbook
+
+New operator runbook: `docs/runbooks/github-actions-schedule-delivery-recovery.md`.
+
+It documents the checked-in cron expressions and existing budgets for:
+- Platform `reconcile-vps.yml`, `inspect-vps.yml`, `recover-stale-ops.yml`, and `reconcile-schedule-watchdog.yml`.
+- TCE `wf-06-tce-healthcheck.yml` and `wf-12-tce-healthcheck-schedule-watchdog.yml`.
+- Stock `run_scraper.yml`.
+
+The runbook provides read-only workflow-state/run-history inspection, the Actions-write API needed to re-enable an intentionally disabled workflow after owner approval, and exact criteria for native schedule proof. It explicitly rejects dispatch/workflow_run/rerun substitution and preserves the TCE market-scan schedule. No cron or workflow was changed.
+
+### Repository and PR state rechecked
+
+- Platform Infra master: `0bfe124aff904aaa22feeed64c49fdb6f5deffe7`; open draft PRs #1314/#544/#541/#539.
+- TCE Dashboard master: `7ab52078c4250829e158f05b2695ceb9d11bdbe3`; no open PR.
+- StockDividend master: `7b88c804f1c015a3ff12a1ddc32ae7f85de0adb9`; no open PR.
+- Media Generation master: `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; no open PR.
+- Authentication master: `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`; #75 ready/gated and #76 draft/gated, both still based on old SHA `2189c97252bfe7ee53f50a68cf51008fa0d27c91`.
+
+### Latest known CI jobs checked
+
+Platform #42350321623 PASS; TCE WF-01 #42337126761, WF-05 #42337126734, WF-02 #42337126665 PASS; Stock #42349827620 7/7 PASS; Media #42239703151 PASS; Auth #42215394539 PASS. Auth PR-triggered checks #40446492086 and #41329425940 PASS, but Supabase Preview remains skipped and migration review remains a merge gate.
+
+The current GitHub connector can fetch jobs for known run IDs but does not expose Actions workflow-run listing or workflow dispatch. Its commit-run helper is PR-trigger-only and returned no runs for the five master SHAs. Therefore the native schedule IDs in the tracker remain the last known evidence, not a freshly enumerated latest-run list; do not claim schedule recovery or infer that no newer event exists.
+
+### Production ownership and blockers
+
+App repositories own tests/builds and immutable GHCR publication. Platform owns production manifests, shared GHCR pull credentials, digest/provenance gate, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only.
+
+No current publication/promotion or manifest apply occurred. Stock's `VNSTOCK_API_KEY` repository secret remains an operator action; Stock tag `12d63b4` still lacks ARM64 evidence in the last snapshot; TCE/Auth HTTP 503 and intentional 0/0 maintenance remain; Media runner and external DNS/backup ownership prevent Stock/Media decommission.
+
+TCE market-scan schedule unchanged.
