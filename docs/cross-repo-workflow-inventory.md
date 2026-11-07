@@ -1,3 +1,40 @@
+## Current workflow inventory — 2026-11-08 03:12 ICT / 2026-11-07 20:12 UTC
+
+| Repository | App-owned workflows | Platform-owned responsibilities / boundary | Current evidence |
+|---|---|---|---|
+| Platform Infra | No application image builds; app release receivers only | Sole production manifests, shared GHCR pull credentials, runtime Secret provisioning, digest/provenance validation, GitOps promotion/reconciliation, rollout/health, read-only inspection, protected Stock/Media decommission | Master `e2e46ea6...`; PR #1415/#1416 merged; scheduled inspection #42409592778 merged through #1417; native watchdog still fails inter-arrival gap. |
+| TCE Dashboard | CI/tests; WF-03 publisher; WF-06 public health; WF-07 backup/integration; WF-08B MicroFE publisher; WF-12 watchdog; WF-13 recovery | No production SSH/Compose/K3s apply; Platform receives digest-bound events and owns apply/reconciliation | Master `7ab52078...`; native WF-06 #42399835467 stale/failed; four HTTP 503 probes; WF-12 workflow_run is not native schedule evidence. |
+| StockDividend | CI, ARM64 image publisher, weekend scraper with safe credential preflight | Retired from active Platform GitOps; legacy workloads await protected decommission | Master `783ae36f...`; CI 7/7; scraper fails closed on missing `VNSTOCK_API_KEY`. |
+| Media Generation | CI and app-owned ARM64 publisher with full-SHA release tag/digest verification | No active Platform GitOps handoff; legacy namespace and dedicated runner await protected decommission | Master `54f3a76a...`; CI PASS; backend/frontend and runner remain present in latest inspection. |
+| Authentication | CI; manual-only ARM64 release publisher with full-SHA/versioned tags, provenance/SBOM and digest handoff | Platform owns production manifests/runtime Secrets and digest-pinned GitOps apply | Master `3b60ff46...`; CI PASS; PR #75/#76 remain Supabase migration-gated. |
+
+### Current workflow ownership and acceptance rules
+
+- Native schedule evidence requires original `event=schedule`, `master`, attempt 1, exact workflow path and full source SHA. Manual, workflow_run and repository_dispatch are separate evidence classes.
+- Platform reconcile cadence remains `7,22,37,52 * * * *`; watchdog/recovery schedules and freshness budgets remain unchanged. New native inspection #42409592778 is fresh but follows a 4h31m51s inter-arrival gap; the watchdog still fails on Reconcile's 4h03m44s gap. Another native cycle is needed.
+- TCE WF-06 remains `*/15 * * * *`; strict HTTP 200 probes remain unchanged. Its last native run is stale and failed HTTP 503. Heartbeat transport does not imply service health. TCE market-scan schedule unchanged.
+- Stock weekend scraper remains `0 1 * * 0,6` UTC. Missing `VNSTOCK_API_KEY` must be fixed by Stock owner; preflight-only must pass before ingestion.
+- TCE/Auth publishers retain app ownership, ARM64/full-SHA/digest/provenance contracts; Platform alone owns production GitOps. Stock/Media have no active Platform handoff.
+- `reconcile-vps.yml` is the only production apply authority; `inspect-vps.yml` is read-only.
+
+### Protected Stock/Media decommission
+
+PR #1415 is merged. Delete remains manual-only, protected by production Environment approval, exact namespace confirmation, backup/external-data review, separate authoritative DNS/provider ownership attestation, dedicated Media runner retirement and fresh PVC/PV/VolumeSnapshot preflight. Ingress host inventory is not proof of DNS ownership. No namespace deletion or runner retirement has occurred.
+
+### Runner registration token handling
+
+PR #1416 is merged. The generated short-lived registration token is masked before it is written to `GITHUB_OUTPUT`; the post-merge bootstrap #42409523802 shows `RUNNER_TOKEN: ***` and succeeded. The preceding bootstrap #42409167152 exposed the generated token in an environment dump; the owner must inspect runner registrations/audit log for unexpected registrations. No token value is recorded here.
+
+### Latest Platform inspection and reconciliation
+
+- Native inspection #42409592778 completed and merged through PR #1417; node Ready, ARM64, disk 56%, RAM about 19 GiB available.
+- Media and MicroFE pods Running; Stock Admin/new Backend ImagePullBackOff; old Stock Backend/Frontend Running; TCE/Auth/Keycloak 0/0; OIDC 503.
+- Workflow-dispatch reconcile #42409179948: GHCR preflight/Secret verification passed, shared pull secret unchanged, no GitOps drift, no image changes, manifest apply skipped; Auth/TCE intentionally zero-replica; MicroFE active health passed.
+
+TCE market-scan schedule unchanged.
+
+---
+
 ## Current workflow inventory — 2026-11-08 03:05 ICT / 2026-11-07 20:05 UTC
 
 | Repository | App-owned workflows | Platform-owned responsibilities / boundary | Current evidence |
