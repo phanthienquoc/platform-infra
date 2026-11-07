@@ -5474,3 +5474,16 @@ No current-master Stock/Media/Auth GHCR publication with verified digest/provena
 ### Authority and production safety remain unchanged
 
 App repos own tests/builds and immutable GHCR publication. Platform Infra owns production manifests, shared GHCR pull credentials, digest/provenance validation, GitOps promotion/reconciliation, rollout and health. Stock/Media remain outside Platform GitOps. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only. No new SSH/Compose production deployment authority was introduced. TCE market-scan schedule unchanged.
+
+
+---
+
+## Post-merge workflow inventory update — 2026-11-07 12:05 ICT / 05:05 UTC
+
+- Platform Infra PR #1378 merged as `1e7753599e874a7976ec7d1221090364d6a17440`; exact-head validation #42341107742 and post-merge validation #42341146524 PASS.
+- StockDividend PR #35 merged as `d30ea9b844c87a8ba75c2388a62f4d21f6d4060c`; exact-head run #42340998595 passed all seven checks, including the release/scraper credential contract and native ARM64 non-publishing image builds. Post-merge Stock CI #42341257653 was queued; its completion is still pending.
+- The Stock master push did not trigger a `deploy.yml` publisher run in the observed latest run list. PR #35 changed only `.github/workflows/run_scraper.yml` and `scripts/validate-production-release-contract.sh`, both covered by existing publisher `paths-ignore`. No GHCR publication or Platform handoff was performed.
+- `run_scraper.yml` remains an app-owned Saturday/Sunday data-ingestion workflow plus manual trigger, not a deployment authority. It now passes `VNSTOCK_API_KEY` only through secret references, fails before dependency/browser installation when missing, validates a non-guest vnstock tier, and uses `contents: read`. Cron `0 1 * * 0,6` is unchanged.
+- The secret's presence/validity cannot be inspected via the available GitHub connection. The next native scheduled run is the runtime verification; absent/invalid secret will fail fast and safely.
+- Native schedule history has not advanced: Platform watchdog/reconcile/recovery/inspection remain #42327836310/#42327720407/#42327707405/#42326168875; TCE WF-12/WF-06 remain #42332584617/#42317701397; Stock scraper remains #41284033242. No new event=schedule proof.
+- Production authority unchanged: app repos own builds and immutable GHCR publishing; Platform Infra owns manifests, shared pull credentials, promotion/reconciliation, rollout and health. `reconcile-vps.yml` is sole apply authority; `inspect-vps.yml` is read-only. No duplicate SSH/Compose authority introduced. TCE market-scan schedule unchanged.
