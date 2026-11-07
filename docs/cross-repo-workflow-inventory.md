@@ -5998,3 +5998,30 @@ Preserve useful CI/test/security and purposeful manual/release/scheduled workflo
 ## PR #1410 merge evidence — 2026-11-08 01:04 ICT / 18:04 UTC
 
 Platform PR #1410 merged from exact head `ed033efee66dce658beff3ddff0ca1ea85839fe5` as `7369a8221294b62d501e3aff857c68b63ab9ba5f`. Exact-head validation #42399264103 and post-merge master validation #42399354714 both passed. The merge updates only the cross-repo deployment tracker, workflow inventory and timestamped checkpoint. No production deployment authority, workflow trigger, cron, image publication, manifest, secret or runtime state changed. Current Platform master matches the merge SHA. TCE market-scan schedule unchanged.
+
+
+---
+
+## Cross-repo workflow inventory refresh — 2026-11-08 02:02 ICT / 19:02 UTC
+
+| Repository | Current master SHA | Latest relevant CI/operations | Open PRs | Deployment ownership |
+|---|---|---|---|---|
+| Platform Infra | `c56a72c39e12ace888a65840cf5a55041b1766a5` | #42404167198 master validation PASS; inspection #42400041607 PASS; manual reconcile #42399872920 PASS with apply/rollout skipped | #1314/#544/#541/#539 docs/planning | Sole production manifests, shared GHCR pull credentials, digest/provenance gate, GitOps promotion/reconciliation, rollout/health and protected decommission |
+| TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | WF-01 #42337126761, WF-02 #42337126665, WF-05 #42337126734 PASS; native WF-06 #42399835467 FAIL (4× HTTP 503); native WF-12 #42392155494 FAIL | None | App CI/tests, strict public health, backup/integration and immutable publisher; no production SSH/Compose/K3s apply |
+| StockDividend | `783ae36f128ba5dffeba8ac1d242602f160ecfd0` | CI #42375688209 7/7 PASS; scraper #42349150261 FAIL (missing VNSTOCK_API_KEY before dependencies) | None | App CI, ARM64 builds and immutable GHCR publisher; retired from active Platform GitOps; scraper secret owner-managed |
+| Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | CI #42239703151 PASS; no new publisher handoff | None | App CI and immutable ARM64 publisher; retired from active Platform GitOps; runner decommission gated by backup/DNS evidence |
+| Authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` | CI #42215394539 PASS; no new release | #75 ready, #76 draft | App CI and manual immutable ARM64 publisher; Platform owns runtime manifests/secrets/promotion; Supabase side-effect gate remains |
+
+### Native schedule and dispatch classification
+
+- Platform schedule definitions remain reconcile `7,22,37,52`, inspect `2,32`, watchdog `12,27,42,57`, recovery `10,25,40,55` (UTC minute/hour cron fields). Latest native events and age/gap budgets are recorded in the 02:02 checkpoint. Do not treat manual or fallback events as native recovery.
+- TCE WF-06 remains every 15 minutes; last native #42399835467 failed all four strict HTTP 200 probes with HTTP 503. WF-12 last native schedule #42392155494 failed stale delivery. Workflow_run heartbeat #42399852533 succeeded and correlated source #42399835467/attempt 1/full SHA to heartbeat #42399852533/attempt 1/same SHA; this is transport only.
+- Stock weekend scraper schedule remains `0 1 * * 0,6` UTC. Last native #42349150261 failed missing VNSTOCK_API_KEY before any ingestion. Keep the safe preflight-only path.
+- Media/Auth have no native scheduled publisher requirement. Preserve their useful CI, security and manual/release workflows.
+
+### GitOps / K3s ownership
+
+- Fresh read-only inspection #42400041607 / PR #1412 snapshot: node Ready/ARM64, 56% disk, ~19 GiB available RAM; Media and MicroFE running; Stock Admin x2 and one Backend ImagePullBackOff; TCE/Auth/Keycloak 0/0 maintenance; Platform and Media runner services active. External backup/retention and DNS ownership remain unverified.
+- Manual reconcile #42399872920 passed GHCR read preflight, provisioned Auth runtime Secret (values suppressed), left shared `ghcr-pull` unchanged, matched TCE desired/live release tags and found no manifest drift. Apply, promotion and rollout were skipped; 0/0 maintenance lanes do not assert live health.
+- No new immutable publisher/digest handoff or production image promotion. Keep app repositories as the only tests/builds/publishers. Platform remains the sole production apply authority. No direct SSH/Compose authority. TCE market-scan schedule unchanged.
+- Full evidence: `docs/cross-repo-deployment-checkpoints/2026-11-08-0202-ict.md`.
