@@ -4110,3 +4110,49 @@ No current-master immutable publisher/digest/provenance run, image promotion, ma
 - `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only.
 - No namespace/PVC/PV deletion, runner retirement, DNS/database/object-storage mutation, secret write, image publication/promotion, replica activation, manifest apply, or host upgrade/reboot occurred.
 - TCE market-scan schedule unchanged.
+
+
+---
+
+## Post-merge checkpoint — 2026-11-07 12:05 ICT / 05:05 UTC
+
+This checkpoint follows the successful merge of Platform Infra PR #1378 and StockDividend PR #35.
+
+### Merged changes and exact-head evidence
+
+| Repository / PR | Exact PR head | Required checks | Squash merge |
+|---|---|---|---|
+| Platform Infra #1378 | `a8ff16baf633f230351cf3cf35d2e3701d1511b1` | validate #42341107742 PASS | `1e7753599e874a7976ec7d1221090364d6a17440` |
+| StockDividend #35 | `42147c037be5993d15851ffb0b8c6f38dcb68fb0` | 7/7 PASS in #42340998595 | `d30ea9b844c87a8ba75c2388a62f4d21f6d4060c` |
+
+Platform post-merge validation #42341146524 completed successfully. Stock post-merge push CI #42341257653 was queued at 05:05:53Z; wait for its result before recording post-merge CI as complete.
+
+Stock PR #35 now maps the repository secret `VNSTOCK_API_KEY` into the weekend scraper, fails fast before Python/browser installation when absent, verifies the installed vnstock package reports a non-guest tier before Chromium starts, and grants only `contents: read`. Its Saturday/Sunday cron and manual workflow_dispatch remain unchanged. The exact-head release-contract job and all three non-publishing image builds (including native ARM64) passed. No secret value was read, added to Git or printed.
+
+The Stock master push produced CI run #42341257653. No Stock `deploy.yml` publisher run was observed for merge commit `d30ea9b...`; the two changed paths are covered by the publisher's existing `paths-ignore`. Therefore this merge did not establish a new GHCR publication, digest or production promotion. Do not infer that the deployed Stock tag `12d63b4` has been repaired.
+
+### Current default branch heads
+
+| Repository | Default branch SHA |
+|---|---|
+| Platform Infra | `1e7753599e874a7976ec7d1221090364d6a17440` |
+| TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` |
+| StockDividend | `d30ea9b844c87a8ba75c2388a62f4d21f6d4060c` |
+| Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` |
+| Authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` |
+
+Open PRs rechecked after merge:
+- Platform Infra #1314, #544, #541 and #539 remain open drafts with stale/diverged bases.
+- Authentication #75 remains open/ready and #76 remains open/draft; both target master base `2189c972...`, 13 commits behind the current Authentication master. Keep both gated by the owner-confirmed Supabase Deploy-to-production integration side effect; do not merge or rebase into master until that effect is authoritatively cleared.
+- TCE Dashboard, StockDividend and Media Generation have no open PRs.
+
+### Native schedule and production state
+
+A fresh event=schedule query after both merges returned no newer native runs:
+- Platform watchdog #42327836310, reconcile #42327720407, recovery #42327707405 and inspection #42326168875 remain the latest native events.
+- TCE WF-12 #42332584617 remains failed on stale WF-06 delivery; WF-06 #42317701397 remains failed on strict HTTP 503 probes; WF-07 backup #42311204446 remains successful.
+- Stock weekend scraper #41284033242 and #41178133076 remain the latest native events and both are cancelled. PR #35 corrects the missing key mapping, but the repository secret's existence/validity cannot be read through the available GitHub connection. The next scheduled execution must verify it at runtime.
+
+The latest full K3s snapshot is still #42332606240, generated 2026-11-07T03:08:46Z; no newer inspection was performed. It records Media and MicroFE core workloads Running, Stock Admin and the newer Stock Backend ImagePullBackOff due missing ARM64 manifests for tag `12d63b4`, TCE/Auth/Keycloak at 0/0, and only the k3s-debug PVC. External backup/retention and DNS ownership remain unverified.
+
+No image publication/promotion, manifest apply, replica activation, namespace/PVC/PV deletion, runner retirement, DNS/database/object-storage mutation, Secret write, host upgrade or reboot occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
