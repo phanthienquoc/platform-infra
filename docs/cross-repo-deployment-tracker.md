@@ -4487,3 +4487,15 @@ It does not change any workflow, cron expression, secret, deployment manifest, o
 6. Preserve all current cron expressions, especially the TCE market-scan schedule.
 
 `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No duplicate SSH/Compose deployment authority was added.
+
+
+---
+
+## Post-merge checkpoint — 2026-11-07 15:05 ICT / 08:05 UTC
+
+- Schedule-delivery recovery runbook PR [#1385](https://github.com/phanthienquoc/platform-infra/pull/1385) was squash-merged from exact head `d963061e25021aa1e6555af2a7376a0eda0b000e` as `e0840559d4ff087c1d071443f0119adb91e7d65a`.
+- Exact-head PR validation [#42353849550](https://github.com/phanthienquoc/platform-infra/actions/runs/42353849550) completed success. All validation steps passed, including retired Stock/Media manifest guard, immutable image-change contract, Auth digest promotion helper, shell validation, production manifest rendering, Auth GitOps contract, secret policy, immutable image policy, Keycloak isolation, and network boundaries.
+- Platform Infra master is now `e0840559d4ff087c1d071443f0119adb91e7d65a`. Open PRs remain #1314/#544/#541/#539; #1385 is merged.
+- The runbook is now available at `docs/runbooks/github-actions-schedule-delivery-recovery.md`. It gives the Actions administrator a read-only state/history inspection path and a gated enable procedure; it does not change workflows or schedules.
+- The current connector still does not expose Actions workflow-run listing or workflow dispatch. The schedule IDs in the preceding checkpoint remain last-known evidence, not a fresh enumeration; native schedule recovery is not claimed.
+- No production manifest apply, image publication/promotion, workload activation, secret write, namespace/storage deletion, runner retirement, DNS/database/object-storage mutation, or host maintenance occurred. TCE market-scan schedule unchanged.

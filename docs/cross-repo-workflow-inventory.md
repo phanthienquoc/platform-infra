@@ -5602,3 +5602,13 @@ App repositories own tests/builds and immutable GHCR publication. Platform owns 
 No current publication/promotion or manifest apply occurred. Stock's `VNSTOCK_API_KEY` repository secret remains an operator action; Stock tag `12d63b4` still lacks ARM64 evidence in the last snapshot; TCE/Auth HTTP 503 and intentional 0/0 maintenance remain; Media runner and external DNS/backup ownership prevent Stock/Media decommission.
 
 TCE market-scan schedule unchanged.
+
+
+---
+
+## Post-merge inventory — 2026-11-07 15:05 ICT / 08:05 UTC
+
+- Added `docs/runbooks/github-actions-schedule-delivery-recovery.md` through Platform PR #1385; merged as `e0840559d4ff087c1d071443f0119adb91e7d65a`.
+- Exact-head validation run #42353849550 completed success; the full `validate-manifests` job passed.
+- Platform Infra remains the only production GitOps apply authority. The runbook's workflow-state enable procedure requires Actions write permission and owner approval; its diagnostic workflow runs do not count as native schedule evidence.
+- No cron, workflow, production manifest, secret, runner, or live cluster state changed. TCE market-scan schedule unchanged.
