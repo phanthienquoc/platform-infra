@@ -5080,3 +5080,19 @@ App repositories own tests/builds and immutable GHCR publication. Platform Infra
 - PR #1410 records the 00:57 ICT five-repository refs, open PRs, native schedule ages/inter-arrival gaps, TCE heartbeat vs HTTP 503 distinction, Stock missing-secret preflight gate, and 141-minute-old K3s snapshot. No production workflow, cron, manifest, secret, image, workload, runner, DNS, database or host change was made.
 - The next implementation work remains dependency-blocked: GitHub Actions administrator must investigate native schedule delivery; Stock owner must add `VNSTOCK_API_KEY` and run preflight-only; Platform operator must obtain fresh K3s inspection; TCE/Auth service owner must approve restoration; Auth owner must verify Supabase integration side effects; Stock/Media owners must provide backup/DNS evidence.
 - Current Platform master: `7369a8221294b62d501e3aff857c68b63ab9ba5f`. TCE market-scan schedule unchanged.
+
+
+---
+
+## Cross-repo execution refresh — 2026-11-08 02:02 ICT / 19:02 UTC
+
+- Platform PR #1411 merged from exact head `9462e2b1ddcd84851d66349804ca979a70ddcf00` as `c56a72c39e12ace888a65840cf5a55041b1766a5`; exact-head #42399454528 and post-merge #42404167198 passed. Read-only inspection PR #1412 merged as `c2bc217ecd60105b3b51f745a35c5a48ee34c2fb` after run #42400041607.
+- Current refs: Platform `c56a72c39e12ace888a65840cf5a55041b1766a5`; TCE `7ab52078c4250829e158f05b2695ceb9d11bdbe3`; Stock `783ae36f128ba5dffeba8ac1d242602f160ecfd0`; Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; Authentication `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`.
+- Open PRs: Platform #1314/#544/#541/#539 (docs/planning); Authentication #75 ready and #76 draft (Supabase integration/migration side-effect gated); none in TCE/Stock/Media.
+- Platform latest native events remain reconcile #42387275904 (15:37:24Z), inspection #42387216070 (15:36:38Z), watchdog #42385910055 (15:20:32Z), recovery #42385416779 (15:14:36Z). At 19:02Z their ages are 204m36s/205m22s/221m28s/227m24s, beyond 45/75/45/45-minute budgets. Latest observed inter-arrival gaps are 24,008s/25,037s/23,511s/23,289s. Fallback/manual events are not native proof.
+- TCE native WF-06 #42399835467 (18:09:17Z) failed all four public probes with HTTP 503; latest native WF-12 #42392155494 (16:36:34Z) failed stale-delivery verification. WF-12 workflow_run #42399852533 successfully forwarded the exact scheduled source/heartbeat IDs, attempts and full SHA to Platform; this is dispatch evidence, not native schedule or service recovery.
+- Stock CI #42375688209 passed 7/7; scraper #42349150261 failed the missing VNSTOCK_API_KEY guard before dependencies/ingestion. Safe preflight-only is merged; owner secret setup remains outstanding. Weekend cron remains `0 1 * * 0,6` UTC.
+- Media CI #42239703151 and Auth CI #42215394539 passed; no new publisher/digest handoff. Authentication #75/#76 remain gated.
+- Fresh inspection #42400041607 / snapshot generated 18:11:48Z: K3s node Ready/ARM64; disk 56%, ~19 GiB RAM available; Media/MicroFE running; Stock Admin (2) and one Backend ImagePullBackOff; TCE/Auth/Keycloak 0/0; both Platform and Media runners active. Backup/retention and DNS ownership remain unverified.
+- Manual reconcile #42399872920 passed GHCR preflight, provisioned/verified Auth runtime Secret, left shared `ghcr-pull` unchanged and found no manifest drift; apply/promotion/rollout skipped. Maintenance-aware TCE/Auth lanes do not assert live health.
+- No new production image publication/promotion, manifest apply, service restoration, decommission or host maintenance. `reconcile-vps.yml` remains sole apply authority; `inspect-vps.yml` read-only. TCE market-scan schedule unchanged. Full evidence: `docs/cross-repo-deployment-checkpoints/2026-11-08-0202-ict.md`.
