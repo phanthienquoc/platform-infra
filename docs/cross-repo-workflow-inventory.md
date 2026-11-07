@@ -1,3 +1,9 @@
+## Current inventory snapshot — 2026-11-07 21:56 ICT / 14:56 UTC
+
+The matching compact inventory is [2026-11-07-2156-ict.md](cross-repo-workflow-inventory-checkpoints/2026-11-07-2156-ict.md). It records all five master SHAs, current open PRs, latest CI/publication evidence, native schedule events, dispatch correlation, ownership boundaries and exact next actions. Key distinctions: TCE heartbeat success is not service health; workflow_run/repository_dispatch is not native schedule delivery; Stock's passing ARM64 CI is non-publishing; the last K3s inspection is stale; Stock/Media production GitOps remains retired. TCE market-scan schedule unchanged.
+
+---
+
 ## Current operational state — 2026-11-07 13:03 ICT / 06:03 UTC
 
 This checkpoint supersedes older workflow-status summaries below. Default branch state, open PRs, recent workflow runs, native schedule events, cross-repo dispatch evidence and the latest VPS snapshot were rechecked.
