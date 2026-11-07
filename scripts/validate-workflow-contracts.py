@@ -1416,8 +1416,8 @@ if "bash scripts/tests/restart-blocked-image-pulls.test.sh" not in actions_valid
 # scheduled/manual/fallback invocations must continue to fail closed on stale data.
 if '  push:\n    branches: [master]\n    paths:\n      - ".github/workflows/reconcile-schedule-watchdog.yml"' not in watchdog:
     fail("The watchdog must run a path-scoped post-merge API smoke check on master.")
-if watchdog.count('if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then') != 11:
-    fail("Only the watchdog's empty-history, disabled-workflow, queue-delay, stale-history, inspection-result, and recovery-result guards may be warn-only for push smoke runs.")
+if watchdog.count('if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then') != 12:
+    fail("Only the watchdog's empty-history, disabled-workflow, queue-delay, stale-history, inspection-result, recovery-result, and native schedule-history API guards may be warn-only for push smoke runs.")
 if '::warning::Read-only API smoke succeeded' not in watchdog:
     fail("The watchdog push smoke must clearly label stale/missing schedule or queue data as a warning, not health success.")
 if '::error::No scheduled reconcile-vps run within ${MAX_AGE_MINUTES} minutes.' not in watchdog:
