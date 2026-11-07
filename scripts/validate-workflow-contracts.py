@@ -290,6 +290,14 @@ if int(recovery_age_budget.group(1)) != recovery_schedule_gap * 3:
         "MAX_RECOVERY_AGE_MINUTES must equal three maximum recovery schedule intervals "
         "so missed native schedule delivery remains observable."
     )
+watchdog_age_budget = re.search(
+    r'(?m)^[ \t]*MAX_WATCHDOG_AGE_MINUTES:[ \t]*"([0-9]+)"',
+    watchdog,
+)
+if watchdog_age_budget is None:
+    fail("The schedule watchdog must declare MAX_WATCHDOG_AGE_MINUTES.")
+if int(watchdog_age_budget.group(1)) != watchdog_schedule_gap * 3:
+    fail("MAX_WATCHDOG_AGE_MINUTES must equal three maximum watchdog schedule intervals.")
 
 # The watchdog must measure recovery freshness from native schedule runs only.
 # workflow_run / workflow_dispatch successes are useful fallback evidence but cannot
@@ -1408,8 +1416,8 @@ if "bash scripts/tests/restart-blocked-image-pulls.test.sh" not in actions_valid
 # scheduled/manual/fallback invocations must continue to fail closed on stale data.
 if '  push:\n    branches: [master]\n    paths:\n      - ".github/workflows/reconcile-schedule-watchdog.yml"' not in watchdog:
     fail("The watchdog must run a path-scoped post-merge API smoke check on master.")
-if watchdog.count('if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then') != 11:
-    fail("Only the watchdog's empty-history, disabled-workflow, queue-delay, stale-history, inspection-result, and recovery-result guards may be warn-only for push smoke runs.")
+if watchdog.count('if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then') != 12:
+    fail("Only the watchdog's empty-history, disabled-workflow, queue-delay, stale-history, inspection-result, recovery-result, and native schedule-history API guards may be warn-only for push smoke runs.")
 if '::warning::Read-only API smoke succeeded' not in watchdog:
     fail("The watchdog push smoke must clearly label stale/missing schedule or queue data as a warning, not health success.")
 if '::error::No scheduled reconcile-vps run within ${MAX_AGE_MINUTES} minutes.' not in watchdog:
@@ -1703,6 +1711,39 @@ if "stale_reconcile" not in lane_queue_contract or 'status in ("in_progress", "c
     fail("The deployment-lane queue verifier must avoid re-failing historical assigned delays after the parent reconciliation is stale.")
 if "Still-queued unassigned lanes remain actionable." not in lane_queue_contract:
     fail("Stale reconciliation handling must continue enforcing currently unassigned deployment lanes.")
+
+# Native schedule delivery must detect long gaps between consecutive original schedule events,
+# even when a delayed latest run makes the ordinary age check look fresh.
+# Native schedule delivery must detect long gaps between consecutive original schedule events,
+# even when a delayed latest run makes the ordinary age check look fresh.
+native_schedule_gap_script = ROOT / "scripts" / "verify-native-schedule-gap.py"
+if not native_schedule_gap_script.is_file():
+    fail("The native schedule inter-arrival verifier is missing.")
+if "python3 scripts/verify-native-schedule-gap.py --self-test" not in actions_validation:
+    fail("Workflow validation must execute native schedule inter-arrival regression fixtures.")
+native_schedule_gap_step = watchdog.find("name: Verify native schedule inter-arrival gaps")
+if native_schedule_gap_step < 0 or "if: always()" not in watchdog[native_schedule_gap_step:]:
+    fail("Native schedule inter-arrival diagnostics must run even when freshness checks fail.")
+native_schedule_gap_block = watchdog[native_schedule_gap_step:]
+for required in (
+    'verify_platform_schedule_gap reconcile-vps.yml "$MAX_AGE_MINUTES"',
+    'verify_platform_schedule_gap inspect-vps.yml "$MAX_INSPECTION_AGE_MINUTES"',
+    'verify_platform_schedule_gap recover-stale-ops.yml "$MAX_RECOVERY_AGE_MINUTES"',
+    'verify_platform_schedule_gap reconcile-schedule-watchdog.yml "$MAX_WATCHDOG_AGE_MINUTES"',
+    '--workflow-path ".github/workflows/wf-06-tce-healthcheck.yml"',
+    '--max-gap-minutes "$MAX_TCE_WF06_AGE_MINUTES"',
+    '--workflow-path ".github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml"',
+    '--max-gap-minutes "$MAX_TCE_WF12_GAP_MINUTES"',
+    'per_page=100',
+):
+    if required not in watchdog:
+        fail(f"Native schedule inter-arrival watchdog contract is missing: {required}")
+tce_wf06_gap_observer = native_schedule_gap_block.split('tce_runs_file="$RUNNER_TEMP/tce-wf06-scheduled-runs.json"', 1)[1]
+if '--workflow-path ".github/workflows/wf-06-tce-healthcheck.yml"' not in tce_wf06_gap_observer or "--warn-only" not in tce_wf06_gap_observer:
+    fail("TCE WF-06 schedule inter-arrival observation must remain warning-only for Platform.")
+tce_wf12_gap_observer = native_schedule_gap_block.split('tce_wf12_runs_file="$RUNNER_TEMP/tce-wf12-scheduled-runs.json"', 1)[1]
+if '--workflow-path ".github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml"' not in tce_wf12_gap_observer or "--warn-only" not in tce_wf12_gap_observer:
+    fail("TCE WF-12 schedule inter-arrival observation must remain warning-only for Platform.")
 
 # Optional VPS MCP must remain read-only and subordinate to the sole GitOps apply authority.
 vps_mcp_contract = ROOT / "scripts" / "validate-vps-control-mcp-contract.py"
