@@ -1,3 +1,43 @@
+## Current workflow inventory — 2026-11-08 02:55 ICT / 2026-11-07 19:55 UTC
+
+This inventory supersedes the older 21:56/22:06 summaries below. The complete five-repository evidence is in [2026-11-08-0255-ict.md](cross-repo-workflow-inventory-checkpoints/2026-11-08-0255-ict.md).
+
+| Repository | App-owned workflows | Platform-owned responsibilities / boundary | Current operational evidence |
+|---|---|---|---|
+| Platform Infra | No application image builds; app release receivers only | Sole production manifests, shared GHCR pull credentials, runtime Secret provisioning, digest/provenance validation, GitOps promotion/reconciliation, rollout/health, read-only inspection and protected Stock/Media decommission | Master `185d4b2b...`; native reconcile #42407410735 PASS, watchdog #42406561460 FAIL, recovery #42406469813 PASS; manual inspection #42406647304 PASS. |
+| TCE Dashboard | CI/build/tests; WF-03 manual publisher; WF-06 strict public health; WF-07 backup/integration; WF-08B MicroFE publisher; WF-12 schedule watchdog; WF-13 recovery | No production SSH/Compose/K3s apply. Platform receives digest-bound MicroFE/TCE events and owns apply/reconciliation. | Master `7ab52078...`; native WF-06 #42399835467 failed four HTTP 503 probes; WF-12 workflow_run #42399852533 PASS is not native schedule evidence. |
+| StockDividend | CI, ARM64 image publisher, weekend scraper with safe credential preflight | Stock/Media are retired from active Platform production GitOps; legacy live workloads await protected decommission | Master `783ae36f...`; CI #42375688209 7/7 PASS; scraper #42349150261 failed because `VNSTOCK_API_KEY` was absent. |
+| Media Generation | CI and app-owned ARM64 publisher with immutable full-SHA release tag/digest verification | No active Platform GitOps handoff; legacy namespace and dedicated runner await protected decommission | Master `54f3a76a...`; CI #42239703151 PASS; backend/frontend still Running in last inspection; runner active/enabled. |
+| Authentication | CI; manual-only ARM64 release publisher with full-SHA/versioned tags, provenance/SBOM and digest handoff | Platform owns production manifests/runtime Secrets and digest-pinned GitOps apply | Master `3b60ff46...`; CI #42215394539 PASS; PR #75/#76 migration-gated on Supabase production review. |
+
+### Workflow trigger and evidence rules
+
+- Native scheduled runs must be identified by `event=schedule`, `master`, original `run_attempt=1`, exact workflow path and full source SHA. Manual, workflow_run and repository_dispatch events are never counted as native schedule recovery.
+- Platform reconcile cadence remains `7,22,37,52 * * * *`; recovery and watchdog cadence remain unchanged. Freshness budgets remain 45/75 minutes. The first native runs after the long gap still show out-of-budget inter-arrival intervals; another original native cycle is required.
+- TCE WF-06 remains `*/15 * * * *`; strict HTTP 200 probes remain unchanged. Its last native run is stale and failed HTTP 503. WF-12 heartbeat transport is separate from service health.
+- Stock weekend scraper remains `0 1 * * 0,6` UTC. Missing `VNSTOCK_API_KEY` is an owner secret dependency, not a reason to bypass the preflight.
+- Media has no Platform GitOps dispatch; its app-owned publication does not imply production deployment.
+- Authentication release is manual-only from master and must validate exact digest, ARM64 manifest and source run before the Platform receiver can promote.
+- `reconcile-vps.yml` is the only production apply authority; `inspect-vps.yml` is read-only. No second SSH/Compose deployment authority is permitted.
+
+### Protected Stock/Media decommission contract
+
+The manual-only `decommission-stock-media.yml` workflow defaults to read-only plan. Delete requires the production Environment, exact namespace confirmation, backup/external-data review, dedicated Media runner retirement, and fresh storage preflight. The preflight inventories Ingress hosts/TLS references but cannot infer authoritative DNS ownership.
+
+This change set adds a separate typed DNS/provider ownership attestation (`AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED`) to the workflow, script, installed CLI source and regression tests. It does not authorize deletion by itself; operators must actually reconcile the reported hostnames with authoritative provider records. The change is not active on master until its PR merges. No decommission workflow or production namespace has been removed.
+
+### Current operational evidence
+
+- Platform master: `185d4b2b428c55782ef2d618f0deb24f3e56de44`; PR #1414 merged; open PRs #1314/#544/#541/#539 remain draft planning/docs.
+- TCE master: `7ab52078c4250829e158f05b2695ceb9d11bdbe3`; no open PR; four public health endpoints return HTTP 503.
+- Stock master: `783ae36f128ba5dffeba8ac1d242602f160ecfd0`; no open PR; CI 7/7 pass; scraper credential preflight fails closed.
+- Media master: `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; no open PR; CI pass; no active Platform handoff.
+- Authentication master: `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`; #75 ready and #76 draft; Supabase migration review blocks both.
+
+TCE market-scan schedule unchanged.
+
+---
+
 ## Final merge evidence — 2026-11-07 22:06 ICT / 15:06 UTC
 
 Platform PR #1404 merged as `60ae5657551460f791a0d78f726575ee3ba7a028`; exact-head validation #42384636492 and post-merge validation #42384687767 passed. Current Platform master is `60ae565...`. The latest complete cross-repo operational inventory remains the 21:56 ICT snapshot. No deployment ownership, workflow trigger, cron, publication, promotion or production runtime behavior changed. TCE market-scan schedule unchanged.
