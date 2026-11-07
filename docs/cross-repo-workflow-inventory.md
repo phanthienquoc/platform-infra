@@ -5865,3 +5865,15 @@ No new GHCR publication/promotion, manifest apply, rollout, workload activation,
 5. Stock/Media owners: provide external backup/retention and authoritative DNS ownership evidence, then retire only the dedicated Media runner and run protected `mode=plan` before any decommission approval.
 
 App repositories own tests/builds and immutable GHCR publication. Platform Infra owns production manifests, shared GHCR pull credentials, digest/provenance verification, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose authority was added. TCE market-scan schedule unchanged.
+
+
+---
+
+## PR #1401 post-merge verification — 2026-11-07 21:08 ICT / 14:08 UTC
+
+- Platform Infra PR #1401 [docs(deploy): refresh cross-repo readiness and native schedule evidence](https://github.com/phanthienquoc/platform-infra/pull/1401) was squash-merged from exact head `f9a9300dbf377dd619ea0fd0590d765044868a63` as `2c13df216b1345c2a8cb7a04300d5bcf54a328a8`.
+- Exact-head PR validation #42380047882 completed success. All manifest guards, immutable-image contract tests, Auth digest promotion helper, shell checks, manifest rendering, secret policy, immutable image policy, isolated Keycloak and network-boundary checks passed.
+- Post-merge master validation #42380143207 completed success on the merge SHA `2c13df216b1345c2a8cb7a04300d5bcf54a328a8`; all observed validation steps passed.
+- The merged checkpoint records the current 5-repository SHAs, open PRs/checks, Platform native schedule staleness, TCE WF-06 HTTP 503 and exact heartbeat correlation, Stock missing-secret failure, and the age/limitations of the latest K3s inspection.
+- Platform master is now `2c13df216b1345c2a8cb7a04300d5bcf54a328a8`. PR #1401 is closed/merged. Remaining open Platform PRs are #1314/#544/#541/#539 (draft planning/docs); Auth #75/#76 remain migration-gated; TCE, Stock and Media have no open PRs.
+- No production mutation was performed. Native schedule recovery, Stock secret/preflight, TCE/Auth service restoration, fresh K3s inspection, and Stock/Media decommission prerequisites remain open. TCE market-scan schedule unchanged.
