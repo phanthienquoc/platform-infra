@@ -52,6 +52,7 @@ run_script() {
     PATH="$TMP:$PATH" \
     PLATFORM_KUBECTL_BIN="$TMP/platform-kubectl" \
     CALL_LOG="$TMP/calls" \
+    GITHUB_WORKSPACE="$ROOT" \
     "$@" \
     bash "$ROOT/scripts/reconcile-vps.sh" "$mode"
 }
