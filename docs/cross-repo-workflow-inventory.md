@@ -1,3 +1,9 @@
+## Post-merge inventory confirmation — 2026-11-07 22:00 ICT / 15:00 UTC
+
+Platform PR #1403 merged as `b7ffad1c1537a927be4e4712555aca2a6be74751`; exact-head validation #42384489144 and post-merge validation #42384535327 passed. The 21:56 ICT inventory remains the current cross-repo workflow snapshot. No workflow ownership, trigger, cron, publication, promotion or production deployment behavior changed. TCE market-scan schedule unchanged.
+
+---
+
 ## Current inventory snapshot — 2026-11-07 21:56 ICT / 14:56 UTC
 
 The matching compact inventory is [2026-11-07-2156-ict.md](cross-repo-workflow-inventory-checkpoints/2026-11-07-2156-ict.md). It records all five master SHAs, current open PRs, latest CI/publication evidence, native schedule events, dispatch correlation, ownership boundaries and exact next actions. Key distinctions: TCE heartbeat success is not service health; workflow_run/repository_dispatch is not native schedule delivery; Stock's passing ARM64 CI is non-publishing; the last K3s inspection is stale; Stock/Media production GitOps remains retired. TCE market-scan schedule unchanged.
