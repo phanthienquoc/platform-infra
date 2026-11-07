@@ -5449,3 +5449,28 @@ No current-master Stock/Media/Auth GHCR publication with verified digest/provena
 - Push-only watchdog smoke is warning-only for stale/missing schedule data; native schedule, workflow_run and manual enforcement remain fail-closed for Platform history/API gaps. TCE observations remain advisory for all events.
 - PR #1372 exact-head validation: #42327826614 and #42327826619 PASS. Post-merge validation: #42327920371 and #42327920340 PASS. Post-merge read-only watchdog smoke #42327920376 PASS with warnings for the observed multi-hour gaps.
 - No cron expression changed. The TCE market-scan schedule, strict HTTP 200 health contract, production apply serialization and sole reconcile-vps.yml apply authority remain unchanged.
+
+
+---
+
+## Workflow inventory update — 2026-11-07 11:57 ICT / 04:57 UTC
+
+### StockDividend — weekend scraper credential contract
+
+| Workflow / file | Owner and authority | Current evidence / guard |
+|---|---|---|
+| `.github/workflows/run_scraper.yml` | StockDividend app-owned scheduled/manual data-ingestion job; no production deployment authority | Master currently preserves cron `0 1 * * 0,6` and `workflow_dispatch`, but does not pass `VNSTOCK_API_KEY`. Native runs #41284033242 and #41178133076 were cancelled; #41284033242 logs show repeated Vnstock `VNSTOCK_TIER_CI_KEY_REQUIRED` errors. PR #35 adds secret mapping, fail-fast presence check, authenticated non-guest `vnstock.status()` verification before Chromium, and `contents: read` permissions. Exact-head run #42340998595 was pending at 04:57Z. Do not merge until all required checks pass on head `42147c037be5993d15851ffb0b8c6f38dcb68fb0`. |
+| `scripts/validate-production-release-contract.sh` | StockDividend CI regression contract for immutable publisher and scraper schedule | Extended in PR #35 to assert the weekend cron/manual trigger remain, only read permission is granted, the VNStock secret is mapped exactly to preflight/entitlement/runtime, entitlement is checked before browser installation, and secret values are not logged. |
+| `.github/workflows/deploy.yml` | StockDividend app-owned immutable ARM64 GHCR publisher; no Platform handoff | PR #35 touches only `.github/**` and the exact validator path already listed in `paths-ignore`; merging it does not trigger publication. Existing full-source-SHA tags and registry digest/platform verification remain unchanged. |
+
+### Current cross-repo execution snapshot
+
+- Platform latest native schedule observations: watchdog #42327836310, reconcile #42327720407, recovery #42327707405, inspection #42326168875. No later native schedule events observed through 04:57Z; freshness/inter-arrival budgets remain violated. Manual/dispatch/workflow_run/push events are not native schedule evidence.
+- TCE latest native observations: WF-12 #42332584617 failed the WF-06 freshness check after successfully sending a verified heartbeat; WF-06 #42317701397 failed four strict HTTP 200 probes with HTTP 503; WF-07 backup #42311204446 passed. No cron or health threshold changes.
+- Stock weekend scraper's latest two native runs remain cancelled; PR #35 addresses the missing CI API-key contract. No schedule was manually dispatched.
+- Media Generation and Authentication have no native schedule workflows in the observed run history.
+- Default-branch CI: Platform #42337225709 PASS; TCE #42337126761/#42337126734/#42337126665 PASS; Stock #42241252700 7/7 PASS; Media #42239703151 PASS; Auth #42215394539 PASS. These are CI checks, not publication or production-health evidence.
+
+### Authority and production safety remain unchanged
+
+App repos own tests/builds and immutable GHCR publication. Platform Infra owns production manifests, shared GHCR pull credentials, digest/provenance validation, GitOps promotion/reconciliation, rollout and health. Stock/Media remain outside Platform GitOps. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only. No new SSH/Compose production deployment authority was introduced. TCE market-scan schedule unchanged.
