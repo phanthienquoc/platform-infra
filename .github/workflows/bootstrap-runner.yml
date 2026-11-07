@@ -144,7 +144,7 @@ jobs:
           set -euo pipefail
 
           install -m 700 -d ~/.ssh
-          printf '%s\\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/vps_key
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/vps_key
           chmod 600 ~/.ssh/vps_key
           ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
 
