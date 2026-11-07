@@ -52,8 +52,10 @@ permissions:
   actions: write
   contents: read
 
+# Keep native schedule recovery independent from completed-run diagnostics and TCE heartbeats.
+# Non-schedule recovery triggers remain serialized with each other.
 concurrency:
-  group: scheduled-ops-delivery-recovery
+  group: scheduled-ops-delivery-recovery-${{ github.event_name == 'schedule' && 'schedule' || 'diagnostic' }}
   cancel-in-progress: false
 
 jobs:
