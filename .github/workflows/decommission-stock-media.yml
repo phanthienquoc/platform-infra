@@ -19,6 +19,10 @@ on:
         description: Type BACKUP-AND-EXTERNAL-DATA-REVIEWED after reviewing backups and external data ownership
         required: false
         type: string
+      dns_ownership_review:
+        description: Type AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED after reconciling retired Ingress hosts with authoritative DNS/provider records
+        required: false
+        type: string
       runner_retirement:
         description: >-
           Type MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED after confirming the dedicated
@@ -120,6 +124,7 @@ jobs:
         env:
           CONFIRMATION: ${{ inputs.confirmation }}
           DATA_RETENTION_REVIEW: ${{ inputs.data_retention_review }}
+          DNS_OWNERSHIP_REVIEW: ${{ inputs.dns_ownership_review }}
           RUNNER_RETIREMENT: ${{ inputs.runner_retirement }}
         run: |
           set -euo pipefail
@@ -133,6 +138,10 @@ jobs:
           }
           test "$DATA_RETENTION_REVIEW" = "BACKUP-AND-EXTERNAL-DATA-REVIEWED" || {
             echo "::error::Backup/external-data review confirmation does not match."
+            exit 1
+          }
+          test "$DNS_OWNERSHIP_REVIEW" = "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED" || {
+            echo "::error::Authoritative DNS/provider ownership review must be confirmed before namespace deletion."
             exit 1
           }
           test "$RUNNER_RETIREMENT" = "MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED" || {
@@ -150,4 +159,5 @@ jobs:
         env:
           CONFIRMATION: ${{ inputs.confirmation }}
           DATA_RETENTION_REVIEW: ${{ inputs.data_retention_review }}
+          DNS_OWNERSHIP_REVIEW: ${{ inputs.dns_ownership_review }}
         run: bash scripts/decommission-stock-media-namespaces.sh delete
