@@ -235,6 +235,18 @@ if "github.event.workflow_run.run_attempt == 1" not in recovery:
     fail("Recovery must ignore workflow_run rerun attempts; only the original completed run may drive freshness recovery.")
 if "github.run_attempt == 1" not in recovery:
     fail("The recovery controller itself must ignore rerun attempts to prevent replay.")
+
+# Native recovery cadence must not be displaced by workflow_run, push, manual or TCE-heartbeat events.
+expected_recovery_concurrency = """concurrency:
+  group: scheduled-ops-delivery-recovery-${{ github.event_name == 'schedule' && 'schedule' || 'diagnostic' }}
+  cancel-in-progress: false
+"""
+if expected_recovery_concurrency not in recovery:
+    fail("Native scheduled recovery must use a concurrency group isolated from non-schedule diagnostics.")
+
+# Keep the sole production apply authority globally serialized across all event types.
+if "concurrency:\\n  group: platform-vps-reconcile\\n  cancel-in-progress: false" not in reconcile:
+    fail("Production reconcile-vps must retain one cross-event concurrency group to serialize all applies.")
 global_latest_runs_query = 'runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/runs" -F branch=master -F per_page=100)"'
 if recovery.count(global_latest_runs_query) < 1:
     fail("Recovery must query the master Actions run page for reconciliation activity.")
