@@ -6170,3 +6170,38 @@ Current source had two read-only-boundary defects:
 A focused Platform branch now removes these mutations, makes missing namespaces explicit drift, fails closed on API errors, keeps the only production apply in the explicit `reconcile-vps.sh apply` path, and adds shell regression/contract validation. No production cluster mutation was performed. The PR remains subject to exact-head required checks.
 
 Preserve all useful CI/test/security and purposeful manual/release/scheduled workflows. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. Do not add SSH/Compose deploy paths. TCE market-scan schedule unchanged.
+
+
+---
+
+## Post-merge workflow inventory correction — PR #1419 (2026-11-08 04:14 ICT)
+
+Platform PR #1419 is merged at `5eb9116db24038facdaa55168d1098fea71290f9`. Exact-head #42414712138/#42414712086 and post-merge #42414766904/#42414766952 all passed.
+
+### Apply authority boundary now enforced
+
+- `reconcile-vps.sh plan`: namespace reads plus `kubectl diff` only; no namespace apply/create.
+- Missing declared namespace is drift (exit 1); API/connectivity failure is an error (exit 2), not inferred drift.
+- `reconcile-vps.sh apply`: sole production Kustomize mutation, `apply -k environments/prod`.
+- `bootstrap-runner.yml`: SSH bootstrap/runner registration only; verifies policy and read-only node access, no Kubernetes apply/create/diff.
+- `validate-github-actions` runs `scripts/tests/reconcile-vps.test.sh` and the workflow contract validator. Final regression and contract checks passed.
+
+### Post-merge runs
+
+| Run | Event | Result | Interpretation |
+|---|---|---|---|
+| #42414766904 | push / validate-github-actions | PASS | actionlint, yamllint, ShellCheck, regression suite and workflow contracts |
+| #42414766952 | push / validate-manifests | PASS | production manifest render and security contracts |
+| #42414766931 | push / bootstrap-runner | PASS | token masked, runner service reused, policy v15 and read-only node access verified |
+| #42414766872 | push / reconcile-vps | PASS | GHCR/Secret preflight and all active health lanes passed; no manifest drift, apply/rollout skipped |
+| #42414878035 | workflow_dispatch recovery | PASS | recent reconciliation and inspection prevented duplicate fallback |
+
+Push reconciliation details: Auth runtime Secret provision/verification ran with values suppressed; shared `ghcr-pull` was unchanged; GHCR reads and TCE tag pairing passed; no blocked image-pull restart was needed for active MicroFE/TCE workloads. Auth/TCE/MicroFE health gates passed with rollouts skipped. Auth/TCE 0/0 remains maintenance, not live health. Stock ImagePullBackOff remained outside active GitOps.
+
+### Remaining operational state
+
+Platform native reconcile/watchdog/recovery remain beyond their 45-minute freshness budgets; native inspection #42409592778 remains within its 75-minute age budget at the last reference. TCE WF-06 native #42399835467 and WF-12 #42411262379 remain stale/failed; manual fallback #42411286211 returned HTTP 503 from all four public endpoints. Keep cron and strict health expectations unchanged.
+
+Stock CI is green but the weekend scraper is blocked by missing `VNSTOCK_API_KEY`; owner preflight-only required. Media has no new publisher run. Auth PR #75/#76 still pass their historical CI but remain Supabase migration-gated. Stock/Media decommission remains blocked by external backup/retention, authoritative DNS and dedicated Media runner retirement evidence. Audit the prior short-lived runner registration-token log exposure; current masking is verified but no claim of registry cleanliness.
+
+No app publisher or digest handoff was run. No Stock/Media workload was reintroduced. Preserve app-owned tests/builds/immutable GHCR publishing and Platform-owned GitOps/promotion/reconciliation/rollout/health. TCE market-scan schedule unchanged.
