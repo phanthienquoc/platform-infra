@@ -1,3 +1,21 @@
+## Current review — 2026-11-07 21:56 ICT / 14:56 UTC
+
+This review supersedes earlier summaries. All five default-branch refs, open PRs, latest workflow runs/jobs, first 100 Actions runs per repository, native schedule classifications, and the existing tracker/inventory were re-read. The detailed checkpoint is [2026-11-07-2156-ict.md](cross-repo-deployment-checkpoints/2026-11-07-2156-ict.md); the matching workflow inventory snapshot is [2026-11-07-2156-ict.md](cross-repo-workflow-inventory-checkpoints/2026-11-07-2156-ict.md).
+
+- Platform master `bc89ca4e64dc30320cd3e0bf147ff71f6c0a4e49`; latest master validation #42380354062 PASS. Open PRs #1314/#544/#541/#539 remain draft planning/docs.
+- TCE master `7ab52078c4250829e158f05b2695ceb9d11bdbe3`; no open PR. Native WF-06 #42376773663 failed all four public probes with HTTP 503. WF-12 workflow_run #42376787996 and WF-13 #42376788009 succeeded; neither is native schedule proof.
+- Stock master `783ae36f128ba5dffeba8ac1d242602f160ecfd0`; CI #42375688209 passed 7/7. Native scraper #42349150261 failed the VNSTOCK_API_KEY preflight. PR #37's safe `preflight_only=true` path is merged; owner secret setup remains outstanding.
+- Media master `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; CI #42239703151 passed. No native schedule is configured; Media production GitOps remains retired.
+- Authentication master `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`; CI #42215394539 passed. PR #75 is ready and #76 is draft; both exact-head CI runs passed but both remain gated on Supabase production migration review.
+- Platform native reconcile/watchdog/recovery/inspection ages are 359.2/367.8/370.1/377.1 minutes against 45/45/45/75-minute budgets. No newer native Platform schedule events appeared in the latest 100-run history. TCE native WF-06/WF-07/WF-12 ages are 92.7/113.6/270.2 minutes; Stock scraper event is 480 minutes old.
+- Latest available read-only K3s inspection remains #42364093834 from 10:28:35Z (267.9 minutes old). It is not fresh rollout/decommission evidence. No new inspection or production mutation occurred.
+- App repositories own CI/build/tests and immutable GHCR publication. Platform owns manifests, shared GHCR credentials, digest/provenance verification, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the only apply authority; `inspect-vps.yml` remains read-only.
+- No direct SSH/Compose authority, image publication/promotion, manifest apply, secret write, workload activation, runner retirement, namespace/PVC/PV deletion, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
+
+Exact owner/operator actions remain: GitHub Actions administrator to verify native schedule delivery/state; Stock owner to configure VNSTOCK_API_KEY and run safe preflight-only; TCE/Auth owner to approve service restoration and obtain fresh K3s inspection; Auth owner to review Supabase migration side effects; Stock/Media owners to provide backup-retention and DNS ownership evidence before protected decommission.
+
+---
+
 ## Current review — 2026-11-07 13:03 ICT / 06:03 UTC
 
 This review supersedes the older status summaries below. All five default branches, open PRs, latest workflow runs/checks, native schedule histories, deployment tracker/inventory, latest reconciliation and a fresh read-only VPS/K3s inspection were rechecked. The only code/workflow change since the previous checkpoint is Stock PR #35; Platform inspection PR #1380 added a new read-only snapshot. No TCE market-scan schedule was changed.
