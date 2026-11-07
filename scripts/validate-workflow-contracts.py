@@ -1724,7 +1724,9 @@ for required in (
 ):
     if required not in watchdog:
         fail(f"Native schedule inter-arrival watchdog contract is missing: {required}")
-if '            --max-gap-minutes "$MAX_TCE_WF06_AGE_MINUTES" \\\n              --warn-only' not in watchdog:
+native_schedule_gap_block = watchdog[native_schedule_gap_step:]
+tce_gap_observer = native_schedule_gap_block.split('tce_runs_file="$RUNNER_TEMP/tce-wf06-scheduled-runs.json"', 1)[1]
+if '--workflow-path ".github/workflows/wf-06-tce-healthcheck.yml"' not in tce_gap_observer or "--warn-only" not in tce_gap_observer:
     fail("Cross-repository TCE schedule inter-arrival observation must remain warning-only for Platform.")
 
 # Optional VPS MCP must remain read-only and subordinate to the sole GitOps apply authority.
