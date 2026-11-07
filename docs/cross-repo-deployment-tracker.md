@@ -5387,7 +5387,6 @@ App repositories remain responsible for tests/builds and immutable GHCR publicat
 
 ## PR #1419 merged — read-only plan and single production apply authority (2026-11-08 04:14 ICT)
 
-<badge>MERGED</badge>
 
 Platform PR #1419 merged by squash from exact head `6b47d7b6a938004165a364e2a13d33fd821f9dcb`; merge/master SHA is `5eb9116db24038facdaa55168d1098fea71290f9`. Exact-head `validate-github-actions` #42414712138 and `validate-manifests` #42414712086 both PASS. Post-merge push validation #42414766904 and #42414766952 both PASS.
 
