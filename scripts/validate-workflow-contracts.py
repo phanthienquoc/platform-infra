@@ -85,6 +85,43 @@ if expected_manual_mode not in manual_dispatch:
 if "github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'repository_dispatch') && 'apply'" not in reconcile:
     fail("Scheduled, push and authenticated GitOps reconciliation must retain their existing automatic apply mode.")
 
+# The platform runner is self-hosted and reuses its checkout. All reconcile scripts
+# below are tracked as non-executable files; invoke them through bash instead of
+# chmod'ing the checkout and leaking mode changes into subsequent jobs.
+non_executable_scripts = (
+    "reconcile-vps.sh",
+    "validate-ghcr-pull-access.sh",
+    "verify-tce-gitops-release.sh",
+    "guard-reconcile-images.sh",
+    "publish-microfe-deployment-event.sh",
+    "verify-workload-health.sh",
+    "verify-tce-gitops-images.sh",
+)
+for script in non_executable_scripts:
+    if f"chmod +x scripts/{script}" in reconcile:
+        fail(f"reconcile-vps.yml must not chmod tracked script {script} on the persistent runner.")
+    if f"./scripts/{script}" in reconcile:
+        fail(f"reconcile-vps.yml must invoke tracked script {script} through bash.")
+required_bash_invocations = (
+    "bash scripts/reconcile-vps.sh plan",
+    "bash scripts/reconcile-vps.sh apply",
+    'TARGET_APP=all GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" bash scripts/validate-ghcr-pull-access.sh',
+    "bash scripts/verify-tce-gitops-release.sh",
+    "bash scripts/guard-reconcile-images.sh check",
+    "bash scripts/publish-microfe-deployment-event.sh",
+    "bash scripts/verify-workload-health.sh",
+    "bash scripts/verify-tce-gitops-images.sh",
+)
+for invocation in required_bash_invocations:
+    if invocation not in reconcile:
+        fail(f"reconcile-vps.yml is missing safe bash invocation: {invocation}")
+if "Checkout is not clean; refusing to use persistent self-hosted workspace." not in reconcile:
+    fail("The primary reconcile job must reject a dirty self-hosted checkout before using it.")
+if reconcile.count("name: Verify clean runner worktree") != 4:
+    fail("Every application lane checkout must reject pre-existing self-hosted worktree changes.")
+if reconcile.count("name: Verify runner worktree remains clean") != 5:
+    fail("The reconcile job and all four application lanes must verify their worktrees remain clean.")
+
 # The promotion workflow defaults to read-only. Grant write scopes only to the
 # jobs that create/merge GitOps PRs or emit the final repository_dispatch.
 top_level_permissions = promotion.split("permissions:\n", 1)[1].split("\nconcurrency:", 1)[0].strip()
@@ -858,7 +895,7 @@ if preflight_index < 0 or auth_secret_index < 0 or preflight_index > auth_secret
 ghcr_preflight_block = reconcile.split("name: Validate GHCR pull access before mutating cluster credentials", 1)[1].split(
     "- name: Provision Auth runtime Secret from platform-infra Environment", 1
 )[0]
-if 'TARGET_APP=all GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" ./scripts/validate-ghcr-pull-access.sh' not in ghcr_preflight_block:
+if 'TARGET_APP=all GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" bash scripts/validate-ghcr-pull-access.sh' not in ghcr_preflight_block:
     fail("Every non-Keycloak apply must validate all production GHCR packages before reconciling the shared pull Secret.")
 
 # GHCR pull preflight must safely handle copied secret line endings before using curl config.
