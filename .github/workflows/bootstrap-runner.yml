@@ -58,6 +58,9 @@ jobs:
             exit 1
           fi
 
+          # The generated token is passed to a later SSH bootstrap step through
+          # GITHUB_OUTPUT; mask it first so Actions never prints it in env dumps.
+          echo "::add-mask::$token"
           printf 'token=%s\n' "$token" >> "$GITHUB_OUTPUT"
 
       - name: Inspect VPS before bootstrap
