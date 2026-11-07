@@ -5769,3 +5769,16 @@ Platform master `0666dc133d4da16a2287bdd3d5c0bded0291b8e6`; TCE `7ab52078c425082
 The available GitHub connector run-list helper is PR-triggered only and does not enumerate native schedule runs. Consequently, the last verified native schedule IDs remain those in the 19:12 ICT checkpoint; do not label them fresh or infer schedule recovery. Latest available K3s inspection remains #42364093834 from 10:28:35Z. A fresh native schedule query and fresh read-only VPS inspection are still required before any operational conclusion or destructive decommission step.
 
 App repositories own CI/tests/builds and immutable GHCR publication. Platform owns production manifests, shared pull credentials, digest/provenance validation, GitOps promotion/reconciliation, rollout and health. Stock/Media remain retired from active Platform production GitOps. No direct SSH/Compose authority, image publication/promotion, manifest apply, secret write or production mutation was introduced. TCE market-scan schedule unchanged.
+
+
+---
+
+## Post-merge workflow inventory — 2026-11-07 20:05 ICT / 13:05 UTC
+
+- Stock PR #37 merged as `783ae36f128ba5dffeba8ac1d242602f160ecfd0`; exact-head CI #42375305139 completed success, all 7 jobs pass. Merged workflow retains weekend cron `0 1 * * 0,6` and adds manual `preflight_only=true` to validate secret presence and authenticated VNStock tier while skipping Chromium and ingestion.
+- Stock owner must still configure Actions repository secret `VNSTOCK_API_KEY`; automation did not write or read its value. Use preflight-only after configuration to avoid MongoDB/Telegram side effects.
+- Platform PR #1398 merged as `c188485a648926fe05223a102b81b073a4d4a6db`; exact-head validate-manifests #42375579817 passed. No post-merge push validation was surfaced by the connector.
+- Current default branches: Platform `c188485a648926fe05223a102b81b073a4d4a6db`; TCE `7ab52078c4250829e158f05b2695ceb9d11bdbe3`; Stock `783ae36f128ba5dffeba8ac1d242602f160ecfd0`; Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; Authentication `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`.
+- Open PRs: Platform #1314/#544/#541/#539 (draft planning/docs); Auth #75/#76 (Supabase migration-gated); none in TCE, Stock or Media.
+- Native schedule inventory is not freshly enumerable through the current connector; retain the 19:12 ICT last-known IDs and stale classifications. Latest K3s inspection remains #42364093834 (10:28:35Z), not fresh same-window evidence.
+- No image publication/promotion, manifest apply, secret write, workload activation, runner retirement, decommission, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
