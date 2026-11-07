@@ -5895,3 +5895,33 @@ App repositories own tests/builds and immutable GHCR publication. Platform Infra
 - The merged checkpoint records the current 5-repository SHAs, open PRs/checks, Platform native schedule staleness, TCE WF-06 HTTP 503 and exact heartbeat correlation, Stock missing-secret failure, and the age/limitations of the latest K3s inspection.
 - Platform master is now `2c13df216b1345c2a8cb7a04300d5bcf54a328a8`. PR #1401 is closed/merged. Remaining open Platform PRs are #1314/#544/#541/#539 (draft planning/docs); Auth #75/#76 remain migration-gated; TCE, Stock and Media have no open PRs.
 - No production mutation was performed. Native schedule recovery, Stock secret/preflight, TCE/Auth service restoration, fresh K3s inspection, and Stock/Media decommission prerequisites remain open. TCE market-scan schedule unchanged.
+
+
+---
+
+## Workflow inventory refresh — 2026-11-07 22:59 ICT / 15:59 UTC
+
+### Native schedule evidence (master, original event=schedule)
+
+| Repository / workflow | Latest native run | Result | Contract interpretation |
+|---|---|---|---|
+| Platform `reconcile-vps.yml` | #42387275904, 15:37:24Z | success | Native delivery resumed; previous interval 24,008s exceeded 45m budget |
+| Platform `inspect-vps.yml` | #42387216070, 15:36:38Z | success | Fresh read-only K3s inspection; historical interval still needs a second in-budget run |
+| Platform `recover-stale-ops.yml` | #42385416779, 15:14:36Z | success | Native recovery delivery; later fallback events do not reset native freshness |
+| Platform watchdog | #42385910055, 15:20:32Z | failure | Fail-closed historical reconcile gap: 24,008s vs 2,700s budget |
+| TCE WF-06 | #42376773663, 13:23:50Z | failure | Four public endpoints HTTP 503; latest native event is stale |
+| TCE WF-07 | #42375151164, 13:02:54Z | success | Third-party integration only; not service health |
+| TCE WF-12 | #42363949566, 10:26:17Z | failure | Stale WF-06 freshness |
+| Stock scraper | #42349150261, 06:56:29Z | failure | Missing VNSTOCK_API_KEY; safe preflight-only mode is available after owner secret setup |
+
+Platform workflow_run #42387468774 (watchdog failure) and #42387468833 (recovery success) are not native schedule events. Watchdog log also observed TCE WF-06 age 8,165s vs 1,500s budget. Media and Authentication intentionally have no native scheduled workflow.
+
+### Ownership and publication boundary
+
+- Stock CI #42375688209: 7/7 jobs passed, including native ARM64 build. This is CI build evidence, not a new immutable release publication or digest handoff. The failed Stock pods still reference tag `12d63b4` without an ARM64 manifest.
+- Media CI #42239703151 passed; Media remains retired from active Platform production GitOps. Keep its app-owned publisher and useful CI; do not create a Platform dispatch or promotion for it.
+- Authentication master CI #42215394539 passed. PR #75 CI #40446492086 and PR #76 CI #41329425940 passed, but PR #75's own docs confirm merge-to-master may trigger the connected Supabase production integration while migration status/provenance is unresolved. Keep #75/#76 gated.
+- Platform scheduled reconcile #42387275904 ran with `mode=apply`, `target_app=all`, `allow_image_changes=false`: GHCR read preflight passed, Auth runtime Secret provisioned from protected Environment, shared `ghcr-pull` unchanged, TCE release pairing passed, no image-pull failures for MicroFE/TCE, drift clean, manifest apply and promotion skipped. TCE/Auth health verification recognized intentional 0-replica maintenance and did not assert live health.
+- Platform read-only inspection #42387216070 refreshed `debug/vps-latest.md` at 15:36:46Z. Node Ready/ARM64; Media/MicroFE containers running; Stock Admin and one Backend pod ImagePullBackOff due no ARM64 manifest for `12d63b4`; another Backend pod on `23b2878` running; TCE/Auth/Keycloak 0/0; GitOps drift clean; Media and Platform runners active. External backup/retention and DNS ownership remain unverified.
+
+Keep app repositories as the only tests/builds/immutable GHCR publishers. Platform remains owner of production manifests, shared GHCR pull credentials, provenance/digest validation, GitOps promotion/reconciliation, rollout and health. No direct SSH/Compose authority. TCE market-scan schedule unchanged. Full evidence: `docs/cross-repo-deployment-checkpoints/2026-11-07-2259-ict.md`.
