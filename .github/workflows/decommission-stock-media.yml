@@ -20,7 +20,9 @@ on:
         required: false
         type: string
       dns_ownership_review:
-        description: Type AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED after reconciling retired Ingress hosts with authoritative DNS/provider records
+        description: >-
+          Type AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED after reconciling retired Ingress hosts
+          with authoritative DNS/provider records
         required: false
         type: string
       runner_retirement:
