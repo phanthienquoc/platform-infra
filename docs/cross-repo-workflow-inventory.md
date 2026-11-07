@@ -5695,3 +5695,40 @@ App repositories continue to own tests/builds and immutable GHCR publication. Pl
 - Latest manual reconciliation #42363966215 passed shared preflight and maintenance-aware lanes with `allow_image_changes=false`; GitOps drift was clean, so manifest apply was skipped. No image promotion or rollout change occurred. Current Platform master validation #42366289392 passed on `76bdd877...`.
 - Exact next owner actions: Actions administrator checks workflow state and restores native schedules only with approval; Stock owner adds `VNSTOCK_API_KEY` and separately authorizes a full-SHA ARM64 publication; TCE/Auth owner approves restoration from 0/0; Auth owner clears Supabase migration side-effect gate; Stock/Media owners verify external backups/DNS and retire only the dedicated Media runner before protected decommission plan.
 - No production mutation occurred. App repos own tests/builds and immutable GHCR publication; Platform owns production manifests, shared pull credentials, digest/provenance validation, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` sole production apply authority; `inspect-vps.yml` read-only. TCE market-scan schedule unchanged.
+
+
+---
+
+## Fresh cross-repo workflow inventory — 2026-11-07 19:04 ICT / 12:04 UTC
+
+Native events below come from fresh Actions run-list queries filtered to branch=master and event=schedule. A push, workflow_dispatch, workflow_run, repository_dispatch or rerun is not native schedule proof.
+
+| Repository | Workflow / owner | Latest native schedule | Delivery / result |
+|---|---|---|---|
+| Platform Infra | reconcile-vps.yml — sole production apply authority | #42357630554 at 08:57:16Z | Success, but 24,521s gap from prior native run; current freshness 187m vs 45m |
+| Platform Infra | reconcile-schedule-watchdog.yml — read-only schedule verifier | #42357048356 at 08:48:41Z | Failed closed on 23,926s watchdog gap and 24,521s reconcile gap; current freshness 196m |
+| Platform Infra | recover-stale-ops.yml — recovery controller | #42356893297 at 08:46:27Z | Success, but 23,882s prior gap; current freshness 198m |
+| Platform Infra | inspect-vps.yml — read-only K3s inspection | #42356397506 at 08:39:21Z | Success, but 24,542s prior gap; current freshness 205m |
+| TCE Dashboard | wf-06-tce-healthcheck.yml — public HTTP 200 checks only | #42346646839 at 06:21:31Z | Failed all four endpoints with HTTP 503; current freshness 343m vs 25m |
+| TCE Dashboard | wf-12-tce-healthcheck-schedule-watchdog.yml — read-only freshness + heartbeat | #42363949566 at 10:26:17Z | Freshness failed (WF-06 age 244m); Platform heartbeat dispatch passed; current freshness 98m vs 25m |
+| TCE Dashboard | wf-07-tce-integration-check.yml — separate integration lane | #42344977873 at 05:59:04Z | Success; not a TCE/Auth service-health signal |
+| StockDividend | run_scraper.yml — app-owned weekend ingestion | #42349150261 at 06:56:29Z | Arrived 5h56m after 01:00Z cron; failed because VNSTOCK_API_KEY was empty before setup |
+| Media Generation | No native schedule run returned | — | WF-03 is publisher-only; no Platform dispatch by design while Media production GitOps is retired |
+| Authentication | No native schedule run returned | — | release.yml is manual-only, master-only and digest/provenance-bound |
+
+### Workflow-state and failure evidence
+
+- Platform watchdog #42357048356 passed the read-only step verifying reconcile-vps.yml was enabled at 08:48Z; its inspection and recovery-controller delivery checks passed. It failed the native inter-arrival verifier, not the enabled-state check.
+- TCE WF-12 #42363949566 passed the read-only step verifying WF-06 was enabled at 10:26Z. Its freshness check failed because the last native WF-06 run was #42346646839, 244 minutes old. The heartbeat dispatch succeeded and Platform recovery #42363955926 passed; neither is native WF-06 delivery.
+- The latest manual WF-06 #42363971811 failed all four public endpoints with HTTP 503. Keep HTTP 200 strict.
+- Stock #42349150261 failed at the VNSTOCK_API_KEY preflight; subsequent setup/ingestion steps were skipped. The secret is an operator action, not automation.
+- Media/Auth had no native schedule events in the query. Do not invent a schedule or add cron solely to make the inventory look uniform.
+
+### Publisher and promotion ownership
+
+- TCE app repository owns its manual immutable publisher; Platform validates source provenance and paired web/service digests before GitOps promotion.
+- Stock app repository owns its ARM64 publisher and full-source-SHA/digest checks. Latest publisher #41563856933 is historical. Stock has no active Platform production manifest/dispatch handoff while its Platform GitOps ownership is retired; do not promote Stock.
+- Media app repository WF-03 owns ARM64 build, checksum-verified artifacts, immutable release tag and GHCR digest/platform verification. It intentionally sends no Platform dispatch while Media production GitOps ownership is retired; do not promote Media.
+- Authentication app repository owns manual-only release, full-SHA/versioned tags, BuildKit provenance/SBOM, ARM64 digest verification and auth-image-published dispatch. Platform verifies exact source run and digest/tag mapping before its narrow Auth GitOps promotion.
+- Platform reconcile-vps.yml remains the only production apply authority. inspect-vps.yml remains read-only. GitOps promotion is separate from application publishing. Shared GHCR pull credentials remain Platform-owned.
+- Preserve CI/test/security workflows and purposeful manual/release/scheduled jobs. Do not add direct SSH/Compose deployment authority. TCE market-scan schedule unchanged.
