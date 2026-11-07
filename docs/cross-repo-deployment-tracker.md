@@ -4591,3 +4591,14 @@ Inspection run [#42356397506](https://github.com/phanthienquoc/platform-infra/ac
 7. Schedule a separate host/containerd/Docker maintenance window.
 
 No GHCR publication/promotion, production manifest apply, TCE/Auth replica activation, namespace/PVC/PV deletion, runner retirement, DNS/database/object-storage mutation, secret write or host upgrade/reboot occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
+---
+
+## Post-merge verification — 2026-11-07 16:10 ICT / 09:10 UTC
+
+- Platform Infra PR [#1388](https://github.com/phanthienquoc/platform-infra/pull/1388) was squash-merged from exact head `4bf9aad9ba538b7458996dd84343df2fb772c40e` as `6339a927f37b4412d07cb2a24d0edf02be55b924`.
+- Exact-head validation run #42358519891 passed the full `validate` job, including retired Stock/Media manifest guard, immutable image-change contract, Auth digest promotion helper, production manifest rendering, secret policy, immutable image policy, Keycloak isolation and network boundaries.
+- Post-merge master validation [#42358556570](https://github.com/phanthienquoc/platform-infra/actions/runs/42358556570) completed success. Platform master is now `6339a927f37b4412d07cb2a24d0edf02be55b924`.
+- No new native Platform schedule event had appeared by 09:10:21Z. Latest native reconcile #42357630554, watchdog #42357048356 (historical inter-arrival failure), recovery #42356893297 and inspection #42356397506 remain the latest observed events. Do not claim cadence recovery until the next native cycle produces two consecutive runs within budget.
+- No TCE WF-06/WF-12, Stock scraper, Media or Authentication schedule/health state changed since the 16:03 checkpoint. Stock `VNSTOCK_API_KEY` remains an operator-supplied repository secret; TCE/Auth remain gated by strict health/maintenance conditions.
+- No GHCR publication/promotion, manifest apply, replica activation, namespace/storage deletion, runner retirement, DNS/database/object-storage mutation, secret write or host maintenance occurred. TCE market-scan schedule unchanged.
