@@ -87,10 +87,14 @@ jobs:
       - name: Verify repository state
         run: |
           set -euo pipefail
-          git status --short
+          status="$(git status --porcelain)"
+          if [[ -n "$status" ]]; then
+            echo "::error::Checkout is not clean; refusing to use persistent self-hosted workspace."
+            printf '%s\\n' "$status"
+            exit 1
+          fi
           git rev-parse HEAD
           test -f environments/prod/kustomization.yaml
-          chmod +x scripts/reconcile-vps.sh
 
       - name: Resolve push deployment scope
         if: ${{ github.event_name == 'push' }}
@@ -156,10 +160,9 @@ jobs:
           GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
         run: |
           set -euo pipefail
-          chmod +x scripts/validate-ghcr-pull-access.sh
           # The Kubernetes pull Secret is shared across production namespaces. A targeted
           # rollout must not rotate it unless every currently referenced GHCR package is readable.
-          TARGET_APP=all GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" ./scripts/validate-ghcr-pull-access.sh
+          TARGET_APP=all GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" bash scripts/validate-ghcr-pull-access.sh
 
       - name: Provision Auth runtime Secret from platform-infra Environment
         if: ${{ env.RECONCILE_MODE == 'apply' && (steps.scope.outputs.target_app == 'auth-service' || steps.scope.outputs.target_app == 'all') }}
@@ -210,8 +213,7 @@ jobs:
         if: ${{ steps.scope.outputs.target_app != 'keycloak' && (steps.scope.outputs.target_app == 'all' || steps.scope.outputs.target_app == 'tce-dashboard') }}
         run: |
           set -euo pipefail
-          chmod +x scripts/verify-tce-gitops-release.sh
-          ./scripts/verify-tce-gitops-release.sh
+          bash scripts/verify-tce-gitops-release.sh
 
       - name: Apply Auth and Keycloak shutdown only
         if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app == 'auth-shutdown' }}
@@ -263,9 +265,8 @@ jobs:
             echo "drift=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          chmod +x scripts/reconcile-vps.sh
           set +e
-          ./scripts/reconcile-vps.sh plan
+          bash scripts/reconcile-vps.sh plan
           rc=$?
           set -e
           if [ "$rc" -gt 1 ]; then
@@ -285,8 +286,7 @@ jobs:
         if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && env.ALLOW_IMAGE_CHANGES != 'true' }}
         run: |
           set -euo pipefail
-          chmod +x scripts/guard-reconcile-images.sh
-          ./scripts/guard-reconcile-images.sh check
+          bash scripts/guard-reconcile-images.sh check
 
       - name: Apply production manifests
         id: apply
@@ -294,7 +294,7 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
-          ./scripts/reconcile-vps.sh apply
+          bash scripts/reconcile-vps.sh apply
 
       - name: Notify Telegram — production processing
         env:
@@ -328,12 +328,11 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
-          chmod +x scripts/publish-microfe-deployment-event.sh
           TAG="$RELEASE_TAG"
           if [ -z "$TAG" ]; then
             TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
           fi
-          ./scripts/publish-microfe-deployment-event.sh deploying tce-dashboard "$TAG" deploying
+          bash scripts/publish-microfe-deployment-event.sh deploying tce-dashboard "$TAG" deploying
 
       - name: Verify cluster after reconciliation
         if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app != 'keycloak' }}
@@ -341,6 +340,16 @@ jobs:
           set -euo pipefail
           sudo /usr/local/sbin/platform-kubectl get nodes -o wide
           sudo /usr/local/sbin/platform-kubectl get pods -A -o wide
+      - name: Verify runner worktree remains clean
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(git status --porcelain)"
+          if [[ -n "$status" ]]; then
+            echo "::error::Reconciliation modified the checked-out repository; refusing to reuse a dirty self-hosted workspace."
+            printf '%s\\n' "$status"
+            exit 1
+          fi
 
       - name: Verify drift cleared
         id: verify_drift
@@ -405,6 +414,16 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
+      - name: Verify clean runner worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(git status --porcelain)"
+          if [[ -n "$status" ]]; then
+            echo "::error::Checkout is not clean; refusing to use persistent self-hosted workspace."
+            printf '%s\\n' "$status"
+            exit 1
+          fi
       - name: Verify Auth runtime Secret
         run: sudo /usr/local/sbin/platform-kubectl verify-auth-secret
       - name: Verify Auth rollout
@@ -421,8 +440,17 @@ jobs:
           TARGET_APP: auth-service
         run: |
           set -euo pipefail
-          chmod +x scripts/verify-workload-health.sh
-          ./scripts/verify-workload-health.sh
+          bash scripts/verify-workload-health.sh
+      - name: Verify runner worktree remains clean
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(git status --porcelain)"
+          if [[ -n "$status" ]]; then
+            echo "::error::Reconciliation modified the checked-out repository; refusing to reuse a dirty self-hosted workspace."
+            printf '%s\\n' "$status"
+            exit 1
+          fi
 
   deploy-microfe:
     name: Deploy lane — MicroFE Shell / WS
@@ -437,6 +465,16 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
+      - name: Verify clean runner worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(git status --porcelain)"
+          if [[ -n "$status" ]]; then
+            echo "::error::Checkout is not clean; refusing to use persistent self-hosted workspace."
+            printf '%s\\n' "$status"
+            exit 1
+          fi
       - name: Verify MicroFE Shell and WS rollout
         if: ${{ needs.reconcile.outputs.drift == 'true' }}
         run: |
@@ -450,8 +488,17 @@ jobs:
           TARGET_APP: microfe
         run: |
           set -euo pipefail
-          chmod +x scripts/verify-workload-health.sh
-          ./scripts/verify-workload-health.sh
+          bash scripts/verify-workload-health.sh
+      - name: Verify runner worktree remains clean
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(git status --porcelain)"
+          if [[ -n "$status" ]]; then
+            echo "::error::Reconciliation modified the checked-out repository; refusing to reuse a dirty self-hosted workspace."
+            printf '%s\\n' "$status"
+            exit 1
+          fi
 
   deploy-keycloak:
     name: Deploy lane — Keycloak SSO
@@ -466,6 +513,16 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
+      - name: Verify clean runner worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(git status --porcelain)"
+          if [[ -n "$status" ]]; then
+            echo "::error::Checkout is not clean; refusing to use persistent self-hosted workspace."
+            printf '%s\\n' "$status"
+            exit 1
+          fi
       - name: Provision Keycloak runtime Secret
         env:
           KEYCLOAK_DB_URL: ${{ secrets.KEYCLOAK_DB_URL }}
@@ -503,8 +560,7 @@ jobs:
           TARGET_APP: keycloak
         run: |
           set -euo pipefail
-          chmod +x scripts/verify-workload-health.sh
-          ./scripts/verify-workload-health.sh
+          bash scripts/verify-workload-health.sh
       - name: Provision and verify mrcute self-registration realm
         env:
           KEYCLOAK_ADMIN_USERNAME: ${{ secrets.KEYCLOAK_ADMIN_USERNAME }}
@@ -542,6 +598,16 @@ jobs:
           done
           echo "::error::Public OIDC discovery did not become ready." >&2
           exit 1
+      - name: Verify runner worktree remains clean
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(git status --porcelain)"
+          if [[ -n "$status" ]]; then
+            echo "::error::Reconciliation modified the checked-out repository; refusing to reuse a dirty self-hosted workspace."
+            printf '%s\\n' "$status"
+            exit 1
+          fi
 
   deploy-tce-dashboard:
     name: Deploy lane — TCE Dashboard
@@ -556,11 +622,20 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
+      - name: Verify clean runner worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(git status --porcelain)"
+          if [[ -n "$status" ]]; then
+            echo "::error::Checkout is not clean; refusing to use persistent self-hosted workspace."
+            printf '%s\\n' "$status"
+            exit 1
+          fi
       - name: Verify TCE GitOps images
         run: |
           set -euo pipefail
-          chmod +x scripts/verify-tce-gitops-images.sh
-          ./scripts/verify-tce-gitops-images.sh
+          bash scripts/verify-tce-gitops-images.sh
       - name: Verify TCE rollout
         if: ${{ needs.reconcile.outputs.drift == 'true' }}
         run: |
@@ -574,8 +649,17 @@ jobs:
           TARGET_APP: tce-dashboard
         run: |
           set -euo pipefail
-          chmod +x scripts/verify-workload-health.sh
-          ./scripts/verify-workload-health.sh
+          bash scripts/verify-workload-health.sh
+      - name: Verify runner worktree remains clean
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(git status --porcelain)"
+          if [[ -n "$status" ]]; then
+            echo "::error::Reconciliation modified the checked-out repository; refusing to reuse a dirty self-hosted workspace."
+            printf '%s\\n' "$status"
+            exit 1
+          fi
 
   deployment-lane-summary:
     name: Deployment lane summary / final gate
