@@ -1310,11 +1310,12 @@ if runner_token_mask < 0 or runner_token_output < 0 or runner_token_mask > runne
     fail("Short-lived runner registration token must be masked before it is written to GITHUB_OUTPUT.")
 if "bootstrap-media-runner.sh" in runner_bootstrap:
     fail("Shared Platform runner bootstrap must not provision the retired dedicated Media runner.")
-bootstrap_verification = runner_bootstrap.split(
+bootstrap_verification_parts = runner_bootstrap.split(
     "name: Verify runner service and read-only cluster access", 1
-)[1]
-if bootstrap_verification is None:
+)
+if len(bootstrap_verification_parts) != 2:
     fail("Runner bootstrap must retain its read-only runner/cluster verification step.")
+bootstrap_verification = bootstrap_verification_parts[1]
 for forbidden in (
     "platform-kubectl apply",
     "kubectl create namespace",
