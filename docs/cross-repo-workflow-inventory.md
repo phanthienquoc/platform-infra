@@ -1,3 +1,64 @@
+## Current workflow inventory review — 2026-11-07 08:05 ICT / 2026-11-07 01:05 UTC
+
+This section supersedes older workflow status below. Ownership boundaries and existing workflow purposes are preserved; no second production deployment authority is introduced.
+
+### Platform Infra
+
+| Workflow / script | Owner and authority | Current evidence / guard |
+|---|---|---|
+| .github/workflows/inspect-vps.yml | Platform; read-only host/K3s/storage/runner inspection | Latest native schedule #42301267072 at 22:00:18Z. Latest manual inspection #42312238041 at 23:29:29Z; its snapshot is now beyond the 75-minute freshness budget. |
+| .github/workflows/reconcile-vps.yml | Platform; sole production GitOps apply authority | Latest successful fallback #42317747614 (workflow_dispatch, target=all, mode=apply, allow_image_changes=false). GHCR preflight passed, shared ghcr-pull unchanged, Auth runtime Secret provisioned/verified, TCE release pairing passed, no manifest drift, apply skipped. |
+| .github/workflows/reconcile-vps.yml — runner hygiene | Platform; persistent self-hosted runner checkout safety | PR #1367 merged as 483ed524fb87a3869d2cb1b9944a7779c2264566. Seven tracked shell scripts are mode 100644 and are now invoked with bash; primary and four app-lane checkouts reject dirty state, and all five jobs verify clean worktrees before runner reuse. Exact-head and post-merge validate-manifests, validate-github-actions and keycloak-ci passed. |
+| .github/workflows/reconcile-schedule-watchdog.yml | Platform; native schedule freshness enforcement and read-only TCE observer | Event-scoped concurrency from #1363 is merged. Last native run #42304321570 was cancelled before the change; no post-change native schedule run has yet verified recovery. |
+| .github/workflows/recover-stale-ops.yml | Platform; existing recovery controller | Native schedule #42304248066 succeeded at 22:22:43Z. TCE heartbeat repository_dispatch path was accepted; recovery #42317887620 completed after reconcile #42317747614. Manual/repository_dispatch/workflow_run do not count as native schedule proof. |
+| .github/workflows/decommission-stock-media.yml | Platform; manual read-only plan and protected namespace deletion | mode=plan is read-only and inventories runner, namespaced objects, PVC/PV, snapshots, Ingress host/TLS and LoadBalancer references. No plan dispatch occurred in this review. Delete remains gated by exact confirmations, production Environment, fresh preflight, external data review and runner retirement evidence. |
+| scripts/decommission-stock-media-namespaces.sh | Platform; scoped preflight/delete helper | Targets only stock-prod and media-prod; tce-prod and microfe-platform are preservation checks. Ingress/TLS/LoadBalancer data is inventory only, not proof of authoritative DNS ownership. |
+
+Platform native schedule history at 01:05Z:
+- inspect-vps #42301267072 at 22:00:18Z — schedule/SUCCESS.
+- reconcile-vps #42304064211 at 22:21:19Z — schedule/SUCCESS.
+- recover-stale-ops #42304248066 at 22:22:43Z — schedule/SUCCESS.
+- watchdog #42304321570 at 22:23:18Z — schedule/CANCELLED.
+- No newer native Platform schedule run appeared after the concurrency change. Workflow_dispatch, workflow_run, push and repository_dispatch are not native schedule evidence.
+
+### App repository workflows
+
+| Repository / workflow | Owner and authority | Current evidence / guard |
+|---|---|---|
+| TCE Dashboard WF-01/WF-02/WF-05 | App CI, build, formatting and tests | Master build #42316036320, backend tests #42316036385 and Prettier #42316036410 passed. |
+| TCE Dashboard WF-03 | App-owned manual-only TCE production publisher | Must publish native ARM64 immutable full-source-SHA web/service images, verify digests/provenance and send the exact versioned promotion handoff. No new release occurred. |
+| TCE Dashboard WF-06 | Strict public HTTP health contract | Native #42317701397 failed four HTTP 200 probes with HTTP 503. Keep strict 200; do not make maintenance return green. |
+| TCE Dashboard WF-12 | Native schedule watchdog and heartbeat producer | Event-scoped concurrency from PR #1028 is merged. Native schedule #42312029821 failed before the fix; workflow_run #42317724969 passed, verified WF-06 active/fresh at 00:21Z and sent an accepted heartbeat. No post-merge native WF-12 schedule proof yet. |
+| TCE Dashboard WF-13 | Read-only fallback/recovery | Only accepts verified native schedule failures/stale watchdog sources; fallback is not native schedule proof. |
+| TCE Dashboard WF-08B | Separate MicroFE Shell/WS publisher | Does not publish TCE app or Auth images. PR publication jobs remain skipped; preserve this lane. |
+| StockDividend CI / deploy.yml | App-owned tests, builds and immutable GHCR publication | Master CI #42241252700 passed 7/7. Historical publisher #41563856933 verified ARM64/full-SHA/digests; no new release. No Platform dispatch or direct SSH/Compose production authority. |
+| Media Generation CI / wf-03-media-production-deploy.yml | App-owned tests, ARM64 build, checksum and immutable GHCR publication | Master CI #42239703151 passed. Historical publisher #41158598649 verified ARM64/checksum/full-SHA; no new publication. Dedicated runner remains active; no retirement authorized. |
+| Authentication CI / release.yml | App-owned tests and manual-only immutable release publisher | Master CI #42215394539 passed; Supabase Preview skipped. Historical release #41040510320 passed; no new publication. #75/#76 remain gated by Supabase integration/migration side-effect verification. |
+
+### Cross-repo dispatch contract
+
+TCE WF-12 heartbeat #42317724969 sent a repository_dispatch to Platform and received HTTP 204. Verified payload:
+- event_type=tce-schedule-heartbeat
+- source_repository=phanthienquoc/TCE-dashboard
+- source_event=schedule
+- source_workflow_path=.github/workflows/wf-06-tce-healthcheck.yml
+- source_run_id=42317701397
+- source_run_attempt=1
+- heartbeat_run_attempt=1
+- heartbeat_run_id=42317724969
+
+Platform recovery validates the repository, event, approved workflow path, run attempts and source metadata before taking any fallback action. A valid heartbeat is diagnostic/recovery input, not proof of Platform native cron delivery.
+
+### GHCR and production ownership
+
+- App repositories own tests/builds, native ARM64 publication, immutable full-source-SHA tags, SBOM/provenance/checksum/digest evidence and release metadata.
+- Platform owns production manifests, shared GHCR pull credentials, private-package pull preflight, provenance/digest validation, GitOps promotion/reconciliation, rollout and runtime health.
+- Shared ghcr-pull was unchanged in #42317747614; Auth runtime Secret was provisioned and verified with values suppressed.
+- No app publisher, GitOps image promotion, manifest apply, workload activation or runner retirement occurred in this review.
+- Do not add direct SSH/Compose deployment authorities; preserve CI, security, manual, release and scheduled workflows with distinct purposes.
+
+---
+
 ## Current workflow inventory review — 2026-11-07 03:58 ICT / 2026-11-06 20:58 UTC
 
 This section records current ownership and observed execution evidence. It preserves existing workflow purposes and does not introduce a second production deployment authority.
