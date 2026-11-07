@@ -5193,3 +5193,14 @@ No current-master Stock/Media/Auth GHCR publication with verified digest/provena
 - TCE WF-06 still fails four strict HTTP 200 public probes (HTTP 503); WF-12 latest native #42312029821 failed freshness; WF-07 #42311204446 passed. Preserve strict health/freshness gates and all schedules, including the TCE market-scan schedule.
 - Latest K3s snapshot #42312238041: Ready ARM64 node; Media/MicroFE active; Stock Admin/new Backend ImagePullBackOff on missing ARM64 tag `12d63b4`; TCE/Auth/Keycloak 0/0; GitOps clean; host restart required. Runner idle, DNS ownership and external backup/retention remain unverified.
 - No decommission plan, destructive action, image publication/promotion, manifest apply, replica activation, runner retirement, DNS/database/storage mutation or host maintenance.
+
+
+---
+
+## Cross-repo operational checkpoint — 2026-11-07 07:07 ICT
+
+- Platform PR #1364 merged at `037919459c5300b74224071fd220e07a9b2ef901` with exact-head validation #42316121268 and post-merge validation #42316173098 PASS. TCE PR #1028 merged at `fc8766426138a5a681c040b58af3529e93b66ea4`; WF-05/WF-02 exact-head and post-merge checks passed; post-merge WF-12 push smoke passed.
+- TCE WF-12 now isolates native schedule from workflow_run/push/manual diagnostics using an event-scoped concurrency group. Platform watchdog already uses the same event-isolation pattern. Neither fix is considered schedule recovery until a later native `event=schedule` run completes.
+- Platform native reconcile/recovery/watchdog latest are #42304064211 PASS, #42304248066 PASS and #42304321570 CANCELLED. TCE native WF-12 #42312029821 failed freshness; WF-06 #42289627961 failed and manual fallback #42312062418 returned four HTTP 503s; WF-07 #42311204446 passed. Preserve all cron/health/freshness budgets.
+- Latest full K3s inspection #42312238041 is a workflow_dispatch snapshot, not native schedule: Ready ARM64 node; Media/MicroFE Running; Stock Admin/new Backend ImagePullBackOff on missing ARM64 tag `12d63b4`; TCE/Auth/Keycloak 0/0; GitOps clean; disk 56%, ~21 GiB free; RAM ~19 GiB available; host restart required. Platform/Media runners active with Listener; no idle proof.
+- No new current-master immutable GHCR publication/digest/provenance, image promotion, manifest apply, replica activation, runner retirement, namespace deletion, DNS/database/storage mutation or host reboot. Decommission plan not dispatched; external backup/retention and DNS ownership unverified. TCE market-scan schedule unchanged.
