@@ -5381,3 +5381,38 @@ No cluster resource was changed during discovery or this PR preparation. The fix
 5. Stock/Media owners: provide external backup/retention and authoritative DNS evidence; retire only the dedicated Media runner after idle/stop/disable/unregister proof.
 
 App repositories remain responsible for tests/builds and immutable GHCR publication. Platform Infra owns production manifests, shared GHCR pull credentials, digest/provenance verification, GitOps promotion/reconciliation, rollout and health. Preserve useful CI/security/manual/release/scheduled workflows. No duplicate SSH/Compose deployment authority. TCE market-scan schedule unchanged.
+
+
+---
+
+## PR #1419 merged — read-only plan and single production apply authority (2026-11-08 04:14 ICT)
+
+<badge>MERGED</badge>
+
+Platform PR #1419 merged by squash from exact head `6b47d7b6a938004165a364e2a13d33fd821f9dcb`; merge/master SHA is `5eb9116db24038facdaa55168d1098fea71290f9`. Exact-head `validate-github-actions` #42414712138 and `validate-manifests` #42414712086 both PASS. Post-merge push validation #42414766904 and #42414766952 both PASS.
+
+The PR fixes the confirmed read-only boundary defect:
+- `reconcile-vps.sh plan` now only reads the declared `k3s-debug`, `microfe-platform` and `tce-prod` namespaces and performs a diff. Missing namespaces are reported as desired-state drift; API/connectivity errors fail closed.
+- Only the `apply` branch runs `apply -k environments/prod`.
+- Runner bootstrap no longer applies/creates namespaces or runs a production diff over SSH; it verifies runner service, policy and read-only node access.
+- Seven regression scenarios cover clean plan, missing namespace, API error, diff error, explicit drift apply and clean no-op apply (including the single-apply assertion). The suite and source contract are part of `validate-github-actions`.
+
+The initial PR attempts exposed and corrected two test issues before merge: ShellCheck SC2251 in the negative grep assertion, then an overly broad nested-case extraction in the contract validator. Both failures were fixed; the final exact head and post-merge checks passed.
+
+### Post-merge operational evidence
+
+- Bootstrap push #42414766931 PASS. The short-lived runner token was masked (`RUNNER_TOKEN: ***`); the existing Platform runner service was reused, policy v15 verified and read-only node access passed. The new verification step performed no Kubernetes apply/create.
+- Push reconciliation #42414766872 completed SUCCESS. GHCR read preflight passed for Auth, MicroFE and TCE packages; Auth runtime Secret was provisioned/verified with values suppressed; shared `ghcr-pull` remained unchanged; blocked-image-pull restart found no failures in the active MicroFE/TCE namespaces; TCE release pairing passed.
+- The new read-only preflight found no manifest drift. Production manifest apply, image guard and rollout were skipped. Auth, TCE and MicroFE health lanes passed their configured gates; their rollout steps were skipped because no drift existed. Auth/TCE remain intentional 0/0 maintenance, not live service health. Keycloak lane skipped.
+- Recovery #42414878035 PASS. It observed the just-completed reconciliation as recent and did not dispatch a duplicate reconcile. Native scheduled inspection #42409592778 was 65 minutes old, within the 75-minute budget, so no inspection fallback was dispatched.
+- The push reconciliation still observed Stock Admin (2 pods) and newer Stock Backend ImagePullBackOff on the known ARM64-incompatible `12d63b4`; Stock/Media are retired from active Platform GitOps and were not promoted or reintroduced.
+
+### Schedule and remaining readiness
+
+Native Platform history remains stale despite successful push/manual runs: reconcile #42407410735, inspection #42409592778, watchdog #42406561460 (FAIL) and recovery #42406469813 are still the latest native schedule events in the returned 100-run history. At 21:14Z, reconcile/watchdog/recovery exceeded their 45-minute budgets; inspection remained within 75 minutes. Do not count push, manual, repository_dispatch or workflow_run as native delivery.
+
+TCE native WF-06 remains #42399835467 (FAIL); WF-12 #42411262379 (FAIL) still observed WF-06 stale. Manual fallback #42411286211 failed all four strict public HTTP 200 probes with HTTP 503. Heartbeat/dispatch/fallback are not service recovery.
+
+Stock still needs owner-provided `VNSTOCK_API_KEY` followed by `preflight_only=true`. Authentication #75/#76 remain gated on Supabase migration/integration side-effect review. External backup/retention and authoritative DNS ownership remain unverified for Stock/Media decommission. Prior runner registration-token exposure still requires Platform owner audit of registered runners/audit log; current bootstrap masking is verified, but registry cleanliness is not inferred.
+
+No production manifest apply, image promotion, workload scaling, namespace/PVC/PV deletion, dedicated runner retirement, host upgrade/reboot, DNS/database/storage mutation or schedule change occurred in the post-merge push reconciliation. Auth runtime Secret provisioning was performed by the existing authorized reconciliation workflow; secret values were suppressed. TCE market-scan schedule unchanged.
