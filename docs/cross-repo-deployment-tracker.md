@@ -4790,3 +4790,23 @@ No new read-only inspection or decommission mode=plan was dispatched in this run
 6. Obtain a fresh read-only K3s/storage/runner inspection before any destructive operation. Schedule Docker/containerd/OS upgrade and reboot separately under an approved maintenance window.
 
 No GHCR publication/promotion, production manifest apply, workload activation, namespace/PVC/PV deletion, runner retirement, secret write, DNS/database/object-storage mutation or host maintenance occurred. App repositories retain test/build and immutable GHCR publication ownership; Platform remains the sole production manifest, shared pull-credential, digest/provenance, GitOps promotion/reconciliation, rollout and health authority. reconcile-vps.yml remains the only production apply authority; inspect-vps.yml remains read-only. TCE market-scan schedule unchanged.
+
+
+---
+
+## Post-merge review — 2026-11-07 19:12 ICT / 12:12 UTC
+
+Platform PR #1395 was squash-merged after exact-head checks passed. It adds a read-only, warning-only state observation for reconcile-schedule-watchdog.yml to recover-stale-ops.yml. The recovery controller now reports inactive/missing/unavailable watchdog state but continues fallback recovery; this avoids making recovery dependent on the watchdog it is meant to complement.
+
+- PR #1395 exact head: e2d23d8139f82c39c34f4b010bb3fb73b468ffa1.
+- Exact-head validate-github-actions #42371417820: PASS (actionlint, yamllint, shellcheck, ops regression tests, path-scope tests, immutable image-change tests and workflow-contract checks).
+- Exact-head validate-manifests #42371417804: PASS.
+- Merge SHA / current master: c843eb47824c910d6226c8c8db2a2aaf3dc59834.
+- Post-merge validate-github-actions #42371482062: PASS.
+- Post-merge validate-manifests #42371482113: PASS.
+
+The new observer uses the existing Actions token permission and performs GET only. It does not change cron, concurrency, triggers, production apply behavior, secrets, manifests or workload state. It cannot re-enable a disabled workflow or repair GitHub scheduler delivery; Actions administration and owner approval remain required.
+
+A fresh event=schedule query through 12:12Z still showed no newer native Platform events than reconcile #42357630554 (08:57:16Z), watchdog #42357048356 (08:48:41Z), recovery #42356893297 (08:46:27Z) and inspection #42356397506 (08:39:21Z). TCE remained at WF-06 #42346646839 (06:21:31Z) and WF-12 #42363949566 (10:26:17Z); no new native TCE schedule event appeared. The last observed state checks had found reconcile-vps active at 08:48Z and WF-06 active at 10:26Z, but current Actions settings remain unavailable through this read-only integration.
+
+Latest available K3s inspection remains #42364093834 at 10:28:35Z; no fresh same-window inspection or decommission plan was dispatched. Stock secret, TCE/Auth 503, Stock ARM64, Auth migration and Stock/Media runner/backup/DNS gates remain open as recorded in the 19:04 checkpoint. No TCE market-scan schedule change.

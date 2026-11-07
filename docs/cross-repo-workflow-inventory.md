@@ -5732,3 +5732,19 @@ Native events below come from fresh Actions run-list queries filtered to branch=
 - Authentication app repository owns manual-only release, full-SHA/versioned tags, BuildKit provenance/SBOM, ARM64 digest verification and auth-image-published dispatch. Platform verifies exact source run and digest/tag mapping before its narrow Auth GitOps promotion.
 - Platform reconcile-vps.yml remains the only production apply authority. inspect-vps.yml remains read-only. GitOps promotion is separate from application publishing. Shared GHCR pull credentials remain Platform-owned.
 - Preserve CI/test/security workflows and purposeful manual/release/scheduled jobs. Do not add direct SSH/Compose deployment authority. TCE market-scan schedule unchanged.
+
+
+---
+
+## Recovery observer contract — 2026-11-07 19:12 ICT
+
+Platform PR #1395 merged as c843eb47824c910d6226c8c8db2a2aaf3dc59834 after exact-head and post-merge validation.
+
+- recover-stale-ops.yml now performs a GET-only observation of reconcile-schedule-watchdog.yml state before fallback recovery.
+- If the watchdog is inactive, missing or inaccessible, the controller emits a warning and continues recovery; it does not fail closed on the observer itself.
+- validate-workflow-contracts.py enforces exact workflow path, warning-only behavior and step ordering.
+- Exact-head checks: #42371417820 validate-github-actions PASS; #42371417804 validate-manifests PASS.
+- Post-merge checks: #42371482062 validate-github-actions PASS; #42371482113 validate-manifests PASS.
+- No cron, concurrency, trigger, permission, TCE market-scan schedule or production deployment behavior changed.
+
+Native schedule evidence is still stale through 12:12Z: Platform last events are #42357630554/#42357048356/#42356893297/#42356397506; TCE last WF-06/WF-12 events are #42346646839/#42363949566. The new observer improves detection only; it cannot re-enable workflows or repair scheduler delivery. Current workflow state must be reviewed by a GitHub Actions administrator.
