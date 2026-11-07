@@ -1,3 +1,40 @@
+## Current operational state — 2026-11-07 13:03 ICT / 06:03 UTC
+
+This checkpoint supersedes older workflow-status summaries below. Default branch state, open PRs, recent workflow runs, native schedule events, cross-repo dispatch evidence and the latest VPS snapshot were rechecked.
+
+### Ownership and active workflow contracts
+
+| Repository | App-owned responsibilities | Platform-owned responsibilities / boundaries | Latest evidence |
+|---|---|---|---|
+| Platform Infra | No application image builds | Sole production GitOps apply, shared GHCR pull credential reconciliation, runtime Secret provisioning, digest/provenance gate, rollout/health verification, read-only inspection and protected Stock/Media decommission | Reconcile #42345001520 PASS with `allow_image_changes=false`; inspection #42345149215 PASS; snapshot PR #1380 merged as 958e332. |
+| TCE Dashboard | CI/build/tests; WF-03 manual-only immutable publisher; WF-06 strict health; WF-07 backup/integration; WF-12 watchdog; WF-13 verified fallback | No production SSH/Compose/K3s apply. WF-04 removed; WF-10 is staging-only bootstrap. | WF-07 integration #42344977873 PASS; WF-12 #42332584617 failed WF-06 freshness; WF-06 #42317701397 failed four HTTP 503 probes. |
+| StockDividend | CI, native ARM64 non-publishing build, immutable GHCR publisher, weekend scraper | No Platform production GitOps ownership; legacy live K3s namespace is pending protected decommission. | PR #35 merged; CI #42341257653 7/7 PASS. Scraper requires `VNSTOCK_API_KEY`; secret presence is not readable via this integration. |
+| Media Generation | CI and app-owned publisher; source repository remains intact | No Platform production GitOps ownership; legacy live K3s namespace and dedicated Media runner are pending protected decommission. | CI #42239703151 PASS; latest read-only snapshot confirms media backend/frontend Running and Media runner active/enabled. |
+| Authentication | CI and manual immutable ARM64 release with digest/provenance | Platform owns production manifests and runtime Secrets; Supabase production migration side effects remain a merge gate | CI #42215394539 PASS; PR #75/#76 remain gated, Supabase Preview skipped. |
+
+### Native schedule and fallback classification
+
+- Platform native schedule latest events: watchdog #42327836310 (02:09:55Z), reconcile #42327720407 (02:08:35Z), recovery #42327707405 (02:08:25Z), inspection #42326168875 (01:50:19Z). All exceed their respective 45/45/45/75-minute freshness budgets at this review.
+- TCE WF-06 #42317701397 (00:21:14Z) failed four HTTP 503 probes. WF-12 #42332584617 (03:08:21Z) failed freshness but its heartbeat path succeeded. TCE WF-07 integration #42344977873 (05:59:04Z) passed private API validation; the order integration job was skipped.
+- Stock weekend scraper cron remains `0 1 * * 0,6`. No Nov 7 event was present at ~06:03Z; previous events were delayed until 06:49Z and 07:15Z, so continue observing rather than declare failure before the prior delay window elapses.
+- TCE WF-07 scheduled heartbeat #42344977873 / heartbeat run #42344986157 was authenticated by Platform recovery #42344992100 using exact source path, event, run ID, attempt and full SHA. It dispatched reconciliation #42345001520 with `mode=apply`, `target_app=all`, `allow_image_changes=false`, then read-only inspection #42345149215. These workflow_dispatch/repository_dispatch runs are fallback evidence only and do not count as native schedule recovery.
+
+### Production reconciliation, GHCR and K3s
+
+- Reconciliation #42345001520: GHCR preflight passed for Auth/MicroFE/TCE images; Auth runtime Secret provisioned and verified; shared `ghcr-pull` unchanged; TCE tag `prod-v0.1.0-e75e338` pairing passed; no manifest drift; manifest apply and image promotion skipped. TCE/Auth/MicroFE maintenance-aware health lanes passed, rollout steps skipped, Keycloak skipped.
+- Inspection #42345149215 / PR #1380 / merge SHA `958e33281b5121144848676d217a6199d92067f4`: K3s node Ready/ARM64; disk 56% (20 GiB free), RAM ~19 GiB available; Docker 29.1.3; containerd runtime 2.3.2-k3s2, package 2.2.1 upgrade available to 2.4.2; restart required.
+- Media backend/frontend remain 1/1 Running. Stock Admin (two pods) and newer Backend remain ImagePullBackOff on `12d63b4` due missing ARM64 manifest; older Backend and Frontend remain Running. TCE/Auth/Keycloak remain 0/0 maintenance.
+- No Stock/Media PVC/PV claim or VolumeSnapshot references appear in the snapshot; only `k3s-debug/k3s-debug-logs` has a PVC/PV. This is not external backup or DNS evidence.
+- Media runner systemd service is active/enabled and Listener is present. The protected decommission delete gate remains blocked. No decommission plan/delete run occurred; no namespace or runner was removed.
+
+### Immutable publication status
+
+No new GHCR publication, digest/provenance verification or image promotion occurred in this review. Stock #41563856933, Media #41158598649 and Auth #41040510320 are historical publisher runs only. Stock PR #35's 7/7 CI run builds ARM64 images without publishing. TCE WF-03 remains manual-only. Production release authorization and digest verification remain required before any promotion.
+
+`reconcile-vps.yml` remains the only production apply authority. Preserve TCE market-scan schedule unchanged.
+
+---
+
 ## Current workflow ownership review — 2026-11-07 11:02 ICT / 2026-11-07 04:02 UTC
 
 This section supersedes earlier workflow-status summaries below and records the latest ownership audit, including TCE PR #1030.
