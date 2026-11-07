@@ -280,6 +280,27 @@ jobs:
           echo "::error::Source reconciliation #$SOURCE_RUN_ID did not complete within 60 seconds."
           exit 1
 
+      - name: Observe schedule watchdog workflow state
+        id: watchdog-state
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! workflow="$(gh api -X GET \
+            -H "Accept: application/vnd.github+json" \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-schedule-watchdog.yml")"; then
+            echo "state=unavailable" >> "$GITHUB_OUTPUT"
+            echo "::warning::Unable to read schedule watchdog workflow state; continuing recovery without assuming native watchdog coverage."
+            exit 0
+          fi
+
+          state="$(jq -r '.state // empty' <<< "$workflow" 2>/dev/null || true)"
+          echo "state=${state:-missing}" >> "$GITHUB_OUTPUT"
+          if [[ "$state" != "active" ]]; then
+            echo "::warning::Schedule freshness watchdog is not active (state=${state:-missing}); continuing recovery, but native watchdog coverage is unavailable."
+            exit 0
+          fi
+          echo "Schedule freshness watchdog state: active"
+
       - name: Resolve GitHub Actions API reference clock
         id: clock
         env:
