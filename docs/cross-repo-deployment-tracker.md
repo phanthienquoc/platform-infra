@@ -1,3 +1,53 @@
+## Current review — 2026-11-08 03:05 ICT / 2026-11-07 20:05 UTC
+
+### Five-repository state
+
+| Repository | Master SHA | Open PRs | Latest relevant CI/operations |
+|---|---|---|---|
+| Platform Infra | `554ef89daaa559bf05352e4b05b78aebffcbe900` | #1314/#544/#541/#539 draft docs/planning; #1415 merged | Native reconcile #42407410735 PASS; watchdog #42406561460 FAIL; recovery #42406469813 PASS; manual K3s inspection #42406647304 PASS. |
+| TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None | Native WF-06 #42399835467 FAIL; manual #42399867071 FAIL; four public probes HTTP 503. WF-12 workflow_run #42399852533 PASS is not native schedule evidence. |
+| StockDividend | `783ae36f128ba5dffeba8ac1d242602f160ecfd0` | None | CI #42375688209 PASS (7/7); weekend scraper #42349150261 FAIL because `VNSTOCK_API_KEY` is missing. |
+| Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | CI #42239703151 PASS; no new publisher run or Platform handoff. |
+| Authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` | #75 ready, #76 draft; both migration-gated | CI #42215394539 PASS; Supabase migration provenance/side effects still block merge. |
+
+Platform PR #1415 merged from exact head `a450e90682bffeabee19a5d142befabe53002575` as `554ef89daaa559bf05352e4b05b78aebffcbe900`. Exact-head checks: lint #42409104612 PASS; validate #42409104637 PASS. Post-merge checks: validate-manifests #42409167104 PASS; validate-github-actions #42409167054 PASS; recovery push #42409167056 PASS; runner bootstrap #42409167152 PASS.
+
+### Decommission safety contract now on master
+
+PR #1415 adds the separate typed DNS/provider ownership attestation `AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED` to the manual-only Stock/Media decommission workflow, script and installed `platform-kubectl` guard. The delete path still requires the production Environment, exact namespace confirmation, backup/external-data review, dedicated Media runner retirement, and fresh PVC/PV/VolumeSnapshot preflight. Plan remains read-only. This does not authorize a deletion; owners must actually review authoritative DNS/provider records and backups, and the Media runner must be retired/unregistered first.
+
+### Runner-bootstrap credential-log hardening
+
+The successful post-merge runner bootstrap #42409167152 generated a short-lived repository runner registration token and passed it to the remote bootstrap over SSH. Its Actions step environment dump included the generated token because the workflow had not registered it with the Actions log masker before writing it to `GITHUB_OUTPUT`. The bootstrap completed successfully, but the token may remain usable until its short expiry. The generated token is not repeated in this tracker.
+
+This change set adds `echo "::add-mask::$token"` before writing the generated token to `GITHUB_OUTPUT`, and adds a workflow-contract assertion that masking must precede output. It does not change the PAT secret, runner registration behavior, runner labels, or deployment authority. The repository owner should promptly inspect Platform Infra → Settings → Actions → Runners and the audit log for unexpected registrations during the token validity window; the current connector could not retrieve the repository runner-registration list, so no claim is made that the list is clean.
+
+### Native schedules and service health
+
+The latest native Platform events remain: reconcile #42407410735 at 19:41:08 UTC; watchdog #42406561460 at 19:30:43 UTC (failure); recovery #42406469813 at 19:29:42 UTC; last native inspection #42387216070 at 15:36:38 UTC. Their first post-gap inter-arrival intervals remain over budget (45m for reconcile/watchdog/recovery; 75m for inspection). Manual inspection #42406647304 is not native schedule evidence. No new native schedule event was present in the latest schedule-only query; no cron or freshness budget changed.
+
+TCE WF-06 remains `*/15 * * * *`; last native #42399835467 at 18:09:17 UTC and manual #42399867071 both failed with HTTP 503 from TCE web/API and Auth liveness/readiness. WF-12 workflow_run #42399852533 only proves heartbeat transport. TCE market-scan schedule unchanged.
+
+Stock scraper remains fail-closed on missing `VNSTOCK_API_KEY`; the owner must add the secret and run `preflight_only=true` before ingestion. Weekend cron remains `0 1 * * 0,6` UTC. Authentication #75/#76 remain Supabase migration-gated.
+
+### Latest production evidence
+
+Reconcile #42407410735 passed GHCR read preflight, Auth runtime Secret provisioning/verification (values suppressed), shared pull-secret reconciliation (unchanged), TCE release pairing and drift check. `ALLOW_IMAGE_CHANGES=false`; manifest apply and rollout verification were skipped. Read-only K3s inspection #42406647304 (19:31:52 UTC) showed node Ready, ARM64, disk 56%/about 20 GiB free, RAM about 19 GiB available; Media and MicroFE pods Running; Stock Admin and new Backend ImagePullBackOff; old Stock Backend/Frontend Running; TCE/Auth/Keycloak 0/0; OIDC 503. Docker/containerd package updates remain a maintenance-window item; no host upgrade/reboot.
+
+### Exact next actions
+
+1. Validate and merge the token-masking follow-up only after exact-head lint and validate checks pass; verify the post-merge bootstrap log does not expose the generated token.
+2. Owner: inspect Platform Infra runner registrations/audit log for unexpected registrations during the short-lived token window.
+3. Observe another native Platform schedule cycle; escalate per-workflow schedule delivery if gaps persist.
+4. Stock owner: add `VNSTOCK_API_KEY` and run safe preflight-only.
+5. TCE/Auth owner: approve restoration before replicas are enabled; keep strict HTTP 200 health checks.
+6. Auth/Supabase owner: resolve migration provenance/side effects before #75/#76 are retargeted or merged.
+7. Stock/Media owners: verify backups, authoritative DNS ownership and Media runner retirement before any namespace delete.
+
+No GHCR publication/promotion, production manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, secret write, DNS/database/storage mutation or host maintenance occurred in this review. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only.
+
+---
+
 ## Current review — 2026-11-08 02:55 ICT / 2026-11-07 19:55 UTC
 
 This review supersedes the older operational summaries below. The five default-branch refs, open PRs, latest Actions histories, selected failed-job logs, current deployment tracker/inventory, publisher workflows, reconciliation, and the latest read-only K3s snapshot were rechecked.
