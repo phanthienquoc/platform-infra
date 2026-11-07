@@ -87,7 +87,10 @@ assert_no_apply
 # Missing declared namespaces are reported as drift without being created.
 if run_script plan MISSING_NAMESPACE=tce-prod; then rc=0; else rc=$?; fi
 [[ "$rc" == "1" ]]
-! grep -Fq 'diff -k environments/prod' "$TMP/calls"
+if grep -Fq 'diff -k environments/prod' "$TMP/calls"; then
+  echo "Missing namespace should short-circuit before kubectl diff." >&2
+  exit 1
+fi
 assert_no_apply
 
 # Explicit apply creates declared namespaces only through the production Kustomize root.
