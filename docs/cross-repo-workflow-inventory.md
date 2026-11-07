@@ -5782,3 +5782,14 @@ App repositories own CI/tests/builds and immutable GHCR publication. Platform ow
 - Open PRs: Platform #1314/#544/#541/#539 (draft planning/docs); Auth #75/#76 (Supabase migration-gated); none in TCE, Stock or Media.
 - Native schedule inventory is not freshly enumerable through the current connector; retain the 19:12 ICT last-known IDs and stale classifications. Latest K3s inspection remains #42364093834 (10:28:35Z), not fresh same-window evidence.
 - No image publication/promotion, manifest apply, secret write, workload activation, runner retirement, decommission, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
+
+
+---
+
+## Post-merge confirmation — 2026-11-07 20:10 ICT / 13:10 UTC
+
+- Platform PR #1399 merged as `a84dc19d18bb5ab8d1715f3393d98fc4bda84f4c`; exact-head manifest validation #42375923511 passed. Post-merge push validation was not exposed by the connector.
+- Stock PR #37 merged as `783ae36f128ba5dffeba8ac1d242602f160ecfd0`; exact-head CI #42375305139 passed all 7 jobs. Merged workflow includes side-effect-free `preflight_only=true` credential verification and preserves `0 1 * * 0,6`.
+- Current open PRs: Platform #1314/#544/#541/#539 (draft docs/planning), Auth #75/#76 (Supabase migration-gated); none in TCE, Stock or Media.
+- Native schedule and K3s state remain last-known from 19:12 ICT; current connector does not enumerate general Actions runs. Require fresh native event history and fresh read-only K3s inspection before operational claims.
+- App repositories own tests/builds and immutable GHCR publishing. Platform remains sole production GitOps/apply authority. No publication, promotion, manifest apply, secret write, workload/runner/decommission/DNS/database/storage/host mutation. TCE market-scan schedule unchanged.
