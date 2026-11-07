@@ -5022,3 +5022,18 @@ App repositories own tests/builds and immutable GHCR publication. Platform Infra
 - The merged checkpoint records the current 5-repository SHAs, open PRs/checks, Platform native schedule staleness, TCE WF-06 HTTP 503 and exact heartbeat correlation, Stock missing-secret failure, and the age/limitations of the latest K3s inspection.
 - Platform master is now `2c13df216b1345c2a8cb7a04300d5bcf54a328a8`. PR #1401 is closed/merged. Remaining open Platform PRs are #1314/#544/#541/#539 (draft planning/docs); Auth #75/#76 remain migration-gated; TCE, Stock and Media have no open PRs.
 - No production mutation was performed. Native schedule recovery, Stock secret/preflight, TCE/Auth service restoration, fresh K3s inspection, and Stock/Media decommission prerequisites remain open. TCE market-scan schedule unchanged.
+
+
+---
+
+## Cross-repo readiness refresh — 2026-11-07 22:59 ICT / 15:59 UTC
+
+- Latest observed refs: Platform `978d45c96017c29d6b417f4bab3593fe3d21c986`; TCE `7ab52078c4250829e158f05b2695ceb9d11bdbe3`; Stock `783ae36f128ba5dffeba8ac1d242602f160ecfd0`; Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; Authentication `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`.
+- Open PRs: Platform #1314/#544/#541/#539 (draft docs/planning); Authentication #75 (ready) and #76 (draft), both still gated by the Supabase production integration/migration side-effect review; none in TCE/Stock/Media.
+- Native Platform schedules have resumed for reconcile #42387275904 (success, 15:37:24Z) and inspection #42387216070 (success, 15:36:38Z). The watchdog #42385910055 still fails closed because the reconcile inter-arrival gap was 24,008s vs 2,700s. Recovery #42385416779 succeeded at 15:14:36Z. Require another in-budget native interval; workflow_run and workflow_dispatch fallbacks do not count.
+- TCE WF-06 #42376773663 remains the latest native healthcheck and failed all four public endpoints with HTTP 503. WF-07 #42375151164 passed its separate integration lane; WF-12 #42363949566 failed stale freshness. TCE market-scan schedule unchanged.
+- Stock CI #42375688209 passed 7/7; scraper #42349150261 failed at missing `VNSTOCK_API_KEY`. Safe preflight-only mode is merged; owner must configure the secret. Media CI #42239703151 and Auth CI #42215394539 passed.
+- Fresh K3s inspection #42387216070 (15:36:46Z): node Ready/ARM64, disk 56%, RAM available ~19 GiB; Media/MicroFE running; Stock Admin and one Stock Backend pod ImagePullBackOff on tag `12d63b4` due missing ARM64 manifest; another Backend pod on `23b2878` running; TCE/Auth/Keycloak intentionally 0/0; GitOps drift clean; Media and Platform runners active. External backups, retention and DNS ownership remain unverified.
+- Scheduled reconciliation #42387275904 passed GHCR preflight, provisioned the protected Auth runtime Secret (values suppressed), left shared `ghcr-pull` unchanged, verified TCE release pairing and skipped manifest apply/image promotion because drift was clean and image changes were disabled. TCE/Auth health scripts explicitly made no live-health assertion for intentional zero replicas.
+- Full evidence and exact next actions: `docs/cross-repo-deployment-checkpoints/2026-11-07-2259-ict.md`.
+- No new publisher, image promotion, manifest apply, workload activation, decommission, runner retirement, secret write, DNS/database/storage mutation or host maintenance was initiated. Platform remains sole production apply authority; no direct SSH/Compose authority. TCE market-scan schedule unchanged.
