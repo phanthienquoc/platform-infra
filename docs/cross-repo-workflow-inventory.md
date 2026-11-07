@@ -5537,3 +5537,17 @@ App repos own tests/builds and immutable GHCR publication. Platform Infra owns p
 - Reconcile #42346682137 passed GHCR read preflight, Auth runtime Secret verification, shared `ghcr-pull` unchanged, TCE release pairing and GitOps diff; manifest apply and image promotion skipped. Targeted MicroFE/TCE image-pull restart checks found no blocked pulls; Stock/Media were not restarted. TCE/Auth lanes explicitly recorded zero-replica maintenance.
 - Latest K3s snapshot #42345149215 / `debug/vps-latest.md` (06:01:30Z): Ready ARM64 node; disk 56% (~20 GiB free), RAM ~19 GiB available; Docker 29.1.3; containerd runtime 2.3.2-k3s2 and package update 2.2.1→2.4.2 pending; restart required. Media/MicroFE Running; Stock Admin/new Backend ImagePullBackOff on `12d63b4`; older Stock Backend/Frontend Running; TCE/Auth/Keycloak 0/0 and Keycloak OIDC probes 503. Platform/Media runners active with Listener.
 - External backup/retention and authoritative DNS ownership remain unverified; no decommission or runner retirement. No new immutable GHCR publication or Platform promotion. `reconcile-vps.yml` sole production apply authority; `inspect-vps.yml` read-only. TCE market-scan schedule unchanged.
+
+
+---
+
+## Post-merge operational inventory — 2026-11-07 14:08 ICT / 07:08 UTC
+
+- Platform PR #1382 merged as `88e1921ab67ffb2a6d3ad957ad18f6dd56bcb94b`; exact-head validation #42349726330 and post-merge #42349784407 PASS.
+- Stock PR #36 merged as `7b88c804f1c015a3ff12a1ddc32ae7f85de0adb9`; exact-head CI #42349533563 passed 7/7. Post-merge CI #42349827620 remained in progress at 07:08Z (5 jobs passed, scraper container and ARM64 non-publishing image build still running).
+- Stock native scraper #42349150261 failed at the preflight because `VNSTOCK_API_KEY` was empty. PR #36 adds repository-secret setup instructions and a workflow error link; it does not create or read the secret. Add it under repository Actions secrets, then verify the next scheduled run. Manual dispatch has real MongoDB/Telegram side effects.
+- Stock PR #36 changed only docs/workflow/validator paths ignored by `deploy.yml`; no publisher run, GHCR publication, digest or Platform promotion followed the merge.
+- Platform native schedule history remains stale: watchdog #42327836310, reconcile #42327720407, recovery #42327707405, inspection #42326168875. Later fallback runs are not native schedule evidence.
+- TCE native WF-06 #42346646839 returned four HTTP 503s; WF-07 #42344977873 passed; WF-12 #42332584617 is latest native watchdog failure. TCE/Auth remain intentional 0/0 maintenance; cron and strict health gates unchanged.
+- Latest reconcile #42346682137: GHCR preflight and Auth runtime Secret verified; shared `ghcr-pull` unchanged; GitOps clean; manifest apply/image promotion skipped. Latest K3s inspection #42345149215 is 06:01:30Z; Stock `12d63b4` Admin/new Backend ImagePullBackOff, Media/MicroFE Running, TCE/Auth/Keycloak 0/0, node Ready ARM64, restart required. Platform/Media runners active.
+- External backup/retention and DNS ownership remain unverified; no destructive changes. `reconcile-vps.yml` sole apply authority; `inspect-vps.yml` read-only. TCE market-scan schedule unchanged.
