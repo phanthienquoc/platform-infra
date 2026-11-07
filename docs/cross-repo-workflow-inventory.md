@@ -5668,3 +5668,15 @@ App repositories continue to own tests/builds and immutable GHCR publication. Pl
 - Latest K3s inspection #42356397506 (08:39:29Z): node Ready/ARM64; Media and MicroFE workloads Running; Stock Admin/new Backend ImagePullBackOff on `12d63b4` without `linux/arm64`; older Stock Backend/Frontend Running; TCE/Auth/Keycloak 0/0. Platform/Media runners remain active. No Stock/Media PVC/PV or snapshot references were observed, but external backup/retention and authoritative DNS ownership are unverified. Host updates/restart remain maintenance-gated.
 - Connected GitHub API surface did not allow reading Actions workflow-state endpoints. The schedule run list proves missing recent events but does not distinguish disabled workflow from queued/scheduler delay. Administrator inspection is the exact next action; do not infer or change workflow state.
 - No GHCR publication/promotion, manifest apply, workload activation, decommission, runner retirement, secret write, DNS/database/storage mutation or host maintenance occurred. App repos own builds and immutable GHCR publishing; Platform owns production GitOps and rollout. `reconcile-vps.yml` sole apply authority; `inspect-vps.yml` read-only. TCE market-scan schedule unchanged.
+
+
+---
+
+## Post-merge workflow inventory — 2026-11-07 17:00 ICT / 10:00 UTC
+
+- Platform PR #1390 merged as `583b90b8f954e6dea149710352dc9f63b729e332`; exact-head #42361982810 and post-merge #42362010998 PASS.
+- Native Platform events remain reconcile #42357630554, watchdog #42357048356, recovery #42356893297, inspection #42356397506. No subsequent native schedule events were present in the fresh query; historical gaps and latest-run freshness exceed existing budgets. Do not count workflow_run/dispatch/push/rerun as native schedule proof.
+- TCE latest native WF-06 #42346646839 failed HTTP 503, WF-12 #42332584617 failed freshness, and WF-07 #42344977873 passed its separate integration check. Stock scraper #42349150261 failed missing-secret preflight. Media/Auth have no native scheduled workflows in the query.
+- CI evidence: TCE three core checks PASS; Stock #42349827620 7/7 PASS; Media #42239703151 PASS; Auth #42215394539 PASS; Platform post-merge #42362010998 PASS.
+- Stock secret remains an owner action; no secret write. Stock ARM64 deployed image, TCE/Auth 0/0 service restoration, Auth Supabase migration gate, and Stock/Media runner/DNS/backup decommission prerequisites remain open.
+- No image publication/promotion or production apply occurred. App repos own tests/builds and immutable GHCR publication; Platform owns production GitOps, shared pull credentials, digest/provenance validation, rollout and health. `reconcile-vps.yml` sole apply authority; `inspect-vps.yml` read-only. TCE market-scan schedule unchanged.
