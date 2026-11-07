@@ -1723,6 +1723,7 @@ if "python3 scripts/verify-native-schedule-gap.py --self-test" not in actions_va
     fail("Workflow validation must execute native schedule inter-arrival regression fixtures.")
 native_schedule_gap_step = watchdog.find("name: Verify native schedule inter-arrival gaps")
 if native_schedule_gap_step < 0 or "if: always()" not in watchdog[native_schedule_gap_step:]:
+native_schedule_gap_block = watchdog[native_schedule_gap_step:]
     fail("Native schedule inter-arrival diagnostics must run even when freshness checks fail.")
 for required in (
     'verify_platform_schedule_gap reconcile-vps.yml "$MAX_AGE_MINUTES"',
