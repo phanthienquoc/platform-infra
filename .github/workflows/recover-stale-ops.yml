@@ -289,14 +289,16 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-schedule-watchdog.yml")"; then
             echo "state=unavailable" >> "$GITHUB_OUTPUT"
-            echo "::warning::Unable to read schedule watchdog workflow state; continuing recovery without assuming native watchdog coverage."
+            echo "::warning::Unable to read schedule watchdog workflow state; continuing recovery."
+            echo "::warning::Native watchdog coverage is not verified."
             exit 0
           fi
 
           state="$(jq -r '.state // empty' <<< "$workflow" 2>/dev/null || true)"
           echo "state=${state:-missing}" >> "$GITHUB_OUTPUT"
           if [[ "$state" != "active" ]]; then
-            echo "::warning::Schedule freshness watchdog is not active (state=${state:-missing}); continuing recovery, but native watchdog coverage is unavailable."
+            echo "::warning::Schedule freshness watchdog is not active (state=${state:-missing})."
+            echo "::warning::Continuing recovery, but native watchdog coverage is unavailable."
             exit 0
           fi
           echo "Schedule freshness watchdog state: active"
