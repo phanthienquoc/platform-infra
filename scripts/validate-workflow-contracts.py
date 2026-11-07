@@ -1283,6 +1283,10 @@ if "Reject retired StockDividend and Media production manifests" not in read("va
     fail("Manifest validation must reject reintroduced StockDividend/Media production trees.")
 
 runner_bootstrap = read("bootstrap-runner.yml")
+runner_token_mask = runner_bootstrap.find('echo "::add-mask::$token"')
+runner_token_output = runner_bootstrap.find('printf \'token=%s\\n\' "$token" >> "$GITHUB_OUTPUT"')
+if runner_token_mask < 0 or runner_token_output < 0 or runner_token_mask > runner_token_output:
+    fail("Short-lived runner registration token must be masked before it is written to GITHUB_OUTPUT.")
 if "bootstrap-media-runner.sh" in runner_bootstrap:
     fail("Shared Platform runner bootstrap must not provision the retired dedicated Media runner.")
 for retired_helper in (
