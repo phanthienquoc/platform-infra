@@ -624,7 +624,8 @@ jobs:
           fi
           if (( ${#warn_args[@]} > 0 )); then
             if (( ${#schedule_gap_warnings[@]} > 0 )); then
-              printf '::notice::Read-only push smoke completed; Platform native schedule observations are warning-only: %s. No cadence acceptance is asserted.\n' "${schedule_gap_warnings[*]}"
+              echo "::notice::Read-only push smoke: native schedule observations are warning-only."
+              printf '::notice::No cadence acceptance asserted; observed: %s\n' "${schedule_gap_warnings[*]}"
             else
               echo "Read-only push smoke completed; no Platform schedule warnings were observed. TCE observations remain warning-only."
             fi
