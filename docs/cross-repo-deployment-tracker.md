@@ -932,3 +932,64 @@ Source: PR #1481 snapshot generated `2026-11-08T20:14:51Z`.
 6. Platform operator: schedule host maintenance separately; no unattended reboot or package/containerd upgrade.
 
 No production image promotion, manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host upgrade/reboot occurred in this execution. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No workflow was removed and no direct SSH/Compose production authority was added. TCE market-scan schedule unchanged.
+
+
+## Latest cross-repo execution — 2026-11-09 03:56 ICT / 2026-11-08 20:56 UTC
+
+### Repository state and open pull requests
+
+- Platform Infra master is the base for this checkpoint; the latest observed master workflow SHA is `0c29f9c38964d6e78ac0295a0073bf571b62116f`. Open draft PRs #1314 (managed mail plan), #544 (Keycloak activation status; currently mergeable=false), #541 (Keycloak/Supabase DB preparation), and #539 (identity architecture ADR) remain human-review decisions and were not merged.
+- TCE Dashboard master `7ab52078c4250829e158f05b2695ceb9d11bdbe3`: no open PRs.
+- StockDividend master `e6469ac6617142b349144101a1192cb6aa7104ad`: no open PRs.
+- Media Generation master `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`: no open PRs.
+- Authentication master `cb907a63df0e0441b54b7b930ecdbfa97a5e52e1`: PR #76 remains draft; its migration/schema drift and Supabase side-effect investigation is not approved for merge.
+
+### Latest workflow and check evidence
+
+| Repository | Latest relevant evidence | Result |
+|---|---|---|
+| Platform Infra | Reconcile schedule #42521088881 at 20:37:39Z | PASS |
+| Platform Infra | Watchdog workflow_run #42521222353 at 20:39:19Z | FAIL: stale native inspection and historical inter-arrival gaps |
+| Platform Infra | Recovery workflow_run #42521222393 | PASS |
+| Platform Infra | Recovery workflow_dispatch #42521201349 | PASS |
+| TCE Dashboard | WF-06 schedule #42512468931; manual fallback #42512497073 | FAIL: TCE API, TCE web, Auth liveness and Auth readiness all HTTP 503 |
+| TCE Dashboard | WF-12 schedule #42507582654 | FAIL: WF-06 schedule freshness exceeded |
+| StockDividend | Scraper schedule #42457182511 | FAIL closed: missing repository secret `VNSTOCK_API_KEY` |
+| StockDividend | CI #42440810105 | PASS |
+| Media Generation | CI #42239703151 | PASS; no current-master publisher run observed |
+| Authentication | CI #42478653766 | PASS; no new release/promotion run observed |
+
+The latest Platform watchdog failure was not a GitOps apply failure. Its logs recorded native schedule inter-arrival gaps:
+- reconcile-vps: 15,672s vs 2,700s budget;
+- inspect-vps: 18,901s vs 4,500s budget;
+- recover-stale-ops: 15,605s vs 2,700s budget;
+- reconcile-schedule-watchdog: 15,517s vs 2,700s budget.
+The inspection-delivery step also failed because the latest native inspection remained stale. Recovery delivery/result verification passed. TCE WF-06 and WF-12 gaps were 16,293s and 20,594s respectively against the 1,500s observation budget. These are scheduler-delivery/cadence observations; do not change cron or freshness budgets to mask them.
+
+### Stock publisher contract clarification
+
+The current Stock `.github/workflows/deploy.yml` is a native ARM64 immutable publisher:
+- master pushes build/publish Scraper, Admin and Backend with full 40-character source-SHA and `prod-v<version>-<sha>` tags, then verify ARM64 manifests and equal registry digests for both tags;
+- manual `workflow_dispatch` publication is explicitly blocked unless repository variable `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=true`;
+- when the variable is false, a master push may still publish immutable artifacts but does not send a Platform handoff;
+- missing `VNSTOCK_API_KEY` blocks authenticated scraper ingestion only; it is not the publisher's image-build credential.
+No secret or release variable was changed, and no manual production publication was attempted. No current-master publisher digest evidence was observed.
+
+### Runtime and safety
+
+- Latest committed K3s inspection snapshot is from PR #1481, generated `2026-11-08T20:14:51Z`; at this checkpoint it is ~42 minutes old and remains within the 75-minute snapshot-age budget, but it is a manual inspection and does not satisfy native inspection cadence.
+- Node `tce-k3s-01` remains Ready/ARM64, K3s `v1.36.3+k3s1`; disk 56% (~21 GiB free), available RAM ~19 GiB, host uptime 191 days and `restart_required=yes`.
+- Media backend/frontend and MicroFE Shell/WS/NATS were 1/1. Stock Admin×2 and desired Backend remained ImagePullBackOff on `12d63b4`; legacy Stock Backend/Frontend remained 1/1 on `23b2878`. TCE/Auth/Keycloak remained 0/0 maintenance; public probes returned HTTP 503. Media runner service remained active/enabled with `Runner.Listener` present.
+- In-cluster Stock/Media storage preflight was storage-clean, but external backup/retention, authoritative DNS ownership, Media runner remote registration audit and `MEDIA_RUNNER_AUDIT_TOKEN` remain unverified. No namespace or runner deletion is authorized.
+- The prior read-only helper change caused one recovery-triggered reconciliation; it found `drift=false`, kept shared `ghcr-pull` unchanged, verified Auth runtime Secret and GHCR read access, and skipped apply/promotion/rollout. PR #1480 now excludes that read-only helper from recovery push triggers.
+
+### Exact next actions
+
+1. GitHub administrator: inspect native schedule event delivery and runner/scheduler telemetry; require consecutive within-budget native runs. Preserve all cron and freshness budgets.
+2. Stock owner: provide `VNSTOCK_API_KEY` for scraper preflight; separately select/approve a current source SHA and allow a master push or explicitly authorize the protected manual publication variable before expecting a current-master immutable publisher run.
+3. TCE/Auth owners: decide whether to activate the intentionally zero-replica services and approve a recovery plan; do not auto-scale from public 503 probes.
+4. Media owner/operator: verify idle state, stop/disable/unregister the Media runner, provide the read-only audit token, and confirm external backup/retention and authoritative DNS ownership before protected decommission.
+5. Auth owner: continue PR #76 schema/migration drift and Supabase side-effect investigation; keep draft.
+6. Platform operator: plan host maintenance separately; no unattended reboot or package/containerd upgrade.
+
+No production manifest apply, image promotion, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host upgrade/reboot occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No workflow was removed and no direct SSH/Compose production authority was added. TCE market-scan schedule unchanged.
