@@ -1,6 +1,6 @@
 # GitHub Credentials Key Inventory
 
-**Audited:** 2026-11-06  
+**Audited:** 2026-11-08  
 **Purpose:** Reusable index of GitHub Actions secret and variable names referenced by workflows across TCE Dashboard, StockDividend, Media Generation, Authentication, and Platform Infra.  
 **Safety:** This document intentionally contains names and usage metadata only. It MUST NOT contain credential values, environment-file contents, generated tokens, or copies of GitHub secret values.
 
@@ -29,6 +29,7 @@ GitHub Actions can resolve secrets/variables from repository, organization, and 
 | `KEYCLOAK_DB_PASSWORD` | Platform Infra: `reconcile-vps.yml` | Keycloak database credential. |
 | `KEYCLOAK_DB_URL` | Platform Infra: `reconcile-vps.yml` | Keycloak database connection URL; may itself embed credentials, so never log it. |
 | `KEYCLOAK_DB_USERNAME` | Platform Infra: `reconcile-vps.yml` | Keycloak database username; currently referenced through the secret context. |
+| `MEDIA_RUNNER_AUDIT_TOKEN` | Platform Infra: `decommission-stock-media.yml` | Read-only repository self-hosted-runner inventory for the exact Media runner `media-generation-k3s-01`; requires fine-grained repository **Administration: read** on `phanthienquoc/media-generation` only. Used only by protected delete mode; it cannot unregister or delete the runner. Secret configuration existence is not verified by this source inventory. |
 | `MFA_ENCRYPTION_KEY` | TCE Dashboard: `wf-01-tce-build-verify.yml`; Platform Infra: `provision-auth-runtime-secret.yml`, `reconcile-vps.yml` | Backend MFA-encryption key. Platform Infra maps the production Environment secret into the Auth runtime secret. Preserve ciphertext compatibility. |
 | `MFA_ENCRYPTION_KEY_PROD` | TCE Dashboard: `wf-10-tce-k3s-bootstrap.yml` | Separate TCE production bootstrap key name; do not assume it is a synonym for `MFA_ENCRYPTION_KEY`. |
 | `MFA_ENCRYPTION_KEY_STG` | TCE Dashboard: `wf-10-tce-k3s-bootstrap.yml` | Separate TCE staging bootstrap key name; do not reuse the production value by assumption. |

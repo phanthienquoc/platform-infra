@@ -24,6 +24,7 @@ Keep application dispatch credentials separate from platform-owned GHCR pull acc
 
 - `GHCR_USERNAME`: package owner/login paired with `GHCR_READ_TOKEN`; keep package visibility and access least-privileged.
 - `RUNNER_REGISTRATION_PAT`: Platform Infra runner bootstrap only; use minimal runner-registration permissions and never store generated short-lived runner tokens.
+- `MEDIA_RUNNER_AUDIT_TOKEN`: Platform Infra `decommission-stock-media.yml` delete mode only. Use a fine-grained token or GitHub App installation token with **Administration: read** on `phanthienquoc/media-generation` only; the workflow lists repository self-hosted runners and verifies the exact Media runner is absent. It does not unregister/delete runners. Plan mode does not require this secret. Verify secret existence in GitHub Settings before any delete-mode attempt; never place its value in Git.
 - `KEYCLOAK_DB_PASSWORD`, `KEYCLOAK_DB_URL`, `KEYCLOAK_DB_USERNAME`, `KEYCLOAK_ADMIN_USERNAME`, and `KEYCLOAK_ADMIN_PASSWORD`: protected Keycloak runtime credentials; keep out of logs, artifacts, manifests, and Git.
 
 ## Verification checklist
