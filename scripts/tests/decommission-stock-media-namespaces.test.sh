@@ -13,7 +13,7 @@ sudo_log="$tmp/sudo-log"
 cat > "$fake_sudo" <<'MOCK'
 #!/usr/bin/env bash
 set -euo pipefail
-printf 'sudo %s\\n' "$*" >> "$SUDO_LOG"
+printf 'sudo %s\n' "$*" >> "$SUDO_LOG"
 exec "$@"
 MOCK
 chmod +x "$fake_sudo"
