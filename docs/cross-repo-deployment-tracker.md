@@ -1,6 +1,6 @@
 # Cross-repo production deployment readiness
 
-Current review: **2026-11-08 10:00 ICT / 2026-11-08 03:00 UTC**
+Current review: **2026-11-08 11:00 ICT / 2026-11-08 04:00 UTC**
 
 Rolling operational summary. Preserve timestamped evidence under `docs/cross-repo-deployment-checkpoints/`.
 
@@ -8,9 +8,9 @@ Rolling operational summary. Preserve timestamped evidence under `docs/cross-rep
 
 | Repository | Master SHA | Open PRs | Latest relevant evidence |
 |---|---|---|---|
-| Platform Infra | `50c7b5a22760e2393668c4367d9e8297e1970aae` | #1314, #544, #541, #539 (draft planning/docs) | Inspection PR #1432 merged after exact-head manifest validation #42438611543 PASS. Latest scheduled reconcile #42439099803 PASS; native inter-arrival budgets still fail. |
+| Platform Infra | `11b0b86a971a1c106d1420930def8d4df80fd99a` | #1314, #544, #541, #539 (draft planning/docs) | PR #1433 merged; exact-head #42441046772 and post-merge #42441085003 PASS. Latest native reconcile #42439099803 PASS but is ~91m old; native schedule freshness remains outside budget. |
 | TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None | Latest native WF-06 #42432710149 failed all four HTTP 200 probes (HTTP 503); latest native WF-12 #42427247349 failed stale-health gate. |
-| StockDividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | None | PR #38 merged. Exact-head CI #42437287197 passed 7/7, including ARM64 build. Post-merge master CI #42440810105 is running (5/7 complete; ARM64 and scraper container builds still in progress at review). Scraper remains blocked by missing `VNSTOCK_API_KEY`. |
+| StockDividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | None | PR #38 merged. Exact-head CI #42437287197 and post-merge master CI #42440810105 both PASS 7/7, including ARM64 non-publishing builds. No GHCR publish occurred. Scraper remains blocked by missing `VNSTOCK_API_KEY`; expected Sunday 01:00Z schedule run is absent. |
 | Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | CI #42239703151 PASS. Latest formal K3s inspection still shows backend/frontend and dedicated runner active; no recent publisher/digest handoff. |
 | Authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` | #75 ready, #76 draft | CI #42215394539 PASS. PR #75/#76 validation PASS; Supabase Preview skipped. #75 remains gated on migration/integration side effects. |
 
@@ -18,7 +18,8 @@ Open Platform PRs #1314, #544, #541 and #539 are draft planning/documentation wo
 
 ## Platform PR and validation evidence
 
-- [PR #1432](https://github.com/phanthienquoc/platform-infra/pull/1432) is merged at master SHA `50c7b5a22760e2393668c4367d9e8297e1970aae`.
+- [PR #1432](https://github.com/phanthienquoc/platform-infra/pull/1432) merged the read-only K3s snapshot at `50c7b5a22760e2393668c4367d9e8297e1970aae`.
+- [PR #1433](https://github.com/phanthienquoc/platform-infra/pull/1433) merged the 10:00 ICT readiness refresh at current master `11b0b86a971a1c106d1420930def8d4df80fd99a`; exact-head #42441046772 and post-merge #42441085003 both PASS.
 - Inspection source run [#42438528386](https://github.com/phanthienquoc/platform-infra/actions/runs/42438528386) completed successfully.
 - Exact-head manifest validation [#42438611543](https://github.com/phanthienquoc/platform-infra/actions/runs/42438611543) PASS for inspection PR head `d9972201b5e4ecc91b67189365e0d2d97766fac1`.
 - PR #1432 merge commit: `50c7b5a22760e2393668c4367d9e8297e1970aae`.
@@ -30,10 +31,10 @@ Only original `event=schedule` runs on master, attempt 1, with the exact workflo
 
 | Workflow | Native cron (UTC) | Latest native run | Result | Inter-arrival gap | Age at review | Budget |
 |---|---|---|---|---:|---:|---:|
-| reconcile-vps.yml | `7,22,37,52 * * * *` | [#42439099803](https://github.com/phanthienquoc/platform-infra/actions/runs/42439099803), 2026-11-08 02:34:10Z | PASS | 12,390s | ~26m | 45m |
-| inspect-vps.yml | `2,32 * * * *` | [#42427239949](https://github.com/phanthienquoc/platform-infra/actions/runs/42427239949), 2026-11-07 23:53:04Z | PASS | 13,475s | ~3h07m | 75m |
-| reconcile-schedule-watchdog.yml | `12,27,42,57 * * * *` | [#42438566387](https://github.com/phanthienquoc/platform-infra/actions/runs/42438566387), 2026-11-08 02:26:41Z | FAIL | 12,395s | ~33m | 45m |
-| recover-stale-ops.yml | `10,25,40,55 * * * *` | [#42438384072](https://github.com/phanthienquoc/platform-infra/actions/runs/42438384072), 2026-11-08 02:24:08Z | PASS | 12,313s | ~36m | 45m |
+| reconcile-vps.yml | `7,22,37,52 * * * *` | [#42439099803](https://github.com/phanthienquoc/platform-infra/actions/runs/42439099803), 2026-11-08 02:34:10Z | PASS | 12,390s | ~91m | 45m |
+| inspect-vps.yml | `2,32 * * * *` | [#42427239949](https://github.com/phanthienquoc/platform-infra/actions/runs/42427239949), 2026-11-07 23:53:04Z | PASS | 13,475s | ~4h12m | 75m |
+| reconcile-schedule-watchdog.yml | `12,27,42,57 * * * *` | [#42438566387](https://github.com/phanthienquoc/platform-infra/actions/runs/42438566387), 2026-11-08 02:26:41Z | FAIL | 12,395s | ~98m | 45m |
+| recover-stale-ops.yml | `10,25,40,55 * * * *` | [#42438384072](https://github.com/phanthienquoc/platform-infra/actions/runs/42438384072), 2026-11-08 02:24:08Z | PASS | 12,313s | ~101m | 45m |
 
 The watchdog log confirms `reconcile-vps.yml` was active and reports a 12,392s native gap between #42407410735 and #42423799465 against the 2,700s budget. A later native reconcile #42439099803 succeeded, but its gap from #42423799465 is also 12,390s, still outside budget. The latest watchdog run predates #42439099803 and has not yet evaluated that newer pair.
 
@@ -56,15 +57,15 @@ Do not lower freshness/inter-arrival budgets, change cron to manufacture green s
 - Latest native WF-06 [#42432710149](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42432710149), 2026-11-08 01:05:27Z, failed all four strict HTTP 200 probes: TCE web, TCE API, Auth liveness and Auth readiness returned HTTP 503.
 - Latest manual WF-06 [#42432739134](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42432739134) also failed.
 - Latest native WF-12 [#42427247349](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42427247349), 2026-11-07 23:53:10Z, failed stale-WF-06 freshness. Workflow_run recovery/watchdog passes are not native schedule evidence or endpoint health.
-- No newer native TCE WF-06/WF-12 event appeared in the latest Actions history reviewed.
+- No newer native TCE WF-06/WF-12 event appeared in the latest Actions history reviewed. At 04:04Z, WF-06 #42432710149 is ~2h59m old and WF-12 #42427247349 is ~4h12m old.
 - Keep WF-06 and WF-12 cron and strict HTTP 200 expectations unchanged. **TCE market-scan schedule unchanged.** Do not increase replicas without explicit service-owner approval and a reviewed recovery plan.
 
 ## StockDividend
 
-- [PR #38](https://github.com/phanthienquoc/stockdividend/pull/38) merged at `e6469ac6617142b349144101a1192cb6aa7104ad`.
+- [PR #38](https://github.com/phanthienquoc/stockdividend/pull/38) merged at `e6469ac6617142b349144101a1192cb6aa7104ad`; current master CI #42440810105 PASS 7/7.
 - PR exact head `04ec376ecee191e979c7a4c6c40a39b0ba0d9c02`; CI [#42437287197](https://github.com/phanthienquoc/stockdividend/actions/runs/42437287197) passed 7/7, including the production ARM64 non-publishing builds.
 - Publisher now emits full 40-character SHA and `prod-v<version>-<full-sha>` tags for scraper/admin/backend; verifies both tags resolve to one SHA-256 digest and expose `linux/arm64`. It no longer creates mutable `latest`, short-SHA or plain-semver aliases. Existing registry tags were not deleted. Registry-side tag immutability enforcement is not certified.
-- Post-merge master CI [#42440810105](https://github.com/phanthienquoc/stockdividend/actions/runs/42440810105) was still running at review: 5/7 checks complete, with ARM64 production build and scraper container build in progress. CI uses non-publishing builds; this is not GHCR publication evidence.
+- Post-merge master CI [#42440810105](https://github.com/phanthienquoc/stockdividend/actions/runs/42440810105) completed PASS 7/7, including ARM64 production image builds and scraper container build. CI uses non-publishing builds; this is not GHCR publication evidence.
 - Weekend scraper [#42349150261](https://github.com/phanthienquoc/stockdividend/actions/runs/42349150261) failed closed at the required `VNSTOCK_API_KEY` check; dependency installation, entitlement check and ingestion were skipped. No 2026-11-08 01:00Z native scraper run appeared in the latest run history.
 - Exact next action: Stock owner supplies repository secret `VNSTOCK_API_KEY`, runs `run_scraper.yml` with `preflight_only=true`, and verifies authenticated non-guest entitlement before ingestion.
 - Stock remains retired from active Platform GitOps; no active production handoff or workload mutation is authorized.
@@ -127,3 +128,17 @@ Stock/Media decommission remains manual-only. Deletion requires production Envir
 - TCE market-scan schedule unchanged.
 
 Detailed evidence: [2026-11-08-1000-ict.md](cross-repo-deployment-checkpoints/2026-11-08-1000-ict.md)
+
+
+## 11:00 ICT execution refresh
+
+- Repository state was re-read from GitHub: Platform master `11b0b86a971a1c106d1420930def8d4df80fd99a`; TCE `7ab52078c4250829e158f05b2695ceb9d11bdbe3`; Stock `e6469ac6617142b349144101a1192cb6aa7104ad`; Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; Authentication `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`.
+- Platform open PRs remain #1314, #544, #541 and #539, all draft planning/documentation; Authentication #75 (ready) and #76 (draft) remain open. TCE, Stock and Media have no open PRs.
+- Latest Platform master validation [#42441085003](https://github.com/phanthienquoc/platform-infra/actions/runs/42441085003) PASS. Stock post-merge master CI [#42440810105](https://github.com/phanthienquoc/stockdividend/actions/runs/42440810105) PASS 7/7. Media master CI #42239703151 and Auth master CI #42215394539 remain prior PASS evidence; no newer runs are present.
+- Native schedule query (`event=schedule`) confirms no newer Platform runs: reconcile #42439099803 (02:34:10Z; gap 12,390s; ~91m old), inspection #42427239949 (23:53:04Z previous day; gap 13,475s; ~4h12m old), watchdog #42438566387 FAIL (02:26:41Z; gap 12,395s; ~98m old), recovery #42438384072 PASS (02:24:08Z; gap 12,313s; ~101m old). All are outside their 45m/75m freshness budgets at review.
+- Native TCE WF-06 #42432710149 remains FAIL (all four strict HTTP 200 probes returned 503); native WF-12 #42427247349 remains FAIL/stale. No newer native WF-06/WF-12 run exists in the latest 30 schedule events. The separate workflow_run recovery/watchdog successes are not native schedule evidence.
+- Stock scraper cron is `0 1 * * 0,6` UTC. The latest scheduled run is #42349150261 on 2026-11-07 06:56:29Z and failed closed because `VNSTOCK_API_KEY` was empty. No 2026-11-08 01:00Z scheduled run is present. The exact next action remains owner provision of the repository secret followed by `workflow_dispatch` with `preflight_only=true`; do not ingest until authenticated non-guest entitlement passes.
+- Authentication PR #75 head `a8e8a1d99e86a679b8d2ea7c7e7fa91302ffcc05` and #76 head `f19cacb0bf2b454b3152bd3a501f6f88d0a14a58` retain validation PASS and Supabase Preview SKIPPED. Their recorded base SHA `2189c97252bfe7ee53f50a68cf51008fa0d27c91` is behind current master; no rebase/merge is performed while migration and integration side effects remain unverified.
+- No new GHCR publisher run or digest-bound production handoff occurred. Stock CI's ARM64 builds use non-publishing mode; the immutable tag contract is merged but no new image has been published.
+- Latest formal K3s snapshot remains #42438528386 (02:26:17Z), approximately 98m old at review. It is too old to assert current pod/node health; a new read-only inspection is required. No dispatch-workflow action is available in the connected GitHub interface for this run, so no manual inspection was triggered.
+- No manifests, images, replicas, credentials, DNS, databases, storage, runner registrations, namespaces or host packages were changed. The TCE market-scan schedule is unchanged.
