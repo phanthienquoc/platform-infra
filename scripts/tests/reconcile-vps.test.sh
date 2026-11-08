@@ -30,7 +30,8 @@ cat > "$TMP/sha256sum" <<'SH'
 set -euo pipefail
 if [[ "${1:-}" == "--check" && "${2:-}" == "--status" ]]; then
   cat >/dev/null
-  exit 0
+  [[ "${SHA256_FAIL:-0}" != "1" ]]
+  exit $?
 fi
 exec /usr/bin/sha256sum "$@"
 SH
@@ -112,6 +113,11 @@ grep -Fq 'get namespace k3s-debug -o name' "$TMP/calls"
 grep -Fq 'get namespace microfe-platform -o name' "$TMP/calls"
 grep -Fq 'get namespace tce-prod -o name' "$TMP/calls"
 grep -Fq 'diff -k environments/prod' "$TMP/calls"
+assert_no_apply
+
+# A release asset checksum mismatch fails closed before any cluster read or mutation.
+if run_script plan SHA256_FAIL=1; then rc=0; else rc=$?; fi
+[[ "$rc" == "1" ]]
 assert_no_apply
 
 # Missing declared namespaces are reported as drift without being created.
