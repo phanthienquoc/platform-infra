@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: **2026-11-08 18:55 ICT / 11:55 UTC**
+Last reviewed: **2026-11-08 19:05 ICT / 12:05 UTC**
 
 This rolling tracker distinguishes native schedule events from manual, push, workflow_run and repository_dispatch fallbacks. Timestamped evidence is archived under `docs/cross-repo-deployment-checkpoints/`.
 
@@ -8,11 +8,11 @@ This rolling tracker distinguishes native schedule events from manual, push, wor
 
 | Repository | Master SHA | Open PRs | Readiness evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | a0c1e3ee6cf0cb3d9f168227e6fdfd1a6e5ebdfd | #1314/#544/#541/#539 (draft planning/docs) | PRs #1458/#1459/#1460 merged; current master validation #42475493117 PASS. #1458 adds paginated read-only Media runner registration guard; #1459 adds fresh read-only K3s snapshot; #1460 refreshes tracker/inventory/credentials. Reconciliation #42474936543 PASS with no drift/apply/promotion; inspection #42475079478 PASS. |
-| phanthienquoc/TCE-dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None | Native WF-06 #42458256899 failed four HTTP 503 probes; native WF-12 #42452308083 failed freshness; WF-07 integration #42453060493 PASS. WF-06/WF-12 have not produced newer native schedule runs. TCE/Auth remain intentional 0/0; no live health asserted. |
-| phanthienquoc/stockdividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | None | Master CI #42440810105 PASS 7/7, including non-publishing ARM64 build. Native scraper #42457182511 failed closed because `VNSTOCK_API_KEY` is missing. Legacy Admin and desired Backend remain ImagePullBackOff on `12d63b4` (no linux/arm64 manifest); older Backend/Frontend remain Running. No publisher run or digest handoff. |
-| phanthienquoc/media-generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | CI #42239703151 PASS. Inspection #42475079478 shows backend/frontend 1/1 and storage-clean in-cluster preflight; dedicated runner remains active/listening. PR #1458's remote runner-registration guard is merged, but `MEDIA_RUNNER_AUDIT_TOKEN`, external backup/retention and authoritative DNS evidence are not verified. No decommission. |
-| phanthienquoc/phanthienquoc-authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` | #75 ready, #76 draft | Master CI #42215394539 PASS; PR #75/#76 exact-head CI #40446492086/#41329425940 PASS, Supabase Preview skipped. PR #75 changes docs/tests only (no migration path in diff), but Supabase integration target and merge-trigger side effects remain unverified; do not merge. |
+| phanthienquoc/platform-infra | 25c5e390161c5410517f5360885281abd4c1ff49 | #1314/#544/#541/#539 (draft planning/docs) | PR #1461 merged at 25c5e390 after exact-head validation #42478273907 PASS; post-merge master validation #42478553173 PASS. PRs #1458/#1459/#1460 remain merged. Latest reconciliation #42474936543 PASS with no drift/apply/promotion; latest inspection #42475079478 PASS. |
+| phanthienquoc/TCE-dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None | Native WF-06 #42458256899 failed four HTTP 503 probes; native WF-12 #42452308083 failed freshness; WF-07 integration #42453060493 PASS. No newer native WF-06/WF-12 event. TCE/Auth remain intentional 0/0; no live health asserted. |
+| phanthienquoc/stockdividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | None | Master CI #42440810105 PASS 7/7, including non-publishing ARM64 build. Native scraper #42457182511 failed closed because `VNSTOCK_API_KEY` is empty; logs confirm dependency installation, entitlement check and ingestion were skipped. Legacy Admin and desired Backend remain ImagePullBackOff on `12d63b4` (no linux/arm64 manifest). |
+| phanthienquoc/media-generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | CI #42239703151 PASS. Inspection #42475079478 shows backend/frontend 1/1 and in-cluster storage preflight clean; dedicated runner remains active/listening. PR #1458's remote runner-registration guard is merged, but `MEDIA_RUNNER_AUDIT_TOKEN`, external backup/retention and authoritative DNS evidence remain unverified. |
+| phanthienquoc/phanthienquoc-authentication | `cb907a63df0e0441b54b7b930ecdbfa97a5e52e1` | #76 draft/open | PR #75 merged at `cb907a63` after exact-head CI #42478511082 PASS (validation + ARM64 non-publishing build; Supabase Preview skipped). Post-merge master CI #42478653766 is running. Supabase project remains ACTIVE_HEALTHY; 84/84 migration versions match repository; no migration count change observed after merge. PR #76 remains draft. |
 
 ## Current actions
 
@@ -394,3 +394,41 @@ Stock weekend scraper [#42457182511](https://github.com/phanthienquoc/stockdivid
 - Auth PR #75 changes only documentation and test files (no migration files in the PR diff), but Supabase GitHub integration target and merge-triggered production migration behavior remain unverified. PR #75 is not merged; #76 remains draft.
 - Media decommission remains blocked on secret configuration for `MEDIA_RUNNER_AUDIT_TOKEN`, remote runner absence, external backup/retention, authoritative DNS/provider ownership, and final approval. No runner stop/unregister or namespace deletion.
 - No production manifest mutation, workload scaling, GHCR publication/promotion, PVC/PV/namespace deletion, DNS/database/storage mutation, runner retirement or host maintenance occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only.
+
+
+## Latest execution update — 2026-11-08 19:05 ICT / 12:05 UTC
+
+### Changes merged this run
+
+- Platform PR [#1461](https://github.com/phanthienquoc/platform-infra/pull/1461) merged by squash at `25c5e390161c5410517f5360885281abd4c1ff49`. Exact-head validation #42478273907 PASS; post-merge `validate-manifests` #42478553173 PASS.
+- Authentication PR [#75](https://github.com/phanthienquoc/phanthienquoc-authentication/pull/75) merged by squash at `cb907a63df0e0441b54b7b930ecdbfa97a5e52e1`. Updated `AUTH-OPS-007` with current read-only Supabase migration parity and deployment-side-effect analysis. Exact-head run #42478511082 passed validation and native ARM64 non-publishing build; Supabase Preview was skipped. Post-merge Auth master CI #42478653766 is still running at this checkpoint. PR #76 remains draft.
+
+### Auth/Supabase merge-side-effect verification
+
+- Supabase project `gtqovpusfyyvxpeezxlo` remains `ACTIVE_HEALTHY`, PostgreSQL `17.6.1.084`, ap-southeast-1. Branch-list API reports default `main`, Git branch `master`, status `FUNCTIONS_DEPLOYED`.
+- Authentication `master:supabase/migrations` contains 84 SQL files; Supabase migration-list API returns 84 applied versions. Exact version/name comparison is 84/84 with no pending local migration and no applied version lacking a repository file.
+- Repository `supabase/` contains only `migrations/`; no `functions/`, `config.toml` or `seed.sql`. PR #75 changed docs/tests only. The earlier 2026-10-27 `MIGRATIONS_FAILED` observation is not reproduced by current project/branch metadata or migration parity.
+- Owner-provided Dashboard evidence still reports GitHub integration connected to this repository root, branch `master`, Deploy to production ON. Supabase docs state that each connected-branch commit runs the deployment DAG and applies only pending migrations, configured seed files and changed Edge Functions. For this merge, no pending migration, seed/config or Edge Function inputs were present. The migration ledger remained at 84 after merge and project status remained ACTIVE_HEALTHY on recheck.
+- The external GitHub integration's own deployment log is not exposed by the available read-only API. Therefore record no migration change observed, but do not claim the external integration run itself was independently inspected. Auth release workflow was not dispatched; no GHCR publication or Platform handoff occurred.
+
+### Latest schedule and runtime state
+
+| Workflow | Latest native evidence | Age at 12:05Z | Budget | Status |
+|---|---|---:|---:|---|
+| Platform reconcile | #42467231073, 09:27:03Z | ~158m | 45m | Failed on old cert-manager URL; no post-fix native run |
+| Platform inspection | #42452273701, 05:49:40Z | ~375m | 75m | PASS but stale |
+| Platform watchdog | #42467080859, 09:24:53Z | ~160m | 45m | FAIL |
+| Platform recovery | #42466737776, 09:20:06Z | ~165m | 45m | PASS but stale |
+| TCE WF-06 | #42458256899, 07:18:37Z | ~286m | 25m freshness | 4× HTTP 503 |
+| TCE WF-12 | #42452308083, 05:50:11Z | ~375m | 25m freshness | FAIL |
+| TCE WF-07 integration | #42453060493, 06:01:55Z | ~363m | workflow contract | PASS |
+| Stock scraper | #42457182511, 07:03:12Z | ~302m | scheduled run | Fail-closed: missing secret |
+
+No newer native Platform or TCE schedule event was returned. The latest successful Platform post-merge validation #42478553173 is a push event and is not native schedule evidence. Do not change cron or freshness budgets; TCE market-scan schedule remains unchanged.
+
+- Stock job log confirms `VNSTOCK_API_KEY` was empty. The preflight failed before Python setup, dependency installation, entitlement verification or ingestion. No data was ingested.
+- Latest read-only K3s inspection #42475079478 snapshot is 11:17:34Z, ~47m old at this review (within 75m age budget, but not native cadence acceptance). Node Ready/ARM64; disk 56% (~21 GiB free), RAM ~19 GiB available. Media backend/frontend and MicroFE Shell/WS/NATS 1/1; Stock Admin and desired Backend ImagePullBackOff on `12d63b4`; older Stock Backend/Frontend 1/1; TCE/Auth/Keycloak intentional 0/0.
+- Reconciliation #42474936543 and recovery #42475042844 PASS; GHCR access and Auth runtime Secret checks passed, shared `ghcr-pull` unchanged, no GitOps drift, manifest apply/image promotion/rollout skipped.
+- Media runner remains active; remote registration guard is merged, but token secret existence is unverified. External backup/retention and authoritative DNS evidence remain missing.
+
+No production manifest mutation, workload scaling, GHCR publication/promotion, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred in this update. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only.
