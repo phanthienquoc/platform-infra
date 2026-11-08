@@ -291,3 +291,52 @@ Preserve the existing separation: app repos own tests/builds/immutable GHCR publ
 - Media runner remains active/enabled/listener-present; remote audit token, external backup/retention and authoritative DNS ownership remain unverified. Decommission workflow remains manual-only and fail-closed.
 - Native Platform schedule history shows reconcile/recovery have each resumed once after multi-hour gaps; watchdog still correctly fails the historic inter-arrival budget, and native inspection remains stale. Require another within-budget native interval before declaring cadence recovered. TCE WF-06/WF-12 native runs remain stale.
 - No production manifest apply, image promotion, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred. No workflow removed; no direct SSH/Compose authority added; TCE market-scan schedule unchanged.
+
+
+## Latest cross-repo execution evidence — 2026-11-09 01:03 ICT / 18:03 UTC
+
+### Current repository heads and open PRs
+
+- Platform Infra master: b0f791422dc9fb5056a77b7dfbfb01deba36d6f2; inspection PR #1475 merged after exact-head validate-manifests #42507931004 passed. Open draft PRs #1314, #544, #541, #539 remain untouched.
+- TCE Dashboard master: 7ab52078c4250829e158f05b2695ceb9d11bdbe3; no open PR.
+- StockDividend master: e6469ac6617142b349144101a1192cb6aa7104ad; no open PR.
+- Media Generation master: 54f3a76a5f8861842fd1bae698c4cb0fa8c9034d; no open PR.
+- Authentication master: cb907a63df0e0441b54b7b930ecdbfa97a5e52e1; PR #76 remains draft.
+
+### Latest event evidence by owner
+
+| Owner | Latest relevant evidence | Result |
+|---|---|---|
+| Platform native reconcile | #42499043683 schedule | PASS; no drift |
+| Platform native inspection | #42483869620 schedule | PASS but stale; manual #42507763937 produced fresh snapshot |
+| Platform schedule watchdog | #42498640135 schedule | FAIL; historic inter-arrival gaps exceed budgets |
+| Platform recovery | #42498266478 schedule | PASS; stale at current checkpoint |
+| Platform manual reconcile | #42507600702 workflow_dispatch | PASS; GHCR/Auth Secret preflight, no drift, no apply/promotion/rollout |
+| TCE WF-06 | #42489680372 schedule; fallback #42507608317 workflow_dispatch | Both FAIL; four public endpoints return HTTP 503 |
+| TCE WF-12 | #42507582654 schedule | FAIL on WF-06 age 213m; heartbeat dispatch succeeded |
+| TCE WF-13 | #42507595891 workflow_run | PASS; dispatched read-only WF-06 fallback |
+| Stock scraper | #42457182511 schedule | FAIL closed; missing VNSTOCK_API_KEY |
+| Stock CI | #42440810105 push | PASS |
+| Media CI | #42239703151 push | PASS |
+| Auth CI | #42478653766 push | PASS |
+
+Platform receiver #42507589119 accepted and validated the TCE WF-12 heartbeat. It dispatched the existing reconciliation workflow with master ref, mode=apply, target_app=all and allow_image_changes=false. Reconciliation #42507600702 found no drift and skipped apply, promotion and rollout. This is runtime evidence for the heartbeat/recovery handoff, not evidence of native schedule cadence recovery.
+
+### Publisher and image evidence
+
+- Stock #41563856933 (2026-11-03) verified three ARM64 component digests for source 50ba0dfb67eb3dfaa376db0c752bbef5b0817bec; stale versus current master. Current 12d63b4 Admin/Backend tags fail ARM64 pulls; cached 23b2878 backend/user have blank RepoDigest.
+- Media #41158598649 (2026-10-31) published ARM64 images; prior Platform promotion #41158826992 failed GitOps master convergence. Current Media pods run pinned digests.
+- Auth #41040510320 (2026-10-30) published ARM64 image with digest; no new release handoff.
+- TCE: no new publisher run or digest handoff.
+
+### Runtime and ownership
+
+Latest read-only K3s snapshot is debug/vps-latest.md, generated 2026-11-08 18:00:37Z. Node Ready/ARM64; disk 56%, ~21 GiB free; available RAM ~19 GiB; restart_required=yes. Media/MicroFE active pods 1/1. Stock Admin×2 and new Backend are ImagePullBackOff on 12d63b4; legacy Backend and frontend/user 23b2878 remain 1/1. TCE/Auth/Keycloak are 0/0; public TCE/OIDC probes return 503. Media runner service/listener remain active. External backup/retention/DNS and MEDIA_RUNNER_AUDIT_TOKEN remain unverified.
+
+### Preservation rules
+
+- Keep app publication in app repos and production promotion/reconciliation in Platform Infra.
+- Keep reconcile-vps.yml as the only production apply authority and inspect-vps.yml read-only.
+- No image promotion, manifest apply, scaling, decommission, DNS/database/storage mutation, runner retirement or host maintenance in this execution.
+- No workflow deletion or direct SSH/Compose authority added.
+- TCE market-scan schedule unchanged.
