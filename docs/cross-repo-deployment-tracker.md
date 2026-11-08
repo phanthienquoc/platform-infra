@@ -1136,3 +1136,75 @@ Latest snapshot confirms:
 - Stock/Media decommission preflight reports `storage-clean`: no target PVC/PV claims or VolumeSnapshot references. The snapshot explicitly says DNS ownership is not inferred and GitHub runner registration is not inferred by host inspection. External backup/retention evidence remains outstanding.
 
 No decommission or host maintenance was performed. A fresh snapshot does not clear the runner, DNS or external-data gates.
+
+
+## Latest cross-repo execution — 2026-11-09 06:01 ICT / 2026-11-08 23:01 UTC
+
+### Repository heads and open pull requests
+
+| Repository | Current master | Open PRs / state |
+|---|---|---|
+| Platform Infra | `6fe49e88255d9bfa5f1511b5a2f0c9280178e6a2` | #1314, #544, #541, #539 remain draft/human-decision PRs; inspection PR #1486 merged |
+| TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None |
+| StockDividend | `4be26f41072ec8d749ea8b92f1a517c714d2a214` | #39 merged; #40 open, CI in progress |
+| Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None |
+| Authentication | `cb907a63df0e0441b54b7b930ecdbfa97a5e52e1` | #76 remains draft |
+
+Platform #1486 is the latest inspection-only commit. It merged at `6fe49e88255d9bfa5f1511b5a2f0c9280178e6a2`; no production manifest was changed. Existing Platform planning/architecture drafts were not promoted or merged.
+
+### Latest workflow and check evidence
+
+| Repository / workflow | Latest relevant run | Result and meaning |
+|---|---|---|
+| Platform native reconcile | #42521088881, 20:37:39Z | PASS, but 15,672s inter-arrival gap vs 2,700s budget |
+| Platform native inspection | #42530192980, 22:25:47Z | PASS; 14,280s gap vs 4,500s budget |
+| Platform native recovery | #42520213983, 20:27:31Z | PASS; 15,605s gap vs 2,700s budget |
+| Platform native watchdog | #42520452305, 20:30:24Z | FAIL; 15,517s gap vs 2,700s budget |
+| Platform manual reconciliation | #42530382496, 22:28:12Z | PASS; preflight and drift check passed, manifest apply/image promotion/rollout skipped |
+| Platform latest workflow_run | #42531502429, 22:41:43Z | SKIPPED; not native schedule evidence |
+| TCE WF-06 native | #42531446260, 22:41:01Z | FAIL; all four public endpoint jobs failed; logs confirm TCE web/API and Auth readiness HTTP 503 |
+| TCE WF-12 native | #42527713763, 21:56:51Z | FAIL; 14,317s inter-arrival gap vs 1,500s budget; heartbeat/recovery path is separate from native cadence |
+| TCE WF-07 native integration | #42528513790, 22:06:09Z | PASS |
+| StockDividend post-merge CI | #42533163812 | IN PROGRESS; four jobs passed, Scraper container and native ARM64 image builds still running at checkpoint |
+| StockDividend PR #40 CI | #42533247153 | IN PROGRESS; syntax and release-contract jobs passed; build jobs still running |
+| StockDividend scraper | #42457182511, 07:03:12Z | FAIL closed because `VNSTOCK_API_KEY` is absent; this is ingestion, not image publication |
+| Media Generation CI | #42239703151 | PASS; no new current-master publisher run |
+| Authentication CI | #42478653766 | PASS; no new release/digest handoff |
+
+The Platform watchdog log reports: reconcile 15,672s, inspection 14,280s, recovery 15,605s and watchdog 15,517s. Native cadence remains outside budget even though the latest inspection completed. Do not substitute workflow_dispatch/workflow_run/repository_dispatch events for native schedule acceptance. Do not change cron expressions or freshness budgets. TCE WF-06 and WF-12 gaps also remain outside budget.
+
+### StockDividend immutable publication contract
+
+- PR #39, `feat(release): prevent overwriting immutable GHCR source tags`, merged by squash at `4be26f41072ec8d749ea8b92f1a517c714d2a214` after all seven exact-head CI jobs passed on `0f7bdd38244e556a9989897830acbb7864e987cb`.
+- The publisher now checks all six full-SHA and version/full-SHA tags for Scraper/Admin/Backend before the first push, serializes by source SHA without cancelling an active publish, and keeps CI ARM64 builds non-publishing. This is workflow-level overwrite prevention, not GHCR server-side tag immutability; digest-pinned Platform promotion remains required.
+- Post-merge master CI #42533163812 was still running at this checkpoint; no production publication was triggered by the workflow/script-only change (publisher path filters exclude these paths).
+- Follow-up PR #40, head `78fe5bbffd97d999258df3a09a1e76c8d119e16b`, narrows missing-tag matching. It removes the unsafe generic `not found` match so ambiguous `repository not found` and HTTP 401 responses fail closed. PR CI #42533247153 was still running; do not merge until all required jobs pass on the current exact head.
+- No current-master registry publication/digest evidence was created by either PR. Manual publication remains gated by `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED`.
+
+### Latest K3s inspection — read-only
+
+Inspection #42530192980 completed successfully and generated `debug/vps-latest.md` at `2026-11-08T22:25:55Z`; inspection PR #1486 merged as Platform master `6fe49e88255d9bfa5f1511b5a2f0c9280178e6a2`.
+
+- Node `tce-k3s-01`: Ready/ARM64, K3s `v1.36.3+k3s1`, containerd `2.3.2-k3s2`; disk 56% (~21 GiB free), available RAM ~19 GiB, host uptime 191 days, `restart_required=yes`.
+- Media backend/frontend and MicroFE Shell/WS/NATS: 1/1 Running with registry digests.
+- Stock Admin ×2 and desired Backend on `12d63b4`: ImagePullBackOff/ErrImagePull; snapshot records no ARM64 match in registry manifests. Legacy Backend and Frontend remain 1/1 with RepoDigest.
+- TCE frontend/service, Auth and Keycloak remain 0/0 maintenance. Public TCE and OIDC probes return HTTP 503.
+- `stock-prod` and `media-prod` storage preflight is `storage-clean` (no target PVC/PV/VolumeSnapshot references), but both namespaces/workloads remain present.
+- Media runner service remains active/enabled and `Runner.Listener` is present. Host inspection does not prove remote GitHub runner registration; authoritative DNS ownership and external backup/retention remain unverified.
+
+### Reconciliation and preservation
+
+Manual reconciliation #42530382496 ran with `ref=master`, `mode=apply`, `target_app=all`, `allow_image_changes=false`. Logs verify GHCR read access for Auth, MicroFE Shell/WS and TCE packages; Auth runtime Secret was provisioned/verified with values suppressed; shared `ghcr-pull` remained unchanged; drift was false; manifest apply, image promotion and rollout were skipped. Auth's zero-replica maintenance lane was explicitly not asserted healthy; Keycloak lane was skipped.
+
+App repositories continue to own tests/builds and immutable GHCR publication. Platform Infra remains the sole owner of production manifests, shared pull credentials, source/digest verification, GitOps promotion/reconciliation, rollout and health verification. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only.
+
+### Exact next actions
+
+1. Wait for post-merge Stock CI #42533163812 and PR #40 CI #42533247153; merge #40 only after verifying the exact current head and every required check.
+2. Stock owner: provide `VNSTOCK_API_KEY`, run safe scraper preflight, and separately approve a current-source ARM64 publication. Do not treat the scraper key as a publisher credential.
+3. GitHub administrator: investigate native schedule delivery/cadence; require consecutive within-budget native runs without changing cron or budgets.
+4. TCE/Auth service owners: approve or reject a documented activation/recovery plan and rollback before any replica restoration.
+5. Media owner/operator: stop/disable/unregister the Media runner and provide remote audit, external backup/retention and authoritative DNS ownership evidence before protected decommission.
+6. Platform operator: plan host maintenance separately; no unattended reboot or package/containerd upgrade.
+
+No image promotion, manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred in this execution. The authorized reconciliation did provision/verify the Auth runtime Secret; shared `ghcr-pull` was unchanged. No workflow was removed and no direct SSH/Compose production authority was added. TCE market-scan schedule unchanged.

@@ -422,3 +422,23 @@ Preserve app-owned tests/builds/immutable GHCR publication and Platform-owned pr
 ## Inspection completion — 2026-11-09 05:01 ICT
 
 Recovery-driven inspection #42527885366 completed successfully. PR #1484 was merged at `da24edc6019ac18be2f298eed06803848362aa68`; validation #42528039006 passed. The committed snapshot generated at 21:59:12Z is fresh. It confirms the K3s node Ready, Media/MicroFE 1/1, Stock Admin×2 plus desired Backend still failing image pulls, TCE/Auth/Keycloak 0/0, Media runner active/enabled/listener-present, and Stock/Media storage preflight `storage-clean`. DNS ownership and remote runner registration are not inferred; external backup/retention remains unverified. Manual inspection is not native schedule acceptance.
+
+
+## Cross-repo contract refresh — 2026-11-09 06:01 ICT
+
+### Current ownership and publication state
+
+- App repositories retain tests, builds and immutable GHCR publication; Platform Infra alone retains production manifests, shared GHCR pull credentials, digest/source verification, GitOps promotion/reconciliation, rollout and health verification.
+- StockDividend PR #39 merged at `4be26f41072ec8d749ea8b92f1a517c714d2a214`. Its publisher performs a six-tag absence preflight (full source SHA + version/source SHA for scraper/admin/backend) before any push and serializes per source SHA. The publisher workflow still uses native ARM64 builds and registry digest verification. This is a workflow-level overwrite guard, not registry-side immutable-tag enforcement.
+- StockDividend PR #40 is open at `78fe5bbffd97d999258df3a09a1e76c8d119e16b`. It removes the broad generic `not found` matcher and adds HTTP 401 plus ambiguous repository-not-found negative tests. Do not merge until exact-head CI is fully green.
+- Stock publisher workflow path filters exclude workflow/script-only changes; PR #39 merge triggered CI #42533163812, not production image publication. Manual release remains explicitly gated by `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED`.
+- Stock scraper `VNSTOCK_API_KEY` is a separate ingestion credential. Missing key blocks scraper preflight only; it must not be used as an image-publisher credential.
+
+### Schedule and runtime ownership evidence
+
+- Native Platform reconcile/inspection/recovery/watchdog latest runs are #42521088881/#42530192980/#42520213983/#42520452305. Their observed gaps (15,672s/14,280s/15,605s/15,517s) exceed their existing budgets (2,700s/4,500s/2,700s/2,700s). Watchdog correctly fails; no cron/budget change is authorized.
+- TCE native WF-06 #42531446260 and WF-12 #42527713763 remain outside the 1,500s cadence budget and fail. WF-06 logs show public HTTP 503s. WF-07 integration #42528513790 passes.
+- Latest K3s inspection #42530192980 is read-only. Media/MicroFE active pods are 1/1 with registry digests; Stock desired Admin×2/Backend image `12d63b4` fails ARM64 manifest pulls; TCE/Auth/Keycloak remain 0/0 maintenance. Media runner remains active/enabled/listener-present. Stock/Media storage preflight is clean, but external data retention, DNS ownership and remote runner registration are not established.
+- Manual reconciliation #42530382496 verified GHCR access and Auth runtime Secret, left shared `ghcr-pull` unchanged, found no drift and skipped manifest apply, promotion and rollout. Zero-replica Auth is not counted as live health.
+
+Preserve purposeful CI, security, manual/release and scheduled workflows. Do not remove jobs solely because they are not part of the production apply path. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose production authority. TCE market-scan schedule unchanged.
