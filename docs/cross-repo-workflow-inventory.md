@@ -182,3 +182,31 @@ Only original `event=schedule`, master, attempt 1, exact workflow path and full 
 - K3s inspection #42475079478 is ~47m old and within its snapshot age budget; workload state remains Media/MicroFE 1/1, Stock Admin/desired Backend ImagePullBackOff, TCE/Auth/Keycloak 0/0. No decommission or rollout change.
 - Reconciliation #42474936543 and recovery #42475042844 passed with no drift, no manifest apply and no image promotion. No new app publisher or digest handoff.
 - Media runner remains active; decommission waits for audit token, external backup/retention and DNS ownership. Keep app-owned publishing and Platform-only production apply boundaries.
+
+
+## Latest cross-repo execution — 2026-11-08 20:01 ICT / 13:01 UTC
+
+### Current repository and workflow state
+
+| Repository | Master SHA | Open PRs | Latest relevant evidence |
+|---|---|---|---|
+| Platform Infra | `192187fffb416dba326055c1a729510d48cb612a` | #1314/#544/#541/#539 (draft) | validate-manifests #42478871584 PASS; heartbeat receiver #42479344664 failed on GitHub API 500 |
+| TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None | WF-12 #42479336350 schedule/FAIL; WF-13 #42479348862 PASS; fallback WF-06 #42479362379 FAIL 4×503 |
+| StockDividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | None | scraper #42457182511 fail-closed on missing `VNSTOCK_API_KEY`; CI #42440810105 PASS/non-publishing |
+| Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | CI #42239703151 PASS; no new publisher run |
+| Authentication | `cb907a63df0e0441b54b7b930ecdbfa97a5e52e1` | #76 draft | master CI #42478653766 PASS |
+
+### Schedule, heartbeat and service health
+
+- Platform native schedule latest evidence: reconcile #42467231073 FAIL (09:27:03Z); inspection #42452273701 PASS (05:49:40Z); watchdog #42467080859 FAIL (09:24:53Z); recovery #42466737776 PASS (09:20:06Z). All are stale against 45/75/45/45-minute budgets. No newer native schedule event appeared in the paged Actions history.
+- TCE WF-12 #42479336350 ran on native schedule and correctly detected stale WF-06. Its authenticated Platform heartbeat dispatch was accepted. WF-13 #42479348862 then dispatched one deduplicated read-only WF-06 fallback, correlated to exact master SHA. Fallback #42479362379 returned 503 for TCE web, TCE API, Auth liveness and Auth readiness.
+- Platform receiver #42479344664 could not complete the source-run API lookup: repeated HTTP 500 from the public GitHub Actions run endpoint. It failed closed before source reconciliation/freshness recovery. Rerun attempt 2 was skipped by the first-attempt-only guard.
+- A bounded retry change is proposed in branch `fix/retry-transient-tce-heartbeat-api-500-20261108-2001-ict`: four retries, 45-second retry window, 15-second request timeout and connection-refused retry; permanent 4xx remain fail-closed. No payload identity, permissions, cron, freshness budget or production authority change.
+- Stock scheduled scraper ran and failed closed before ingestion because `VNSTOCK_API_KEY` is missing. No new immutable GHCR publisher/digest evidence exists for Stock, TCE, Media or Auth in this review.
+
+### Runtime/deployment boundary
+
+- Latest K3s snapshot #42475079478 is older than the 75-minute snapshot-age budget at this checkpoint; no current health claim should be derived from it. Last recorded workloads: Media backend/frontend and MicroFE Shell/WS/NATS 1/1; Stock Admin and desired Backend ImagePullBackOff on `12d63b4` due missing ARM64 manifest; TCE/Auth/Keycloak intentional 0/0.
+- Reconciliation #42474936543 passed GHCR access and Auth runtime Secret checks, left shared `ghcr-pull` unchanged, found no GitOps drift and skipped apply/promotion/rollout.
+- `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE/Stock/Media/Auth app repositories own tests/builds and immutable image publication; Platform owns production manifests, shared pull credentials, GitOps promotion/reconciliation, rollout and health verification.
+- Preserve useful CI/security/test workflows and purposeful manual/release/scheduled jobs. No workflow was removed. No production mutation, scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred. TCE market-scan schedule unchanged.
