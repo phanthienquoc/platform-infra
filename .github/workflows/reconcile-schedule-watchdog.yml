@@ -552,7 +552,7 @@ jobs:
               -f event=schedule \
               -f branch=master \
               -F per_page=100 2>&1)"; then
-              if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+              if (( ${#warn_args[@]} > 0 )); then
                 echo "::warning::Unable to query native schedule history for ${workflow_file}: ${response}"
               else
                 echo "::error::Unable to query native schedule history for ${workflow_file}: ${response}"
