@@ -381,3 +381,20 @@ App repositories retain tests/builds and immutable GHCR publication. Platform In
 - PR #1481 merged the fresh read-only K3s inspection snapshot at `5197840226b49d790cb99c4caeb8377526e6fed8`; exact inspection validation #42519280294 passed.
 - The #1479 push initially matched the recovery `scripts/**` path and caused a recovery-dispatched reconciliation. That run found `drift=false`, kept `ghcr-pull` unchanged, skipped manifest apply/promotion/rollout, and did not scale TCE/Auth. PR #1480 closes this routing gap for future read-only helper changes.
 - Native schedule gaps remain outside the existing budgets; manual inspections and workflow_run/repository_dispatch recoveries are not counted as native schedule evidence. Cron, freshness budgets and TCE market-scan schedule remain unchanged.
+
+
+## Latest observed workflow ownership and run state — 2026-11-09 03:56 ICT
+
+| Repository | Master SHA | Latest relevant workflow evidence | Open PRs |
+|---|---|---|---|
+| Platform Infra | `0c29f9c38964d6e78ac0295a0073bf571b62116f` | Reconcile schedule #42521088881 PASS; watchdog workflow_run #42521222353 FAIL on stale inspection/inter-arrival gaps; recovery #42521222393 PASS | #1314/#544/#541/#539 (draft) |
+| TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | WF-06 schedule #42512468931 FAIL; manual fallback #42512497073 confirms four HTTP 503 endpoints; WF-12 #42507582654 FAIL stale | None |
+| StockDividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | CI #42440810105 PASS; scraper #42457182511 fail-closed on missing `VNSTOCK_API_KEY`; deploy.yml has ARM64 immutable publisher and manual gate `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED` | None |
+| Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | CI #42239703151 PASS; no new current-master publisher run | None |
+| Authentication | `cb907a63df0e0441b54b7b930ecdbfa97a5e52e1` | CI #42478653766 PASS; no new release/promotion evidence | #76 draft |
+
+Platform native cadence gaps from watchdog #42521222353: reconcile 15,672s/2,700s; inspection 18,901s/4,500s; recovery 15,605s/2,700s; watchdog 15,517s/2,700s. TCE WF-06/WF-12 gaps: 16,293s and 20,594s against 1,500s. Recovery delivery/result verification passed. Manual/workflow_run events are not native schedule acceptance.
+
+Stock publication boundary: master pushes can publish immutable ARM64 artifacts without a Platform handoff when the manual-release variable is false; manual dispatch is blocked unless `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=true`. `VNSTOCK_API_KEY` is a scraper-ingestion prerequisite, not the image publisher credential. No secret/variable was modified and no manual publication was attempted.
+
+Latest committed K3s snapshot remains PR #1481, generated 20:14:51Z; it is manual and therefore not native cadence evidence. Stock desired ARM64 images remain failing; Media runner remains active/listener-present; external backup/DNS and runner audit prerequisites remain unverified. TCE/Auth/Keycloak remain 0/0 maintenance. No production mutation or workflow deletion occurred. App repos own tests/builds/immutable GHCR publication; Platform Infra alone owns production manifests, shared pull credentials, digest/source verification, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only. No SSH/Compose authority added; TCE market-scan schedule unchanged.
