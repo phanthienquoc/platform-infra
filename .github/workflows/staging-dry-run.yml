@@ -31,6 +31,11 @@ jobs:
           test -x /usr/local/sbin/platform-kubectl
           sudo /usr/local/sbin/platform-kubectl version
 
+      - name: Prepare checksum-verified cert-manager release
+        run: |
+          set -euo pipefail
+          bash scripts/prepare-cert-manager-manifest.sh "$GITHUB_WORKSPACE/platform/cert-manager/cert-manager.yaml"
+
       - name: Render production manifests locally
         run: |
           set -euo pipefail
@@ -72,6 +77,20 @@ jobs:
               exit "$rc"
               ;;
           esac
+
+      - name: Clean up checksum-verified cert-manager release
+        if: always()
+        run: |
+          set -euo pipefail
+          manifest="platform/cert-manager/cert-manager.yaml"
+          expected_sha256="5f6a499b8c1857d57f560f536e0dcc830914b45c420899fe7ad0692c8624e408"
+          if [[ -f "$manifest" ]]; then
+            printf '%s  %s\n' "$expected_sha256" "$manifest" | sha256sum --check --status || {
+              echo "::error::Refusing to remove an unexpected cert-manager manifest artifact."
+              exit 1
+            }
+            rm -f "$manifest"
+          fi
 
       - name: Publish dry-run summary
         env:

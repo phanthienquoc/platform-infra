@@ -82,8 +82,26 @@ jobs:
             bash -n "$script"
           done < <(find scripts -type f -name '*.sh' -print | sort)
 
+      - name: Validate pinned cert-manager bootstrap contract
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/validate-cert-manager-bootstrap-contract.py
+          python3 scripts/validate-cert-manager-bootstrap-contract.py --self-test
+
       - name: Render production manifests
-        run: kubectl kustomize environments/prod > /tmp/platform-infra-rendered.yaml
+        run: |
+          set -euo pipefail
+          manifest="platform/cert-manager/cert-manager.yaml"
+          prepared=false
+          cleanup() {
+            if [[ "$prepared" == true ]]; then
+              rm -f "$manifest"
+            fi
+          }
+          trap cleanup EXIT
+          bash scripts/prepare-cert-manager-manifest.sh "$GITHUB_WORKSPACE/$manifest"
+          prepared=true
+          kubectl kustomize environments/prod > /tmp/platform-infra-rendered.yaml
 
       - name: Validate Auth GitOps contract validator
         run: |

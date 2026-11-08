@@ -11,6 +11,31 @@ set -euo pipefail
 exec "$@"
 SH
 
+cat > "$TMP/curl" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+output=""
+while (($#)); do
+  case "$1" in
+    --output) output="$2"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+[[ -n "$output" ]] || { echo "fake curl requires --output" >&2; exit 2; }
+printf 'apiVersion: v1\nkind: Namespace\nmetadata:\n  name: cert-manager\n' > "$output"
+SH
+
+cat > "$TMP/sha256sum" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ "${1:-}" == "--check" && "${2:-}" == "--status" ]]; then
+  cat >/dev/null
+  [[ "${SHA256_FAIL:-0}" != "1" ]]
+  exit $?
+fi
+exec /usr/bin/sha256sum "$@"
+SH
+
 cat > "$TMP/platform-kubectl" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -42,19 +67,25 @@ echo "Unexpected fake platform-kubectl invocation: $*" >&2
 exit 64
 SH
 
-chmod +x "$TMP/sudo" "$TMP/platform-kubectl"
+chmod +x "$TMP/sudo" "$TMP/curl" "$TMP/sha256sum" "$TMP/platform-kubectl"
 
 run_script() {
   local mode="$1"
   shift
   : > "$TMP/calls"
+  local rc=0
   env \
     PATH="$TMP:$PATH" \
     PLATFORM_KUBECTL_BIN="$TMP/platform-kubectl" \
     CALL_LOG="$TMP/calls" \
     GITHUB_WORKSPACE="$ROOT" \
     "$@" \
-    bash "$ROOT/scripts/reconcile-vps.sh" "$mode"
+    bash "$ROOT/scripts/reconcile-vps.sh" "$mode" || rc=$?
+  if [[ -e "$ROOT/platform/cert-manager/cert-manager.yaml" ]]; then
+    echo "Generated cert-manager manifest was not cleaned up after reconciliation." >&2
+    return 1
+  fi
+  return "$rc"
 }
 
 assert_no_apply() {
@@ -82,6 +113,11 @@ grep -Fq 'get namespace k3s-debug -o name' "$TMP/calls"
 grep -Fq 'get namespace microfe-platform -o name' "$TMP/calls"
 grep -Fq 'get namespace tce-prod -o name' "$TMP/calls"
 grep -Fq 'diff -k environments/prod' "$TMP/calls"
+assert_no_apply
+
+# A release asset checksum mismatch fails closed before any cluster read or mutation.
+if run_script plan SHA256_FAIL=1; then rc=0; else rc=$?; fi
+[[ "$rc" == "1" ]]
 assert_no_apply
 
 # Missing declared namespaces are reported as drift without being created.

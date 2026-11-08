@@ -8,4 +8,13 @@ Kubernetes resources live here. Application repositories own source, Dockerfiles
 
 Production entrypoint: environments/prod.
 
-Static verification: kubectl kustomize environments/prod and kubectl apply --dry-run=client against the rendered output.
+The cert-manager controller/CRD bundle is a pinned GitHub Release asset, not a Kustomize Git base. Before rendering the production entrypoint locally, prepare the checksum-verified asset and remove it afterward:
+
+```bash
+manifest="$PWD/platform/cert-manager/cert-manager.yaml"
+trap 'rm -f "$manifest"' EXIT
+bash scripts/prepare-cert-manager-manifest.sh "$manifest"
+kubectl kustomize environments/prod
+```
+
+The preparation script pins cert-manager v1.21.1 and its release-asset SHA-256. The production reconciliation workflow uses the same helper and remains the only production apply authority.

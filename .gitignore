@@ -6,3 +6,4 @@ kubeconfig*
 *.pem
 *.key
 .DS_Store
+platform/cert-manager/cert-manager.yaml

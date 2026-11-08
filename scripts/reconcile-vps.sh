@@ -4,8 +4,22 @@ set -euo pipefail
 MODE="${1:-plan}"
 ROOT="${GITHUB_WORKSPACE:-$(pwd)}"
 KUBECTL_BIN="${PLATFORM_KUBECTL_BIN:-/usr/local/sbin/platform-kubectl}"
+CERT_MANAGER_MANIFEST_FILE="$ROOT/platform/cert-manager/cert-manager.yaml"
+CERT_MANAGER_MANIFEST_PREPARED=false
 
 cd "$ROOT"
+
+cleanup() {
+  if [[ "$CERT_MANAGER_MANIFEST_PREPARED" == true ]]; then
+    rm -f "$CERT_MANAGER_MANIFEST_FILE"
+  fi
+}
+trap cleanup EXIT
+
+prepare_cert_manager_manifest() {
+  bash scripts/prepare-cert-manager-manifest.sh "$CERT_MANAGER_MANIFEST_FILE"
+  CERT_MANAGER_MANIFEST_PREPARED=true
+}
 
 run_kubectl() {
   sudo "$KUBECTL_BIN" "$@"
@@ -16,6 +30,14 @@ run_diff() {
   local required_namespaces=(k3s-debug microfe-platform tce-prod)
   local missing_namespaces=()
 
+  [[ -s "$CERT_MANAGER_MANIFEST_FILE" ]] || {
+    echo "Verified cert-manager release manifest is unavailable; refusing to diff." >&2
+    return 2
+  }
+
+  # The checksum-verified release is materialized at the local Kustomize path.
+  # Both diff and apply continue through the existing restricted platform-kubectl
+  # wrapper and the single environments/prod GitOps authority.
   # kubectl diff cannot reliably inspect namespaced objects before their
   # declaratively-managed Namespace resources exist. Check those prerequisites
   # without creating anything; a missing Namespace is desired-state drift.
@@ -59,10 +81,12 @@ run_diff() {
 
 case "$MODE" in
   plan)
+    prepare_cert_manager_manifest
     echo "== Read-only Kubernetes diff =="
     run_diff
     ;;
   apply)
+    prepare_cert_manager_manifest
     echo "== Preflight read-only Kubernetes diff =="
     set +e
     run_diff
@@ -83,7 +107,7 @@ case "$MODE" in
         ;;
     esac
 
-    echo "== Applying environments/prod =="
+    echo "== Applying checksum-verified cert-manager release and production manifests =="
     run_kubectl apply -k environments/prod
 
     echo "Manifest reconciliation completed successfully."

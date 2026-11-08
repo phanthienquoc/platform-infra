@@ -140,7 +140,7 @@ flowchart LR
 
 - Application repos own source, tests and image builds.
 - `platform-infra` owns Kubernetes manifests, production Kustomize overlays, image promotion and rollout/health verification.
-- The declared production composition is `environments/prod/kustomization.yaml`, including Keycloak/auth platform resources, StockDividend, TCE and Media Generation.
+- The declared production composition is `environments/prod/kustomization.yaml`, including Keycloak/auth platform resources and TCE. StockDividend and Media Generation are retired from this Platform K3s footprint.
 - The generic release contract requires verification before publishing, immutable tags, GitOps promotion, then K3s reconciliation and health checks. Never treat a GitHub image publish as proof of successful rollout.
 
 ## 6. Secret and trust boundaries
@@ -162,7 +162,7 @@ This diagram intentionally separates declared design from runtime facts. The fol
 2. Provision/verify exact OIDC clients and callback URLs for TCE and StockDividend; use authorization code + PKCE for browser clients.
 3. Prove token validation at every protected API: signature/JWKS, issuer, audience, expiry, role mapping, logout/session semantics.
 4. Confirm the Keycloak runtime DB password secret is provisioned without printing its value; validate the connection over TLS and bounded pooler configuration.
-5. Render `kubectl kustomize environments/prod` and compare output image references against GitOps intent; validate live namespaces, pods, ingress, certificates and endpoints.
+5. Prepare the checksum-pinned cert-manager release asset with `bash scripts/prepare-cert-manager-manifest.sh "$PWD/platform/cert-manager/cert-manager.yaml"`, render `kubectl kustomize environments/prod`, and compare image references against GitOps intent; validate live namespaces, pods, ingress, certificates and endpoints. Remove the generated asset after the review.
 6. Confirm StockDividend scraper scheduling and the current status of migration execution separately; do not infer these from the application README.
 7. Run end-to-end login and authorization tests for both applications in a non-production flow before any client traffic cutover.
 

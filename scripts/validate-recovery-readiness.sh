@@ -5,7 +5,23 @@ set -euo pipefail
 # This validates that GitOps state can be reconstructed and that current workloads
 # retain rollback history without executing rollback/apply operations.
 
-KUBECTL="${KUBECTL:-sudo /usr/local/sbin/platform-kubectl}"
+ROOT="${GITHUB_WORKSPACE:-$(pwd)}"
+cd "$ROOT"
+CERT_MANAGER_MANIFEST_FILE="$ROOT/platform/cert-manager/cert-manager.yaml"
+CERT_MANAGER_MANIFEST_PREPARED=false
+cleanup() {
+  if [[ "$CERT_MANAGER_MANIFEST_PREPARED" == true ]]; then
+    rm -f "$CERT_MANAGER_MANIFEST_FILE"
+  fi
+}
+trap cleanup EXIT
+bash scripts/prepare-cert-manager-manifest.sh "$CERT_MANAGER_MANIFEST_FILE"
+CERT_MANAGER_MANIFEST_PREPARED=true
+
+# This helper is read-only: direct K3s kubectl is used only for render,
+# server-side dry-run, get and rollout-history inspection. Production mutation
+# remains restricted to reconcile-vps.yml through platform-kubectl.
+KUBECTL="${KUBECTL:-sudo /usr/local/bin/k3s kubectl}"
 
 run_kubectl() {
   # shellcheck disable=SC2086

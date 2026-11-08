@@ -1,8 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
+ROOT="${GITHUB_WORKSPACE:-$(pwd)}"
+cd "$ROOT"
 OUT="${1:-debug/vps-latest.md}"
 mkdir -p "$(dirname "$OUT")"
 KCTL=/usr/local/sbin/platform-kubectl
+CERT_MANAGER_MANIFEST_FILE="$ROOT/platform/cert-manager/cert-manager.yaml"
+CERT_MANAGER_MANIFEST_PREPARED=false
+cleanup() {
+  if [[ "$CERT_MANAGER_MANIFEST_PREPARED" == true ]]; then
+    rm -f "$CERT_MANAGER_MANIFEST_FILE"
+  fi
+}
+trap cleanup EXIT
 CRI=/usr/local/sbin/platform-crictl
 {
   echo "# VPS inspection"; echo; echo "Generated: $(date -Is)"; echo
@@ -103,7 +113,16 @@ CRI=/usr/local/sbin/platform-crictl
   jq -r '.images[:100][]? | [((.repoTags // []) | join(",")), ((.repoDigests // []) | join(",")), (.id // ""), (.pinned // false | tostring), (.size // 0 | tostring)] | @tsv' <<< "$images_json"
   echo "Containers (container ID, name, image reference, state):"
   jq -r '.containers[:100][]? | [(.id // ""), (.metadata.name // ""), (.imageRef // ""), (.state // "")] | @tsv' <<< "$containers_json"
-  echo; echo "### GitOps drift"; set +e; sudo "$KCTL" diff -k environments/prod >/dev/null 2>&1; drift_rc=$?; set -e
+  echo; echo "### GitOps drift"
+  if bash scripts/prepare-cert-manager-manifest.sh "$CERT_MANAGER_MANIFEST_FILE"; then
+    CERT_MANAGER_MANIFEST_PREPARED=true
+    set +e
+    sudo "$KCTL" diff -k environments/prod >/dev/null 2>&1
+    drift_rc=$?
+    set -e
+  else
+    drift_rc=2
+  fi
   case "$drift_rc" in 0) echo "status: clean";; 1) echo "status: drift-detected";; *) echo "status: diff-error"; echo "exit_code: $drift_rc";; esac
   echo; echo "### Images"; sudo "$KCTL" get deployments -A -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,IMAGES:.spec.template.spec.containers[*].image' --no-headers 2>/dev/null || true
   sudo "$KCTL" get services -A || true; sudo "$KCTL" get ingress -A || true
