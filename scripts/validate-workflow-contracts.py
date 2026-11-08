@@ -543,6 +543,19 @@ for required in ("### Pod imageID evidence", "containerStatuses", "initContainer
     if required not in inspection_script:
         fail(f"VPS inspection is missing runtime image identity evidence: {required}")
 
+# The read-only CRI inventory must distinguish a local GHCR cache tag from a
+# registry-resolved digest. A local image ID is never promotion evidence.
+for required in (
+    'echo; echo "### GHCR image digest coverage"',
+    'select(any((.repoTags // [])[]?; startswith("ghcr.io/")))',
+    'select((.repoDigests // []) | length == 0)',
+    "local image IDs are not registry digests or promotion evidence",
+):
+    if required not in inspection_script:
+        fail(f"VPS inspection is missing GHCR cache digest evidence: {required}")
+if 'grep -q "^### GHCR image digest coverage$"' not in inspection:
+    fail("inspect-vps output validation must require the GHCR digest coverage section.")
+
 # The fresh VPS snapshot must expose the installed allowlisted runner policy.
 for required in ('sudo "$KCTL" policy-version', "runner_policy:"):
     if required not in inspection_script:

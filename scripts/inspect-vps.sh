@@ -111,6 +111,22 @@ CRI=/usr/local/sbin/platform-crictl
   jq -e '.containers | type == "array"' <<< "$containers_json" >/dev/null
   echo "Images (repo tags, repo digests, image ID, pinned, size bytes):"
   jq -r '.images[:100][]? | [((.repoTags // []) | join(",")), ((.repoDigests // []) | join(",")), (.id // ""), (.pinned // false | tostring), (.size // 0 | tostring)] | @tsv' <<< "$images_json"
+  echo; echo "### GHCR image digest coverage"
+  ghcr_without_repo_digest="$(
+    jq -r '
+      .images[]?
+      | select(any((.repoTags // [])[]?; startswith("ghcr.io/")))
+      | select((.repoDigests // []) | length == 0)
+      | (.repoTags // [] | map(select(startswith("ghcr.io/"))) | join(","))
+    ' <<< "$images_json"
+  )"
+  if [[ -n "$ghcr_without_repo_digest" ]]; then
+    echo "status: warning"
+    echo "GHCR-tagged cached image(s) have no RepoDigest; local image IDs are not registry digests or promotion evidence:"
+    printf '%s\n' "$ghcr_without_repo_digest"
+  else
+    echo "status: all cached GHCR-tagged images have RepoDigest"
+  fi
   echo "Containers (container ID, name, image reference, state):"
   jq -r '.containers[:100][]? | [(.id // ""), (.metadata.name // ""), (.imageRef // ""), (.state // "")] | @tsv' <<< "$containers_json"
   echo; echo "### Stock/Media protected decommission preflight (read-only)"
