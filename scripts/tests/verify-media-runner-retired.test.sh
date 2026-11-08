@@ -69,15 +69,15 @@ fi
 case "$url" in
   *"page=1")
     if [[ "${MOCK_API_PAGINATION:-0}" == "1" ]]; then
-      printf '%s\\n' '{"total_count":101,"runners":[]}'
+      printf '%s\n' '{"total_count":101,"runners":[]}'
     elif [[ "${MOCK_API_RUNNER_PRESENT:-0}" == "1" ]]; then
-      printf '%s\\n' '{"total_count":1,"runners":[{"id":42,"name":"media-generation-k3s-01","status":"offline","busy":false}]}'
+      printf '%s\n' '{"total_count":1,"runners":[{"id":42,"name":"media-generation-k3s-01","status":"offline","busy":false}]}'
     else
-      printf '%s\\n' '{"total_count":0,"runners":[]}'
+      printf '%s\n' '{"total_count":0,"runners":[]}'
     fi
     ;;
   *"page=2")
-    printf '%s\\n' '{"total_count":101,"runners":[{"id":42,"name":"media-generation-k3s-01","status":"offline","busy":false}]}'
+    printf '%s\n' '{"total_count":101,"runners":[{"id":42,"name":"media-generation-k3s-01","status":"offline","busy":false}]}'
     ;;
   *)
     echo "Unexpected runner API URL: $url" >&2
