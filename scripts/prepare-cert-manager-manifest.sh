@@ -15,7 +15,11 @@ if [[ "$DEST" != "$EXPECTED_DEST" ]]; then
   exit 2
 fi
 if [[ -e "$DEST" ]]; then
-  echo "Refusing to overwrite an existing cert-manager manifest: $DEST" >&2
+  if printf '%s  %s\n' "$CERT_MANAGER_MANIFEST_SHA256" "$DEST" | sha256sum --check --status; then
+    echo "Existing cert-manager manifest already matches the pinned release digest."
+    exit 0
+  fi
+  echo "Refusing to overwrite an existing cert-manager manifest with an unexpected digest: $DEST" >&2
   exit 2
 fi
 
