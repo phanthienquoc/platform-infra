@@ -92,8 +92,15 @@ jobs:
         run: |
           set -euo pipefail
           manifest="platform/cert-manager/cert-manager.yaml"
-          trap 'rm -f "$manifest"' EXIT
+          prepared=false
+          cleanup() {
+            if [[ "$prepared" == true ]]; then
+              rm -f "$manifest"
+            fi
+          }
+          trap cleanup EXIT
           bash scripts/prepare-cert-manager-manifest.sh "$GITHUB_WORKSPACE/$manifest"
+          prepared=true
           kubectl kustomize environments/prod > /tmp/platform-infra-rendered.yaml
 
       - name: Validate Auth GitOps contract validator
