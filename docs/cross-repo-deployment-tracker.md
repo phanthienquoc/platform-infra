@@ -460,3 +460,22 @@ No production manifest mutation, workload scaling, GHCR publication/promotion, n
 - Static publisher/receiver review: TCE WF-03 and Auth release are manual app-owned ARM64 publishers with full-SHA-bound tags and digest verification before digest-bound Platform events; Stock deploy verifies full-SHA and version+SHA tags for Scraper/Admin/Backend but has no active Platform handoff while retired; Media WF-03 verifies ARM64 release digest and intentionally sends no Platform handoff while retired. Platform receiver verifies TCE/Auth source run identity, tag-to-digest mapping and ARM64 before GitOps promotion. No new publisher run or actual GHCR digest handoff was observed.
 - Stock scraper #42457182511 remains fail-closed due missing `VNSTOCK_API_KEY`; Auth master CI #42478653766 PASS and PR #76 remains draft. Media CI #42239703151 PASS.
 - No production manifest apply, image promotion, workload scaling, decommission, DNS/database/storage mutation, runner retirement or host maintenance occurred. TCE market-scan schedule unchanged.
+
+## Completed K3s inspection follow-up — 2026-11-08 20:15 ICT / 13:15 UTC
+
+- Native Platform inspection [#42483869620](https://github.com/phanthienquoc/platform-infra/actions/runs/42483869620) completed SUCCESS. It generated `debug/vps-latest.md` at 13:12:54Z and created inspection PR [#1464](https://github.com/phanthienquoc/platform-infra/pull/1464), which was validated and squash-merged at `ba01c42299490eff839c41326c894e0d59650ab6`.
+- Snapshot is now fresh, but native inspection cadence is still not accepted: prior native inspection #42452273701 was 05:49:40Z; inter-arrival gap was 26,586s (~7h23m), exceeding the 4,500s/75m budget.
+- K3s node `tce-k3s-01` remains Ready, ARM64, K3s `v1.36.3+k3s1`; container runtime `containerd://2.3.2-k3s2`. Disk 56% (21 GiB available), RAM 19 GiB available. Docker 29.1.3 reports 20 images/9.195 GB with 5.773 GB reclaimable; 12 containers active; no cleanup performed.
+- Media backend/frontend and MicroFE Shell/WS/NATS are Running 1/1. Stock Admin (two pods) and desired Backend remain ImagePullBackOff on `12d63b4`; legacy Stock Backend and Frontend remain Running 1/1. TCE/Auth/Keycloak remain zero-replica; Keycloak readiness timed out and both public OIDC probes returned HTTP 503.
+- Media runner service and Listener remain active/enabled; Platform runner is also active. In-cluster Stock/Media storage preflight remains clean (no PVC/PV claims or VolumeSnapshot references), but external backup/retention and authoritative DNS are still unverified.
+- GitOps drift is clean; cert-manager v1.21.1 bootstrap manifest checksum was verified. Host reports `restart_required=yes`; containerd/Docker/OS updates are available. No upgrade/reboot authorized.
+- No production manifest apply, image promotion, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred.
+
+
+## Inspection completion addendum — 2026-11-08 20:15 ICT / 13:15 UTC
+
+- Native inspection #42483869620 completed SUCCESS; snapshot generated 13:12:54Z and inspection PR #1464 merged at `ba01c42299490eff839c41326c894e0d59650ab6`.
+- Snapshot age is fresh, but native inspection inter-arrival gap was 26,586s (~7h23m), still far above the 75-minute cadence budget.
+- Node Ready/ARM64, K3s v1.36.3+k3s1, disk 56%/21 GiB free, RAM 19 GiB available. Media and MicroFE pods 1/1; Stock Admin and desired Backend ImagePullBackOff; legacy Stock Backend/Frontend 1/1; TCE/Auth/Keycloak 0/0. Keycloak readiness timed out; OIDC probes returned 503.
+- Stock/Media in-cluster storage preflight clean, but external backup/DNS evidence remains missing. Media runner still active/listening. Host restart required and updates available; no maintenance performed.
+- No workload, manifest, image, Secret, DNS, database, storage or runner mutation.
