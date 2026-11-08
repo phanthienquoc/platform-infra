@@ -8,9 +8,15 @@ set -euo pipefail
 ROOT="${GITHUB_WORKSPACE:-$(pwd)}"
 cd "$ROOT"
 CERT_MANAGER_MANIFEST_FILE="$ROOT/platform/cert-manager/cert-manager.yaml"
-cleanup() { rm -f "$CERT_MANAGER_MANIFEST_FILE"; }
+CERT_MANAGER_MANIFEST_PREPARED=false
+cleanup() {
+  if [[ "$CERT_MANAGER_MANIFEST_PREPARED" == true ]]; then
+    rm -f "$CERT_MANAGER_MANIFEST_FILE"
+  fi
+}
 trap cleanup EXIT
 bash scripts/prepare-cert-manager-manifest.sh "$CERT_MANAGER_MANIFEST_FILE"
+CERT_MANAGER_MANIFEST_PREPARED=true
 
 KUBECTL="${KUBECTL:-sudo /usr/local/sbin/platform-kubectl}"
 
