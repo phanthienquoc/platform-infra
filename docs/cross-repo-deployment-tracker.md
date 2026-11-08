@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: **2026-11-08 21:57 ICT / 14:57 UTC**
+Last reviewed: **2026-11-08 22:14 ICT / 15:14 UTC**
 
 This rolling tracker distinguishes native schedule events from manual, push, workflow_run and repository_dispatch fallbacks. Timestamped evidence is archived under `docs/cross-repo-deployment-checkpoints/`.
 
@@ -8,11 +8,11 @@ This rolling tracker distinguishes native schedule events from manual, push, wor
 
 | Repository | Master SHA | Open PRs | Readiness evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `ab458a525f18c1397fa52ca639e5a2abd6c9a536` | #1314/#544/#541/#539 (open planning/docs) | Latest inspection snapshot PR #1467 is on master; `debug/vps-latest.md` generated 2026-11-08T14:28:32Z. Snapshot age ~29m at this review. No new Actions run/check conclusion is inferred from the empty combined-status response; the linked connector exposes PR-triggered commit runs but not repository-wide run listing. |
+| phanthienquoc/platform-infra | `819215cc0c6b295f746e1a43cd6747df4fe292b8` | #1314/#544/#541/#539 (open planning/docs) | PR #1468 merged at `45fae050`; exact-head `validate-github-actions` #42493255493 and `validate-manifests` #42493255334 PASS. Latest inspection PR #1469 is on master; snapshot generated 2026-11-08T15:10:12Z and the new GHCR digest-coverage warning actually reported Stock `backend:23b2878` and `user:23b2878` without RepoDigest. Event type/run ID not surfaced. PR #1470 was closed as superseded. |
 | phanthienquoc/TCE-dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None | Latest verified native WF-07 #42484929411 PASS; WF-12 heartbeat #42484941935 reached Platform recovery #42484949353 PASS. Latest recorded native WF-06 #42458256899 failed 4×HTTP 503; WF-12 #42479336350 failed stale-WF-06 freshness. No new publisher/digest evidence. |
-| phanthienquoc/stockdividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | None | Master CI #42440810105 PASS (non-publishing); scraper #42457182511 failed closed on missing `VNSTOCK_API_KEY`. Snapshot #1467 shows Admin×2 and desired Backend ImagePullBackOff on `12d63b4` (no linux/arm64 manifest); legacy Backend/Frontend run `23b2878`. CRI RepoDigest is blank for cached Stock tags, so this is not registry digest/promotion evidence. |
-| phanthienquoc/media-generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | CI #42239703151 PASS; snapshot #1467 shows backend/frontend 1/1 with GHCR RepoDigests. Dedicated Media runner service remains active/enabled with Listener present. `MEDIA_RUNNER_AUDIT_TOKEN`, external backup/retention and authoritative DNS remain unverified. |
-| phanthienquoc/phanthienquoc-authentication | `cb907a63df0e0441b54b7b930ecdbfa97a5e52e1` | #76 draft/open | Master CI #42478653766 PASS; prior Supabase read-only check showed 84/84 migration version/name parity and no count change after PR #75. Snapshot #1467 still shows Keycloak 0/0 and public OIDC HTTP 503. PR #76 remains gated; no new Auth publisher evidence. |
+| phanthienquoc/stockdividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | None | Snapshot #1469 confirms Admin×2 and desired Backend ImagePullBackOff on `12d63b4` (no linux/arm64 manifest); legacy Backend/Frontend on `23b2878`. New read-only digest coverage warning found blank RepoDigest for cached `backend:23b2878` and `user:23b2878`. Scraper #42457182511 still fail-closed on missing `VNSTOCK_API_KEY`; no new publisher/digest evidence. |
+| phanthienquoc/media-generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | Snapshot #1469 shows backend/frontend 1/1 with GHCR RepoDigests; dedicated Media runner service active/enabled and Listener present. `MEDIA_RUNNER_AUDIT_TOKEN`, external backup/retention and authoritative DNS remain unverified. |
+| phanthienquoc/phanthienquoc-authentication | `cb907a63df0e0441b54b7b930ecdbfa97a5e52e1` | #76 draft/open | Master CI #42478653766 PASS; prior Supabase check showed 84/84 migration version/name parity and no count change after #75. Snapshot #1469 still shows Keycloak 0/0 and public OIDC HTTP 503. No new Auth publisher evidence. |
 
 ## Current actions
 
@@ -197,7 +197,6 @@ The latest read-only inspection snapshot in `debug/vps-latest.md` was generated 
 No GHCR publication/promotion, production manifest mutation, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose authority was added. TCE market-scan schedule unchanged.
 
 ---
-
 ## Latest execution update — 2026-11-08 16:55 ICT / 09:55 UTC
 
 Repository heads and open PRs were re-read from GitHub. Platform master is `1f7e5cd8ca52c34fc1fe57b90324137325188a5b`; TCE `7ab52078c4250829e158f05b2695ceb9d11bdbe3`; Stock `e6469ac6617142b349144101a1192cb6aa7104ad`; Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; Authentication `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`.
@@ -397,7 +396,6 @@ Stock weekend scraper [#42457182511](https://github.com/phanthienquoc/stockdivid
 
 - Platform PR [#1461](https://github.com/phanthienquoc/platform-infra/pull/1461) merged by squash at `25c5e390161c5410517f5360885281abd4c1ff49`. Exact-head validation #42478273907 PASS; post-merge `validate-manifests` #42478553173 PASS.
 - Authentication PR [#75](https://github.com/phanthienquoc/phanthienquoc-authentication/pull/75) merged by squash at `cb907a63df0e0441b54b7b930ecdbfa97a5e52e1`. Updated `AUTH-OPS-007` with current read-only Supabase migration parity and deployment-side-effect analysis. Exact-head run #42478511082 passed validation and native ARM64 non-publishing build; Supabase Preview was skipped. Post-merge Auth master CI #42478653766 is still running at this checkpoint. PR #76 remains draft.
-
 ### Auth/Supabase merge-side-effect verification
 
 - Supabase project `gtqovpusfyyvxpeezxlo` remains `ACTIVE_HEALTHY`, PostgreSQL `17.6.1.084`, ap-southeast-1. Branch-list API reports default `main`, Git branch `master`, status `FUNCTIONS_DEPLOYED`.
@@ -565,3 +563,13 @@ The latest workflow_run watchdog #42484055575 also failed for these measured nat
 - App repositories continue to own tests/builds and immutable GHCR publication. Platform Infra remains the sole owner of production manifests, shared GHCR pull credentials, source/digest/provenance verification, GitOps promotion/reconciliation, rollout and health verification.
 - `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No duplicate direct SSH/Compose production authority was added and no workflow was removed.
 - No GHCR publication/promotion, production manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host upgrade/reboot occurred. TCE market-scan schedule unchanged.
+## Latest execution update — 2026-11-08 22:14 ICT / 15:14 UTC
+
+- Platform master advanced to `819215cc0c6b295f746e1a43cd6747df4fe292b8` through automated inspection PR #1469. Snapshot `debug/vps-latest.md` generated at `2026-11-08T15:10:12Z` (22:10:12 ICT); its event type and run ID were not surfaced, so it is not counted as native schedule acceptance.
+- PR #1468 remains merged at `45fae050df626641ddfca3ededcff3cbf9f388b3`; exact-head `validate-github-actions` #42493255493 and `validate-manifests` #42493255334 both PASS. The read-only inspection code was exercised by the subsequent PR #1469 snapshot: `GHCR image digest coverage` emitted `status: warning` and listed `stockdividend/backend:23b2878` and `stockdividend/user:23b2878` with blank RepoDigest. This validates the new diagnostic on live inspection output; it does not prove a publisher digest.
+- PR #1470 was closed unmerged as superseded when inspection PR #1469 advanced master; its docs are being refreshed from current master on this branch. Current open Platform PRs remain #1314/#544/#541/#539 (planning/docs).
+- K3s: node `tce-k3s-01` Ready/ARM64; disk 56% (~21 GiB free), RAM ~19 GiB available, uptime ~191 days 1 hour, `restart_required=yes`. Media backend/frontend and MicroFE Shell/WS/NATS 1/1. Stock Admin×2 and desired Backend ImagePullBackOff on `12d63b4`; legacy Backend/Frontend 1/1 on `23b2878`. TCE/Auth/Keycloak 0/0; public OIDC 503. Platform and Media runner services active; Media Listener present.
+- Stock CRI inventory has no RepoDigest for cached `backend:23b2878`/`user:23b2878`; these are not promotion evidence. Scraper #42457182511 failed closed on missing `VNSTOCK_API_KEY`; no new publisher run or immutable digest handoff is verified.
+- TCE WF-07 native #42484929411 PASS; WF-12 heartbeat #42484941935 and Platform recovery #42484949353 PASS. Native WF-06 #42458256899 remains four HTTP 503s; native WF-12 #42479336350 stale. Platform native reconcile/watchdog/recovery latest recorded runs remain outside freshness budgets; inspection PR #1469 event provenance unknown.
+- The GitHub connector still does not expose repository-wide latest Actions run/check-run listing. PR #1468 exact-head checks are directly verified; no post-merge check conclusion is inferred from empty combined-status data.
+- No GHCR publication/promotion, production manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance. `reconcile-vps.yml` remains sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
