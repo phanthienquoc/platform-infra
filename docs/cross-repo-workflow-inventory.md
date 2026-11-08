@@ -4,7 +4,7 @@ Current review: **2026-11-08 17:34 ICT / 10:34 UTC**
 
 | Repository | App-owned workflows and release contract | Platform-owned responsibilities / boundary | Current evidence |
 |---|---|---|---|
-| Platform Infra | No application image builds. Receives TCE/Auth digest-bound events; owns validators, native inspection, reconciliation, watchdog and recovery. | Sole production manifests, shared GHCR pull credentials, runtime Secrets, source/digest/provenance validation, GitOps promotion/reconciliation, rollout/health and protected Stock/Media decommission. | Master 77207c26; PR #1453 cert-manager API auth merged with exact-head and post-merge checks PASS. Inspection #42471706668 verified the #1452 sudo fix; PR #1454 merged after exact-head manifest validation #42471833649. Stock/Media storage preflight is storage-clean; external backup/DNS and Media runner retirement still block decommission. Reconcile #42471718647 final deployment gate PASS; recovery notification still queued. |
+| Platform Infra | No application image builds. Receives TCE/Auth digest-bound events; owns validators, native inspection, reconciliation, watchdog, recovery and image-cleanup dry-run. | Sole production manifests, shared GHCR pull credentials, runtime Secrets, source/digest/provenance validation, GitOps promotion/reconciliation, rollout/health and protected Stock/Media decommission. | Master c473432c; #1453/#1454/#1455/#1456 merged; exact-head and post-merge validation PASS. Reconcile #42471718647 and recovery #42471978667 PASS. Weekly image-cleanup #42472343489 dry-run PASS; zero images removed. |
 | TCE Dashboard | App-owned CI/tests; manual WF-03 ARM64 immutable web/service publisher with digest verification and validated tce-release-requested handoff; WF-08B MicroFE ARM64 publisher and digest-bound Platform handoff; WF-06/WF-07/WF-12/WF-13 health, integration, watchdog and recovery. Manual WF-09 is a safe VPS inspection/setup utility that creates isolated directories and uploads source only to the development path. WF-10 is explicitly staging-only (workflow_call/dispatch), bootstraps tce-stg and its staging Secret; it does not target tce-prod. | No production SSH/Compose/K3s apply authority. Platform alone owns production manifests, runtime Secrets, image promotion/reconciliation and health. Preserve WF-09/WF-10 as scoped manual staging/bootstrap utilities; do not treat them as production deployment lanes. | Master 7ab52078; no open PR. Native WF-06 #42458256899 failed four probes (503); native WF-12 #42452308083 failed freshness; WF-07 #42453060493 PASS. TCE market-scan schedule unchanged. |
 | StockDividend | CI/tests; deploy.yml is the app-owned ARM64 GHCR publisher: master push emits full-SHA and prod-v<version>-<full-SHA> tags for Scraper/Admin/Backend; workflow_dispatch is blocked unless STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=true. No Platform handoff. Weekend scraper cron remains separate and fail-closed on VNSTOCK_API_KEY. | Retired from active Platform GitOps; legacy namespace/workloads await protected decommission. No production SSH/Compose deployment authority. | Master e6469ac6; PR #38 merged; CI #42440810105 PASS 7/7 (non-publishing CI). Native scraper #42457182511 failed closed on missing VNSTOCK_API_KEY; Stock Admin/desired Backend remain ARM64 ImagePullBackOff. |
 | Media Generation | CI/tests; WF-03 app-owned master-push/manual publisher builds ARM64 and publishes immutable version/full-SHA images with digest verification. No Platform dispatch while retired. | No active Platform GitOps handoff; legacy namespace and dedicated runner await protected decommission. No direct SSH/Compose production deployment authority in WF-03. | Master 54f3a76a; CI #42239703151 PASS. Fresh snapshot #42471706668 shows backend/frontend 1/1, storage-clean preflight and dedicated Media runner active/enabled; backup/DNS/runner-registration evidence still incomplete. |
@@ -12,12 +12,13 @@ Current review: **2026-11-08 17:34 ICT / 10:34 UTC**
 
 ## Platform workflow schedule and acceptance
 
-| Workflow | Native cron (UTC) | Freshness budget | Latest native evidence at 10:34Z |
+| Workflow | Native cron (UTC) | Freshness budget | Latest native evidence at 10:40Z |
 |---|---|---:|---|
-| reconcile-vps.yml | `7,22,37,52 * * * *` | 45m | #42467231073 FAIL at 09:27:03Z before cert-manager fix; gap 24,773s; ~67m old. |
-| inspect-vps.yml | `2,32 * * * *` | 75m | #42452273701 PASS at 05:49:40Z; gap 21,396s; ~284m old. Fresh push inspection #42468887549 is not native. |
-| reconcile-schedule-watchdog.yml | `12,27,42,57 * * * *` | 45m | #42467080859 FAIL at 09:24:53Z; gap 25,092s; ~69m old. |
-| recover-stale-ops.yml | `10,25,40,55 * * * *` | 45m | #42466737776 PASS at 09:20:06Z; gap 24,958s; ~74m old. |
+| reconcile-vps.yml | `7,22,37,52 * * * *` | 45m | #42467231073 FAIL at 09:27:03Z before cert-manager fix; gap 24,773s; ~73m old. |
+| inspect-vps.yml | `2,32 * * * *` | 75m | #42452273701 PASS at 05:49:40Z; gap 21,396s; ~290m old. Fresh push inspection #42468887549 is not native. |
+| reconcile-schedule-watchdog.yml | `12,27,42,57 * * * *` | 45m | #42467080859 FAIL at 09:24:53Z; gap 25,092s; ~75m old. |
+| recover-stale-ops.yml | `10,25,40,55 * * * *` | 45m | #42466737776 PASS at 09:20:06Z; gap 24,958s; ~80m old. |
+| vps-image-cleanup.yml | `30 3 * * 0` | N/A (weekly dry-run) | #42472343489 PASS at 10:39:26Z (~7h09 after cron); DRY_RUN=true, 8 unused, retain 10, remove 0. |
 
 Only original `event=schedule`, master, attempt 1, exact workflow path and full source SHA count as native. Manual, push, workflow_run and repository_dispatch remain separate. Push smoke reports schedule observations as warnings; it does not assert cadence acceptance.
 
@@ -121,3 +122,11 @@ Only original `event=schedule`, master, attempt 1, exact workflow path and full 
 - Media WF-03 is an app-owned ARM64 immutable publisher; Media is retired from active Platform GitOps and no Platform handoff is sent. No SSH/Compose authority is added.
 - Authentication release.yml is workflow_dispatch-only and app-owned; Platform remains the sole production manifest/Secret/reconcile/rollout authority.
 - No workflow was removed. Useful manual staging, release and scheduled jobs are preserved. No direct SSH/Compose production deployment authority was added; TCE market-scan schedule unchanged.
+
+
+## Scheduled image cleanup safety contract — 2026-11-08 17:40 ICT / 10:40 UTC
+
+- vps-image-cleanup.yml runs weekly Sunday 03:30 UTC. Scheduled and push-triggered runs are forced to DRY_RUN=true; only explicit workflow_dispatch can set dry_run=false.
+- Latest native run #42472343489 completed PASS at 10:39:26Z, about 7h09 after the cron time. KEEP_UNUSED_IMAGES=10; script found 8 unused images and remove_count=0. No images were removed.
+- The script inventories all Pods and CRI containers, protects images referenced by existing containers (including terminated ones), excludes pinned images, fails closed if a non-terminal Pod reference cannot be resolved, and rechecks Pod/container references before each deletion. The destructive manual path was not invoked.
+- This workflow is purposeful maintenance, not a production deployment authority; preserve it and keep it separate from native deployment cadence acceptance.
