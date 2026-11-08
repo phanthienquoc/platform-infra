@@ -442,3 +442,13 @@ Recovery-driven inspection #42527885366 completed successfully. PR #1484 was mer
 - Manual reconciliation #42530382496 verified GHCR access and Auth runtime Secret, left shared `ghcr-pull` unchanged, found no drift and skipped manifest apply, promotion and rollout. Zero-replica Auth is not counted as live health.
 
 Preserve purposeful CI, security, manual/release and scheduled workflows. Do not remove jobs solely because they are not part of the production apply path. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose production authority. TCE market-scan schedule unchanged.
+
+
+## Stock GHCR guard follow-up — 2026-11-09 06:07 ICT
+
+- PR #39 merged: six-tag preflight checks full source SHA and version/source SHA tags for Scraper/Admin/Backend before first push, with per-source-SHA non-cancelling concurrency. Exact-head CI #42528788805 and post-merge CI #42533163812 passed all seven jobs.
+- PR #40 merged at `1a18cabf32c6cc5f85f4157b5142a6d9f0d9d9b5`: broad generic `not found` matching removed; explicit HTTP 404 and known missing-manifest responses remain the only absent-tag signals. Regression cases prove 401 and ambiguous repository-not-found responses fail closed. Exact-head CI #42533247153 passed all seven jobs, including native ARM64 builds with push=false.
+- Post-merge CI #42533562194 is still running; no production publication or Platform dispatch was triggered by these workflow/script-only changes. Verify this run before marking the Stock master CI lane fully green.
+- These checks are workflow-level overwrite prevention, not GHCR registry-side immutable-tag enforcement. Platform promotion must continue to use verified registry digests.
+
+App-owned publication and Platform-owned production GitOps boundaries remain unchanged. Native Platform/TCE schedule gaps remain outside existing budgets; do not change cron or freshness thresholds. Preserve all purposeful CI/security/manual/release/scheduled workflows. No direct SSH/Compose deployment authority. TCE market-scan schedule unchanged.
