@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: **2026-11-08 21:57 ICT / 14:57 UTC**
+Last reviewed: **2026-11-08 22:10 ICT / 15:10 UTC**
 
 This rolling tracker distinguishes native schedule events from manual, push, workflow_run and repository_dispatch fallbacks. Timestamped evidence is archived under `docs/cross-repo-deployment-checkpoints/`.
 
@@ -8,7 +8,7 @@ This rolling tracker distinguishes native schedule events from manual, push, wor
 
 | Repository | Master SHA | Open PRs | Readiness evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `ab458a525f18c1397fa52ca639e5a2abd6c9a536` | #1314/#544/#541/#539 (open planning/docs) | Latest inspection snapshot PR #1467 is on master; `debug/vps-latest.md` generated 2026-11-08T14:28:32Z. Snapshot age ~29m at this review. No new Actions run/check conclusion is inferred from the empty combined-status response; the linked connector exposes PR-triggered commit runs but not repository-wide run listing. |
+| phanthienquoc/platform-infra | `45fae050df626641ddfca3ededcff3cbf9f388b3` | #1314/#544/#541/#539 (open planning/docs) | PR #1468 merged at `45fae050`; exact-head `validate-github-actions` #42493255493 PASS and `validate-manifests` #42493255334 PASS on head `351ecba9`. PR #1467 snapshot remains latest K3s inspection evidence. Post-merge run/check listing is not exposed by the current connector; no post-merge PASS inferred. |
 | phanthienquoc/TCE-dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None | Latest verified native WF-07 #42484929411 PASS; WF-12 heartbeat #42484941935 reached Platform recovery #42484949353 PASS. Latest recorded native WF-06 #42458256899 failed 4×HTTP 503; WF-12 #42479336350 failed stale-WF-06 freshness. No new publisher/digest evidence. |
 | phanthienquoc/stockdividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | None | Master CI #42440810105 PASS (non-publishing); scraper #42457182511 failed closed on missing `VNSTOCK_API_KEY`. Snapshot #1467 shows Admin×2 and desired Backend ImagePullBackOff on `12d63b4` (no linux/arm64 manifest); legacy Backend/Frontend run `23b2878`. CRI RepoDigest is blank for cached Stock tags, so this is not registry digest/promotion evidence. |
 | phanthienquoc/media-generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | CI #42239703151 PASS; snapshot #1467 shows backend/frontend 1/1 with GHCR RepoDigests. Dedicated Media runner service remains active/enabled with Listener present. `MEDIA_RUNNER_AUDIT_TOKEN`, external backup/retention and authoritative DNS remain unverified. |
@@ -197,7 +197,6 @@ The latest read-only inspection snapshot in `debug/vps-latest.md` was generated 
 No GHCR publication/promotion, production manifest mutation, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose authority was added. TCE market-scan schedule unchanged.
 
 ---
-
 ## Latest execution update — 2026-11-08 16:55 ICT / 09:55 UTC
 
 Repository heads and open PRs were re-read from GitHub. Platform master is `1f7e5cd8ca52c34fc1fe57b90324137325188a5b`; TCE `7ab52078c4250829e158f05b2695ceb9d11bdbe3`; Stock `e6469ac6617142b349144101a1192cb6aa7104ad`; Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; Authentication `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`.
@@ -397,7 +396,6 @@ Stock weekend scraper [#42457182511](https://github.com/phanthienquoc/stockdivid
 
 - Platform PR [#1461](https://github.com/phanthienquoc/platform-infra/pull/1461) merged by squash at `25c5e390161c5410517f5360885281abd4c1ff49`. Exact-head validation #42478273907 PASS; post-merge `validate-manifests` #42478553173 PASS.
 - Authentication PR [#75](https://github.com/phanthienquoc/phanthienquoc-authentication/pull/75) merged by squash at `cb907a63df0e0441b54b7b930ecdbfa97a5e52e1`. Updated `AUTH-OPS-007` with current read-only Supabase migration parity and deployment-side-effect analysis. Exact-head run #42478511082 passed validation and native ARM64 non-publishing build; Supabase Preview was skipped. Post-merge Auth master CI #42478653766 is still running at this checkpoint. PR #76 remains draft.
-
 ### Auth/Supabase merge-side-effect verification
 
 - Supabase project `gtqovpusfyyvxpeezxlo` remains `ACTIVE_HEALTHY`, PostgreSQL `17.6.1.084`, ap-southeast-1. Branch-list API reports default `main`, Git branch `master`, status `FUNCTIONS_DEPLOYED`.
@@ -565,3 +563,11 @@ The latest workflow_run watchdog #42484055575 also failed for these measured nat
 - App repositories continue to own tests/builds and immutable GHCR publication. Platform Infra remains the sole owner of production manifests, shared GHCR pull credentials, source/digest/provenance verification, GitOps promotion/reconciliation, rollout and health verification.
 - `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No duplicate direct SSH/Compose production authority was added and no workflow was removed.
 - No GHCR publication/promotion, production manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host upgrade/reboot occurred. TCE market-scan schedule unchanged.
+## Post-merge verification — 2026-11-08 22:10 ICT / 15:10 UTC
+
+- Platform PR [#1468](https://github.com/phanthienquoc/platform-infra/pull/1468) squash-merged at `45fae050df626641ddfca3ededcff3cbf9f388b3`; validated head was `351ecba94ecd8f8e6d7962073d5b74d7173743cb` on branch `docs/deployment-readiness-2026-11-08-2157-ict`.
+- Exact-head required checks both completed successfully: `validate-github-actions` #42493255493 PASS and `validate-manifests` #42493255334 PASS. The workflow jobs show actionlint, yamllint, shellcheck, ops regression tests, path-scoped deployment resolution, immutable image-change tests, workflow contract checks, manifest rendering, secret policy, Keycloak isolation and network boundaries all completed successfully.
+- PR metadata confirms state=closed, merged=true, exact head `351ecba...`, merge commit `45fae050...`; latest master commit search returns the same merge SHA.
+- The connector's repository-wide Actions run listing and check-run API are not available in this session. Post-merge combined status returned no legacy statuses and the PR-event-only run lookup returned no push runs; post-merge check conclusion is therefore not claimed.
+- The new inspection diagnostic is informational and read-only. It warns when CRI reports a GHCR tag without RepoDigest; it does not block inspection or authorize/perform image promotion.
+- No production manifests, workloads, Secrets, runner state, DNS, database, storage, or host state were changed. TCE market-scan schedule and all cron expressions remain unchanged.
