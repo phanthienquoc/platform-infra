@@ -18,7 +18,10 @@ trap cleanup EXIT
 bash scripts/prepare-cert-manager-manifest.sh "$CERT_MANAGER_MANIFEST_FILE"
 CERT_MANAGER_MANIFEST_PREPARED=true
 
-KUBECTL="${KUBECTL:-sudo /usr/local/sbin/platform-kubectl}"
+# This helper is read-only: direct K3s kubectl is used only for render,
+# server-side dry-run, get and rollout-history inspection. Production mutation
+# remains restricted to reconcile-vps.yml through platform-kubectl.
+KUBECTL="${KUBECTL:-sudo /usr/local/bin/k3s kubectl}"
 
 run_kubectl() {
   # shellcheck disable=SC2086
