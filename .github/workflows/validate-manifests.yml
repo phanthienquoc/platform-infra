@@ -89,7 +89,12 @@ jobs:
           python3 scripts/validate-cert-manager-bootstrap-contract.py --self-test
 
       - name: Render production manifests
-        run: kubectl kustomize environments/prod > /tmp/platform-infra-rendered.yaml
+        run: |
+          set -euo pipefail
+          manifest="platform/cert-manager/cert-manager.yaml"
+          trap 'rm -f "$manifest"' EXIT
+          bash scripts/prepare-cert-manager-manifest.sh "$GITHUB_WORKSPACE/$manifest"
+          kubectl kustomize environments/prod > /tmp/platform-infra-rendered.yaml
 
       - name: Validate Auth GitOps contract validator
         run: |
