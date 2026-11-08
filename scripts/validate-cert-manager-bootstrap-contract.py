@@ -29,6 +29,7 @@ def validate() -> None:
     workflow = read(".github/workflows/validate-manifests.yml")
     staging = read(".github/workflows/staging-dry-run.yml")
     wrapper = read("scripts/bootstrap-runner.sh")
+    recovery = read("scripts/validate-recovery-readiness.sh")
     gitignore = read(".gitignore")
 
     require(
@@ -113,6 +114,13 @@ def validate() -> None:
         "Prepare checksum-verified cert-manager release" in staging
         and "Clean up checksum-verified cert-manager release" in staging,
         "staging dry-run must prepare and clean the generated asset",
+    )
+    require(
+        'bash scripts/prepare-cert-manager-manifest.sh "$CERT_MANAGER_MANIFEST_FILE"' in recovery
+        and 'KUBECTL="${KUBECTL:-sudo /usr/local/bin/k3s kubectl}"' in recovery
+        and "apply --dry-run=server -k environments/prod" in recovery
+        and "apply -k environments/prod" not in recovery,
+        "recovery readiness must prepare the asset and keep its only apply operation server-side dry-run",
     )
     require(
         "apply -k environments/prod" in wrapper
