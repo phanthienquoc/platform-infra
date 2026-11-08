@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+ROOT="${GITHUB_WORKSPACE:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+cd "$ROOT"
 output="${1:-/tmp/platform-infra-network.yaml}"
+manifest="$ROOT/platform/cert-manager/cert-manager.yaml"
+cleanup() { rm -f "$manifest"; }
+trap cleanup EXIT
+
+bash scripts/prepare-cert-manager-manifest.sh "$manifest"
 kubectl kustomize environments/prod > "$output"
 
 grep -q '^kind: Service$' "$output" || { echo "Expected application Services were not rendered."; exit 1; }
