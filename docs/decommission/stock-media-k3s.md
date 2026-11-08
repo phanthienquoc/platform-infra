@@ -138,7 +138,7 @@ This section supersedes the 13:01 ICT / 06:01 UTC snapshot above. Source: read-o
 The protected decommission workflow was not dispatched. The delete gate remains blocked by the active/enabled Media runner and missing external backup/retention and DNS-owner confirmation. No namespace, workload, PVC/PV, runner, DNS record, external database/storage, GHCR package or app repository was deleted.
 
 
-## Remote GitHub runner registration verification — proposed 2026-11-08 18:04 ICT
+## Remote GitHub runner registration verification — merged PR #1458 (2026-11-08)
 
 The delete-mode guard is strengthened to verify the repository-level GitHub runner list, not merely accept a typed operator attestation:
 
@@ -148,4 +148,19 @@ The delete-mode guard is strengthened to verify the repository-level GitHub runn
 - The owner/operator must still stop and disable the exact Media runner service and unregister it from the Media repository using GitHub's supported removal flow. This workflow verifies absence; it does not stop, unregister, or delete any runner.
 - If the secret is not provisioned or the API cannot be read, the protected namespace delete path is blocked. Plan mode remains read-only and does not require this secret.
 
-This is a proposed code change until its PR is merged and the exact-head workflow checks pass. No runner or namespace has been changed by this proposal.
+Merged implementation evidence: PR #1458 merged at `098cf54de9e2223bc97db57cca6fbee8334fc80c`. Exact-head `validate-github-actions` #42474849755 and `validate-manifests` #42474849751 passed; post-merge #42474925147 and #42474925187 passed. The PR changed only the protected verification gate and documentation/tests; no runner or namespace was changed.
+
+
+## Latest read-only runtime evidence — 2026-11-08 18:17 ICT / 11:17 UTC
+
+Source: inspection fallback [#42475079478](https://github.com/phanthienquoc/platform-infra/actions/runs/42475079478), generated at `2026-11-08T11:17:34Z`, committed by inspection PR [#1459](https://github.com/phanthienquoc/platform-infra/pull/1459) at `ef7a1a15b94acdaf7c46cbecb4aa2391cb90b0f8`. Exact-head manifest validation #42475211696 passed. PR #1459 changed only `debug/vps-latest.md`.
+
+- Node `tce-k3s-01` is Ready, ARM64, K3s `v1.36.3+k3s1`; disk 56% used (~21 GiB free), available RAM ~19 GiB.
+- `media-prod`: backend/frontend each 1/1 Running. `microfe-platform`: Shell/WS/NATS each 1/1 Running; Auth/Keycloak 0/0. `tce-prod`: frontend/service 0/0.
+- `stock-prod`: two Admin Pods and the newer Backend Pod remain ImagePullBackOff on tag `12d63b4`; kubelet says no matching `linux/arm64` manifest. Older Backend and Frontend remain 1/1.
+- In-cluster storage inventory shows no Stock/Media PVC/PV claim or VolumeSnapshot/VolumeSnapshotContent references. This does not prove external database/object-storage backup or retention.
+- Dedicated Media runner service remains active and enabled, with `Runner.Listener` present. The shared Platform runner is active and must remain untouched. Media Ingress still publishes `media.mrcute.space`; Stock Ingresses still publish the four retired Stock hostnames.
+- OIDC probes to `sso.mrcute.space` returned HTTP 503 while Keycloak/Auth remain 0/0. This is not live service health.
+- PR #1458's remote registration check requires `MEDIA_RUNNER_AUDIT_TOKEN` with repository Administration:read on Media. Secret existence has not been independently verified; no delete-mode workflow was run. External backup/retention and authoritative DNS-owner approvals remain outstanding.
+
+No namespace, PVC/PV, runner, DNS, external database/storage, GHCR package or app repository was deleted.
