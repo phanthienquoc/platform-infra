@@ -48,13 +48,17 @@ case "$MODE" in
 esac
 
 CERT_MANAGER_MANIFEST_FILE="$ROOT/platform/cert-manager/cert-manager.yaml"
-cleanup() {
-  rm -f "$CERT_MANAGER_MANIFEST_FILE"
-  rm -f "${diff_output:-}"
-}
+CERT_MANAGER_MANIFEST_PREPARED=false
 diff_output=""
+cleanup() {
+  if [[ "$CERT_MANAGER_MANIFEST_PREPARED" == true ]]; then
+    rm -f "$CERT_MANAGER_MANIFEST_FILE"
+  fi
+  [[ -z "$diff_output" ]] || rm -f "$diff_output"
+}
 trap cleanup EXIT
 bash scripts/prepare-cert-manager-manifest.sh "$CERT_MANAGER_MANIFEST_FILE"
+CERT_MANAGER_MANIFEST_PREPARED=true
 
 diff_output="$(mktemp)"
 
