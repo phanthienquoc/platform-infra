@@ -5,10 +5,16 @@ ROOT="${GITHUB_WORKSPACE:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 cd "$ROOT"
 output="${1:-/tmp/platform-infra-rendered.yaml}"
 manifest="$ROOT/platform/cert-manager/cert-manager.yaml"
-cleanup() { rm -f "$manifest"; }
+CERT_MANAGER_MANIFEST_PREPARED=false
+cleanup() {
+  if [[ "$CERT_MANAGER_MANIFEST_PREPARED" == true ]]; then
+    rm -f "$manifest"
+  fi
+}
 trap cleanup EXIT
 
 bash scripts/prepare-cert-manager-manifest.sh "$manifest"
+CERT_MANAGER_MANIFEST_PREPARED=true
 kubectl kustomize environments/prod > "$output"
 kubectl apply --dry-run=client --validate=strict -f "$output"
 
