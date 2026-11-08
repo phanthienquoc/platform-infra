@@ -123,7 +123,7 @@ CRI=/usr/local/sbin/platform-crictl
   if [[ -n "$ghcr_without_repo_digest" ]]; then
     echo "status: warning"
     echo "GHCR-tagged cached image(s) have no RepoDigest; local image IDs are not registry digests or promotion evidence:"
-    printf '%s\\n' "$ghcr_without_repo_digest"
+    printf '%s\n' "$ghcr_without_repo_digest"
   else
     echo "status: all cached GHCR-tagged images have RepoDigest"
   fi
