@@ -1591,6 +1591,8 @@ for required in (
     if required not in reconcile_freshness_block:
         fail(f"Scheduled reconciliation result gate is missing: {required}")
 for required in (
+    'if status not in {"queued", "waiting", "requested", "pending", "in_progress", "completed"}:',
+    '"unknown run status fails closed"',
     'if status != "completed":',
     'if conclusion == "success":',
     'if event == "push":',
