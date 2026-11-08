@@ -1,6 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+# The pinned controller/CRD release asset is downloaded, checksum-verified,
+# diffed and applied by scripts/reconcile-vps.sh before this overlay.
+# Do not put GitHub release-asset URLs in Kustomize resources: Kustomize
+# interprets github.com URLs as Git repositories rather than release assets.
 resources:
-- https://github.com/cert-manager/cert-manager/releases/download/v1.21.1/cert-manager.yaml
 - cluster-issuer.yaml
 - certificates.yaml
