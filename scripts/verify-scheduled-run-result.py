@@ -66,14 +66,16 @@ def self_test() -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--event", required=True)
-    parser.add_argument("--run-id", required=True)
-    parser.add_argument("--run-url", required=True)
+    parser.add_argument("--event")
+    parser.add_argument("--run-id")
+    parser.add_argument("--run-url")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
 
     if args.self_test:
         return self_test()
+    if not args.event or not args.run_id or not args.run_url:
+        parser.error("--event, --run-id and --run-url are required unless --self-test is used")
     try:
         run = json.load(sys.stdin)
         if not isinstance(run, dict):
