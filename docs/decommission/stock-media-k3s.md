@@ -136,3 +136,16 @@ This section supersedes the 13:01 ICT / 06:01 UTC snapshot above. Source: read-o
 - Media Ingress still publishes `media.mrcute.space`; Stock Ingresses still publish the four Stock hostnames. Authoritative DNS/provider ownership must be confirmed before decommission.
 
 The protected decommission workflow was not dispatched. The delete gate remains blocked by the active/enabled Media runner and missing external backup/retention and DNS-owner confirmation. No namespace, workload, PVC/PV, runner, DNS record, external database/storage, GHCR package or app repository was deleted.
+
+
+## Remote GitHub runner registration verification — proposed 2026-11-08 18:04 ICT
+
+The delete-mode guard is strengthened to verify the repository-level GitHub runner list, not merely accept a typed operator attestation:
+
+- Before namespace deletion, the Platform workflow runs `scripts/verify-media-runner-retired.sh` after checking the local systemd unit and `Runner.Listener` process.
+- The script requires `MEDIA_RUNNER_AUDIT_TOKEN` and queries only `GET /repos/phanthienquoc/media-generation/actions/runners`. It fails closed on a missing token, HTTP/API error, malformed response, or any registered runner named `media-generation-k3s-01`.
+- Configure `MEDIA_RUNNER_AUDIT_TOKEN` as a Platform Infra Actions secret using a fine-grained GitHub token or GitHub App installation token with **Administration: read** on `phanthienquoc/media-generation` only. The token is read-only for this verification; it must not be granted runner deletion/write permission. The value is passed to curl through stdin configuration and is never printed.
+- The owner/operator must still stop and disable the exact Media runner service and unregister it from the Media repository using GitHub's supported removal flow. This workflow verifies absence; it does not stop, unregister, or delete any runner.
+- If the secret is not provisioned or the API cannot be read, the protected namespace delete path is blocked. Plan mode remains read-only and does not require this secret.
+
+This is a proposed code change until its PR is merged and the exact-head workflow checks pass. No runner or namespace has been changed by this proposal.
