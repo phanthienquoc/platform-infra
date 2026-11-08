@@ -83,8 +83,9 @@ jobs:
         run: |
           set -euo pipefail
           manifest="platform/cert-manager/cert-manager.yaml"
+          expected_sha256="5f6a499b8c1857d57f560f536e0dcc830914b45c420899fe7ad0692c8624e408"
           if [[ -f "$manifest" ]]; then
-            printf '%s  %s\n' "5f6a499b8c1857d57f560f536e0dcc830914b45c420899fe7ad0692c8624e408" "$manifest" | sha256sum --check --status || {
+            printf '%s  %s\n' "$expected_sha256" "$manifest" | sha256sum --check --status || {
               echo "::error::Refusing to remove an unexpected cert-manager manifest artifact."
               exit 1
             }
