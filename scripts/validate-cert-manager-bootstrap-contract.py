@@ -94,6 +94,12 @@ def validate() -> None:
     require_token_step(inspection_workflow, "Inspect VPS", ".github/workflows/inspect-vps.yml")
     require_token_step(recovery_workflow, "Validate recovery readiness", ".github/workflows/validate-recovery-readiness.yml")
 
+    require(
+        '"scripts/decommission-stock-media-namespaces.sh"' in inspection_workflow
+        and '"scripts/prepare-cert-manager-manifest.sh"' in inspection_workflow,
+        "read-only inspection must run after changes to the decommission preflight or pinned release helper",
+    )
+
     workflow_permissions = workflow.split("jobs:", 1)[0]
     report_job = workflow.split("  report-validation-failure:", 1)[1]
     require(
