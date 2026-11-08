@@ -1,6 +1,6 @@
 # Cross-repo workflow inventory and deployment ownership
 
-Current review: **2026-11-08 13:57 ICT / 06:57 UTC**
+Current review: **2026-11-08 15:04 ICT / 08:04 UTC**
 
 | Repository | App-owned workflows and release contract | Platform-owned responsibilities / boundary | Current evidence |
 |---|---|---|---|
@@ -58,3 +58,15 @@ Only original `event=schedule`, master, attempt 1, exact workflow path and full 
 - Authentication: master CI #42215394539 PASS; PR #75 exact-head CI #40446492086 PASS but merge remains gated by Supabase Deploy-to-production integration behavior; PR #76 exact-head CI #41329425940 PASS and remains draft.
 - Open PRs: Platform #1314/#544/#541/#539; Authentication #75/#76. TCE, Stock and Media have none.
 - No GHCR publish/promotion, production manifest mutation, workload scaling, decommission, DNS/database/storage change, runner retirement or host maintenance. TCE market-scan schedule unchanged.
+
+
+## Latest execution evidence — 2026-11-08 15:04 ICT / 08:04 UTC
+
+- Platform master `564d94bb9134195a0643274f8656d95161b47e02`; inspection PR #1440 merged at exact validated head `9cdfaddc66fbcb21a6ea7a78e05f44551726fa69` (merge SHA `564d94bb9134195a0643274f8656d95161b47e02`). Read-only inspection #42458425146 succeeded; exact-head manifest validation #42458510940 passed.
+- Manual reconcile #42458288651: GHCR pull access and Auth runtime Secret verification passed; shared `ghcr-pull` unchanged; no manifest drift, so apply skipped. TCE/Auth are intentional zero-replica maintenance (no live health asserted); active MicroFE health passed. No image promotion.
+- Platform native schedule latests: reconcile #42439099803, inspection #42452273701, watchdog #42438566387, recovery #42438384072. At 08:04Z all exceed their 45/75/45/45m freshness budgets. Manual fallback runs do not count. Cron and budgets unchanged.
+- TCE WF-06 native #42458256899 failed all four strict HTTP 200 probes with HTTP 503. WF-12 workflow_run #42458270339 confirmed WF-06 active and fresh at its own run time (age/queue 0m) and delivered authenticated Platform heartbeat; by 08:04Z the 25m age budget is exceeded again. Latest native WF-12 #42452308083 remains stale/failing. WF-13 #42458270097 passed recovery.
+- Stock scraper scheduled run #42457182511 failed closed before dependency installation because `VNSTOCK_API_KEY` is empty. Stock master CI #42440810105 PASS 7/7. No credential change or ingestion.
+- Media CI #42239703151 and Auth CI #42215394539 remain PASS. Auth PR #75/#76 exact-head CI #40446492086/#41329425940 PASS; Supabase merge-trigger effect remains a gate.
+- Fresh K3s snapshot #1440: node Ready/ARM64; Media and MicroFE workloads Running 1/1; Stock Admin (2 pods) and desired Backend ImagePullBackOff for `12d63b4` (no ARM64 manifest); old Stock Backend/Frontend Running; TCE/Auth/Keycloak 0/0. Runner services active/enabled, registration audit outstanding. No Stock/Media VolumeSnapshot references; external backup/DNS ownership unverified. Host restart required; no maintenance performed.
+- App repos retain tests/builds and immutable GHCR publication ownership. Platform retains manifests, shared pull credentials, GitOps promotion/reconciliation, rollout and health. No new GHCR publication, digest handoff, production apply, scaling, decommission, DNS/database/storage change, or direct SSH/Compose authority. TCE market-scan schedule unchanged.
