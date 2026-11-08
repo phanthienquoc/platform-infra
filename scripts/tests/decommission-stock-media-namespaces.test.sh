@@ -7,6 +7,18 @@ tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 fake="$tmp/platform-kubectl"
 log="$tmp/log"
+fake_sudo="$tmp/sudo"
+sudo_log="$tmp/sudo-log"
+
+cat > "$fake_sudo" <<'MOCK'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'sudo %s\\n' "$*" >> "$SUDO_LOG"
+exec "$@"
+MOCK
+chmod +x "$fake_sudo"
+export PLATFORM_KUBECTL_SUDO="$fake_sudo"
+export SUDO_LOG="$sudo_log"
 
 cat > "$fake" <<'MOCK'
 #!/usr/bin/env bash
@@ -64,6 +76,43 @@ grep -Fq "stock.example.test" <<< "$plan_output"
 grep -Fq "stock-example-tls" <<< "$plan_output"
 grep -Fq "DNS ownership is not inferred" <<< "$plan_output"
 grep -Fq "get ingress -n stock-prod -o json" "$log"
+grep -q '^sudo .* get namespace tce-prodif CONFIRMATION=wrong DATA_RETENTION_REVIEW=wrong DNS_OWNERSHIP_REVIEW=AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" bash "$SCRIPT" delete >/dev/null 2>&1; then
+  echo "FAIL: invalid confirmation was accepted" >&2
+  exit 1
+fi
+if CONFIRMATION=DELETE-STOCK-PROD-AND-MEDIA-PROD DATA_RETENTION_REVIEW=BACKUP-AND-EXTERNAL-DATA-REVIEWED DNS_OWNERSHIP_REVIEW=wrong PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" bash "$SCRIPT" delete >/dev/null 2>&1; then
+  echo "FAIL: missing/invalid authoritative DNS ownership attestation was accepted" >&2
+  exit 1
+fi
+if MOCK_PVC=1 PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" CONFIRMATION=DELETE-STOCK-PROD-AND-MEDIA-PROD DATA_RETENTION_REVIEW=BACKUP-AND-EXTERNAL-DATA-REVIEWED DNS_OWNERSHIP_REVIEW=AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED bash "$SCRIPT" delete >/dev/null 2>&1; then
+  echo "FAIL: PVC presence did not block deletion" >&2
+  exit 1
+fi
+if MOCK_PV=1 PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" CONFIRMATION=DELETE-STOCK-PROD-AND-MEDIA-PROD DATA_RETENTION_REVIEW=BACKUP-AND-EXTERNAL-DATA-REVIEWED DNS_OWNERSHIP_REVIEW=AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED bash "$SCRIPT" delete >/dev/null 2>&1; then
+  echo "FAIL: PV claim presence did not block deletion" >&2
+  exit 1
+fi
+if MOCK_MISSING_NS=1 PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" bash "$SCRIPT" plan >/dev/null 2>&1; then
+  echo "FAIL: missing target namespace did not block decommission" >&2
+  exit 1
+fi
+if MOCK_SNAPSHOT=1 CONFIRMATION=DELETE-STOCK-PROD-AND-MEDIA-PROD DATA_RETENTION_REVIEW=BACKUP-AND-EXTERNAL-DATA-REVIEWED DNS_OWNERSHIP_REVIEW=AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" bash "$SCRIPT" delete >/dev/null 2>&1; then
+  echo "FAIL: namespaced VolumeSnapshot did not block deletion" >&2
+  exit 1
+fi
+if MOCK_SNAPSHOT_CONTENT=1 CONFIRMATION=DELETE-STOCK-PROD-AND-MEDIA-PROD DATA_RETENTION_REVIEW=BACKUP-AND-EXTERNAL-DATA-REVIEWED DNS_OWNERSHIP_REVIEW=AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" bash "$SCRIPT" delete >/dev/null 2>&1; then
+  echo "FAIL: cluster-scoped VolumeSnapshotContent did not block deletion" >&2
+  exit 1
+fi
+if grep -q "^decommission-stock-media$" "$log"; then
+  echo "FAIL: snapshot preflight invoked the root namespace deletion command" >&2
+  exit 1
+fi
+CONFIRMATION=DELETE-STOCK-PROD-AND-MEDIA-PROD DATA_RETENTION_REVIEW=BACKUP-AND-EXTERNAL-DATA-REVIEWED DNS_OWNERSHIP_REVIEW=AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" bash "$SCRIPT" delete
+grep -q '^DELETE_OK$' "$log"
+echo "Stock/Media decommission preflight and confirmation tests passed."
+ "$sudo_log"
+echo "Verified default decommission preflight invokes the root-owned wrapper through sudo."
 if CONFIRMATION=wrong DATA_RETENTION_REVIEW=wrong DNS_OWNERSHIP_REVIEW=AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" bash "$SCRIPT" delete >/dev/null 2>&1; then
   echo "FAIL: invalid confirmation was accepted" >&2
   exit 1
