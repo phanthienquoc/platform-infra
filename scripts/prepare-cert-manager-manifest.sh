@@ -29,13 +29,18 @@ cleanup() {
 }
 trap cleanup EXIT
 
-curl --fail --silent --show-error --location \
-  --header "Accept: application/octet-stream" \
-  --header "X-GitHub-Api-Version: 2022-11-28" \
-  --retry 3 --retry-all-errors \
-  --connect-timeout 10 --max-time 120 \
-  "$CERT_MANAGER_MANIFEST_URL" \
-  --output "$tmp_file"
+curl_args=(
+  --fail --silent --show-error --location
+  --header "Accept: application/octet-stream"
+  --header "X-GitHub-Api-Version: 2022-11-28"
+  --retry 3 --retry-all-errors
+  --connect-timeout 10 --max-time 120
+)
+if [[ -n "${GH_TOKEN:-}" ]]; then
+  curl_args+=(--header "Authorization: Bearer ${GH_TOKEN}")
+fi
+
+curl "${curl_args[@]}" "$CERT_MANAGER_MANIFEST_URL" --output "$tmp_file"
 
 if ! printf '%s  %s\n' "$CERT_MANAGER_MANIFEST_SHA256" "$tmp_file" | sha256sum --check --status; then
   echo "::error::Downloaded cert-manager ${CERT_MANAGER_VERSION} manifest failed its pinned SHA-256 check." >&2
