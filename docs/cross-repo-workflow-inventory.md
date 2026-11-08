@@ -369,3 +369,15 @@ Latest read-only K3s snapshot is debug/vps-latest.md, generated 2026-11-08 18:00
 ### Preservation
 
 App repositories retain tests/builds and immutable GHCR publication. Platform Infra remains the sole owner of production manifests, shared GHCR pull credentials, digest/source verification, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose deployment authority, workflow deletion, image promotion, manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred. TCE market-scan schedule unchanged.
+
+
+## Latest contract changes — 2026-11-09 03:16 ICT
+
+- `reconcile-schedule-watchdog.yml` now verifies the completed conclusion of the latest scheduled reconciliation in addition to age and queue freshness. `scripts/verify-scheduled-run-result.py` fails closed on failed/cancelled/timed-out/unknown completed results; queued/in-progress results are explicitly pending. Push-triggered read-only smoke remains warning-only.
+- `validate-github-actions.yml` runs the helper's eight regression cases; `validate-workflow-contracts.py` asserts that the helper is invoked with the exact run ID, event and URL and that unknown statuses fail closed.
+- `recover-stale-ops.yml` explicitly excludes `scripts/verify-scheduled-run-result.py` from the broad `scripts/**` push trigger. The workflow contract validator enforces this exclusion so read-only watchdog code cannot bootstrap production reconciliation.
+- PR #1479 implemented the result gate and merged at `01a3b4ba4ebcf481bd532bbc367533da9f2791a3`; exact-head and post-merge GitHub Actions/manifest validations passed.
+- PR #1480 implemented the recovery-path exclusion and merged at `9bb69b446d6aa161aae13c7efe4648af92691641`; exact-head and post-merge GitHub Actions/manifest validations passed.
+- PR #1481 merged the fresh read-only K3s inspection snapshot at `5197840226b49d790cb99c4caeb8377526e6fed8`; exact inspection validation #42519280294 passed.
+- The #1479 push initially matched the recovery `scripts/**` path and caused a recovery-dispatched reconciliation. That run found `drift=false`, kept `ghcr-pull` unchanged, skipped manifest apply/promotion/rollout, and did not scale TCE/Auth. PR #1480 closes this routing gap for future read-only helper changes.
+- Native schedule gaps remain outside the existing budgets; manual inspections and workflow_run/repository_dispatch recoveries are not counted as native schedule evidence. Cron, freshness budgets and TCE market-scan schedule remain unchanged.
