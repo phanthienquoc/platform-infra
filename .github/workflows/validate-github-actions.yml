@@ -29,11 +29,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
 
-      - name: Install actionlint
+      - name: Install pinned actionlint from Go module proxy
         run: |
           set -euo pipefail
-          curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash | bash
-          echo "$PWD" >> "$GITHUB_PATH"
+          command -v go
+          mkdir -p "$RUNNER_TEMP/bin"
+          GOBIN="$RUNNER_TEMP/bin" go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/bin/actionlint" -version
 
       - name: Install yamllint
         run: |
