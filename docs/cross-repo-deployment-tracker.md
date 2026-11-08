@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: **2026-11-08 15:04 ICT / 08:04 UTC**
+Last reviewed: **2026-11-08 15:57 ICT / 08:57 UTC**
 
 This rolling tracker distinguishes native schedule events from manual, push, workflow_run and repository_dispatch fallbacks. Timestamped evidence is archived under `docs/cross-repo-deployment-checkpoints/`.
 
@@ -8,11 +8,11 @@ This rolling tracker distinguishes native schedule events from manual, push, wor
 
 | Repository | Master SHA | Open PRs | Readiness evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `374222f2c9685528c6783c480e5df01e22b457de` | #1438 (this update), #1314, #544, #541, #539 (draft planning/docs) | PR #1435 and #1437 merged. Exact-head and post-merge checks passed. PR #1438 corrects push-smoke summary wording and refreshes tracker. |
-| phanthienquoc/TCE-dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None | Native WF-06 #42432710149 stale; manual #42452331522 failed four strict HTTP 200 probes with 503. Native WF-12 #42452308083 failed stale-WF-06 freshness. WF-07 scheduled #42453060493 passed and heartbeat reached Platform. |
-| phanthienquoc/stockdividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | None | PR #38 merged; master CI #42440810105 PASS 7/7. Scraper #42349150261 failed closed because `VNSTOCK_API_KEY` was empty; Sunday 01:00Z run absent. |
-| phanthienquoc/media-generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | CI #42239703151 PASS. Inspection #42452273701 shows backend/frontend 1/1 Running and dedicated Media runner active. |
-| phanthienquoc/phanthienquoc-authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` | #75 ready, #76 draft | CI #42215394539 PASS. Supabase Preview skipped; #75 remains gated on merge-triggered migration/integration side effects. |
+| phanthienquoc/platform-infra | `f779f74d7176437a85e183ca00dd44e704023a3e` | #1314, #544, #541, #539 (all draft planning/docs) | PRs #1439, #1440 and #1441 merged. PR #1441 exact-head validation #42461666616 and post-merge master validation #42461706752 PASS. |
+| phanthienquoc/TCE-dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None | Native WF-06 #42458256899 failed all four public HTTP 200 probes with 503; native WF-12 #42452308083 failed freshness. Workflow_run #42458270339 passed heartbeat delivery only, not native cadence or service health. |
+| phanthienquoc/stockdividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | None | PR #38 merged; master CI #42440810105 PASS 7/7. Native scraper #42457182511 failed closed before dependency installation because `VNSTOCK_API_KEY` is missing. |
+| phanthienquoc/media-generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | Master CI #42239703151 PASS (latest observed). Last K3s snapshot #42458425146 showed backend/frontend 1/1 but is now older than the 75m snapshot budget; no new publisher/digest handoff. |
+| phanthienquoc/phanthienquoc-authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` | #75 ready, #76 draft | Master CI #42215394539 PASS; exact-head PR CI #40446492086/#41329425940 PASS. #75 remains gated by Supabase integration/merge-triggered migration side effects. |
 
 ## Current actions
 
@@ -27,13 +27,13 @@ This rolling tracker distinguishes native schedule events from manual, push, wor
 
 ## Current runtime blockers
 
-- **Native schedule delivery:** Platform native reconcile/watchdog/recovery exceed freshness budgets; inspection #42452273701 is fresh by age but its inter-arrival gap is 21,396s versus 75m. TCE WF-06 was 17,798s (296m) old at WF-12 run #42453071754 against 25m, with queue 0m and enabled check passing.
-- **TCE/Auth health:** four public endpoints returned HTTP 503. K3s snapshot shows TCE frontend/service and Auth/Keycloak intentional 0/0; no live health is asserted and no replicas are scaled.
-- **Stock scraper:** missing `VNSTOCK_API_KEY`; safe preflight must pass before ingestion. No Sunday 2026-11-08 01:00Z run appears in recent Actions history.
-- **Stock legacy workloads:** Admin (two pods) and desired Backend pod ImagePullBackOff on `12d63b4`; kubelet reports no matching platform manifest. Stock remains retired from active Platform GitOps.
-- **Stock/Media decommission:** external backup/retention, authoritative DNS ownership and fresh PVC/PV/VolumeSnapshot evidence are incomplete; Media runner retirement is not proven.
+- **Native schedule delivery:** no newer native Platform schedule events appear through 08:57Z. Latest reconcile #42439099803 age ~384m, inspection #42452273701 age ~188m, watchdog #42438566387 age ~391m, recovery #42438384072 age ~394m against 45/75/45/45m budgets. Latest TCE WF-06 #42458256899 age ~99m and WF-12 #42452308083 age ~188m against 25m budgets. Manual/workflow_run fallbacks do not count.
+- **TCE/Auth health:** latest WF-06 #42458256899 logged HTTP 503 for TCE web, TCE API, Auth liveness and Auth readiness. Last K3s snapshot shows TCE/Auth/Keycloak at intentional 0/0 but is now stale (>75m); no current live-health claim or replica change is made.
+- **Stock scraper:** native run #42457182511 (07:03:12Z) failed closed because `VNSTOCK_API_KEY` was empty before Python/dependency setup. Owner must add the repository secret and run `preflight_only=true` before ingestion.
+- **Stock legacy workloads:** last snapshot #42458425146 showed Admin pods and desired Backend on `12d63b4` in ImagePullBackOff (`no match for platform in manifest`); old Backend/Frontend were Running. Snapshot is stale; obtain a new read-only inspection before asserting current state.
+- **Stock/Media decommission:** external backup/retention, authoritative DNS ownership, runner retirement and fresh PVC/PV/VolumeSnapshot evidence remain incomplete; no namespace/workload deletion is safe yet.
 - **Authentication migration:** PR #75/#76 must not merge solely on CI; Supabase Deploy to production is reported ON and merge-triggered migration effects remain unverified.
-- **Host maintenance:** Docker/containerd updates are available and `restart_required=yes`; no maintenance window/rollback evidence exists.
+- **Host maintenance:** last snapshot reported Docker 29.1.3, host containerd.io 2.2.1, ~5.77 GB reclaimable and `restart_required=yes`; snapshot is stale and no maintenance window/rollback evidence exists.
 
 ## Platform PR and validation evidence
 
@@ -46,16 +46,14 @@ This rolling tracker distinguishes native schedule events from manual, push, wor
 
 Only original `event=schedule`, master, attempt 1 runs with exact workflow path and full source SHA count as native evidence. Manual, push, workflow_run and repository_dispatch remain separate.
 
-| Workflow | Native cron (UTC) | Latest native run | Result | Inter-arrival gap | Age at 06:09Z | Budget |
+| Workflow | Native cron (UTC) | Latest native run | Result | Inter-arrival gap | Age at 08:57Z | Budget |
 |---|---|---|---:|---:|---:|---:|
-| `reconcile-vps.yml` | `7,22,37,52 * * * *` | [#42439099803](https://github.com/phanthienquoc/platform-infra/actions/runs/42439099803), 02:34:10Z | PASS | 12,390s | ~215m | 45m |
-| `inspect-vps.yml` | `2,32 * * * *` | [#42452273701](https://github.com/phanthienquoc/platform-infra/actions/runs/42452273701), 05:49:40Z | PASS | 21,396s | ~20m | 75m |
-| `reconcile-schedule-watchdog.yml` | `12,27,42,57 * * * *` | [#42438566387](https://github.com/phanthienquoc/platform-infra/actions/runs/42438566387), 02:26:41Z | FAIL | 12,395s | ~223m | 45m |
-| `recover-stale-ops.yml` | `10,25,40,55 * * * *` | [#42438384072](https://github.com/phanthienquoc/platform-infra/actions/runs/42438384072), 02:24:08Z | PASS | 12,313s | ~225m | 45m |
+| `reconcile-vps.yml` | `7,22,37,52 * * * *` | [#42439099803](https://github.com/phanthienquoc/platform-infra/actions/runs/42439099803), 02:34:10Z | PASS | 12,390s | ~384m | 45m |
+| `inspect-vps.yml` | `2,32 * * * *` | [#42452273701](https://github.com/phanthienquoc/platform-infra/actions/runs/42452273701), 05:49:40Z | PASS | 21,396s | ~188m | 75m |
+| `reconcile-schedule-watchdog.yml` | `12,27,42,57 * * * *` | [#42438566387](https://github.com/phanthienquoc/platform-infra/actions/runs/42438566387), 02:26:41Z | FAIL | 12,395s | ~391m | 45m |
+| `recover-stale-ops.yml` | `10,25,40,55 * * * *` | [#42438384072](https://github.com/phanthienquoc/platform-infra/actions/runs/42438384072), 02:24:08Z | PASS | 12,313s | ~394m | 45m |
 
-Push smoke #42453579901 reported warnings for all four Platform gaps and TCE WF-06/WF-12 gaps (11,773s and 21,421s). It is diagnostic only and does not satisfy native cadence acceptance.
-
-TCE WF-06 latest native remains #42432710149; WF-12 latest native remains #42452308083. WF-07 scheduled integration #42453060493 passed at 06:01:55Z; its WF-12 workflow_run #42453071754 failed stale-WF-06 freshness and WF-13 #42453081086 recovered. Platform recovery #42453078467 authenticated the heartbeat and avoided duplicate fallback dispatches.
+No newer native Platform schedule event appears through 08:57Z. Push smoke remains diagnostic-only and does not satisfy native cadence acceptance.
 
 ## Reconciliation and GHCR credentials
 
@@ -195,3 +193,20 @@ The latest read-only inspection snapshot in `debug/vps-latest.md` was generated 
 7. Platform operator: plan Docker/containerd maintenance with rollback and retention evidence before cleanup, upgrade or reboot.
 
 No GHCR publication/promotion, production manifest mutation, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose authority was added. TCE market-scan schedule unchanged.
+
+
+---
+
+## Latest execution update — 2026-11-08 15:57 ICT / 08:57 UTC
+
+Repository heads and open PRs were re-read from GitHub. Platform master is `f779f74d7176437a85e183ca00dd44e704023a3e`; TCE `7ab52078c4250829e158f05b2695ceb9d11bdbe3`; Stock `e6469ac6617142b349144101a1192cb6aa7104ad`; Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; Authentication `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`.
+
+- Open PRs: Platform #1314/#544/#541/#539 (draft); Authentication #75 (ready) and #76 (draft); TCE/Stock/Media none. Platform PR #1439/#1440/#1441 merged.
+- Platform PR #1441 [merged](https://github.com/phanthienquoc/platform-infra/pull/1441); exact-head #42461666616 and post-merge #42461706752 passed. Latest master workflow run #42461706752 was created at 08:09:25Z.
+- Latest native Platform schedule events through 08:57Z: reconcile #42439099803 PASS at 02:34:10Z; inspection #42452273701 PASS at 05:49:40Z; watchdog #42438566387 FAIL at 02:26:41Z; recovery #42438384072 PASS at 02:24:08Z. Ages are approximately 384m/188m/391m/394m against 45m/75m/45m/45m budgets. No newer native event appears in the inspected history.
+- Manual Platform reconciliation #42458288651 passed at 07:19Z: GHCR access and Auth runtime Secret verification passed, shared `ghcr-pull` unchanged, no GitOps drift, manifest apply and image promotion skipped. This is not native schedule evidence or a rollout.
+- TCE native WF-06 #42458256899 failed at 07:18:37Z. Job logs confirm HTTP 503 for TCE web, TCE API, Auth liveness and Auth readiness. Native WF-12 #42452308083 remains failed/stale at 05:50:11Z. Workflow_run #42458270339 passed heartbeat/delivery at 07:18Z but is not native and does not establish endpoint health.
+- Stock native scraper #42457182511 failed at 07:03:12Z; logs confirm the missing `VNSTOCK_API_KEY` gate stopped execution before Python/dependency setup. Stock master CI #42440810105 PASS 7/7 and is non-publishing validation.
+- Media CI #42239703151 and Auth CI #42215394539 PASS; no new app CI, GHCR publication or digest handoff was found. Auth PR #75/#76 exact-head CI #40446492086/#41329425940 PASS, but Supabase merge-triggered migration effects remain unverified.
+- Latest committed read-only K3s snapshot `debug/vps-latest.md` was generated at 07:21:07Z by manual inspection #42458425146; it is ~97m old at 08:57:42Z, beyond the 75m budget. Last-known state: node Ready/ARM64; Media and MicroFE workloads Running 1/1; Stock Admin and desired Backend on `12d63b4` ImagePullBackOff due no matching platform manifest; old Stock Backend/Frontend Running; TCE/Auth/Keycloak intentional 0/0. External backup/DNS evidence remains missing; runner audit outstanding.
+- No GHCR publication/promotion, production manifest apply, workload scaling, decommission, runner retirement, DNS/database/storage mutation or host maintenance occurred. TCE market-scan schedule unchanged.
