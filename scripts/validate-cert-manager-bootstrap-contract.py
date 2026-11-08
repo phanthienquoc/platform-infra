@@ -55,7 +55,8 @@ def validate() -> None:
         "preparation script must pin the exact reviewed release and asset digest",
     )
     require(
-        "curl --fail --silent --show-error --location" in prepare
+        "curl_args=(" in prepare
+        and "--fail --silent --show-error --location" in prepare
         and '--header "Accept: application/octet-stream"' in prepare
         and "sha256sum --check --status" in prepare,
         "release download must fail closed and pass SHA-256 verification",
