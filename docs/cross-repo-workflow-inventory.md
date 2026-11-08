@@ -1,10 +1,10 @@
 # Cross-repo workflow inventory and deployment ownership
 
-Current review: **2026-11-08 17:31 ICT / 10:31 UTC**
+Current review: **2026-11-08 17:34 ICT / 10:34 UTC**
 
 | Repository | App-owned workflows and release contract | Platform-owned responsibilities / boundary | Current evidence |
 |---|---|---|---|
-| Platform Infra | No application image builds. Receives TCE/Auth digest-bound events; owns validators, native inspection, reconciliation, watchdog and recovery. | Sole production manifests, shared GHCR pull credentials, runtime Secrets, source/digest/provenance validation, GitOps promotion/reconciliation, rollout/health and protected Stock/Media decommission. | Master `ab2696c2`; PR #1453 merged after exact-head manifest/workflow/Keycloak checks all passed. Post-merge manifest validation #42471706415 and Keycloak CI #42471706467 PASS; workflow lint #42471706454 still running. Fresh read-only inspection #42471706668 triggered but `Inspect VPS` is still in progress. |
+| Platform Infra | No application image builds. Receives TCE/Auth digest-bound events; owns validators, native inspection, reconciliation, watchdog and recovery. | Sole production manifests, shared GHCR pull credentials, runtime Secrets, source/digest/provenance validation, GitOps promotion/reconciliation, rollout/health and protected Stock/Media decommission. | Master 77207c26; PR #1453 cert-manager API auth merged with exact-head and post-merge checks PASS. Inspection #42471706668 verified the #1452 sudo fix; PR #1454 merged after exact-head manifest validation #42471833649. Stock/Media storage preflight is storage-clean; external backup/DNS and Media runner retirement still block decommission. Reconcile #42471718647 final deployment gate PASS; recovery notification still queued. |
 | TCE Dashboard | CI/tests; manual WF-03 ARM64 publisher with full-SHA/version tags, web/service digest verification and `tce-release-requested`; WF-06 public health; WF-07 backup/integration; WF-08B MicroFE publisher; WF-12 watchdog; WF-13 recovery. Market-scan schedule separately owned and unchanged. | No production SSH/Compose/K3s apply. Platform receives validated digest-bound release events and owns GitOps promotion/apply and production health. | Master `7ab52078`; no open PR. Native WF-06 #42458256899 failed four probes (503); native WF-12 #42452308083 failed freshness; WF-07 #42453060493 PASS. |
 | StockDividend | CI/tests; ARM64 publisher uses full-SHA and `prod-v<version>-<full-sha>` tags, matching SHA-256 digests and `linux/arm64`; weekend scraper cron `0 1 * * 0,6` UTC has fail-closed key preflight. | Retired from active Platform GitOps; legacy namespace/workloads await protected decommission. No active production handoff. | Master `e6469ac6`; PR #38 merged; CI #42440810105 PASS 7/7. Native scraper #42457182511 failed closed on missing `VNSTOCK_API_KEY`; Stock Admin/desired Backend remain ARM64 ImagePullBackOff. |
 | Media Generation | CI/tests; app-owned ARM64 publisher with version/full-SHA tags and digest verification; no Platform dispatch while retired. | No active Platform GitOps handoff; legacy namespace and dedicated runner await protected decommission. | Master `54f3a76a`; CI #42239703151 PASS. Fresh snapshot shows backend/frontend Running 1/1 and dedicated Media runner active/enabled; backup/DNS/runner-registration evidence still incomplete. |
@@ -12,12 +12,12 @@ Current review: **2026-11-08 17:31 ICT / 10:31 UTC**
 
 ## Platform workflow schedule and acceptance
 
-| Workflow | Native cron (UTC) | Freshness budget | Latest native evidence at 10:31Z |
+| Workflow | Native cron (UTC) | Freshness budget | Latest native evidence at 10:34Z |
 |---|---|---:|---|
-| reconcile-vps.yml | `7,22,37,52 * * * *` | 45m | #42467231073 FAIL at 09:27:03Z before cert-manager fix; gap 24,773s; ~64m old. |
-| inspect-vps.yml | `2,32 * * * *` | 75m | #42452273701 PASS at 05:49:40Z; gap 21,396s; ~281m old. Fresh push inspection #42468887549 is not native. |
-| reconcile-schedule-watchdog.yml | `12,27,42,57 * * * *` | 45m | #42467080859 FAIL at 09:24:53Z; gap 25,092s; ~66m old. |
-| recover-stale-ops.yml | `10,25,40,55 * * * *` | 45m | #42466737776 PASS at 09:20:06Z; gap 24,958s; ~71m old. |
+| reconcile-vps.yml | `7,22,37,52 * * * *` | 45m | #42467231073 FAIL at 09:27:03Z before cert-manager fix; gap 24,773s; ~67m old. |
+| inspect-vps.yml | `2,32 * * * *` | 75m | #42452273701 PASS at 05:49:40Z; gap 21,396s; ~284m old. Fresh push inspection #42468887549 is not native. |
+| reconcile-schedule-watchdog.yml | `12,27,42,57 * * * *` | 45m | #42467080859 FAIL at 09:24:53Z; gap 25,092s; ~69m old. |
+| recover-stale-ops.yml | `10,25,40,55 * * * *` | 45m | #42466737776 PASS at 09:20:06Z; gap 24,958s; ~74m old. |
 
 Only original `event=schedule`, master, attempt 1, exact workflow path and full source SHA count as native. Manual, push, workflow_run and repository_dispatch remain separate. Push smoke reports schedule observations as warnings; it does not assert cadence acceptance.
 
@@ -100,3 +100,13 @@ Only original `event=schedule`, master, attempt 1, exact workflow path and full 
 - Read-only inspection #42471706668 was triggered by the helper/preflight path filter and remained in progress at the `Inspect VPS` step. It must complete before claiming the #1452 sudo boundary works against live K3s inventory.
 - Native schedule events remain unchanged: Platform reconcile #42467231073, inspection #42452273701, watchdog #42467080859, recovery #42466737776; TCE WF-06 #42458256899 and WF-12 #42452308083. Ages exceed their configured freshness budgets; push/manual/workflow_run fallbacks are not native evidence. Cron and budgets unchanged.
 - No new app image publication or digest handoff. Stock scraper #42457182511 fails closed on missing `VNSTOCK_API_KEY`; TCE WF-06 has four HTTP 503 probes; Media CI and Auth CI remain last recorded PASS. No production manifest apply, image promotion, workload scaling, decommission, runner retirement or host maintenance.
+
+
+## Latest execution update — 2026-11-08 17:34 ICT / 10:34 UTC
+
+- PR #1453 merged on Platform master ab2696c2 after exact-head #42470921373/#42470921319/#42470921336 passed. Post-merge #42471706415 (manifest), #42471706454 (workflow lint) and #42471706467 (Keycloak) passed. The cert-manager helper now uses optional read-only GH_TOKEN for the pinned release asset API while preserving SHA-256 verification and isolating PR-write permission.
+- Read-only inspection #42471706668 completed; exact-head inspection PR #1454 passed #42471833649 and merged at 77207c26536cb005b2cbcbaf19945ded5069c0df. The sudo decommission preflight reached both retired namespaces, confirmed preserved namespaces, and found no Stock/Media PVC/PV claims or VolumeSnapshot references. This confirms storage-clean preflight only; backup/DNS and Media runner unregistration are still missing.
+- Recovery-dispatched reconcile #42471718647: target all, apply mode, image changes disabled. GHCR access and Auth runtime Secret checks passed; shared pull secret unchanged; no-op ServiceAccount/deployment patches; no active Auth/MicroFE/TCE image-pull failures; TCE release pairing passed; GitOps drift false and production apply skipped. MicroFE, TCE and Auth health lanes passed, with Auth/TCE zero-replica maintenance explicitly not represented as live health. Final deployment lane gate passed; recovery-controller notification job remained queued.
+- K3s snapshot 10:30:37Z: node Ready/ARM64; Media backend/frontend and MicroFE Shell/WS/NATS 1/1; Stock Admin (2 pods) and desired Backend ImagePullBackOff on 12d63b4; older Stock Backend/Frontend 1/1; TCE/Auth/Keycloak 0/0; public OIDC 503; GitOps drift clean.
+- Native schedule latests remain Platform #42467231073/#42452273701/#42467080859/#42466737776 and TCE #42458256899/#42452308083. All relevant freshness budgets remain exceeded. No cron or freshness budget changed.
+- No GHCR publication/promotion, production manifest apply, workload scaling, namespace/storage deletion, runner retirement, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
