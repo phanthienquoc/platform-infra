@@ -1,6 +1,6 @@
 # Cross-repo production deployment readiness
 
-Current review: **2026-11-08 06:58 ICT / 2026-11-07 23:58 UTC**
+Current review: **2026-11-08 07:05 ICT / 2026-11-08 00:05 UTC**
 
 This is the rolling operational summary. Preserve timestamped evidence under [docs/cross-repo-deployment-checkpoints](cross-repo-deployment-checkpoints/).
 
@@ -8,9 +8,9 @@ This is the rolling operational summary. Preserve timestamped evidence under [do
 
 | Repository | Default-branch SHA | Open PRs | Latest relevant evidence |
 |---|---|---|---|
-| Platform Infra | `fe5c0deba7c955167060c4ddb35229eacbf6aa04` | #1314/#544/#541/#539 (draft planning/docs) | PR #1427 merged; native inspection #42427239949 PASS. Native reconcile #42423799465 PASS but 12,392s inter-arrival and 50m41s current age exceed 45m. Native watchdog #42423187797 FAIL; recovery #42423100821 PASS. |
+| Platform Infra | `50d11c2a463b76ca863290bfe0c813956e0aeac5` | #1314/#544/#541/#539 (draft planning/docs) | PR #1427 merged; native inspection #42427239949 PASS. Native reconcile #42423799465 PASS but 12,392s inter-arrival and 57m20s current age exceed 45m. Native watchdog #42423187797 FAIL; recovery #42423100821 PASS. |
 | TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None | Native WF-12 #42427247349 FAIL because WF-06 is stale. Latest native WF-06 #42417660167 FAIL; manual WF-06 #42427267317 also reports four HTTP 503 endpoints. WF-13 recovery #42427257920 PASS. |
-| StockDividend | `783ae36f128ba5dffeba8ac1d242602f160ecfd0` | None | CI #42375688209 PASS (7/7). Weekend scraper #42349150261 FAIL closed because `VNSTOCK_API_KEY` is missing. Next cron: 2026-11-08 01:00Z / 08:00 ICT. |
+| StockDividend | `783ae36f128ba5dffeba8ac1d242602f160ecfd0` | None | CI #42375688209 PASS (7/7). Weekend scraper #42349150261 FAIL closed because `VNSTOCK_API_KEY` is missing. Next cron: 2026-11-08 01:00Z / 08:00 ICT (about 55 minutes after this review). |
 | Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | CI #42239703151 PASS; no recent immutable publisher run/digest handoff. Backend/frontend and dedicated runner remain active in K3s. |
 | Authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` | #75 ready, #76 draft; migration/integration gated | CI #42215394539 PASS. PR #75 validate PASS / Supabase Preview skipped; PR #76 validate PASS / Supabase Preview skipped. No recent release/digest handoff. |
 
@@ -19,7 +19,8 @@ This is the rolling operational summary. Preserve timestamped evidence under [do
 - [PR #1424](https://github.com/phanthienquoc/platform-infra/pull/1424) merged as `8e64f0710c857c53284be6e2ad3e675307d8ceef`; exact-head and post-merge validation passed.
 - [PR #1425](https://github.com/phanthienquoc/platform-infra/pull/1425) merged as `769c558f2ded93979f6857ba35d5954404d25949`; read-only inspection snapshot only.
 - [PR #1426](https://github.com/phanthienquoc/platform-infra/pull/1426) merged as `178e70157be3b0e347ac366fafe54c221c9df4cc`; exact-head #42424250124 and post-merge #42424282141 passed.
-- [PR #1427](https://github.com/phanthienquoc/platform-infra/pull/1427) merged as current master `fe5c0deba7c955167060c4ddb35229eacbf6aa04`; exact inspection PR head `f7bfc3aa3ae2b93c3252820a3afaf3450a4fad2c`, manifest validation #42427319306 PASS. Changed `debug/vps-latest.md` only.
+- [PR #1427](https://github.com/phanthienquoc/platform-infra/pull/1427) merged as `fe5c0deba7c955167060c4ddb35229eacbf6aa04`; exact inspection PR head `f7bfc3aa3ae2b93c3252820a3afaf3450a4fad2c`, manifest validation #42427319306 PASS. Changed `debug/vps-latest.md` only.
+- [PR #1428](https://github.com/phanthienquoc/platform-infra/pull/1428) merged as current master `50d11c2a463b76ca863290bfe0c813956e0aeac5`; exact head `120a63c22394149622875146bf79ce1da20458e0`, PR validation #42427963196 PASS and post-merge validation #42428011036 PASS. Updated tracker, inventory and checkpoint only.
 
 No PR above changed production manifests, application images, schedules, or workload replica counts.
 
@@ -30,9 +31,9 @@ Only original `event=schedule` runs on master count as native evidence. Manual, 
 | Workflow | Latest native run | Result | Inter-arrival gap | Current age | Budget |
 |---|---|---|---:|---:|---:|
 | reconcile-vps.yml | [#42423799465, 23:07:40Z](https://github.com/phanthienquoc/platform-infra/actions/runs/42423799465) | PASS | 12,392s | 50m41s | 45m |
-| inspect-vps.yml | [#42427239949, 23:53:04Z](https://github.com/phanthienquoc/platform-infra/actions/runs/42427239949) | PASS | 13,475s | 5m17s | 75m |
-| reconcile-schedule-watchdog.yml | [#42423187797, 23:00:06Z](https://github.com/phanthienquoc/platform-infra/actions/runs/42423187797) | FAIL | 12,563s | 58m15s | 45m |
-| recover-stale-ops.yml | [#42423100821, 22:58:55Z](https://github.com/phanthienquoc/platform-infra/actions/runs/42423100821) | PASS | 12,553s | 59m26s | 45m |
+| inspect-vps.yml | [#42427239949, 23:53:04Z](https://github.com/phanthienquoc/platform-infra/actions/runs/42427239949) | PASS | 13,475s | 11m56s | 75m |
+| reconcile-schedule-watchdog.yml | [#42423187797, 23:00:06Z](https://github.com/phanthienquoc/platform-infra/actions/runs/42423187797) | FAIL | 12,563s | 64m54s | 45m |
+| recover-stale-ops.yml | [#42423100821, 22:58:55Z](https://github.com/phanthienquoc/platform-infra/actions/runs/42423100821) | PASS | 12,553s | 66m05s | 45m |
 
 A fresh inspection event arrived at 23:53Z, but the gap from #42409592778 remains 13,475s (3h44m35s), far above the 75m inter-arrival budget. The latest workflow_run watchdog #42427358673 at 23:54:46Z failed the freshness/inter-arrival gate; it is not native evidence.
 
@@ -46,10 +47,10 @@ Keep native freshness budgets at 45/75/45/45 minutes. Do not lower budgets or co
 
 ## TCE schedule and service health
 
-- Native WF-06 [#42417660167](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42417660167) at 21:49:14Z remains the latest native healthcheck. Its gap from #42399835467 was 13,197s (3h39m57s); it failed all four strict HTTP 200 probes.
+- Native WF-06 [#42417660167](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42417660167) at 21:49:14Z remains the latest native healthcheck (age 2h15m46s at review). Its gap from #42399835467 was 13,197s (3h39m57s); it failed all four strict HTTP 200 probes.
 - Manual WF-06 [#42427267317](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42427267317) at 23:53:27Z also failed all four endpoints: TCE web, TCE API, Auth liveness and Auth readiness returned HTTP 503.
 - Native WF-12 [#42427247349](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42427247349) at 23:53:10Z failed because native WF-06 delivery is stale. Its authenticated Platform heartbeat dispatch succeeded; WF-13 recovery #42427257920 succeeded. Heartbeat transport is not service health or native WF-06 delivery.
-- WF-12 native gap from #42411262379 was 12,247s (3h24m07s), above its 1,500s budget.
+- WF-12 native gap from #42411262379 was 12,247s (3h24m07s), above its 1,500s budget; latest native age is 11m50s.
 - WF-07 backup #42419031555 and integration #42417842240 passed.
 
 Keep WF-06/WF-12 schedules and strict HTTP 200 expectations unchanged. **TCE market-scan schedule unchanged.**
@@ -101,4 +102,4 @@ Stock/Media decommission remains manual-only. Deletion requires production Envir
 - No duplicate direct SSH/Compose deployment authority was added.
 - TCE market-scan schedule unchanged.
 
-Detailed evidence: [2026-11-08-0658-ict.md](cross-repo-deployment-checkpoints/2026-11-08-0658-ict.md)
+Detailed evidence: [2026-11-08-0705-ict.md](cross-repo-deployment-checkpoints/2026-11-08-0705-ict.md)
