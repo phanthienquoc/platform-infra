@@ -372,6 +372,7 @@ for required in (
     "phanthienquoc/TCE-dashboard",
     "TCE heartbeat SHAs must be full commit IDs",
     "fetch_tce_run()",
+    "--retry 4 --retry-delay 2 --retry-max-time 45 --max-time 15 --retry-connrefused",
     "api.github.com/repos/$SOURCE_REPOSITORY/actions/runs/$1",
     "source_run_path",
     "source_run_event",
@@ -397,6 +398,8 @@ for required in (
         fail(f"External TCE schedule heartbeat contract is missing: {required}")
 if not re.search(r"(?m)^  push:\n    branches: \[master\]\n    paths:", recovery):
     fail("Recovery controller must bootstrap from deployment-relevant master pushes.")
+if "--retry-all-errors" in recovery:
+    fail("TCE heartbeat verification must not retry permanent 4xx/authentication failures.")
 for required_path in (
     'apps/**',
     'platform/**',
