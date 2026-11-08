@@ -752,3 +752,74 @@ App repositories continue to own tests/builds and immutable GHCR publication. Pl
 5. Auth owner: continue PR #76 investigation; keep draft until the Supabase integration side-effect gate is resolved.
 
 No production manifest apply, image promotion, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host upgrade/reboot occurred. No workflow was removed and no duplicate direct SSH/Compose production authority was introduced. reconcile-vps.yml remains the sole production apply authority; inspect-vps.yml remains read-only. TCE market-scan schedule unchanged.
+
+
+## Latest cross-repo execution — 2026-11-09 02:00 ICT / 19:00 UTC
+
+### Repository heads and open pull requests
+
+- Platform Infra master: `e412faffc669a766176adccec7207c5cc02306f5`. Inspection PR [#1477](https://github.com/phanthienquoc/platform-infra/pull/1477) was squash-merged at this SHA. Its exact validated head was `874cedfb52b9bdacc7c3fc5eba1ccde41dddb859`; exact-head `validate-manifests` [#42510263923](https://github.com/phanthienquoc/platform-infra/actions/runs/42510263923) passed. The inspection snapshot was generated at 18:27:55Z. No separate post-merge validation run for the inspection-only commit was observed.
+- TCE Dashboard master: `7ab52078c4250829e158f05b2695ceb9d11bdbe3`; no open PR.
+- StockDividend master: `e6469ac6617142b349144101a1192cb6aa7104ad`; no open PR.
+- Media Generation master: `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; no open PR.
+- Authentication master: `cb907a63df0e0441b54b7b930ecdbfa97a5e52e1`; draft PR [#76](https://github.com/phanthienquoc/phanthienquoc-authentication/pull/76) remains open.
+- Platform draft PRs #1314/#544/#541/#539 remain open and unmerged. Their latest recorded `validate-manifests` runs passed respectively: #42161859747, #38575430454, #38567431761 and #38548718033. PR #544 currently reports mergeable=false; do not force-update or merge these planning/approval-gated PRs. Auth PR #76's latest `auth-service-ci` #41329425940 passed. TCE, Stock and Media have no open PRs.
+
+### Native schedule evidence (event= schedule only)
+
+Platform latest native runs and immediately preceding native runs:
+
+| Workflow | Latest native run | Previous native run | Inter-arrival gap | Budget |
+|---|---|---|---:|---:|
+| Reconcile | [#42499043683](https://github.com/phanthienquoc/platform-infra/actions/runs/42499043683), SUCCESS, 16:16:27Z | #42467231073, 09:27:03Z | 24,564s | 2,700s |
+| Inspection | [#42510125328](https://github.com/phanthienquoc/platform-infra/actions/runs/42510125328), SUCCESS, 18:27:47Z | #42483869620, 13:12:46Z | 18,901s | 4,500s |
+| Recovery | [#42498266478](https://github.com/phanthienquoc/platform-infra/actions/runs/42498266478), SUCCESS, 16:07:26Z | #42466737776, 09:20:06Z | 24,440s | 2,700s |
+| Schedule watchdog | [#42498640135](https://github.com/phanthienquoc/platform-infra/actions/runs/42498640135), FAILURE, 16:11:47Z | #42467080859, 09:24:53Z | 24,414s | 2,700s |
+
+The watchdog gaps are about 5.25–6.82 hours, materially above the existing budgets. Inspection is currently the freshest native lane, but its latest inter-arrival gap also exceeded its 75-minute budget. Recent `workflow_dispatch`, `workflow_run` and `repository_dispatch` executions are not native schedule evidence. Do not change cron or weaken freshness/queue budgets; the evidence proves missing/delayed schedule events, not a code-level cause.
+
+TCE native schedule evidence:
+
+| Workflow | Latest native run | Previous native run | Inter-arrival gap | Budget/result |
+|---|---|---|---:|---|
+| WF-06 | [#42512468931](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42512468931), FAILURE, 18:56:20Z | #42489680372, 14:24:47Z | 16,293s | 900s cadence; all four public probes failed |
+| WF-12 | [#42507582654](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42507582654), FAILURE, 17:58:14Z | #42479336350, 12:15:00Z | 20,594s | 900s cadence; watchdog reported WF-06 age 213m |
+| WF-07 integration | [#42484929411](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42484929411), SUCCESS, 13:25:55Z | #42453060493, 06:01:55Z | 26,640s | Historical gap exceeds its observed cadence |
+
+WF-06 #42512468931 is newer than the WF-12 schedule run; it does not retroactively make WF-12's native cadence healthy. The subsequent WF-12 `workflow_run` event and Platform heartbeat are separate event types.
+
+### Reconciliation and dispatch evidence
+
+- TCE WF-06 #42512468931 failed all four public probes (TCE web, TCE API, Auth liveness and Auth readiness). The observed endpoints remain HTTP 503 while TCE/Auth are intentionally zero-replica maintenance; this is not a reason to scale workloads automatically.
+- TCE WF-12's heartbeat path was accepted by Platform. The receiver/recovery chain dispatched the existing `reconcile-vps.yml` authority; the correlated manual reconciliation was [#42512502763](https://github.com/phanthienquoc/platform-infra/actions/runs/42512502763), `workflow_dispatch`, SUCCESS, with `mode=apply`, `target_app=all`, `allow_image_changes=false`.
+- Reconciliation verified GHCR read access and Auth runtime Secret presence; `ghcr-pull` was unchanged. GitOps drift was false, so manifest apply was skipped. MicroFE active health passed; TCE and Auth were explicitly recognized as zero-replica maintenance; Keycloak was skipped. No image promotion or rollout occurred.
+- Recovery [#42512617350](https://github.com/phanthienquoc/platform-infra/actions/runs/42512617350) completed successfully after verifying the source reconciliation. It was `workflow_dispatch`, not a native schedule run.
+
+### App CI, publisher and credentials
+
+- Stock CI [#42440810105](https://github.com/phanthienquoc/stockdividend/actions/runs/42440810105) passed. Scheduled scraper [#42457182511](https://github.com/phanthienquoc/stockdividend/actions/runs/42457182511) failed closed because repository secret `VNSTOCK_API_KEY` is absent. This blocks scraper entitlement/ingestion, not the image build. No new current-master publisher/digest evidence exists; the previously verified publisher is stale versus current master.
+- Media CI [#42239703151](https://github.com/phanthienquoc/media-generation/actions/runs/42239703151) passed. No new publisher run was observed; current K3s Media images remain digest-pinned.
+- Auth CI [#42478653766](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/42478653766) passed. No new release/promotion was observed; PR #76 remains draft.
+- TCE has no new publisher run or digest handoff. Preserve app ownership of tests/builds/immutable GHCR publication; Platform alone owns production manifests, shared pull credentials, GitOps promotion/reconciliation, rollout and health.
+
+### Latest read-only K3s and Stock/Media decommission evidence
+
+Source: native inspection [#42510125328](https://github.com/phanthienquoc/platform-infra/actions/runs/42510125328), snapshot generated `2026-11-08T18:27:55Z`, committed by inspection PR #1477.
+
+- Node `tce-k3s-01` is Ready/ARM64, K3s `v1.36.3+k3s1`, containerd `2.3.2-k3s2`; disk 56% (~21 GiB free), available RAM ~19 GiB. Host uptime is 191 days and `restart_required=yes`; Docker reports 20 images/9.195 GB, 5.773 GB reclaimable. No cleanup, package upgrade or reboot occurred.
+- Media backend/frontend and MicroFE Shell/WS/NATS are 1/1 Running.
+- Stock Admin×2 and the newer Backend remain ImagePullBackOff on `12d63b4` because the registry has no matching ARM64 manifest. Older Stock Backend and Frontend remain 1/1 on legacy tags.
+- TCE/Auth runtime and Keycloak remain 0/0 maintenance. No live health is claimed for those lanes.
+- The inspection itself ran `scripts/decommission-stock-media-namespaces.sh plan`: both target namespaces are present, `tce-prod` and `microfe-platform` are present, and the fresh in-cluster preflight reports no Stock/Media PVC, PV claim or VolumeSnapshot references (`storage-clean`). It made no changes.
+- The same snapshot shows the dedicated Media runner service active/enabled and `Runner.Listener` present. GitHub repository runner registration is not inferred by the host snapshot. Stock Ingresses still publish `mrcute.space`, `www.mrcute.space`, `admin.mrcute.space`, `api.mrcute.space`; Media Ingress still publishes `media.mrcute.space`.
+- In-cluster storage-clean is not proof of external database/object-storage backup, retention or ownership. Authoritative DNS/provider ownership and external-data retention remain unverified. The protected delete workflow additionally requires the dedicated Media runner to be stopped, disabled and unregistered, a valid read-only `MEDIA_RUNNER_AUDIT_TOKEN`, exact typed confirmations and the protected production Environment.
+
+### Exact next actions and safety
+
+1. GitHub administrator: investigate native schedule delivery/runner telemetry. Require consecutive within-budget native runs; do not use manual/dispatch runs as substitutes and do not change TCE market-scan or existing cron schedules.
+2. Stock owner: provision `VNSTOCK_API_KEY` in Stock repository Actions secrets and run the safe preflight. Separately publish the intended current source SHA and supply verified ARM64 full-SHA/version+SHA digest evidence before any Platform promotion.
+3. TCE/Auth service owners: approve an explicit recovery/activation plan for the intentional 0/0 lanes before public HTTP 503 can be treated as an actionable deployment failure. No automatic scaling.
+4. Media owner/operator: confirm the dedicated runner is idle, stop/disable it, unregister it from the Media repository and provide the read-only audit token. Confirm external backup/retention and authoritative DNS/provider ownership. Then run the protected decommission plan again and, only with all gates satisfied, delete exactly `stock-prod` and `media-prod`.
+5. Auth owner: continue PR #76 schema/migration drift investigation; keep it draft until Supabase side-effect gates are resolved.
+
+No production manifest/image change, workload scaling, namespace/PVC/PV deletion, runner stop/unregister, DNS/database/storage mutation or host maintenance occurred. No workflow was removed or duplicate direct SSH/Compose production authority added. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.

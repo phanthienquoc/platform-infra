@@ -340,3 +340,32 @@ Latest read-only K3s snapshot is debug/vps-latest.md, generated 2026-11-08 18:00
 - No image promotion, manifest apply, scaling, decommission, DNS/database/storage mutation, runner retirement or host maintenance in this execution.
 - No workflow deletion or direct SSH/Compose authority added.
 - TCE market-scan schedule unchanged.
+
+
+## Latest cross-repo execution — 2026-11-09 02:00 ICT / 19:00 UTC
+
+| Repository | Current master | Latest relevant evidence | Open PRs |
+|---|---|---|---|
+| Platform Infra | `e412faffc669a766176adccec7207c5cc02306f5` | Native inspection #42510125328 PASS; exact-head validation #42510263923 PASS; native reconcile #42499043683 PASS but stale; native recovery #42498266478 PASS but stale; native watchdog #42498640135 FAIL; manual reconcile #42512502763 PASS; recovery dispatch #42512617350 PASS | #1314/#544/#541/#539, all draft |
+| TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | WF-06 native #42512468931 FAIL (four HTTP 503 probes); WF-12 native #42507582654 FAIL (stale WF-06); later workflow_run heartbeat path reached Platform | None |
+| StockDividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | CI #42440810105 PASS; scraper #42457182511 FAIL closed on missing `VNSTOCK_API_KEY`; no current-master publisher evidence | None |
+| Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | CI #42239703151 PASS; no new publisher run; live images remain digest-pinned | None |
+| Authentication | `cb907a63df0e0441b54b7b930ecdbfa97a5e52e1` | CI #42478653766 PASS; no new release/promotion evidence | #76 draft |
+
+### Schedule acceptance
+
+- Platform native reconcile gap: 24,564s vs 2,700s budget.
+- Platform native inspection gap: 18,901s vs 4,500s budget.
+- Platform native recovery gap: 24,440s vs 2,700s budget.
+- Platform native watchdog gap: 24,414s vs 2,700s budget; latest watchdog remains failed.
+- TCE WF-06 gap: 16,293s; WF-12 gap: 20,594s; both exceed the observed 900s cadence. Do not change cron or freshness budgets. Manual, workflow_run and repository_dispatch events do not satisfy native schedule acceptance.
+
+### Reconciliation / runtime
+
+- Reconciliation #42512502763 ran with master, `mode=apply`, `target_app=all`, `allow_image_changes=false`; GHCR access and Auth runtime Secret checks passed, shared `ghcr-pull` unchanged, drift=false, apply/promotion/rollout skipped. TCE/Auth zero-replica maintenance was explicitly recognized; MicroFE active health passed; Keycloak skipped.
+- Snapshot #42510125328 generated 18:27:55Z: node Ready/ARM64, disk 56%, ~21 GiB free, RAM ~19 GiB; restart_required=yes. Media and MicroFE workloads 1/1. Stock Admin×2 and desired Backend ImagePullBackOff on `12d63b4`; legacy Backend/Frontend 1/1. TCE/Auth/Keycloak 0/0.
+- The inspection's read-only Stock/Media decommission plan reports storage-clean (no target PVC/PV/VolumeSnapshot references), but the Media runner is active/enabled/listener-present and DNS/external backup ownership are unverified. Namespaces and workloads remain present. Do not run delete mode until the remote runner audit, runner retirement, backup/retention and authoritative DNS gates are independently satisfied.
+
+### Preservation
+
+App repositories retain tests/builds and immutable GHCR publication. Platform Infra remains the sole owner of production manifests, shared GHCR pull credentials, digest/source verification, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose deployment authority, workflow deletion, image promotion, manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred. TCE market-scan schedule unchanged.
