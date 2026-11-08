@@ -7,10 +7,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = "v1.21.1"
 SHA256 = "5f6a499b8c1857d57f560f536e0dcc830914b45c420899fe7ad0692c8624e408"
-RELEASE_URL = (
-    "https://github.com/cert-manager/cert-manager/releases/download/"
-    f"{VERSION}/cert-manager.yaml"
-)
+RELEASE_URL = "https://api.github.com/repos/cert-manager/cert-manager/releases/assets/494156333"
 
 
 def read(path: str) -> str:
@@ -49,11 +46,12 @@ def validate() -> None:
     require(
         f'CERT_MANAGER_VERSION="{VERSION}"' in prepare
         and f'CERT_MANAGER_MANIFEST_SHA256="{SHA256}"' in prepare
-        and f'CERT_MANAGER_MANIFEST_URL="https://github.com/cert-manager/cert-manager/releases/download/${{CERT_MANAGER_VERSION}}/cert-manager.yaml"' in prepare,
+        and f'CERT_MANAGER_MANIFEST_URL="{RELEASE_URL}"' in prepare,
         "preparation script must pin the exact reviewed release and asset digest",
     )
     require(
         "curl --fail --silent --show-error --location" in prepare
+        and '--header "Accept: application/octet-stream"' in prepare
         and "sha256sum --check --status" in prepare,
         "release download must fail closed and pass SHA-256 verification",
     )
