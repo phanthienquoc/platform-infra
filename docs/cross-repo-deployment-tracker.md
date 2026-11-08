@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: **2026-11-08 15:04 ICT / 08:04 UTC**
+Last reviewed: **2026-11-08 16:55 ICT / 09:55 UTC**
 
 This rolling tracker distinguishes native schedule events from manual, push, workflow_run and repository_dispatch fallbacks. Timestamped evidence is archived under `docs/cross-repo-deployment-checkpoints/`.
 
@@ -8,32 +8,33 @@ This rolling tracker distinguishes native schedule events from manual, push, wor
 
 | Repository | Master SHA | Open PRs | Readiness evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `374222f2c9685528c6783c480e5df01e22b457de` | #1438 (this update), #1314, #544, #541, #539 (draft planning/docs) | PR #1435 and #1437 merged. Exact-head and post-merge checks passed. PR #1438 corrects push-smoke summary wording and refreshes tracker. |
-| phanthienquoc/TCE-dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None | Native WF-06 #42432710149 stale; manual #42452331522 failed four strict HTTP 200 probes with 503. Native WF-12 #42452308083 failed stale-WF-06 freshness. WF-07 scheduled #42453060493 passed and heartbeat reached Platform. |
-| phanthienquoc/stockdividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | None | PR #38 merged; master CI #42440810105 PASS 7/7. Scraper #42349150261 failed closed because `VNSTOCK_API_KEY` was empty; Sunday 01:00Z run absent. |
-| phanthienquoc/media-generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | CI #42239703151 PASS. Inspection #42452273701 shows backend/frontend 1/1 Running and dedicated Media runner active. |
-| phanthienquoc/phanthienquoc-authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` | #75 ready, #76 draft | CI #42215394539 PASS. Supabase Preview skipped; #75 remains gated on merge-triggered migration/integration side effects. |
+| phanthienquoc/platform-infra | `1f7e5cd8ca52c34fc1fe57b90324137325188a5b` | #1452 (decommission preflight privilege fix), #1314/#544/#541/#539 (draft planning/docs) | Master includes checksum-pinned cert-manager bootstrap (`312ab704`); post-fix push reconciliation #42468465293 passed with no drift. Fresh inspection #42468887549 passed; its read-only decommission preflight exposed a missing sudo boundary, fixed under #1452. |
+| phanthienquoc/TCE-dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None | Latest native WF-06 #42458256899 failed all four strict probes with HTTP 503; native WF-12 #42452308083 failed freshness. WF-07 #42453060493 passed earlier; no newer native TCE schedule event observed through 09:55Z. |
+| phanthienquoc/stockdividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | None | Master CI #42440810105 PASS 7/7. Weekend scraper #42457182511 failed closed because `VNSTOCK_API_KEY` is missing. Fresh K3s snapshot shows Admin and desired Backend ImagePullBackOff on `12d63b4` (no matching ARM64 manifest); older Backend/Frontend remain Running. |
+| phanthienquoc/media-generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | CI #42239703151 PASS. Fresh K3s snapshot #42468887549 shows backend/frontend Running 1/1; dedicated Media runner service remains active/enabled. Decommission still requires external backup, DNS and runner-registration evidence. |
+| phanthienquoc/phanthienquoc-authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` | #75 ready, #76 draft | Master CI #42215394539 PASS; exact-head PR CI #40446492086/#41329425940 PASS. Supabase merge-triggered migration/integration effects remain unverified; no merge. |
 
 ## Current actions
 
-1. **Platform/GitHub Actions:** PR #1438 makes push-only watchdog output explicitly warning-only when native schedule gaps exist. Preserve strict non-push failure semantics, cron, concurrency and 45/75/45/45m budgets.
-2. **GitHub Actions administrator:** investigate native schedule delivery gaps across Platform and TCE WF-06/WF-12; workflows are enabled and queue diagnostics show no excessive delay.
-3. **Platform owner:** audit runner registrations and GitHub audit log after the earlier short-lived registration-token exposure window.
-4. **TCE/service owner:** investigate four HTTP 503 endpoints; any replica restoration requires explicit approval and rollback plan.
-5. **Stock owner:** add `VNSTOCK_API_KEY`, run `run_scraper.yml` with `preflight_only=true`, and verify authenticated non-guest entitlement before ingestion.
-6. **Auth/Supabase owner:** verify integration target and merge-triggered migration effects before PR #75; keep #76 draft.
-7. **Stock/Media owners:** provide external backup/retention and authoritative DNS/provider evidence; retire the dedicated Media runner before namespace deletion.
-8. **Platform operator:** schedule Docker/containerd maintenance with rollback/retention evidence before cleanup, upgrade or reboot.
+1. **Platform/decommission:** PR #1452 fixes the read-only Stock/Media preflight to invoke the root-owned `platform-kubectl` wrapper through `sudo`. Fresh inspection #42468887549 showed `/etc/rancher/k3s/k3s.yaml: permission denied` because the script called the wrapper unprivileged. Exact-head validation is pending.
+2. **Platform/cert-manager:** master commit `312ab704` replaces the unsupported remote Kustomize release URL with a checksum-pinned GitHub Release asset prepared locally. Fix-branch validations #42468403916/#42468403911 passed; post-fix push reconciliation #42468465293 prepared the verified asset and found no drift. Production apply was skipped.
+3. **GitHub Actions administrator:** investigate delayed/missing native Platform and TCE WF-06/WF-12 schedule delivery; preserve existing cron and freshness budgets.
+4. **Platform owner:** audit runner registrations and GitHub audit log after the earlier short-lived registration-token exposure window.
+5. **TCE/service owner:** investigate four HTTP 503 endpoints; any replica restoration requires explicit approval and rollback plan.
+6. **Stock owner:** add `VNSTOCK_API_KEY`, run `run_scraper.yml` with `preflight_only=true`, and verify authenticated non-guest entitlement before ingestion.
+7. **Auth/Supabase owner:** verify integration target and merge-triggered migration effects before PR #75; keep #76 draft.
+8. **Stock/Media owners:** provide external backup/retention and authoritative DNS/provider evidence; retire and unregister the dedicated Media runner before namespace deletion.
+9. **Platform operator:** schedule Docker/containerd maintenance with rollback/retention evidence before cleanup, upgrade or reboot.
 
 ## Current runtime blockers
 
-- **Native schedule delivery:** Platform native reconcile/watchdog/recovery exceed freshness budgets; inspection #42452273701 is fresh by age but its inter-arrival gap is 21,396s versus 75m. TCE WF-06 was 17,798s (296m) old at WF-12 run #42453071754 against 25m, with queue 0m and enabled check passing.
-- **TCE/Auth health:** four public endpoints returned HTTP 503. K3s snapshot shows TCE frontend/service and Auth/Keycloak intentional 0/0; no live health is asserted and no replicas are scaled.
-- **Stock scraper:** missing `VNSTOCK_API_KEY`; safe preflight must pass before ingestion. No Sunday 2026-11-08 01:00Z run appears in recent Actions history.
-- **Stock legacy workloads:** Admin (two pods) and desired Backend pod ImagePullBackOff on `12d63b4`; kubelet reports no matching platform manifest. Stock remains retired from active Platform GitOps.
-- **Stock/Media decommission:** external backup/retention, authoritative DNS ownership and fresh PVC/PV/VolumeSnapshot evidence are incomplete; Media runner retirement is not proven.
+- **Native schedule delivery:** latest Platform reconcile #42467231073 (09:27:03Z) failed before the cert-manager bootstrap fix; watchdog #42467080859 (09:24:53Z) failed; recovery #42466737776 (09:20:06Z) passed. Inspection #42452273701 (05:49:40Z) is beyond the 75m age budget. Inter-arrival gaps are ~24,773s / 21,396s / 25,092s / 24,958s versus 45/75/45/45m budgets. At 09:55Z, reconcile/watchdog/recovery latest ages are within their age budgets, but the long inter-arrival gaps still fail cadence acceptance. Native delivery remains an administrator-level blocker.
+- **TCE/Auth health:** WF-06 #42458256899 returned HTTP 503 for TCE web, TCE API, Auth liveness and Auth readiness. Fresh K3s snapshot shows TCE frontend/service, Auth and Keycloak at intentional 0/0; no live health is asserted and no replicas are scaled.
+- **Stock scraper:** native run #42457182511 failed closed because `VNSTOCK_API_KEY` was empty before dependency installation. Safe preflight must pass before ingestion.
+- **Stock legacy workloads:** fresh snapshot #42468887549 shows two Stock Admin pods and the desired Backend pod in ImagePullBackOff on `12d63b4`; kubelet reports `no match for platform in manifest`. Older Backend and Frontend remain Running 1/1. Stock remains retired from active Platform GitOps.
+- **Stock/Media decommission:** inspection's read-only preflight did not complete because it invoked the root-owned wrapper without sudo; PR #1452 fixes this. Snapshot itself lists no Stock/Media PVC/PV claims or VolumeSnapshot references, but authoritative preflight must be rerun. External backup/retention, DNS ownership and Media runner unregistration remain unverified.
 - **Authentication migration:** PR #75/#76 must not merge solely on CI; Supabase Deploy to production is reported ON and merge-triggered migration effects remain unverified.
-- **Host maintenance:** Docker/containerd updates are available and `restart_required=yes`; no maintenance window/rollback evidence exists.
+- **Host maintenance:** snapshot reports Docker 29.1.3, host containerd.io 2.2.1 with 2.4.2-3 available, ~5.77 GB reclaimable and `restart_required=yes`; no maintenance window/rollback evidence exists.
 
 ## Platform PR and validation evidence
 
@@ -46,12 +47,12 @@ This rolling tracker distinguishes native schedule events from manual, push, wor
 
 Only original `event=schedule`, master, attempt 1 runs with exact workflow path and full source SHA count as native evidence. Manual, push, workflow_run and repository_dispatch remain separate.
 
-| Workflow | Native cron (UTC) | Latest native run | Result | Inter-arrival gap | Age at 06:09Z | Budget |
-|---|---|---|---:|---:|---:|---:|
-| `reconcile-vps.yml` | `7,22,37,52 * * * *` | [#42439099803](https://github.com/phanthienquoc/platform-infra/actions/runs/42439099803), 02:34:10Z | PASS | 12,390s | ~215m | 45m |
-| `inspect-vps.yml` | `2,32 * * * *` | [#42452273701](https://github.com/phanthienquoc/platform-infra/actions/runs/42452273701), 05:49:40Z | PASS | 21,396s | ~20m | 75m |
-| `reconcile-schedule-watchdog.yml` | `12,27,42,57 * * * *` | [#42438566387](https://github.com/phanthienquoc/platform-infra/actions/runs/42438566387), 02:26:41Z | FAIL | 12,395s | ~223m | 45m |
-| `recover-stale-ops.yml` | `10,25,40,55 * * * *` | [#42438384072](https://github.com/phanthienquoc/platform-infra/actions/runs/42438384072), 02:24:08Z | PASS | 12,313s | ~225m | 45m |
+| Workflow | Native cron (UTC) | Latest native run | Result | Inter-arrival gap | Age at 09:55Z | Budget |
+|---|---|---:|---:|---:|---:|---:|
+| `reconcile-vps.yml` | `7,22,37,52 * * * *` | [#42467231073](https://github.com/phanthienquoc/platform-infra/actions/runs/42467231073), 09:27:03Z | FAIL (pre-fix cert-manager render) | 24,773s | ~28m | 45m |
+| `inspect-vps.yml` | `2,32 * * * *` | [#42452273701](https://github.com/phanthienquoc/platform-infra/actions/runs/42452273701), 05:49:40Z | PASS | 21,396s | ~245m | 75m |
+| `reconcile-schedule-watchdog.yml` | `12,27,42,57 * * * *` | [#42467080859](https://github.com/phanthienquoc/platform-infra/actions/runs/42467080859), 09:24:53Z | FAIL | 25,092s | ~30m | 45m |
+| `recover-stale-ops.yml` | `10,25,40,55 * * * *` | [#42466737776](https://github.com/phanthienquoc/platform-infra/actions/runs/42466737776), 09:20:06Z | PASS | 24,958s | ~35m | 45m |
 
 Push smoke #42453579901 reported warnings for all four Platform gaps and TCE WF-06/WF-12 gaps (11,773s and 21,421s). It is diagnostic only and does not satisfy native cadence acceptance.
 
@@ -195,3 +196,21 @@ The latest read-only inspection snapshot in `debug/vps-latest.md` was generated 
 7. Platform operator: plan Docker/containerd maintenance with rollback and retention evidence before cleanup, upgrade or reboot.
 
 No GHCR publication/promotion, production manifest mutation, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose authority was added. TCE market-scan schedule unchanged.
+
+
+---
+
+## Latest execution update — 2026-11-08 16:55 ICT / 09:55 UTC
+
+Repository heads and open PRs were re-read from GitHub. Platform master is `1f7e5cd8ca52c34fc1fe57b90324137325188a5b`; TCE `7ab52078c4250829e158f05b2695ceb9d11bdbe3`; Stock `e6469ac6617142b349144101a1192cb6aa7104ad`; Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; Authentication `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`.
+
+- Open PRs: Platform #1452 (this fix), #1314/#544/#541/#539 (draft planning/docs); Authentication #75 ready and #76 draft; TCE/Stock/Media none. The older Platform documentation PR #1442 is being superseded because its 15:57Z snapshot is stale and its exact-head validation used the pre-cert-manager-fix base.
+- PR #1452 branch `fix/decommission-preflight-sudo-20261108-1655-ict` changes only the decommission preflight script, its regression test and workflow-contract validator. The fresh inspection log for #42468887549 showed `error loading config file /etc/rancher/k3s/k3s.yaml: permission denied`; the script was invoking the root-owned wrapper without sudo. The fix defaults to `sudo /usr/local/sbin/platform-kubectl` and uses a fake sudo shim in tests. No Kubernetes delete operation was invoked.
+- Native Platform schedule evidence: reconcile #42467231073 failed at 09:27:03Z on the old remote cert-manager URL; inspection #42452273701 passed at 05:49:40Z; watchdog #42467080859 failed at 09:24:53Z; recovery #42466737776 passed at 09:20:06Z. Inter-arrival gaps remain 24,773s / 21,396s / 25,092s / 24,958s. Current latest ages at 09:55Z are ~28m / 245m / 30m / 35m. Cadence acceptance still fails; cron and budgets are unchanged.
+- Cert-manager failure is fixed on master by commit `312ab704`: the release asset is downloaded via the GitHub Release asset API, SHA-256 checked, and materialized locally for Kustomize. Fix-branch validations #42468403916/#42468403911 passed. Post-fix push-auto reconciliation #42468465293 passed: checksum-verified manifest prepared, Kubernetes state matched the repo, no drift; production apply and image promotion were skipped. The native #42467231073 failure predates this fix.
+- Latest Platform push-auto reconciliation #42468465293 completed all targeted gates. GHCR pull preflight and Auth runtime Secret provisioning/verification passed; shared `ghcr-pull` remained unchanged. No drift, so no manifest apply, image promotion or rollout was performed. Zero-replica TCE/Auth lanes are not represented as live health.
+- Latest read-only K3s inspection #42468887549 completed at 09:50:43Z; snapshot generated 09:50:50Z. Node `tce-k3s-01` Ready/ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2; ~19 GiB RAM available, disk 56%/~21 GiB free. Media backend/frontend and MicroFE Shell/WS/NATS Running 1/1. Stock Admin (two pods) and desired Backend on `12d63b4` ImagePullBackOff (`no match for platform in manifest`); older Stock Backend/Frontend Running 1/1. TCE frontend/service, Auth and Keycloak 0/0. Only the k3s-debug PVC/PV was listed; no Stock/Media PVC, PV claim or VolumeSnapshot references appeared in the snapshot. The decommission preflight stopped before target-namespace inventory due to the permission issue now fixed by #1452.
+- Host snapshot: Docker 29.1.3; 20 images / 9.195 GB with ~5.773 GB reclaimable; host containerd.io 2.2.1 with 2.4.2-3 available; `restart_required=yes`. Platform and Media runner services active/enabled. No cleanup, upgrade, reboot or runner retirement.
+- TCE native WF-06 #42458256899 (07:18:37Z) failed all four public HTTP 200 probes with 503; WF-12 native #42452308083 (05:50:11Z) failed freshness; WF-07 #42453060493 passed at 06:01:55Z. Workflow_run heartbeat success does not count as native cadence or service health.
+- Stock native scraper #42457182511 failed closed on missing `VNSTOCK_API_KEY`; master CI #42440810105 PASS 7/7 and is non-publishing. Media CI #42239703151 PASS. Auth CI #42215394539 PASS; PR #75/#76 exact-head CI #40446492086/#41329425940 PASS, but Supabase merge-trigger effects remain gated.
+- No new GHCR publication, digest handoff or production promotion. No production manifest mutation, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
