@@ -198,7 +198,6 @@ No GHCR publication/promotion, production manifest mutation, workload scaling, n
 
 ---
 ## Latest execution update — 2026-11-08 16:55 ICT / 09:55 UTC
-
 Repository heads and open PRs were re-read from GitHub. Platform master is `1f7e5cd8ca52c34fc1fe57b90324137325188a5b`; TCE `7ab52078c4250829e158f05b2695ceb9d11bdbe3`; Stock `e6469ac6617142b349144101a1192cb6aa7104ad`; Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; Authentication `3b60ff46b8959d18aee1956f99d6b62589b8b9c5`.
 
 - Open PRs: Platform #1452 (this fix), #1314/#544/#541/#539 (draft planning/docs); Authentication #75 ready and #76 draft; TCE/Stock/Media none. The older Platform documentation PR #1442 is being superseded because its 15:57Z snapshot is stale and its exact-head validation used the pre-cert-manager-fix base.
@@ -397,7 +396,6 @@ Stock weekend scraper [#42457182511](https://github.com/phanthienquoc/stockdivid
 - Platform PR [#1461](https://github.com/phanthienquoc/platform-infra/pull/1461) merged by squash at `25c5e390161c5410517f5360885281abd4c1ff49`. Exact-head validation #42478273907 PASS; post-merge `validate-manifests` #42478553173 PASS.
 - Authentication PR [#75](https://github.com/phanthienquoc/phanthienquoc-authentication/pull/75) merged by squash at `cb907a63df0e0441b54b7b930ecdbfa97a5e52e1`. Updated `AUTH-OPS-007` with current read-only Supabase migration parity and deployment-side-effect analysis. Exact-head run #42478511082 passed validation and native ARM64 non-publishing build; Supabase Preview was skipped. Post-merge Auth master CI #42478653766 is still running at this checkpoint. PR #76 remains draft.
 ### Auth/Supabase merge-side-effect verification
-
 - Supabase project `gtqovpusfyyvxpeezxlo` remains `ACTIVE_HEALTHY`, PostgreSQL `17.6.1.084`, ap-southeast-1. Branch-list API reports default `main`, Git branch `master`, status `FUNCTIONS_DEPLOYED`.
 - Authentication `master:supabase/migrations` contains 84 SQL files; Supabase migration-list API returns 84 applied versions. Exact version/name comparison is 84/84 with no pending local migration and no applied version lacking a repository file.
 - Repository `supabase/` contains only `migrations/`; no `functions/`, `config.toml` or `seed.sql`. PR #75 changed docs/tests only. The earlier 2026-10-27 `MIGRATIONS_FAILED` observation is not reproduced by current project/branch metadata or migration parity.
@@ -538,7 +536,7 @@ The latest workflow_run watchdog #42484055575 also failed for these measured nat
 
 - The latest CRI inventory contains Stock cached tags `backend:23b2878` and `user:23b2878` with empty RepoDigest fields. The image IDs are local runtime identifiers, not registry digests or promotion evidence.
 - Added a read-only `GHCR image digest coverage` section to `scripts/inspect-vps.sh`. It warns when a cached GHCR-tagged image has no RepoDigest and explicitly says local image IDs cannot authorize promotion. It does not fail inspection, delete images, or change deployment state.
-- Added output validation in `.github/workflows/inspect-vps.yml` and a static contract assertion in `scripts/validate-workflow-contracts.py`. This change is on the dedicated branch `docs/deployment-readiness-2026-11-08-2157-ict`; exact-head checks are pending after PR creation.
+- Added output validation in `.github/workflows/inspect-vps.yml` and a static contract assertion in `scripts/validate-workflow-contracts.py`. PR [#1468](https://github.com/phanthienquoc/platform-infra/pull/1468) merged at `45fae050df626641ddfca3ededcff3cbf9f388b3` from exact head `351ecba94ecd8f8e6d7962073d5b74d7173743cb`. Exact-head `validate-github-actions` #42493255493 and `validate-manifests` #42493255334 both PASS.
 
 ### Latest K3s snapshot — PR #1467
 
