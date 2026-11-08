@@ -568,7 +568,7 @@ The latest workflow_run watchdog #42484055575 also failed for these measured nat
 - Platform master advanced to `819215cc0c6b295f746e1a43cd6747df4fe292b8` through automated inspection PR #1469. Snapshot `debug/vps-latest.md` generated at `2026-11-08T15:10:12Z` (22:10:12 ICT); its event type and run ID were not surfaced, so it is not counted as native schedule acceptance.
 - PR #1468 remains merged at `45fae050df626641ddfca3ededcff3cbf9f388b3`; exact-head `validate-github-actions` #42493255493 and `validate-manifests` #42493255334 both PASS. The read-only inspection code was exercised by the subsequent PR #1469 snapshot: `GHCR image digest coverage` emitted `status: warning` and listed `stockdividend/backend:23b2878` and `stockdividend/user:23b2878` with blank RepoDigest. This validates the new diagnostic on live inspection output; it does not prove a publisher digest.
 - PR #1470 was closed unmerged as superseded when inspection PR #1469 advanced master; its docs are being refreshed from current master on this branch. Current open Platform PRs remain #1314/#544/#541/#539 (planning/docs).
-- K3s: node `tce-k3s-01` Ready/ARM64; disk 56% (~21 GiB free), RAM ~19 GiB available, uptime ~191 days 1 hour, `restart_required=yes`. Media backend/frontend and MicroFE Shell/WS/NATS 1/1. Stock Admin×2 and desired Backend ImagePullBackOff on `12d63b4`; legacy Backend/Frontend 1/1 on `23b2878`. TCE/Auth/Keycloak 0/0; public OIDC 503. Platform and Media runner services active; Media Listener present.
+- K3s: node `tce-k3s-01` Ready/ARM64; disk 56% (~21 GiB free), RAM ~19 GiB available, uptime ~191 days 1 hour, `restart_required=yes`. Media backend/frontend and MicroFE Shell/WS/NATS 1/1. Stock Admin has one `ImagePullBackOff` and one `ErrImagePull`; desired Backend remains `ImagePullBackOff` on `12d63b4`; legacy Backend/Frontend 1/1 on `23b2878`. TCE/Auth/Keycloak 0/0; public OIDC 503. Platform and Media runner services active; Media Listener present.
 - Stock CRI inventory has no RepoDigest for cached `backend:23b2878`/`user:23b2878`; these are not promotion evidence. Scraper #42457182511 failed closed on missing `VNSTOCK_API_KEY`; no new publisher run or immutable digest handoff is verified.
 - TCE WF-07 native #42484929411 PASS; WF-12 heartbeat #42484941935 and Platform recovery #42484949353 PASS. Native WF-06 #42458256899 remains four HTTP 503s; native WF-12 #42479336350 stale. Platform native reconcile/watchdog/recovery latest recorded runs remain outside freshness budgets; inspection PR #1469 event provenance unknown.
 - The GitHub connector still does not expose repository-wide latest Actions run/check-run listing. PR #1468 exact-head checks are directly verified; no post-merge check conclusion is inferred from empty combined-status data.
@@ -1082,14 +1082,14 @@ Manual, push, workflow_run and repository_dispatch runs remain separate from nat
 
 ## Latest K3s snapshot and runtime limits
 
-The latest committed snapshot remains PR #1481, generated at 20:14:51Z. At 21:56Z it was ~102 minutes old, outside the 75-minute snapshot-age budget. The new inspection #42527885366 had not completed, so no fresher runtime health is claimed.
+The latest committed snapshot is PR #1484, generated at 21:59:12Z and fresh at the 05:01 ICT review. Inspection #42527885366 completed successfully; validation #42528039006 passed. This is a manual recovery inspection, not native schedule evidence.
 
 Snapshot #1481 recorded:
 
 - Node `tce-k3s-01` Ready/ARM64, K3s `v1.36.3+k3s1`, containerd `2.3.2-k3s2`.
 - Disk 56% (~21 GiB free), available RAM ~19 GiB, host uptime 191 days, `restart_required=yes`.
 - Media backend/frontend and MicroFE Shell/WS/NATS 1/1.
-- Stock Admin×2 and desired Backend ImagePullBackOff on `12d63b4`; legacy Backend/Frontend 1/1 on `23b2878`.
+- Stock Admin has one `ImagePullBackOff` and one `ErrImagePull`; desired Backend remains `ImagePullBackOff` on `12d63b4`; legacy Backend/Frontend 1/1 on `23b2878`.
 - TCE frontend/service, Auth and Keycloak 0/0.
 - Media runner service active/enabled with `Runner.Listener` present.
 - Stock/Media storage preflight clean (no target PVC/PV/VolumeSnapshot references), but external backup/retention, authoritative DNS/provider ownership and remote runner registration remain unverified.
