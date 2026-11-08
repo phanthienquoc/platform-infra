@@ -1,16 +1,10 @@
 #!/usr/bin/env python3
-"""Guard the checksum-pinned cert-manager bootstrap outside Kustomize."""
+"""Guard the checksum-pinned cert-manager bootstrap across every render/apply path."""
 
 from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-KUSTOMIZATION = ROOT / "platform/cert-manager/kustomization.yaml"
-PREPARE_SCRIPT = ROOT / "scripts/prepare-cert-manager-manifest.sh"
-RECONCILE_SCRIPT = ROOT / "scripts/reconcile-vps.sh"
-VALIDATION_WORKFLOW = ROOT / ".github/workflows/validate-manifests.yml"
-GITIGNORE = ROOT / ".gitignore"
-
 VERSION = "v1.21.1"
 SHA256 = "5f6a499b8c1857d57f560f536e0dcc830914b45c420899fe7ad0692c8624e408"
 RELEASE_URL = (
@@ -19,39 +13,43 @@ RELEASE_URL = (
 )
 
 
+def read(path: str) -> str:
+    return (ROOT / path).read_text()
+
+
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise SystemExit(f"cert-manager bootstrap contract failed: {message}")
 
 
 def validate() -> None:
-    kustomization = KUSTOMIZATION.read_text()
-    prepare = PREPARE_SCRIPT.read_text()
-    reconcile = RECONCILE_SCRIPT.read_text()
-    workflow = VALIDATION_WORKFLOW.read_text()
-    gitignore = GITIGNORE.read_text()
+    kustomization = read("platform/cert-manager/kustomization.yaml")
+    prepare = read("scripts/prepare-cert-manager-manifest.sh")
+    reconcile = read("scripts/reconcile-vps.sh")
+    workflow = read(".github/workflows/validate-manifests.yml")
+    staging = read(".github/workflows/staging-dry-run.yml")
+    wrapper = read("scripts/bootstrap-runner.sh")
+    gitignore = read(".gitignore")
 
     require(
         RELEASE_URL not in kustomization and "releases/download" not in kustomization,
         "release assets must not be declared as remote Kustomize resources",
     )
+    resource_order = [
+        kustomization.find("cert-manager.yaml"),
+        kustomization.find("cluster-issuer.yaml"),
+        kustomization.find("certificates.yaml"),
+    ]
     require(
-        "cert-manager.yaml" in kustomization
-        and "cluster-issuer.yaml" in kustomization
-        and "certificates.yaml" in kustomization,
-        "controller bundle and local ClusterIssuer/Certificate resources must remain in the production Kustomize tree",
+        all(index >= 0 for index in resource_order)
+        and resource_order == sorted(resource_order),
+        "controller bundle must precede local ClusterIssuer/Certificate resources",
     )
     require(
-        f'CERT_MANAGER_VERSION="{VERSION}"' in prepare,
-        "preparation script must pin the reviewed cert-manager release",
-    )
-    require(
-        f'CERT_MANAGER_MANIFEST_SHA256="{SHA256}"' in prepare,
-        "preparation script must pin the GitHub release asset SHA-256",
-    )
-    require(
-        f'CERT_MANAGER_MANIFEST_URL="{RELEASE_URL}"' in prepare,
-        "preparation script must download the exact pinned release asset",
+        f'CERT_MANAGER_VERSION="{VERSION}"' in prepare
+        and f'CERT_MANAGER_MANIFEST_SHA256="{SHA256}"' in prepare
+        and f'CERT_MANAGER_MANIFEST_URL="https://github.com/cert-manager/cert-manager/releases/download/${{CERT_MANAGER_VERSION}}/cert-manager.yaml"' in prepare,
+        "preparation script must pin the exact reviewed release and asset digest",
     )
     require(
         "curl --fail --silent --show-error --location" in prepare
@@ -60,48 +58,66 @@ def validate() -> None:
     )
     require(
         'if [[ "$DEST" != "$EXPECTED_DEST" ]]' in prepare
-        and 'if [[ -e "$DEST" ]]' in prepare,
-        "preparation script must constrain the destination and refuse overwrite",
+        and 'if [[ -e "$DEST" ]]' in prepare
+        and "Refusing to overwrite an existing cert-manager manifest" in prepare,
+        "preparation script must constrain the destination and refuse unverified overwrite",
     )
 
     require(
-        'bash scripts/prepare-cert-manager-manifest.sh "$CERT_MANAGER_MANIFEST_FILE"' in reconcile,
-        "GitOps reconciliation must prepare the verified local resource before diff/apply",
-    )
-    require(
-        'rm -f "$CERT_MANAGER_MANIFEST_FILE"' in reconcile
+        'bash scripts/prepare-cert-manager-manifest.sh "$CERT_MANAGER_MANIFEST_FILE"' in reconcile
+        and "CERT_MANAGER_MANIFEST_PREPARED=true" in reconcile
+        and 'rm -f "$CERT_MANAGER_MANIFEST_FILE"' in reconcile
         and "trap cleanup EXIT" in reconcile,
-        "generated manifest must be removed after reconciliation",
+        "GitOps reconciliation must prepare and clean the generated asset",
     )
     require(
         "run_kubectl diff -k environments/prod" in reconcile
-        and "run_kubectl apply -k environments/prod" in reconcile,
-        "production diff and apply must remain behind the existing restricted wrapper",
-    )
-    require(
-        "run_kubectl diff -f" not in reconcile
+        and "run_kubectl apply -k environments/prod" in reconcile
+        and "run_kubectl diff -f" not in reconcile
         and "run_kubectl apply -f" not in reconcile,
-        "do not introduce an unverified wrapper operation or a second apply path",
+        "production diff/apply must stay behind the existing restricted Kustomize wrapper",
     )
     plan = reconcile.split("  plan)", 1)[1].split("  apply)", 1)[0]
     apply = reconcile.split("  apply)", 1)[1].split("  *)", 1)[0]
     require(
-        plan.find("prepare_cert_manager_manifest") < plan.find("run_diff"),
-        "plan must prepare the release asset before Kustomize diff",
-    )
-    require(
-        apply.find("prepare_cert_manager_manifest") < apply.find("run_diff"),
-        "apply must prepare the release asset before preflight diff",
+        plan.find("prepare_cert_manager_manifest") < plan.find("run_diff")
+        and apply.find("prepare_cert_manager_manifest") < apply.find("run_diff"),
+        "both read-only plan and explicit apply must prepare the asset before diff",
     )
 
-    render = workflow.split("- name: Render production manifests", 1)[1].split(
+    callers = {
+        "scripts/validate-manifests.sh": "kubectl kustomize environments/prod",
+        "scripts/validate-network-boundaries.sh": "kubectl kustomize environments/prod",
+        "scripts/validate-recovery-readiness.sh": "run_kubectl kustomize environments/prod",
+        "scripts/guard-reconcile-images.sh": "sudo /usr/local/sbin/platform-kubectl diff -k environments/prod",
+        "scripts/inspect-vps.sh": 'sudo "$KCTL" diff -k environments/prod',
+    }
+    for path, operation in callers.items():
+        source = read(path)
+        require(
+            "bash scripts/prepare-cert-manager-manifest.sh" in source
+            and operation in source,
+            f"{path} must prepare the pinned asset before its production Kustomize operation",
+        )
+
+    render_step = workflow.split("- name: Render production manifests", 1)[1].split(
         "- name: Validate Auth GitOps contract validator", 1
     )[0]
     require(
-        "bash scripts/prepare-cert-manager-manifest.sh" in render
-        and "kubectl kustomize environments/prod" in render
-        and "trap 'rm -f" in render,
-        "offline manifest validation must prepare and clean the pinned asset before rendering",
+        "bash scripts/prepare-cert-manager-manifest.sh" in render_step
+        and "kubectl kustomize environments/prod" in render_step
+        and "prepared=true" in render_step,
+        "manifest validation workflow must prepare the asset before rendering",
+    )
+    require(
+        "Prepare checksum-verified cert-manager release" in staging
+        and "Clean up checksum-verified cert-manager release" in staging,
+        "staging dry-run must prepare and clean the generated asset",
+    )
+    require(
+        "apply -k environments/prod" in wrapper
+        and "diff -k environments/prod" in wrapper,
+        "the host wrapper must retain its existing GitOps-only production operations",
     )
     require(
         "platform/cert-manager/cert-manager.yaml" in gitignore,
