@@ -1267,6 +1267,12 @@ for required in (
     if required not in decommission_script:
         fail(f"Namespace decommission preflight is missing: {required}")
 for required in (
+    'KUBECTL_SUDO="${PLATFORM_KUBECTL_SUDO:-sudo}"',
+    'KUBECTL=("$KUBECTL_SUDO" "$KUBECTL_BIN")',
+):
+    if required not in decommission_script:
+        fail(f"Namespace decommission preflight must run the root-owned wrapper through sudo: {required}")
+for required in (
     "decommission-stock-media)",
     "DELETE-STOCK-PROD-AND-MEDIA-PROD",
     "BACKUP-AND-EXTERNAL-DATA-REVIEWED",
@@ -1291,6 +1297,9 @@ decommission_test = (ROOT / "scripts" / "tests" / "decommission-stock-media-name
 for required in ("MOCK_SNAPSHOT", "MOCK_SNAPSHOT_CONTENT", "namespaced VolumeSnapshot", "cluster-scoped VolumeSnapshotContent", "DNS_OWNERSHIP_REVIEW", "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED"):
     if required not in decommission_test:
         fail(f"Decommission storage regression tests must cover snapshot references: {required}")
+for required in ("fake_sudo", "PLATFORM_KUBECTL_SUDO", "SUDO_LOG", "Verified default decommission preflight invokes the root-owned wrapper through sudo."):
+    if required not in decommission_test:
+        fail(f"Decommission regression tests must cover privileged wrapper invocation: {required}")
 snapshot_test = ROOT / "scripts" / "tests" / "namespace-storage-snapshot-refs.test.sh"
 if not snapshot_test.is_file():
     fail("Namespace storage snapshot regression test is missing.")

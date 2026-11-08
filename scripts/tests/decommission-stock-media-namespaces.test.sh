@@ -7,6 +7,18 @@ tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 fake="$tmp/platform-kubectl"
 log="$tmp/log"
+fake_sudo="$tmp/sudo"
+sudo_log="$tmp/sudo-log"
+
+cat > "$fake_sudo" <<'MOCK'
+#!/usr/bin/env bash
+set -euo pipefail
+echo "sudo $*" >> "$SUDO_LOG"
+exec "$@"
+MOCK
+chmod +x "$fake_sudo"
+export PLATFORM_KUBECTL_SUDO="$fake_sudo"
+export SUDO_LOG="$sudo_log"
 
 cat > "$fake" <<'MOCK'
 #!/usr/bin/env bash
@@ -64,6 +76,8 @@ grep -Fq "stock.example.test" <<< "$plan_output"
 grep -Fq "stock-example-tls" <<< "$plan_output"
 grep -Fq "DNS ownership is not inferred" <<< "$plan_output"
 grep -Fq "get ingress -n stock-prod -o json" "$log"
+grep -Fq "sudo $fake get namespace tce-prod" "$sudo_log"
+echo "Verified default decommission preflight invokes the root-owned wrapper through sudo."
 if CONFIRMATION=wrong DATA_RETENTION_REVIEW=wrong DNS_OWNERSHIP_REVIEW=AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" bash "$SCRIPT" delete >/dev/null 2>&1; then
   echo "FAIL: invalid confirmation was accepted" >&2
   exit 1
