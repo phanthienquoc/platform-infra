@@ -446,3 +446,5 @@ No production manifest mutation, workload scaling, GHCR publication/promotion, n
 - Latest K3s snapshot #42475079478 is now older than the 75-minute snapshot-age budget; do not treat it as current health. Its recorded state remains Media/MicroFE 1/1, Stock Admin/desired Backend ImagePullBackOff, and TCE/Auth/Keycloak 0/0.
 - Reconciliation #42474936543 passed credential/GHCR preflight, found no drift and skipped manifest apply/image promotion/rollout. No fresh inspection, new immutable publication, digest handoff, production mutation, scaling, decommission, DNS/database/storage change, runner retirement or host maintenance occurred.
 - TCE market-scan schedule is unchanged. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only.
+
+- Follow-up after checkpoint creation: Platform PR [#1463](https://github.com/phanthienquoc/platform-infra/pull/1463) is now open from the dedicated branch; initial exact head `b7550187f317fb36999757038ad1fa631a07a908`. `validate-github-actions` and `validate-manifests` started on that exact head and were in progress at the first status read. Re-check current head before any merge.
