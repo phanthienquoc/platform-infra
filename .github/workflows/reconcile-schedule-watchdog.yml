@@ -535,26 +535,44 @@ jobs:
             warn_args+=(--warn-only)
           fi
 
+          # Aggregate all Platform schedule failures. With errexit, a single stale
+          # workflow previously stopped this step before the remaining schedules
+          # were measured, hiding useful evidence from the same watchdog run.
+          schedule_gap_failures=()
+
           verify_platform_schedule_gap() {
             local workflow_file="$1"
             local max_gap_minutes="$2"
             local runs_file="$RUNNER_TEMP/${workflow_file%.yml}-native-schedule-runs.json"
             local response
-            response="$(gh api \
+            if ! response="$(gh api \
               -X GET \
               -H "Accept: application/vnd.github+json" \
               "repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow_file}/runs" \
               -f event=schedule \
               -f branch=master \
-              -F per_page=100)"
+              -F per_page=100 2>&1)"; then
+              if (( ${#warn_args[@]} > 0 )); then
+                echo "::warning::Unable to query native schedule history for ${workflow_file}: ${response}"
+              else
+                echo "::error::Unable to query native schedule history for ${workflow_file}: ${response}"
+                schedule_gap_failures+=("${workflow_file}: Actions API query failed")
+              fi
+              return 0
+            fi
             printf '%s\n' "$response" > "$runs_file"
-            python3 scripts/verify-native-schedule-gap.py \
+            if python3 scripts/verify-native-schedule-gap.py \
               --runs-file "$runs_file" \
               --workflow-path ".github/workflows/${workflow_file}" \
               --branch master \
               --reference-epoch "$reference_epoch" \
               --max-gap-minutes "$max_gap_minutes" \
-              "${warn_args[@]}"
+              "${warn_args[@]}"; then
+              return 0
+            fi
+
+            schedule_gap_failures+=("${workflow_file}")
+            echo "::error::Native schedule acceptance failed for ${workflow_file}; continuing to inspect the remaining workflows."
           }
 
           verify_platform_schedule_gap reconcile-vps.yml "$MAX_AGE_MINUTES"
@@ -592,3 +610,9 @@ jobs:
             --reference-epoch "$reference_epoch" \
             --max-gap-minutes "$MAX_TCE_WF12_GAP_MINUTES" \
             --warn-only
+
+          if (( ${#schedule_gap_failures[@]} > 0 )); then
+            printf '::error::Native Platform schedule acceptance failed for: %s\n' "${schedule_gap_failures[*]}"
+            exit 1
+          fi
+          echo "All Platform native schedule inter-arrival checks passed."
