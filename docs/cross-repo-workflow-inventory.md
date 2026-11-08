@@ -1,13 +1,13 @@
 # Cross-repo workflow inventory and deployment ownership
 
-Current review: **2026-11-08 06:58 ICT / 2026-11-07 23:58 UTC**
+Current review: **2026-11-08 07:05 ICT / 2026-11-08 00:05 UTC**
 
 Rolling inventory only; timestamped run/PR evidence remains under `docs/cross-repo-deployment-checkpoints/`.
 
 | Repository | App-owned workflows and release contract | Platform-owned responsibilities / boundary | Current evidence |
 |---|---|---|---|
-| Platform Infra | No application image builds. Receives TCE/Auth digest-bound events; owns manifest/workflow validators, native inspection, reconciliation, watchdog and recovery. | Sole production manifests, shared GHCR pull credentials, runtime Secrets, source/digest/provenance validation, GitOps promotion/reconciliation, rollout/health and protected Stock/Media decommission. | Master `fe5c0de`; PR #1427 merged. Native inspection #42427239949 PASS but 13,475s inter-arrival. Native reconcile #42423799465 PASS but 12,392s gap and now stale; watchdog #42423187797 FAIL; recovery #42423100821 PASS. |
-| TCE Dashboard | CI/tests; manual WF-03 ARM64 publisher with full-SHA/version tags, web/service digest verification and `tce-release-requested`; WF-06 public health; WF-07 backup/integration; WF-08B MicroFE publisher; WF-12 watchdog; WF-13 recovery. Market-scan schedule remains separately owned and unchanged. | No production SSH/Compose/K3s apply. Platform receives validated digest-bound release events and owns GitOps promotion/apply and production health. | Master `7ab52078`; no open PR. Native WF-06 #42417660167 FAIL; native WF-12 #42427247349 FAIL/stale; manual WF-06 #42427267317 fails four HTTP 503 probes. |
+| Platform Infra | No application image builds. Receives TCE/Auth digest-bound events; owns manifest/workflow validators, native inspection, reconciliation, watchdog and recovery. | Sole production manifests, shared GHCR pull credentials, runtime Secrets, source/digest/provenance validation, GitOps promotion/reconciliation, rollout/health and protected Stock/Media decommission. | Master `50d11c2`; PR #1427 and #1428 merged; #1428 exact-head #42427963196 and post-merge #42428011036 PASS. Native inspection #42427239949 PASS but 13,475s inter-arrival. Native reconcile #42423799465 PASS but 12,392s gap and now stale; watchdog #42423187797 FAIL; recovery #42423100821 PASS. |
+| TCE Dashboard | CI/tests; manual WF-03 ARM64 publisher with full-SHA/version tags, web/service digest verification and `tce-release-requested`; WF-06 public health; WF-07 backup/integration; WF-08B MicroFE publisher; WF-12 watchdog; WF-13 recovery. Market-scan schedule remains separately owned and unchanged. | No production SSH/Compose/K3s apply. Platform receives validated digest-bound release events and owns GitOps promotion/apply and production health. | Master `7ab52078`; no open PR. Native WF-06 #42417660167 FAIL (age 2h15m46s); native WF-12 #42427247349 FAIL/stale (age 11m50s); manual WF-06 #42427267317 fails four HTTP 503 probes. |
 | StockDividend | CI/tests; ARM64 `deploy.yml` publishes full-SHA tags and verifies registry digests; weekend scraper cron has fail-closed `VNSTOCK_API_KEY` preflight. | Retired from active Platform GitOps; legacy namespace/workloads await protected decommission. No active production handoff. | Master `783ae36f`; CI #42375688209 7/7 PASS; scraper #42349150261 failed before dependencies/ingestion because `VNSTOCK_API_KEY` is missing. |
 | Media Generation | CI/tests; WF-03 builds ARM64, publishes version + full-SHA immutable tags and verifies digests; no Platform dispatch while retired. | No active Platform GitOps handoff; legacy namespace and dedicated runner await protected decommission. | Master `54f3a76a`; CI #42239703151 PASS; backend/frontend and dedicated runner remain active in K3s; no recent publisher/digest handoff. |
 | Authentication | CI/tests; manual `release.yml` builds ARM64 with provenance/SBOM, verifies SHA/version tags against one digest and sends `auth-image-published`. | Platform owns runtime manifests/Secrets, digest-pinned GitOps promotion/apply, rollout and health. | Master `3b60ff46`; CI #42215394539 PASS; PR #75 validate PASS/Supabase Preview skipped, #76 validate PASS/Supabase Preview skipped; both migration/integration gated. |
@@ -16,10 +16,10 @@ Rolling inventory only; timestamped run/PR evidence remains under `docs/cross-re
 
 | Workflow | Native cron (UTC) | Freshness budget | Latest native evidence |
 |---|---|---:|---|
-| `reconcile-vps.yml` | `7,22,37,52 * * * *` | 45m | #42423799465 PASS; 12,392s gap, latest age 50m41s at review. |
-| `inspect-vps.yml` | `2,32 * * * *` | 75m | #42427239949 PASS; 13,475s gap, latest age 5m17s. |
+| `reconcile-vps.yml` | `7,22,37,52 * * * *` | 45m | #42423799465 PASS; 12,392s gap, latest age 57m20s at review. |
+| `inspect-vps.yml` | `2,32 * * * *` | 75m | #42427239949 PASS; 13,475s gap, latest age 11m56s. |
 | `reconcile-schedule-watchdog.yml` | `12,27,42,57 * * * *` | 45m | #42423187797 FAIL; workflow_run #42427358673 also failed freshness. |
-| `recover-stale-ops.yml` | `10,25,40,55 * * * *` | 45m | #42423100821 PASS but age 59m26s; workflow_dispatch #42427458035 is fallback only. |
+| `recover-stale-ops.yml` | `10,25,40,55 * * * *` | 45m | #42423100821 PASS but age 66m05s; workflow_dispatch #42427458035 is fallback only. |
 
 Native evidence requires original `event=schedule`, master branch, attempt 1, exact workflow path and full source SHA. Manual, push, workflow_run and repository_dispatch are separate evidence classes. Do not lower budgets or count fallbacks as native delivery.
 
@@ -56,4 +56,4 @@ A prior short-lived runner registration token appeared in an Actions environment
 - Stock/Media deletion, runner retirement, DNS/database/storage changes and host maintenance remain gated on explicit evidence and owner approval.
 - TCE market-scan schedule unchanged.
 
-Detailed evidence: [2026-11-08-0658-ict.md](cross-repo-deployment-checkpoints/2026-11-08-0658-ict.md)
+Detailed evidence: [2026-11-08-0705-ict.md](cross-repo-deployment-checkpoints/2026-11-08-0705-ict.md)
