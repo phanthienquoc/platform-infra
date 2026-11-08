@@ -82,6 +82,12 @@ jobs:
             bash -n "$script"
           done < <(find scripts -type f -name '*.sh' -print | sort)
 
+      - name: Validate pinned cert-manager bootstrap contract
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/validate-cert-manager-bootstrap-contract.py
+          python3 scripts/validate-cert-manager-bootstrap-contract.py --self-test
+
       - name: Render production manifests
         run: kubectl kustomize environments/prod > /tmp/platform-infra-rendered.yaml
 
