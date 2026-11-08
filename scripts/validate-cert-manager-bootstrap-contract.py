@@ -28,6 +28,10 @@ def validate() -> None:
     wrapper = read("scripts/bootstrap-runner.sh")
     recovery = read("scripts/validate-recovery-readiness.sh")
     inspection = read("scripts/inspect-vps.sh")
+    reconcile_workflow = read(".github/workflows/reconcile-vps.yml")
+    inspection_workflow = read(".github/workflows/inspect-vps.yml")
+    recovery_workflow = read(".github/workflows/validate-recovery-readiness.yml")
+    auth_test = read("scripts/tests/prepare-cert-manager-manifest-auth.test.sh")
     gitignore = read(".gitignore")
 
     require(
@@ -51,10 +55,60 @@ def validate() -> None:
         "preparation script must pin the exact reviewed release and asset digest",
     )
     require(
-        "curl --fail --silent --show-error --location" in prepare
+        "curl_args=(" in prepare
+        and "--fail --silent --show-error --location" in prepare
         and '--header "Accept: application/octet-stream"' in prepare
         and "sha256sum --check --status" in prepare,
         "release download must fail closed and pass SHA-256 verification",
+    )
+    require(
+        'if [[ -n "${GH_TOKEN:-}" ]]' in prepare
+        and 'curl_args+=(--header "Authorization: Bearer ${GH_TOKEN}")' in prepare
+        and 'curl "${curl_args[@]}" "$CERT_MANAGER_MANIFEST_URL" --output "$tmp_file"' in prepare,
+        "release asset download must use an optional token to avoid anonymous API rate limits",
+    )
+    require(
+        "GH_TOKEN=test-token" in auth_test
+        and "Authorization: Bearer test-token" in auth_test
+        and "never logged" in auth_test,
+        "cert-manager release auth regression test must cover token use and log redaction",
+    )
+
+    def require_token_step(source: str, step_name: str, workflow_path: str) -> None:
+        marker = f"      - name: {step_name}"
+        start = source.find(marker)
+        require(start >= 0, f"{workflow_path} is missing step {step_name}")
+        end = source.find("\n      - name:", start + len(marker))
+        if end < 0:
+            end = len(source)
+        require(
+            "GH_TOKEN: ${{ github.token }}" in source[start:end],
+            f"{workflow_path} step {step_name} must provide GH_TOKEN to the pinned release download",
+        )
+
+    require_token_step(workflow, "Render production manifests", ".github/workflows/validate-manifests.yml")
+    require_token_step(workflow, "Validate network boundaries", ".github/workflows/validate-manifests.yml")
+    require_token_step(staging, "Prepare checksum-verified cert-manager release", ".github/workflows/staging-dry-run.yml")
+    require_token_step(reconcile_workflow, "Preflight diff", ".github/workflows/reconcile-vps.yml")
+    require_token_step(reconcile_workflow, "Guard workload image changes", ".github/workflows/reconcile-vps.yml")
+    require_token_step(reconcile_workflow, "Apply production manifests", ".github/workflows/reconcile-vps.yml")
+    require_token_step(inspection_workflow, "Inspect VPS", ".github/workflows/inspect-vps.yml")
+    require_token_step(recovery_workflow, "Validate recovery readiness", ".github/workflows/validate-recovery-readiness.yml")
+
+    require(
+        '"scripts/decommission-stock-media-namespaces.sh"' in inspection_workflow
+        and '"scripts/prepare-cert-manager-manifest.sh"' in inspection_workflow,
+        "read-only inspection must run after changes to the decommission preflight or pinned release helper",
+    )
+
+    workflow_permissions = workflow.split("jobs:", 1)[0]
+    report_job = workflow.split("  report-validation-failure:", 1)[1]
+    require(
+        "pull-requests: write" not in workflow_permissions
+        and "needs: validate" in report_job
+        and "permissions:\n      pull-requests: write" in report_job
+        and 'gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY"' in report_job,
+        "PR write permission must be isolated in the failure-comment job, not exposed to manifest validation code",
     )
     require(
         'if [[ "$DEST" != "$EXPECTED_DEST" ]]' in prepare

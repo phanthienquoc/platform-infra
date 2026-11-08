@@ -30,6 +30,8 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl version
 
       - name: Validate recovery readiness
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           chmod +x scripts/validate-recovery-readiness.sh

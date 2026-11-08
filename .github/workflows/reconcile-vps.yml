@@ -253,6 +253,8 @@ jobs:
 
       - name: Preflight diff
         id: preflight
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           if [ "$TARGET_APP" = "auth-shutdown" ]; then
@@ -284,6 +286,8 @@ jobs:
 
       - name: Guard workload image changes
         if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && env.ALLOW_IMAGE_CHANGES != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           bash scripts/guard-reconcile-images.sh check
@@ -292,6 +296,8 @@ jobs:
         id: apply
         if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' }}
         continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           bash scripts/reconcile-vps.sh apply

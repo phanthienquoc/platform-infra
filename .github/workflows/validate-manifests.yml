@@ -11,7 +11,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   validate:
@@ -89,6 +88,8 @@ jobs:
           python3 scripts/validate-cert-manager-bootstrap-contract.py --self-test
 
       - name: Render production manifests
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           manifest="platform/cert-manager/cert-manager.yaml"
@@ -197,14 +198,22 @@ jobs:
           PY
 
       - name: Validate network boundaries
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           chmod +x scripts/validate-network-boundaries.sh
           ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
 
+  report-validation-failure:
+    if: ${{ always() && github.event_name == 'pull_request' && needs.validate.result == 'failure' }}
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
       - name: Report validation failure
-        if: failure() && github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: gh pr comment "$PR_NUMBER" --body "Manifest validation failed. Check the failed step(s) above."
+        run: gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Manifest validation failed. Check the failed step(s) above."
 # yamllint enable rule:line-length
