@@ -8,7 +8,7 @@ DEST="${1:-$EXPECTED_DEST}"
 CERT_MANAGER_VERSION="v1.21.1"
 # GitHub Release API asset digest for cert-manager.yaml at v1.21.1.
 CERT_MANAGER_MANIFEST_SHA256="5f6a499b8c1857d57f560f536e0dcc830914b45c420899fe7ad0692c8624e408"
-CERT_MANAGER_MANIFEST_URL="https://github.com/cert-manager/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml"
+CERT_MANAGER_MANIFEST_URL="https://api.github.com/repos/cert-manager/cert-manager/releases/assets/494156333"
 
 if [[ "$DEST" != "$EXPECTED_DEST" ]]; then
   echo "Refusing to write cert-manager manifest outside the declared Kustomize path: $DEST" >&2
@@ -30,6 +30,8 @@ cleanup() {
 trap cleanup EXIT
 
 curl --fail --silent --show-error --location \
+  --header "Accept: application/octet-stream" \
+  --header "X-GitHub-Api-Version: 2022-11-28" \
   --retry 3 --retry-all-errors \
   --connect-timeout 10 --max-time 120 \
   "$CERT_MANAGER_MANIFEST_URL" \
