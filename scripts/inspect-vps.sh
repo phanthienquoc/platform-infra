@@ -113,6 +113,28 @@ CRI=/usr/local/sbin/platform-crictl
   jq -r '.images[:100][]? | [((.repoTags // []) | join(",")), ((.repoDigests // []) | join(",")), (.id // ""), (.pinned // false | tostring), (.size // 0 | tostring)] | @tsv' <<< "$images_json"
   echo "Containers (container ID, name, image reference, state):"
   jq -r '.containers[:100][]? | [(.id // ""), (.metadata.name // ""), (.imageRef // ""), (.state // "")] | @tsv' <<< "$containers_json"
+  echo; echo "### Stock/Media protected decommission preflight (read-only)"
+  set +e
+  bash scripts/decommission-stock-media-namespaces.sh plan
+  decommission_rc=$?
+  set -e
+  case "$decommission_rc" in
+    0) echo "decommission_preflight_status: storage-clean" ;;
+    *) echo "decommission_preflight_status: blocked"; echo "decommission_preflight_exit_code: $decommission_rc" ;;
+  esac
+  echo
+  echo "### Dedicated Media runner retirement evidence"
+  media_runner_service="actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service"
+  media_runner_state="$(systemctl is-active "$media_runner_service" 2>/dev/null || true)"
+  media_runner_enabled="$(systemctl is-enabled "$media_runner_service" 2>/dev/null || true)"
+  if pgrep -f '[/]opt/media-actions-runner/bin/Runner.Listener' >/dev/null 2>&1; then
+    media_runner_listener=present
+  else
+    media_runner_listener=absent
+  fi
+  printf 'media_runner_service=%s enabled=%s listener=%s\n' \
+    "${media_runner_state:-unknown}" "${media_runner_enabled:-unknown}" "$media_runner_listener"
+  echo "GitHub runner registration is not inferred by this host inspection; verify it in the Media repository/organization settings."
   echo; echo "### GitOps drift"
   if bash scripts/prepare-cert-manager-manifest.sh "$CERT_MANAGER_MANIFEST_FILE"; then
     CERT_MANAGER_MANIFEST_PREPARED=true

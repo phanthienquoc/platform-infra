@@ -27,6 +27,7 @@ def validate() -> None:
     staging = read(".github/workflows/staging-dry-run.yml")
     wrapper = read("scripts/bootstrap-runner.sh")
     recovery = read("scripts/validate-recovery-readiness.sh")
+    inspection = read("scripts/inspect-vps.sh")
     gitignore = read(".gitignore")
 
     require(
@@ -112,6 +113,11 @@ def validate() -> None:
         "Prepare checksum-verified cert-manager release" in staging
         and "Clean up checksum-verified cert-manager release" in staging,
         "staging dry-run must prepare and clean the generated asset",
+    )
+    require(
+        "bash scripts/decommission-stock-media-namespaces.sh plan" in inspection
+        and "bash scripts/decommission-stock-media-namespaces.sh delete" not in inspection,
+        "routine inspection may run only the read-only Stock/Media decommission preflight",
     )
     require(
         'bash scripts/prepare-cert-manager-manifest.sh "$CERT_MANAGER_MANIFEST_FILE"' in recovery
