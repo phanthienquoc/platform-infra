@@ -52,8 +52,8 @@ manifest="$PWD/platform/cert-manager/cert-manager.yaml"
 trap 'rm -f "$manifest"' EXIT
 bash scripts/prepare-cert-manager-manifest.sh "$manifest"
 sudo /usr/local/sbin/platform-kubectl version
-sudo /usr/local/sbin/platform-kubectl kustomize environments/prod >/dev/null
-sudo /usr/local/sbin/platform-kubectl apply --dry-run=server -k environments/prod >/dev/null
+sudo /usr/local/bin/k3s kubectl kustomize environments/prod >/dev/null
+sudo /usr/local/bin/k3s kubectl apply --dry-run=server -k environments/prod >/dev/null
 sudo /usr/local/sbin/platform-kubectl diff -k environments/prod
 ```
 
