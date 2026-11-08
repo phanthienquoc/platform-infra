@@ -12,9 +12,13 @@ def evaluate(run: dict, event: str, run_id: str, run_url: str) -> int:
     status = str(run.get("status") or "")
     conclusion = str(run.get("conclusion") or "pending")
 
+    if status not in {"queued", "waiting", "requested", "pending", "in_progress", "completed"}:
+        print(f"::error::Scheduled reconcile #{run_id} returned an unknown status={status or 'missing'}.")
+        return 1
+
     if status != "completed":
         print(
-            f"::notice::Scheduled reconcile #{run_id} is still {status or 'unknown'}; "
+            f"::notice::Scheduled reconcile #{run_id} is still {status}; "
             "completion has not been verified."
         )
         return 0
@@ -48,6 +52,7 @@ def self_test() -> int:
         ("failed run during read-only push smoke", {"status": "completed", "conclusion": "failure"}, "push", 0),
         ("queued scheduled run remains pending", {"status": "queued", "conclusion": None}, "schedule", 0),
         ("in-progress scheduled run remains pending", {"status": "in_progress", "conclusion": None}, "schedule", 0),
+        ("unknown run status fails closed", {"status": "unexpected", "conclusion": None}, "schedule", 1),
     ]
     failures = 0
     for label, run, event, expected in cases:
