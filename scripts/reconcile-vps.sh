@@ -4,40 +4,25 @@ set -euo pipefail
 MODE="${1:-plan}"
 ROOT="${GITHUB_WORKSPACE:-$(pwd)}"
 KUBECTL_BIN="${PLATFORM_KUBECTL_BIN:-/usr/local/sbin/platform-kubectl}"
-
-# cert-manager publishes its install bundle as a GitHub Release asset, not a
-# Kustomize remote base. Pin both the release and GitHub's asset SHA-256 so the
-# controller/CRDs remain reproducible and are applied before local CR objects.
-CERT_MANAGER_VERSION="v1.21.1"
-CERT_MANAGER_MANIFEST_SHA256="5f6a499b8c1857d57f560f536e0dcc830914b45c420899fe7ad0692c8624e408"
-CERT_MANAGER_MANIFEST_URL="https://github.com/cert-manager/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml"
-CERT_MANAGER_TMP_DIR=""
-CERT_MANAGER_MANIFEST_FILE=""
+CERT_MANAGER_MANIFEST_FILE="$ROOT/platform/cert-manager/cert-manager.yaml"
+CERT_MANAGER_MANIFEST_PREPARED=false
 
 cd "$ROOT"
 
 cleanup() {
-  if [[ -n "$CERT_MANAGER_TMP_DIR" && -d "$CERT_MANAGER_TMP_DIR" ]]; then
-    rm -rf "$CERT_MANAGER_TMP_DIR"
+  if [[ "$CERT_MANAGER_MANIFEST_PREPARED" == true ]]; then
+    rm -f "$CERT_MANAGER_MANIFEST_FILE"
   fi
 }
 trap cleanup EXIT
 
 prepare_cert_manager_manifest() {
-  CERT_MANAGER_TMP_DIR="$(mktemp -d)"
-  CERT_MANAGER_MANIFEST_FILE="$CERT_MANAGER_TMP_DIR/cert-manager.yaml"
-
-  curl --fail --silent --show-error --location \
-    --retry 3 --retry-all-errors \
-    --connect-timeout 10 --max-time 120 \
-    "$CERT_MANAGER_MANIFEST_URL" \
-    --output "$CERT_MANAGER_MANIFEST_FILE"
-
-  if ! printf '%s  %s\n' "$CERT_MANAGER_MANIFEST_SHA256" "$CERT_MANAGER_MANIFEST_FILE" | sha256sum --check --status; then
-    echo "::error::Downloaded cert-manager ${CERT_MANAGER_VERSION} manifest failed its pinned SHA-256 check." >&2
-    exit 1
+  if [[ -e "$CERT_MANAGER_MANIFEST_FILE" ]]; then
+    echo "A cert-manager manifest already exists in the worktree; refusing to overwrite it." >&2
+    exit 2
   fi
-  echo "Verified cert-manager ${CERT_MANAGER_VERSION} release manifest SHA-256."
+  bash scripts/prepare-cert-manager-manifest.sh "$CERT_MANAGER_MANIFEST_FILE"
+  CERT_MANAGER_MANIFEST_PREPARED=true
 }
 
 run_kubectl() {
@@ -48,25 +33,15 @@ run_diff() {
   local rc namespace output
   local required_namespaces=(k3s-debug microfe-platform tce-prod)
   local missing_namespaces=()
-  local drift_detected=false
 
   [[ -s "$CERT_MANAGER_MANIFEST_FILE" ]] || {
     echo "Verified cert-manager release manifest is unavailable; refusing to diff." >&2
     return 2
   }
 
-  # The controller/CRD bundle is a pinned release artifact outside Kustomize.
-  # Diff it separately, then diff the local CR objects and application overlays.
-  if run_kubectl diff -f "$CERT_MANAGER_MANIFEST_FILE"; then
-    :
-  else
-    rc=$?
-    case "$rc" in
-      1) drift_detected=true ;;
-      *) echo "cert-manager release diff failed with exit code $rc." >&2; return "$rc" ;;
-    esac
-  fi
-
+  # The checksum-verified release is materialized at the local Kustomize path.
+  # Both diff and apply continue through the existing restricted platform-kubectl
+  # wrapper and the single environments/prod GitOps authority.
   # kubectl diff cannot reliably inspect namespaced objects before their
   # declaratively-managed Namespace resources exist. Check those prerequisites
   # without creating anything; a missing Namespace is desired-state drift.
@@ -92,16 +67,15 @@ run_diff() {
   fi
 
   if run_kubectl diff -k environments/prod; then
-    :
+    rc=0
   else
     rc=$?
-    case "$rc" in
-      1) drift_detected=true ;;
-      *) echo "Kubernetes production Kustomize diff failed with exit code $rc." >&2; return "$rc" ;;
-    esac
   fi
-
-  if [[ "$drift_detected" == true ]]; then
+  if [[ "$rc" -gt 1 ]]; then
+    echo "Kubernetes diff failed with exit code $rc" >&2
+    return "$rc"
+  fi
+  if [[ "$rc" -eq 1 ]]; then
     echo "Kubernetes drift detected."
     return 1
   fi
@@ -129,7 +103,7 @@ case "$MODE" in
         exit 0
         ;;
       1)
-        echo "Drift detected; applying the pinned cert-manager release and environments/prod."
+        echo "Drift detected; applying environments/prod."
         ;;
       *)
         echo "Kubernetes preflight diff failed; refusing production apply." >&2
@@ -137,10 +111,7 @@ case "$MODE" in
         ;;
     esac
 
-    echo "== Applying checksum-verified cert-manager ${CERT_MANAGER_VERSION} release =="
-    run_kubectl apply -f "$CERT_MANAGER_MANIFEST_FILE"
-
-    echo "== Applying environments/prod =="
+    echo "== Applying checksum-verified cert-manager release and production manifests =="
     run_kubectl apply -k environments/prod
 
     echo "Manifest reconciliation completed successfully."
