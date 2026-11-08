@@ -16,7 +16,7 @@ This rolling tracker distinguishes native schedule events from manual, push, wor
 
 ## Current actions
 
-1. **Platform/cert-manager:** PR #1453 fixes post-merge manifest validation's HTTP 403 from the pinned GitHub Release asset API by using optional `GH_TOKEN` on trusted callers. It keeps the validation job at `contents: read` and moves PR-comment write permission to a separate job.
+1. **Platform/cert-manager:** PR #1453 fixes post-merge manifest validation's HTTP 403 from the pinned GitHub Release asset API by using optional `GH_TOKEN` on trusted callers. It keeps the validation job at `contents: read`, moves PR-comment write permission to a separate job, and triggers a read-only inspection when the decommission preflight or pinned release helper changes.
 2. **Platform/decommission:** PR #1452 merged as `7ccd527ed2989c772f7ba7b2e0a97e1d615086ee`; exact-head `validate-github-actions` #42469900529 and `validate-manifests` #42469900449 passed. The sudo boundary is fixed, but a post-merge read-only inspection has not yet re-run the Stock/Media preflight.
 3. **Platform reconciliation:** workflow_dispatch #42469998524 passed; GHCR pull access, Auth runtime Secret and shared pull credential checks passed. No GitOps drift, so manifest apply and rollout were skipped.
 4. **GitHub Actions administrator:** investigate missing/delayed native Platform and TCE WF-06/WF-12 schedule delivery; preserve cron and freshness budgets.
