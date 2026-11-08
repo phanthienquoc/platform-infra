@@ -539,6 +539,7 @@ jobs:
           # workflow previously stopped this step before the remaining schedules
           # were measured, hiding useful evidence from the same watchdog run.
           schedule_gap_failures=()
+          schedule_gap_warnings=()
 
           verify_platform_schedule_gap() {
             local workflow_file="$1"
@@ -554,6 +555,7 @@ jobs:
               -F per_page=100 2>&1)"; then
               if (( ${#warn_args[@]} > 0 )); then
                 echo "::warning::Unable to query native schedule history for ${workflow_file}: ${response}"
+                schedule_gap_warnings+=("${workflow_file}: Actions API query failed")
               else
                 echo "::error::Unable to query native schedule history for ${workflow_file}: ${response}"
                 schedule_gap_failures+=("${workflow_file}: Actions API query failed")
@@ -561,18 +563,23 @@ jobs:
               return 0
             fi
             printf '%s\n' "$response" > "$runs_file"
-            if python3 scripts/verify-native-schedule-gap.py \
+            local verifier_output
+            local verifier_status=0
+            verifier_output="$(python3 scripts/verify-native-schedule-gap.py \
               --runs-file "$runs_file" \
               --workflow-path ".github/workflows/${workflow_file}" \
               --branch master \
               --reference-epoch "$reference_epoch" \
               --max-gap-minutes "$max_gap_minutes" \
-              "${warn_args[@]}"; then
-              return 0
-            fi
+              "${warn_args[@]}" 2>&1)" || verifier_status=$?
+            printf '%s\n' "$verifier_output"
 
-            schedule_gap_failures+=("${workflow_file}")
-            echo "::error::Native schedule acceptance failed for ${workflow_file}; continuing to inspect the remaining workflows."
+            if (( verifier_status != 0 )); then
+              schedule_gap_failures+=("${workflow_file}")
+              echo "::error::Native schedule acceptance failed for ${workflow_file}; continuing to inspect the remaining workflows."
+            elif [[ "$verifier_output" == *"::warning::Native schedule inter-arrival observation:"* ]]; then
+              schedule_gap_warnings+=("${workflow_file}")
+            fi
           }
 
           verify_platform_schedule_gap reconcile-vps.yml "$MAX_AGE_MINUTES"
@@ -615,4 +622,13 @@ jobs:
             printf '::error::Native Platform schedule acceptance failed for: %s\n' "${schedule_gap_failures[*]}"
             exit 1
           fi
-          echo "All Platform native schedule inter-arrival checks passed."
+          if (( ${#warn_args[@]} > 0 )); then
+            if (( ${#schedule_gap_warnings[@]} > 0 )); then
+              echo "::notice::Read-only push smoke: native schedule observations are warning-only."
+              printf '::notice::No cadence acceptance asserted; observed: %s\n' "${schedule_gap_warnings[*]}"
+            else
+              echo "Read-only push smoke completed; no Platform schedule warnings were observed. TCE observations remain warning-only."
+            fi
+          else
+            echo "All Platform native schedule inter-arrival checks passed."
+          fi
