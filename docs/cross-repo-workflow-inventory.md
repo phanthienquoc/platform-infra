@@ -1,6 +1,6 @@
 # Cross-repo workflow inventory and deployment ownership
 
-Current review: **2026-11-08 22:14 ICT / 15:14 UTC**
+Current review: **2026-11-09 05:01 ICT / 2026-11-08 22:01 UTC**
 
 | Repository | App-owned workflows and release contract | Platform-owned responsibilities / boundary | Current evidence |
 |---|---|---|---|
@@ -397,4 +397,28 @@ Platform native cadence gaps from watchdog #42521222353: reconcile 15,672s/2,700
 
 Stock publication boundary: master pushes can publish immutable ARM64 artifacts without a Platform handoff when the manual-release variable is false; manual dispatch is blocked unless `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=true`. `VNSTOCK_API_KEY` is a scraper-ingestion prerequisite, not the image publisher credential. No secret/variable was modified and no manual publication was attempted.
 
-Latest committed K3s snapshot remains PR #1481, generated 20:14:51Z; it is manual and therefore not native cadence evidence. Stock desired ARM64 images remain failing; Media runner remains active/listener-present; external backup/DNS and runner audit prerequisites remain unverified. TCE/Auth/Keycloak remain 0/0 maintenance. No production mutation or workflow deletion occurred. App repos own tests/builds/immutable GHCR publication; Platform Infra alone owns production manifests, shared pull credentials, digest/source verification, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only. No SSH/Compose authority added; TCE market-scan schedule unchanged.
+Latest committed K3s snapshot is PR #1484, generated 21:59:12Z; it is a successful manual recovery inspection and therefore not native cadence evidence. Stock desired ARM64 images remain failing; Media runner remains active/listener-present; external backup/DNS and runner audit prerequisites remain unverified. TCE/Auth/Keycloak remain 0/0 maintenance. No production mutation or workflow deletion occurred. App repos own tests/builds/immutable GHCR publication; Platform Infra alone owns production manifests, shared pull credentials, digest/source verification, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only. No SSH/Compose authority added; TCE market-scan schedule unchanged.
+
+
+## Latest observed workflow ownership and run state — 2026-11-09 04:56 ICT
+
+| Repository | Master SHA | Current workflow evidence | Open PRs |
+|---|---|---|---|
+| Platform Infra | `da24edc6019ac18be2f298eed06803848362aa68` | #1483 and inspection PR #1484 merged; #1484 inspection validation #42528039006 PASS. Native reconcile #42521088881 PASS but stale; native watchdog #42520452305 FAIL; native inspection #42510125328 stale. TCE heartbeat recovery #42527720332 PASS; reconciliation #42527730424 PASS with GHCR/Secret preflight, `ghcr-pull` unchanged, drift=false and apply/promotion/rollout skipped. Read-only inspection #42527885366 completed successfully; PR #1484 merged at `da24edc6019ac18be2f298eed06803848362aa68` and validation #42528039006 passed. | #1314/#544/#541/#539 (draft) |
+| TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | Native WF-12 #42527713763 FAIL: WF-06 #42512468931 was 180m old, queue 0m. Heartbeat job PASS. WF-13 #42527723683 PASS and fallback WF-06 #42527735064 FAIL: four HTTP 503 probes. | None |
+| StockDividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | CI #42440810105 PASS; scraper #42457182511 fail-closed before dependencies because `VNSTOCK_API_KEY` is missing. No current-master publisher run; workflow-only changes are excluded by `.github/**` path-ignore. | None |
+| Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | CI #42239703151 PASS; no new publisher. Last snapshot showed digest-resolved backend/frontend 1/1; runner active/enabled/listener-present. | None |
+| Authentication | `cb907a63df0e0441b54b7b930ecdbfa97a5e52e1` | CI #42478653766 PASS; no new release/promotion; PR #76 remains draft. | #76 draft |
+
+Platform native schedule gaps: reconcile 15,672s/2,700s; inspection 18,901s/4,500s; recovery 15,605s/2,700s; watchdog 15,517s/2,700s. Inspection runner queue telemetry was 0m, so no runner-queue cause was evidenced. TCE WF-06 gap 16,293s/1,500s; WF-12 gap 14,317s/1,500s. All cadence budgets remain violated. Manual/recovery events do not satisfy native acceptance.
+
+The recovery-driven reconciliation payload was `ref=master`, `mode=apply`, `target_app=all`, `allow_image_changes=false`. It provisioned/verified Auth runtime Secret, verified GHCR read access, kept shared `ghcr-pull` unchanged, inspected only active MicroFE/TCE blocked-image workloads (no failures), detected `drift=false` and skipped manifest apply, image promotion and rollout. No Stock/Media workload restart or scaling occurred.
+
+Latest committed K3s snapshot remains #1481 at 20:14:51Z and is outside the 75-minute age budget at review. Recovery inspection #42527885366 was still in progress; do not claim a fresh snapshot until it completes. TCE/Auth/Keycloak remain 0/0; Stock Admin×2 and desired Backend remain ImagePullBackOff; Media runner retirement and external backup/DNS evidence remain blocked.
+
+Preserve app-owned tests/builds/immutable GHCR publication and Platform-owned production manifests, shared pull credentials, digest verification, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No cron/freshness budget change, workflow deletion, direct SSH/Compose authority, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
+
+
+## Inspection completion — 2026-11-09 05:01 ICT
+
+Recovery-driven inspection #42527885366 completed successfully. PR #1484 was merged at `da24edc6019ac18be2f298eed06803848362aa68`; validation #42528039006 passed. The committed snapshot generated at 21:59:12Z is fresh. It confirms the K3s node Ready, Media/MicroFE 1/1, Stock Admin×2 plus desired Backend still failing image pulls, TCE/Auth/Keycloak 0/0, Media runner active/enabled/listener-present, and Stock/Media storage preflight `storage-clean`. DNS ownership and remote runner registration are not inferred; external backup/retention remains unverified. Manual inspection is not native schedule acceptance.
