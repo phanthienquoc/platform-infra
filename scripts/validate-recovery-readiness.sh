@@ -5,6 +5,13 @@ set -euo pipefail
 # This validates that GitOps state can be reconstructed and that current workloads
 # retain rollback history without executing rollback/apply operations.
 
+ROOT="${GITHUB_WORKSPACE:-$(pwd)}"
+cd "$ROOT"
+CERT_MANAGER_MANIFEST_FILE="$ROOT/platform/cert-manager/cert-manager.yaml"
+cleanup() { rm -f "$CERT_MANAGER_MANIFEST_FILE"; }
+trap cleanup EXIT
+bash scripts/prepare-cert-manager-manifest.sh "$CERT_MANAGER_MANIFEST_FILE"
+
 KUBECTL="${KUBECTL:-sudo /usr/local/sbin/platform-kubectl}"
 
 run_kubectl() {
