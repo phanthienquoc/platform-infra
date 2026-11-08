@@ -47,8 +47,16 @@ case "$MODE" in
     ;;
 esac
 
+CERT_MANAGER_MANIFEST_FILE="$ROOT/platform/cert-manager/cert-manager.yaml"
+cleanup() {
+  rm -f "$CERT_MANAGER_MANIFEST_FILE"
+  rm -f "${diff_output:-}"
+}
+diff_output=""
+trap cleanup EXIT
+bash scripts/prepare-cert-manager-manifest.sh "$CERT_MANAGER_MANIFEST_FILE"
+
 diff_output="$(mktemp)"
-trap 'rm -f "$diff_output"' EXIT
 
 set +e
 sudo /usr/local/sbin/platform-kubectl diff -k environments/prod | tee "$diff_output" >/dev/null
