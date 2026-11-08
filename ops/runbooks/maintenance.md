@@ -16,6 +16,9 @@ This runbook is the safe operational boundary for the single-node K3s production
 Run the repository inspection workflow/script first and capture the resulting evidence. The expected checks are equivalent to:
 
 ```bash
+manifest="$PWD/platform/cert-manager/cert-manager.yaml"
+trap 'rm -f "$manifest"' EXIT
+bash scripts/prepare-cert-manager-manifest.sh "$manifest"
 sudo /usr/local/sbin/platform-kubectl get nodes -o wide
 sudo /usr/local/sbin/platform-kubectl get pods -A -o wide
 sudo /usr/local/sbin/platform-kubectl get deployments -A
@@ -89,7 +92,7 @@ The repository is the source of truth for declarative platform state. After any 
 
 1. record what changed;
 2. verify rollout health;
-3. run the GitOps diff;
+3. run the GitOps diff with the checksum-verified cert-manager asset prepared;
 4. reconcile through the repository once the intended state is confirmed; and
 5. record the final state and any remaining drift.
 
