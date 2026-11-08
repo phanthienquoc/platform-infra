@@ -292,3 +292,54 @@ Repository heads and open PRs were re-read from GitHub. Platform master is `1f7e
 - Latest K3s snapshot remains read-only inspection #42471706668 (10:30:37Z): node Ready/ARM64; Media and MicroFE workloads 1/1; Stock Admin/desired Backend ImagePullBackOff on `12d63b4`; TCE/Auth/Keycloak 0/0. It is not a new native inspection event.
 - PR #1458 on branch `fix/verify-media-runner-registration-before-decommission-20261108` adds a read-only GitHub API check that the exact Media runner name `media-generation-k3s-01` is absent from `phanthienquoc/media-generation`, in addition to local systemd/Listener checks. Delete mode will require Platform secret `MEDIA_RUNNER_AUDIT_TOKEN` with fine-grained repository Administration:read on Media only; missing secret/API failure/registered runner fails closed. The token cannot unregister the runner. Plan mode remains read-only and does not require it.
 - Backup/external-data ownership and authoritative DNS approval remain unverified. No namespace/PVC/PV deletion, runner stop/unregister, DNS/database/storage mutation, production manifest apply, workload scaling, image promotion or host maintenance occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
+
+
+## Execution follow-up — 2026-11-08 18:20 ICT / 11:20 UTC
+
+### Merged changes
+
+- Platform PR [#1458](https://github.com/phanthienquoc/platform-infra/pull/1458) merged by squash at `098cf54de9e2223bc97db57cca6fbee8334fc80c`. Exact head `892166b7b64aceea2e5d7b73ddd6f5e9cd83a5e3); exact-head `validate-github-actions` #42474849755 PASS and `validate-manifests` #42474849751 PASS; post-merge #42474925147 and #42474925187 PASS.
+- PR [#1459](https://github.com/phanthienquoc/platform-infra/pull/1459) merged the read-only K3s inspection snapshot at `ef7a1a15b94acdaf7c46cbecb4aa2391cb90b0f8`. Its exact-head manifest validation #42475211696 PASS. It changed only `debug/vps-latest.md`; no workload or production manifest was changed.
+- Current Platform master: `ef7a1a15b94acdaf7c46cbecb4aa2391cb90b0f8`.
+
+### Reconciliation and rollout evidence
+
+- Recovery-triggered reconciliation [#42474936543](https://github.com/phanthienquoc/platform-infra/actions/runs/42474936543) completed SUCCESS after a stale-schedule fallback. It used `mode=apply`, `target_app=all`, `allow_image_changes=false`.
+- GHCR pull preflight passed for Auth, MicroFE Shell/WS and TCE service/web. The shared `ghcr-pull` Secret was reported `unchanged` in both `microfe-platform` and `tce-prod`. Auth runtime Secret was provisioned and verified; values were suppressed.
+- Production preflight found no GitOps manifest drift; production manifest apply and image promotion were correctly skipped. No image digest changed.
+- Auth, MicroFE and TCE deployment lanes completed SUCCESS. Auth/MicroFE/TCE rollout steps were skipped because no rollout was required; TCE health verifier explicitly reported intentional zero-replica maintenance and **did not assert live workload health**. Keycloak lane remained skipped. The final deployment-lane gate passed.
+- TCE GitOps image verification confirmed desired/live pair `prod-v0.1.0-e75e338` for web and service. This verifies the pinned pair, not endpoint availability.
+
+### Fresh read-only K3s snapshot
+
+Source: inspection fallback [#42475079478](https://github.com/phanthienquoc/platform-infra/actions/runs/42475079478), generated `2026-11-08T11:17:34Z`, committed through PR #1459.
+
+- Node `tce-k3s-01`: Ready, ARM64, K3s `v1.36.3+k3s1`; disk 56% (~21 GiB free), available RAM ~19 GiB.
+- `media-prod`: backend/frontend each 1/1 Running. `microfe-platform`: Shell/WS/NATS each 1/1 Running; Auth/Keycloak 0/0. `tce-prod`: frontend/service 0/0 maintenance.
+- `stock-prod`: two Admin Pods and the newer Backend Pod remain ImagePullBackOff on `12d63b4`; kubelet explicitly reports no matching `linux/arm64` manifest. Older Backend and Frontend remain 1/1 Running.
+- No Stock/Media PVC/PV claim or VolumeSnapshot/VolumeSnapshotContent reference was listed. This is in-cluster storage evidence only; external backup/retention and authoritative DNS ownership remain unverified.
+- Dedicated Media runner service and `Runner.Listener` are still active. The shared Platform runner is also active and must remain untouched. The Media Ingress still publishes `media.mrcute.space`; Stock Ingress still publishes the four retired Stock hostnames.
+- Public OIDC probes for `sso.mrcute.space` returned HTTP 503 while Keycloak/Auth are 0/0. Do not report OIDC as live/healthy.
+
+### Decommission runner guard
+
+- PR #1458 adds local systemd/Listener checks plus a paginated read-only GitHub runner-list query for exact runner `media-generation-k3s-01` in `phanthienquoc/media-generation`.
+- Protected delete mode requires Platform secret `MEDIA_RUNNER_AUDIT_TOKEN`, a fine-grained GitHub token or App installation token with repository **Administration: read** on Media only. Missing token, API/JSON error or a still-registered runner blocks deletion. It cannot unregister or delete the runner.
+- Secret configuration itself is not readable through this audit and has not been verified. Plan mode remains read-only and does not need the token. No delete-mode run, runner stop/unregister or namespace deletion occurred.
+
+### Cross-repository blockers
+
+- Native Platform schedules remain stale: reconcile #42467231073 (09:27:03Z), inspection #42452273701 (05:49:40Z), watchdog #42467080859 (09:24:53Z), recovery #42466737776 (09:20:06Z). At 11:20Z they exceed the 45/75/45/45-minute budgets. The 11:17 inspection is `workflow_dispatch`, not native schedule evidence. Do not change cron or freshness budgets.
+- Native TCE WF-06 #42458256899 (07:18:37Z) failed four HTTP 503 endpoint probes; WF-12 #42452308083 (05:50:11Z) failed freshness. WF-07 integration #42453060493 passed. TCE market-scan schedule unchanged.
+- Stock scraper #42457182511 failed closed because `VNSTOCK_API_KEY` is missing. Stock CI #42440810105 passed 7/7 but is non-publishing; no new immutable GHCR publisher run/digest handoff was observed. App owner must add the key and run authenticated `preflight_only=true` before ingestion.
+- Media CI #42239703151 and Auth CI #42215394539 remain the latest recorded PASS. Authentication PR #75 remains gated on Supabase merge-trigger side-effect evidence; #76 remains draft.
+- Platform weekly cleanup #42472343489 passed with `DRY_RUN=true`, `remove_count=0`, but ran ~7h09 after its 03:30Z cron. It is purposeful maintenance and remains enabled.
+
+### Current open PRs
+
+- Platform: #1314, #544, #541, #539 (draft planning/docs). #1458 and #1459 are merged.
+- Authentication: #75 ready/open, #76 draft.
+- TCE Dashboard, StockDividend and Media Generation: none.
+
+No namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation, production manifest apply, workload scaling, GHCR publication/promotion or host maintenance occurred in this execution. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only.
