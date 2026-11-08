@@ -1220,7 +1220,8 @@ if "environment: production" in plan_job:
 for required in (
     "Validate exact deletion confirmations",
     "DNS_OWNERSHIP_REVIEW",
-    "Verify dedicated Media runner is retired",
+    "Verify dedicated Media runner is retired in GitHub and on the VPS",
+    "MEDIA_RUNNER_AUDIT_TOKEN: ${{ secrets.MEDIA_RUNNER_AUDIT_TOKEN }}",
     "run: bash scripts/verify-media-runner-retired.sh",
     "Run fresh read-only storage preflight",
     "Delete only the two approved namespaces",
@@ -1229,7 +1230,7 @@ for required in (
 ):
     if required not in delete_job:
         fail(f"Destructive decommission job is missing: {required}")
-runner_guard_step = delete_job.find("name: Verify dedicated Media runner is retired")
+runner_guard_step = delete_job.find("name: Verify dedicated Media runner is retired in GitHub and on the VPS")
 storage_preflight_step = delete_job.find("name: Run fresh read-only storage preflight")
 namespace_delete_step = delete_job.find("name: Delete only the two approved namespaces")
 if not (0 <= runner_guard_step < storage_preflight_step < namespace_delete_step):
@@ -1242,7 +1243,13 @@ for required in (
     "disabled|masked|masked-runtime|not-found",
     "Runner.Listener",
     "pgrep -f",
-    "GitHub registration remains operator-attested",
+    "MEDIA_RUNNER_AUDIT_TOKEN",
+    "phanthienquoc/media-generation",
+    "media-generation-k3s-01",
+    "curl --fail --silent --show-error --config -",
+    "page_count",
+    "select(.name == $runner)",
+    "refusing namespace deletion",
 ):
     if required not in runner_guard_script:
         fail(f"Dedicated Media runner retirement guard is missing: {required}")

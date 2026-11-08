@@ -151,7 +151,9 @@ jobs:
             exit 1
           }
 
-      - name: Verify dedicated Media runner is retired
+      - name: Verify dedicated Media runner is retired in GitHub and on the VPS
+        env:
+          MEDIA_RUNNER_AUDIT_TOKEN: ${{ secrets.MEDIA_RUNNER_AUDIT_TOKEN }}
         run: bash scripts/verify-media-runner-retired.sh
 
       - name: Run fresh read-only storage preflight

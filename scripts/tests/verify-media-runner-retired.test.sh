@@ -47,13 +47,56 @@ if [[ "${MOCK_LISTENER_PRESENT:-0}" == "1" ]]; then
 fi
 exit 1
 MOCK
-chmod +x "$tmp/bin/systemctl" "$tmp/bin/pgrep"
+cat > "$tmp/bin/curl" <<'MOCK'
+#!/usr/bin/env bash
+set -euo pipefail
+for arg in "$@"; do
+  [[ "$arg" != *"${MOCK_EXPECTED_TOKEN:-test-token}"* ]] || {
+    echo "Token must not appear in curl argv." >&2
+    exit 90
+  }
+done
+config="$(cat)"
+[[ "$config" == *"Authorization: Bearer ${MOCK_EXPECTED_TOKEN:-test-token}"* ]] || {
+  echo "Expected authorization header was not supplied through curl stdin config." >&2
+  exit 91
+}
+url="${@: -1}"
+[[ "$url" == https://api.github.com/repos/phanthienquoc/media-generation/actions/runners?per_page=100\&page=* ]]
+if [[ "${MOCK_API_FAIL:-0}" == "1" ]]; then
+  exit 22
+fi
+case "$url" in
+  *"page=1")
+    if [[ "${MOCK_API_PAGINATION:-0}" == "1" ]]; then
+      printf '%s\n' '{"total_count":101,"runners":[]}'
+    elif [[ "${MOCK_API_RUNNER_PRESENT:-0}" == "1" ]]; then
+      printf '%s\n' '{"total_count":1,"runners":[{"id":42,"name":"media-generation-k3s-01","status":"offline","busy":false}]}'
+    else
+      printf '%s\n' '{"total_count":0,"runners":[]}'
+    fi
+    ;;
+  *"page=2")
+    printf '%s\n' '{"total_count":101,"runners":[{"id":42,"name":"media-generation-k3s-01","status":"offline","busy":false}]}'
+    ;;
+  *)
+    echo "Unexpected runner API URL: $url" >&2
+    exit 92
+    ;;
+esac
+MOCK
+chmod +x "$tmp/bin/systemctl" "$tmp/bin/pgrep" "$tmp/bin/curl"
 
 run_guard() {
   PATH="$tmp/bin:$PATH" \
+    MEDIA_RUNNER_AUDIT_TOKEN="${MEDIA_RUNNER_AUDIT_TOKEN:-test-token}" \
+    MOCK_EXPECTED_TOKEN=test-token \
     MOCK_SERVICE_STATE="${MOCK_SERVICE_STATE:-inactive}" \
     MOCK_SERVICE_ENABLED="${MOCK_SERVICE_ENABLED:-disabled}" \
     MOCK_LISTENER_PRESENT="${MOCK_LISTENER_PRESENT:-0}" \
+    MOCK_API_RUNNER_PRESENT="${MOCK_API_RUNNER_PRESENT:-0}" \
+    MOCK_API_PAGINATION="${MOCK_API_PAGINATION:-0}" \
+    MOCK_API_FAIL="${MOCK_API_FAIL:-0}" \
     bash "$SCRIPT"
 }
 expect_failure() {
@@ -80,5 +123,12 @@ MOCK_SERVICE_STATE=inactive MOCK_SERVICE_ENABLED=static expect_failure "static s
 MOCK_SERVICE_STATE=inactive MOCK_SERVICE_ENABLED=linked expect_failure "linked service unit"
 MOCK_SERVICE_STATE=inactive MOCK_SERVICE_ENABLED=unknown expect_failure "unknown enablement state"
 MOCK_SERVICE_STATE=inactive MOCK_SERVICE_ENABLED=disabled MOCK_LISTENER_PRESENT=1 expect_failure "listener process still running"
+MOCK_API_RUNNER_PRESENT=1 expect_failure "GitHub runner remains registered"
+MOCK_API_FAIL=1 expect_failure "GitHub runner API unavailable"
+MOCK_API_PAGINATION=1 expect_failure "GitHub runner appears on a later API page"
+if PATH="$tmp/bin:$PATH" env -u MEDIA_RUNNER_AUDIT_TOKEN bash "$SCRIPT" >/dev/null 2>&1; then
+  echo "FAIL: missing GitHub runner audit token was accepted" >&2
+  exit 1
+fi
 
 echo "Dedicated Media runner retirement guard tests passed."

@@ -130,3 +130,15 @@ Only original `event=schedule`, master, attempt 1, exact workflow path and full 
 - Latest native run #42472343489 completed PASS at 10:39:26Z, about 7h09 after the cron time. KEEP_UNUSED_IMAGES=10; script found 8 unused images and remove_count=0. No images were removed.
 - The script inventories all Pods and CRI containers, protects images referenced by existing containers (including terminated ones), excludes pinned images, fails closed if a non-terminal Pod reference cannot be resolved, and rechecks Pod/container references before each deletion. The destructive manual path was not invoked.
 - This workflow is purposeful maintenance, not a production deployment authority; preserve it and keep it separate from native deployment cadence acceptance.
+
+
+
+## Media runner decommission verification contract — PR #1458 (open)
+
+- App ownership is unchanged: Media Generation owns source/tests/builds and immutable image publication; Platform owns only the protected K3s decommission workflow after GitOps ownership retirement.
+- The delete-mode workflow now runs both local checks (systemd inactive and disabled/masked/absent; no `Runner.Listener`) and a remote read-only GitHub repository runner-list check for exact runner name `media-generation-k3s-01`.
+- Required Platform Actions secret: `MEDIA_RUNNER_AUDIT_TOKEN`. It must be a fine-grained token or GitHub App installation token with repository **Administration: read** on `phanthienquoc/media-generation` only. The verifier calls only `GET /repos/phanthienquoc/media-generation/actions/runners`, paginates, suppresses the token, and fails closed on missing credentials, API/JSON failure or a matching runner. It does not have or request runner deletion permission.
+- Operator still performs the stop/disable and GitHub unregister flow separately. The workflow verifies the result; it never stops or unregisters the runner.
+- Plan mode remains read-only and token-free. Delete mode retains production Environment approval, typed namespace/backup/DNS attestations, fresh same-run storage preflight and fixed namespace allowlist.
+- PR #1458 adds regression coverage for absent/present runner, pagination, missing token and API failure. It is open pending exact-head validation; no decommission was dispatched.
+- This contract does not change app publisher ownership, GHCR credentials, GitOps promotion, production apply authority, direct SSH/Compose boundaries or the TCE market-scan schedule.
