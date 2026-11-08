@@ -77,7 +77,7 @@ def validate() -> None:
         marker = f"      - name: {step_name}"
         start = source.find(marker)
         require(start >= 0, f"{workflow_path} is missing step {step_name}")
-        end = source.find("\\n      - name:", start + len(marker))
+        end = source.find("\n      - name:", start + len(marker))
         if end < 0:
             end = len(source)
         require(
@@ -99,7 +99,7 @@ def validate() -> None:
     require(
         "pull-requests: write" not in workflow_permissions
         and "needs: validate" in report_job
-        and "permissions:\\n      pull-requests: write" in report_job
+        and "permissions:\n      pull-requests: write" in report_job
         and 'gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY"' in report_job,
         "PR write permission must be isolated in the failure-comment job, not exposed to manifest validation code",
     )
