@@ -6,7 +6,12 @@ OUT="${1:-debug/vps-latest.md}"
 mkdir -p "$(dirname "$OUT")"
 KCTL=/usr/local/sbin/platform-kubectl
 CERT_MANAGER_MANIFEST_FILE="$ROOT/platform/cert-manager/cert-manager.yaml"
-cleanup() { rm -f "$CERT_MANAGER_MANIFEST_FILE"; }
+CERT_MANAGER_MANIFEST_PREPARED=false
+cleanup() {
+  if [[ "$CERT_MANAGER_MANIFEST_PREPARED" == true ]]; then
+    rm -f "$CERT_MANAGER_MANIFEST_FILE"
+  fi
+}
 trap cleanup EXIT
 CRI=/usr/local/sbin/platform-crictl
 {
@@ -110,6 +115,7 @@ CRI=/usr/local/sbin/platform-crictl
   jq -r '.containers[:100][]? | [(.id // ""), (.metadata.name // ""), (.imageRef // ""), (.state // "")] | @tsv' <<< "$containers_json"
   echo; echo "### GitOps drift"
   if bash scripts/prepare-cert-manager-manifest.sh "$CERT_MANAGER_MANIFEST_FILE"; then
+    CERT_MANAGER_MANIFEST_PREPARED=true
     set +e
     sudo "$KCTL" diff -k environments/prod >/dev/null 2>&1
     drift_rc=$?
