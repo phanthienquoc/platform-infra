@@ -17,10 +17,6 @@ cleanup() {
 trap cleanup EXIT
 
 prepare_cert_manager_manifest() {
-  if [[ -e "$CERT_MANAGER_MANIFEST_FILE" ]]; then
-    echo "A cert-manager manifest already exists in the worktree; refusing to overwrite it." >&2
-    exit 2
-  fi
   bash scripts/prepare-cert-manager-manifest.sh "$CERT_MANAGER_MANIFEST_FILE"
   CERT_MANAGER_MANIFEST_PREPARED=true
 }
