@@ -8,13 +8,13 @@ Rolling operational summary. Preserve timestamped evidence under `docs/cross-rep
 
 | Repository | Master SHA | Open PRs | Latest relevant evidence |
 |---|---|---|---|
-| Platform Infra | `11b0b86a971a1c106d1420930def8d4df80fd99a` | #1314, #544, #541, #539 (draft planning/docs) | PR #1433 merged; exact-head #42441046772 and post-merge #42441085003 PASS. Latest native reconcile #42439099803 PASS but is ~91m old; native schedule freshness remains outside budget. |
+| Platform Infra | `11b0b86a971a1c106d1420930def8d4df80fd99a` |  #1314, #544, #541, #539 (draft planning/docs), #1434 (this readiness refresh; validation queued) | PR #1433 merged; exact-head #42441046772 and post-merge #42441085003 PASS. Latest native reconcile #42439099803 PASS but is ~91m old; native schedule freshness remains outside budget. |
 | TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None | Latest native WF-06 #42432710149 failed all four HTTP 200 probes (HTTP 503); latest native WF-12 #42427247349 failed stale-health gate. |
 | StockDividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | None | PR #38 merged. Exact-head CI #42437287197 and post-merge master CI #42440810105 both PASS 7/7, including ARM64 non-publishing builds. No GHCR publish occurred. Scraper remains blocked by missing `VNSTOCK_API_KEY`; expected Sunday 01:00Z schedule run is absent. |
 | Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | CI #42239703151 PASS. Latest formal K3s inspection still shows backend/frontend and dedicated runner active; no recent publisher/digest handoff. |
 | Authentication | `3b60ff46b8959d18aee1956f99d6b62589b8b9c5` | #75 ready, #76 draft | CI #42215394539 PASS. PR #75/#76 validation PASS; Supabase Preview skipped. #75 remains gated on migration/integration side effects. |
 
-Open Platform PRs #1314, #544, #541 and #539 are draft planning/documentation work, not deployment changes. No open cross-repo deployment PR remains on Platform.
+Open Platform PRs #1314, #544, #541 and #539 are draft planning/documentation work; #1434 is this documentation-only readiness refresh with exact-head validation queued. No application deployment PR is open on Platform.
 
 ## Platform PR and validation evidence
 
