@@ -234,3 +234,15 @@ Only original `event=schedule`, master, attempt 1, exact workflow path and full 
 - Media runner service and Listener remain active/enabled; Platform runner is also active. In-cluster Stock/Media storage preflight remains clean (no PVC/PV claims or VolumeSnapshot references), but external backup/retention and authoritative DNS are still unverified.
 - GitOps drift is clean; cert-manager v1.21.1 bootstrap manifest checksum was verified. Host reports `restart_required=yes`; containerd/Docker/OS updates are available. No upgrade/reboot authorized.
 - No production manifest apply, image promotion, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred.
+
+
+## Cross-repo operational evidence — 2026-11-08 21:07 ICT / 14:07 UTC
+
+No workflow ownership or deployment authority changed in this review. The current run evidence confirms:
+- TCE WF-07 native schedule #42484929411 successfully dispatched an authenticated heartbeat; Platform recovery #42484949353 verified its exact source workflow/run/attempt/SHA and accepted the repository_dispatch payload.
+- Platform native schedule cadence remains outside the existing budgets; a recent manual reconciliation and a recent native inspection are fallback/runtime evidence only, not cadence acceptance.
+- TCE WF-06/WF-12 native runs remain stale; the latest fallback healthcheck returned HTTP 503 for all four public endpoints.
+- Stock publisher source contract statically builds all three components on native ARM64 and verifies full-SHA/version+SHA tag digest equality; no new publisher run/digest evidence was observed. Stock scraper remains fail-closed on missing `VNSTOCK_API_KEY`.
+- Media and Auth have no new publisher/deployment runs. Media runner remains active; its remote-registration audit token and external backup/DNS prerequisites remain unverified. Auth PR #76 remains draft.
+
+Preserve the existing separation: app repos own tests/builds/immutable GHCR publication; Platform Infra alone owns production manifests, shared pull credentials, GitOps promotion/reconciliation, rollout and health verification. Preserve useful CI/security/manual/release/scheduled jobs. No direct SSH/Compose production authority was added, no workflow was removed, and the TCE market-scan schedule is unchanged.

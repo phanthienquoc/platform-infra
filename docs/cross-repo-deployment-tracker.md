@@ -470,3 +470,66 @@ No production manifest mutation, workload scaling, GHCR publication/promotion, n
 - Media runner service and Listener remain active/enabled; Platform runner is also active. In-cluster Stock/Media storage preflight remains clean (no PVC/PV claims or VolumeSnapshot references), but external backup/retention and authoritative DNS are still unverified.
 - GitOps drift is clean; cert-manager v1.21.1 bootstrap manifest checksum was verified. Host reports `restart_required=yes`; containerd/Docker/OS updates are available. No upgrade/reboot authorized.
 - No production manifest apply, image promotion, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred.
+
+
+## Latest cross-repo execution — 2026-11-08 21:07 ICT / 14:07 UTC
+
+### Repository state, PRs and latest workflow evidence
+
+All five default branches, open PRs, recent Actions runs, this tracker and the workflow inventory were inspected before changes.
+
+| Repository | Default-branch head | Open PRs | Latest relevant CI/workflow evidence |
+|---|---|---|---|
+| Platform Infra | `4031089f19a0dfbbea7d73196ac6fd771aaa0b39` | #1314, #544, #541, #539 (planning/docs) | post-merge `validate-manifests` #42484497462 PASS; latest recovery #42484949353 PASS; latest workflow_run diagnostics #42484968404/#42484972617 skipped |
+| TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | none | WF-07 native schedule #42484929411 PASS; WF-12 workflow_run #42484941935 FAIL on stale WF-06; fallback WF-06 #42484965082 FAIL (four public endpoints HTTP 503) |
+| StockDividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | none | CI #42440810105 PASS; scheduled scraper #42457182511 FAIL closed because `VNSTOCK_API_KEY` is missing |
+| Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | none | CI #42239703151 PASS; no newer publisher or deployment run |
+| Authentication | `cb907a63df0e0441b54b7b930ecdbfa97a5e52e1` | #76 (draft) | master CI #42478653766 PASS; PR #76 remains draft pending Supabase merge-trigger side-effect/schema-drift investigation |
+
+### Native schedule acceptance — still failing
+
+| Platform workflow | Latest native run | Previous native run | Inter-arrival gap | Budget | Result |
+|---|---:|---:|---:|---:|---|
+| reconcile-vps | #42467231073, 09:27:03Z, FAIL | #42439099803 | 24,773s | 2,700s | FAIL |
+| inspect-vps | #42483869620, 13:12:46Z, PASS | #42452273701 | 26,586s | 4,500s | cadence FAIL; snapshot currently within 75m age budget |
+| recover-stale-ops | #42466737776, 09:20:06Z, PASS | #42438384072 | 24,958s | 2,700s | FAIL |
+| reconcile-schedule-watchdog | #42467080859, 09:24:53Z, FAIL | #42438566387 | 25,092s | 2,700s | FAIL |
+
+The latest workflow_run watchdog #42484055575 also failed for these measured native inter-arrival gaps. Its TCE WF-06/WF-12 observations are warning-only and do not turn a manual or workflow_run event into native schedule evidence. Do not relax cron or freshness budgets to obtain a green result.
+
+### TCE heartbeat and Platform recovery — live payload accepted
+
+- TCE WF-07 native schedule #42484929411 completed PASS at 13:25:55Z.
+- TCE WF-12 workflow_run #42484941935 completed FAIL at 13:26:05Z because the latest native WF-06 run remained #42458256899 (07:18:37Z), age 367m against the 25m budget. The latest native WF-12 run remains #42479336350 (12:15:00Z), also outside its 25m budget.
+- WF-13 #42484952892 completed PASS and the read-only WF-06 fallback #42484965082 was dispatched; the four public probes (TCE web, TCE API, Auth liveness, Auth readiness) each returned HTTP 503.
+- Platform repository_dispatch recovery #42484949353 completed PASS. Its log verifies source repository `phanthienquoc/TCE-dashboard`, source workflow `.github/workflows/wf-07-tce-integration-check.yml`, source run #42484929411, attempt 1, source SHA `7ab52078c4250829e158f05b2695ceb9d11bdbe3`, and heartbeat run #42484941935. It observed the recent fallback reconciliation #42484067445 (last activity 13:16:58Z, age 9m) and native inspection #42483869620 (age 13m), so correctly dispatched no duplicate fallbacks.
+- This is evidence that the TCE-to-Platform repository_dispatch payload and recovery receiver worked. It is not evidence that native Platform/TCE cadence or public service health has recovered.
+
+### Latest reconciliation and K3s snapshot
+
+- Platform fallback reconciliation #42484067445 completed PASS at 13:15:18Z with `mode=apply`, `target_app=all`, `allow_image_changes=false`. GHCR access preflight and Auth runtime Secret provisioning/verification passed; no manifest drift was found, so production manifest apply and image promotion were skipped. MicroFE/TCE/Auth lane gates passed with rollouts skipped for unchanged/zero-replica state; Keycloak lane was skipped.
+- Native read-only inspection #42483869620 generated `debug/vps-latest.md` at 13:12:54Z. At this checkpoint it is approximately 54m old, within the 75m snapshot-age budget. Node `tce-k3s-01` is Ready/ARM64, K3s `v1.36.3+k3s1`, runtime `containerd://2.3.2-k3s2`; disk 56% with 21 GiB available and RAM 19 GiB available. Docker 29.1.3 reports 20 images / 9.195 GB with 5.773 GB reclaimable; no cleanup was run.
+- Media backend/frontend and MicroFE Shell/WS/NATS remain 1/1 in the snapshot. Stock Admin (two pods) and desired Backend remain ImagePullBackOff on legacy `12d63b4`; legacy Stock Backend and Frontend remain 1/1. TCE/Auth/Keycloak remain intentional zero-replica maintenance. Public OIDC probes return HTTP 503.
+- Media and Platform runner services/listeners remain active. Stock/Media in-cluster storage preflight is clean, but external backup/retention and authoritative DNS ownership remain unverified. GitOps drift is clean. Host updates/restart requirements are not authorized for this run.
+
+### Publisher and credential dependencies
+
+- Stock `deploy.yml` statically verifies native ARM64 build execution, `linux/arm64` for Scraper/Admin/Backend, full-40-character source-SHA tags, version+full-SHA tags, and equality of each immutable tag pair's registry digest. No new Stock publisher run or GHCR digest evidence exists; do not update Platform image references or promote.
+- Stock scheduled scraper #42457182511 failed before dependency installation, entitlement verification and ingestion because `VNSTOCK_API_KEY` is absent. Preserve fail-closed behavior; Stock owner must provision the secret and run `preflight_only=true` before ingestion.
+- Media runner audit token `MEDIA_RUNNER_AUDIT_TOKEN`, external backup/retention and authoritative DNS ownership remain unverified. Do not stop/unregister the runner or decommission namespaces.
+- Auth PR #76 remains draft; no production migration, release or publisher dispatch was performed.
+
+### Authority and safety
+
+- App repositories continue to own tests/builds and immutable GHCR publication. Platform Infra remains sole owner of production manifests, shared GHCR pull credentials, GitOps promotion/reconciliation, rollout and health verification.
+- `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose production authority was added and no workflow was removed.
+- No image publication/promotion, production manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host upgrade/reboot occurred.
+- TCE market-scan schedule is unchanged.
+
+### Exact next actions
+
+1. GitHub Actions administrator: investigate native schedule delivery/large inter-arrival gaps; keep existing cron and freshness budgets unchanged.
+2. Stock owner: add `VNSTOCK_API_KEY`, run `run_scraper.yml` with `preflight_only=true`, then authorize normal ingestion and an app-owned ARM64 publisher run.
+3. TCE/Auth service owner: provide an approved recovery/rollback plan for the four public HTTP 503 probes before any replica or production state change.
+4. Platform owner: verify `MEDIA_RUNNER_AUDIT_TOKEN`; Media/Stock owners must provide external backup/retention and DNS evidence before decommission.
+5. Auth/Supabase owner: continue PR #76 schema-drift and merge-trigger side-effect investigation; keep it draft until evidence is complete.
