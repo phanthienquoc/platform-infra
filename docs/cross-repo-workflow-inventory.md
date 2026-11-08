@@ -271,3 +271,23 @@ Preserve the existing separation: app repos own tests/builds/immutable GHCR publ
 - Native Platform schedule evidence remains reconcile #42467231073 FAIL, inspection #42483869620 PASS but stale, watchdog #42467080859 FAIL, recovery #42466737776 PASS but stale. A newer push-triggered inspection snapshot is not native schedule evidence. Do not change cron or budgets.
 - Latest snapshot (15:10:12Z): node Ready/ARM64; Media and MicroFE 1/1; Stock Admin×2 and desired Backend ImagePullBackOff on 12d63b4; Stock cached backend/user 23b2878 lack RepoDigest; TCE/Auth/Keycloak 0/0; public OIDC 503; Media runner active/enabled. Storage preflight is clean in-cluster, but external backup/DNS evidence is missing.
 - App ownership remains unchanged: TCE/Stock/Media/Auth own tests/builds and immutable GHCR publication; Platform alone owns production manifests, shared pull credentials, GitOps promotion/reconciliation, rollout and health verification. No new publisher/digest handoff, no workflow deletion and no direct SSH/Compose production authority.
+
+
+## Latest observed execution — 2026-11-08 23:56 ICT / 16:56 UTC
+
+| Repository | Current master | Latest relevant run evidence | Open PRs |
+|---|---|---|---|
+| Platform Infra | `eac9ca7eafca1cd1399b5237188be6dda4675880` | Native reconcile #42499043683 PASS; native recovery #42498266478 PASS; native watchdog #42498640135 FAIL on historic inter-arrival gaps; native inspection #42483869620 stale; manual inspection #42498449089 PASS | #1314/#544/#541/#539 (planning/docs) |
+| TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | WF-06 native #42489680372 FAIL (four public probes; TCE web log confirms 503); WF-12 latest native #42479336350 FAIL; WF-07 native #42484929411 PASS; no recent publisher run | None |
+| StockDividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | Scraper #42457182511 FAIL closed on missing `VNSTOCK_API_KEY`; CI #42440810105 PASS; publisher #41563856933 (Nov 3) PASS with three verified ARM64 digests but is stale vs current master | None |
+| Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | CI #42239703151 PASS; latest publisher #41158598649 (Oct 31) PASS, no newer publication | None |
+| Authentication | `cb907a63df0e0441b54b7b930ecdbfa97a5e52e1` | CI #42478653766 PASS; latest manual release #41040510320 (Oct 30) PASS, no newer publication | #76 draft |
+
+### Runtime/deployment ownership
+
+- Reconcile #42499043683 verified GHCR read access, provisioned/verified Auth runtime Secret, left shared `ghcr-pull` unchanged, found no GitOps drift and skipped apply/image promotion/rollout.
+- K3s snapshot from manual inspection #42498449089 (generated 16:09:45Z) is within the 75-minute snapshot-age budget at this checkpoint, but is not native inspection cadence evidence. Media/MicroFE active pods are 1/1; Stock Admin×2 and desired Backend are ImagePullBackOff/ErrImagePull on `12d63b4`; old Stock Backend/Frontend 1/1; TCE/Auth/Keycloak 0/0; OIDC 503.
+- Stock's last publisher #41563856933 (source `50ba0dfb67eb3dfaa376db0c752bbef5b0817bec`) verified ARM64 full-SHA/version+SHA tag digests for Scraper/Admin/Backend. It is not current-master publication evidence; the live desired `12d63b4` tags remain invalid for ARM64. Missing `VNSTOCK_API_KEY` blocks scraper ingestion, not the image build itself.
+- Media runner remains active/enabled/listener-present; remote audit token, external backup/retention and authoritative DNS ownership remain unverified. Decommission workflow remains manual-only and fail-closed.
+- Native Platform schedule history shows reconcile/recovery have each resumed once after multi-hour gaps; watchdog still correctly fails the historic inter-arrival budget, and native inspection remains stale. Require another within-budget native interval before declaring cadence recovered. TCE WF-06/WF-12 native runs remain stale.
+- No production manifest apply, image promotion, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred. No workflow removed; no direct SSH/Compose authority added; TCE market-scan schedule unchanged.
