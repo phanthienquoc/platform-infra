@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-11-08T10:30:37+00:00
+Generated: 2026-11-08T11:17:34+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,14 +11,14 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.5Gi       2.1Gi        84Mi        17Gi        19Gi
+Mem:            23Gi       3.6Gi       2.0Gi        84Mi        17Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   25G   21G  56% /
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   25G   21G  56% /
 disk_pressure: normal (56%)
- 10:30:37 up 190 days, 20:21,  0 users,  load average: 0.16, 0.05, 0.08
+ 11:17:34 up 190 days, 21:07,  0 users,  load average: 0.29, 0.24, 0.18
 
 ### Top disk consumers (best-effort, runner-readable paths)
 4.0K	/var/lib/docker
@@ -44,7 +44,7 @@ disk_pressure: normal (56%)
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
 1057701 /opt/media-actions-runner/bin/Runner.Listener run --startuptype service
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-2716756 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+2761853 /opt/actions-runner/bin/Runner.Worker spawnclient 154 162
   actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-media-generation.media-generation-k3s-01)
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service           loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
@@ -121,7 +121,7 @@ k3s-debug          Active   31d
 kube-node-lease    Active   78d
 kube-public        Active   78d
 kube-system        Active   78d
-media-prod         Active   38d
+media-prod         Active   39d
 microfe-platform   Active   33d
 stock-prod         Active   50d
 tce-prod           Active   78d
@@ -136,15 +136,15 @@ kube-system        local-path-provisioner-58d557dc48-jbhhp     1/1     Running  
 kube-system        metrics-server-6dc596dfb8-s2bzm             1/1     Running            0             78d     10.42.0.4     tce-k3s-01   <none>           <none>
 kube-system        svclb-traefik-859779c1-7bwx2                2/2     Running            0             78d     10.42.0.7     tce-k3s-01   <none>           <none>
 kube-system        traefik-59b7647586-gml84                    1/1     Running            0             78d     10.42.0.8     tce-k3s-01   <none>           <none>
-media-prod         media-generation-665d86ff54-4664l           1/1     Running            0             7d6h    10.42.0.155   tce-k3s-01   <none>           <none>
-media-prod         media-generation-frontend-58d8bbc67-lwhhf   1/1     Running            0             7d6h    10.42.0.154   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-shell-7b44b44dfb-ln4sw              1/1     Running            0             7d8h    10.42.0.153   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-ws-5bc979dd77-txd28                 1/1     Running            0             7d8h    10.42.0.152   tce-k3s-01   <none>           <none>
+media-prod         media-generation-665d86ff54-4664l           1/1     Running            0             7d7h    10.42.0.155   tce-k3s-01   <none>           <none>
+media-prod         media-generation-frontend-58d8bbc67-lwhhf   1/1     Running            0             7d7h    10.42.0.154   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-shell-7b44b44dfb-ln4sw              1/1     Running            0             7d9h    10.42.0.153   tce-k3s-01   <none>           <none>
+microfe-platform   microfe-ws-5bc979dd77-txd28                 1/1     Running            0             7d9h    10.42.0.152   tce-k3s-01   <none>           <none>
 microfe-platform   nats-7bc8d9f768-q682m                       1/1     Running            0             30d     10.42.0.178   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-5864bcb497-6b6hm                0/1     ImagePullBackOff   0             6d11h   10.42.0.182   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-59cddb87b7-qgkjr                0/1     ImagePullBackOff   0             6d11h   10.42.0.180   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-5864bcb497-6b6hm                0/1     ImagePullBackOff   0             6d12h   10.42.0.182   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-59cddb87b7-qgkjr                0/1     ImagePullBackOff   0             6d12h   10.42.0.180   tce-k3s-01   <none>           <none>
 stock-prod         stock-backend-57ccb8ff6-d25jq               1/1     Running            0             50d     10.42.0.55    tce-k3s-01   <none>           <none>
-stock-prod         stock-backend-6bc874575d-xcg2j              0/1     ImagePullBackOff   0             6d11h   10.42.0.183   tce-k3s-01   <none>           <none>
+stock-prod         stock-backend-6bc874575d-xcg2j              0/1     ImagePullBackOff   0             6d12h   10.42.0.183   tce-k3s-01   <none>           <none>
 stock-prod         stock-frontend-79c57845df-z747s             1/1     Running            0             50d     10.42.0.56    tce-k3s-01   <none>           <none>
 
 ### Pod imageID evidence
@@ -177,7 +177,7 @@ kube-system        coredns                     1/1     1            1           
 kube-system        local-path-provisioner      1/1     1            1           78d
 kube-system        metrics-server              1/1     1            1           78d
 kube-system        traefik                     1/1     1            1           78d
-media-prod         media-generation            1/1     1            1           38d
+media-prod         media-generation            1/1     1            1           39d
 media-prod         media-generation-frontend   1/1     1            1           38d
 microfe-platform   keycloak                    0/0     0            0           23d
 microfe-platform   microfe-auth                0/0     0            0           33d
@@ -265,18 +265,18 @@ endpoints/backend
 endpoints/stock-admin
 endpoints/stock-backend
 endpoints/stock-frontend
+event/stock-admin-5864bcb497-6b6hm.18e40e62bffa7a86
+event/stock-admin-5864bcb497-6b6hm.18e40e6335e46b97
 event/stock-admin-5864bcb497-6b6hm.18e40e634c019104
 event/stock-admin-5864bcb497-6b6hm.18e40e634c027664
-event/stock-admin-59cddb87b7-qgkjr.18e40d22b70f6afb
-event/stock-admin-59cddb87b7-qgkjr.18e40d23268315bb
 event/stock-admin-59cddb87b7-qgkjr.18e40d2349469ca6
 event/stock-admin-59cddb87b7-qgkjr.18e40d234947a25e
 event/stock-backend-6bc874575d-xcg2j.18e40e634bfdef7a
 event/stock-backend-6bc874575d-xcg2j.18e40e634bff081b
-event/stock-frontend-74546898cb.18e607f9e74c44ad
-event/stock-frontend-74546898cb.18e608e2bc2cc054
-event/stock-frontend-74546898cb.18e609cb910da5e5
 event/stock-frontend-74546898cb.18e60ab4669eda0c
+event/stock-frontend-74546898cb.18e60b9d3b802cc3
+event/stock-frontend-74546898cb.18e60c86116e053e
+event/stock-frontend-74546898cb.18e60d6ee6fa5a81
 limitrange/stock-defaults
 pod/stock-admin-5864bcb497-6b6hm
 pod/stock-admin-59cddb87b7-qgkjr
@@ -759,18 +759,18 @@ endpointslice.discovery.k8s.io/backend-fvv26
 endpointslice.discovery.k8s.io/stock-admin-sf6kz
 endpointslice.discovery.k8s.io/stock-backend-jbwqp
 endpointslice.discovery.k8s.io/stock-frontend-b8rbs
+event.events.k8s.io/stock-admin-5864bcb497-6b6hm.18e40e62bffa7a86
+event.events.k8s.io/stock-admin-5864bcb497-6b6hm.18e40e6335e46b97
 event.events.k8s.io/stock-admin-5864bcb497-6b6hm.18e40e634c019104
 event.events.k8s.io/stock-admin-5864bcb497-6b6hm.18e40e634c027664
-event.events.k8s.io/stock-admin-59cddb87b7-qgkjr.18e40d22b70f6afb
-event.events.k8s.io/stock-admin-59cddb87b7-qgkjr.18e40d23268315bb
 event.events.k8s.io/stock-admin-59cddb87b7-qgkjr.18e40d2349469ca6
 event.events.k8s.io/stock-admin-59cddb87b7-qgkjr.18e40d234947a25e
 event.events.k8s.io/stock-backend-6bc874575d-xcg2j.18e40e634bfdef7a
 event.events.k8s.io/stock-backend-6bc874575d-xcg2j.18e40e634bff081b
-event.events.k8s.io/stock-frontend-74546898cb.18e607f9e74c44ad
-event.events.k8s.io/stock-frontend-74546898cb.18e608e2bc2cc054
-event.events.k8s.io/stock-frontend-74546898cb.18e609cb910da5e5
 event.events.k8s.io/stock-frontend-74546898cb.18e60ab4669eda0c
+event.events.k8s.io/stock-frontend-74546898cb.18e60b9d3b802cc3
+event.events.k8s.io/stock-frontend-74546898cb.18e60c86116e053e
+event.events.k8s.io/stock-frontend-74546898cb.18e60d6ee6fa5a81
 podmetrics.metrics.k8s.io/stock-backend-57ccb8ff6-d25jq
 podmetrics.metrics.k8s.io/stock-frontend-79c57845df-z747s
 ingress.networking.k8s.io/stock
@@ -781,10 +781,10 @@ stock-ingress	admin.mrcute.space,api.mrcute.space,mrcute.space,www.mrcute.space	
 DNS ownership is not inferred; reconcile these hostnames with authoritative DNS/provider records before deletion.
 ### Common workload status: stock-prod
 NAME                                  READY   STATUS             RESTARTS   AGE     IP            NODE         NOMINATED NODE   READINESS GATES
-pod/stock-admin-5864bcb497-6b6hm      0/1     ImagePullBackOff   0          6d11h   10.42.0.182   tce-k3s-01   <none>           <none>
-pod/stock-admin-59cddb87b7-qgkjr      0/1     ImagePullBackOff   0          6d11h   10.42.0.180   tce-k3s-01   <none>           <none>
+pod/stock-admin-5864bcb497-6b6hm      0/1     ImagePullBackOff   0          6d12h   10.42.0.182   tce-k3s-01   <none>           <none>
+pod/stock-admin-59cddb87b7-qgkjr      0/1     ImagePullBackOff   0          6d12h   10.42.0.180   tce-k3s-01   <none>           <none>
 pod/stock-backend-57ccb8ff6-d25jq     1/1     Running            0          50d     10.42.0.55    tce-k3s-01   <none>           <none>
-pod/stock-backend-6bc874575d-xcg2j    0/1     ImagePullBackOff   0          6d11h   10.42.0.183   tce-k3s-01   <none>           <none>
+pod/stock-backend-6bc874575d-xcg2j    0/1     ImagePullBackOff   0          6d12h   10.42.0.183   tce-k3s-01   <none>           <none>
 pod/stock-frontend-79c57845df-z747s   1/1     Running            0          50d     10.42.0.56    tce-k3s-01   <none>           <none>
 
 NAME                     TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE   SELECTOR
@@ -810,27 +810,27 @@ replicaset.apps/stock-admin-558cfc4457      0         0         0       24d     
 replicaset.apps/stock-admin-558db47b8f      0         0         0       11d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=558db47b8f
 replicaset.apps/stock-admin-55d7c95fc       0         0         0       30d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=55d7c95fc
 replicaset.apps/stock-admin-55dff8b6f6      0         0         0       11d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=55dff8b6f6
-replicaset.apps/stock-admin-565b8b9c8       0         0         0       6d14h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=565b8b9c8
+replicaset.apps/stock-admin-565b8b9c8       0         0         0       6d15h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=565b8b9c8
 replicaset.apps/stock-admin-566699c6ff      0         0         0       28d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=566699c6ff
 replicaset.apps/stock-admin-5677449bfd      0         0         0       30d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5677449bfd
 replicaset.apps/stock-admin-569b69c98d      0         0         0       9d      admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=569b69c98d
 replicaset.apps/stock-admin-569cf6c8b7      0         0         0       29d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=569cf6c8b7
 replicaset.apps/stock-admin-574756b897      0         0         0       21d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=574756b897
-replicaset.apps/stock-admin-575cd8cc46      0         0         0       7d12h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=575cd8cc46
-replicaset.apps/stock-admin-576c4d59d6      0         0         0       7d8h    admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=576c4d59d6
+replicaset.apps/stock-admin-575cd8cc46      0         0         0       7d13h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=575cd8cc46
+replicaset.apps/stock-admin-576c4d59d6      0         0         0       7d9h    admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=576c4d59d6
 replicaset.apps/stock-admin-577ddc87bd      0         0         0       11d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=577ddc87bd
 replicaset.apps/stock-admin-577f489d94      0         0         0       9d      admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=577f489d94
 replicaset.apps/stock-admin-57897896d       0         0         0       30d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=57897896d
 replicaset.apps/stock-admin-57cdcd4d8f      0         0         0       22d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=57cdcd4d8f
 replicaset.apps/stock-admin-58475cb8d       0         0         0       30d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=58475cb8d
 replicaset.apps/stock-admin-5858cd55c7      0         0         0       26d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5858cd55c7
-replicaset.apps/stock-admin-5864bcb497      1         1         0       6d11h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5864bcb497
+replicaset.apps/stock-admin-5864bcb497      1         1         0       6d12h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5864bcb497
 replicaset.apps/stock-admin-58c5b555b6      0         0         0       21d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=58c5b555b6
 replicaset.apps/stock-admin-58ddff88cc      0         0         0       25d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=58ddff88cc
 replicaset.apps/stock-admin-5954dfcb77      0         0         0       19d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5954dfcb77
 replicaset.apps/stock-admin-5964dd4d48      0         0         0       10d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5964dd4d48
 replicaset.apps/stock-admin-596c9b896d      0         0         0       18d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=596c9b896d
-replicaset.apps/stock-admin-59cddb87b7      1         1         0       6d11h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=59cddb87b7
+replicaset.apps/stock-admin-59cddb87b7      1         1         0       6d12h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=59cddb87b7
 replicaset.apps/stock-admin-59cf77f486      0         0         0       33d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=59cf77f486
 replicaset.apps/stock-admin-5b5697fbc4      0         0         0       29d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5b5697fbc4
 replicaset.apps/stock-admin-5b65d945cc      0         0         0       30d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5b65d945cc
@@ -840,10 +840,10 @@ replicaset.apps/stock-admin-5bf9bfdd76      0         0         0       23d     
 replicaset.apps/stock-admin-5c6cbd5b8d      0         0         0       30d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5c6cbd5b8d
 replicaset.apps/stock-admin-5c8975cd9b      0         0         0       25d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5c8975cd9b
 replicaset.apps/stock-admin-5c9686fd48      0         0         0       18d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5c9686fd48
-replicaset.apps/stock-admin-5cd8c4bc9c      0         0         0       6d23h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5cd8c4bc9c
+replicaset.apps/stock-admin-5cd8c4bc9c      0         0         0       7d      admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5cd8c4bc9c
 replicaset.apps/stock-admin-5cdd85cb9       0         0         0       24d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5cdd85cb9
 replicaset.apps/stock-admin-5cf4c8d94b      0         0         0       30d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5cf4c8d94b
-replicaset.apps/stock-admin-5cf6d6f6db      0         0         0       7d19h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5cf6d6f6db
+replicaset.apps/stock-admin-5cf6d6f6db      0         0         0       7d20h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5cf6d6f6db
 replicaset.apps/stock-admin-5d775cc445      0         0         0       10d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5d775cc445
 replicaset.apps/stock-admin-5d87df85b9      0         0         0       8d      admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5d87df85b9
 replicaset.apps/stock-admin-5db948fd77      0         0         0       30d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5db948fd77
@@ -872,7 +872,7 @@ replicaset.apps/stock-admin-66885f4997      0         0         0       23d     
 replicaset.apps/stock-admin-66b74f766f      0         0         0       17d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=66b74f766f
 replicaset.apps/stock-admin-66bcb7958c      0         0         0       9d      admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=66bcb7958c
 replicaset.apps/stock-admin-66cd64cb48      0         0         0       25d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=66cd64cb48
-replicaset.apps/stock-admin-66f845774d      0         0         0       7d15h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=66f845774d
+replicaset.apps/stock-admin-66f845774d      0         0         0       7d16h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=66f845774d
 replicaset.apps/stock-admin-67589c8699      0         0         0       12d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=67589c8699
 replicaset.apps/stock-admin-67848b9ccd      0         0         0       14d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=67848b9ccd
 replicaset.apps/stock-admin-6788d4d554      0         0         0       30d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6788d4d554
@@ -895,7 +895,7 @@ replicaset.apps/stock-admin-6b9597bdf       0         0         0       27d     
 replicaset.apps/stock-admin-6b95d4d66c      0         0         0       13d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6b95d4d66c
 replicaset.apps/stock-admin-6bdc4d5469      0         0         0       14d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6bdc4d5469
 replicaset.apps/stock-admin-6c45f7d854      0         0         0       18d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6c45f7d854
-replicaset.apps/stock-admin-6c686779ff      0         0         0       6d17h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6c686779ff
+replicaset.apps/stock-admin-6c686779ff      0         0         0       6d18h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6c686779ff
 replicaset.apps/stock-admin-6c99784fb6      0         0         0       18d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6c99784fb6
 replicaset.apps/stock-admin-6cbf9d84d5      0         0         0       18d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6cbf9d84d5
 replicaset.apps/stock-admin-6d4f44dd57      0         0         0       18d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6d4f44dd57
@@ -908,9 +908,9 @@ replicaset.apps/stock-admin-6ddb4dff98      0         0         0       9d      
 replicaset.apps/stock-admin-6df8479d68      0         0         0       19d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6df8479d68
 replicaset.apps/stock-admin-6f4d7794cb      0         0         0       18d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6f4d7794cb
 replicaset.apps/stock-admin-6f9666c446      0         0         0       30d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6f9666c446
-replicaset.apps/stock-admin-6fb68dc964      0         0         0       6d20h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6fb68dc964
-replicaset.apps/stock-admin-6fc4d4f77f      0         0         0       6d12h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6fc4d4f77f
-replicaset.apps/stock-admin-6fc8bf8546      0         0         0       6d13h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6fc8bf8546
+replicaset.apps/stock-admin-6fb68dc964      0         0         0       6d21h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6fb68dc964
+replicaset.apps/stock-admin-6fc4d4f77f      0         0         0       6d13h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6fc4d4f77f
+replicaset.apps/stock-admin-6fc8bf8546      0         0         0       6d14h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6fc8bf8546
 replicaset.apps/stock-admin-6ff7846b85      0         0         0       27d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6ff7846b85
 replicaset.apps/stock-admin-7474c88f7c      0         0         0       13d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7474c88f7c
 replicaset.apps/stock-admin-74855cf68f      0         0         0       10d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=74855cf68f
@@ -931,7 +931,7 @@ replicaset.apps/stock-admin-7744f896dc      0         0         0       8d      
 replicaset.apps/stock-admin-7754bb96bf      0         0         0       24d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7754bb96bf
 replicaset.apps/stock-admin-77bd44d57d      0         0         0       18d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=77bd44d57d
 replicaset.apps/stock-admin-7899977f66      0         0         0       17d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7899977f66
-replicaset.apps/stock-admin-78f96594cf      0         0         0       6d18h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=78f96594cf
+replicaset.apps/stock-admin-78f96594cf      0         0         0       6d19h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=78f96594cf
 replicaset.apps/stock-admin-7967788c6c      0         0         0       8d      admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7967788c6c
 replicaset.apps/stock-admin-797544c7c8      0         0         0       13d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=797544c7c8
 replicaset.apps/stock-admin-797856b9c8      0         0         0       22d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=797856b9c8
@@ -954,9 +954,9 @@ replicaset.apps/stock-admin-7db6f8fcd4      0         0         0       9d      
 replicaset.apps/stock-admin-7dff4cc5d8      0         0         0       11d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7dff4cc5d8
 replicaset.apps/stock-admin-7f448548b9      0         0         0       16d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7f448548b9
 replicaset.apps/stock-admin-7f45847d4b      0         0         0       18d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7f45847d4b
-replicaset.apps/stock-admin-7f66f6f765      0         0         0       6d19h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7f66f6f765
+replicaset.apps/stock-admin-7f66f6f765      0         0         0       6d20h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7f66f6f765
 replicaset.apps/stock-admin-7f7f76644f      0         0         0       18d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7f7f76644f
-replicaset.apps/stock-admin-7f8648449f      0         0         0       22d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7f8648449f
+replicaset.apps/stock-admin-7f8648449f      0         0         0       23d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7f8648449f
 replicaset.apps/stock-admin-7fb8884696      0         0         0       18d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7fb8884696
 replicaset.apps/stock-admin-7fc48f669f      0         0         0       27d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7fc48f669f
 replicaset.apps/stock-admin-7fd5587d5       0         0         0       30d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7fd5587d5
@@ -974,7 +974,7 @@ replicaset.apps/stock-admin-854657854f      0         0         0       8d      
 replicaset.apps/stock-admin-8566b5d44       0         0         0       8d      admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=8566b5d44
 replicaset.apps/stock-admin-8566b6d7dd      0         0         0       11d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=8566b6d7dd
 replicaset.apps/stock-admin-8585c48d94      0         0         0       22d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=8585c48d94
-replicaset.apps/stock-admin-859995d4bf      0         0         0       11d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=859995d4bf
+replicaset.apps/stock-admin-859995d4bf      0         0         0       12d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=859995d4bf
 replicaset.apps/stock-admin-85c4d7cb4d      0         0         0       27d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=85c4d7cb4d
 replicaset.apps/stock-admin-85cc86b749      0         0         0       7d9h    admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=85cc86b749
 replicaset.apps/stock-admin-85d8994cd4      0         0         0       18d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=85d8994cd4
@@ -995,7 +995,7 @@ replicaset.apps/stock-admin-94d9f4bd4       0         0         0       24d     
 replicaset.apps/stock-admin-95bd8d945       0         0         0       18d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=95bd8d945
 replicaset.apps/stock-admin-9757b86         0         0         0       18d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=9757b86
 replicaset.apps/stock-admin-9bbbf8fb4       0         0         0       24d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=9bbbf8fb4
-replicaset.apps/stock-admin-9c5d4c9df       0         0         0       6d17h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=9c5d4c9df
+replicaset.apps/stock-admin-9c5d4c9df       0         0         0       6d18h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=9c5d4c9df
 replicaset.apps/stock-admin-b47f4d965       0         0         0       18d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=b47f4d965
 replicaset.apps/stock-admin-b8bbd5567       0         0         0       28d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=b8bbd5567
 replicaset.apps/stock-admin-b959549d5       0         0         0       9d      admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=b959549d5
@@ -1007,7 +1007,7 @@ replicaset.apps/stock-admin-c5c5cf85d       0         0         0       30d     
 replicaset.apps/stock-admin-c647b74f5       0         0         0       9d      admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=c647b74f5
 replicaset.apps/stock-admin-c8cd6d8f9       0         0         0       22d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=c8cd6d8f9
 replicaset.apps/stock-admin-cd564655b       0         0         0       23d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=cd564655b
-replicaset.apps/stock-admin-cd9c555d7       0         0         0       6d13h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=cd9c555d7
+replicaset.apps/stock-admin-cd9c555d7       0         0         0       6d14h   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=cd9c555d7
 replicaset.apps/stock-admin-cf75f949d       0         0         0       15d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=cf75f949d
 replicaset.apps/stock-admin-cf8797f6        0         0         0       13d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=cf8797f6
 replicaset.apps/stock-admin-d5cff4d65       0         0         0       18d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=d5cff4d65
@@ -1019,7 +1019,7 @@ replicaset.apps/stock-admin-dbb65bcd6       0         0         0       20d     
 replicaset.apps/stock-admin-ddcd56d8b       0         0         0       18d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=ddcd56d8b
 replicaset.apps/stock-admin-f6856cfb9       0         0         0       14d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=f6856cfb9
 replicaset.apps/stock-admin-f68578bb5       0         0         0       17d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=f68578bb5
-replicaset.apps/stock-admin-f7d556f95       0         0         0       29d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=f7d556f95
+replicaset.apps/stock-admin-f7d556f95       0         0         0       30d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=f7d556f95
 replicaset.apps/stock-admin-f96c45bb4       0         0         0       29d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=f96c45bb4
 replicaset.apps/stock-admin-fb87c56c8       0         0         0       26d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=fb87c56c8
 replicaset.apps/stock-admin-fc5c79b54       0         0         0       12d     admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=fc5c79b54
@@ -1049,7 +1049,7 @@ replicaset.apps/stock-backend-56c9db6dc8    0         0         0       28d     
 replicaset.apps/stock-backend-56f9f6d55     0         0         0       23d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=56f9f6d55
 replicaset.apps/stock-backend-5765d467db    0         0         0       8d      backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5765d467db
 replicaset.apps/stock-backend-576fb79c78    0         0         0       30d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=576fb79c78
-replicaset.apps/stock-backend-5796467fbd    0         0         0       7d12h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5796467fbd
+replicaset.apps/stock-backend-5796467fbd    0         0         0       7d13h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5796467fbd
 replicaset.apps/stock-backend-57ccb8ff6     1         1         1       50d     backend      ghcr.io/phanthienquoc/stockdividend/backend:23b2878   app=stock-backend,pod-template-hash=57ccb8ff6
 replicaset.apps/stock-backend-58464f567d    0         0         0       8d      backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=58464f567d
 replicaset.apps/stock-backend-584bd48597    0         0         0       30d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=584bd48597
@@ -1069,7 +1069,7 @@ replicaset.apps/stock-backend-5b4548d6b4    0         0         0       33d     
 replicaset.apps/stock-backend-5b67b496dc    0         0         0       21d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5b67b496dc
 replicaset.apps/stock-backend-5b6b76f694    0         0         0       25d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5b6b76f694
 replicaset.apps/stock-backend-5b978b44bc    0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5b978b44bc
-replicaset.apps/stock-backend-5bb8754458    0         0         0       6d12h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5bb8754458
+replicaset.apps/stock-backend-5bb8754458    0         0         0       6d13h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5bb8754458
 replicaset.apps/stock-backend-5bcdf9556c    0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5bcdf9556c
 replicaset.apps/stock-backend-5bff86c8c8    0         0         0       20d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5bff86c8c8
 replicaset.apps/stock-backend-5c69c554d4    0         0         0       9d      backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5c69c554d4
@@ -1077,7 +1077,7 @@ replicaset.apps/stock-backend-5c9f77fc55    0         0         0       13d     
 replicaset.apps/stock-backend-5ccb86cfc8    0         0         0       30d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5ccb86cfc8
 replicaset.apps/stock-backend-5cd96bd67d    0         0         0       24d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5cd96bd67d
 replicaset.apps/stock-backend-5cdb66fc67    0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5cdb66fc67
-replicaset.apps/stock-backend-5cff6d5655    0         0         0       6d20h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5cff6d5655
+replicaset.apps/stock-backend-5cff6d5655    0         0         0       6d21h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5cff6d5655
 replicaset.apps/stock-backend-5dc5df5bd6    0         0         0       21d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5dc5df5bd6
 replicaset.apps/stock-backend-5f45f875f     0         0         0       24d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5f45f875f
 replicaset.apps/stock-backend-5f5bddf746    0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5f5bddf746
@@ -1094,13 +1094,13 @@ replicaset.apps/stock-backend-64dbf998b6    0         0         0       14d     
 replicaset.apps/stock-backend-64fd565       0         0         0       28d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=64fd565
 replicaset.apps/stock-backend-6547946847    0         0         0       9d      backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6547946847
 replicaset.apps/stock-backend-65dcbc59f9    0         0         0       16d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=65dcbc59f9
-replicaset.apps/stock-backend-6647646874    0         0         0       6d11h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6647646874
+replicaset.apps/stock-backend-6647646874    0         0         0       6d12h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6647646874
 replicaset.apps/stock-backend-66b579b978    0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=66b579b978
 replicaset.apps/stock-backend-675c44854c    0         0         0       10d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=675c44854c
 replicaset.apps/stock-backend-676bbb7dd7    0         0         0       30d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=676bbb7dd7
 replicaset.apps/stock-backend-67c5f86579    0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=67c5f86579
 replicaset.apps/stock-backend-67c9fdc489    0         0         0       22d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=67c9fdc489
-replicaset.apps/stock-backend-68458d6cdf    0         0         0       6d17h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=68458d6cdf
+replicaset.apps/stock-backend-68458d6cdf    0         0         0       6d18h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=68458d6cdf
 replicaset.apps/stock-backend-684658f67f    0         0         0       25d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=684658f67f
 replicaset.apps/stock-backend-68845c65b4    0         0         0       17d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=68845c65b4
 replicaset.apps/stock-backend-689694fcb     0         0         0       13d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=689694fcb
@@ -1118,7 +1118,7 @@ replicaset.apps/stock-backend-6b4b9749b9    0         0         0       14d     
 replicaset.apps/stock-backend-6bb5f79dd4    0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6bb5f79dd4
 replicaset.apps/stock-backend-6bb7f8c4f     0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6bb7f8c4f
 replicaset.apps/stock-backend-6bbfd66c49    0         0         0       25d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6bbfd66c49
-replicaset.apps/stock-backend-6bc874575d    1         1         0       6d11h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6bc874575d
+replicaset.apps/stock-backend-6bc874575d    1         1         0       6d12h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6bc874575d
 replicaset.apps/stock-backend-6bd68b7db8    0         0         0       26d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6bd68b7db8
 replicaset.apps/stock-backend-6bd75fff54    0         0         0       25d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6bd75fff54
 replicaset.apps/stock-backend-6c76997988    0         0         0       26d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6c76997988
@@ -1134,7 +1134,7 @@ replicaset.apps/stock-backend-6d649676c4    0         0         0       8d      
 replicaset.apps/stock-backend-6d7cd68d7f    0         0         0       20d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6d7cd68d7f
 replicaset.apps/stock-backend-6d8979fd5d    0         0         0       25d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6d8979fd5d
 replicaset.apps/stock-backend-6dbf8c4b8     0         0         0       12d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6dbf8c4b8
-replicaset.apps/stock-backend-6df8fcc47d    0         0         0       6d13h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6df8fcc47d
+replicaset.apps/stock-backend-6df8fcc47d    0         0         0       6d14h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6df8fcc47d
 replicaset.apps/stock-backend-6f68c4dbd7    0         0         0       8d      backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6f68c4dbd7
 replicaset.apps/stock-backend-6f776c964c    0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6f776c964c
 replicaset.apps/stock-backend-6f9589b578    0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6f9589b578
@@ -1144,11 +1144,11 @@ replicaset.apps/stock-backend-6fcbd9768c    0         0         0       24d     
 replicaset.apps/stock-backend-6fd58899dc    0         0         0       14d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6fd58899dc
 replicaset.apps/stock-backend-6fd84c544c    0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6fd84c544c
 replicaset.apps/stock-backend-6fff8b4479    0         0         0       25d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6fff8b4479
-replicaset.apps/stock-backend-74466c858f    0         0         0       29d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=74466c858f
+replicaset.apps/stock-backend-74466c858f    0         0         0       30d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=74466c858f
 replicaset.apps/stock-backend-7454c6c585    0         0         0       15d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7454c6c585
 replicaset.apps/stock-backend-747c949b4     0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=747c949b4
 replicaset.apps/stock-backend-74c99cd67c    0         0         0       8d      backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=74c99cd67c
-replicaset.apps/stock-backend-74d958c7b     0         0         0       6d19h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=74d958c7b
+replicaset.apps/stock-backend-74d958c7b     0         0         0       6d20h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=74d958c7b
 replicaset.apps/stock-backend-75947776bf    0         0         0       15d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=75947776bf
 replicaset.apps/stock-backend-75fdcf6f55    0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=75fdcf6f55
 replicaset.apps/stock-backend-766b4f47d6    0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=766b4f47d6
@@ -1156,7 +1156,7 @@ replicaset.apps/stock-backend-76bb7d645b    0         0         0       25d     
 replicaset.apps/stock-backend-77455f4f89    0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=77455f4f89
 replicaset.apps/stock-backend-777bcb965b    0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=777bcb965b
 replicaset.apps/stock-backend-777cccb4ff    0         0         0       25d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=777cccb4ff
-replicaset.apps/stock-backend-778d89767     0         0         0       11d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=778d89767
+replicaset.apps/stock-backend-778d89767     0         0         0       12d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=778d89767
 replicaset.apps/stock-backend-786b76d66f    0         0         0       16d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=786b76d66f
 replicaset.apps/stock-backend-786c7cf779    0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=786c7cf779
 replicaset.apps/stock-backend-7884bd5b77    0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7884bd5b77
@@ -1174,7 +1174,7 @@ replicaset.apps/stock-backend-79dd6ddcbf    0         0         0       28d     
 replicaset.apps/stock-backend-7b4578f89b    0         0         0       22d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7b4578f89b
 replicaset.apps/stock-backend-7b4878c955    0         0         0       11d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7b4878c955
 replicaset.apps/stock-backend-7b889c5ddd    0         0         0       25d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7b889c5ddd
-replicaset.apps/stock-backend-7b9489b7f4    0         0         0       7d15h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7b9489b7f4
+replicaset.apps/stock-backend-7b9489b7f4    0         0         0       7d16h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7b9489b7f4
 replicaset.apps/stock-backend-7bd7694875    0         0         0       22d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7bd7694875
 replicaset.apps/stock-backend-7c649c6fb7    0         0         0       16d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7c649c6fb7
 replicaset.apps/stock-backend-7c6667dcf5    0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7c6667dcf5
@@ -1185,19 +1185,19 @@ replicaset.apps/stock-backend-7d5d6fb4c9    0         0         0       27d     
 replicaset.apps/stock-backend-7d6bb9f5dc    0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7d6bb9f5dc
 replicaset.apps/stock-backend-7d8f5bdfdc    0         0         0       25d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7d8f5bdfdc
 replicaset.apps/stock-backend-7d94c88fb4    0         0         0       25d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7d94c88fb4
-replicaset.apps/stock-backend-7dc87ccfc9    0         0         0       6d13h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7dc87ccfc9
+replicaset.apps/stock-backend-7dc87ccfc9    0         0         0       6d14h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7dc87ccfc9
 replicaset.apps/stock-backend-7f44bdcf68    0         0         0       23d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7f44bdcf68
 replicaset.apps/stock-backend-7f6c9d776f    0         0         0       15d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7f6c9d776f
 replicaset.apps/stock-backend-7fbbdb6ff8    0         0         0       25d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7fbbdb6ff8
 replicaset.apps/stock-backend-7fd8b99c86    0         0         0       30d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7fd8b99c86
-replicaset.apps/stock-backend-7ffd8b6fc6    0         0         0       7d19h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7ffd8b6fc6
+replicaset.apps/stock-backend-7ffd8b6fc6    0         0         0       7d20h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7ffd8b6fc6
 replicaset.apps/stock-backend-844577ffc8    0         0         0       24d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=844577ffc8
 replicaset.apps/stock-backend-8446bcc676    0         0         0       16d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=8446bcc676
 replicaset.apps/stock-backend-846948869     0         0         0       12d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=846948869
 replicaset.apps/stock-backend-847bd8dbdc    0         0         0       30d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=847bd8dbdc
 replicaset.apps/stock-backend-84c56cf67f    0         0         0       22d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=84c56cf67f
 replicaset.apps/stock-backend-84c79458ff    0         0         0       22d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=84c79458ff
-replicaset.apps/stock-backend-84cd8cc96b    0         0         0       6d17h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=84cd8cc96b
+replicaset.apps/stock-backend-84cd8cc96b    0         0         0       6d18h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=84cd8cc96b
 replicaset.apps/stock-backend-84dfdfd9b8    0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=84dfdfd9b8
 replicaset.apps/stock-backend-8557955595    0         0         0       30d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=8557955595
 replicaset.apps/stock-backend-8557b56859    0         0         0       20d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=8557b56859
@@ -1217,7 +1217,7 @@ replicaset.apps/stock-backend-86f875bd4d    0         0         0       30d     
 replicaset.apps/stock-backend-88c58d494     0         0         0       9d      backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=88c58d494
 replicaset.apps/stock-backend-8d9d4f68d     0         0         0       20d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=8d9d4f68d
 replicaset.apps/stock-backend-8dfd4454c     0         0         0       13d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=8dfd4454c
-replicaset.apps/stock-backend-8f7f44fcf     0         0         0       6d23h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=8f7f44fcf
+replicaset.apps/stock-backend-8f7f44fcf     0         0         0       7d      backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=8f7f44fcf
 replicaset.apps/stock-backend-94cc499c9     0         0         0       8d      backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=94cc499c9
 replicaset.apps/stock-backend-968696496     0         0         0       12d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=968696496
 replicaset.apps/stock-backend-977768668     0         0         0       30d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=977768668
@@ -1230,8 +1230,8 @@ replicaset.apps/stock-backend-9bbf9c9b9     0         0         0       13d     
 replicaset.apps/stock-backend-9df7bdd55     0         0         0       25d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=9df7bdd55
 replicaset.apps/stock-backend-b4859fb74     0         0         0       12d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=b4859fb74
 replicaset.apps/stock-backend-b64f9bdd8     0         0         0       18d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=b64f9bdd8
-replicaset.apps/stock-backend-b9564f5bf     0         0         0       22d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=b9564f5bf
-replicaset.apps/stock-backend-b95fd5f7b     0         0         0       6d14h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=b95fd5f7b
+replicaset.apps/stock-backend-b9564f5bf     0         0         0       23d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=b9564f5bf
+replicaset.apps/stock-backend-b95fd5f7b     0         0         0       6d15h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=b95fd5f7b
 replicaset.apps/stock-backend-bbcd56c76     0         0         0       20d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=bbcd56c76
 replicaset.apps/stock-backend-bc789675f     0         0         0       8d      backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=bc789675f
 replicaset.apps/stock-backend-bd8dfc97b     0         0         0       20d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=bd8dfc97b
@@ -1247,9 +1247,9 @@ replicaset.apps/stock-backend-d85844b4      0         0         0       17d     
 replicaset.apps/stock-backend-d9946b74f     0         0         0       13d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=d9946b74f
 replicaset.apps/stock-backend-ddb854c99     0         0         0       16d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=ddb854c99
 replicaset.apps/stock-backend-f45cb8fbd     0         0         0       21d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=f45cb8fbd
-replicaset.apps/stock-backend-f59d758d4     0         0         0       7d8h    backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=f59d758d4
+replicaset.apps/stock-backend-f59d758d4     0         0         0       7d9h    backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=f59d758d4
 replicaset.apps/stock-backend-f7bfc6c9f     0         0         0       10d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=f7bfc6c9f
-replicaset.apps/stock-backend-fb9c5dbd5     0         0         0       6d18h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=fb9c5dbd5
+replicaset.apps/stock-backend-fb9c5dbd5     0         0         0       6d19h   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=fb9c5dbd5
 replicaset.apps/stock-backend-fbc8764b4     0         0         0       30d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=fbc8764b4
 replicaset.apps/stock-backend-ff56f7bdb     0         0         0       14d     backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=ff56f7bdb
 replicaset.apps/stock-frontend-74546898cb   1         0         0       8d      frontend     ghcr.io/phanthienquoc/stockdividend/user:23b2878      app=stock-frontend,pod-template-hash=74546898cb
@@ -1306,36 +1306,36 @@ media	media.mrcute.space	media.mrcute.space	media-mrcute-tls	10.0.0.120
 DNS ownership is not inferred; reconcile these hostnames with authoritative DNS/provider records before deletion.
 ### Common workload status: media-prod
 NAME                                            READY   STATUS    RESTARTS   AGE    IP            NODE         NOMINATED NODE   READINESS GATES
-pod/media-generation-665d86ff54-4664l           1/1     Running   0          7d6h   10.42.0.155   tce-k3s-01   <none>           <none>
-pod/media-generation-frontend-58d8bbc67-lwhhf   1/1     Running   0          7d6h   10.42.0.154   tce-k3s-01   <none>           <none>
+pod/media-generation-665d86ff54-4664l           1/1     Running   0          7d7h   10.42.0.155   tce-k3s-01   <none>           <none>
+pod/media-generation-frontend-58d8bbc67-lwhhf   1/1     Running   0          7d7h   10.42.0.154   tce-k3s-01   <none>           <none>
 
 NAME                                TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE   SELECTOR
-service/media-generation            ClusterIP   10.43.252.95   <none>        3000/TCP   38d   app=media-generation
+service/media-generation            ClusterIP   10.43.252.95   <none>        3000/TCP   39d   app=media-generation
 service/media-generation-frontend   ClusterIP   10.43.48.52    <none>        80/TCP     38d   app=media-generation-frontend
 
 NAME                                        READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS                  IMAGES                                                                                                                    SELECTOR
-deployment.apps/media-generation            1/1     1            1           38d   media-generation            ghcr.io/phanthienquoc/media-generation/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d    app=media-generation
+deployment.apps/media-generation            1/1     1            1           39d   media-generation            ghcr.io/phanthienquoc/media-generation/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d    app=media-generation
 deployment.apps/media-generation-frontend   1/1     1            1           38d   media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a   app=media-generation-frontend
 
 NAME                                                   DESIRED   CURRENT   READY   AGE    CONTAINERS                  IMAGES                                                                                                                    SELECTOR
 replicaset.apps/media-generation-557898ffc5            0         0         0       38d    media-generation            ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-56179ff                                                        app=media-generation,pod-template-hash=557898ffc5
 replicaset.apps/media-generation-5c9b76dfb9            0         0         0       25d    media-generation            ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-58f80a8                                                        app=media-generation,pod-template-hash=5c9b76dfb9
 replicaset.apps/media-generation-646c797f66            0         0         0       8d     media-generation            ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-58f80a8                                                        app=media-generation,pod-template-hash=646c797f66
-replicaset.apps/media-generation-665d86ff54            1         1         1       7d6h   media-generation            ghcr.io/phanthienquoc/media-generation/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d    app=media-generation,pod-template-hash=665d86ff54
+replicaset.apps/media-generation-665d86ff54            1         1         1       7d7h   media-generation            ghcr.io/phanthienquoc/media-generation/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d    app=media-generation,pod-template-hash=665d86ff54
 replicaset.apps/media-generation-6857cc5595            0         0         0       38d    media-generation            ghcr.io/phanthienquoc/media-generation-backend:prod-v0.3.0-85a354f                                                        app=media-generation,pod-template-hash=6857cc5595
 replicaset.apps/media-generation-6b6f875997            0         0         0       37d    media-generation            ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-a34d8ca                                                        app=media-generation,pod-template-hash=6b6f875997
 replicaset.apps/media-generation-6c68f86bf4            0         0         0       8d     media-generation            ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-58f80a8                                                        app=media-generation,pod-template-hash=6c68f86bf4
 replicaset.apps/media-generation-6f66c4dc4d            0         0         0       33d    media-generation            ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-362cb81                                                        app=media-generation,pod-template-hash=6f66c4dc4d
-replicaset.apps/media-generation-74bdb964d8            0         0         0       37d    media-generation            ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-5229584                                                        app=media-generation,pod-template-hash=74bdb964d8
+replicaset.apps/media-generation-74bdb964d8            0         0         0       38d    media-generation            ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-5229584                                                        app=media-generation,pod-template-hash=74bdb964d8
 replicaset.apps/media-generation-86c45c6686            0         0         0       38d    media-generation            ghcr.io/phanthienquoc/media-generation-backend:prod-v0.3.0-cb5355d                                                        app=media-generation,pod-template-hash=86c45c6686
 replicaset.apps/media-generation-8d887c6c9             0         0         0       38d    media-generation            ghcr.io/phanthienquoc/media-generation-backend:prod-v0.3.0-bf6c55a                                                        app=media-generation,pod-template-hash=8d887c6c9
 replicaset.apps/media-generation-frontend-5445d66b98   0         0         0       8d     media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-58f80a8                                                       app=media-generation-frontend,pod-template-hash=5445d66b98
 replicaset.apps/media-generation-frontend-55447798b6   0         0         0       38d    media-generation-frontend   ghcr.io/phanthienquoc/media-generation-frontend:prod-v0.3.0-cc47a89                                                       app=media-generation-frontend,pod-template-hash=55447798b6
 replicaset.apps/media-generation-frontend-58c8dd5969   0         0         0       38d    media-generation-frontend   ghcr.io/phanthienquoc/media-generation-frontend:prod-v0.3.0-85a354f                                                       app=media-generation-frontend,pod-template-hash=58c8dd5969
-replicaset.apps/media-generation-frontend-58d8bbc67    1         1         1       7d6h   media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a   app=media-generation-frontend,pod-template-hash=58d8bbc67
+replicaset.apps/media-generation-frontend-58d8bbc67    1         1         1       7d7h   media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a   app=media-generation-frontend,pod-template-hash=58d8bbc67
 replicaset.apps/media-generation-frontend-597b779c9d   0         0         0       25d    media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-58f80a8                                                       app=media-generation-frontend,pod-template-hash=597b779c9d
 replicaset.apps/media-generation-frontend-5df46b89c    0         0         0       38d    media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-56179ff                                                       app=media-generation-frontend,pod-template-hash=5df46b89c
-replicaset.apps/media-generation-frontend-64dfb87d84   0         0         0       37d    media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-5229584                                                       app=media-generation-frontend,pod-template-hash=64dfb87d84
+replicaset.apps/media-generation-frontend-64dfb87d84   0         0         0       38d    media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-5229584                                                       app=media-generation-frontend,pod-template-hash=64dfb87d84
 replicaset.apps/media-generation-frontend-667fb49d95   0         0         0       33d    media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-362cb81                                                       app=media-generation-frontend,pod-template-hash=667fb49d95
 replicaset.apps/media-generation-frontend-7d4cc58775   0         0         0       37d    media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-a34d8ca                                                       app=media-generation-frontend,pod-template-hash=7d4cc58775
 replicaset.apps/media-generation-frontend-867d5d8b77   0         0         0       38d    media-generation-frontend   ghcr.io/phanthienquoc/media-generation-frontend:prod-v0.3.0-bf6c55a                                                       app=media-generation-frontend,pod-template-hash=867d5d8b77
@@ -1384,7 +1384,7 @@ default            kubernetes                  ClusterIP      10.43.0.1       <n
 kube-system        kube-dns                    ClusterIP      10.43.0.10      <none>        53/UDP,53/TCP,9153/TCP       78d
 kube-system        metrics-server              ClusterIP      10.43.120.41    <none>        443/TCP                      78d
 kube-system        traefik                     LoadBalancer   10.43.213.239   10.0.0.120    80:30225/TCP,443:30415/TCP   78d
-media-prod         media-generation            ClusterIP      10.43.252.95    <none>        3000/TCP                     38d
+media-prod         media-generation            ClusterIP      10.43.252.95    <none>        3000/TCP                     39d
 media-prod         media-generation-frontend   ClusterIP      10.43.48.52     <none>        80/TCP                       38d
 microfe-platform   keycloak                    ClusterIP      10.43.142.95    <none>        80/TCP,9000/TCP              23d
 microfe-platform   microfe-auth                ClusterIP      10.43.83.168    <none>        80/TCP                       33d
@@ -1398,7 +1398,7 @@ stock-prod         stock-frontend              ClusterIP      10.43.53.102    <n
 tce-prod           tce-frontend                ClusterIP      10.43.99.130    <none>        80/TCP                       75d
 tce-prod           tce-service                 ClusterIP      10.43.189.227   <none>        8210/TCP                     75d
 NAMESPACE          NAME                               CLASS     HOSTS                                                          ADDRESS      PORTS     AGE
-media-prod         media                              traefik   media.mrcute.space                                             10.0.0.120   80, 443   38d
+media-prod         media                              traefik   media.mrcute.space                                             10.0.0.120   80, 443   39d
 microfe-platform   keycloak-public                    traefik   sso.mrcute.space                                               10.0.0.120   80, 443   23d
 microfe-platform   keycloak-registration-rate-limit   traefik   sso.mrcute.space                                               10.0.0.120   80, 443   11d
 microfe-platform   microfe-public                     traefik   app.mrcute.space,auth.mrcute.space,ws.mrcute.space             10.0.0.120   80, 443   33d
@@ -1418,5 +1418,5 @@ keycloak   0/0     0            0           23d   keycloak     quay.io/keycloak/
 error: timed out waiting for the condition
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.089334s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049689s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.107946s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049477s remote_ip=132.226.175.206
