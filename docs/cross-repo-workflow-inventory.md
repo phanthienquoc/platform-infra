@@ -142,3 +142,19 @@ Only original `event=schedule`, master, attempt 1, exact workflow path and full 
 - Plan mode remains read-only and token-free. Delete mode retains production Environment approval, typed namespace/backup/DNS attestations, fresh same-run storage preflight and fixed namespace allowlist.
 - PR #1458 adds regression coverage for absent/present runner, pagination, missing token and API failure. It is open pending exact-head validation; no decommission was dispatched.
 - This contract does not change app publisher ownership, GHCR credentials, GitOps promotion, production apply authority, direct SSH/Compose boundaries or the TCE market-scan schedule.
+
+
+
+## Runner audit guard — merged Platform PR #1458
+
+- `decommission-stock-media.yml` delete mode now verifies the Media runner both locally and remotely. Local checks require the exact service to be inactive and disabled/masked/absent and no `Runner.Listener` process.
+- Remote check: `GET /repos/phanthienquoc/media-generation/actions/runners`, paginated, exact runner name `media-generation-k3s-01`. It is read-only and fails closed on missing credentials, HTTP/API failure, malformed JSON or a matching runner.
+- Required Platform Actions secret: `MEDIA_RUNNER_AUDIT_TOKEN`, fine-grained token/App installation token with **Administration: read** on `phanthienquoc/media-generation` only. No runner deletion permission. Secret existence is not verified by this audit.
+- Operator must separately stop/disable and unregister the Media runner. The workflow does not do those actions. Plan mode remains read-only and token-free.
+- PR #1458 merged at `098cf54de9e2223bc97db57cca6fbee8334fc80c`; exact-head and post-merge workflow validations passed. No decommission was dispatched.
+
+## Latest Platform runtime evidence — 2026-11-08 18:20 ICT
+
+- Reconcile fallback #42474936543: GHCR preflight PASS; shared `ghcr-pull` unchanged in both active GHCR namespaces; Auth runtime Secret provisioned/verified; no GitOps drift; manifest apply/image promotion skipped. Auth/MicroFE/TCE lanes passed with rollouts skipped; TCE remains zero-replica maintenance, so no live health was asserted.
+- Read-only inspection #42475079478 / PR #1459: K3s node Ready ARM64; Media and MicroFE active pods 1/1; Stock Admin/new Backend ImagePullBackOff due missing ARM64 manifest for `12d63b4`; TCE/Auth/Keycloak 0/0; OIDC 503; dedicated Media runner still active/enabled; no Stock/Media PVC/PV/VolumeSnapshot references.
+- PR #1459 merged at `ef7a1a15b94acdaf7c46cbecb4aa2391cb90b0f8` after exact-head manifest validation #42475211696 passed. Only `debug/vps-latest.md` changed.
