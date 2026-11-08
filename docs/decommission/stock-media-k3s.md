@@ -164,3 +164,16 @@ Source: inspection fallback [#42475079478](https://github.com/phanthienquoc/plat
 - PR #1458's remote registration check requires `MEDIA_RUNNER_AUDIT_TOKEN` with repository Administration:read on Media. Secret existence has not been independently verified; no delete-mode workflow was run. External backup/retention and authoritative DNS-owner approvals remain outstanding.
 
 No namespace, PVC/PV, runner, DNS, external database/storage, GHCR package or app repository was deleted.
+
+
+## Latest read-only runtime evidence — 2026-11-09 02:00 ICT / 19:00 UTC
+
+Source: native inspection [#42510125328](https://github.com/phanthienquoc/platform-infra/actions/runs/42510125328), generated at `2026-11-08T18:27:55Z`, merged by inspection PR [#1477](https://github.com/phanthienquoc/platform-infra/pull/1477) at `e412faffc669a766176adccec7207c5cc02306f5`. Exact-head manifest validation [#42510263923](https://github.com/phanthienquoc/platform-infra/actions/runs/42510263923) passed before merge. The PR changed only the inspection snapshot.
+
+- Both `stock-prod` and `media-prod` remain Active. Media backend/frontend are 1/1 Running. Stock Admin×2 and the newer Backend remain ImagePullBackOff on `12d63b4` due to the missing ARM64 manifest; the legacy Backend and Frontend remain Running.
+- The inspection ran the protected workflow's read-only plan script. It confirmed `tce-prod` and `microfe-platform` are present, and reported `storage-clean`: no PVC, PV claim, VolumeSnapshot or VolumeSnapshotContent references for either target namespace. This is same-snapshot in-cluster evidence, not proof of external database/object-storage backups or retention.
+- Stock Ingresses still publish `mrcute.space`, `www.mrcute.space`, `admin.mrcute.space`, and `api.mrcute.space`. Media Ingress still publishes `media.mrcute.space`. The inspection explicitly states DNS ownership is not inferred.
+- Dedicated Media runner service remains active/enabled and `/opt/media-actions-runner/bin/Runner.Listener` is present. The host snapshot cannot prove whether GitHub still lists the runner; the delete guard requires the read-only `MEDIA_RUNNER_AUDIT_TOKEN` check against the Media repository.
+- The protected `decommission-stock-media.yml` delete mode was not dispatched. It remains blocked until the Media runner is idle, stopped, disabled and unregistered; `MEDIA_RUNNER_AUDIT_TOKEN` is available and verifies absence; external backup/retention and authoritative DNS/provider ownership are reviewed; exact typed confirmations are supplied; and the protected production Environment approves the operation.
+
+No namespace, workload, PVC/PV, runner, DNS record, external database/storage, GHCR package or application repository was deleted. Preserve the shared Platform runner, TCE/Auth/MicroFE/Keycloak and TCE market-scan schedule.
