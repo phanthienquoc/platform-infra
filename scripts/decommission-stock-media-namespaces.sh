@@ -3,7 +3,8 @@ set -euo pipefail
 
 MODE="${1:-plan}"
 KUBECTL_BIN="${PLATFORM_KUBECTL_BIN:-/usr/local/sbin/platform-kubectl}"
-KUBECTL=("$KUBECTL_BIN")
+KUBECTL_SUDO="${PLATFORM_KUBECTL_SUDO:-sudo}"
+KUBECTL=("$KUBECTL_SUDO" "$KUBECTL_BIN")
 TARGET_NAMESPACES=(stock-prod media-prod)
 
 run_kubectl() {
