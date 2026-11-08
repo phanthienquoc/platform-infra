@@ -432,3 +432,17 @@ No newer native Platform or TCE schedule event was returned. The latest successf
 - Media runner remains active; remote registration guard is merged, but token secret existence is unverified. External backup/retention and authoritative DNS evidence remain missing.
 
 No production manifest mutation, workload scaling, GHCR publication/promotion, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred in this update. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only.
+
+
+## Latest execution update — 2026-11-08 20:01 ICT / 13:01 UTC
+
+- Current master SHAs: Platform `192187fffb416dba326055c1a729510d48cb612a`; TCE `7ab52078c4250829e158f05b2695ceb9d11bdbe3`; Stock `e6469ac6617142b349144101a1192cb6aa7104ad`; Media `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d`; Authentication `cb907a63df0e0441b54b7b930ecdbfa97a5e52e1`.
+- Open PRs: Platform #1314/#544/#541/#539 (draft); Authentication #76 (draft); no open PRs in TCE, Stock or Media.
+- Platform latest master validation #42478871584 PASS. Native schedule events remain reconcile #42467231073 FAIL, inspection #42452273701 PASS but stale, watchdog #42467080859 FAIL, recovery #42466737776 PASS but stale. All exceed their 45/75/45/45-minute freshness budgets; no later native Platform schedule event was found in paged Actions history.
+- TCE WF-12 native #42479336350 failed its stale-WF-06 freshness check but successfully dispatched a heartbeat. WF-13 #42479348862 validated that failure and dispatched read-only WF-06 fallback #42479362379. The fallback returned HTTP 503 for all four strict public probes (TCE web/API and Auth liveness/readiness). Schedule delivery and live service health remain separate.
+- Platform heartbeat receiver #42479344664 failed while fetching the public TCE Actions run API: logs show repeated HTTP 500 responses for run #42479336350. Payload/source fields passed initial validation; API lookup failed closed. A rerun was requested but attempt 2 was skipped by the existing first-attempt-only guard, so no second validation or dispatch occurred.
+- A dedicated branch `fix/retry-transient-tce-heartbeat-api-500-20261108-2001-ict` adds bounded retries for transient 5xx/connection failures to `fetch_tce_run()`, and static assertions that permanent 4xx responses are not retried indiscriminately. PR validation is pending; no production path or schedule was changed.
+- Stock scraper #42457182511 failed closed before ingestion because `VNSTOCK_API_KEY` is missing. Stock CI #42440810105 passed but did not publish. Media CI #42239703151 passed; no new publisher/decommission evidence. Auth master CI #42478653766 passed; #76 remains draft.
+- Latest K3s snapshot #42475079478 is now older than the 75-minute snapshot-age budget; do not treat it as current health. Its recorded state remains Media/MicroFE 1/1, Stock Admin/desired Backend ImagePullBackOff, and TCE/Auth/Keycloak 0/0.
+- Reconciliation #42474936543 passed credential/GHCR preflight, found no drift and skipped manifest apply/image promotion/rollout. No fresh inspection, new immutable publication, digest handoff, production mutation, scaling, decommission, DNS/database/storage change, runner retirement or host maintenance occurred.
+- TCE market-scan schedule is unchanged. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only.
