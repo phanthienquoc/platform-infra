@@ -54,6 +54,7 @@ recovery = read("recover-stale-ops.yml")
 watchdog = read("reconcile-schedule-watchdog.yml")
 inspection = read("inspect-vps.yml")
 lane_queue = (ROOT / "scripts" / "verify-reconcile-lane-queue.py").read_text(encoding="utf-8")
+scheduled_run_result = (ROOT / "scripts" / "verify-scheduled-run-result.py").read_text(encoding="utf-8")
 provision = read("provision-keycloak-tce-client.yml")
 cleanup = read("vps-image-cleanup.yml")
 
@@ -1580,6 +1581,27 @@ if "age_seconds > MAX_AGE_MINUTES * 60" not in reconcile_freshness_block:
     fail("Scheduled reconciliation freshness must compare exact elapsed seconds against its budget.")
 if "age_minutes > MAX_AGE_MINUTES" in reconcile_freshness_block:
     fail("Scheduled reconciliation freshness must not truncate elapsed time to whole minutes.")
+
+for required in (
+    'python3 scripts/verify-scheduled-run-result.py',
+    '--event "$GITHUB_EVENT_NAME"',
+    '--run-id "$run_id"',
+    '--run-url "$run_url"',
+):
+    if required not in reconcile_freshness_block:
+        fail(f"Scheduled reconciliation result gate is missing: {required}")
+for required in (
+    'if status not in {"queued", "waiting", "requested", "pending", "in_progress", "completed"}:',
+    '"unknown run status fails closed"',
+    'if status != "completed":',
+    'if conclusion == "success":',
+    'if event == "push":',
+    'return 1',
+    '"failed scheduled run"',
+    '"cancelled manual run"',
+):
+    if required not in scheduled_run_result:
+        fail(f"Scheduled reconciliation result verifier is missing: {required}")
 if "WATCHDOG_REFERENCE_EPOCH=$reference_epoch" not in watchdog or "WATCHDOG_REFERENCE_EPOCH" not in watchdog:
     fail("The watchdog must pass its API reference timestamp to inspection queue diagnostics.")
 if "date -u +%s" in watchdog:
