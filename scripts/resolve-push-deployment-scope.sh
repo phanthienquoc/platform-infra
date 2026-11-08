@@ -40,7 +40,11 @@ resolve_scope() {
       platform/keycloak/*|apps/keycloak/*)
         keycloak_changed=1
         ;;
-      environments/prod/*|platform/cert-manager/*|platform/k3s-debug-logs/*|scripts/reconcile-vps.sh|scripts/guard-reconcile-images.sh|scripts/validate-ghcr-pull-access.sh|scripts/verify-workload-health.sh|scripts/resolve-push-deployment-scope.sh)
+      README.md|.gitignore|environments/prod/README.md|.github/skills/*|ops/runbooks/*|scripts/inspect-vps.sh)
+        # Repository/runbook/skill documentation and read-only inspection code
+        # must not become an automatic production deployment scope.
+        ;;
+      environments/prod/*|platform/cert-manager/*|platform/k3s-debug-logs/*|scripts/reconcile-vps.sh|scripts/prepare-cert-manager-manifest.sh|scripts/guard-reconcile-images.sh|scripts/validate-ghcr-pull-access.sh|scripts/verify-workload-health.sh|scripts/resolve-push-deployment-scope.sh)
         cluster_wide=1
         ;;
       .github/workflows/*|scripts/bootstrap-runner.sh|scripts/bootstrap-media-runner.sh|scripts/decommission-stock-media-namespaces.sh|scripts/validate-*.py|scripts/validate-*.sh|scripts/verify-reconcile-lane-queue.py|scripts/verify-media-publisher-run.sh|scripts/verify-stockdividend-publisher-run.sh|scripts/verify-stockdividend-gitops-digests.py|scripts/tests/*|docs/*|debug/vps-latest.md)
@@ -127,6 +131,8 @@ self_test() {
   assert_scope all apps/media-generation/base/kustomization.yaml environments/prod/kustomization.yaml
   assert_scope all scripts/verify-workload-health.sh
   assert_scope all scripts/resolve-push-deployment-scope.sh
+  assert_scope all platform/cert-manager/kustomization.yaml scripts/prepare-cert-manager-manifest.sh
+  assert_failure README.md .gitignore environments/prod/README.md .github/skills/manifest-validation/SKILL.md ops/runbooks/maintenance.md scripts/inspect-vps.sh
   assert_scope all scripts/verify-workload-health.sh scripts/bootstrap-runner.sh scripts/validate-recovery-readiness.sh
   assert_failure scripts/bootstrap-runner.sh scripts/validate-recovery-readiness.sh
   # Manual-only and retired helper changes must never trigger an automatic
