@@ -79,7 +79,7 @@ case "${1:-}" in
     ;;
   policy-version)
     [[ "$#" -eq 1 ]] || exit 2
-    echo "platform-kubectl policy: rollout-status-v15-core-workloads"
+    echo "platform-kubectl policy: rollout-status-v16-decommission-runner-attestation"
     exit 0
     ;;
   reconcile-ghcr-pull)
@@ -452,7 +452,7 @@ echo "platform-kubectl: command is not allowlisted" >&2
 exit 2
 EOF
 chmod 0755 /usr/local/sbin/platform-kubectl
-echo "platform-kubectl policy: rollout-status-v15-core-workloads"
+echo "platform-kubectl policy: rollout-status-v16-decommission-runner-attestation"
 cat >/usr/local/sbin/platform-crictl <<'EOF'
 #!/usr/bin/env bash
 # Root-owned restricted CRI interface for the platform cleanup helper.
