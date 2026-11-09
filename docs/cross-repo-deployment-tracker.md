@@ -9,7 +9,6 @@ This rolling tracker distinguishes native schedule events from manual, push, wor
 | Repository | Master SHA | Open PRs | Readiness evidence |
 |---|---|---|---|
 | phanthienquoc/platform-infra | `2ab93d7736f520383764b9cb0f739d98a6696f58` | #1314/#544/#541/#539 (draft planning/docs) | Latest master validation #42539863349 PASS. Native reconcile #42538596496 PASS but its 12,675s inter-arrival gap exceeds the 2,700s budget; watchdog #42537967026 FAIL. Latest committed inspection #42530192980 is stale at 00:57Z. |
-
 | phanthienquoc/TCE-dashboard | `ddf5811a7994aab08236028cff04e0a78ffd2e3e` | None | Post-merge WF-01 #42538802539, WF-02 #42538802538 and WF-05 #42538802541 PASS. Native WF-06 #42531446260 FAIL (four HTTP 503 endpoints); WF-12 #42527713763 FAIL on stale WF-06 delivery. |
 | phanthienquoc/stockdividend | `1a18cabf32c6cc5f85f4157b5142a6d9f0d9d9b5` | None | Master CI #42533562194 PASS. Weekend scraper #42457182511 failed closed before dependencies because `VNSTOCK_API_KEY` is missing. Immutable publisher guard PRs #39/#40 are merged; no new production publication/digest handoff. |
 | phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | None | Post-merge CI #42539512417 PASS. Backend/frontend were 1/1 with RepoDigests in the last K3s snapshot; dedicated runner remains active/enabled/listener-present. No Platform GitOps handoff while retired. |
