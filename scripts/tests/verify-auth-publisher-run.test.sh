@@ -210,4 +210,11 @@ if PATH="$tmp_dir/bin:$PATH" MOCK_CURL_COUNT_FILE="$tmp_dir/count" MOCK_CURL_RES
   exit 1
 fi
 
+if PATH="$tmp_dir/bin:$PATH" MOCK_CURL_COUNT_FILE="$tmp_dir/count" MOCK_CURL_RESPONSE_FILE="$tmp_dir/response.json" \
+  SOURCE_RUN_ID=0 SOURCE_RUN_ATTEMPT=1 SOURCE_WORKFLOW_PATH="$sample_path" SOURCE_EVENT=workflow_dispatch \
+  SOURCE_HEAD_SHA="$sample_sha" SOURCE_COMMIT="$sample_sha" bash "$validator" >/dev/null 2>&1; then
+  echo "Expected zero Auth source run ID to fail before API access." >&2
+  exit 1
+fi
+
 echo "Auth publisher-run provenance contract tests passed."
