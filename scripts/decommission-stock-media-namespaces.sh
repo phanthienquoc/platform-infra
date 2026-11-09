@@ -94,8 +94,12 @@ case "$MODE" in
       echo "DNS_OWNERSHIP_REVIEW must equal AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED." >&2
       exit 2
     }
+    [[ "${RUNNER_RETIREMENT:-}" == "MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED" ]] || {
+      echo "RUNNER_RETIREMENT must equal MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED; no namespace was changed." >&2
+      exit 2
+    }
     preflight
-    printf '%s\n%s\n%s\n' "$CONFIRMATION" "$DATA_RETENTION_REVIEW" "$DNS_OWNERSHIP_REVIEW" | "${KUBECTL[@]}" decommission-stock-media
+    printf '%s\n%s\n%s\n%s\n' "$CONFIRMATION" "$DATA_RETENTION_REVIEW" "$DNS_OWNERSHIP_REVIEW" "$RUNNER_RETIREMENT" | "${KUBECTL[@]}" decommission-stock-media
     ;;
   *)
     echo "Usage: $0 plan|delete" >&2
