@@ -99,6 +99,16 @@ mv "$tmp_dir/invalid.json" "$event_file"
 expect_failure "non-string source run ID"
 
 make_valid
+jq '.client_payload.source_run_attempt = 1' "$event_file" > "$tmp_dir/invalid.json"
+mv "$tmp_dir/invalid.json" "$event_file"
+expect_failure "non-string source run attempt"
+
+make_valid
+jq '.client_payload.source_head_sha = "0123456789ABCDEF0123456789ABCDEF01234567"' "$event_file" > "$tmp_dir/invalid.json"
+mv "$tmp_dir/invalid.json" "$event_file"
+expect_failure "uppercase source head SHA"
+
+make_valid
 jq '.client_payload.source_run_attempt = "0"' "$event_file" > "$tmp_dir/invalid.json"
 mv "$tmp_dir/invalid.json" "$event_file"
 expect_failure "zero source run attempt"
