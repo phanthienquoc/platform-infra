@@ -644,7 +644,7 @@ Platform master dd1bca11e3c59c92f920ec5e4896fb8d643be272 after PR #1490; exact-h
 
 ## Observed execution state — 2026-11-09 12:02 ICT / 05:02 UTC
 
-- Current master heads: Platform 4e5d77df98fd86adac8670170440c0201d6f2be5; TCE ddf5811a7994aab08236028cff04e0a78ffd2e3e; Stock 1a18cabf32c6cc5f85f4157b5142a6d9b5; Media dcd698699c65ba6e73f6b43838975144777131c3; Authentication 047abc08e123d8bde7678104899d00aa8782624a.
+- Current master heads: Platform 4e5d77df98fd86adac8670170440c0201d6f2be5; TCE ddf5811a7994aab08236028cff04e0a78ffd2e3e; Stock 1a18cabf32c6cc5f85f4157b5142a6d9d9b5; Media dcd698699c65ba6e73f6b43838975144777131c3; Authentication 047abc08e123d8bde7678104899d00aa8782624a.
 - Platform PR #1502 post-merge validate-github-actions #42559897903 and validate-manifests #42559897980 PASS; PR #1503 post-merge validate-manifests #42560097448 PASS.
 - TCE latest master unit-test lane #42538802541 PASS; native WF-06 #42548397383 and WF-12 #42546629459 FAIL. WF-06 has four strict public health probes failing (TCE web/API and Auth liveness/readiness) while TCE/Auth are intentional 0/0.
 - Stock master CI #42533562194 PASS 7/7. Scheduled scraper #42457182511 stops at missing VNSTOCK_API_KEY preflight before dependency installation or scrape.
