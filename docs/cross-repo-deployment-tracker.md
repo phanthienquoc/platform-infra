@@ -13,7 +13,8 @@
 ### Stock scraper preflight contract hardening
 
 - The existing manual `run_scraper.yml` supports `preflight_only=true`: it checks `VNSTOCK_API_KEY`, verifies an authenticated non-guest VNStock tier, and guards Chromium installation and scraper ingestion with `preflight_only != true`.
-- PR #41 merged at `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` from exact head `b212fa0c4f2e2640230977b3d4c8184a7130998e`; exact-head CI #42609809654 passed all seven jobs, including native ARM64 non-publishing builds.\n- `scripts/validate-production-release-contract.sh` now enforces the exact eight-step scraper job sequence, so an added/renamed/reordered step fails CI until explicitly reviewed. MongoDB and Telegram credentials must appear exactly once and only inside the final scraper-ingestion step. No post-merge push result is claimed.
+- PR #41 merged at `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` from exact head `b212fa0c4f2e2640230977b3d4c8184a7130998e`; exact-head CI #42609809654 passed all seven jobs, including native ARM64 non-publishing builds.
+- `scripts/validate-production-release-contract.sh` now enforces the exact eight-step scraper job sequence, so an added/renamed/reordered step fails CI until explicitly reviewed. MongoDB and Telegram credentials must appear exactly once and only inside the final scraper-ingestion step. No post-merge push result is claimed.
 - This is validator-only. No scraper dispatch, credential read, ingestion, MongoDB/Telegram write, GHCR publication or Platform handoff was performed. The weekend schedule remains `0 1 * * 0,6`.
 
 ### Schedule, reconciliation and runtime evidence
