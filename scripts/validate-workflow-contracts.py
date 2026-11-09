@@ -676,6 +676,8 @@ if "`PLATFORM_INFRA_AUTOMATION_TOKEN`" in credentials_key:
     fail("credentials-key.md must not list the retired GitOps automation PAT.")
 
 # The generic promotion receiver is Auth-only; TCE and MicroFE use dedicated jobs.
+if promotion.count("SOURCE_RUN_ATTEMPT: ${{ github.event.client_payload.source_run_attempt }}") != 2:
+    fail("TCE and MicroFE promotion jobs must receive the source Actions run attempt.")
 if "- auth-image-published" not in promotion:
     fail("GitOps promotion must consume the Auth immutable-digest event.")
 if "stockdividend-images-published" in promotion or "media-images-published" in promotion:
@@ -683,6 +685,7 @@ if "stockdividend-images-published" in promotion or "media-images-published" in 
 for required in (
     "EVENT_AUTH_DIGEST: ${{ github.event.client_payload.auth_digest }}",
     "EVENT_SOURCE_RUN_ID: ${{ github.event.client_payload.source_run_id }}",
+    "EVENT_SOURCE_RUN_ATTEMPT: ${{ github.event.client_payload.source_run_attempt }}",
     "EVENT_SOURCE_WORKFLOW_PATH: ${{ github.event.client_payload.source_workflow_path }}",
     "EVENT_SOURCE_EVENT: ${{ github.event.client_payload.source_event }}",
     "EVENT_SOURCE_HEAD_SHA: ${{ github.event.client_payload.source_head_sha }}",
@@ -745,6 +748,7 @@ for required in (
     "SOURCE_APP",
     "SOURCE_REPOSITORY",
     "SOURCE_RUN_ID",
+    "SOURCE_RUN_ATTEMPT",
     "SOURCE_WORKFLOW_PATH",
     "SOURCE_EVENT",
     "SOURCE_HEAD_SHA",
@@ -752,6 +756,8 @@ for required in (
     "repository.full_name",
     "head_repository.full_name",
     "conclusion",
+    '[[ "$SOURCE_RUN_ATTEMPT" =~ ^[1-9][0-9]*$ ]]',
+    '[[ "$run_attempt" == "$SOURCE_RUN_ATTEMPT" ]]',
     "Build and publish MicroFE WebSocket image",
     "Build and publish MicroFE Shell image",
     "Dispatch immutable image promotion and verify production",
@@ -782,6 +788,10 @@ if microfe_ghcr_validation.index('GHCR_IMAGE_REFERENCE="$image:$SOURCE_COMMIT"')
 
 if "scripts/tests/verify-tce-microfe-publisher-run.test.sh" not in (ROOT / ".github" / "workflows" / "validate-github-actions.yml").read_text(encoding="utf-8"):
     fail("MicroFE publisher provenance regression tests must run in validate-github-actions.")
+microfe_provenance_tests = (ROOT / "scripts" / "tests" / "verify-tce-microfe-publisher-run.test.sh").read_text(encoding="utf-8")
+for required in ("SOURCE_RUN_ATTEMPT=1", 'run_attempt:($run_attempt|tonumber)', 'expect_failure "run attempt mismatch"', 'expect_failure "missing run attempt"'):
+    if required not in microfe_provenance_tests:
+        fail(f"MicroFE publisher provenance tests must cover exact run-attempt binding: {required}")
 
 # Promotion renders the updated MicroFE Kustomization; do not rely on an ambient runner kubectl.
 microfe_job = promotion.split("  promote-microfe-digests:", 1)[1].split("  fanout-tce-release:", 1)[0]
@@ -836,6 +846,8 @@ if "WEB_DIGEST_ON_MASTER" not in promotion or "SERVICE_DIGEST_ON_MASTER" not in 
 tce_provenance = (ROOT / "scripts" / "verify-tce-publisher-run.sh").read_text(encoding="utf-8")
 for required in (
     "https://api.github.com/repos/phanthienquoc/TCE-dashboard/actions/runs/$SOURCE_RUN_ID",
+    '[[ "$SOURCE_RUN_ATTEMPT" =~ ^[1-9][0-9]*$ ]]',
+    '[[ "$run_attempt" == "$SOURCE_RUN_ATTEMPT" ]]',
     '"$repository" == "phanthienquoc/TCE-dashboard"',
     '"$head_repository" == "phanthienquoc/TCE-dashboard"',
     '"$workflow_path" == "$SOURCE_WORKFLOW_PATH"',
@@ -856,6 +868,10 @@ if "scripts/tests/verify-tce-publisher-run.test.sh" not in (ROOT / ".github" / "
 tce_provenance_tests = (ROOT / "scripts" / "tests" / "verify-tce-publisher-run.test.sh").read_text(encoding="utf-8")
 for required in (
     'jobs_api_url="$API_URL/jobs?per_page=100"',
+    "SOURCE_RUN_ATTEMPT=1",
+    'run_attempt:($run_attempt|tonumber)',
+    'expect_failure "run attempt mismatch"',
+    'expect_failure "missing run attempt"',
     'verify_job_success "Require master for production release"',
     'verify_job_success "Notify Telegram — release started"',
     'verify_job_success "Resolve production image tag"',
@@ -1748,6 +1764,8 @@ for required in (
     'verify_step_success "Verify auth service" "Run npm test"',
     'verify_step_success "Verify auth service" "Run npm run typecheck"',
     'verify_step_success "Verify auth service" "Run npm run build"',
+    '[[ "$SOURCE_RUN_ATTEMPT" =~ ^[1-9][0-9]*$ ]]',
+    '[[ "$run_attempt" == "$SOURCE_RUN_ATTEMPT" ]]',
 ):
     if required not in auth_verifier_text:
         fail(f"Auth publisher provenance must require successful application verification step: {required}")
@@ -1760,13 +1778,21 @@ for required in (
     "Run npm test",
     "Run npm run typecheck",
     "Run npm run build",
+    "SOURCE_RUN_ATTEMPT=1",
+    'run_attempt:($run_attempt|tonumber)',
+    'expect_failure "run attempt mismatch"',
+    'expect_failure "missing run attempt"',
 ):
     if required not in auth_verifier_tests.read_text(encoding="utf-8"):
         fail(f"Auth publisher provenance tests must cover required verification step: {required}")
 for required in (
     "auth-image-published",
+    "EVENT_SOURCE_RUN_ATTEMPT: ${{ github.event.client_payload.source_run_attempt }}",
+    "SOURCE_RUN_ATTEMPT: ${{ steps.input.outputs.source_run_attempt }}",
     "EVENT_AUTH_DIGEST: ${{ github.event.client_payload.auth_digest }}",
     'SOURCE_WORKFLOW_PATH="$EVENT_SOURCE_WORKFLOW_PATH"',
+    'SOURCE_RUN_ATTEMPT="$EVENT_SOURCE_RUN_ATTEMPT"',
+    '[[ "$SOURCE_RUN_ATTEMPT" =~ ^[1-9][0-9]*$ ]]',
     '[[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/release.yml" ]]',
     '[[ "$SOURCE_EVENT" == "workflow_dispatch" ]]',
     "run: bash scripts/verify-auth-publisher-run.sh",
