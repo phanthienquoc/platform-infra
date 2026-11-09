@@ -10,7 +10,7 @@ from pathlib import Path
 
 DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 SHA = re.compile(r"^[0-9a-f]{40}$")
-PROD_RELEASE = re.compile(r"^prod-v[0-9]+\\.[0-9]+\\.[0-9]+-([0-9a-f]{40})$")
+PROD_RELEASE = re.compile(r"^prod-v[0-9]+\.[0-9]+\.[0-9]+-([0-9a-f]{40})$")
 MICROFE_RELEASE = re.compile(r"^microfe-([0-9a-f]{7})$")
 
 APP_IMAGES = {
@@ -93,14 +93,14 @@ def self_test() -> None:
     tce_web, tce_service = APP_IMAGES["tce-dashboard"][1]
     microfe_shell, microfe_ws = APP_IMAGES["microfe"][1]
 
-    auth_fixture = f"images:\\n- name: {auth_image}\\n  newName: {auth_image}\\n  digest: {digest_a}\\n"
+    auth_fixture = f"images:\n- name: {auth_image}\n  newName: {auth_image}\n  digest: {digest_a}\n"
     tce_fixture = (
-        f"images:\\n- name: {tce_web}\\n  digest: {digest_a}\\n"
-        f"- name: {tce_service}\\n  digest: {digest_b}\\n"
+        f"images:\n- name: {tce_web}\n  digest: {digest_a}\n"
+        f"- name: {tce_service}\n  digest: {digest_b}\n"
     )
     microfe_fixture = (
-        f"images:\\n- name: {microfe_shell}\\n  digest: {digest_a}\\n"
-        f"- name: {microfe_ws}\\n  digest: {digest_b}\\n"
+        f"images:\n- name: {microfe_shell}\n  digest: {digest_a}\n"
+        f"- name: {microfe_ws}\n  digest: {digest_b}\n"
     )
 
     require(extract_digest(auth_fixture, auth_image) == digest_a, "Auth digest fixture failed.")
@@ -111,7 +111,7 @@ def self_test() -> None:
 
     bad_cases = [
         (auth_fixture.replace(f"  digest: {digest_a}", "  newTag: latest"), auth_image),
-        (auth_fixture.replace(f"  digest: {digest_a}", f"  digest: {digest_a}\\n  digest: {digest_b}"), auth_image),
+        (auth_fixture.replace(f"  digest: {digest_a}", f"  digest: {digest_a}\n  digest: {digest_b}"), auth_image),
         (auth_fixture.replace(auth_image, "ghcr.io/phanthienquoc/other/image"), auth_image),
         (auth_fixture.replace(digest_a, "sha256:bad"), auth_image),
     ]
@@ -153,7 +153,7 @@ def main() -> int:
         parser.error("--app, --release and --source-commit are required unless --self-test is used.")
     try:
         for image, tag, digest in resolve(args.app, args.release, args.source_commit, args.root):
-            print(f"{image}\\t{tag}\\t{digest}")
+            print(f"{image}\t{tag}\t{digest}")
     except (OSError, ContractError) as exc:
         print(f"::error::GitOps-ready image reference validation failed: {exc}", file=sys.stderr)
         return 1
