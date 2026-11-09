@@ -55,6 +55,7 @@ run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target
       - scripts/resolve-push-deployment-scope.sh
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
@@ -95,6 +96,37 @@ jobs:
           fi
           git rev-parse HEAD
           test -f environments/prod/kustomization.yaml
+
+      - name: Validate GitOps promotion dispatch provenance
+        if: ${{ github.event_name == 'repository_dispatch' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROMOTION_RUN_ID: ${{ github.event.client_payload.promotion_run_id }}
+        run: |
+          set -euo pipefail
+          [[ "$PROMOTION_RUN_ID" =~ ^[1-9][0-9]*$ ]] || {
+            echo "::error::GitOps-ready dispatch must identify its originating Platform promotion run."
+            exit 1
+          }
+          deadline=$((SECONDS + 180))
+          while (( SECONDS < deadline )); do
+            if run_json="$(gh api -X GET -H "Accept: application/vnd.github+json" "repos/${GITHUB_REPOSITORY}/actions/runs/${PROMOTION_RUN_ID}" 2>/dev/null)"; then
+              status="$(jq -r '.status // empty' <<< "$run_json")"
+              if [[ "$status" == "completed" ]]; then
+                printf '%s\\n' "$run_json" > "$RUNNER_TEMP/gitops-promotion-run.json"
+                python3 scripts/verify-gitops-ready-dispatch.py \
+                  --event "$GITHUB_EVENT_PATH" \
+                  --promotion-run "$RUNNER_TEMP/gitops-promotion-run.json"
+                exit 0
+              fi
+              echo "Waiting for originating GitOps promotion run #$PROMOTION_RUN_ID to complete (status=${status:-unknown})."
+            else
+              echo "Waiting for GitHub Actions API visibility of promotion run #$PROMOTION_RUN_ID."
+            fi
+            sleep 5
+          done
+          echo "::error::Timed out waiting for a completed GitOps promotion run; refusing production reconciliation."
+          exit 1
 
       - name: Resolve push deployment scope
         if: ${{ github.event_name == 'push' }}
