@@ -1,8 +1,24 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: **2026-11-09 14:12 ICT / 2026-11-09 07:12 UTC**
+Last reviewed: **2026-11-09 14:20 ICT / 2026-11-09 07:20 UTC**
 
 This rolling tracker distinguishes native schedule events from manual, push, workflow_run and repository_dispatch fallbacks. Timestamped evidence is archived under `docs/cross-repo-deployment-checkpoints/`.
+
+## Runner bootstrap policy v16 gate — 2026-11-09 14:20 ICT / 07:20 UTC
+
+PR #1507 hardened the repository bootstrap source and destructive script to require the fourth Media runner-retirement attestation. A fresh VPS inspection (PR #1508, generated 07:10:37Z) still reports the installed root-owned wrapper at `rollout-status-v15-core-workloads`. Repository code changes do not update that installed wrapper.
+
+This PR versions the new contract as `rollout-status-v16-decommission-runner-attestation` and requires it in the manual bootstrap verification, Stock/Media plan/delete jobs, production reconciliation apply gate and Auth runtime Secret provisioning. The workflow-contract validator rejects stale v15 references in these active paths. The operator must run the approved manual bootstrap workflow before any of these protected production operations can pass. No bootstrap or host mutation is performed here.
+
+
+
+## Runner bootstrap policy v16 gate — 2026-11-09 14:20 ICT / 07:20 UTC
+
+PR #1507 hardened the repository bootstrap source and destructive script to require the fourth Media runner-retirement attestation. A fresh VPS inspection (PR #1508, generated 07:10:37Z) still reports the installed root-owned wrapper at `rollout-status-v15-core-workloads`. Repository code changes do not update that installed wrapper.
+
+This PR versions the new contract as `rollout-status-v16-decommission-runner-attestation` and requires it in the manual bootstrap verification, Stock/Media plan/delete jobs, production reconciliation apply gate and Auth runtime Secret provisioning. The workflow-contract validator rejects stale v15 references in these active paths. The operator must run the approved manual bootstrap workflow before any of these protected production operations can pass. No bootstrap or host mutation is performed here.
+
+
 
 ## Post-merge and fresh-inspection delta — 2026-11-09 14:12 ICT / 07:12 UTC
 
