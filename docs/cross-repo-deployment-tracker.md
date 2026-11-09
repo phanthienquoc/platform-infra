@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: **2026-11-09 07:57 ICT / 2026-11-09 00:57 UTC**
+Last reviewed: **2026-11-09 08:10 ICT / 2026-11-09 01:10 UTC**
 
 This rolling tracker distinguishes native schedule events from manual, push, workflow_run and repository_dispatch fallbacks. Timestamped evidence is archived under `docs/cross-repo-deployment-checkpoints/`.
 
@@ -8,7 +8,7 @@ This rolling tracker distinguishes native schedule events from manual, push, wor
 
 | Repository | Master SHA | Open PRs | Readiness evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `2ab93d7736f520383764b9cb0f739d98a6696f58` | #1314/#544/#541/#539 (draft planning/docs) | Latest master validation #42539863349 PASS. Native reconcile #42538596496 PASS but its 12,675s inter-arrival gap exceeds the 2,700s budget; watchdog #42537967026 FAIL. Latest committed inspection #42530192980 is stale at 00:57Z. |
+| phanthienquoc/platform-infra | `a614b3a6549cdccd2d5f2c9af3e86245df5a58ce` | #1314/#544/#541/#539 (draft); #1493 (dispatch-job attestation) | PR #1492 merged. Exact-head validation #42543963303/#42543963257/#42543963209 PASS; post-merge #42544069779/#42544069795/#42544069796 PASS. New PR #1493 adds executed-job evidence to the dispatch gate. |
 | phanthienquoc/TCE-dashboard | `ddf5811a7994aab08236028cff04e0a78ffd2e3e` | None | Post-merge WF-01 #42538802539, WF-02 #42538802538 and WF-05 #42538802541 PASS. Native WF-06 #42531446260 FAIL (four HTTP 503 endpoints); WF-12 #42527713763 FAIL on stale WF-06 delivery. |
 | phanthienquoc/stockdividend | `1a18cabf32c6cc5f85f4157b5142a6d9f0d9d9b5` | None | Master CI #42533562194 PASS. Weekend scraper #42457182511 failed closed before dependencies because `VNSTOCK_API_KEY` is missing. Immutable publisher guard PRs #39/#40 are merged; no new production publication/digest handoff. |
 | phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | None | Post-merge CI #42539512417 PASS. Backend/frontend were 1/1 with RepoDigests in the last K3s snapshot; dedicated runner remains active/enabled/listener-present. No Platform GitOps handoff while retired. |
@@ -1326,3 +1326,20 @@ Branch `fix/gitops-promotion-dispatch-provenance-20261109-0757-ict` adds a fail-
 6. Platform operator: plan host maintenance separately with a maintenance window and rollback; no unattended reboot/upgrade.
 
 No image publication, image promotion, manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred in this execution. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose authority was added. TCE market-scan schedule unchanged.
+
+
+## Post-merge follow-up — 2026-11-09 08:10 ICT / 01:10 UTC
+
+- Platform PR [#1492](https://github.com/phanthienquoc/platform-infra/pull/1492) was squash-merged at exact head `e1d55deb801a1c081cdb7591ac5cd90e57840cb7`, producing master `a614b3a6549cdccd2d5f2c9af3e86245df5a58ce`.
+- Exact-head checks all passed: `validate-manifests` #42543963303, `validate-github-actions` #42543963257 and `keycloak-ci` #42543963209.
+- Post-merge checks all passed: `validate-manifests` #42544069779, `validate-github-actions` #42544069795 and `keycloak-ci` #42544069796.
+- A second review found that a successful workflow-run envelope alone could still describe a no-op promotion workflow whose app-specific promotion job was skipped. Dedicated branch `fix/gitops-promotion-job-attestation-20261109-0812-ict` now also requires the expected promotion job(s) to be completed-successful: MicroFE digest promotion; both TCE paired promotion and coordinator; or Auth promotion. PR #1493 carries this follow-up.
+- The new validator has 4 positive and 23 negative self-test cases, including skipped/missing/failed app-specific promotion jobs. It fetches the Actions jobs endpoint for the exact promotion run attempt. No production event or reconciliation was dispatched.
+
+### Schedule and runtime status at this checkpoint
+
+No newer native Platform or TCE schedule events appeared after the recorded runs through 01:10Z. Latest Platform native reconcile #42538596496 (00:08:54Z), inspection #42530192980 (22:25:47Z), recovery #42537793367 (23:59:38Z) and watchdog #42537967026 (00:01:36Z) remain outside freshness/cadence expectations; watchdog is failed. TCE WF-06 #42531446260 and WF-12 #42527713763 remain failed. Do not count post-merge CI, workflow_run or recovery dispatches as native schedule acceptance.
+
+Latest committed K3s snapshot #42530192980 (22:25:55Z) is stale; no new inspection or production rollout was triggered. Last known reconciliation #42538596496 was no-drift and skipped apply/promotion/rollout. Stock scraper still lacks `VNSTOCK_API_KEY`; TCE/Auth remain intentional 0/0; Media runner and external backup/DNS evidence remain owner-blocked.
+
+No cron/freshness change, production image publication/promotion, manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
