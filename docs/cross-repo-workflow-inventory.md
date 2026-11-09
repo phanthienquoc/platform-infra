@@ -1,3 +1,13 @@
+## 2026-11-09 22:23 ICT — native schedule recheck
+
+- Re-query of the latest 100 master runs found no new native schedule events. Ages at 15:23:42Z: Platform reconcile 30,562s/2,700s budget; inspection 20,774s/4,500s; recovery 32,985s/2,700s; watchdog 32,628s/2,700s; TCE WF-06 20,819s/1,500s; WF-12 24,062s/1,500s. Inter-arrival gaps unchanged. Issue #1497 comment #6743818812 records this recheck. Push inspection #42643433567 is not schedule acceptance.
+- Fresh K3s snapshot (15:19:13Z) is 269s old at 15:23:42Z; node Ready, 56% disk, ~21 GiB free, ~19 GiB RAM, restart required. Stock desired ARM64 pods still ImagePullBackOff; Media 1/1; MicroFE Shell/WS/NATS 1/1; TCE/Auth/Keycloak 0/0; public OIDC 503.
+- Decommission storage preflight is clean, but runner service/listener remains active and backup/retention, remote unregister and DNS ownership remain unverified. No deletion.
+- Platform master `0c932b81`; PR #1525 and #1526 merged. PR #1527's previous exact-head validation #42644190684 passed; new final head must be revalidated.
+- No production rollout/mutation or cron/TCE market-scan schedule change.
+
+---
+
 ## 2026-11-09 22:21 ICT — fresh inspection and decommission readiness
 
 - Platform master `0c932b81` includes read-only inspection PR #1526, generated from run #42643433567 at 15:19:13Z and exact-head validated before squash merge. Snapshot age at 15:21:18Z was ~125 seconds (within 4,500s).
