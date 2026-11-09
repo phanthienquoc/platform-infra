@@ -1,6 +1,19 @@
 # Cross-repo workflow inventory and deployment ownership
 
-Current review: **2026-11-09 13:00 ICT / 2026-11-09 06:00 UTC**
+Current review: **2026-11-09 14:00 ICT / 2026-11-09 07:00 UTC**
+
+## 2026-11-09 14:00 ICT execution delta
+
+- Platform master observed at inspection commit `1a9c9b9b1c3cb550f9904f65a50ed87df0c157cb`; PR #1505 exact-head validation #42570696070 PASS and PR #1504 post-merge #42565271145 PASS. The connector does not expose all push/schedule/dispatch runs for master commits.
+- TCE Dashboard master `ddf5811a`: unit test #42538802541 PASS; WF-06 #42548397383 fails all four strict public health probes (HTTP 503). Keep HTTP 200 acceptance.
+- StockDividend master `1a18cabf`: CI #42533562194 PASS 7/7 with publishing disabled. Scraper #42457182511 failed on empty VNSTOCK_API_KEY at older source SHA `e6469ac`; current master secret state is unverified.
+- Media master `dcd69869`: application test/build #42539512417 PASS. Authentication master `047abc08`: ARM64 non-publishing build/validation #42539350154 PASS.
+- Fresh K3s snapshot #1506 generated 06:16:06Z: node Ready/ARM64; Media/MicroFE active workloads 1/1; Stock Admin desired image pull fails on missing ARM64 manifest and legacy Stock image digests are unavailable; TCE/Auth/Keycloak 0/0; OIDC 503. Media runner remains active/enabled. Stock/Media storage preflight is clean in-cluster, but namespaced Secrets/workloads remain and will be deleted with their namespaces; external backup/retention and DNS review are outstanding.
+- Decommission defense-in-depth follow-up requires the runner-retirement attestation in the workflow's final delete step, namespace script and root-owned wrapper, not only the preceding workflow validation/remote audit step. Regression tests reject missing/mismatched runner attestations. Remote GitHub runner absence still comes only from the protected read-only API audit.
+- Native schedule cadence remains unverified after the 05:02:47Z all-event snapshot in issue #1497. Preserve cron and budgets. TCE market-scan schedule unchanged.
+- No production publication/promotion/apply/rollout/scaling, namespace or storage deletion, runner retirement, DNS/database/storage mutation, or host maintenance occurred.
+
+| Repository | App-owned workflows and release contract | Platform-owned responsibilities / boundary | Current evidence |
 
 | Repository | App-owned workflows and release contract | Platform-owned responsibilities / boundary | Current evidence |
 |---|---|---|---|
