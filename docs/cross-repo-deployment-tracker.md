@@ -1,11 +1,68 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: **2026-11-09 16:03 ICT / 2026-11-09 09:03 UTC**
+Last reviewed: **2026-11-09 17:00 ICT / 2026-11-09 10:00 UTC**
+
+## Execution delta — 2026-11-09 17:00 ICT / 10:00 UTC
+
+### Repository and PR state
+
+Current default-branch heads:
+- Platform Infra: `9530a7abd61b2b79b8c51cd9ea698ea44dc49e59` (inspection snapshot #1515)
+- TCE Dashboard: `65af89f69ffe0d844a9b63e2434bc3f8cedfebb7`
+- StockDividend: `1a18cabf32c6cc5f85f4157b5142a6d9f0d9d9b5`
+- Media Generation: `dcd698699c65ba6e73f6b43838975144777131c3`
+- Authentication: `b71834758d278e50e6ce07b5086fe45e9d9b3350`
+
+Open human-decision drafts remain Platform #1314/#544/#541/#539 and Authentication #76. TCE Dashboard, StockDividend and Media Generation have no open PRs. No draft was merged.
+
+The current Platform master includes inspection snapshot commit #1515 (`9530a7ab`). It updates `debug/vps-latest.md` from 08:38:41Z to **09:37:36Z** and changes inspection evidence only; no production manifest or workload was changed.
+
+### Workflow and check evidence re-read
+
+- Platform PR #1514 exact-head `validate-manifests` run [#42591267072](https://github.com/phanthienquoc/platform-infra/actions/runs/42591267072) PASS. PR #1512 exact-head `validate-manifests` [#42587680995](https://github.com/phanthienquoc/platform-infra/actions/runs/42587680995) PASS. The PR-only run connector does not expose post-merge push/schedule/dispatch runs for current master; no such post-merge result is claimed for #1514 or inspection #1515.
+- TCE PR #1032 exact-head runs WF-01P #42585765728, WF-02 #42585765734, WF-05 #42585765722 and WF-08B #42585765835 all PASS. WF-08B's two test jobs passed; publisher and dispatch jobs were skipped as expected for a PR event, so this is not production publication evidence.
+- StockDividend CI [#42533247153](https://github.com/phanthienquoc/stockdividend/actions/runs/42533247153) passed all seven jobs. Its ARM64 image builds were non-publishing; immutable GHCR publication was not exercised by this run.
+- Media application test/build [#42539297802](https://github.com/phanthienquoc/media-generation/actions/runs/42539297802) PASS.
+- Authentication service CI [#42585818369](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/42585818369) PASS, including native ARM64 non-publishing build and release-contract validation.
+- Combined-status queries for the five current master SHAs returned no status entries. The connected workflow-run view is PR-event filtered; empty results do not prove that newer push, schedule or repository_dispatch runs do not exist.
+
+Historical run-ID correction: the TCE WF-08B exact-head run is **#42585765835**, not #42585865835. The latter was a typo in the 15:15 checkpoint and has been corrected there and in rolling references.
+
+### Fresh read-only K3s inspection
+
+Source: `debug/vps-latest.md`, generated **2026-11-09T09:37:36Z** (16:37:36 ICT).
+
+- Node `tce-k3s-01` Ready, ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2. Disk 56% (~21 GiB free), available RAM ~19 GiB; host still reports `restart_required: yes`.
+- Docker inventory: 20 images, 9.195 GB total; 5.773 GB reported reclaimable. No cleanup was performed.
+- Media backend/frontend and MicroFE Shell/WS/NATS are 1/1 Running with registry digest evidence.
+- Stock Admin has two 0/1 ImagePullBackOff pods; desired Stock Backend has a 0/1 pull failure. Events explicitly say tag `12d63b4` has no matching `linux/arm64` manifest. Legacy Stock Backend/Frontend remain 1/1 on older tags, but do not provide registry RepoDigest evidence suitable for promotion.
+- TCE frontend/service, MicroFE Auth and Keycloak remain intentional 0/0. Both public OIDC discovery probes return HTTP 503; this is not live health.
+- Stock and Media namespaces have no PVC, PV claim or VolumeSnapshot references in this inspection. The unrelated `k3s-debug` namespace still owns a PVC/PV. Stock/Media namespaces still contain Secrets/TLS credentials, Services, Ingresses, Deployments and ReplicaSets; storage-clean does not authorize namespace deletion.
+- Both Platform and Media runner services are active/enabled with listeners present. Remote GitHub runner registration is not inferred from host process state.
+- GitOps drift is reported clean. Ingress hostnames remain; DNS ownership must be checked against authoritative provider records before decommission.
+
+This snapshot is fresh enough for current diagnosis, but it does not authorize production rollout, namespace deletion, runner retirement, DNS changes or host maintenance.
+
+### Native schedule and service blockers
+
+Issue [#1497](https://github.com/phanthienquoc/platform-infra/issues/1497) remains open. Latest authoritative all-event schedule evidence available in the tracker remains 05:02:47Z; the current all-event cadence is unverified because this connector does not expose a complete Actions run enumeration or scheduler enqueue evidence. Preserve all cron expressions and freshness budgets.
+
+TCE WF-06 #42548397383 remains the last confirmed strict health failure: four public probes returned HTTP 503. Stock's prior scraper failure #42457182511 checked out older source commit `e6469ac`; it does not establish the current master secret state. Do not infer `VNSTOCK_API_KEY` is currently missing without a current safe preflight.
+
+### Exact next actions
+
+1. GitHub administrator: provide authoritative schedule enqueue/delivery evidence for issue #1497; do not change cron or freshness budgets.
+2. Stock owner: run safe credential preflight against current master; separately approve a new full-source-SHA ARM64 image publication, then capture immutable registry digests. Do not overwrite tag `12d63b4`.
+3. TCE/Auth service owners: diagnose HTTP 503 and approve recovery/rollback before restoring any replicas.
+4. Media owner/operator: verify external backup/retention, DNS ownership and remote runner registration before protected decommission.
+5. Platform operator: use the fresh snapshot for diagnosis only; require a new read-only inspection immediately before any later runtime mutation and an approved host maintenance window.
+
+No production GHCR publication, digest promotion, manifest apply, rollout, scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host reboot/upgrade occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
 
 ## Execution delta — 2026-11-09 16:03 ICT / 09:03 UTC
 
 - Platform PR [#1512](https://github.com/phanthienquoc/platform-infra/pull/1512) squash-merged at `296665e832964124f34fd768bafbfa8bddd925d9` from exact head `a428a7d50e84711a31ab9abbc71166e05b1f3297`; exact-head validate-manifests #42587680995 PASS. This docs-only PR did not trigger validate-github-actions; post-merge push CI is not exposed by the connected run view.
-- Corrected the TCE WF-08B exact-head run reference to **#42585765835**. The PR-only run list confirms this ID; the two MicroFE tests passed and publisher/dispatch jobs were skipped as expected for a PR event. The prior typo #42585865835 returned 404.
+- Corrected the TCE WF-08B exact-head run reference to **#42585765835**. The PR-only run list confirms this ID; the two MicroFE tests passed and publisher/dispatch jobs were skipped as expected for a PR event. The prior typo #42585765835 returned 404.
 - Current masters: Platform `296665e8`, TCE `65af89f6`, Stock `1a18cabf`, Media `dcd69869`, Auth `b7183475`. Open human-decision drafts: Platform #1314/#544/#541/#539 and Auth #76; no open PRs in TCE/Stock/Media.
 - Latest inspection snapshot #1513: `debug/vps-latest.md` generated `2026-11-09T08:38:41Z`; node Ready/ARM64, disk 56%, ~21 GiB free, RAM ~19 GiB, restart_required=yes. Media/MicroFE 1/1 with digest evidence; Stock Admin and desired Backend pulls fail (ARM64 manifest mismatch); TCE/Auth/Keycloak 0/0; public OIDC probes HTTP 503. Media runner service active/enabled; remote registration remains unverified.
 - TCE #1032, Auth #91 and Platform #1511 exact-head checks remain PASS; positive source_run_attempt attestation is enforced for TCE, MicroFE and Auth. No production publication or dispatch was performed.

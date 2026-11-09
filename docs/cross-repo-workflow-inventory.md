@@ -1,6 +1,17 @@
 # Cross-repo workflow inventory and deployment ownership
 
-Current review: **2026-11-09 16:03 ICT / 2026-11-09 09:03 UTC**
+Current review: **2026-11-09 17:00 ICT / 2026-11-09 10:00 UTC**
+
+## 2026-11-09 17:00 ICT inspection and evidence refresh
+
+- Platform master includes inspection snapshot #1515 at `9530a7ab`; `debug/vps-latest.md` generated 09:37:36Z. Node Ready/ARM64; disk 56%, ~21 GiB free; available RAM ~19 GiB; host restart required. Docker reports 5.773 GB reclaimable; no cleanup was run.
+- Media backend/frontend and MicroFE Shell/WS/NATS are 1/1 with registry digest evidence. Stock Admin×2 and desired Backend fail to pull tag `12d63b4` because the registry manifest has no matching linux/arm64 platform. Legacy Stock Backend/Frontend remain 1/1 but lack RepoDigest evidence. TCE frontend/service, MicroFE Auth and Keycloak remain 0/0; public OIDC probes return 503.
+- Stock/Media storage preflight reports no namespace PVC/PV claims or VolumeSnapshots; both namespaces still contain Secrets/TLS credentials, workloads, Services and Ingresses. DNS ownership, external backup/retention and remote Media runner registration remain unverified. Platform and Media runner services remain active/enabled.
+- Platform PR #1514 exact-head validate-manifests #42591267072 PASS; PR #1512 #42587680995 PASS. TCE PR #1032 runs #42585765728/#42585765734/#42585765722/#42585765835 PASS (WF-08B publisher/dispatch skipped on PR event). Stock CI #42533247153 7/7 PASS with non-publishing ARM64 builds; Media #42539297802 PASS; Auth #42585818369 PASS.
+- Correct TCE WF-08B run ID is #42585765835; the previous #42585865835 value in the 15:15 checkpoint was a typo and is corrected.
+- Current master heads: Platform `9530a7ab`, TCE `65af89f6`, Stock `1a18cabf`, Media `dcd69869`, Auth `b7183475`. Open drafts: Platform #1314/#544/#541/#539; Auth #76. No open PRs in TCE/Stock/Media.
+- Native schedule issue #1497 remains open; current cadence is unverified beyond the 05:02:47Z all-event evidence. No cron/freshness changes; TCE market-scan schedule unchanged.
+- No production publication, promotion, apply, rollout, scaling, deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred.
 
 ## 2026-11-09 16:03 ICT publisher-provenance and inspection delta
 
