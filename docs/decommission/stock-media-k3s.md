@@ -1,3 +1,17 @@
+## Latest live workload readout — 2026-11-10 05:10 ICT / 2026-11-09 22:10:30 UTC
+
+Source: successful recovery-triggered [reconcile-vps run #42709362025](https://github.com/phanthienquoc/platform-infra/actions/runs/42709362025). This is a fresh node/pod readout during controlled reconciliation, not a replacement for the full disk/RAM/runner/storage inspection.
+
+- Node `tce-k3s-01` was Ready, ARM64, K3s `v1.36.3+k3s1`, containerd `2.3.2-k3s2`.
+- `media-prod`: backend/frontend each 1/1 Running.
+- `microfe-platform`: Shell/WS/NATS each 1/1 Running.
+- `stock-prod`: two Admin pods and desired Backend pod remain ImagePullBackOff; legacy Backend/Frontend remain 1/1 Running.
+- TCE frontend/service and Auth/Keycloak remain intentional 0/0. This reconciliation did not assert public HTTP 200 for those services.
+- GHCR read-access preflight passed for all managed Auth/MicroFE/TCE images; Auth runtime Secret provisioned/verified with values suppressed; shared `ghcr-pull` unchanged; no image-pull failures for managed MicroFE/Auth/TCE targets. TCE release pairing `prod-v0.1.0-e75e338` passed.
+- GitOps drift=false, `ALLOW_IMAGE_CHANGES=false`, and production manifest apply skipped. Reconciliation and post-reconcile cluster verification passed.
+- This readout contains no disk/RAM or `restart_required` measurement. The latest full hardware/storage/runner inspection remains #42694932077 at 20:38:49Z and is now older than the 75-minute freshness budget. Obtain a fresh full read-only inspection before any runtime mutation or decommission operation.
+- Stock/Media namespaces remain present. Media runner service/listener, remote unregister, external backup/retention and authoritative DNS ownership remain unverified. The protected delete workflow remains blocked.
+
 ## Latest runtime evidence — 2026-11-10 04:03 ICT / 2026-11-09 21:03:15 UTC
 
 This section supersedes the older runtime snapshots below. Source: read-only inspection [#42694932077](https://github.com/phanthienquoc/platform-infra/actions/runs/42694932077), generated at `2026-11-09T20:38:49Z`, committed by inspection PR [#1546](https://github.com/phanthienquoc/platform-infra/pull/1546) at master `827d8d442cf7de344be04a246e56ee2ee3148657`. Snapshot age at this checkpoint was 24m26s (within the 75-minute inspection budget). The PR changed only the inspection snapshot; no production manifest was changed.
