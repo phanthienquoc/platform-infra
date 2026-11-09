@@ -464,3 +464,11 @@ App-owned publication and Platform-owned production GitOps boundaries remain unc
 - Latest native schedule evidence remains outside budgets: Platform reconcile/inspection/recovery/watchdog gaps 15,672s/14,280s/12,727s/12,672s against 2,700s/4,500s/2,700s/2,700s; TCE WF-06/WF-12 gaps 13,481s/14,317s against 1,500s. Do not change cron or budgets; GitHub administrator investigation required.
 - Latest read-only K3s snapshot #42537975671: node Ready/ARM64, disk 56%, RAM ~19 GiB, restart_required=yes; Media/MicroFE 1/1, Stock desired Admin/Backend image pulls failing due ARM64 manifest mismatch, TCE/Auth/Keycloak 0/0. Stock/Media storage preflight clean but external data retention, DNS and remote runner registration remain unverified.
 - reconcile-vps.yml remains the only production apply authority; inspect-vps.yml remains read-only. No promotion, manifest apply, scaling, deletion, runner retirement, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
+
+
+## TCE publisher hardening merge — 2026-11-09 07:11 ICT
+
+- TCE Dashboard PR #1031 merged by squash at ddf5811a7994aab08236028cff04e0a78ffd2e3e. Exact-head PR checks passed: WF-01P #42538473285 (release contract and mocked tag-absence tests), WF-02 #42538473275, WF-05 #42538473166; push-format/unit-test runs #42538448641/#42538448647 passed.
+- WF-03 remains manual-only/master-only. It now serializes publication per source SHA and checks both web/service version+full-SHA GHCR tags before the first push. Only explicit HTTP 404/known missing-manifest responses count as absent; existing tags, 401/403, ambiguous repository-not-found and unknown errors fail closed. This is workflow-level overwrite prevention, not registry-side tag immutability.
+- Post-merge TCE CI #42538802539/#42538802538/#42538802541 was still running at review. No production image publication or Platform dispatch occurred.
+- Platform documentation PR #1490 records the 07:08 snapshot and this 07:11 post-merge delta; revalidate its updated exact head before merge. No cron, freshness budget or TCE market-scan schedule change.
