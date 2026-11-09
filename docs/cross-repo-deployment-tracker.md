@@ -1232,3 +1232,14 @@ Exact next actions: (1) verify post-merge Stock CI #42533562194 to completion; (
 ## Latest cross-repo execution — 2026-11-09 07:08 ICT
 
 The current checkpoint and evidence are archived in [2026-11-09-0708-ict.md](cross-repo-deployment-checkpoints/2026-11-09-0708-ict.md). Key changes since 06:07 ICT: Platform inspection PR #1489 merged at ecafca5f594f9984baa294ee679afed6afd245bb; fresh read-only K3s snapshot #42537975671 generated at 00:01:52Z and validation #42538111845 passed; Stock master CI #42533562194 is now confirmed PASS; TCE PR #1031 adds fail-closed GHCR tag preflight and is still under exact-head CI review. Native Platform/TCE schedule cadence remains outside budget. The full run IDs, gaps, runtime state, ownership boundaries and exact next actions are in the checkpoint.
+
+
+## Post-checkpoint execution update — 2026-11-09 07:11 ICT / 00:11 UTC
+
+TCE Dashboard PR #1031 was squash-merged at ddf5811a7994aab08236028cff04e0a78ffd2e3e after verifying the exact PR head 80c24eb1914bcfed924a3d90be4113294144b10d and all required PR checks. WF-01P #42538473285 passed, including the release-contract validator and mocked GHCR absence tests; WF-02 #42538473275 and WF-05 #42538473166 passed. The duplicate push runs #42538448641/#42538448647 also passed. The skipped PR auto-format step was non-blocking; the push auto-format run passed. No image publication or Platform dispatch occurred.
+
+Post-merge TCE CI is now running on the new master SHA: WF-01 #42538802539, WF-02 #42538802538 and WF-05 #42538802541 were in progress at the last check. Do not mark the post-merge app CI lane green until all three finish. TCE WF-03 remains manual-only/master-only; the new tag guard only runs during an explicitly approved release and blocks existing/ambiguous tags before either GHCR push.
+
+Platform tracker/inventory PR #1490 remains open at exact head c132840342d0c92859114eaea14fec899c268735. Exact-head validate-manifests #42538755907 passed before this post-checkpoint update; a new validation run is required after the update is committed. Platform master remains ecafca5f594f9984baa294ee679afed6afd245bb. No Platform production manifests or runtime state changed.
+
+Native schedule gaps, K3s snapshot #42537975671, Stock/Media/Auth blockers and all safety boundaries remain as recorded in the 07:08 ICT checkpoint. TCE market-scan schedule unchanged.
