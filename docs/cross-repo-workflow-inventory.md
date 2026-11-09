@@ -1,6 +1,18 @@
 # Cross-repo workflow inventory and deployment ownership
 
-Current review: **2026-11-09 17:00 ICT / 2026-11-09 10:00 UTC**
+## 2026-11-09 18:02 ICT execution and ownership refresh
+
+- Current masters: Platform `7c6f2b32`; TCE `65af89f6`; Stock `1a18cabf`; Media `dcd69869`; Authentication `b7183475`.
+- Latest master push CI: Platform #42599052606 PASS; TCE WF-01 #42586355695, WF-02 #42586356008 and WF-05 #42586355696 PASS; Stock #42533562194 PASS 7/7 with non-publishing ARM64 builds; Media #42539512417 PASS; Auth #42586362115 PASS.
+- Open drafts: Platform #1314/#544/#541/#539 and Auth #76. Platform PR #1517 adds a final-step Media runner re-audit immediately before protected namespace deletion; exact-head validation pending. No app publisher PR remains open.
+- Latest reconciliation #42595146384 is workflow_dispatch, not schedule: Auth runtime Secret provisioned/verified, shared `ghcr-pull` unchanged, no active MicroFE/TCE image-pull failures, drift=false, manifest apply/image promotion skipped. TCE/Auth 0/0 maintenance is not live health. Recovery #42595660819 is repository_dispatch fallback, not native acceptance.
+- Native schedule gaps: Platform reconcile 24,326s / inspection 27,768s / recovery 22,459s / watchdog 22,698s; TCE WF-06 27,454s / WF-12 25,452s. All exceed existing budgets; current ages also exceed freshness budgets. Issue #1497 has been updated with exact run IDs, gaps and ages. No cron/budget or TCE market-scan changes.
+- TCE WF-06 #42594757482 was delivered natively but all four public endpoints returned HTTP 503. TCE/Auth remain intentional 0/0; strict health probes remain failures.
+- Latest K3s snapshot #1515 generated 09:37:36Z is 85m old and beyond the 75m inspection budget. Node Ready/ARM64, disk 56%, RAM ~19 GiB, restart required; Media/MicroFE 1/1 with digest evidence; Stock desired tag 12d63b4 fails ARM64 manifest resolution; TCE/Auth/Keycloak 0/0.
+- Stock/Media decommission remains blocked by external backup/retention, authoritative DNS ownership and remote Media runner registration. PR #1517 tightens final-step runner retirement verification but performs no deletion.
+- App repos continue to own tests/builds and immutable GHCR publication; Platform alone owns production manifests, shared pull credentials, digest/provenance validation, GitOps apply, rollout and health. `reconcile-vps.yml` remains sole apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose authority.
+
+Current review: **2026-11-09 18:02 ICT / 2026-11-09 11:02 UTC**
 
 ## 2026-11-09 17:00 ICT inspection and evidence refresh
 
