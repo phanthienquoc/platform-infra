@@ -1,3 +1,13 @@
+## Execution delta — 2026-11-09 22:23 ICT / 15:23:42 UTC
+
+- A fresh re-query of both repositories' first 100 master Actions runs found no new native `event=schedule` runs since the 15:06Z evidence. Current ages at 15:23:42Z: Platform reconcile 30,562s (budget 2,700s); inspection 20,774s (4,500s); recovery 32,985s (2,700s); watchdog 32,628s (2,700s); TCE WF-06 20,819s (1,500s); TCE WF-12 24,062s (1,500s). Inter-arrival gaps remain 24,326s / 27,768s / 22,459s / 22,698s / 27,454s / 25,452s respectively. New issue evidence: [#1497 comment #6743818812](https://github.com/phanthienquoc/platform-infra/issues/1497#issuecomment-6743818812). Push-triggered inspection #42643433567 is not native schedule acceptance.
+- The fresh K3s snapshot generated at 15:19:13Z is 269s old at 15:23:42Z and remains within the 4,500s budget. It confirms node Ready, 56% disk, ~21 GiB free, ~19 GiB RAM, host restart required; Stock desired ARM64 pods ImagePullBackOff; Media 1/1; MicroFE Shell/WS/NATS 1/1; TCE/Auth/Keycloak 0/0; public SSO OIDC HTTP 503.
+- Stock/Media storage preflight remains `storage-clean` (no target PVC/PV claims or VolumeSnapshot references; only the unrelated `k3s-debug` PVC). This does not authorize deletion: Media runner service/listener is still active, and external backup/retention, remote runner unregister and authoritative DNS ownership are unverified.
+- Platform master remains `0c932b8142535162128457b0141be5cbd113d6b8`; #1525 code PR and #1526 read-only inspection PR are merged. PR #1527 documentation head `7a88abe0cbc8e99f6e65bf98e98a81c458e9a2ae` passed exact-head validate-manifests #42644190684 before this additional schedule-age note; final-head validation will be rechecked after the update.
+- Preserve all schedule expressions/budgets, strict HTTP 200 checks and TCE market-scan schedule. No production mutation.
+
+Checkpoint: `docs/cross-repo-deployment-checkpoints/2026-11-09-2223-ict.md`.
+
 ## Execution delta — 2026-11-09 22:21 ICT / 15:21 UTC
 
 - Platform master advanced to `0c932b8142535162128457b0141be5cbd113d6b8` through read-only inspection PR [#1526](https://github.com/phanthienquoc/platform-infra/pull/1526), squash-merged by the inspection workflow after exact-head manifest validation. Source inspection run [#42643433567](https://github.com/phanthienquoc/platform-infra/actions/runs/42643433567) completed successfully. The new snapshot `debug/vps-latest.md` was generated at 15:19:13Z; it is approximately 2m05s old at 15:21:18Z, within the 4,500s freshness budget.
