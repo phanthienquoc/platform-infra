@@ -1,3 +1,13 @@
+## 2026-11-09 23:12 ICT — post-merge verification
+
+- Platform PR #1530 documentation merge at `abad728979ea245e026be7681da16a3c0dadcbbc`: exact-head `validate-manifests` #42652140427 PASS; post-merge #42652306568 PASS.
+- Platform PR #1529 decommission evidence-reference code remains fully validated: exact-head `validate-github-actions` #42651633999 and `validate-manifests` #42651634041 PASS; post-merge #42651796084 and #42651796227 PASS.
+- Delete mode requires stable HTTPS backup/retention and authoritative DNS evidence references before the protected production Environment gate; the references are included in the workflow summary for reviewer inspection. Existing typed confirmations, Media local/remote runner retirement, retired-manifest guard and fresh storage preflight remain required.
+- K3s snapshot from 15:23:26Z is still within the 4,500s freshness budget at 16:12:17Z. Media runner service/listener remains active; external backup/retention, remote unregister and DNS ownership remain blockers.
+- Issue #1497 comment #6744779547 remains the latest filtered native schedule evidence; all six tracked gaps/ages exceed budgets. Administrator delivery telemetry outstanding. No cron or TCE market-scan schedule changes.
+
+---
+
 ## 2026-11-09 23:09 ICT — decommission evidence contract and readiness
 
 - Platform PR #1529 merged at `9fbf172c7e0b2a60b96f6fdd75f48860aa813647`. The manual-only `decommission-stock-media.yml` workflow now requires stable HTTPS references for backup/retention and authoritative DNS/provider evidence in delete mode. The lightweight validation job checks them before the protected `production` Environment gate and records the links in the run summary. It rejects non-HTTPS, host-only, embedded credentials, query strings, fragments and whitespace. Plan mode is unchanged.
