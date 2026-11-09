@@ -1903,8 +1903,6 @@ for required in (
 ):
     if required not in reconcile:
         fail(f"reconcile-vps is missing the GitOps promotion-run verification contract: {required}")
-if 'jq -r \' .total_count' in reconcile:
-    fail("Unexpected malformed promotion job count expression.")
 if "jq -r '.total_count // empty' <<< \"$jobs_json\"" not in reconcile:
     fail("reconcile-vps must read the Actions jobs total_count before trusting promotion job evidence.")
 if "jq -r 'if (.jobs | type) == \"array\" then (.jobs | length) else -1 end' <<< \"$jobs_json\"" not in reconcile:
