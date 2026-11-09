@@ -177,3 +177,33 @@ Source: native inspection [#42510125328](https://github.com/phanthienquoc/platfo
 - The protected `decommission-stock-media.yml` delete mode was not dispatched. It remains blocked until the Media runner is idle, stopped, disabled and unregistered; `MEDIA_RUNNER_AUDIT_TOKEN` is available and verifies absence; external backup/retention and authoritative DNS/provider ownership are reviewed; exact typed confirmations are supplied; and the protected production Environment approves the operation.
 
 No namespace, workload, PVC/PV, runner, DNS record, external database/storage, GHCR package or application repository was deleted. Preserve the shared Platform runner, TCE/Auth/MicroFE/Keycloak and TCE market-scan schedule.
+
+
+## Delete-gate attestation propagation — 2026-11-09 14:00 ICT
+
+A review of the destructive path found that the workflow validated the fourth operator attestation `MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED` and separately queried GitHub's Media runner API, but the final namespace-delete script and root-owned `platform-kubectl` wrapper consumed only the namespace, backup/external-data and DNS confirmations. A direct invocation of those lower layers could therefore omit the runner-retirement attestation.
+
+The contract is now propagated and checked independently at every layer:
+
+1. The protected workflow validates the exact runner-retirement input and performs the existing local systemd/Listener plus read-only remote GitHub runner absence checks.
+2. The final delete step passes the same attestation to `decommission-stock-media-namespaces.sh`.
+3. The script rejects a missing or mismatched runner-retirement attestation before running its destructive preflight.
+4. The root-owned wrapper reads and validates all four newline-delimited confirmations before it can delete either namespace.
+5. Shell regression tests cover missing and incorrect runner attestations as well as the existing PVC/PV/VolumeSnapshot guards.
+
+This is defense in depth for the operator attestation. It does not replace the workflow's remote GitHub runner API check, and it does not unregister or stop a runner. Delete mode remains blocked until the operator independently stops/disables/unregisters the dedicated Media runner, the read-only API audit confirms it is absent, external backup/retention and authoritative DNS ownership are reviewed, and the protected production Environment authorizes the operation.
+
+## Fresh read-only K3s evidence — 2026-11-09 13:16 ICT / 06:16 UTC
+
+Source: inspection snapshot committed by [PR #1506](https://github.com/phanthienquoc/platform-infra/pull/1506), master commit `1a9c9b9b1c3cb550f9904f65a50ed87df0c157cb`. Snapshot generated at `2026-11-09T06:16:06Z`; it is fresh for this checkpoint but is not a deployment authorization.
+
+- Node `tce-k3s-01`: Ready, ARM64, K3s `v1.36.3+k3s1`, containerd `2.3.2-k3s2`; 4 CPUs, ~19 GiB available RAM, disk 56% (~21 GiB free), uptime 191 days 16 hours. Host still reports `restart_required=yes`; package upgrades are available, but no maintenance was performed.
+- Media backend/frontend: 1/1 Running with RepoDigest evidence. MicroFE Shell/WS/NATS: 1/1 Running with RepoDigest evidence. TCE frontend/service, Auth and Keycloak remain intentional 0/0.
+- Stock Admin remains 0/1 with two ImagePullBackOff pods on `12d63b4`; the newer Stock Backend pod also ImagePullBackOff due to no matching platform manifest. A legacy Backend and Frontend remain 1/1 on `23b2878`, but their local cached images have no RepoDigest and are not promotion evidence.
+- In-cluster preflight still reports no Stock/Media PVC/PV claims or VolumeSnapshot references. The namespace inventory includes names of namespace-scoped credentials/TLS Secrets and many workload/ReplicaSet objects; values are suppressed. Namespace deletion would remove those namespaced objects, so external backup, credential rotation/retention and service-owner sign-off remain required.
+- Stock Ingresses still publish `mrcute.space`, `www.mrcute.space`, `admin.mrcute.space` and `api.mrcute.space`; Media still publishes `media.mrcute.space`. Authoritative DNS/provider ownership is not inferred by inspection.
+- The dedicated Media runner remains active/enabled with `Runner.Listener` present; the shared Platform runner is also active and must be preserved. Remote Media runner registration still requires the read-only audit token.
+- Public OIDC probes for both master and mrcute realms returned HTTP 503 while Keycloak remains 0/0. This is not live SSO health.
+- GHCR digest coverage remains warning because the cached Stock legacy Backend/User images lack RepoDigest; local image IDs are not registry proof.
+
+No Stock/Media namespace, workload, PVC/PV, runner, DNS record, external database/storage, GHCR package or app repository was deleted. No image was published/promoted, no manifest was applied, no workload was scaled, and no host package/reboot maintenance was performed.
