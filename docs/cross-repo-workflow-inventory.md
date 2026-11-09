@@ -1,3 +1,17 @@
+## 2026-11-09 22:21 ICT — fresh inspection and decommission readiness
+
+- Platform master `0c932b81` includes read-only inspection PR #1526, generated from run #42643433567 at 15:19:13Z and exact-head validated before squash merge. Snapshot age at 15:21:18Z was ~125 seconds (within 4,500s).
+- K3s node Ready/ARM64; disk 56% (~21 GiB free), RAM available ~19 GiB; host restart required. Platform and dedicated Media runner services remain active/enabled.
+- Fresh workloads: Media backend/frontend 1/1 with digest evidence; MicroFE shell/WS/NATS 1/1; Keycloak/Auth 0/0; TCE frontend/service 0/0; public SSO OIDC returns HTTP 503.
+- Stock Admin (2 pods) and desired Backend (1 pod) remain ImagePullBackOff due missing linux/arm64 manifest for GHCR tag `12d63b4`; legacy Backend/Frontend remain 1/1 and do not validate the desired image.
+- Decommission storage preflight: no target PVC/PV claim/VolumeSnapshot references; only `k3s-debug` PVC remains. Shared retired-manifest guard passed. Deletion remains blocked by active Media runner/listener, unverified remote runner unregister, external backup/retention and authoritative DNS ownership; namespaces still contain workloads, Services, Ingresses and Secrets.
+- PR #1525 merged at `542e3d37`; exact-head and post-merge checks PASS. Scheduler evidence remains issue #1497 comment #6743653448; native schedule acceptance is still outside budgets and administrator telemetry is outstanding.
+- TCE app build/format/tests PASS but strict public health checks fail HTTP 503; TCE/Auth remain intentional 0/0. Stock CI PASS 7/7 but current-master authenticated scraper preflight/digest publication unverified. Media/Auth CI PASS without current production digest handoff.
+- Other master heads: TCE `65af89f6`, Stock `b1b5e177`, Media `dcd69869`, Authentication `b7183475`. Open owner-decision drafts: Platform #1314/#544/#541/#539 and Auth #76.
+- No production publication/promotion/apply/rollout, scaling, deletion, runner retirement, DNS/database/storage mutation or host maintenance. No cron or TCE market-scan schedule changes.
+
+---
+
 ## 2026-11-09 22:19 ICT — decommission guard and readiness delta
 
 - Platform master `542e3d37`; PR #1525 merged after exact-head `validate-manifests` #42643198502, `validate-github-actions` #42643198496 and `keycloak-ci` #42643198522 PASS. Post-merge #42643433458/#42643433572/#42643433668 PASS.
