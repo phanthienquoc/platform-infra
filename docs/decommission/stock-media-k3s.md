@@ -1,3 +1,21 @@
+## Latest runtime evidence — 2026-11-10 04:03 ICT / 2026-11-09 21:03:15 UTC
+
+This section supersedes the older runtime snapshots below. Source: read-only inspection [#42694932077](https://github.com/phanthienquoc/platform-infra/actions/runs/42694932077), generated at `2026-11-09T20:38:49Z`, committed by inspection PR [#1546](https://github.com/phanthienquoc/platform-infra/pull/1546) at master `827d8d442cf7de344be04a246e56ee2ee3148657`. Snapshot age at this checkpoint was 24m26s (within the 75-minute inspection budget). The PR changed only the inspection snapshot; no production manifest was changed.
+
+- Node `tce-k3s-01` is Ready, ARM64, K3s `v1.36.3+k3s1`, containerd `2.3.2-k3s2`, Ubuntu 22.04.5. Disk is 56% used (~20 GiB free), available RAM ~19 GiB, uptime 192 days.
+- `restart_required=yes`; Ubuntu, containerd and Docker updates are pending. No reboot or upgrade was performed.
+- `media-prod`: backend and frontend are 1/1 Running with digest-pinned imageIDs. The dedicated Media runner systemd service is active/enabled and `/opt/media-actions-runner/bin/Runner.Listener` remains present.
+- `stock-prod`: two Admin pods and the desired Backend pod are ImagePullBackOff on historical tag `12d63b4`, with GHCR reporting no matching linux/arm64 manifest. The older Backend and Frontend remain 1/1 Running. This is an image-platform failure, not evidence that the shared pull Secret is invalid.
+- `microfe-platform`: Shell, WS and NATS are 1/1 Running. TCE frontend/service and Auth/Keycloak remain intentional 0/0; public HTTP 200 health was not established.
+- The only PVC/PV claim listed is `k3s-debug/k3s-debug-logs`. No Stock/Media VolumeSnapshot or VolumeSnapshotContent references were found. Both target namespaces remain Active with namespaced resources, Services and Ingresses. Absence of in-cluster PVCs/snapshots does not prove external database/object-storage backup or retention.
+- The protected decommission preflight confirms no retired Stock/Media references in the active production manifest tree, but the dedicated Media runner has not been retired, remote GitHub unregister is unverified, and external backup/retention plus authoritative DNS ownership are not independently confirmed. The delete workflow remains blocked. Do not infer delete authorization from storage-clean output.
+- Docker image store is ~9.195 GB with ~5.773 GB reclaimable; no cleanup was performed. No host maintenance was performed.
+
+The protected manual workflow remains `workflow_dispatch` only. Preserve `tce-prod`, `microfe-platform`, the shared Platform runner, strict HTTP 200 health assertions and the TCE market-scan schedule.
+
+
+---
+
 
 
 ## Latest runtime evidence — 2026-11-07 13:01 ICT / 06:01 UTC
