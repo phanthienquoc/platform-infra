@@ -1110,13 +1110,21 @@ for repository in (
 
 
 # Auth shutdown must be an isolated, allowlisted maintenance operation.
-if "rollout-status-v15-core-workloads" not in bootstrap_script:
-    fail("Runner bootstrap must publish the versioned scoped image-pull restart policy.")
+if "rollout-status-v16-decommission-runner-attestation" not in bootstrap_script:
+    fail("Runner bootstrap must publish the v16 decommission-attestation policy.")
+
+bootstrap_workflow = read("bootstrap-runner.yml")
+if f"platform-kubectl policy: rollout-status-v16-decommission-runner-attestation" not in bootstrap_workflow:
+    fail("The manual runner bootstrap must verify the installed v16 policy before reporting success.")
+
+auth_secret_workflow = read("provision-auth-runtime-secret.yml")
+if f"platform-kubectl policy: rollout-status-v16-decommission-runner-attestation" not in auth_secret_workflow or "rollout-status-v15-core-workloads" in auth_secret_workflow:
+    fail("Auth runtime Secret provisioning must require the current v16 runner policy.")
 if '  scale)' not in bootstrap_script or 'scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform' not in bootstrap_script:
     fail("Runner bootstrap must allow only the exact Auth/Keycloak scale-to-zero command.")
 
-if "rollout-status-v15-core-workloads" not in reconcile:
-    fail("Production reconciliation must require the current v15 core-workload runner policy.")
+if "rollout-status-v16-decommission-runner-attestation" not in reconcile:
+    fail("Production reconciliation must require the current v16 runner policy before apply.")
 
 # Keep operator-facing diagnostics aligned with the enforced runner policy version.
 for required in (
@@ -1129,7 +1137,7 @@ for required in (
 if "runner bootstrap policy v13" in reconcile or "image-pull restart v13" in reconcile:
     fail("Reconciliation diagnostics must not report the retired v13 runner policy after v15 is required.")
 auth_provision = read("provision-auth-runtime-secret.yml")
-if "rollout-status-v15-core-workloads" not in auth_provision:
+if "rollout-status-v16-decommission-runner-attestation" not in auth_provision:
     fail("Standalone Auth secret provisioning must accept the current v15 runner policy.")
 
 restart_step = reconcile.split("- name: Restart target workloads blocked on image pulls", 1)[1].split(
