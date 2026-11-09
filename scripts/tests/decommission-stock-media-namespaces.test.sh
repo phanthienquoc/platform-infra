@@ -121,7 +121,5 @@ if grep -q "^decommission-stock-media$" "$log"; then
   exit 1
 fi
 CONFIRMATION=DELETE-STOCK-PROD-AND-MEDIA-PROD DATA_RETENTION_REVIEW=BACKUP-AND-EXTERNAL-DATA-REVIEWED DNS_OWNERSHIP_REVIEW=AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED RUNNER_RETIREMENT=MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED PLATFORM_KUBECTL_BIN="$fake" FAKE_LOG="$log" bash "$SCRIPT" delete
-grep -q '^DELETE_OK
-echo "Stock/Media decommission preflight and confirmation tests passed."
- "$log"
+grep -q '^DELETE_OK$' "$log"
 echo "Stock/Media decommission preflight and confirmation tests passed."
