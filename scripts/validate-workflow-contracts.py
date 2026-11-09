@@ -1894,9 +1894,11 @@ if promotion_guard_index < 0 or scope_step_index <= promotion_guard_index:
 for required in (
     "PROMOTION_RUN_ID: ${{ github.event.client_payload.promotion_run_id }}",
     "actions/runs/${PROMOTION_RUN_ID}",
+    "actions/runs/${PROMOTION_RUN_ID}/jobs?per_page=100",
     "python3 scripts/verify-gitops-ready-dispatch.py",
     "--event \"$GITHUB_EVENT_PATH\"",
     "--promotion-run \"$RUNNER_TEMP/gitops-promotion-run.json\"",
+    "--promotion-jobs \"$RUNNER_TEMP/gitops-promotion-jobs.json\"",
     "deadline=$((SECONDS + 180))",
 ):
     if required not in reconcile:
@@ -1919,6 +1921,10 @@ for required in (
     "Retired or unsupported GitOps-ready application",
     "promotion_run.get(\"conclusion\") == \"success\"",
     "promotion_run.get(\"head_branch\") == \"master\"",
+    "Promote MicroFE image digests as one GitOps change",
+    "Promote TCE web/service digests atomically",
+    "Coordinate TCE release",
+    "Promote auth-service /",
 ):
     if required not in dispatch_validator:
         fail(f"GitOps-ready dispatch validator is missing required fail-closed check: {required}")
