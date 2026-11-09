@@ -1,3 +1,50 @@
+## 2026-11-09 22:25 ICT — Stock publisher/decommission distinction
+
+- Stock current master `deploy.yml` is app-owned and ARM64-only: three images (scraper/admin/backend) publish full-source-SHA and version+SHA tags, reject existing immutable tags and verify linux/arm64 registry manifests/digests. CI separately builds all three ARM64 images with push=false; master CI #42610360402 PASS 7/7.
+- No Platform handoff remains by design because Stock was removed from active Platform GitOps. Manual publication requires `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=true`.
+- K3s desired tag `12d63b4` resolves to old source commit `12d63b495346dbff8fcba87e976f9e15165c0ebb` (2026-05-20) and lacks linux/arm64 manifest. Do not republish/promote while decommission is approved; complete retirement gates instead.
+- Fresh K3s snapshot (15:19:13Z) is within freshness budget; storage-clean for target namespaces but Media runner active and external backup/retention, remote unregister and authoritative DNS remain blockers.
+- Native schedule re-query at 15:23:42Z found no new events; issue #1497 comment #6743818812. No cron or TCE market-scan changes.
+
+---
+
+## 2026-11-09 22:23 ICT — native schedule recheck
+
+- Re-query of the latest 100 master runs found no new native schedule events. Ages at 15:23:42Z: Platform reconcile 30,562s/2,700s budget; inspection 20,774s/4,500s; recovery 32,985s/2,700s; watchdog 32,628s/2,700s; TCE WF-06 20,819s/1,500s; WF-12 24,062s/1,500s. Inter-arrival gaps unchanged. Issue #1497 comment #6743818812 records this recheck. Push inspection #42643433567 is not schedule acceptance.
+- Fresh K3s snapshot (15:19:13Z) is 269s old at 15:23:42Z; node Ready, 56% disk, ~21 GiB free, ~19 GiB RAM, restart required. Stock desired ARM64 pods still ImagePullBackOff; Media 1/1; MicroFE Shell/WS/NATS 1/1; TCE/Auth/Keycloak 0/0; public OIDC 503.
+- Decommission storage preflight is clean, but runner service/listener remains active and backup/retention, remote unregister and DNS ownership remain unverified. No deletion.
+- Platform master `0c932b81`; PR #1525 and #1526 merged. PR #1527's previous exact-head validation #42644190684 passed; new final head must be revalidated.
+- No production rollout/mutation or cron/TCE market-scan schedule change.
+
+---
+
+## 2026-11-09 22:21 ICT — fresh inspection and decommission readiness
+
+- Platform master `0c932b81` includes read-only inspection PR #1526, generated from run #42643433567 at 15:19:13Z and exact-head validated before squash merge. Snapshot age at 15:21:18Z was ~125 seconds (within 4,500s).
+- K3s node Ready/ARM64; disk 56% (~21 GiB free), RAM available ~19 GiB; host restart required. Platform and dedicated Media runner services remain active/enabled.
+- Fresh workloads: Media backend/frontend 1/1 with digest evidence; MicroFE shell/WS/NATS 1/1; Keycloak/Auth 0/0; TCE frontend/service 0/0; public SSO OIDC returns HTTP 503.
+- Stock Admin (2 pods) and desired Backend (1 pod) remain ImagePullBackOff due missing linux/arm64 manifest for GHCR tag `12d63b4`; legacy Backend/Frontend remain 1/1 and do not validate the desired image.
+- Decommission storage preflight: no target PVC/PV claim/VolumeSnapshot references; only `k3s-debug` PVC remains. Shared retired-manifest guard passed. Deletion remains blocked by active Media runner/listener, unverified remote runner unregister, external backup/retention and authoritative DNS ownership; namespaces still contain workloads, Services, Ingresses and Secrets.
+- PR #1525 merged at `542e3d37`; exact-head and post-merge checks PASS. Scheduler evidence remains issue #1497 comment #6743653448; native schedule acceptance is still outside budgets and administrator telemetry is outstanding.
+- TCE app build/format/tests PASS but strict public health checks fail HTTP 503; TCE/Auth remain intentional 0/0. Stock CI PASS 7/7 but current-master authenticated scraper preflight/digest publication unverified. Media/Auth CI PASS without current production digest handoff.
+- Other master heads: TCE `65af89f6`, Stock `b1b5e177`, Media `dcd69869`, Authentication `b7183475`. Open owner-decision drafts: Platform #1314/#544/#541/#539 and Auth #76.
+- No production publication/promotion/apply/rollout, scaling, deletion, runner retirement, DNS/database/storage mutation or host maintenance. No cron or TCE market-scan schedule changes.
+
+---
+
+## 2026-11-09 22:19 ICT — decommission guard and readiness delta
+
+- Platform master `542e3d37`; PR #1525 merged after exact-head `validate-manifests` #42643198502, `validate-github-actions` #42643198496 and `keycloak-ci` #42643198522 PASS. Post-merge #42643433458/#42643433572/#42643433668 PASS.
+- New shared guard `scripts/verify-retired-production-manifests.sh` is invoked by manifest validation and by the Stock/Media namespace decommission preflight. It fails closed if `apps/stockdividend` or `apps/media-generation` reappears, if active production trees reference `stock-prod`/`media-prod`, or if retired GHCR image paths return. Regression suite: 1 positive and 5 negative fixtures PASS; workflow contract validator PASS.
+- Decommission remains manual-only. The guard is not a delete authorization: backup/retention, authoritative DNS, Media runner service/process/GitHub registration, typed confirmations, production Environment and fresh storage checks remain mandatory.
+- Post-merge `inspect-vps` run #42643433567 was in progress at 15:19:08Z; until it completes and publishes a new snapshot, the committed 09:37:36Z snapshot remains stale (~5h41m). Push recovery #42643433651 success is not native schedule evidence.
+- Latest native schedule evidence is issue #1497 comment #6743653448. All six tracked Platform/TCE native gaps and ages remain beyond existing budgets; administrator scheduler delivery telemetry is still required. No cron or TCE market-scan changes.
+- TCE application build/format/test PASS; public WF-06 probes remain HTTP 503 and WF-12 freshness is stale. Stock CI PASS 7/7 but current-master authenticated scraper preflight and production digest publication are unverified. Media and Auth CI PASS; neither has a current production digest handoff. TCE/Auth remain intentional 0/0.
+- Current master heads: Platform `542e3d37`, TCE `65af89f6`, Stock `b1b5e177`, Media `dcd69869`, Authentication `b7183475`. Open drafts: Platform #1314/#544/#541/#539; Authentication #76.
+- Production publication/promotion/apply/rollout, scaling, deletion, runner retirement, DNS/database/storage mutation and host maintenance were not performed. `reconcile-vps.yml` remains the only apply authority; `inspect-vps.yml` remains read-only.
+
+---
+
 ## 2026-11-09 21:25 ICT — post-merge readiness delta
 
 - Platform master `81191ee4`; PR #1523 exact-head validate-manifests #42634259014 and post-merge master push #42634355055 PASS. PR #1522 exact-head validate-github-actions #42633638893 / validate-manifests #42633638946 and post-merge #42633860020/#42633860140 all PASS. The GitOps-ready verifier rejects duplicate promotion-job evidence (4 positive, 26 negative self-tests). Open human-decision drafts #1314/#544/#541/#539.
