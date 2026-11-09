@@ -1,6 +1,6 @@
 # Cross-repo workflow inventory and deployment ownership
 
-Current review: **2026-11-09 07:08 ICT / 2026-11-09 00:08 UTC**
+Current review: **2026-11-09 07:22 ICT / 2026-11-09 00:22 UTC**
 
 | Repository | App-owned workflows and release contract | Platform-owned responsibilities / boundary | Current evidence |
 |---|---|---|---|
@@ -490,3 +490,14 @@ App-owned publication and Platform-owned production GitOps boundaries remain unc
 - Post-merge Media CI #42539512417 was still running; release-contract validation passed and dependency installation was in progress. No production publisher run, image publication or Platform dispatch occurred. Media remains retired from Platform GitOps ownership; runner/runtime state unchanged.
 - Auth PR #90 merged at 047abc08e123d8bde7678104899d00aa8782624a; post-merge CI #42539350154 PASS. TCE PR #1031 merged at ddf5811a7994aab08236028cff04e0a78ffd2e3e; post-merge WF-01/WF-02/WF-05 all PASS. Stock PR #39/#40 merged; CI #42533562194 PASS 7/7.
 - Platform docs PR #1490's previous head c4f36d0db6f5ddb8f25b53baba1c3183a17ac066 was under validation #42539467189 before this delta; revalidate the new exact head before merge. TCE market-scan schedule unchanged.
+
+
+## App-owned immutable tag guard rollout complete — 2026-11-09 07:22 ICT
+
+- StockDividend: PR #39/#40 merged; six-tag preflight across Scraper/Admin/Backend, fail-closed missing-manifest classification and same-SHA serialization. Master CI #42533562194 PASS 7/7.
+- TCE Dashboard: PR #1031 merged; web/service release-tag preflight and same-SHA serialization. Post-merge WF-01/WF-02/WF-05 #42538802539/#42538802538/#42538802541 all PASS.
+- Authentication: PR #90 merged; raw-SHA and version/full-SHA preflight before Buildx push. Exact-head PR CI passed 26 suites/135 tests plus typecheck/build/ARM64 non-publishing build; post-merge #42539350154 PASS.
+- Media Generation: PR #74 merged; frontend/backend release-tag preflight, same-SHA serialization, helper/test path exclusions. Exact-head CI and post-merge #42539512417 PASS. No Platform dispatch was reintroduced; Media remains retired from Platform GitOps ownership.
+- All guards are workflow-level overwrite prevention, not GHCR server-side immutability. Registry digest verification and digest-pinned Platform promotion remain mandatory. Guard-only changes did not publish images or dispatch production promotion.
+
+Platform master dd1bca11e3c59c92f920ec5e4896fb8d643be272 after PR #1490; exact-head validation #42539583925 and post-merge validation #42539638207 PASS. Open human-decision drafts: Platform #1314/#544/#541/#539 and Auth #76. Native Platform/TCE schedule cadence remains outside budget; queue telemetry does not show saturation. TCE market-scan schedule unchanged.
