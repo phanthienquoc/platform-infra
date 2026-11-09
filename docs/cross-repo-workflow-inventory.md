@@ -1,3 +1,15 @@
+## 2026-11-10 03:10 ICT — TCE native tick and controlled reconciliation
+
+- Platform PR #1544 merged at `a3566640`; exact-head #42689845993 and post-merge #42689926885 passed. Current heads: Platform `a3566640`, TCE `aea2755f`, Stock `b1b5e177`, Media `dcd69869`, Auth `eab85fab`. Open drafts Platform #1314/#544/#541/#539 and Auth #76; no TCE/Stock/Media open PRs.
+- TCE native WF-06 #42689871258 arrived 20:07:17Z after 37,834s gap and failed all four strict HTTP 200 probes with 503. A single tick is not cadence recovery.
+- Existing recovery controller dispatched reconcile-vps #42689957669 with `mode=apply`, `allow_image_changes=false`, `target_app=all`. GHCR pull preflight passed for Auth, MicroFE Shell/WS and TCE web/service; Auth runtime Secret provisioned/verified with values suppressed; shared `ghcr-pull` unchanged; TCE release pairing `prod-v0.1.0-e75e338` passed. Drift=false, manifest apply skipped, image-change guard skipped. TCE/Auth intentionally 0/0 (no live health asserted); MicroFE active health passed; Keycloak skipped; final gate passed. Recovery #42690196366 passed and avoided duplicate apply/inspection due fresh reconciliation and fallback snapshot.
+- K3s snapshot #42681626973 generated 19:15:47Z; age 54m13s at 20:10Z, within 75m. Node Ready/ARM64; disk 56%, ~20 GiB free; RAM ~19 GiB; host restart required. Media/MicroFE core 1/1, TCE/Auth/Keycloak 0/0, Stock desired Admin/Backend ImagePullBackOff on historical `12d63b4`. Media runner service/listener remains active; backup/retention/DNS and remote unregister unverified.
+- Native schedule ages at 20:10Z: Platform reconcile 9,917s; inspection 37,952s; recovery 12,494s; watchdog 12,398s; TCE WF-06 163s; WF-12 3,408s. Inter-arrival gaps 37,823s / 27,768s / 37,669s / 37,408s / 37,834s / 37,832s vs unchanged budgets 2,700s / 4,500s / 2,700s / 2,700s / 1,500s / 1,500s. No consecutive in-budget deliveries. Evidence in [issue #1497](https://github.com/phanthienquoc/platform-infra/issues/1497#issuecomment-6750237520).
+- Stock weekend scraper #42457182511 failed closed due empty `VNSTOCK_API_KEY`; owner action tracked in Stock issue #42. Do not weaken fail-closed preflight or change weekend schedule.
+- No GHCR publication, release dispatch, digest promotion, production manifest apply, workload scaling, decommission, runner retirement, DNS/storage/database mutation or host maintenance. TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-10 03:04 ICT — Stock scraper credential blocker and schedule freshness recheck
 
 - Platform master `6e1598c0`, TCE `aea2755f`, Stock `b1b5e177`, Media `dcd69869`, Auth `eab85fab`. Platform latest master validate-manifests #42684398108 PASS; latest app master CI evidence: TCE #42680305817/#42680305566/#42680305431 PASS, Stock #42610360402 PASS 7/7, Media #42539512417 PASS, Auth #42654579277 PASS.
