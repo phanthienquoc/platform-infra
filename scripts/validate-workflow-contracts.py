@@ -1253,6 +1253,9 @@ storage_preflight_step = delete_job.find("name: Run fresh read-only storage pref
 namespace_delete_step = delete_job.find("name: Delete only the two approved namespaces")
 if not (0 <= runner_guard_step < storage_preflight_step < namespace_delete_step):
     fail("Dedicated Media runner state must be checked before destructive storage preflight and namespace deletion.")
+delete_step = delete_job[namespace_delete_step:]
+if "RUNNER_RETIREMENT: ${{ inputs.runner_retirement }}" not in delete_step:
+    fail("The validated Media runner retirement attestation must reach the final namespace delete script.")
 runner_guard_script = (ROOT / "scripts" / "verify-media-runner-retired.sh").read_text(encoding="utf-8")
 for required in (
     "actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service",
@@ -1288,6 +1291,8 @@ for required in (
     "decommission-stock-media",
     "DNS_OWNERSHIP_REVIEW",
     "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED",
+    "RUNNER_RETIREMENT",
+    "MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED",
 ):
     if required not in decommission_script:
         fail(f"Namespace decommission preflight is missing: {required}")
@@ -1303,6 +1308,8 @@ for required in (
     "BACKUP-AND-EXTERNAL-DATA-REVIEWED",
     "dns_review",
     "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED",
+    "runner_retirement",
+    "MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED",
     "PVCs remain",
     "PV claims remain",
     "namespace_storage_snapshot_refs()",
@@ -1319,7 +1326,7 @@ for required in ("Stock/Media VolumeSnapshot references (names only)", 'inventor
     if required not in inspect_script:
         fail(f"VPS inspection must expose decommission snapshot references: {required}")
 decommission_test = (ROOT / "scripts" / "tests" / "decommission-stock-media-namespaces.test.sh").read_text(encoding="utf-8")
-for required in ("MOCK_SNAPSHOT", "MOCK_SNAPSHOT_CONTENT", "namespaced VolumeSnapshot", "cluster-scoped VolumeSnapshotContent", "DNS_OWNERSHIP_REVIEW", "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED"):
+for required in ("MOCK_SNAPSHOT", "MOCK_SNAPSHOT_CONTENT", "namespaced VolumeSnapshot", "cluster-scoped VolumeSnapshotContent", "DNS_OWNERSHIP_REVIEW", "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED", "RUNNER_RETIREMENT", "MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED", "missing Media runner retirement attestation", "invalid Media runner retirement attestation"):
     if required not in decommission_test:
         fail(f"Decommission storage regression tests must cover snapshot references: {required}")
 for required in ("fake_sudo", "PLATFORM_KUBECTL_SUDO", "SUDO_LOG", "Verified default decommission preflight invokes the root-owned wrapper through sudo."):
