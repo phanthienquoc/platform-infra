@@ -1882,3 +1882,50 @@ for required in (
         fail(f"Manifest validation must execute the VPS MCP deployment-boundary contract: {required}")
 
 print("Workflow contract validation passed.")
+
+
+# A production-capable GitOps-ready event must be tied to a completed successful
+# Platform promotion run on master, not merely to a caller-supplied event payload.
+reconcile_permissions = reconcile.split("permissions:\\n", 1)[1].split("\\n\\nconcurrency:", 1)[0]
+if reconcile_permissions != "  actions: read\\n  contents: read":
+    fail("reconcile-vps must grant only Actions read plus Contents read for promotion-run verification.")
+promotion_guard = "      - name: Validate GitOps promotion dispatch provenance\\n"
+promotion_guard_index = reconcile.find(promotion_guard)
+scope_step_index = reconcile.find("      - name: Resolve push deployment scope\\n")
+if promotion_guard_index < 0 or scope_step_index <= promotion_guard_index:
+    fail("GitOps-ready dispatch provenance must be checked before deployment scope or production preflight.")
+for required in (
+    "PROMOTION_RUN_ID: ${{ github.event.client_payload.promotion_run_id }}",
+    "actions/runs/${PROMOTION_RUN_ID}",
+    "python3 scripts/verify-gitops-ready-dispatch.py",
+    "--event \"$GITHUB_EVENT_PATH\"",
+    "--promotion-run \"$RUNNER_TEMP/gitops-promotion-run.json\"",
+    "deadline=\$((SECONDS + 180))",
+):
+    if required not in reconcile:
+        fail(f"reconcile-vps is missing the GitOps promotion-run verification contract: {required}")
+
+dispatch_blocks = (
+    promotion.split("      - name: Trigger shared VPS reconciliation\\n", 1)[1].split("\\n\\n  promote-tce-digests:", 1)[0],
+    promotion.split("      - name: Wait for paired GitOps release\\n", 1)[1].split("\\n\\n\\n  promote:", 1)[0],
+    promotion.split("      - name: Trigger VPS reconciliation\\n", 1)[1].split("\\n# yamllint enable", 1)[0],
+)
+for index, block in enumerate(dispatch_blocks, start=1):
+    for field in ("source_commit", "promotion_run_id", "promotion_run_attempt", "promotion_workflow_path", "promotion_head_sha"):
+        if field not in block:
+            fail(f"GitOps-ready producer {index} is missing dispatch field {field}.")
+dispatch_validator = (ROOT / "scripts" / "verify-gitops-ready-dispatch.py").read_text(encoding="utf-8")
+for required in (
+    "PAYLOAD_KEYS",
+    "promotion_workflow_path",
+    "promotion_head_sha",
+    "Retired or unsupported GitOps-ready application",
+    "promotion_run.get(\"conclusion\") == \"success\"",
+    "promotion_run.get(\"head_branch\") == \"master\"",
+):
+    if required not in dispatch_validator:
+        fail(f"GitOps-ready dispatch validator is missing required fail-closed check: {required}")
+if "python3 scripts/verify-gitops-ready-dispatch.py --self-test" not in github_actions:
+    fail("GitHub Actions validation must run the GitOps-ready dispatch positive/negative regression tests.")
+if '"!scripts/verify-gitops-ready-dispatch.py"' not in recovery_push_paths:
+    fail("The read-only GitOps-ready dispatch validator must not trigger production recovery on push.")
