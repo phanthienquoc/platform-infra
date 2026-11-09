@@ -1,6 +1,6 @@
 # Cross-repo workflow inventory and deployment ownership
 
-Current review: **2026-11-09 05:01 ICT / 2026-11-08 22:01 UTC**
+Current review: **2026-11-09 07:08 ICT / 2026-11-09 00:08 UTC**
 
 | Repository | App-owned workflows and release contract | Platform-owned responsibilities / boundary | Current evidence |
 |---|---|---|---|
@@ -452,3 +452,15 @@ Preserve purposeful CI, security, manual/release and scheduled workflows. Do not
 - These checks are workflow-level overwrite prevention, not GHCR registry-side immutable-tag enforcement. Platform promotion must continue to use verified registry digests.
 
 App-owned publication and Platform-owned production GitOps boundaries remain unchanged. Native Platform/TCE schedule gaps remain outside existing budgets; do not change cron or freshness thresholds. Preserve all purposeful CI/security/manual/release/scheduled workflows. No direct SSH/Compose deployment authority. TCE market-scan schedule unchanged.
+
+
+## Latest execution delta — 2026-11-09 07:08 ICT
+
+- Platform Infra: master ecafca5f594f9984baa294ee679afed6afd245bb after read-only inspection PR #1489; validation #42538111845 PASS. Open human-decision drafts #1314/#544/#541/#539 remain gated.
+- TCE Dashboard: PR #1031 adds same-source-SHA non-cancelling concurrency and a fail-closed pre-push guard for web/service release tags. The guard rejects existing tags, 401/403, ambiguous repository-not-found and unknown errors; only explicit 404/known missing-manifest responses mean absent. Regression tests run through the existing WF-01P release-contract validation. WF-01P #42538473285, WF-02 #42538473275 and WF-05 #42538473166 passed; do not merge until the exact current PR head and all required checks are green. WF-03 remains manual/master-only; no publish/dispatch occurred.
+- StockDividend: PRs #39/#40 merged; master CI #42533562194 PASS 7/7. The GHCR guard is workflow-level overwrite prevention, not registry-side immutable-tag enforcement. No production publication/digest handoff; scraper credential VNSTOCK_API_KEY remains missing.
+- Media Generation: master CI #42239703151 PASS; backend/frontend remain digest-pinned 1/1 in the latest K3s snapshot. Dedicated runner remains active/enabled/listener-present; retirement, backup/retention and DNS evidence remain blocked.
+- Authentication: master CI #42478653766 PASS; PR #76 remains draft. Auth runtime Secret is present/verified by reconciliation #42537804409, but Auth/Keycloak remain intentional 0/0 and are not live-healthy.
+- Latest native schedule evidence remains outside budgets: Platform reconcile/inspection/recovery/watchdog gaps 15,672s/14,280s/12,727s/12,672s against 2,700s/4,500s/2,700s/2,700s; TCE WF-06/WF-12 gaps 13,481s/14,317s against 1,500s. Do not change cron or budgets; GitHub administrator investigation required.
+- Latest read-only K3s snapshot #42537975671: node Ready/ARM64, disk 56%, RAM ~19 GiB, restart_required=yes; Media/MicroFE 1/1, Stock desired Admin/Backend image pulls failing due ARM64 manifest mismatch, TCE/Auth/Keycloak 0/0. Stock/Media storage preflight clean but external data retention, DNS and remote runner registration remain unverified.
+- reconcile-vps.yml remains the only production apply authority; inspect-vps.yml remains read-only. No promotion, manifest apply, scaling, deletion, runner retirement, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
