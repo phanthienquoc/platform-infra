@@ -868,10 +868,6 @@ if "scripts/tests/verify-tce-publisher-run.test.sh" not in (ROOT / ".github" / "
 tce_provenance_tests = (ROOT / "scripts" / "tests" / "verify-tce-publisher-run.test.sh").read_text(encoding="utf-8")
 for required in (
     'jobs_api_url="$API_URL/jobs?per_page=100"',
-    "SOURCE_RUN_ATTEMPT=1",
-    'run_attempt:($run_attempt|tonumber)',
-    'expect_failure "run attempt mismatch"',
-    'expect_failure "missing run attempt"',
     'verify_job_success "Require master for production release"',
     'verify_job_success "Notify Telegram — release started"',
     'verify_job_success "Resolve production image tag"',
@@ -891,6 +887,10 @@ for required in (
     if required not in tce_provenance:
         fail(f"TCE source-run verifier must validate required publisher job/step: {required}")
 for required in (
+    "SOURCE_RUN_ATTEMPT=1",
+    'run_attempt:($run_attempt|tonumber)',
+    'expect_failure "run attempt mismatch"',
+    'expect_failure "missing run attempt"',
     'Build frontend (native ARM64)',
     'Build backend (native ARM64)',
     'Publish immutable images and promote platform-infra',
