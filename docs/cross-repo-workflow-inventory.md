@@ -1,3 +1,17 @@
+## 2026-11-10 02:28 ICT — TCE sender/receiver merged; current schedule and K3s evidence
+
+- Platform #1539 exact TCE receiver schema and TCE #1033 exact sender/source-context contract are merged. Platform exact-head and post-merge validation runs passed; TCE exact-head WF-01P/WF-05/WF-02 and post-merge WF-01/WF-05/WF-02 passed. No production dispatch or publication was executed.
+- Platform #1540 readiness docs and #1541 fresh inspection docs are merged. Latest Platform master `aa668f00`; validate-manifests #42683186419 PASS. TCE master `aea2755f`; Stock `b1b5e177`; Media `dcd69869`; Authentication `eab85fab`.
+- App ownership remains unchanged: TCE/Stock/Media/Auth own tests/builds and immutable GHCR publishing; Platform owns manifests, shared pull credentials, digest/provenance verification, GitOps promotion/reconciliation, rollout and health.
+- Latest app CI: TCE WF-01/02/05 #42680305817/#42680305431/#42680305566 PASS; Stock #42610360402 PASS 7/7; Media #42539512417 PASS; Auth #42654579277 PASS. These are build/validation results, not new GHCR publication evidence.
+- TCE WF-06 fallback #42681311390 returned HTTP 503 on all four strict public endpoints. Native WF-12 #42681246237 heartbeat succeeded but its WF-06 freshness gate failed. TCE/Auth remain 0/0 maintenance; strict probes stay unchanged.
+- Fresh read-only K3s inspection #42681626973 snapshot `2026-11-09T19:15:47Z`: node Ready/ARM64; disk 56%, ~20 GiB free; ~19 GiB RAM available; restart required; Media/MicroFE 1/1; TCE/Auth/Keycloak 0/0; Stock desired Admin/Backend image pulls fail on historical `12d63b4` without ARM64 manifest. Only PVC is `k3s-debug/k3s-debug-logs`; Media runner service/listener remains active; remote unregister, external backup/retention and DNS ownership remain unverified. No decommission.
+- Native schedule age/inter-arrival evidence at 19:28:00Z is recorded in the deployment tracker and issue #1497 comment #6749394096. TCE WF-12's own run age is 888s (<1,500s) but it correctly failed because WF-06 is stale; all six inter-arrival gaps remain out of budget. GitHub administrator telemetry remains required.
+- Open drafts: Platform #1314/#544/#541/#539; Authentication #76. No open PRs in TCE, Stock or Media.
+- No production publication, dispatch, digest promotion, manifest apply, rollout, scaling, namespace/storage deletion, runner retirement, DNS/database mutation or host maintenance. Auth runtime Secret was provisioned in the earlier controlled reconciliation; shared `ghcr-pull` remained unchanged. No cron/freshness change; TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-10 02:19 ICT — TCE receiver merged; fresh K3s inspection and recovery evidence
 
 - Platform receiver PR #1539 merged at `17b8ae2c374382fb07604a5a975dc52a242b3172`. Exact-head validate-github-actions #42681274603, validate-manifests #42681274888 and Keycloak CI #42681275045 passed; post-merge push runs #42681874018/#42681873952/#42681873949 passed. The earlier skipped-only validate-manifests anomaly did not recur.
