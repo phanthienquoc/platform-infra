@@ -26,7 +26,7 @@ The current Platform master includes inspection snapshot commit #1515 (`9530a7ab
 - Authentication service CI [#42585818369](https://github.com/phanthienquoc/phanthienquoc-authentication/actions/runs/42585818369) PASS, including native ARM64 non-publishing build and release-contract validation.
 - Combined-status queries for the five current master SHAs returned no status entries. The connected workflow-run view is PR-event filtered; empty results do not prove that newer push, schedule or repository_dispatch runs do not exist.
 
-Historical run-ID correction: the TCE WF-08B exact-head run is **#42585765835**, not #42585765835. The latter was a typo in the 15:15 checkpoint and has been corrected there and in rolling references.
+Historical run-ID correction: the TCE WF-08B exact-head run is **#42585765835**, not #42585865835. The latter was a typo in the 15:15 checkpoint and has been corrected there and in rolling references.
 
 ### Fresh read-only K3s inspection
 
