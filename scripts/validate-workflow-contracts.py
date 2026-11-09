@@ -1919,6 +1919,51 @@ for required in (
     if required not in auth_payload_tests.read_text(encoding="utf-8"):
         fail(f"Auth dispatch payload regression tests are missing: {required}")
 
+# TCE release receiver must reject unknown/missing client-payload keys before
+# publisher provenance lookup, GHCR reads or any production promotion work.
+tce_payload_verifier = ROOT / "scripts" / "verify-tce-dispatch-payload.sh"
+tce_payload_tests = ROOT / "scripts" / "tests" / "verify-tce-dispatch-payload.test.sh"
+if not tce_payload_verifier.is_file() or not tce_payload_tests.is_file():
+    fail("Exact TCE dispatch payload receiver and regression tests are required.")
+tce_payload_verifier_text = tce_payload_verifier.read_text(encoding="utf-8")
+for required in (
+    '"tce-release-requested"',
+    '"tce-dashboard"',
+    '"service_digest"',
+    '"web_digest"',
+    '"source_run_id"',
+    '"source_run_attempt"',
+    '"source_workflow_path"',
+    '"workflow_dispatch"',
+    '"^[1-9][0-9]*$"',
+    'endswith("-" + $payload.source_head_sha)',
+):
+    if required not in tce_payload_verifier_text:
+        fail(f"Exact TCE dispatch payload verifier is missing required schema rule: {required}")
+if "bash scripts/tests/verify-tce-dispatch-payload.test.sh" not in actions_validation:
+    fail("GitHub Actions validation must execute exact TCE dispatch payload receiver tests.")
+for required in (
+    "name: Validate exact TCE release dispatch payload schema",
+    "if: github.event_name == 'repository_dispatch' && github.event.action == 'tce-release-requested'",
+    'run: bash scripts/verify-tce-dispatch-payload.sh "$GITHUB_EVENT_PATH"',
+):
+    if required not in promotion:
+        fail(f"TCE dispatch receiver must validate the exact client payload before promotion: {required}")
+tce_payload_validation_step = promotion.find("name: Validate exact TCE release dispatch payload schema")
+tce_provenance_step = promotion.find("name: Verify TCE release payload and publisher provenance")
+if tce_payload_validation_step < 0 or tce_provenance_step <= tce_payload_validation_step:
+    fail("Exact TCE dispatch payload validation must run before publisher provenance lookup.")
+if '[[ "$SOURCE_RUN_ID" =~ ^[1-9][0-9]*$ ]]' not in tce_provenance:
+    fail("TCE publisher provenance must reject zero/invalid source run IDs before Actions API lookup.")
+for required in (
+    "wrong repository-dispatch action",
+    "unexpected payload key",
+    "zero source run ID",
+    "release tag not bound to source head",
+):
+    if required not in tce_payload_tests.read_text(encoding="utf-8"):
+        fail(f"TCE dispatch payload regression tests are missing: {required}")
+
 # Canonical Auth release promotion must independently correlate both immutable
 # producer tags (full source SHA and versioned full-SHA tag) to the dispatch digest.
 auth_ghcr_validation = promotion.split(
