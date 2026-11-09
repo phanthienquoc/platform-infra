@@ -1366,6 +1366,23 @@ if "scripts/tests/verify-media-runner-retired.test.sh" not in github_actions:
 if "Reject retired StockDividend and Media production manifests" not in read("validate-manifests.yml"):
     fail("Manifest validation must reject reintroduced StockDividend/Media production trees.")
 
+retired_manifest_guard = ROOT / "scripts" / "verify-retired-production-manifests.sh"
+retired_manifest_test = ROOT / "scripts" / "tests" / "verify-retired-production-manifests.test.sh"
+if not retired_manifest_guard.is_file() or not retired_manifest_test.is_file():
+    fail("Retired production manifest guard and regression tests must exist.")
+if "bash scripts/verify-retired-production-manifests.sh" not in manifest_validation:
+    fail("Manifest validation must execute the shared retired Stock/Media production guard.")
+if "bash scripts/tests/verify-retired-production-manifests.test.sh" not in github_actions:
+    fail("Workflow validation must execute retired Stock/Media manifest guard regression tests.")
+for required in ("stock-prod|media-prod", "ghcr\\.io/phanthienquoc/(stockdividend|media-generation)", "environments/prod", "platform", "apps"):
+    if required not in retired_manifest_guard.read_text(encoding="utf-8"):
+        fail(f"Retired production manifest guard is missing: {required}")
+if 'bash "$SCRIPT_DIR/verify-retired-production-manifests.sh"' not in decommission_script:
+    fail("Namespace decommission plan/delete preflight must re-check active GitOps manifests before touching namespaces.")
+for required in ("Retired StockDividend tree", "retired Media namespace manifest", "retired Stock namespace", "retired Media GHCR image", "missing active platform manifest path"):
+    if required not in retired_manifest_test.read_text(encoding="utf-8"):
+        fail(f"Retired production manifest guard tests are missing: {required}")
+
 runner_bootstrap = read("bootstrap-runner.yml")
 runner_token_mask = runner_bootstrap.find('echo "::add-mask::$token"')
 runner_token_output = runner_bootstrap.find('printf \'token=%s\\n\' "$token" >> "$GITHUB_OUTPUT"')
