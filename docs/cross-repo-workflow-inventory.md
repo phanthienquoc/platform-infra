@@ -1,6 +1,6 @@
 # Cross-repo workflow inventory and deployment ownership
 
-Current review: **2026-11-09 10:04 ICT / 2026-11-09 03:04 UTC**
+Current review: **2026-11-09 10:12 ICT / 2026-11-09 03:12 UTC**
 
 | Repository | App-owned workflows and release contract | Platform-owned responsibilities / boundary | Current evidence |
 |---|---|---|---|
@@ -617,3 +617,13 @@ Platform master dd1bca11e3c59c92f920ec5e4896fb8d643be272 after PR #1490; exact-h
 - This closes a repository-identity gap: previously the preflight could verify `image:$immutable_tag` in the allowlisted repository while Kustomize rendered a different `newName`.
 - No production dispatch, publication, promotion, apply, rollout or credential mutation. Auth/TCE tag-only manifests continue to fail the ready-event gate until their own promotion workflows merge digest pins; MicroFE remains digest-pinned.
 - Issue #1497 remains the administrator-owned native schedule investigation. Cron, freshness budgets and TCE market-scan schedule unchanged.
+
+
+## Post-merge image identity contract — 2026-11-09 10:12 ICT
+
+- Platform PR #1500 merged at `640eab00e13ff1460c47f394138598da98e096cb`, exact head `046d323593c0546a5119895c77ff945456874b54`.
+- Exact-head `validate-github-actions` #42555164957 and `validate-manifests` #42555164890 PASS. The Actions log confirms 5 positive / 12 negative GitOps image-ref tests and the workflow-contract validator passed.
+- The GitOps-ready image validator now requires an exact app-specific image set and binds optional `newName:` to the allowlisted GHCR repository. Additional/missing/duplicate image entries and repository redirects fail closed.
+- Master is `640eab00e13ff1460c47f394138598da98e096cb`. No post-merge workflow run was visible at checkpoint time; post-merge CI remains unverified.
+- Auth/TCE current manifests are tag-pinned until a promotion PR merges digest pins; ready-event validation intentionally blocks before production mutation. MicroFE remains digest-pinned.
+- Native schedule investigation remains issue #1497. No cron/freshness changes and no TCE market-scan schedule change.
