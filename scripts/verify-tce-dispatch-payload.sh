@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-EVENT_FILE="\${1:-\${GITHUB_EVENT_PATH:-}}"
+EVENT_FILE="${1:-${GITHUB_EVENT_PATH:-}}"
 
 fail() {
   echo "::error::$*" >&2
