@@ -87,6 +87,7 @@ jobs:
           bash scripts/tests/verify-auth-publisher-run.test.sh
           bash scripts/tests/verify-auth-dispatch-payload.test.sh
           bash scripts/tests/verify-tce-dispatch-payload.test.sh
+          bash scripts/tests/verify-tce-microfe-dispatch-payload.test.sh
           bash scripts/tests/verify-tce-publisher-run.test.sh
           bash scripts/tests/verify-tce-microfe-publisher-run.test.sh
           python3 scripts/promote-tce-image-digests.py --self-test
