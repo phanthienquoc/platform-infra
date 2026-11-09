@@ -1,12 +1,24 @@
 # Cross-Repository Production Deployment Tracker
 
+Last reviewed: **2026-11-09 16:03 ICT / 2026-11-09 09:03 UTC**
+
+## Execution delta — 2026-11-09 16:03 ICT / 09:03 UTC
+
+- Platform PR [#1512](https://github.com/phanthienquoc/platform-infra/pull/1512) squash-merged at `296665e832964124f34fd768bafbfa8bddd925d9` from exact head `a428a7d50e84711a31ab9abbc71166e05b1f3297`; exact-head validate-manifests #42587680995 PASS. This docs-only PR did not trigger validate-github-actions; post-merge push CI is not exposed by the connected run view.
+- Corrected the TCE WF-08B exact-head run reference to **#42585765835**. The PR-only run list confirms this ID; the two MicroFE tests passed and publisher/dispatch jobs were skipped as expected for a PR event. The prior typo #42585865835 returned 404.
+- Current masters: Platform `296665e8`, TCE `65af89f6`, Stock `1a18cabf`, Media `dcd69869`, Auth `b7183475`. Open human-decision drafts: Platform #1314/#544/#541/#539 and Auth #76; no open PRs in TCE/Stock/Media.
+- Latest inspection snapshot #1513: `debug/vps-latest.md` generated `2026-11-09T08:38:41Z`; node Ready/ARM64, disk 56%, ~21 GiB free, RAM ~19 GiB, restart_required=yes. Media/MicroFE 1/1 with digest evidence; Stock Admin and desired Backend pulls fail (ARM64 manifest mismatch); TCE/Auth/Keycloak 0/0; public OIDC probes HTTP 503. Media runner service active/enabled; remote registration remains unverified.
+- TCE #1032, Auth #91 and Platform #1511 exact-head checks remain PASS; positive source_run_attempt attestation is enforced for TCE, MicroFE and Auth. No production publication or dispatch was performed.
+- Native schedule evidence is unchanged from issue #1497 comment #6732680029 at 05:02:47Z; current cadence is unverified. No cron/freshness changes and no TCE market-scan schedule change.
+- No production promotion/apply/rollout, scale, decommission, runner retirement, DNS/database/storage mutation or host maintenance. `reconcile-vps.yml` remains the only production apply authority.
+
 Last reviewed: **2026-11-09 15:15 ICT / 2026-11-09 08:15 UTC**
 
 This rolling tracker distinguishes native schedule events from manual, push, workflow_run and repository_dispatch fallbacks. Timestamped evidence is archived under `docs/cross-repo-deployment-checkpoints/`.
 
 ## Publisher run-attempt provenance — 2026-11-09 15:15 ICT / 08:15 UTC
 
-- TCE PR #1032 squash-merged at 65af89f69ffe0d844a9b63e2434bc3f8cedfebb7 from exact head d9b5dc6995555f62c2b368e68d054666edfbfd38. Exact-head WF-01P #42585765728, WF-02 #42585765734, WF-05 #42585765722 and WF-08B #42585865835 all PASS.
+- TCE PR #1032 squash-merged at 65af89f69ffe0d844a9b63e2434bc3f8cedfebb7 from exact head d9b5dc6995555f62c2b368e68d054666edfbfd38. Exact-head WF-01P #42585765728, WF-02 #42585765734, WF-05 #42585765722 and WF-08B #42585765835 all PASS.
 - Authentication PR #91 squash-merged at b71834758d278e50e6ce07b5086fe45e9d9b3350 from exact head 00ce65bb68d06570f49643e8d788c1eb9d407d99. Exact-head auth-service-ci #42585818369 PASS.
 - Platform PR #1511 squash-merged at 3d9063a8a233092e312bd1acc1100017e89147f4 from exact head ab8d7daa5cef14fb58d42b5a10e09fd38d47fc06. Exact-head validate-github-actions #42587040047 PASS and validate-manifests #42587039974 PASS. Earlier exact-head attempts exposed corrected workflow-contract assertions and one corrected MicroFE invalid-input fixture; only the final exact-head checks are acceptance evidence.
 - Current masters: Platform 3d9063a8; TCE 65af89f6; StockDividend 1a18cabf; Media Generation dcd69869; Authentication b7183475.
