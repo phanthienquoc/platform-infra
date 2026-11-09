@@ -1,3 +1,14 @@
+## 2026-11-09 23:20 ICT — Auth dispatch payload and scheduled-job audit
+
+- Authentication PR #92 merged at `135a60a4f0af1a74c6cd23cc5b2dc12b6a7f4a2a`. Exact PR CI #42653356621 passed, including tests/typecheck/build, immutable release contract, manual-only release pin validation and native ARM64 non-publishing build. Post-merge #42653598077 was still running at checkpoint time.
+- Auth's manual publisher now builds an exact `auth-image-published` JSON payload, validates root and client-payload keys/values/provenance, writes a run summary and sends the same file using `gh api --input`. The dispatch step runs only after validation. No release or image publication was triggered.
+- The unrelated scheduled mirror workflow #41737911916 failed because `PLATFORM_INFRA_MIRROR_TOKEN` is missing. Preserve the workflow; owner action is to restore the least-privilege destination-repository token or explicitly retire the mirror after confirming ownership.
+- Scheduled `vps-image-cleanup` #42472343489 succeeded in dry-run mode: 8 unused images identified, retain 10, remove 0. TCE WF-07 integration and backup schedules are also purposeful and remain untouched.
+- Six tracked Platform/TCE deployment freshness lanes remain beyond budget; issue #1497 comment #6745121718 contains the latest native-event ages. GitHub administrator enqueue/delivery telemetry remains outstanding.
+- K3s inspection snapshot 15:23:26Z remains within freshness budget at 16:20:55Z. Media runner is still active; external backup/retention, remote unregister and DNS ownership remain blockers. No deletion, runtime mutation or schedule changes.
+
+---
+
 ## 2026-11-09 23:12 ICT — post-merge verification
 
 - Platform PR #1530 documentation merge at `abad728979ea245e026be7681da16a3c0dadcbbc`: exact-head `validate-manifests` #42652140427 PASS; post-merge #42652306568 PASS.
