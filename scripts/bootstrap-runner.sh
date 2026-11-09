@@ -161,10 +161,12 @@ case "${1:-}" in
     IFS= read -r confirmation || true
     IFS= read -r data_review || true
     IFS= read -r dns_review || true
+    IFS= read -r runner_retirement || true
     [[ "$confirmation" == "DELETE-STOCK-PROD-AND-MEDIA-PROD" &&
        "$data_review" == "BACKUP-AND-EXTERNAL-DATA-REVIEWED" &&
-       "$dns_review" == "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED" ]] || {
-      echo "platform-kubectl: namespace, backup/external-data, or DNS ownership confirmation failed; no namespace was changed" >&2
+       "$dns_review" == "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED" &&
+       "$runner_retirement" == "MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED" ]] || {
+      echo "platform-kubectl: namespace, backup/external-data, DNS ownership, or Media runner retirement confirmation failed; no namespace was changed" >&2
       exit 2
     }
     for namespace in stock-prod media-prod; do
