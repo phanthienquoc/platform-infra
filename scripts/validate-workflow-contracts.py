@@ -1955,12 +1955,10 @@ for required in (
         fail(f"reconcile-vps is missing the GitOps-ready manifest/tag digest binding: {required}")
 image_ref_validator = (ROOT / "scripts" / "verify-gitops-ready-image-refs.py").read_text(encoding="utf-8")
 for required in (
-    "APP_IMAGES",
-    "digest:",
-    "not digest-pinned",
-    "Retired or unsupported GitOps-ready application",
-    "validate_image_set",
-    "newName:",
+    "parse_image_entries",
+    'line == "images:"',
+    "root-level images section",
+    "Only direct image entries and supported image fields are allowed under images",
     "GitOps image set does not exactly match the allowlist",
     "must resolve to the allowlisted repository",
 ):

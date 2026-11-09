@@ -12,10 +12,9 @@ DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 SHA = re.compile(r"^[0-9a-f]{40}$")
 PROD_RELEASE = re.compile(r"^prod-v[0-9]+\.[0-9]+\.[0-9]+-([0-9a-f]{40})$")
 MICROFE_RELEASE = re.compile(r"^microfe-([0-9a-f]{7})$")
-IMAGE_NAME_PREFIX = re.compile(r"^\s*-\s*name\s*:")
-IMAGE_NAME = re.compile(r"^\s*-\s*name:\s*([^\s#]+)\s*$")
-NEW_NAME_PREFIX = re.compile(r"^\s*newName\s*:")
-NEW_NAME = re.compile(r"^\s*newName:\s*([^\s#]+)\s*$")
+IMAGE_NAME = re.compile(r"^- name:\s*([^\s#]+)\s*$")
+IMAGE_FIELD = re.compile(r"^  (newName|newTag|digest):\s*([^\s#]+)\s*$")
+ROOT_MAPPING_KEY = re.compile(r"^[A-Za-z_][A-Za-z0-9_.-]*:")
 
 APP_IMAGES = {
     "auth-service": (
@@ -48,54 +47,92 @@ def require(condition: bool, message: str) -> None:
         raise ContractError(message)
 
 
-def validate_image_set(content: str, expected_images: tuple[str, ...]) -> None:
+def parse_image_entries(content: str) -> list[dict[str, object]]:
     lines = content.splitlines()
-    image_sections = [line for line in lines if line.strip() == "images:"]
-    require(len(image_sections) == 1, "GitOps manifest must contain exactly one images section.")
-    name_lines = [line for line in lines if IMAGE_NAME_PREFIX.match(line)]
-    parsed_names = [IMAGE_NAME.fullmatch(line) for line in name_lines]
+    image_sections = [index for index, line in enumerate(lines) if line == "images:"]
     require(
-        len(parsed_names) == len(expected_images) and all(match is not None for match in parsed_names),
-        "GitOps image entries must use an unambiguous '- name: <repository>' form.",
+        len(image_sections) == 1,
+        "GitOps manifest must contain exactly one root-level images section.",
     )
-    actual_images = [match.group(1) for match in parsed_names if match is not None]
+
+    entries: list[dict[str, object]] = []
+    current: dict[str, object] | None = None
+    for line in lines[image_sections[0] + 1 :]:
+        stripped = line.strip()
+        if not stripped or line.lstrip().startswith("#"):
+            continue
+
+        # A new unindented mapping key ends the root-level Kustomize images list.
+        # Never collect '- name:' entries from unrelated sections such as configMapGenerator.
+        if not line.startswith((" ", "\t", "-")):
+            if ROOT_MAPPING_KEY.match(line):
+                break
+            raise ContractError("Unexpected root-level content in the Kustomize images section.")
+
+        if line.startswith("-"):
+            match = IMAGE_NAME.fullmatch(line)
+            require(
+                match is not None,
+                "Only direct '- name: <repository>' entries are allowed under images.",
+            )
+            current = {"name": match.group(1), "fields": {}}
+            entries.append(current)
+            continue
+
+        require(current is not None, "Kustomize image fields must follow a direct image entry.")
+        field_match = IMAGE_FIELD.fullmatch(line)
+        require(
+            field_match is not None,
+            "Only direct image entries and supported image fields are allowed under images.",
+        )
+        field, value = field_match.groups()
+        fields = current["fields"]
+        require(field not in fields, f"Duplicate {field} field in Kustomize image entry.")
+        fields[field] = value
+
+    return entries
+
+
+def validate_image_set(content: str, expected_images: tuple[str, ...]) -> None:
+    entries = parse_image_entries(content)
+    actual_images = [entry["name"] for entry in entries]
     require(
-        len(actual_images) == len(set(actual_images)) and set(actual_images) == set(expected_images),
+        len(actual_images) == len(expected_images)
+        and len(actual_images) == len(set(actual_images))
+        and set(actual_images) == set(expected_images),
         "GitOps image set does not exactly match the allowlist (unexpected, missing or duplicate image names).",
     )
+    for entry in entries:
+        image = entry["name"]
+        fields = entry["fields"]
+        if "newName" in fields:
+            require(
+                fields["newName"] == image,
+                f"newName for {image} must resolve to the allowlisted repository {image}.",
+            )
+        pins = [field for field in ("newTag", "digest") if field in fields]
+        require(len(pins) == 1, f"Expected exactly one tag/digest field for {image}, found {len(pins)}.")
+        if "digest" in fields:
+            require(DIGEST.fullmatch(fields["digest"]) is not None, f"{image} has an invalid sha256 digest.")
 
 
 def extract_digest(content: str, image: str) -> str:
-    lines = content.splitlines()
-    starts = [index for index, line in enumerate(lines) if line.strip() == f"- name: {image}"]
-    require(len(starts) == 1, f"Expected exactly one GitOps image entry for {image}, found {len(starts)}.")
-    start = starts[0]
-    end = start + 1
-    while end < len(lines) and not lines[end].lstrip().startswith("- name:"):
-        end += 1
-    new_name_fields = [
-        lines[index].strip()
-        for index in range(start + 1, end)
-        if NEW_NAME_PREFIX.match(lines[index])
-    ]
-    require(len(new_name_fields) <= 1, f"Expected at most one newName field for {image}.")
-    if new_name_fields:
-        new_name = NEW_NAME.fullmatch(new_name_fields[0])
+    entries = parse_image_entries(content)
+    matches = [entry for entry in entries if entry["name"] == image]
+    require(len(matches) == 1, f"Expected exactly one GitOps image entry for {image}, found {len(matches)}.")
+    fields = matches[0]["fields"]
+    if "newName" in fields:
         require(
-            new_name is not None and new_name.group(1) == image,
+            fields["newName"] == image,
             f"newName for {image} must resolve to the allowlisted repository {image}.",
         )
-    fields = [
-        lines[index].strip()
-        for index in range(start + 1, end)
-        if lines[index].strip().startswith(("newTag:", "digest:"))
-    ]
-    require(len(fields) == 1, f"Expected exactly one tag/digest field for {image}, found {len(fields)}.")
-    require(fields[0].startswith("digest: "), f"{image} is not digest-pinned in the current GitOps manifest.")
-    digest = fields[0].split(":", 1)[1].strip()
+    require(
+        "digest" in fields and "newTag" not in fields,
+        f"{image} is not digest-pinned in the current GitOps manifest.",
+    )
+    digest = fields["digest"]
     require(DIGEST.fullmatch(digest) is not None, f"{image} has an invalid sha256 digest.")
     return digest
-
 
 def resolve(app: str, release: str, source_commit: str, root: Path = Path(".")) -> list[tuple[str, str, str]]:
     require(app in APP_IMAGES, f"Retired or unsupported GitOps-ready application: {app!r}.")
@@ -167,6 +204,16 @@ def self_test() -> None:
     validate_image_set(auth_fixture, (auth_image,))
     validate_image_set(tce_fixture, (tce_web, tce_service))
     validate_image_set(microfe_fixture, (microfe_shell, microfe_ws))
+    # A Kustomize resource generator also uses '- name:' entries. Those must
+    # not be mistaken for image transformer entries outside the root images block.
+    scoped_fixture = auth_fixture + (
+        "configMapGenerator:\n"
+        "- name: unrelated-config\n"
+        "  literals:\n"
+        "  - key=value\n"
+    )
+    validate_image_set(scoped_fixture, (auth_image,))
+
     image_set_cases = [
         (
             tce_fixture + f"- name: ghcr.io/phanthienquoc/unexpected/sidecar\n  digest: {digest_a}\n",
@@ -178,14 +225,29 @@ def self_test() -> None:
             (tce_web, tce_service),
         ),
         (tce_fixture.replace("images:\n", ""), (tce_web, tce_service)),
+        (
+            f"metadata:\n  images:\n  - name: {auth_image}\n    digest: {digest_a}\n",
+            (auth_image,),
+        ),
+        (
+            f"images:\nconfigMapGenerator:\n- name: {auth_image}\n  digest: {digest_a}\n",
+            (auth_image,),
+        ),
+        (
+            f"images:\n- name: {auth_image}\n  digest: {digest_a}\n  unrelatedField: attacker\n",
+            (auth_image,),
+        ),
+        (
+            f"images:\n  - name: {auth_image}\n    digest: {digest_a}\n",
+            (auth_image,),
+        ),
     ]
     for fixture_text, expected_images in image_set_cases:
         try:
             validate_image_set(fixture_text, expected_images)
         except ContractError:
             continue
-        raise SystemExit("GitOps image-ref self-test accepted an unexpected, missing or duplicate image entry.")
-
+        raise SystemExit("GitOps image-ref self-test accepted an out-of-section or malformed image entry.")
     try:
         resolve("auth-service", f"prod-v1.2.3-{'b' * 40}", source)
     except ContractError:
@@ -199,7 +261,7 @@ def self_test() -> None:
     else:
         raise SystemExit("GitOps image-ref self-test accepted a retired app.")
 
-    print("GitOps ready image-ref self-tests passed (5 positive extraction, 12 negative contract cases).")
+    print("GitOps ready image-ref self-tests passed (5 positive extraction, 1 section-scope isolation, 16 negative contract cases).")
 
 
 def main() -> int:
