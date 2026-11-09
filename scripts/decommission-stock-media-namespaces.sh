@@ -5,6 +5,7 @@ MODE="${1:-plan}"
 KUBECTL_BIN="${PLATFORM_KUBECTL_BIN:-/usr/local/sbin/platform-kubectl}"
 KUBECTL_SUDO="${PLATFORM_KUBECTL_SUDO:-sudo}"
 KUBECTL=("$KUBECTL_SUDO" "$KUBECTL_BIN")
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET_NAMESPACES=(stock-prod media-prod)
 
 run_kubectl() {
@@ -12,6 +13,7 @@ run_kubectl() {
 }
 
 preflight() {
+  bash "$SCRIPT_DIR/verify-retired-production-manifests.sh"
   local namespaces_json namespace pvc_json pvc_count pv_json pv_claims namespace_inventory snapshot_refs ingress_json
   echo "### Platform namespace preservation check"
   for namespace in tce-prod microfe-platform; do
