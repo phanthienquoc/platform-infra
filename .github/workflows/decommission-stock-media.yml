@@ -31,6 +31,18 @@ on:
           Media runner is idle, stopped, disabled and removed from GitHub
         required: false
         type: string
+      backup_evidence_ref:
+        description: >-
+          Stable HTTPS link to the completed backup/retention evidence for Stock/Media data and
+          external services. Do not include query strings, fragments or embedded credentials.
+        required: false
+        type: string
+      dns_evidence_ref:
+        description: >-
+          Stable HTTPS link to the authoritative DNS/provider export or change record for every
+          retired Ingress hostname. Do not include query strings, fragments or embedded credentials.
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -48,6 +60,8 @@ jobs:
       - name: Validate production ref and requested mode
         env:
           MODE: ${{ inputs.mode }}
+          BACKUP_EVIDENCE_REF: ${{ inputs.backup_evidence_ref }}
+          DNS_EVIDENCE_REF: ${{ inputs.dns_evidence_ref }}
         run: |
           set -euo pipefail
           test "$GITHUB_REF" = "refs/heads/master" || {
@@ -58,6 +72,137 @@ jobs:
             plan|delete) ;;
             *) echo "::error::Unsupported decommission mode: $MODE"; exit 1 ;;
           esac
+          if [[ "$MODE" == "delete" ]]; then
+            evidence_url_re='^https://[A-Za-z0-9.-]+(:[0-9]+)?/[A-Za-z0-9._~:/%+-]+
+  plan:
+    needs: validate_mode
+    if: ${{ needs.validate_mode.result == 'success' && inputs.mode == 'plan' }}
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    timeout-minutes: 15
+    steps:
+      - name: Checkout platform-infra
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify installed runner policy
+        run: |
+          set -euo pipefail
+          policy="$(sudo /usr/local/sbin/platform-kubectl policy-version)"
+          test "$policy" = "platform-kubectl policy: rollout-status-v15-core-workloads" || {
+            echo "::error::Runner bootstrap policy v15 is required before preflight."
+            exit 1
+          }
+
+      - name: Report dedicated Media runner state
+        run: |
+          set -euo pipefail
+          service="actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service"
+          process_pattern='[/]opt/media-actions-runner/bin/Runner.Listener'
+          command -v systemctl >/dev/null
+          command -v pgrep >/dev/null
+          service_state="$(systemctl is-active "$service" 2>/dev/null || true)"
+          enabled_state="$(systemctl is-enabled "$service" 2>/dev/null || true)"
+          if pgrep -f "$process_pattern" >/dev/null 2>&1; then
+            listener_state=present
+          else
+            listener_state=absent
+          fi
+          printf 'Media runner service=%s enabled=%s listener=%s\n' \
+            "${service_state:-unknown}" "${enabled_state:-unknown}" "$listener_state"
+          echo "GitHub runner registration must be verified separately by the operator."
+          echo "This plan mode does not stop, disable, unregister or remove the runner."
+
+      - name: Run fresh read-only storage preflight
+        run: bash scripts/decommission-stock-media-namespaces.sh plan
+
+  decommission:
+    needs: validate_mode
+    if: ${{ needs.validate_mode.result == 'success' && inputs.mode == 'delete' }}
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    environment: production
+    timeout-minutes: 15
+    steps:
+      - name: Checkout platform-infra
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify installed runner policy
+        run: |
+          set -euo pipefail
+          policy="$(sudo /usr/local/sbin/platform-kubectl policy-version)"
+          test "$policy" = "platform-kubectl policy: rollout-status-v15-core-workloads" || {
+            echo "::error::Runner bootstrap policy v15 is required before decommission."
+            exit 1
+          }
+
+      - name: Validate exact deletion confirmations
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          DATA_RETENTION_REVIEW: ${{ inputs.data_retention_review }}
+          DNS_OWNERSHIP_REVIEW: ${{ inputs.dns_ownership_review }}
+          RUNNER_RETIREMENT: ${{ inputs.runner_retirement }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/master" || {
+            echo "::error::Namespace decommission must run from master."
+            exit 1
+          }
+          test "$CONFIRMATION" = "DELETE-STOCK-PROD-AND-MEDIA-PROD" || {
+            echo "::error::Typed namespace confirmation does not match."
+            exit 1
+          }
+          test "$DATA_RETENTION_REVIEW" = "BACKUP-AND-EXTERNAL-DATA-REVIEWED" || {
+            echo "::error::Backup/external-data review confirmation does not match."
+            exit 1
+          }
+          test "$DNS_OWNERSHIP_REVIEW" = "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED" || {
+            echo "::error::Authoritative DNS/provider ownership review must be confirmed before namespace deletion."
+            exit 1
+          }
+          test "$RUNNER_RETIREMENT" = "MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED" || {
+            echo "::error::Dedicated Media runner must be confirmed idle, stopped, disabled and unregistered before namespace deletion."
+            exit 1
+          }
+
+      - name: Verify dedicated Media runner is retired in GitHub and on the VPS
+        env:
+          MEDIA_RUNNER_AUDIT_TOKEN: ${{ secrets.MEDIA_RUNNER_AUDIT_TOKEN }}
+        run: bash scripts/verify-media-runner-retired.sh
+
+      - name: Run fresh read-only storage preflight
+        run: bash scripts/decommission-stock-media-namespaces.sh plan
+
+      - name: Delete only the two approved namespaces
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          DATA_RETENTION_REVIEW: ${{ inputs.data_retention_review }}
+          DNS_OWNERSHIP_REVIEW: ${{ inputs.dns_ownership_review }}
+          RUNNER_RETIREMENT: ${{ inputs.runner_retirement }}
+          MEDIA_RUNNER_AUDIT_TOKEN: ${{ secrets.MEDIA_RUNNER_AUDIT_TOKEN }}
+        run: |
+          set -euo pipefail
+          # Re-check local service/process state and the authoritative GitHub runner
+          # registry in the same step immediately before namespace deletion.
+          bash scripts/verify-media-runner-retired.sh
+          unset MEDIA_RUNNER_AUDIT_TOKEN
+          bash scripts/decommission-stock-media-namespaces.sh delete
+
+            [[ "$BACKUP_EVIDENCE_REF" =~ $evidence_url_re ]] || {
+              echo "::error::Delete mode requires a stable HTTPS backup/retention evidence URL without query strings, fragments or embedded credentials."
+              exit 1
+            }
+            [[ "$DNS_EVIDENCE_REF" =~ $evidence_url_re ]] || {
+              echo "::error::Delete mode requires a stable HTTPS authoritative DNS evidence URL without query strings, fragments or embedded credentials."
+              exit 1
+            }
+            {
+              echo "### Stock/Media decommission evidence references"
+              echo "- Backup/retention evidence: $BACKUP_EVIDENCE_REF"
+              echo "- Authoritative DNS evidence: $DNS_EVIDENCE_REF"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
 
   plan:
     needs: validate_mode
