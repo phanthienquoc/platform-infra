@@ -1,5 +1,17 @@
 # Cross-repo workflow inventory and deployment ownership
 
+Current review: **2026-11-09 16:03 ICT / 2026-11-09 09:03 UTC**
+
+## 2026-11-09 16:03 ICT publisher-provenance and inspection delta
+
+- Platform PR #1512 is merged at `296665e832964124f34fd768bafbfa8bddd925d9`; exact-head `validate-manifests` #42587680995 PASS. Documentation-only; no post-merge push result is claimed.
+- Correct TCE WF-08B exact-head run ID is #42585765835. Its MicroFE test jobs passed and publish/dispatch jobs were skipped on the PR event. The previous #42585865835 reference was a typo and returned 404.
+- Current masters: Platform `296665e8`, TCE `65af89f6`, Stock `1a18cabf`, Media `dcd69869`, Authentication `b7183475`.
+- TCE #1032, Auth #91 and Platform #1511 are merged with exact-head validations passed. TCE WF-03/WF-08B and Auth release now emit positive `source_run_attempt`; Platform validates it against the public Actions run API and the required publisher job evidence.
+- Latest inspection snapshot #1513 was generated at 08:38:41Z: node Ready/ARM64; Media and MicroFE 1/1 with digest evidence; Stock desired images ImagePullBackOff due missing ARM64 manifest; TCE/Auth/Keycloak 0/0 and public OIDC 503; Media runner service active/enabled. This is point-in-time read-only evidence, not rollout/decommission authorization.
+- Native schedule issue #1497 remains open; latest authoritative all-event evidence remains 05:02:47Z and no cadence recovery is claimed. Preserve cron, budgets and TCE market-scan schedule.
+- No production publication, promotion, apply, rollout, scaling, deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred.
+
 Current review: **2026-11-09 15:15 ICT / 2026-11-09 08:15 UTC**
 
 ## 2026-11-09 15:15 ICT publisher provenance delta
