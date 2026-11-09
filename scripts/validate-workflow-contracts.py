@@ -1894,13 +1894,21 @@ if promotion_guard_index < 0 or scope_step_index <= promotion_guard_index:
 for required in (
     "PROMOTION_RUN_ID: ${{ github.event.client_payload.promotion_run_id }}",
     "actions/runs/${PROMOTION_RUN_ID}",
+    "actions/runs/${PROMOTION_RUN_ID}/jobs?per_page=100",
     "python3 scripts/verify-gitops-ready-dispatch.py",
     "--event \"$GITHUB_EVENT_PATH\"",
     "--promotion-run \"$RUNNER_TEMP/gitops-promotion-run.json\"",
+    "--promotion-jobs \"$RUNNER_TEMP/gitops-promotion-jobs.json\"",
     "deadline=$((SECONDS + 180))",
 ):
     if required not in reconcile:
         fail(f"reconcile-vps is missing the GitOps promotion-run verification contract: {required}")
+if "jq -r '.total_count // empty' <<< \"$jobs_json\"" not in reconcile:
+    fail("reconcile-vps must read the Actions jobs total_count before trusting promotion job evidence.")
+if "jq -r 'if (.jobs | type) == \"array\" then (.jobs | length) else -1 end' <<< \"$jobs_json\"" not in reconcile:
+    fail("reconcile-vps must require a valid Actions jobs array.")
+if '"$total_jobs" != "$returned_jobs"' not in reconcile:
+    fail("reconcile-vps must reject truncated or incomplete Actions job evidence.")
 
 dispatch_blocks = (
     promotion.split("      - name: Trigger shared VPS reconciliation\n", 1)[1].split("\n\n  promote-tce-digests:", 1)[0],
@@ -1919,6 +1927,10 @@ for required in (
     "Retired or unsupported GitOps-ready application",
     "promotion_run.get(\"conclusion\") == \"success\"",
     "promotion_run.get(\"head_branch\") == \"master\"",
+    "Promote MicroFE image digests as one GitOps change",
+    "Promote TCE web/service digests atomically",
+    "Coordinate TCE release",
+    "Promote auth-service /",
 ):
     if required not in dispatch_validator:
         fail(f"GitOps-ready dispatch validator is missing required fail-closed check: {required}")
@@ -1926,5 +1938,33 @@ if "python3 scripts/verify-gitops-ready-dispatch.py --self-test" not in github_a
     fail("GitHub Actions validation must run the GitOps-ready dispatch positive/negative regression tests.")
 if '"!scripts/verify-gitops-ready-dispatch.py"' not in recovery_push_paths:
     fail("The read-only GitOps-ready dispatch validator must not trigger production recovery on push.")
+
+
+image_ref_guard = "      - name: Verify GitOps-ready release tags against current pinned digests\n"
+image_ref_guard_index = reconcile.find(image_ref_guard)
+secret_provision_index = reconcile.find("      - name: Provision Auth runtime Secret from platform-infra Environment\n")
+if image_ref_guard_index < 0 or secret_provision_index <= image_ref_guard_index:
+    fail("GitOps-ready tag-to-digest verification must run before any runtime Secret or pull-credential mutation.")
+for required in (
+    "python3 scripts/verify-gitops-ready-image-refs.py",
+    "--source-commit \"$SOURCE_COMMIT\"",
+    "GHCR_EXPECTED_DIGEST=\"$digest\"",
+    "bash scripts/validate-ghcr-image-reference.sh",
+):
+    if required not in reconcile:
+        fail(f"reconcile-vps is missing the GitOps-ready manifest/tag digest binding: {required}")
+image_ref_validator = (ROOT / "scripts" / "verify-gitops-ready-image-refs.py").read_text(encoding="utf-8")
+for required in (
+    "APP_IMAGES",
+    "digest:",
+    "not digest-pinned",
+    "Retired or unsupported GitOps-ready application",
+):
+    if required not in image_ref_validator:
+        fail(f"GitOps-ready image-ref validator is missing fail-closed rule: {required}")
+if "python3 scripts/verify-gitops-ready-image-refs.py --self-test" not in github_actions:
+    fail("GitHub Actions validation must run GitOps-ready image-ref regression tests.")
+if '"!scripts/verify-gitops-ready-image-refs.py"' not in recovery_push_paths:
+    fail("The read-only GitOps-ready image-ref validator must not trigger production recovery on push.")
 
 print("Workflow contract validation passed.")

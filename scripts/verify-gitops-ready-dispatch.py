@@ -30,7 +30,7 @@ def require(condition: bool, message: str) -> None:
         raise ValueError(message)
 
 
-def validate(event: dict, promotion_run: dict) -> None:
+def validate(event: dict, promotion_run: dict, promotion_jobs: dict) -> None:
     require(event.get("action") == "gitops-promoted-ready", "Unsupported repository_dispatch action.")
     payload = event.get("client_payload")
     require(isinstance(payload, dict), "GitOps-ready dispatch must include an object client_payload.")
@@ -91,6 +91,32 @@ def validate(event: dict, promotion_run: dict) -> None:
     require(promotion_run.get("conclusion") == "success",
             f"GitOps promotion workflow run did not succeed (conclusion={promotion_run.get('conclusion')!r}).")
 
+    jobs = promotion_jobs.get("jobs") if isinstance(promotion_jobs, dict) else None
+    require(isinstance(jobs, list), "Promotion run jobs response must contain a jobs array.")
+    successful_names = {
+        job.get("name")
+        for job in jobs
+        if isinstance(job, dict)
+        and isinstance(job.get("name"), str)
+        and job.get("status") == "completed"
+        and job.get("conclusion") == "success"
+    }
+    if app == "microfe":
+        require(
+            "Promote MicroFE image digests as one GitOps change" in successful_names,
+            "MicroFE promotion run did not successfully execute its digest-promotion job.",
+        )
+    elif app == "tce-dashboard":
+        require(
+            {"Promote TCE web/service digests atomically", "Coordinate TCE release"} <= successful_names,
+            "TCE promotion run must successfully execute both paired promotion and release-coordinator jobs.",
+        )
+    else:
+        require(
+            any(name.startswith("Promote auth-service /") for name in successful_names),
+            "Auth promotion run did not successfully execute the Auth promotion job.",
+        )
+
 
 def self_test() -> None:
     source = "a" * 40
@@ -106,7 +132,7 @@ def self_test() -> None:
         "conclusion": "success",
     }
 
-    def case(app: str, component: str, release: str, event_name: str = "repository_dispatch") -> tuple[dict, dict]:
+    def case(app: str, component: str, release: str, event_name: str = "repository_dispatch") -> tuple[dict, dict, dict]:
         payload = {
             "app": app,
             "component": component,
@@ -118,7 +144,16 @@ def self_test() -> None:
             "promotion_head_sha": head,
         }
         run = {**base_run, "event": event_name}
-        return {"action": "gitops-promoted-ready", "client_payload": payload}, run
+        if app == "microfe":
+            jobs = [{"name": "Promote MicroFE image digests as one GitOps change", "status": "completed", "conclusion": "success"}]
+        elif app == "tce-dashboard":
+            jobs = [
+                {"name": "Promote TCE web/service digests atomically", "status": "completed", "conclusion": "success"},
+                {"name": "Coordinate TCE release", "status": "completed", "conclusion": "success"},
+            ]
+        else:
+            jobs = [{"name": "Promote auth-service / auth", "status": "completed", "conclusion": "success"}]
+        return {"action": "gitops-promoted-ready", "client_payload": payload}, run, {"jobs": jobs}
 
     positive = [
         case("auth-service", "auth", f"prod-v1.2.3-{source}", "workflow_dispatch"),
@@ -126,25 +161,25 @@ def self_test() -> None:
         case("tce-dashboard", "release", f"prod-v2.0.1-{source}"),
         case("microfe", "release", f"microfe-{source[:7]}"),
     ]
-    for event, run in positive:
-        validate(event, run)
+    for event, run, jobs in positive:
+        validate(event, run, jobs)
 
     negative = []
-    event, run = case("stockdividend", "release", f"prod-v1.2.3-{source}")
-    negative.append((event, run))
-    event, run = case("media-generation", "release", f"prod-v1.2.3-{source}")
-    negative.append((event, run))
-    event, run = case("tce-dashboard", "auth", f"prod-v1.2.3-{source}")
-    negative.append((event, run))
-    event, run = case("microfe", "release", "microfe-fffffff")
-    negative.append((event, run))
-    event, run = case("auth-service", "auth", f"prod-v1.2.3-{'c' * 40}", "workflow_dispatch")
-    negative.append((event, run))
-    event, run = case("auth-service", "auth", f"prod-v1.2.3-{source}", "push")
-    negative.append((event, run))
-    event, run = case("auth-service", "auth", f"prod-v1.2.3-{source}", "workflow_dispatch")
+    event, run, jobs = case("stockdividend", "release", f"prod-v1.2.3-{source}")
+    negative.append((event, run, jobs))
+    event, run, jobs = case("media-generation", "release", f"prod-v1.2.3-{source}")
+    negative.append((event, run, jobs))
+    event, run, jobs = case("tce-dashboard", "auth", f"prod-v1.2.3-{source}")
+    negative.append((event, run, jobs))
+    event, run, jobs = case("microfe", "release", "microfe-fffffff")
+    negative.append((event, run, jobs))
+    event, run, jobs = case("auth-service", "auth", f"prod-v1.2.3-{'c' * 40}", "workflow_dispatch")
+    negative.append((event, run, jobs))
+    event, run, jobs = case("auth-service", "auth", f"prod-v1.2.3-{source}", "push")
+    negative.append((event, run, jobs))
+    event, run, jobs = case("auth-service", "auth", f"prod-v1.2.3-{source}", "workflow_dispatch")
     event["client_payload"]["unexpected"] = "must-not-pass"
-    negative.append((event, run))
+    negative.append((event, run, jobs))
     for field, value in (
         ("promotion_run_id", "not-a-run"),
         ("promotion_run_attempt", "0"),
@@ -152,9 +187,9 @@ def self_test() -> None:
         ("promotion_head_sha", "short"),
         ("source_commit", "short"),
     ):
-        event, run = case("auth-service", "auth", f"prod-v1.2.3-{source}", "workflow_dispatch")
+        event, run, jobs = case("auth-service", "auth", f"prod-v1.2.3-{source}", "workflow_dispatch")
         event["client_payload"][field] = value
-        negative.append((event, run))
+        negative.append((event, run, jobs))
     for field, value in (
         ("id", 99999),
         ("path", ".github/workflows/other.yml"),
@@ -164,16 +199,26 @@ def self_test() -> None:
         ("status", "in_progress"),
         ("conclusion", "failure"),
     ):
-        event, run = case("auth-service", "auth", f"prod-v1.2.3-{source}", "workflow_dispatch")
+        event, run, jobs = case("auth-service", "auth", f"prod-v1.2.3-{source}", "workflow_dispatch")
         run[field] = value
-        negative.append((event, run))
-    event, run = case("auth-service", "auth", f"prod-v1.2.3-{source}", "workflow_dispatch")
+        negative.append((event, run, jobs))
+    event, run, jobs = case("auth-service", "auth", f"prod-v1.2.3-{source}", "workflow_dispatch")
     event["action"] = "other-event"
-    negative.append((event, run))
+    negative.append((event, run, jobs))
 
-    for event, run in negative:
+    event, run, jobs = case("auth-service", "auth", f"prod-v1.2.3-{source}", "workflow_dispatch")
+    jobs["jobs"][0]["conclusion"] = "failure"
+    negative.append((event, run, jobs))
+    event, run, jobs = case("tce-dashboard", "release", f"prod-v1.2.3-{source}")
+    jobs["jobs"] = jobs["jobs"][:1]
+    negative.append((event, run, jobs))
+    event, run, jobs = case("microfe", "release", f"microfe-{source[:7]}")
+    jobs["jobs"] = []
+    negative.append((event, run, jobs))
+
+    for event, run, jobs in negative:
         try:
-            validate(event, run)
+            validate(event, run, jobs)
         except ValueError:
             continue
         raise SystemExit("GitOps-ready dispatch self-test accepted an invalid payload or promotion run.")
@@ -185,16 +230,18 @@ def main() -> int:
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--event", type=Path)
     parser.add_argument("--promotion-run", type=Path)
+    parser.add_argument("--promotion-jobs", type=Path)
     args = parser.parse_args()
     if args.self_test:
         self_test()
         return 0
-    if args.event is None or args.promotion_run is None:
-        parser.error("--event and --promotion-run are required unless --self-test is used.")
+    if args.event is None or args.promotion_run is None or args.promotion_jobs is None:
+        parser.error("--event, --promotion-run and --promotion-jobs are required unless --self-test is used.")
     try:
         event = json.loads(args.event.read_text(encoding="utf-8"))
         promotion_run = json.loads(args.promotion_run.read_text(encoding="utf-8"))
-        validate(event, promotion_run)
+        promotion_jobs = json.loads(args.promotion_jobs.read_text(encoding="utf-8"))
+        validate(event, promotion_run, promotion_jobs)
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         print(f"::error::GitOps-ready dispatch validation failed: {exc}", file=sys.stderr)
         return 1

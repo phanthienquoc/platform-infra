@@ -80,6 +80,7 @@ jobs:
           python3 scripts/verify-reconcile-lane-queue.py --self-test
           python3 scripts/verify-scheduled-run-result.py --self-test
           python3 scripts/verify-gitops-ready-dispatch.py --self-test
+          python3 scripts/verify-gitops-ready-image-refs.py --self-test
           python3 scripts/verify-tce-schedule-delivery.py --self-test
           python3 scripts/verify-native-schedule-gap.py --self-test
           bash scripts/tests/verify-auth-publisher-run.test.sh

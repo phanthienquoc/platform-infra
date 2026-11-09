@@ -1,10 +1,10 @@
 # Cross-repo workflow inventory and deployment ownership
 
-Current review: **2026-11-09 07:57 ICT / 2026-11-09 00:57 UTC**
+Current review: **2026-11-09 08:14 ICT / 2026-11-09 01:14 UTC**
 
 | Repository | App-owned workflows and release contract | Platform-owned responsibilities / boundary | Current evidence |
 |---|---|---|---|
-| Platform Infra | No application image builds. Receives provenance-bound TCE/Auth/MicroFE digest events; owns native inspection, reconciliation, watchdog, recovery and image-cleanup dry-run. | Sole production manifests, shared GHCR pull credentials, runtime Secrets, source/digest/provenance validation, GitOps promotion/reconciliation, rollout/health and protected Stock/Media decommission. | Master `2ab93d77`; latest `validate-manifests` #42539863349 PASS. Open human-decision drafts #1314/#544/#541/#539. New dispatch-provenance contract is on a dedicated PR branch, not yet merged. |
+| Platform Infra | No application image builds. Receives provenance-bound TCE/Auth/MicroFE digest events; owns native inspection, reconciliation, watchdog, recovery and image-cleanup dry-run. | Sole production manifests, shared GHCR pull credentials, runtime Secrets, source/digest/provenance validation, GitOps promotion/reconciliation, rollout/health and protected Stock/Media decommission. | Master `a614b3a6`; PR #1492 dispatch-run provenance merged with exact-head and post-merge validation PASS. Open human-decision drafts #1314/#544/#541/#539; PR #1493 adds app-specific successful-job attestation plus current manifest tag-to-digest/ARM64 verification before reconciliation. |
 | TCE Dashboard | App-owned CI/tests; manual WF-03 ARM64 immutable web/service publisher with digest verification and provenance-bound `tce-release-requested` handoff; WF-08B MicroFE ARM64 publisher and digest-bound Platform handoff; WF-06/WF-07/WF-12/WF-13 health, integration, watchdog and recovery. WF-09 remains a safe manual VPS utility; WF-10 remains staging-only. | No production SSH/Compose/K3s apply authority. Platform alone owns production manifests, runtime Secrets, image promotion/reconciliation and health. | Master `ddf5811a`; no open PR. Publisher guard #1031 merged; post-merge WF-01/WF-02/WF-05 #42538802539/#42538802538/#42538802541 PASS. Native WF-06 #42531446260 4×HTTP 503; WF-12 #42527713763 stale. Market-scan schedule unchanged. |
 | StockDividend | CI/tests; deploy.yml is the app-owned ARM64 GHCR publisher for Scraper/Admin/Backend, using full-SHA and version/full-SHA tags, pre-push tag-absence guard, digest equality and ARM64 checks. Weekend scraper cron remains separate and fail-closed on `VNSTOCK_API_KEY`. | Retired from active Platform GitOps; legacy namespace/workloads await protected decommission. No production SSH/Compose authority. | Master `1a18cabf`; no open PR. PRs #39/#40 merged; master CI #42533562194 PASS. Scraper #42457182511 failed closed on missing key. Desired Stock images still have ARM64 manifest mismatch in the last K3s snapshot. |
 | Media Generation | CI/tests; app-owned master-push/manual ARM64 publisher verifies immutable version/full-SHA images, pre-push tag absence and registry digests. No Platform handoff while retired. | No active Platform GitOps handoff; legacy namespace and dedicated runner await protected decommission. No direct SSH/Compose production authority. | Master `dcd69869`; no open PR. Publisher guard #74 merged; CI #42539512417 PASS. Last K3s snapshot shows backend/frontend 1/1 with RepoDigests; runner active/enabled/listener present. |
@@ -511,3 +511,21 @@ Platform master dd1bca11e3c59c92f920ec5e4896fb8d643be272 after PR #1490; exact-h
 - The validator is read-only and its path is excluded from recovery push bootstrap. Existing `validate-github-actions` runs its positive/negative regression tests. Exact-head CI is required before merge; no production image publication or dispatch was executed by this code change.
 - App repositories continue to own tests/builds and immutable GHCR publication. Platform Infra alone owns production manifests, shared pull credentials, digest/source verification, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose authority.
 - Native schedule cadence remains outside existing budgets; manual/recovery events are not native acceptance. No cron/freshness change and no TCE market-scan schedule change.
+
+
+## Promotion-run execution attestation — 2026-11-09 08:10 ICT
+
+- PR #1492 now requires each `gitops-promoted-ready` event to reference a completed successful Platform promotion workflow run on master with exact run ID, attempt, workflow path and head SHA.
+- Follow-up PR #1493 closes the remaining no-op-run case: the reconcile gate also fetches the exact run's Actions jobs and requires the app-specific promotion work to have completed successfully. MicroFE requires its digest-promotion job; TCE requires both paired-promotion and coordinator jobs; Auth requires its Auth promotion job.
+- A completed-successful workflow with the relevant job skipped, absent or failed is rejected. This is separate from source app publisher provenance, which remains validated in the promotion workflow, and from registry tag-to-digest/ARM64 checks.
+- No direct application deployment is introduced. The app repositories still own builds/tests and immutable GHCR publication; Platform alone owns GitOps manifests, shared pull credentials, digest promotion, apply, rollout and health.
+- The read-only validator remains excluded from recovery push bootstrap. No cron, freshness budget or TCE market-scan schedule changed.
+
+
+## Ready-event registry binding — 2026-11-09 08:14 ICT
+
+- The final `gitops-promoted-ready` gate now has three independent checks: strict payload/source-SHA validation; exact originating promotion run and app-specific job success; current GitOps manifest digest and GHCR tag-to-digest/ARM64 validation.
+- `verify-gitops-ready-image-refs.py` allowlists only Auth/TCE/MicroFE and requires every expected image entry to be digest-pinned. It rejects missing/duplicate image entries, tag-only `newTag`, duplicate tag/digest fields and malformed digest values.
+- Reconcile re-reads each immutable source tag using the expected manifest digest and then reads the digest reference itself through `validate-ghcr-image-reference.sh`. This prevents a successful but unrelated/replayed promotion run from authorizing an arbitrary manifest image change.
+- This registry check runs after GHCR read-access preflight and before runtime Secret provisioning or shared pull-credential mutation. It is read-only and does not change the normal scheduled reconciliation path.
+- The image-ref helper is self-tested in GitHub Actions and excluded from recovery push bootstrap. No cron, freshness budget or TCE market-scan schedule change.
