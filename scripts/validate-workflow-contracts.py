@@ -1934,7 +1934,7 @@ if '"!scripts/verify-gitops-ready-dispatch.py"' not in recovery_push_paths:
     fail("The read-only GitOps-ready dispatch validator must not trigger production recovery on push.")
 
 
-image_ref_guard = "      - name: Verify GitOps-ready release tags against current pinned digests\\n"
+image_ref_guard = "      - name: Verify GitOps-ready release tags against current pinned digests\n"
 image_ref_guard_index = reconcile.find(image_ref_guard)
 secret_provision_index = reconcile.find("      - name: Provision Auth runtime Secret from platform-infra Environment\\n")
 if image_ref_guard_index < 0 or secret_provision_index <= image_ref_guard_index:
