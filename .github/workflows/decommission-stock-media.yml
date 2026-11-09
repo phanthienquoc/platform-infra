@@ -75,11 +75,11 @@ jobs:
           if [[ "$MODE" == "delete" ]]; then
             evidence_url_re='^https://[A-Za-z0-9.-]+(:[0-9]+)?/[A-Za-z0-9._~:/%+-]+$'
             [[ "$BACKUP_EVIDENCE_REF" =~ $evidence_url_re ]] || {
-              echo "::error::Delete mode requires a stable HTTPS backup/retention evidence URL without query strings, fragments or embedded credentials."
+              echo "::error::Backup evidence must be a stable HTTPS URL without query, fragment or embedded credentials."
               exit 1
             }
             [[ "$DNS_EVIDENCE_REF" =~ $evidence_url_re ]] || {
-              echo "::error::Delete mode requires a stable HTTPS authoritative DNS evidence URL without query strings, fragments or embedded credentials."
+              echo "::error::DNS evidence must be a stable HTTPS URL without query, fragment or embedded credentials."
               exit 1
             }
             {
