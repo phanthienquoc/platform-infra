@@ -1,3 +1,16 @@
+## 2026-11-10 02:19 ICT — TCE receiver merged; fresh K3s inspection and recovery evidence
+
+- Platform receiver PR #1539 merged at `17b8ae2c374382fb07604a5a975dc52a242b3172`. Exact-head validate-github-actions #42681274603, validate-manifests #42681274888 and Keycloak CI #42681275045 passed; post-merge push runs #42681874018/#42681873952/#42681873949 passed. The earlier skipped-only validate-manifests anomaly did not recur.
+- Platform tracker PR #1540 merged at `4cf8534d4c28f4b5d7eff8f74c08b2245bc83c2e`; inspection PR #1541 merged at `9f8f2d81859b0ff1b5d925db3cc4ad6d448ec04a` after fresh read-only inspect-vps #42681626973.
+- TCE PR #1033 merged at `aea2755f164186eb6172d9e11afece98227907f9`. WF-03 now gates source context before notifications, builds and GHCR publication. Exact-head and post-merge WF-01/02/05 checks all passed.
+- Controlled recovery #42681294414 used the existing `reconcile-vps.yml` authority with mode=apply, target=all and `ALLOW_IMAGE_CHANGES=false`. GHCR pull preflight passed; Auth runtime Secret provision/verification succeeded; shared `ghcr-pull` Secret was unchanged; no blocked image-pull restarts were needed for active MicroFE/Auth/TCE targets. Drift=false; production manifest apply skipped. MicroFE health passed; TCE/Auth 0/0 maintenance lanes did not assert live health; Keycloak skipped.
+- Fresh K3s snapshot `2026-11-09T19:15:47Z`: node Ready/ARM64; disk 56%, 20 GiB free; RAM available ~19 GiB; host restart required; Media runner service/listener still active. Media backend/frontend and MicroFE shell/WS/NATS 1/1; TCE/Auth/Keycloak 0/0; Stock desired Admin/Backend pods still ImagePullBackOff on old tag `12d63b4` with no ARM64 descriptor. Only PVC/PV is the k3s-debug log claim; no Stock/Media VolumeSnapshot refs. Cached Stock tags `23b2878` lack RepoDigest. No decommission.
+- TCE WF-12 native schedule #42681246237 failed; heartbeat to Platform succeeded. WF-13 #42681277887 dispatched WF-06 fallback #42681311390, which got HTTP 503 on all four public endpoints. Do not treat zero-replica internal health lanes as public health recovery.
+- Native schedule age/inter-arrival evidence remains out of budget across all six deployment lanes. Latest event IDs, gaps and issue #1497 evidence are in the deployment tracker. No cron, freshness budget or TCE market-scan schedule changed.
+- No workflow removed. No production image publication, digest promotion, repository dispatch, manifest apply, workload scaling, namespace/storage deletion, runner retirement, DNS mutation or host maintenance.
+
+---
+
 ## 2026-11-10 02:00 ICT — TCE source-context gate and receiver PR status
 
 - TCE PR #1033 merged at `aea2755f164186eb6172d9e11afece98227907f9`. Exact-head WF-01P #42679926050, WF-05 #42679926049 and WF-02 #42679925453 passed. WF-01P executed the release contract validator and frontend build; WF-05 executed backend build/unit tests; WF-02 formatting passed.
