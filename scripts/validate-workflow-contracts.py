@@ -756,6 +756,7 @@ for required in (
     "repository.full_name",
     "head_repository.full_name",
     "conclusion",
+    '[[ "$SOURCE_RUN_ID" =~ ^[1-9][0-9]*$ ]]',
     '[[ "$SOURCE_RUN_ATTEMPT" =~ ^[1-9][0-9]*$ ]]',
     '[[ "$run_attempt" == "$SOURCE_RUN_ATTEMPT" ]]',
     "Build and publish MicroFE WebSocket image",
@@ -888,6 +889,7 @@ for required in (
         fail(f"TCE source-run verifier must validate required publisher job/step: {required}")
 for required in (
     "SOURCE_RUN_ATTEMPT=1",
+    "SOURCE_RUN_ID=0",
     'run_attempt:($run_attempt|tonumber)',
     'expect_failure "run attempt mismatch"',
     'expect_failure "missing run attempt"',
@@ -1884,7 +1886,7 @@ auth_payload_verifier_text = auth_payload_verifier.read_text(encoding="utf-8")
 for required in (
     '"auth-image-published"',
     '"auth-service"',
-    '"sha256:[0-9a-f]{64}"',
+    'sha256:[0-9a-f]{64}',
     '".github/workflows/release.yml"',
     '"^[1-9][0-9]*$"',
     '"source_run_attempt"',
