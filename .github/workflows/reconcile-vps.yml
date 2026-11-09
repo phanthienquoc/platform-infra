@@ -187,7 +187,7 @@ jobs:
         if: ${{ env.RECONCILE_MODE == 'apply' }}
         run: |
           set -euo pipefail
-          expected="platform-kubectl policy: rollout-status-v15-core-workloads"
+          expected="platform-kubectl policy: rollout-status-v16-decommission-runner-attestation"
           for attempt in $(seq 1 24); do
             if policy="$(sudo /usr/local/sbin/platform-kubectl policy-version 2>/dev/null)" && [[ "$policy" == "$expected" ]]; then
               echo "Runner policy v15 (core platform workloads) is ready."
