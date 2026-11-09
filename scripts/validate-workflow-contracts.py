@@ -1942,6 +1942,8 @@ for required in (
         fail(f"Exact TCE dispatch payload verifier is missing required schema rule: {required}")
 if "bash scripts/tests/verify-tce-dispatch-payload.test.sh" not in actions_validation:
     fail("GitHub Actions validation must execute exact TCE dispatch payload receiver tests.")
+if "bash scripts/tests/verify-auth-dispatch-payload.test.sh" not in manifest_validation or "bash scripts/tests/verify-tce-dispatch-payload.test.sh" not in manifest_validation:
+    fail("Manifest validation must execute both exact Auth and TCE dispatch payload receiver tests.")
 for required in (
     "name: Validate exact TCE release dispatch payload schema",
     "if: github.event_name == 'repository_dispatch' && github.event.action == 'tce-release-requested'",
