@@ -1903,6 +1903,14 @@ for required in (
 ):
     if required not in reconcile:
         fail(f"reconcile-vps is missing the GitOps promotion-run verification contract: {required}")
+if 'jq -r \' .total_count' in reconcile:
+    fail("Unexpected malformed promotion job count expression.")
+if "jq -r '.total_count // empty' <<< \"$jobs_json\"" not in reconcile:
+    fail("reconcile-vps must read the Actions jobs total_count before trusting promotion job evidence.")
+if "jq -r 'if (.jobs | type) == \"array\" then (.jobs | length) else -1 end' <<< \"$jobs_json\"" not in reconcile:
+    fail("reconcile-vps must require a valid Actions jobs array.")
+if '"$total_jobs" != "$returned_jobs"' not in reconcile:
+    fail("reconcile-vps must reject truncated or incomplete Actions job evidence.")
 
 dispatch_blocks = (
     promotion.split("      - name: Trigger shared VPS reconciliation\n", 1)[1].split("\n\n  promote-tce-digests:", 1)[0],
