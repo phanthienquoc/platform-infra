@@ -236,6 +236,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE: ${{ steps.digests.outputs.release }}
+          SOURCE_COMMIT: ${{ steps.digests.outputs.source_commit }}
+          PROMOTION_RUN_ID: ${{ github.run_id }}
+          PROMOTION_RUN_ATTEMPT: ${{ github.run_attempt }}
+          PROMOTION_HEAD_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           gh api --method POST -H 'Accept: application/vnd.github+json' \
@@ -243,7 +247,12 @@ jobs:
             -f event_type='gitops-promoted-ready' \
             -f 'client_payload[app]=microfe' \
             -f 'client_payload[component]=release' \
-            -f "client_payload[release]=$RELEASE"
+            -f "client_payload[release]=$RELEASE" \
+            -f "client_payload[source_commit]=$SOURCE_COMMIT" \
+            -f "client_payload[promotion_run_id]=$PROMOTION_RUN_ID" \
+            -f "client_payload[promotion_run_attempt]=$PROMOTION_RUN_ATTEMPT" \
+            -f 'client_payload[promotion_workflow_path]=.github/workflows/gitops-image-promotion.yml' \
+            -f "client_payload[promotion_head_sha]=$PROMOTION_HEAD_SHA"
 
   promote-tce-digests:
     if: github.event_name == 'repository_dispatch' && github.event.action == 'tce-release-requested'
@@ -423,6 +432,10 @@ jobs:
           RELEASE: ${{ github.event.client_payload.release }}
           WEB_DIGEST: ${{ github.event.client_payload.web_digest }}
           SERVICE_DIGEST: ${{ github.event.client_payload.service_digest }}
+          SOURCE_COMMIT: ${{ github.event.client_payload.source_head_sha }}
+          PROMOTION_RUN_ID: ${{ github.run_id }}
+          PROMOTION_RUN_ATTEMPT: ${{ github.run_attempt }}
+          PROMOTION_HEAD_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           FILE="apps/tce-dashboard/overlays/prod/kustomization.yaml"
@@ -448,7 +461,12 @@ jobs:
                 -f event_type="gitops-promoted-ready" \
                 -f "client_payload[app]=tce-dashboard" \
                 -f "client_payload[component]=release" \
-                -f "client_payload[release]=$RELEASE"
+                -f "client_payload[release]=$RELEASE" \
+                -f "client_payload[source_commit]=$SOURCE_COMMIT" \
+                -f "client_payload[promotion_run_id]=$PROMOTION_RUN_ID" \
+                -f "client_payload[promotion_run_attempt]=$PROMOTION_RUN_ATTEMPT" \
+                -f 'client_payload[promotion_workflow_path]=.github/workflows/gitops-image-promotion.yml' \
+                -f "client_payload[promotion_head_sha]=$PROMOTION_HEAD_SHA"
               echo "Triggered VPS reconciliation for TCE release $RELEASE."
               exit 0
             fi
@@ -711,6 +729,10 @@ jobs:
           APP: ${{ steps.input.outputs.app }}
           COMPONENT: ${{ steps.input.outputs.component }}
           RELEASE: ${{ steps.input.outputs.tag }}
+          SOURCE_COMMIT: ${{ steps.input.outputs.source_commit }}
+          PROMOTION_RUN_ID: ${{ github.run_id }}
+          PROMOTION_RUN_ATTEMPT: ${{ github.run_attempt }}
+          PROMOTION_HEAD_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           gh api --method POST \
@@ -719,6 +741,11 @@ jobs:
             -f event_type="gitops-promoted-ready" \
             -f client_payload\[app\]="$APP" \
             -f client_payload\[component\]="$COMPONENT" \
-            -f client_payload\[release\]="$RELEASE"
+            -f client_payload\[release\]="$RELEASE" \
+            -f client_payload\[source_commit\]="$SOURCE_COMMIT" \
+            -f client_payload\[promotion_run_id\]="$PROMOTION_RUN_ID" \
+            -f client_payload\[promotion_run_attempt\]="$PROMOTION_RUN_ATTEMPT" \
+            -f client_payload\[promotion_workflow_path\]=".github/workflows/gitops-image-promotion.yml" \
+            -f client_payload\[promotion_head_sha\]="$PROMOTION_HEAD_SHA"
           echo "Triggered VPS reconciliation for $APP release $RELEASE."
 # yamllint enable rule:line-length
