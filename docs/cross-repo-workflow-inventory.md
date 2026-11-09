@@ -1,3 +1,18 @@
+## 2026-11-10 04:03 ICT — fresh inspection and schedule evidence
+
+- Current master heads: Platform `827d8d442cf7de344be04a246e56ee2ee3148657`; TCE `aea2755f164186eb6172d9e11afece98227907f9`; Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
+- Open PRs: Platform #1314/#544/#541/#539 (draft); Authentication #76 (draft); none in TCE/Stock/Media.
+- Native Platform inspection #42694932077 succeeded at 20:38:40Z and auto-merged inspection-only PR #1546 at master SHA `827d8d44`. Snapshot `debug/vps-latest.md` generated 20:38:49Z; it was 24m26s old at checkpoint time. No production manifests changed.
+- Platform workflow_dispatch reconciliation #42695326631 succeeded with `mode=apply`, `target=all`, `ALLOW_IMAGE_CHANGES=false`: GHCR read preflight passed; Auth runtime Secret provisioned/verified; shared `ghcr-pull` unchanged; managed image-pull restart found no failures; TCE release pairing passed; drift=false and manifest apply skipped. TCE/Auth 0/0 maintenance, MicroFE active health passed, Keycloak skipped. Recovery controller #42695559771 passed and avoided duplicate fallback dispatch.
+- Latest native schedule IDs/gaps/budgets: reconcile #42664347392 / 37,823s / 2,700s; inspection #42694932077 / 39,672s / 4,500s; recovery #42657359651 / 37,669s / 2,700s; watchdog #42657625219 / 37,408s / 2,700s; TCE WF-06 #42689871258 / 37,834s / 1,500s; TCE WF-12 #42681246237 / 37,832s / 1,500s. All gaps exceed unchanged budgets. One fresh inspection tick is not cadence recovery. Issue #1497 remains open for administrator enqueue/delivery evidence.
+- TCE native WF-06 #42689871258 and manual fallback #42689940373 both failed strict HTTP 200 probes (all four endpoints returned 503). Keep strict checks; TCE/Auth remain intentional 0/0.
+- App CI: TCE WF-01/05/02 #42680305817/#42680305566/#42680305431 PASS; Stock CI #42610360402 PASS 7/7; Media CI #42539512417 PASS; Auth CI #42654579277 PASS. Stock scraper #42457182511 failed closed on missing `VNSTOCK_API_KEY`; owner action issue #42.
+- K3s: node Ready/ARM64; disk 56%, ~20 GiB free; ~19 GiB RAM; restart required. Media/MicroFE core 1/1; TCE/Auth/Keycloak 0/0; Stock desired Admin/Backend ImagePullBackOff on historical `12d63b4`; legacy Backend/Frontend remain 1/1. Only PVC/PV is `k3s-debug`; no Stock/Media snapshot refs. Media runner service and Listener remain active; external backup/retention/DNS and remote unregister remain unverified.
+- No new immutable GHCR publication or digest promotion. No production manifest apply, namespace/storage deletion, runner retirement, DNS/database mutation or host maintenance. TCE market-scan schedule unchanged.
+
+
+---
+
 ## 2026-11-10 03:10 ICT — TCE native tick and controlled reconciliation
 
 - Platform PR #1544 merged at `a3566640`; exact-head #42689845993 and post-merge #42689926885 passed. Current heads: Platform `a3566640`, TCE `aea2755f`, Stock `b1b5e177`, Media `dcd69869`, Auth `eab85fab`. Open drafts Platform #1314/#544/#541/#539 and Auth #76; no TCE/Stock/Media open PRs.
