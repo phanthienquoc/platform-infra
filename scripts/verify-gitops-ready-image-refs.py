@@ -32,7 +32,7 @@ APP_IMAGES = {
             "ghcr.io/phanthienquoc/microfe-ws",
         ),
     ),
-)
+}
 
 
 class ContractError(ValueError):
