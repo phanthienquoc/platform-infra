@@ -1259,7 +1259,7 @@ for required in (
     "run: bash scripts/verify-media-runner-retired.sh",
     "Run fresh read-only storage preflight",
     "Delete only the two approved namespaces",
-    "run: bash scripts/decommission-stock-media-namespaces.sh delete",
+    "bash scripts/decommission-stock-media-namespaces.sh delete",
     "environment: production",
 ):
     if required not in delete_job:
