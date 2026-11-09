@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: **2026-11-09 05:01 ICT / 2026-11-08 22:01 UTC**
+Last reviewed: **2026-11-09 07:08 ICT / 2026-11-09 00:08 UTC**
 
 This rolling tracker distinguishes native schedule events from manual, push, workflow_run and repository_dispatch fallbacks. Timestamped evidence is archived under `docs/cross-repo-deployment-checkpoints/`.
 
@@ -1225,3 +1225,10 @@ Platform #1487 post-merge validation passed; Platform master is `28dbb1d7efa63c8
 No production manifest apply, image promotion, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred. Latest read-only K3s snapshot remains inspection #42530192980: node Ready/ARM64; Media/MicroFE 1/1 digest-pinned; Stock Admin×2 and desired Backend on `12d63b4` still ImagePullBackOff without ARM64 manifest; TCE/Auth/Keycloak 0/0; Media runner active/enabled/listener-present; Stock/Media storage preflight clean but external backup/retention, DNS ownership and remote runner registration unverified. Auth runtime Secret was provisioned/verified by reconciliation #42530382496; shared `ghcr-pull` unchanged; drift=false; apply/promotion/rollout skipped.
 
 Exact next actions: (1) verify post-merge Stock CI #42533562194 to completion; (2) Stock owner supplies `VNSTOCK_API_KEY` and runs safe ingestion preflight separately from image publication; (3) GitHub administrator investigates native schedule delivery; (4) TCE/Auth owners decide activation/rollback; (5) Media owner completes runner, external-data and DNS evidence before protected decommission; (6) Platform operator schedules host maintenance separately. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only; TCE market-scan schedule unchanged.
+
+
+---
+
+## Latest cross-repo execution — 2026-11-09 07:08 ICT
+
+The current checkpoint and evidence are archived in [2026-11-09-0708-ict.md](cross-repo-deployment-checkpoints/2026-11-09-0708-ict.md). Key changes since 06:07 ICT: Platform inspection PR #1489 merged at ecafca5f594f9984baa294ee679afed6afd245bb; fresh read-only K3s snapshot #42537975671 generated at 00:01:52Z and validation #42538111845 passed; Stock master CI #42533562194 is now confirmed PASS; TCE PR #1031 adds fail-closed GHCR tag preflight and is still under exact-head CI review. Native Platform/TCE schedule cadence remains outside budget. The full run IDs, gaps, runtime state, ownership boundaries and exact next actions are in the checkpoint.
