@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: **2026-11-09 10:12 ICT / 2026-11-09 03:12 UTC**
+Last reviewed: **2026-11-09 11:00 ICT / 2026-11-09 04:00 UTC**
 
 This rolling tracker distinguishes native schedule events from manual, push, workflow_run and repository_dispatch fallbacks. Timestamped evidence is archived under `docs/cross-repo-deployment-checkpoints/`.
 
@@ -1517,3 +1517,64 @@ Current Platform master: `640eab00e13ff1460c47f394138598da98e096cb`. Open human-
 The Auth and TCE production manifests remain tag-pinned at master until their app-specific digest promotion jobs run and merge. Their authenticated ready events remain fail-closed until the digest-pinned manifest is present and registry tag-to-digest/ARM64 checks pass. MicroFE is already digest-pinned. This does not affect normal scheduled reconciliation.
 
 No production image publication/promotion, manifest apply, workload scaling, credential mutation, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
+
+
+## Execution checkpoint — 2026-11-09 11:00 ICT / 04:00 UTC
+
+### Current repository heads and open pull requests
+
+| Repository | Current master | Open PRs |
+|---|---|---|
+| Platform Infra | \`f23f272a746dd1991f868630c57c914f2ebac1b4\` | #1314, #544, #541, #539 (all draft / human decision) |
+| TCE Dashboard | \`ddf5811a7994aab08236028cff04e0a78ffd2e3e\` | None |
+| StockDividend | \`1a18cabf32c6cc5f85f4157b5142a6d9f0d9d9b5\` | None |
+| Media Generation | \`dcd698699c65ba6e73f6b43838975144777131c3\` | None |
+| Authentication | \`047abc08e123d8bde7678104899d00aa8782624a\` | #76 (draft / migration decision) |
+
+Open Platform draft heads were inspected: #1314 \`db152c9a17416d1a7f82165597dfe478321bd055\`, #544 \`c95e7daecb83b65577b54303427fe4ea81adfe06\`, #541 \`b8f7c6ba04e3d971336a899b2efd5894662083b3\`, and #539 \`2dc48b97017ecb08e49682633303a2f1d5e991a1\`. Their visible PR-triggered manifest validations (#42161859747, #38575430454, #38567431761 and #38548718033 respectively) completed successfully, but all remain drafts and are not deployment approval. Authentication #76 head \`f19cacb0bf2b454b3152bd3a501f6f88d0a14a58\` has visible CI #41329425940 PASS; it also remains draft. No draft was merged.
+
+### PR #1502 — root-scoped GitOps image parsing
+
+[PR #1502](https://github.com/phanthienquoc/platform-infra/pull/1502) was squash-merged at \`f23f272a746dd1991f868630c57c914f2ebac1b4\` from exact head \`51dd0b5e1c1bc804a0a24b4b57437175f19176f7\`, based on master \`26c22833a1485f7aef92dbb944d02479b85ae034\`.
+
+Review found that the previous image-ref validator searched all \`- name:\` lines after finding an \`images:\` line. A root \`images:\` section could be empty while an image-shaped item under a different Kustomize section was counted as an image transformer. The ready-event preflight could therefore extract a digest from the wrong section.
+
+The merged parser now:
+- Requires exactly one root-level \`images:\` section.
+- Parses only direct image entries within that section; unrelated \`- name:\` items in \`configMapGenerator\` and other sections are ignored.
+- Rejects nested/mis-scoped entries, empty image blocks, unsupported fields, duplicate fields and malformed indentation.
+- Keeps exact per-app allowlists, \`newName\` repository binding, one tag/digest pin per image and digest-only acceptance for ready events.
+- Adds one positive section-isolation case and four additional negative cases (5 positive extraction, 1 scope-isolation, 16 negative cases).
+
+Exact-head validation on \`51dd0b5e1c1bc804a0a24b4b57437175f19176f7\`:
+- \`validate-github-actions\` #42559803093 — PASS (actionlint, yamllint, shellcheck, ops regression, path-scoped deployment tests, image-change tests and workflow-contract checks).
+- \`validate-manifests\` #42559803103 — PASS (Kustomize render, Auth contract, secret policy, immutable image policy, isolated Keycloak and network boundaries).
+
+The earlier superseded head \`11ec4a907795a449c76a87b17a7f3b9af19b1f9e\` failed #42559716184 because the direct \`extract_digest\` self-test did not independently reject a redirected \`newName\`; that guard was restored on the final head and the exact-head checks passed. The final merge was protected by expected-head SHA and used squash. The connector exposes PR-triggered runs only; no post-merge push run or post-merge combined status was available for the merge SHA at this checkpoint. Do not claim post-merge CI PASS until independently observed.
+
+### Cross-repo publication and GitOps state
+
+- App-owned workflow-level GHCR overwrite guards remain merged in StockDividend #39/#40, TCE #1031, Authentication #90 and Media #74. They are not GHCR server-side immutable-tag enforcement. No production image publication or digest handoff is evidenced in this checkpoint.
+- Platform remains sole owner of production manifests, shared GHCR pull credentials, promotion provenance/digest/ARM64 verification, GitOps reconciliation, rollout and health.
+- StockDividend and Media Generation remain retired from active Platform GitOps ownership; their app repositories and packages are not deleted.
+- Current Auth and TCE production Kustomize overlays remain tag-pinned; the authenticated GitOps-ready event requires a digest-pinned manifest and exact source-tag-to-digest/ARM64 evidence, so their ready events remain fail-closed until promotion merges. MicroFE remains digest-pinned.
+- Last known reconciliation evidence remains workflow_dispatch #42546651537 (not native schedule): GHCR read access passed, Auth runtime Secret was provisioned/verified, shared \`ghcr-pull\` was unchanged, drift was false, and manifest apply/image promotion/rollout were skipped. This is not a fresh runtime check.
+
+### Native schedules and runtime evidence
+
+- Native schedule investigation remains open in [issue #1497](https://github.com/phanthienquoc/platform-infra/issues/1497). Its last authoritative native evidence recorded in the issue is through 01:59 UTC on 2026-11-09; no newer all-event schedule listing is exposed by the current connector. Schedule recovery is therefore unproven. Do not treat PR/push/workflow_dispatch/recovery events as native acceptance.
+- Preserve every existing cron expression and freshness budget. No TCE market-scan schedule change.
+- The current \`debug/vps-latest.md\` was generated at \`2026-11-09T01:54:48Z\`; at this checkpoint it is over three hours old and stale for rollout/decommission authorization. It last reported ARM64 node Ready, disk 56% (~21 GiB free), available RAM ~19 GiB and \`restart_required=yes\`.
+- That snapshot reported Media backend/frontend and MicroFE Shell/WS/NATS 1/1; Stock Admin×2 and desired Backend on \`12d63b4\` ImagePullBackOff due to missing ARM64 manifest; legacy Stock Backend/Frontend 1/1; TCE/Auth/Keycloak 0/0. Public OIDC probes returned 503; 0/0 is maintenance, not live health.
+- The dedicated Media runner service was active/enabled with \`Runner.Listener\` present. In-cluster Stock/Media PVC/PV/VolumeSnapshot preflight was clean, but this does not prove external database/object-storage backups, retention or DNS/provider ownership. The remote Media runner registration still requires the read-only audit-token check.
+- The protected \`decommission-stock-media.yml\` delete path was not run. It remains blocked by runner retirement/remote absence, external backup/retention review, authoritative DNS ownership review, fresh same-window storage plan, exact typed confirmations and protected production Environment approval.
+
+### Exact next actions
+
+1. GitHub administrator: investigate native schedule delivery under issue #1497; provide authoritative delayed/dropped/enqueue evidence without changing cron or budgets.
+2. Stock owner: provide \`VNSTOCK_API_KEY\`, run authenticated safe \`preflight_only=true\`, approve a current full-source-SHA ARM64 publication, and capture registry digest evidence before any Platform promotion.
+3. TCE/Auth owners: approve recovery/rollback plans; complete app-owned digest publication and Platform digest-promotion PRs before ready-event activation or replica restoration.
+4. Media owner/operator: verify the dedicated runner is idle, stop/disable/unregister only that runner, retain required logs, verify remote absence with \`MEDIA_RUNNER_AUDIT_TOKEN\`, and independently confirm external backup/retention and authoritative DNS ownership. Preserve the shared Platform runner.
+5. Platform operator: obtain a fresh read-only K3s inspection before any decommission decision; host package/reboot maintenance remains a separate approved window.
+
+No production image publication/promotion, production manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host reboot/upgrade occurred in this checkpoint. \`reconcile-vps.yml\` remains the sole production apply authority; \`inspect-vps.yml\` remains read-only. No direct SSH/Compose deployment authority was added. TCE market-scan schedule unchanged.
