@@ -1959,6 +1959,10 @@ for required in (
     "digest:",
     "not digest-pinned",
     "Retired or unsupported GitOps-ready application",
+    "validate_image_set",
+    "newName:",
+    "GitOps image set does not exactly match the allowlist",
+    "must resolve to the allowlisted repository",
 ):
     if required not in image_ref_validator:
         fail(f"GitOps-ready image-ref validator is missing fail-closed rule: {required}")
