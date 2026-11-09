@@ -199,6 +199,656 @@ jobs:
           # rollout must not rotate it unless every currently referenced GHCR package is readable.
           TARGET_APP=all GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" bash scripts/validate-ghcr-pull-access.sh
 
+      - name: Verify GitOps-ready release tags against current pinned digests
+        if: ${{ github.event_name == 'repository_dispatch' }}
+        env:
+          APP: ${{ github.event.client_payload.app }}
+          RELEASE_TAG: ${{ github.event.client_payload.release }}
+          SOURCE_COMMIT: ${{ github.event.client_payload.source_commit }}
+          GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}
+          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+        run: |
+          set -euo pipefail
+          refs_file="$RUNNER_TEMP/gitops-ready-image-refs.tsv"
+          python3 scripts/verify-gitops-ready-image-refs.py \\
+            --app "$APP" \\
+            --release "$RELEASE_TAG" \\
+            --source-commit "$SOURCE_COMMIT" > "$refs_file"
+          mapfile -t image_refs < "$refs_file"
+          if (( ${#image_refs[@]} == 0 )); then
+            echo "::error::No digest-pinned images were resolved for GitOps-ready app $APP."
+            exit 1
+          fi
+          for entry in "${image_refs[@]}"; do
+            IFS=
+        if: ${{ env.RECONCILE_MODE == 'apply' && (steps.scope.outputs.target_app == 'auth-service' || steps.scope.outputs.target_app == 'all') }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          MFA_ENCRYPTION_KEY: ${{ secrets.MFA_ENCRYPTION_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          for name in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY JWT_SECRET MFA_ENCRYPTION_KEY; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Missing required production Environment Secret: $name"
+              exit 1
+            fi
+          done
+          printf '%s\n%s\n%s\n%s\n' \
+            "$SUPABASE_URL" \
+            "$SUPABASE_SERVICE_ROLE_KEY" \
+            "$JWT_SECRET" \
+            "$MFA_ENCRYPTION_KEY" |
+            sudo /usr/local/sbin/platform-kubectl provision-auth-secret
+          unset SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY JWT_SECRET MFA_ENCRYPTION_KEY
+          sudo /usr/local/sbin/platform-kubectl verify-auth-secret
+
+      - name: Bootstrap GHCR pull credentials
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app != 'keycloak' && steps.scope.outputs.target_app != 'auth-shutdown' }}
+        env:
+          GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}
+          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$GHCR_USERNAME" || -z "$GHCR_TOKEN" ]]; then
+            echo "::error::Configure GHCR_READ_TOKEN with read:packages access to all private production images."
+            exit 1
+          fi
+          printf "%s\n%s\n" "$GHCR_USERNAME" "$GHCR_TOKEN" |
+            sudo /usr/local/sbin/platform-kubectl reconcile-ghcr-pull
+          echo "GHCR pull credentials reconciled across production GHCR namespaces."
+      - name: Restart target workloads blocked on image pulls
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app != 'keycloak' && steps.scope.outputs.target_app != 'auth-shutdown' }}
+        run: |
+          set -euo pipefail
+          sudo /usr/local/sbin/platform-kubectl restart-blocked-image-pulls "$TARGET_APP"
+      - name: Validate TCE release pairing
+        if: ${{ steps.scope.outputs.target_app != 'keycloak' && (steps.scope.outputs.target_app == 'all' || steps.scope.outputs.target_app == 'tce-dashboard') }}
+        run: |
+          set -euo pipefail
+          bash scripts/verify-tce-gitops-release.sh
+
+      - name: Apply Auth and Keycloak shutdown only
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app == 'auth-shutdown' }}
+        run: |
+          set -euo pipefail
+          # Apply only the dedicated Keycloak resource set, then stop Auth and Keycloak.
+          sudo /usr/local/sbin/platform-kubectl apply -k platform/keycloak
+          sudo /usr/local/sbin/platform-kubectl scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform
+
+      - name: Verify Auth and Keycloak shutdown state
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app == 'auth-shutdown' }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 24); do
+            all_zero=true
+            for deployment in microfe-auth keycloak; do
+              state="$(sudo /usr/local/sbin/platform-kubectl get deployment "$deployment" -n microfe-platform -o 'jsonpath={.spec.replicas} {.status.readyReplicas} {.status.updatedReplicas}')"
+              read -r desired ready updated <<< "$state"
+              if [[ "$desired" != "0" || "${ready:-0}" != "0" || "${updated:-0}" != "0" ]]; then
+                all_zero=false
+                echo "$deployment has not converged to desired/ready/updated=0: $state"
+              fi
+            done
+            auth_pods="$(sudo /usr/local/sbin/platform-kubectl get pods -n microfe-platform -l app=microfe-auth -o name)"
+            keycloak_pods="$(sudo /usr/local/sbin/platform-kubectl get pods -n microfe-platform -l app.kubernetes.io/name=keycloak -o name)"
+            if [[ "$all_zero" == true && -z "$auth_pods" && -z "$keycloak_pods" ]]; then
+              echo "Auth and Keycloak are scaled to zero with no matching pods remaining."
+              exit 0
+            fi
+            [[ -z "$auth_pods" ]] || printf 'Remaining Auth pods:\n%s\n' "$auth_pods"
+            [[ -z "$keycloak_pods" ]] || printf 'Remaining Keycloak pods:\n%s\n' "$keycloak_pods"
+            echo "Waiting for Auth/Keycloak shutdown convergence (attempt $attempt/24)..."
+            sleep 5
+          done
+          echo "::error::Auth/Keycloak shutdown did not converge to zero replicas and no matching pods within 120 seconds."
+          exit 1
+
+      - name: Preflight diff
+        id: preflight
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ "$TARGET_APP" = "auth-shutdown" ]; then
+            echo "Auth shutdown is a narrow scale-to-zero maintenance operation; no shared GitOps apply is permitted."
+            echo "drift=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$TARGET_APP" = "keycloak" ]; then
+            echo "Keycloak has a separate allowlisted reconcile path; shared environments/prod manifests remain untouched."
+            echo "drift=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          set +e
+          bash scripts/reconcile-vps.sh plan
+          rc=$?
+          set -e
+          if [ "$rc" -gt 1 ]; then
+            echo "Kubernetes diff failed with exit code $rc" >&2
+            echo "Diff prerequisites were verified immediately before this check." >&2
+            exit "$rc"
+          fi
+          if [ "$rc" -eq 1 ]; then
+            echo "Kubernetes drift detected; reconciliation will apply the repository state."
+            echo "drift=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Kubernetes state matches the repository."
+            echo "drift=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Guard workload image changes
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && env.ALLOW_IMAGE_CHANGES != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          bash scripts/guard-reconcile-images.sh check
+
+      - name: Apply production manifests
+        id: apply
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          bash scripts/reconcile-vps.sh apply
+
+      - name: Notify Telegram — production processing
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' }}
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing GitHub variable: TELEGRAM_BOT_TOKEN"; exit 1; }
+          test -n "$TELEGRAM_CHAT_ID" || { echo "Missing GitHub variable: TELEGRAM_CHAT_ID"; exit 1; }
+
+          TAG="${RELEASE_TAG:-$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')}"
+          test -n "$TAG" || TAG="unknown"
+
+          # Keep this template identical in structure to the rollout summary.
+          # Do not replace, collapse, or rewrite template fields dynamically.
+          printf -v MESSAGE '%s\n' \
+            "<pre>🔄 PRODUCTION • PROCESSING" \
+            "" \
+            "📦 App             $TARGET_APP" \
+            "🏷️ Release         $TAG" \
+            "" \
+            "✓ GitOps synced" \
+            "✓ VPS reconciliation" \
+            "⏳ Rollout in progress</pre>"
+
+          curl --fail-with-body -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" -d "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${MESSAGE}" -d "parse_mode=HTML"
+
+      - name: Publish TCE deployment started event
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' && (steps.scope.outputs.target_app == 'all' || steps.scope.outputs.target_app == 'tce-dashboard') }}
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          TAG="$RELEASE_TAG"
+          if [ -z "$TAG" ]; then
+            TAG="$(grep -A1 'name: ghcr.io/phanthienquoc/tce-dashboard/web' apps/tce-dashboard/overlays/prod/kustomization.yaml | awk '/newTag:/ {print $2}')"
+          fi
+          bash scripts/publish-microfe-deployment-event.sh deploying tce-dashboard "$TAG" deploying
+
+      - name: Verify cluster after reconciliation
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app != 'keycloak' }}
+        run: |
+          set -euo pipefail
+          sudo /usr/local/sbin/platform-kubectl get nodes -o wide
+          sudo /usr/local/sbin/platform-kubectl get pods -A -o wide
+      - name: Verify runner worktree remains clean
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(git status --porcelain)"
+          if [[ -n "$status" ]]; then
+            echo "::error::Reconciliation modified the checked-out repository; refusing to reuse a dirty self-hosted workspace."
+            printf '%s\\n' "$status"
+            exit 1
+          fi
+
+      - name: Verify drift cleared
+        id: verify_drift
+        if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' }}
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          diff_stderr="$(mktemp)"
+          trap 'rm -f "$diff_stderr"' EXIT
+          set +e
+          sudo /usr/local/sbin/platform-kubectl diff -k environments/prod 2>"$diff_stderr"
+          rc=$?
+          set -e
+          case "$rc" in
+            0) echo "Post-reconcile GitOps state is clean." ;;
+            1) echo "Post-reconcile drift remains; refusing to report reconciliation as healthy." >&2 ;;
+            *)
+              echo "Post-reconcile drift verification failed with exit code $rc." >&2
+              sed -n '1,120p' "$diff_stderr" >&2 || true
+              ;;
+          esac
+          exit "$rc"
+
+      - name: Fail if shared reconciliation failed
+        if: ${{ !cancelled() && env.RECONCILE_MODE == 'apply' }}
+        env:
+          PREFLIGHT_STATUS: ${{ steps.preflight.outcome }}
+          APPLY_STATUS: ${{ steps.apply.outcome }}
+          DRIFT_STATUS: ${{ steps.verify_drift.outcome }}
+          DRIFT: ${{ steps.preflight.outputs.drift }}
+        run: |
+          set -euo pipefail
+          if [ "$PREFLIGHT_STATUS" != "success" ]; then
+            echo "Shared reconciliation preflight did not succeed (status: ${PREFLIGHT_STATUS:-unknown}); refusing to report success." >&2
+            exit 1
+          fi
+          case "$DRIFT" in
+            true)
+              [ "$APPLY_STATUS" = "success" ] || { echo "Production manifest reconciliation failed." >&2; exit 1; }
+              [ "$DRIFT_STATUS" = "success" ] || { echo "Post-reconcile GitOps drift verification failed." >&2; exit 1; }
+              ;;
+            false)
+              echo "Preflight succeeded and no manifest drift was detected; apply was correctly skipped."
+              ;;
+            *)
+              echo "Shared reconciliation preflight did not produce a valid drift result; refusing to report success." >&2
+              exit 1
+              ;;
+          esac
+          echo "Shared manifest reconciliation passed; application lanes may proceed."
+
+  deploy-auth-service:
+    name: Deploy lane — Auth
+    needs: reconcile
+    if: ${{ needs.reconcile.result == 'success' && needs.reconcile.outputs.mode == 'apply' && (needs.reconcile.outputs.target_app == 'all' || needs.reconcile.outputs.target_app == 'auth-service') }}
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    environment: production
+    concurrency:
+      group: deploy-auth-service
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify clean runner worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(git status --porcelain)"
+          if [[ -n "$status" ]]; then
+            echo "::error::Checkout is not clean; refusing to use persistent self-hosted workspace."
+            printf '%s\\n' "$status"
+            exit 1
+          fi
+      - name: Verify Auth runtime Secret
+        run: sudo /usr/local/sbin/platform-kubectl verify-auth-secret
+      - name: Verify Auth rollout
+        if: ${{ needs.reconcile.outputs.drift == 'true' }}
+        run: sudo /usr/local/sbin/platform-kubectl rollout status deployment/microfe-auth -n microfe-platform --timeout=180s
+      - name: Verify Auth HTTPS
+        run: |
+          set -euo pipefail
+          tls_output="$(printf '' | openssl s_client -connect auth.mrcute.space:443 -servername auth.mrcute.space -verify_return_error 2>&1 || true)"
+          printf '%s\\n' "$tls_output" | grep -q "Verify return code: 0 (ok)"
+          printf '%s\\n' "$tls_output" | grep -Eq "subject=.*CN|subject=.*auth.mrcute.space|DNS:auth.mrcute.space"
+      - name: Verify Auth workload health
+        env:
+          TARGET_APP: auth-service
+        run: |
+          set -euo pipefail
+          bash scripts/verify-workload-health.sh
+      - name: Verify runner worktree remains clean
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(git status --porcelain)"
+          if [[ -n "$status" ]]; then
+            echo "::error::Reconciliation modified the checked-out repository; refusing to reuse a dirty self-hosted workspace."
+            printf '%s\\n' "$status"
+            exit 1
+          fi
+
+  deploy-microfe:
+    name: Deploy lane — MicroFE Shell / WS
+    needs: reconcile
+    if: ${{ needs.reconcile.result == 'success' && needs.reconcile.outputs.mode == 'apply' && (needs.reconcile.outputs.target_app == 'all' || needs.reconcile.outputs.target_app == 'microfe') }}
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    environment: production
+    concurrency:
+      group: deploy-microfe
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify clean runner worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(git status --porcelain)"
+          if [[ -n "$status" ]]; then
+            echo "::error::Checkout is not clean; refusing to use persistent self-hosted workspace."
+            printf '%s\\n' "$status"
+            exit 1
+          fi
+      - name: Verify MicroFE Shell and WS rollout
+        if: ${{ needs.reconcile.outputs.drift == 'true' }}
+        run: |
+          set -u
+          rc=0
+          sudo /usr/local/sbin/platform-kubectl rollout status deployment/microfe-shell -n microfe-platform --timeout=180s || rc=1
+          sudo /usr/local/sbin/platform-kubectl rollout status deployment/microfe-ws -n microfe-platform --timeout=180s || rc=1
+          exit "$rc"
+      - name: Verify MicroFE workload health
+        env:
+          TARGET_APP: microfe
+        run: |
+          set -euo pipefail
+          bash scripts/verify-workload-health.sh
+      - name: Verify runner worktree remains clean
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(git status --porcelain)"
+          if [[ -n "$status" ]]; then
+            echo "::error::Reconciliation modified the checked-out repository; refusing to reuse a dirty self-hosted workspace."
+            printf '%s\\n' "$status"
+            exit 1
+          fi
+
+  deploy-keycloak:
+    name: Deploy lane — Keycloak SSO
+    needs: reconcile
+    if: ${{ needs.reconcile.result == 'success' && needs.reconcile.outputs.mode == 'apply' && needs.reconcile.outputs.target_app == 'keycloak' }}
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    environment: production
+    concurrency:
+      group: deploy-keycloak
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify clean runner worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(git status --porcelain)"
+          if [[ -n "$status" ]]; then
+            echo "::error::Checkout is not clean; refusing to use persistent self-hosted workspace."
+            printf '%s\\n' "$status"
+            exit 1
+          fi
+      - name: Provision Keycloak runtime Secret
+        env:
+          KEYCLOAK_DB_URL: ${{ secrets.KEYCLOAK_DB_URL }}
+          KEYCLOAK_DB_USERNAME: ${{ secrets.KEYCLOAK_DB_USERNAME }}
+          KEYCLOAK_DB_PASSWORD: ${{ secrets.KEYCLOAK_DB_PASSWORD }}
+          KEYCLOAK_ADMIN_USERNAME: ${{ secrets.KEYCLOAK_ADMIN_USERNAME }}
+          KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          for name in KEYCLOAK_DB_URL KEYCLOAK_DB_USERNAME KEYCLOAK_DB_PASSWORD KEYCLOAK_ADMIN_USERNAME KEYCLOAK_ADMIN_PASSWORD; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Missing required production Environment Secret: $name"
+              exit 1
+            fi
+          done
+          [[ "$KEYCLOAK_DB_USERNAME" == "keycloak_runtime.gtqovpusfyyvxpeezxlo" ]] || { echo "::error::KEYCLOAK_DB_USERNAME must be keycloak_runtime.gtqovpusfyyvxpeezxlo; do not deploy with the project owner role."; exit 1; }
+          [[ "$KEYCLOAK_DB_URL" == "jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require" ]] || { echo "::error::Unexpected Keycloak JDBC target; refusing deploy."; exit 1; }
+          [[ "${#KEYCLOAK_DB_PASSWORD}" -ge 32 && "${#KEYCLOAK_ADMIN_PASSWORD}" -ge 24 ]] || { echo "::error::Keycloak passwords do not meet minimum length requirements."; exit 1; }
+          printf '%s\n%s\n%s\n%s\n%s\n' "$KEYCLOAK_DB_URL" "$KEYCLOAK_DB_USERNAME" "$KEYCLOAK_DB_PASSWORD" "$KEYCLOAK_ADMIN_USERNAME" "$KEYCLOAK_ADMIN_PASSWORD" |
+            sudo /usr/local/sbin/platform-kubectl provision-keycloak-secret
+          unset KEYCLOAK_DB_URL KEYCLOAK_DB_USERNAME KEYCLOAK_DB_PASSWORD KEYCLOAK_ADMIN_USERNAME KEYCLOAK_ADMIN_PASSWORD
+          sudo /usr/local/sbin/platform-kubectl verify-keycloak-secret
+      - name: Validate SSO DNS before issuing TLS
+        run: |
+          set -euo pipefail
+          getent ahostsv4 sso.mrcute.space >/dev/null || { echo "::error::sso.mrcute.space does not currently resolve over IPv4."; exit 1; }
+      - name: Apply only Keycloak resources
+        run: sudo /usr/local/sbin/platform-kubectl apply -k platform/keycloak
+      - name: Verify Keycloak rollout
+        run: sudo /usr/local/sbin/platform-kubectl rollout status deployment/keycloak -n microfe-platform --timeout=300s
+      - name: Verify Keycloak workload health
+        env:
+          TARGET_APP: keycloak
+        run: |
+          set -euo pipefail
+          bash scripts/verify-workload-health.sh
+      - name: Provision and verify mrcute self-registration realm
+        env:
+          KEYCLOAK_ADMIN_USERNAME: ${{ secrets.KEYCLOAK_ADMIN_USERNAME }}
+          KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          python3 scripts/provision-keycloak-realm.py
+          python3 scripts/verify-keycloak-tce-client.py
+          unset KEYCLOAK_ADMIN_USERNAME KEYCLOAK_ADMIN_PASSWORD
+      - name: Verify public OIDC discovery
+        run: |
+          set -euo pipefail
+          response="$(mktemp)"
+          trap 'rm -f "$response"' EXIT
+          for attempt in $(seq 1 18); do
+            if curl --fail --silent --show-error --max-time 10 https://sso.mrcute.space/realms/master/.well-known/openid-configuration -o "$response"; then
+              python3 - "$response" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+          data = json.loads(Path(sys.argv[1]).read_text())
+          issuer = data.get("issuer", "")
+          if issuer != "https://sso.mrcute.space/realms/master":
+              raise SystemExit("OIDC discovery returned an unexpected issuer.")
+          required = ("authorization_endpoint", "token_endpoint", "jwks_uri")
+          if not all(data.get(key) for key in required):
+              raise SystemExit("OIDC discovery document is missing required endpoints.")
+          print("OIDC discovery passed; issuer and essential endpoints verified.")
+          PY
+              exit 0
+            fi
+            echo "Waiting for public OIDC discovery (attempt $attempt/18)..."
+            sleep 10
+          done
+          echo "::error::Public OIDC discovery did not become ready." >&2
+          exit 1
+      - name: Verify runner worktree remains clean
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(git status --porcelain)"
+          if [[ -n "$status" ]]; then
+            echo "::error::Reconciliation modified the checked-out repository; refusing to reuse a dirty self-hosted workspace."
+            printf '%s\\n' "$status"
+            exit 1
+          fi
+
+  deploy-tce-dashboard:
+    name: Deploy lane — TCE Dashboard
+    needs: reconcile
+    if: ${{ needs.reconcile.result == 'success' && needs.reconcile.outputs.mode == 'apply' && (needs.reconcile.outputs.target_app == 'all' || needs.reconcile.outputs.target_app == 'tce-dashboard') }}
+    runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
+    environment: production
+    concurrency:
+      group: deploy-tce-dashboard
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify clean runner worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(git status --porcelain)"
+          if [[ -n "$status" ]]; then
+            echo "::error::Checkout is not clean; refusing to use persistent self-hosted workspace."
+            printf '%s\\n' "$status"
+            exit 1
+          fi
+      - name: Verify TCE GitOps images
+        run: |
+          set -euo pipefail
+          bash scripts/verify-tce-gitops-images.sh
+      - name: Verify TCE rollout
+        if: ${{ needs.reconcile.outputs.drift == 'true' }}
+        run: |
+          set -u
+          rc=0
+          sudo /usr/local/sbin/platform-kubectl rollout status deployment/tce-service -n tce-prod --timeout=180s || rc=1
+          sudo /usr/local/sbin/platform-kubectl rollout status deployment/tce-frontend -n tce-prod --timeout=180s || rc=1
+          exit "$rc"
+      - name: Verify TCE workload health
+        env:
+          TARGET_APP: tce-dashboard
+        run: |
+          set -euo pipefail
+          bash scripts/verify-workload-health.sh
+      - name: Verify runner worktree remains clean
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(git status --porcelain)"
+          if [[ -n "$status" ]]; then
+            echo "::error::Reconciliation modified the checked-out repository; refusing to reuse a dirty self-hosted workspace."
+            printf '%s\\n' "$status"
+            exit 1
+          fi
+
+  deployment-lane-summary:
+    name: Deployment lane summary / final gate
+    needs:
+      - reconcile
+      - deploy-auth-service
+      - deploy-microfe
+      - deploy-tce-dashboard
+      - deploy-keycloak
+    if: ${{ always() && needs.reconcile.result == 'success' && needs.reconcile.outputs.mode == 'apply' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any targeted lane failed
+        env:
+          TARGET_APP: ${{ needs.reconcile.outputs.target_app }}
+          AUTH_RESULT: ${{ needs.deploy-auth-service.result }}
+          MICROFE_RESULT: ${{ needs.deploy-microfe.result }}
+          TCE_RESULT: ${{ needs.deploy-tce-dashboard.result }}
+          KEYCLOAK_RESULT: ${{ needs.deploy-keycloak.result }}
+        run: |
+          set -euo pipefail
+          failed=0
+          check_lane() {
+            local app="$1" result="$2"
+            if [ "$TARGET_APP" = "all" ] || [ "$TARGET_APP" = "$app" ]; then
+              if [ "$result" != "success" ]; then
+                echo "::error::Deployment lane $app finished with result: $result"
+                failed=1
+              else
+                echo "Deployment lane $app succeeded."
+              fi
+            fi
+          }
+          check_lane auth-service "$AUTH_RESULT"
+          check_lane microfe "$MICROFE_RESULT"
+          check_lane tce-dashboard "$TCE_RESULT"
+          if [ "$TARGET_APP" = "keycloak" ]; then
+            if [ "$KEYCLOAK_RESULT" != "success" ]; then
+              echo "::error::Deployment lane keycloak finished with result: $KEYCLOAK_RESULT"
+              failed=1
+            else
+              echo "Deployment lane keycloak succeeded."
+            fi
+          fi
+          [ "$failed" -eq 0 ] || exit 1
+          echo "All targeted deployment lanes passed."
+# yamllint enable rule:line-length
+
+  notify-recovery-controller:
+    name: Trigger inspection recovery after reconciliation
+    needs:
+      - reconcile
+      - deployment-lane-summary
+    if: ${{ always() && needs.reconcile.result == 'success' && needs.reconcile.outputs.mode == 'apply' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Dispatch recovery controller after all application lanes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ github.run_id }}
+          SOURCE_HEAD_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]] || {
+            echo "::error::Invalid source reconciliation run id."
+            exit 1
+          }
+          [[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || {
+            echo "::error::Invalid source reconciliation SHA."
+            exit 1
+          }
+          current_run="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_RUN_ID}")"
+          started_at="$(jq -r '.run_started_at // .created_at // empty' <<< "$current_run")"
+          [[ -n "$started_at" ]] || {
+            echo "::error::Unable to resolve source reconciliation start time from Actions API."
+            exit 1
+          }
+          gh workflow run recover-stale-ops.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref master \
+            -f "source_run_id=$SOURCE_RUN_ID" \
+            -f "source_head_sha=$SOURCE_HEAD_SHA"
+          expected_display_title="Recover Stale Scheduled Ops — workflow_dispatch / source $SOURCE_RUN_ID"
+          for attempt in $(seq 1 6); do
+            runs="$(
+              gh api -X GET \
+                "repos/${GITHUB_REPOSITORY}/actions/workflows/recover-stale-ops.yml/runs" \
+                -F event=workflow_dispatch -F branch=master -F per_page=100
+            )"
+            dispatched_run="$(jq -c --arg started "$started_at" --arg source_run "$SOURCE_RUN_ID" '
+              [.workflow_runs[] | select(
+                .event == "workflow_dispatch"
+                and .path == ".github/workflows/recover-stale-ops.yml"
+                and .head_branch == "master"
+                and .display_title == ("Recover Stale Scheduled Ops — workflow_dispatch / source " + $source_run)
+                and .created_at >= $started
+              )] | sort_by(.created_at) | last // empty
+            ' <<< "$runs")"
+            if [[ -n "$dispatched_run" ]]; then
+              run_id="$(jq -r '.id' <<< "$dispatched_run")"
+              run_url="$(jq -r '.html_url' <<< "$dispatched_run")"
+              echo "Verified post-reconciliation recovery dispatch for source #$SOURCE_RUN_ID: #$run_id $run_url ($expected_display_title)"
+              exit 0
+            fi
+            echo "Waiting for recovery controller dispatch correlation (attempt $attempt/6)."
+            sleep 5
+          done
+          echo "::error::GitHub did not create a recovery-controller workflow_dispatch run for source reconciliation #$SOURCE_RUN_ID."
+          exit 1
+\\t' read -r image tag digest <<< "$entry"
+            [[ "$image" == ghcr.io/phanthienquoc/* ]] || {
+              echo "::error::Unexpected image repository in GitOps-ready manifest: $image"
+              exit 1
+            }
+            GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" \\
+              GHCR_IMAGE_REFERENCE="$image:$tag" GHCR_EXPECTED_DIGEST="$digest" \\
+              bash scripts/validate-ghcr-image-reference.sh
+            GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" \\
+              GHCR_IMAGE_REFERENCE="$image@$digest" \\
+              bash scripts/validate-ghcr-image-reference.sh
+          done
+
       - name: Provision Auth runtime Secret from platform-infra Environment
         if: ${{ env.RECONCILE_MODE == 'apply' && (steps.scope.outputs.target_app == 'auth-service' || steps.scope.outputs.target_app == 'all') }}
         env:
