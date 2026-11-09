@@ -1,8 +1,20 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: **2026-11-09 14:12 ICT / 2026-11-09 07:12 UTC**
+Last reviewed: **2026-11-09 15:15 ICT / 2026-11-09 08:15 UTC**
 
 This rolling tracker distinguishes native schedule events from manual, push, workflow_run and repository_dispatch fallbacks. Timestamped evidence is archived under `docs/cross-repo-deployment-checkpoints/`.
+
+## Publisher run-attempt provenance — 2026-11-09 15:15 ICT / 08:15 UTC
+
+- TCE PR #1032 squash-merged at 65af89f69ffe0d844a9b63e2434bc3f8cedfebb7 from exact head d9b5dc6995555f62c2b368e68d054666edfbfd38. Exact-head WF-01P #42585765728, WF-02 #42585765734, WF-05 #42585765722 and WF-08B #42585865835 all PASS.
+- Authentication PR #91 squash-merged at b71834758d278e50e6ce07b5086fe45e9d9b3350 from exact head 00ce65bb68d06570f49643e8d788c1eb9d407d99. Exact-head auth-service-ci #42585818369 PASS.
+- Platform PR #1511 squash-merged at 3d9063a8a233092e312bd1acc1100017e89147f4 from exact head ab8d7daa5cef14fb58d42b5a10e09fd38d47fc06. Exact-head validate-github-actions #42587040047 PASS and validate-manifests #42587039974 PASS. Earlier exact-head attempts exposed corrected workflow-contract assertions and one corrected MicroFE invalid-input fixture; only the final exact-head checks are acceptance evidence.
+- Current masters: Platform 3d9063a8; TCE 65af89f6; StockDividend 1a18cabf; Media Generation dcd69869; Authentication b7183475.
+- Active app publishers now include positive source_run_attempt: TCE WF-03 and WF-08B use GITHUB_RUN_ATTEMPT; Auth release uses github.run_attempt. Platform compares the payload value with run_attempt from the public Actions run API before accepting TCE, MicroFE or Auth promotion. Missing, malformed, non-positive or mismatched attempts fail closed. Regression tests cover missing and mismatched attempts.
+- TCE, Auth and Platform PR checks were verified on the exact heads above. The connected run/status view does not expose post-merge push/schedule/dispatch runs for the new master commits; post-merge CI is therefore not claimed.
+- Open human-decision drafts remain Platform #1314/#544/#541/#539 and Authentication #76. TCE, StockDividend and Media Generation have no open PRs.
+
+No production release dispatch, GHCR publication, GitOps digest promotion, manifest apply, rollout, scale, namespace deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred. TCE market-scan schedule unchanged.
 
 ## Post-merge and fresh-inspection delta — 2026-11-09 14:12 ICT / 07:12 UTC
 
