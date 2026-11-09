@@ -4,6 +4,7 @@ set -euo pipefail
 SOURCE_APP="${SOURCE_APP:-}"
 SOURCE_REPOSITORY="${SOURCE_REPOSITORY:-}"
 SOURCE_RUN_ID="${SOURCE_RUN_ID:-}"
+SOURCE_RUN_ATTEMPT="${SOURCE_RUN_ATTEMPT:-}"
 SOURCE_WORKFLOW_PATH="${SOURCE_WORKFLOW_PATH:-}"
 SOURCE_EVENT="${SOURCE_EVENT:-}"
 SOURCE_HEAD_SHA="${SOURCE_HEAD_SHA:-}"
@@ -19,6 +20,7 @@ fail() {
 [[ "$SOURCE_APP" == "microfe" ]] || fail "MicroFE publisher app is not approved."
 [[ "$SOURCE_REPOSITORY" == "phanthienquoc/TCE-dashboard" ]] || fail "MicroFE publisher repository is not approved."
 [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]] || fail "MicroFE publisher run ID must be numeric."
+[[ "$SOURCE_RUN_ATTEMPT" =~ ^[1-9][0-9]*$ ]] || fail "MicroFE publisher run attempt must be a positive integer."
 [[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/wf-08b-tce-microfe-build-publish.yml" ]] || fail "MicroFE publisher workflow path is not approved."
 [[ "$SOURCE_EVENT" == "push" || "$SOURCE_EVENT" == "workflow_dispatch" ]] || fail "MicroFE publisher event must be push or workflow_dispatch."
 [[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "MicroFE publisher head must be a full 40-character SHA."
@@ -52,6 +54,7 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   fi
 
   run_id="$(jq -r '.id // empty' <<< "$source_run")"
+  run_attempt="$(jq -r '.run_attempt // empty' <<< "$source_run")"
   repository="$(jq -r '.repository.full_name // empty' <<< "$source_run")"
   head_repository="$(jq -r '.head_repository.full_name // empty' <<< "$source_run")"
   workflow_path="$(jq -r '.path // empty' <<< "$source_run")"
@@ -62,6 +65,7 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   conclusion="$(jq -r '.conclusion // empty' <<< "$source_run")"
 
   [[ "$run_id" == "$SOURCE_RUN_ID" ]] || fail "GitHub Actions returned a different MicroFE source run ID."
+  [[ "$run_attempt" == "$SOURCE_RUN_ATTEMPT" ]] || fail "MicroFE source run attempt does not match the dispatch payload."
   [[ "$repository" == "$SOURCE_REPOSITORY" && "$head_repository" == "$SOURCE_REPOSITORY" ]] || fail "MicroFE source run repository identity does not match."
   [[ "$workflow_path" == "$SOURCE_WORKFLOW_PATH" ]] || fail "MicroFE source run #$SOURCE_RUN_ID used an unexpected workflow path."
   [[ "$event" == "$SOURCE_EVENT" ]] || fail "MicroFE source run #$SOURCE_RUN_ID event does not match the dispatch payload."
@@ -126,7 +130,7 @@ REQUIRED_JOBS
     }
   fi
 
-  echo "Verified MicroFE publisher provenance: repository=$repository workflow=$workflow_path event=$event branch=$branch run=$run_id sha=$head_sha status=$status."
+  echo "Verified MicroFE publisher provenance: repository=$repository workflow=$workflow_path event=$event branch=$branch run=$run_id attempt=$run_attempt sha=$head_sha status=$status."
   echo "Verified all required MicroFE tests and immutable image-publish jobs completed successfully."
   exit 0
 done

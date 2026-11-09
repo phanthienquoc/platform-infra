@@ -121,6 +121,7 @@ jobs:
           SOURCE_APP: ${{ github.event.client_payload.app }}
           SOURCE_REPOSITORY: ${{ github.event.client_payload.source_repository }}
           SOURCE_RUN_ID: ${{ github.event.client_payload.source_run_id }}
+          SOURCE_RUN_ATTEMPT: ${{ github.event.client_payload.source_run_attempt }}
           SOURCE_WORKFLOW_PATH: ${{ github.event.client_payload.source_workflow_path }}
           SOURCE_EVENT: ${{ github.event.client_payload.source_event }}
           SOURCE_HEAD_SHA: ${{ github.event.client_payload.source_head_sha }}
@@ -292,6 +293,7 @@ jobs:
           WEB_DIGEST: ${{ github.event.client_payload.web_digest }}
           SERVICE_DIGEST: ${{ github.event.client_payload.service_digest }}
           SOURCE_RUN_ID: ${{ github.event.client_payload.source_run_id }}
+          SOURCE_RUN_ATTEMPT: ${{ github.event.client_payload.source_run_attempt }}
           SOURCE_WORKFLOW_PATH: ${{ github.event.client_payload.source_workflow_path }}
           SOURCE_EVENT: ${{ github.event.client_payload.source_event }}
           SOURCE_HEAD_SHA: ${{ github.event.client_payload.source_head_sha }}
@@ -506,6 +508,7 @@ jobs:
           EVENT_AUTH_DIGEST: ${{ github.event.client_payload.auth_digest }}
           EVENT_RELEASE: ${{ github.event.client_payload.release }}
           EVENT_SOURCE_RUN_ID: ${{ github.event.client_payload.source_run_id }}
+          EVENT_SOURCE_RUN_ATTEMPT: ${{ github.event.client_payload.source_run_attempt }}
           EVENT_SOURCE_WORKFLOW_PATH: ${{ github.event.client_payload.source_workflow_path }}
           EVENT_SOURCE_EVENT: ${{ github.event.client_payload.source_event }}
           EVENT_SOURCE_HEAD_SHA: ${{ github.event.client_payload.source_head_sha }}
@@ -525,6 +528,7 @@ jobs:
           AUTH_DIGEST="${EVENT_AUTH_DIGEST:-$INPUT_AUTH_DIGEST}"
           SOURCE_COMMIT="${EVENT_COMMIT:-$INPUT_SOURCE_COMMIT}"
           SOURCE_RUN_ID=""
+          SOURCE_RUN_ATTEMPT=""
           SOURCE_WORKFLOW_PATH=""
           SOURCE_EVENT=""
           SOURCE_HEAD_SHA=""
@@ -535,6 +539,7 @@ jobs:
             SOURCE_COMMIT="$EVENT_COMMIT"
             AUTH_DIGEST="$EVENT_AUTH_DIGEST"
             SOURCE_RUN_ID="$EVENT_SOURCE_RUN_ID"
+            SOURCE_RUN_ATTEMPT="$EVENT_SOURCE_RUN_ATTEMPT"
             SOURCE_WORKFLOW_PATH="$EVENT_SOURCE_WORKFLOW_PATH"
             SOURCE_EVENT="$EVENT_SOURCE_EVENT"
             SOURCE_HEAD_SHA="$EVENT_SOURCE_HEAD_SHA"
@@ -542,6 +547,7 @@ jobs:
             [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Auth source commit must be a full 40-character SHA"; exit 1; }
             [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{40}$ && "$TAG" == *-"$SOURCE_COMMIT" ]] || { echo "::error::Auth release tag must contain the full source SHA"; exit 1; }
             [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]] || { echo "::error::Auth source run ID must be numeric"; exit 1; }
+            [[ "$SOURCE_RUN_ATTEMPT" =~ ^[1-9][0-9]*$ ]] || { echo "::error::Auth source run attempt must be a positive integer"; exit 1; }
             [[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/release.yml" ]] || { echo "::error::Auth source workflow path is not approved"; exit 1; }
             [[ "$SOURCE_EVENT" == "workflow_dispatch" ]] || { echo "::error::Auth production publisher must originate from workflow_dispatch"; exit 1; }
             [[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ && "$SOURCE_HEAD_SHA" == "$SOURCE_COMMIT" ]] || { echo "::error::Auth source SHA must match the immutable image commit"; exit 1; }
@@ -591,6 +597,7 @@ jobs:
             echo "auth_digest=$AUTH_DIGEST"
             echo "source_commit=$SOURCE_COMMIT"
             echo "source_run_id=$SOURCE_RUN_ID"
+            echo "source_run_attempt=$SOURCE_RUN_ATTEMPT"
             echo "source_workflow_path=$SOURCE_WORKFLOW_PATH"
             echo "source_event=$SOURCE_EVENT"
             echo "source_head_sha=$SOURCE_HEAD_SHA"
@@ -600,6 +607,7 @@ jobs:
         if: ${{ github.event_name == 'repository_dispatch' && github.event.action == 'auth-image-published' }}
         env:
           SOURCE_RUN_ID: ${{ steps.input.outputs.source_run_id }}
+          SOURCE_RUN_ATTEMPT: ${{ steps.input.outputs.source_run_attempt }}
           SOURCE_WORKFLOW_PATH: ${{ steps.input.outputs.source_workflow_path }}
           SOURCE_EVENT: ${{ steps.input.outputs.source_event }}
           SOURCE_HEAD_SHA: ${{ steps.input.outputs.source_head_sha }}

@@ -2,6 +2,7 @@
 set -euo pipefail
 
 SOURCE_RUN_ID="${SOURCE_RUN_ID:-}"
+SOURCE_RUN_ATTEMPT="${SOURCE_RUN_ATTEMPT:-}"
 SOURCE_WORKFLOW_PATH="${SOURCE_WORKFLOW_PATH:-}"
 SOURCE_EVENT="${SOURCE_EVENT:-}"
 SOURCE_HEAD_SHA="${SOURCE_HEAD_SHA:-}"
@@ -15,6 +16,7 @@ fail() {
 }
 
 [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]] || fail "Auth source run ID must be numeric."
+[[ "$SOURCE_RUN_ATTEMPT" =~ ^[1-9][0-9]*$ ]] || fail "Auth source run attempt must be a positive integer."
 [[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/release.yml" ]] || fail "Auth source workflow path is not approved."
 [[ "$SOURCE_EVENT" == "workflow_dispatch" ]] || fail "Auth production publisher must originate from workflow_dispatch."
 [[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "Auth source head must be a full 40-character SHA."
@@ -39,6 +41,7 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   fi
 
   run_id="$(jq -r '.id // empty' <<< "$source_run")"
+  run_attempt="$(jq -r '.run_attempt // empty' <<< "$source_run")"
   repository="$(jq -r '.repository.full_name // empty' <<< "$source_run")"
   head_repository="$(jq -r '.head_repository.full_name // empty' <<< "$source_run")"
   workflow_path="$(jq -r '.path // empty' <<< "$source_run")"
@@ -49,6 +52,7 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   conclusion="$(jq -r '.conclusion // empty' <<< "$source_run")"
 
   [[ "$run_id" == "$SOURCE_RUN_ID" ]] || fail "GitHub Actions returned a different Auth run ID."
+  [[ "$run_attempt" == "$SOURCE_RUN_ATTEMPT" ]] || fail "Auth source run attempt does not match the dispatch payload."
   [[ "$repository" == "phanthienquoc/phanthienquoc-authentication" && "$head_repository" == "phanthienquoc/phanthienquoc-authentication" ]] || fail "Auth source run repository identity does not match."
   [[ "$workflow_path" == "$SOURCE_WORKFLOW_PATH" ]] || fail "Auth source run #$SOURCE_RUN_ID used an unexpected workflow path."
   [[ "$event" == "$SOURCE_EVENT" ]] || fail "Auth source run #$SOURCE_RUN_ID event does not match the dispatch payload."
@@ -102,7 +106,7 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
       verify_step_success "Build and publish ARM64 image with version and SHA tags" "Verify published digest and ARM64 manifest"
       verify_step_success "Build and publish ARM64 image with version and SHA tags" "Request Auth image promotion in platform-infra"
 
-      echo "Verified successful Auth publisher run #$SOURCE_RUN_ID: workflow=$workflow_path event=$event branch=$branch sha=$head_sha; application verification, ARM64 publication, digest validation and Platform dispatch succeeded."
+      echo "Verified successful Auth publisher run #$SOURCE_RUN_ID attempt=$run_attempt: workflow=$workflow_path event=$event branch=$branch sha=$head_sha; application verification, ARM64 publication, digest validation and Platform dispatch succeeded."
       exit 0
       ;;
     queued|in_progress)

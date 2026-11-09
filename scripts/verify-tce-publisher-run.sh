@@ -2,6 +2,7 @@
 set -euo pipefail
 
 SOURCE_RUN_ID="${SOURCE_RUN_ID:-}"
+SOURCE_RUN_ATTEMPT="${SOURCE_RUN_ATTEMPT:-}"
 SOURCE_WORKFLOW_PATH="${SOURCE_WORKFLOW_PATH:-}"
 SOURCE_EVENT="${SOURCE_EVENT:-}"
 SOURCE_HEAD_SHA="${SOURCE_HEAD_SHA:-}"
@@ -18,6 +19,7 @@ fail() {
 }
 
 [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]] || fail "TCE source run ID must be numeric."
+[[ "$SOURCE_RUN_ATTEMPT" =~ ^[1-9][0-9]*$ ]] || fail "TCE source run attempt must be a positive integer."
 [[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/wf-03-tce-production-deploy.yml" ]] || fail "TCE source workflow path is not approved."
 [[ "$SOURCE_EVENT" == "workflow_dispatch" ]] || fail "TCE source event must be workflow_dispatch."
 [[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "TCE source head must be a full 40-character SHA."
@@ -45,6 +47,7 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   fi
 
   run_id="$(jq -r '.id // empty' <<< "$source_run")"
+  run_attempt="$(jq -r '.run_attempt // empty' <<< "$source_run")"
   repository="$(jq -r '.repository.full_name // empty' <<< "$source_run")"
   head_repository="$(jq -r '.head_repository.full_name // empty' <<< "$source_run")"
   workflow_path="$(jq -r '.path // empty' <<< "$source_run")"
@@ -55,6 +58,7 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   conclusion="$(jq -r '.conclusion // empty' <<< "$source_run")"
 
   [[ "$run_id" == "$SOURCE_RUN_ID" ]] || fail "GitHub Actions returned a different TCE run ID."
+  [[ "$run_attempt" == "$SOURCE_RUN_ATTEMPT" ]] || fail "TCE source run attempt does not match the dispatch payload."
   [[ "$repository" == "phanthienquoc/TCE-dashboard" && "$head_repository" == "phanthienquoc/TCE-dashboard" ]] || fail "TCE source run repository identity does not match."
   [[ "$workflow_path" == "$SOURCE_WORKFLOW_PATH" ]] || fail "TCE source run #$SOURCE_RUN_ID used an unexpected workflow path."
   [[ "$event" == "$SOURCE_EVENT" ]] || fail "TCE source run #$SOURCE_RUN_ID event does not match the dispatch payload."
@@ -153,4 +157,4 @@ for step in \
   verify_step_success "Publish immutable images and promote platform-infra" "$step"
 done
 
-echo "Verified successful TCE publisher run #$SOURCE_RUN_ID: workflow=$workflow_path event=$event branch=$branch sha=$head_sha release=$RELEASE; frontend/backend ARM64 builds, immutable GHCR digests and Platform dispatch all passed."
+echo "Verified successful TCE publisher run #$SOURCE_RUN_ID attempt=$run_attempt: workflow=$workflow_path event=$event branch=$branch sha=$head_sha release=$RELEASE; frontend/backend ARM64 builds, immutable GHCR digests and Platform dispatch all passed."
