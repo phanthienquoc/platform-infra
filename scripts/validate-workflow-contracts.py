@@ -1942,7 +1942,7 @@ if '"!scripts/verify-gitops-ready-dispatch.py"' not in recovery_push_paths:
 
 image_ref_guard = "      - name: Verify GitOps-ready release tags against current pinned digests\n"
 image_ref_guard_index = reconcile.find(image_ref_guard)
-secret_provision_index = reconcile.find("      - name: Provision Auth runtime Secret from platform-infra Environment\\n")
+secret_provision_index = reconcile.find("      - name: Provision Auth runtime Secret from platform-infra Environment\n")
 if image_ref_guard_index < 0 or secret_provision_index <= image_ref_guard_index:
     fail("GitOps-ready tag-to-digest verification must run before any runtime Secret or pull-credential mutation.")
 for required in (
