@@ -31,6 +31,18 @@ on:
           Media runner is idle, stopped, disabled and removed from GitHub
         required: false
         type: string
+      backup_evidence_ref:
+        description: >-
+          Stable HTTPS link to the completed backup/retention evidence for Stock/Media data and
+          external services. Do not include query strings, fragments or embedded credentials.
+        required: false
+        type: string
+      dns_evidence_ref:
+        description: >-
+          Stable HTTPS link to the authoritative DNS/provider export or change record for every
+          retired Ingress hostname. Do not include query strings, fragments or embedded credentials.
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -48,6 +60,8 @@ jobs:
       - name: Validate production ref and requested mode
         env:
           MODE: ${{ inputs.mode }}
+          BACKUP_EVIDENCE_REF: ${{ inputs.backup_evidence_ref }}
+          DNS_EVIDENCE_REF: ${{ inputs.dns_evidence_ref }}
         run: |
           set -euo pipefail
           test "$GITHUB_REF" = "refs/heads/master" || {
@@ -58,6 +72,22 @@ jobs:
             plan|delete) ;;
             *) echo "::error::Unsupported decommission mode: $MODE"; exit 1 ;;
           esac
+          if [[ "$MODE" == "delete" ]]; then
+            evidence_url_re='^https://[A-Za-z0-9.-]+(:[0-9]+)?/[A-Za-z0-9._~:/%+-]+$'
+            [[ "$BACKUP_EVIDENCE_REF" =~ $evidence_url_re ]] || {
+              echo "::error::Backup evidence must be a stable HTTPS URL without query, fragment or embedded credentials."
+              exit 1
+            }
+            [[ "$DNS_EVIDENCE_REF" =~ $evidence_url_re ]] || {
+              echo "::error::DNS evidence must be a stable HTTPS URL without query, fragment or embedded credentials."
+              exit 1
+            }
+            {
+              echo "### Stock/Media decommission evidence references"
+              echo "- Backup/retention evidence: $BACKUP_EVIDENCE_REF"
+              echo "- Authoritative DNS evidence: $DNS_EVIDENCE_REF"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
 
   plan:
     needs: validate_mode

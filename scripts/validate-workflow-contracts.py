@@ -1230,6 +1230,14 @@ for required in (
     "dns_ownership_review:",
     "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED",
     "MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED",
+    "backup_evidence_ref:",
+    "dns_evidence_ref:",
+    "BACKUP_EVIDENCE_REF: ${{ inputs.backup_evidence_ref }}",
+    "DNS_EVIDENCE_REF: ${{ inputs.dns_evidence_ref }}",
+    "evidence_url_re=",
+    "GITHUB_STEP_SUMMARY",
+    "Backup/retention evidence:",
+    "Authoritative DNS evidence:",
     "environment: production",
 ):
     if required not in decommission_workflow:
@@ -1237,7 +1245,41 @@ for required in (
 if "push:" in decommission_workflow or "schedule:" in decommission_workflow or "repository_dispatch:" in decommission_workflow:
     fail("Namespace decommission must remain manual-only.")
 
+validate_mode_start = decommission_workflow.find("  validate_mode:")
 plan_job_start = decommission_workflow.find("  plan:")
+validate_mode_job = decommission_workflow[validate_mode_start:plan_job_start]
+for required in (
+    'if [[ "$MODE" == "delete" ]]',
+    '[[ "$BACKUP_EVIDENCE_REF" =~ $evidence_url_re ]]',
+    '[[ "$DNS_EVIDENCE_REF" =~ $evidence_url_re ]]',
+    '>> "$GITHUB_STEP_SUMMARY"',
+):
+    if required not in validate_mode_job:
+        fail(f"Delete-mode evidence references must be validated before the production Environment gate: {required}")
+evidence_pattern_match = re.search(r"evidence_url_re='([^']+)'", validate_mode_job)
+if evidence_pattern_match is None:
+    fail("Delete-mode evidence URL pattern is missing from the pre-Environment validation job.")
+try:
+    evidence_pattern = re.compile(evidence_pattern_match.group(1))
+except re.error as error:
+    fail(f"Delete-mode evidence URL pattern is invalid: {error}")
+for valid_ref in (
+    "https://backup.example.net/reports/stock-media/2026-11-09",
+    "https://dns.example.net/zones/mrcute.space/export/2026-11-09",
+):
+    if evidence_pattern.fullmatch(valid_ref) is None:
+        fail(f"Delete-mode evidence URL pattern rejected a valid stable HTTPS reference: {valid_ref}")
+for invalid_ref in (
+    "",
+    "http://backup.example.net/reports/stock-media",
+    "https://backup.example.net",
+    "https://user:pass@backup.example.net/report",
+    "https://backup.example.net/report?token=secret",
+    "https://backup.example.net/report#fragment",
+    "https://backup.example.net/report with spaces",
+):
+    if evidence_pattern.fullmatch(invalid_ref) is not None:
+        fail(f"Delete-mode evidence URL pattern accepted an unsafe reference: {invalid_ref}")
 delete_job_start = decommission_workflow.find("  decommission:")
 if not (0 <= plan_job_start < delete_job_start):
     fail("Read-only plan job must be separate from the destructive decommission job.")
