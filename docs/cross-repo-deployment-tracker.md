@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: **2026-11-09 05:01 ICT / 2026-11-08 22:01 UTC**
+Last reviewed: **2026-11-09 07:08 ICT / 2026-11-09 00:08 UTC**
 
 This rolling tracker distinguishes native schedule events from manual, push, workflow_run and repository_dispatch fallbacks. Timestamped evidence is archived under `docs/cross-repo-deployment-checkpoints/`.
 
@@ -1225,3 +1225,45 @@ Platform #1487 post-merge validation passed; Platform master is `28dbb1d7efa63c8
 No production manifest apply, image promotion, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred. Latest read-only K3s snapshot remains inspection #42530192980: node Ready/ARM64; Media/MicroFE 1/1 digest-pinned; Stock Admin×2 and desired Backend on `12d63b4` still ImagePullBackOff without ARM64 manifest; TCE/Auth/Keycloak 0/0; Media runner active/enabled/listener-present; Stock/Media storage preflight clean but external backup/retention, DNS ownership and remote runner registration unverified. Auth runtime Secret was provisioned/verified by reconciliation #42530382496; shared `ghcr-pull` unchanged; drift=false; apply/promotion/rollout skipped.
 
 Exact next actions: (1) verify post-merge Stock CI #42533562194 to completion; (2) Stock owner supplies `VNSTOCK_API_KEY` and runs safe ingestion preflight separately from image publication; (3) GitHub administrator investigates native schedule delivery; (4) TCE/Auth owners decide activation/rollback; (5) Media owner completes runner, external-data and DNS evidence before protected decommission; (6) Platform operator schedules host maintenance separately. `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only; TCE market-scan schedule unchanged.
+
+
+---
+
+## Latest cross-repo execution — 2026-11-09 07:08 ICT
+
+The current checkpoint and evidence are archived in [2026-11-09-0708-ict.md](cross-repo-deployment-checkpoints/2026-11-09-0708-ict.md). Key changes since 06:07 ICT: Platform inspection PR #1489 merged at ecafca5f594f9984baa294ee679afed6afd245bb; fresh read-only K3s snapshot #42537975671 generated at 00:01:52Z and validation #42538111845 passed; Stock master CI #42533562194 is now confirmed PASS; TCE PR #1031 adds fail-closed GHCR tag preflight and is still under exact-head CI review. Native Platform/TCE schedule cadence remains outside budget. The full run IDs, gaps, runtime state, ownership boundaries and exact next actions are in the checkpoint.
+
+
+## Post-checkpoint execution update — 2026-11-09 07:11 ICT / 00:11 UTC
+
+TCE Dashboard PR #1031 was squash-merged at ddf5811a7994aab08236028cff04e0a78ffd2e3e after verifying the exact PR head 80c24eb1914bcfed924a3d90be4113294144b10d and all required PR checks. WF-01P #42538473285 passed, including the release-contract validator and mocked GHCR absence tests; WF-02 #42538473275 and WF-05 #42538473166 passed. The duplicate push runs #42538448641/#42538448647 also passed. The skipped PR auto-format step was non-blocking; the push auto-format run passed. No image publication or Platform dispatch occurred.
+
+Post-merge TCE CI is now running on the new master SHA: WF-01 #42538802539, WF-02 #42538802538 and WF-05 #42538802541 were in progress at the last check. Do not mark the post-merge app CI lane green until all three finish. TCE WF-03 remains manual-only/master-only; the new tag guard only runs during an explicitly approved release and blocks existing/ambiguous tags before either GHCR push.
+
+Platform tracker/inventory PR #1490 remains open at exact head c132840342d0c92859114eaea14fec899c268735. Exact-head validate-manifests #42538755907 passed before this post-checkpoint update; a new validation run is required after the update is committed. Platform master remains ecafca5f594f9984baa294ee679afed6afd245bb. No Platform production manifests or runtime state changed.
+
+Native schedule gaps, K3s snapshot #42537975671, Stock/Media/Auth blockers and all safety boundaries remain as recorded in the 07:08 ICT checkpoint. TCE market-scan schedule unchanged.
+
+
+## Cross-repo publisher guard update — 2026-11-09 07:18 ICT / 00:18 UTC
+
+TCE Dashboard PR #1031 merged at ddf5811a7994aab08236028cff04e0a78ffd2e3e after exact-head validation. Its post-merge master CI is now fully green: WF-01 #42538802539 PASS, WF-02 #42538802538 PASS and WF-05 #42538802541 PASS. No TCE release was dispatched and no image was published.
+
+Authentication PR #90 merged at 047abc08e123d8bde7678104899d00aa8782624a after exact-head PR CI #42539110908 passed. The CI log confirms 26 test suites/135 tests passed, typecheck/build passed, native ARM64 non-publishing build passed, and the Auth immutable GHCR preflight tests passed. Post-merge master CI #42539350154 was still in progress at the last check. Auth release remains manual-only; no image was published and no Platform dispatch occurred.
+
+Media Generation PR #74 is open at exact head 5ed0d0bbf7bbd5942fa5a865f7e5c2de4ee72411. It adds a fail-closed pre-push guard for frontend/backend prod-vX.Y.Z-full-SHA tags, same-source non-cancelling concurrency, mocked negative tests, and paths-ignore for helper/test-only changes so they cannot trigger the production publisher. PR CI #42539297802 and push CI #42539276866 were still in progress. Media remains retired from Platform GitOps ownership; this PR does not change runtime/runner state or send a Platform dispatch.
+
+The latest native Platform reconciliation is #42538596496 at 00:08:54Z, success. Its follow-on watchdog workflow_run #42538746501 failed native cadence acceptance. Updated observed gaps: reconcile 12,675s vs 2,700s; inspection 14,280s vs 4,500s; recovery 12,727s vs 2,700s; watchdog 12,672s vs 2,700s. TCE WF-06/WF-12 observations remain 13,481s/14,317s vs 1,500s. Inspection queue wait was 0m and no deployment lane exceeded 15m; no runner queue saturation evidence. Native schedule delivery remains a GitHub administrator blocker; cron and budgets are unchanged.
+
+Reconciliation #42538596496 verified shared ghcr-pull unchanged, Auth runtime Secret present/verified with values suppressed, active MicroFE/TCE scopes without image-pull failures, drift=false, apply skipped and image changes disabled. Auth remains intentional 0/0; no live Auth health was asserted. Latest K3s snapshot remains read-only inspection #42537975671 at 00:01:52Z; no newer snapshot was committed in this delta.
+
+Platform docs PR #1490 was validated at head 914f5abef2a3f5da65791d05dcc51042a2ba8dc5 by #42538879776 PASS before this delta. The new tracker/inventory/checkpoint commit requires a fresh exact-head validation before merge. Platform master remains ecafca5f594f9984baa294ee679afed6afd245bb. TCE market-scan schedule unchanged.
+
+
+## Media guard merge update — 2026-11-09 07:20 ICT / 00:20 UTC
+
+Media Generation PR #74 was squash-merged at dcd698699c65ba6e73f6b43838975144777131c3 after exact-head validation on 5ed0d0bbf7bbd5942fa5a865f7e5c2de4ee72411. PR CI #42539297802 passed; logs confirm the Media release-contract validator and mocked immutable-tag preflight tests passed. Post-merge Media CI #42539512417 was still in progress; its release-contract validation step had passed and dependency installation was running. The helper/test-only paths are excluded from the production publisher trigger; no Media image publication or Platform dispatch occurred.
+
+Authentication post-merge CI #42539350154 completed successfully on master 047abc08e123d8bde7678104899d00aa8782624a. Auth PR #90 remains merged; no Auth release was dispatched. TCE post-merge CI remains fully green on ddf5811a7994aab08236028cff04e0a78ffd2e3e. Stock post-merge CI #42533562194 remains PASS 7/7.
+
+Platform documentation PR #1490 currently includes the 07:18 checkpoint. Its latest exact-head validation #42539467189 was running on head c4f36d0db6f5ddb8f25b53baba1c3183a17ac066 before this delta; the new checkpoint/inventory commit requires another exact-head validation. Platform master remains ecafca5f594f9984baa294ee679afed6afd245bb. No production state changed. TCE market-scan schedule unchanged.
