@@ -1,3 +1,18 @@
+## 2026-11-09 20:04 ICT — workflow ownership and readiness delta
+
+- Platform master `f9984d4d`; PR #1520 exact-head validate-manifests #42614267017 and post-merge push #42614397667 PASS. Open human-decision drafts #1314/#544/#541/#539.
+- TCE master `65af89f6`; WF-01P/WF-02/WF-05 pass. Native WF-06 #42594757482, manual WF-06 #42594805077 and native WF-12 #42587926693 fail. WF-06 job evidence has all four public probes failed; TCE/Auth intentional 0/0 is not live health. No open PR.
+- Stock master `b1b5e177`; CI #42610360402 PASS 7/7. The older scheduled scraper failure #42457182511 used SHA `e6469ac`; current master credential state is unverified. No open PR or production publisher/digest handoff.
+- Media master `dcd69869`; CI #42539512417 PASS. Latest inspection shows dedicated runner service active/enabled and listener present; remote registration, external backup/retention and DNS ownership remain unverified. No open PR.
+- Auth master `b7183475`; CI #42586362115 PASS; draft PR #76 remains open.
+- Native schedule API query at 13:04:20Z: Platform reconcile/inspection/recovery/watchdog gaps 24,326s/27,768s/22,459s/22,698s; ages 22,200s/12,412s/24,623s/24,266s. TCE WF-06/WF-12 gaps 27,454s/25,452s; ages 12,457s/15,700s. All exceed budgets. Issue #1497 comment #6740838807 requests authoritative administrator delivery/enqueue evidence.
+- Latest K3s inspection #42594848960 is stale for rollout/decommission: snapshot generated 09:37:36Z, age 12,404s (>4,500s). Do not use it for runtime authorization.
+- Scheduled reconciliation #42575932602 succeeded with no manifest drift; Auth runtime Secret provisioned/verified; shared `ghcr-pull` unchanged; no image-pull failures in MicroFE/TCE targets; production apply and rollout checks skipped. Public TCE WF-06 remains failed independently.
+- App repositories continue to own tests/builds and immutable GHCR publication; Platform alone owns manifests, shared pull credentials, provenance/digest/ARM64 checks, GitOps promotion/apply, rollout/health. `reconcile-vps.yml` is sole apply authority; `inspect-vps.yml` is read-only. No duplicate SSH/Compose authority.
+- No production publication/promotion/apply/rollout, scaling, deletion, runner retirement, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-09 19:00 ICT ownership and readiness delta
 
 - Platform master `5647035a`; PR #1519 exact-head #42610714863 and post-merge #42610795648 PASS; PR #1518 post-merge #42609219961 PASS. Open human-decision drafts #1314/#544/#541/#539.
