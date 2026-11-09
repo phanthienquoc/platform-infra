@@ -1272,6 +1272,12 @@ if not (0 <= runner_guard_step < storage_preflight_step < namespace_delete_step)
 delete_step = delete_job[namespace_delete_step:]
 if "RUNNER_RETIREMENT: ${{ inputs.runner_retirement }}" not in delete_step:
     fail("The validated Media runner retirement attestation must reach the final namespace delete script.")
+final_runner_audit_token = delete_step.find("MEDIA_RUNNER_AUDIT_TOKEN: ${{ secrets.MEDIA_RUNNER_AUDIT_TOKEN }}")
+final_runner_audit = delete_step.find("bash scripts/verify-media-runner-retired.sh")
+final_runner_token_unset = delete_step.find("unset MEDIA_RUNNER_AUDIT_TOKEN")
+final_namespace_delete = delete_step.find("bash scripts/decommission-stock-media-namespaces.sh delete")
+if not (0 <= final_runner_audit_token < final_runner_audit < final_runner_token_unset < final_namespace_delete):
+    fail("The final namespace-delete step must re-audit the dedicated Media runner immediately before deletion and unset the audit token before invoking the namespace script.")
 runner_guard_script = (ROOT / "scripts" / "verify-media-runner-retired.sh").read_text(encoding="utf-8")
 for required in (
     "actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service",
