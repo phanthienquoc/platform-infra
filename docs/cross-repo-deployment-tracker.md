@@ -1,8 +1,18 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: **2026-11-09 14:00 ICT / 2026-11-09 07:00 UTC**
+Last reviewed: **2026-11-09 14:10 ICT / 2026-11-09 07:10 UTC**
 
 This rolling tracker distinguishes native schedule events from manual, push, workflow_run and repository_dispatch fallbacks. Timestamped evidence is archived under `docs/cross-repo-deployment-checkpoints/`.
+
+## Post-merge delta — 2026-11-09 14:10 ICT / 07:10 UTC
+
+- Platform PR [#1507](https://github.com/phanthienquoc/platform-infra/pull/1507) squash-merged at `a619815db94db2a407f9abf8d9e19595bcdc1146` from exact head `e65dbb62b541870aff3704dcabf0faa6913f923d`.
+- Exact-head `validate-github-actions` [#42577373795](https://github.com/phanthienquoc/platform-infra/actions/runs/42577373795) PASS. Its lint job completed actionlint, yamllint, shellcheck, ops regression tests, immutable image-change contract tests and workflow-contract checks successfully.
+- Exact-head `validate-manifests` [#42577373702](https://github.com/phanthienquoc/platform-infra/actions/runs/42577373702) PASS. Merge was performed only after verifying the exact head and both required checks.
+- Platform master is now `a619815db94db2a407f9abf8d9e19595bcdc1146`. The connector did not expose a post-merge push run/status for this commit; post-merge CI is unverified, not assumed green.
+- No decommission workflow was dispatched. Stock/Media namespaces and the dedicated Media runner remain untouched pending external backup/retention, authoritative DNS, runner retirement and protected-environment approval.
+
+
 
 # Cross-repository deployment checkpoint — 2026-11-09 14:00 ICT / 07:00 UTC
 
