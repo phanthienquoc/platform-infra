@@ -1,3 +1,13 @@
+## 2026-11-09 22:25 ICT — Stock publisher/decommission distinction
+
+- Stock current master `deploy.yml` is app-owned and ARM64-only: three images (scraper/admin/backend) publish full-source-SHA and version+SHA tags, reject existing immutable tags and verify linux/arm64 registry manifests/digests. CI separately builds all three ARM64 images with push=false; master CI #42610360402 PASS 7/7.
+- No Platform handoff remains by design because Stock was removed from active Platform GitOps. Manual publication requires `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=true`.
+- K3s desired tag `12d63b4` resolves to old source commit `12d63b495346dbff8fcba87e976f9e15165c0ebb` (2026-05-20) and lacks linux/arm64 manifest. Do not republish/promote while decommission is approved; complete retirement gates instead.
+- Fresh K3s snapshot (15:19:13Z) is within freshness budget; storage-clean for target namespaces but Media runner active and external backup/retention, remote unregister and authoritative DNS remain blockers.
+- Native schedule re-query at 15:23:42Z found no new events; issue #1497 comment #6743818812. No cron or TCE market-scan changes.
+
+---
+
 ## 2026-11-09 22:23 ICT — native schedule recheck
 
 - Re-query of the latest 100 master runs found no new native schedule events. Ages at 15:23:42Z: Platform reconcile 30,562s/2,700s budget; inspection 20,774s/4,500s; recovery 32,985s/2,700s; watchdog 32,628s/2,700s; TCE WF-06 20,819s/1,500s; WF-12 24,062s/1,500s. Inter-arrival gaps unchanged. Issue #1497 comment #6743818812 records this recheck. Push inspection #42643433567 is not schedule acceptance.
