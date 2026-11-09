@@ -286,6 +286,10 @@ jobs:
           sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
           kubectl version --client=true
 
+      - name: Validate exact TCE release dispatch payload schema
+        if: github.event_name == 'repository_dispatch' && github.event.action == 'tce-release-requested'
+        run: bash scripts/verify-tce-dispatch-payload.sh "$GITHUB_EVENT_PATH"
+
       - name: Verify TCE release payload and publisher provenance
         env:
           APP: ${{ github.event.client_payload.app }}
