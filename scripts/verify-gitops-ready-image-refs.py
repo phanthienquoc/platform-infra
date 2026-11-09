@@ -145,14 +145,14 @@ def self_test() -> None:
 
     bad_cases = [
         (auth_fixture.replace(f"  digest: {digest_a}", "  newTag: latest"), auth_image),
-        (auth_fixture.replace(f"  digest: {digest_a}", f"  digest: {digest_a}\\n  digest: {digest_b}"), auth_image),
+        (auth_fixture.replace(f"  digest: {digest_a}", f"  digest: {digest_a}\n  digest: {digest_b}"), auth_image),
         (auth_fixture.replace(auth_image, "ghcr.io/phanthienquoc/other/image"), auth_image),
         (auth_fixture.replace(digest_a, "sha256:bad"), auth_image),
         (auth_fixture.replace(f"  newName: {auth_image}", "  newName: ghcr.io/phanthienquoc/untrusted/auth"), auth_image),
         (
             auth_fixture.replace(
                 f"  newName: {auth_image}",
-                f"  newName: {auth_image}\\n  newName: ghcr.io/phanthienquoc/untrusted/auth",
+                f"  newName: {auth_image}\n  newName: ghcr.io/phanthienquoc/untrusted/auth",
             ),
             auth_image,
         ),
@@ -169,15 +169,15 @@ def self_test() -> None:
     validate_image_set(microfe_fixture, (microfe_shell, microfe_ws))
     image_set_cases = [
         (
-            tce_fixture + f"- name: ghcr.io/phanthienquoc/unexpected/sidecar\\n  digest: {digest_a}\\n",
+            tce_fixture + f"- name: ghcr.io/phanthienquoc/unexpected/sidecar\n  digest: {digest_a}\n",
             (tce_web, tce_service),
         ),
         (tce_fixture.replace(f"- name: {tce_service}", f"- name: {tce_web}"), (tce_web, tce_service)),
         (
-            tce_fixture.replace(f"- name: {tce_service}\\n  digest: {digest_b}\\n", ""),
+            tce_fixture.replace(f"- name: {tce_service}\n  digest: {digest_b}\n", ""),
             (tce_web, tce_service),
         ),
-        (tce_fixture.replace("images:\\n", ""), (tce_web, tce_service)),
+        (tce_fixture.replace("images:\n", ""), (tce_web, tce_service)),
     ]
     for fixture_text, expected_images in image_set_cases:
         try:
