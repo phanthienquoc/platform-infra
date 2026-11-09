@@ -177,7 +177,7 @@ if PATH="$tmp_dir/bin:$PATH" \
 fi
 
 if PATH="$tmp_dir/bin:$PATH" \
-  SOURCE_REPOSITORY="$sample_repo" SOURCE_RUN_ID="$sample_run_id" SOURCE_RUN_ATTEMPT=0 SOURCE_WORKFLOW_PATH="$sample_path" \
+  SOURCE_APP=microfe SOURCE_REPOSITORY="$sample_repo" SOURCE_RUN_ID="$sample_run_id" SOURCE_RUN_ATTEMPT=0 SOURCE_WORKFLOW_PATH="$sample_path" \
   SOURCE_EVENT=push SOURCE_HEAD_SHA="$sample_sha" SOURCE_COMMIT="$sample_sha" \
   bash "$validator" >/dev/null 2>&1; then
   echo "Expected invalid MicroFE source run attempt to fail before API access." >&2
