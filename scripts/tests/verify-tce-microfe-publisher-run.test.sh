@@ -161,6 +161,14 @@ if PATH="$tmp_dir/bin:$PATH" \
   echo "Expected invalid MicroFE source run ID to fail before API access." >&2
   exit 1
 fi
+
+if PATH="$tmp_dir/bin:$PATH" \
+  SOURCE_REPOSITORY="$sample_repo" SOURCE_RUN_ID=0 SOURCE_WORKFLOW_PATH="$sample_path" \
+  SOURCE_EVENT=push SOURCE_HEAD_SHA="$sample_sha" SOURCE_COMMIT="$sample_sha" \
+  bash "$validator" >/dev/null 2>&1; then
+  echo "Expected zero MicroFE source run ID to fail before API access." >&2
+  exit 1
+fi
 if PATH="$tmp_dir/bin:$PATH" \
   SOURCE_REPOSITORY="$sample_repo" SOURCE_RUN_ID="$sample_run_id" SOURCE_WORKFLOW_PATH="$sample_path" \
   SOURCE_EVENT=schedule SOURCE_HEAD_SHA="$sample_sha" SOURCE_COMMIT="$sample_sha" \
