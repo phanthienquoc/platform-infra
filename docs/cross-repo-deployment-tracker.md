@@ -1,5 +1,50 @@
 # Cross-Repository Production Deployment Tracker
 
+## Execution delta — 2026-11-09 18:17 ICT / 11:17 UTC
+
+### Platform PR #1517 merged — final Media runner retirement re-audit
+
+- PR [#1517](https://github.com/phanthienquoc/platform-infra/pull/1517) squash-merged at `f480b8e3fbca130e0d64277983a9c12e55a470f7` from exact head `37d99cb3b7fda0db8d27235da6e3d24550f6858b`.
+- Exact-head `validate-github-actions` [#42607555613](https://github.com/phanthienquoc/platform-infra/actions/runs/42607555613) PASS; `validate-manifests` [#42607555700](https://github.com/phanthienquoc/platform-infra/actions/runs/42607555700) PASS.
+- Post-merge push `validate-github-actions` [#42607717790](https://github.com/phanthienquoc/platform-infra/actions/runs/42607717790) PASS; `validate-manifests` [#42607718023](https://github.com/phanthienquoc/platform-infra/actions/runs/42607718023) PASS.
+- A superseded exact-head attempt #42607277216 exposed an outdated workflow-contract assertion that required a one-line `run:` command. The workflow was intentionally converted to a multiline final step; the validator assertion was corrected to check the command and enforce ordering. The final exact-head and post-merge checks above are all green.
+- The final destructive step now re-runs `verify-media-runner-retired.sh` (local service inactive/disabled, no listener process, and exact Media repository runner absent from the paginated GitHub Actions runner API), then unsets `MEDIA_RUNNER_AUDIT_TOKEN` before invoking `decommission-stock-media-namespaces.sh delete`. Earlier audit and fresh storage preflight remain. The root-owned wrapper still requires all four typed attestations and independently rechecks PVC/PV/VolumeSnapshot constraints and preservation of TCE/MicroFE namespaces.
+- This closes a check/use gap in the protected delete job. It does not stop/unregister the runner or delete either namespace. External backup/retention, DNS ownership and remote runner evidence remain operator prerequisites.
+
+### Repository heads, open PRs and current CI
+
+- Platform Infra master: `f480b8e3fbca130e0d64277983a9c12e55a470f7`; PR #1517 merged.
+- TCE Dashboard: `65af89f69ffe0d844a9b63e2434bc3f8cedfebb7`; master WF-01 #42586355695, WF-02 #42586356008, WF-05 #42586355696 PASS.
+- StockDividend: `1a18cabf32c6cc5f85f4157b5142a6d9d9b5`; master CI #42533562194 PASS 7/7, ARM64 image builds non-publishing.
+- Media Generation: `dcd698699c65ba6e73f6b43838975144777131c3`; master CI #42539512417 PASS.
+- Authentication: `b71834758d278e50e6ce07b5086fe45e9d9b3350`; master CI #42586362115 PASS.
+- Open human-decision drafts: Platform #1314/#544/#541/#539 and Authentication #76. TCE, StockDividend and Media Generation have no open PRs.
+
+### Native schedule and runtime evidence refresh — 2026-11-09 11:17:20 UTC
+
+No new native schedule run appeared after the 11:02:35Z query. Only `event=schedule`, `master`, attempt 1 is counted.
+
+| Workflow | Latest native run | Inter-arrival gap | Age at 11:17:20Z | Existing budget |
+|---|---:|---:|---:|---:|
+| Platform reconcile | #42575932602 | 24,326s | 15,780s | 2,700s |
+| Platform inspection | #42594848960 | 27,768s | 5,992s | 4,500s |
+| Platform recovery | #42571777920 | 22,459s | 18,203s | 2,700s |
+| Platform watchdog | #42572369962 | 22,698s | 17,846s | 2,700s |
+| TCE WF-06 | #42594757482 | 27,454s | 6,037s | 1,500s |
+| TCE WF-12 | #42587926693 | 25,452s | 9,280s | 1,500s |
+
+All current ages and inter-arrival gaps remain beyond budget. Platform watchdog #42595132043 failed on stale native reconcile/recovery and all four Platform gap checks. It separately observed TCE WF-06 #42594757482 was delivered natively, but all four endpoint probes returned HTTP 503. Issue [#1497](https://github.com/phanthienquoc/platform-infra/issues/1497) contains the 11:02Z administrator request and exact evidence. No cron, freshness budget, strict health probe or TCE market-scan schedule changed.
+
+### Reconciliation and app-owner blockers
+
+- Reconciliation #42595146384 was workflow_dispatch, not native schedule: `mode=apply`, `target_app=all`, `allow_image_changes=false`; Auth runtime Secret provisioned/verified; shared `ghcr-pull` unchanged; no image-pull failures for active MicroFE/TCE deployments; drift=false; manifest apply and image promotion skipped. TCE/Auth zero-replica maintenance was not treated as live health; Keycloak skipped.
+- Recovery #42595660819 was repository_dispatch fallback and is not native schedule acceptance.
+- Stock `.github/workflows/run_scraper.yml` already exposes manual `workflow_dispatch` input `preflight_only=true`: it checks `VNSTOCK_API_KEY` and authenticated non-guest VNStock entitlement, then skips Chromium and ingestion. The last scheduled scraper failure #42457182511 was on older SHA `e6469ac`; current secret state remains unverified. Exact next action: Stock owner runs this manual preflight against current master, then separately approves any ARM64 publication.
+- Latest K3s snapshot #1515 / `debug/vps-latest.md` generated 09:37:36Z is now ~100m old, beyond the 75m inspection budget. Node Ready/ARM64, disk 56%, RAM ~19 GiB, restart required; Media/MicroFE 1/1 with digest evidence; Stock desired tag `12d63b4` has no matching ARM64 manifest; TCE/Auth/Keycloak 0/0. Do not use the stale snapshot to authorize rollout/decommission.
+- Media runner service was active/enabled in the snapshot. External backup/retention, DNS ownership and remote runner registration remain unverified. No runner retirement or namespace deletion.
+
+No production GHCR publication, digest promotion, manifest apply, rollout, scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host reboot/upgrade occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
 ## Execution delta — 2026-11-09 18:02 ICT / 11:02 UTC
 
 ### Repository heads, PRs and current master checks
@@ -53,7 +98,7 @@ No cron expression, freshness budget, strict HTTP 200 check or TCE market-scan s
 
 No production GHCR publication, digest promotion, production manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host reboot/upgrade occurred in this checkpoint. Auth runtime Secret provisioning during reconciliation #42595146384 is the confirmed production mutation; `ghcr-pull` remained unchanged. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
 
-Last reviewed: **2026-11-09 18:02 ICT / 2026-11-09 11:02 UTC**
+Last reviewed: **2026-11-09 18:17 ICT / 2026-11-09 11:17 UTC**
 
 ## Execution delta — 2026-11-09 17:00 ICT / 10:00 UTC
 
