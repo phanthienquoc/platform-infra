@@ -1,3 +1,13 @@
+## Execution delta — 2026-11-09 22:25 ICT / 15:25 UTC
+
+- Stock release ownership is now clarified from the current master workflow: `.github/workflows/deploy.yml` runs on eligible master code pushes or manual dispatch, builds all three images natively for `linux/arm64`, publishes full-source-SHA and version+SHA tags, refuses tag overwrite and verifies registry digests/platform manifests. `ci.yml` separately builds the three ARM64 images with `push: false`; master CI #42610360402 passed 7/7. The publisher intentionally has no Platform dispatch because Stock was removed from active Platform GitOps.
+- The running Stock desired image tag `12d63b4` resolves to source commit `12d63b495346dbff8fcba87e976f9e15165c0ebb` dated 2026-05-20, not current master. The fresh K3s inspection reports no linux/arm64 manifest for this historical tag. Do not republish/promote Stock while its decommission is the approved direction; retire the old workloads only after the existing runner/backup/DNS/storage gates are satisfied. Manual Stock publication remains gated by `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=true`.
+- Fresh snapshot `debug/vps-latest.md` generated 15:19:13Z; age 269s at 15:23:42Z. Storage preflight is clean for target namespaces, but Media runner/listener remains active and external backup/retention, remote runner unregister and authoritative DNS ownership remain unverified.
+- Native schedule re-query at 15:23:42Z found no new schedule events; ages/gaps are recorded in issue #1497 comment #6743818812. Do not count push inspection #42643433567 as schedule acceptance.
+- Platform master `0c932b8142535162128457b0141be5cbd113d6b8`; PR #1525 safety guard and #1526 read-only inspection merged. Current docs PR #1527 is being revalidated after this update. No production changes or TCE market-scan schedule changes.
+
+Checkpoint: `docs/cross-repo-deployment-checkpoints/2026-11-09-2225-ict.md`.
+
 ## Execution delta — 2026-11-09 22:23 ICT / 15:23:42 UTC
 
 - A fresh re-query of both repositories' first 100 master Actions runs found no new native `event=schedule` runs since the 15:06Z evidence. Current ages at 15:23:42Z: Platform reconcile 30,562s (budget 2,700s); inspection 20,774s (4,500s); recovery 32,985s (2,700s); watchdog 32,628s (2,700s); TCE WF-06 20,819s (1,500s); TCE WF-12 24,062s (1,500s). Inter-arrival gaps remain 24,326s / 27,768s / 22,459s / 22,698s / 27,454s / 25,452s respectively. New issue evidence: [#1497 comment #6743818812](https://github.com/phanthienquoc/platform-infra/issues/1497#issuecomment-6743818812). Push-triggered inspection #42643433567 is not native schedule acceptance.
