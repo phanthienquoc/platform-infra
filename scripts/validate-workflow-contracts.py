@@ -1230,6 +1230,14 @@ for required in (
     "dns_ownership_review:",
     "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED",
     "MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED",
+    "backup_evidence_ref:",
+    "dns_evidence_ref:",
+    "BACKUP_EVIDENCE_REF: ${{ inputs.backup_evidence_ref }}",
+    "DNS_EVIDENCE_REF: ${{ inputs.dns_evidence_ref }}",
+    "evidence_url_re=",
+    "GITHUB_STEP_SUMMARY",
+    "Backup/retention evidence:",
+    "Authoritative DNS evidence:",
     "environment: production",
 ):
     if required not in decommission_workflow:
@@ -1237,7 +1245,17 @@ for required in (
 if "push:" in decommission_workflow or "schedule:" in decommission_workflow or "repository_dispatch:" in decommission_workflow:
     fail("Namespace decommission must remain manual-only.")
 
+validate_mode_start = decommission_workflow.find("  validate_mode:")
 plan_job_start = decommission_workflow.find("  plan:")
+validate_mode_job = decommission_workflow[validate_mode_start:plan_job_start]
+for required in (
+    'if [[ "$MODE" == "delete" ]]',
+    '[[ "$BACKUP_EVIDENCE_REF" =~ $evidence_url_re ]]',
+    '[[ "$DNS_EVIDENCE_REF" =~ $evidence_url_re ]]',
+    '>> "$GITHUB_STEP_SUMMARY"',
+):
+    if required not in validate_mode_job:
+        fail(f"Delete-mode evidence references must be validated before the production Environment gate: {required}")
 delete_job_start = decommission_workflow.find("  decommission:")
 if not (0 <= plan_job_start < delete_job_start):
     fail("Read-only plan job must be separate from the destructive decommission job.")
