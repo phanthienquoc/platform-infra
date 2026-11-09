@@ -905,3 +905,18 @@ Platform master dd1bca11e3c59c92f920ec5e4896fb8d643be272 after PR #1490; exact-h
 - Media #42539512417 application test/build PASS. Authentication #42539350154 ARM64 non-publishing build and validation PASS.
 - The available commit-workflow-runs connector is PR-only; empty master queries do not prove no newer workflow runs. The complete latest native schedule event list and a fresh K3s inspection were not available in this execution.
 - Preserve strict production gates, exact app/Platform ownership, and the TCE market-scan schedule.
+
+
+## Execution evidence — 2026-11-09 23:56 ICT / 16:56 UTC
+
+- Current default-branch heads: Platform `c3522e4452f95350610f8c6fc3dcea6d2860427f`; TCE `65af89f69ffe0d844a9b63e2434bc3f8cedfebb7`; Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
+- Open human-decision drafts: Platform #1314/#544/#541/#539 and Authentication #76. No open PRs in TCE, Stock or Media.
+- Platform push manifest validation #42656964670 PASS. Native recovery schedule #42657359651 PASS; native freshness watchdog #42657625219 FAILs correctly on the historical cadence gaps; read-only inspection #42657403805 PASS (workflow_dispatch); recovery workflow_run #42657691775 PASS. These events are distinct; only #42657359651 and #42657625219 count as native schedule events.
+- TCE master build #42586355695, format #42586356008 and backend tests #42586355696 PASS. Native WF-06 #42594757482 and WF-12 #42587926693 remain failures; manual WF-06 #42594805077 fails four public HTTP 200 probes.
+- Stock master CI #42610360402 PASS 7/7, including safe preflight contract and ARM64 non-publishing build. Historical scheduled scraper failure #42457182511 uses old SHA `e6469ac`; current master credential state is not verified.
+- Media master CI #42539512417 PASS. Authentication master CI #42654579277 PASS; Auth dispatch fixture PR run #42654291067 PASS. No production app publisher or dispatch run was observed.
+- Native schedule partial resumption: Platform recovery #42657359651 at 16:41:46Z and watchdog #42657625219 at 16:43:22Z are new original schedule events. Historical gaps remain 37,669s and 37,408s respectively; Platform reconcile/inspection and both TCE health lanes remain stale. The watchdog failure is correct strict behavior. GitHub administrator enqueue/delivery evidence remains required.
+- Fresh read-only K3s inspection #42657403805 PASS, snapshot 16:42:11Z. Node Ready/ARM64; disk 56% (~20 GiB free); RAM available 19 GiB; restart_required=yes. Media and MicroFE core workloads 1/1; Stock Admin×2 and one desired Backend pod ImagePullBackOff on historical tag `12d63b4` lacking ARM64 descriptor; older Backend and Frontend remain available; TCE/Auth/Keycloak remain 0/0; public OIDC 503. Platform and Media runner services remain active/enabled.
+- Stock/Media storage preflight is clean for PVC/PV/VolumeSnapshot references; only PVC is in `k3s-debug`. Production manifests contain no active Stock/Media references. This does not prove external backup/retention/DNS ownership or remote Media runner unregistration. No delete plan/action.
+- Auth receiver exact schema merged in Platform #1534; Auth master CI fixtures PASS. Auth/TCE remain tag-pinned pending app publication and Platform digest promotion. MicroFE remains digest-pinned. Stock/Media remain retired from active GitOps but workloads are not deleted.
+- No production image publication/promotion, apply, rollout, scaling, deletion, runner retirement, DNS/database/storage mutation or host maintenance. No cron/freshness change; TCE market-scan schedule unchanged.
