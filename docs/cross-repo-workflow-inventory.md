@@ -1,3 +1,15 @@
+## 2026-11-10 03:04 ICT — Stock scraper credential blocker and schedule freshness recheck
+
+- Platform master `6e1598c0`, TCE `aea2755f`, Stock `b1b5e177`, Media `dcd69869`, Auth `eab85fab`. Platform latest master validate-manifests #42684398108 PASS; latest app master CI evidence: TCE #42680305817/#42680305566/#42680305431 PASS, Stock #42610360402 PASS 7/7, Media #42539512417 PASS, Auth #42654579277 PASS.
+- Open owner-decision drafts: Platform #1314/#544/#541/#539; Auth #76. No TCE/Stock/Media open PRs.
+- Stock weekend scraper #42457182511 failed closed because `VNSTOCK_API_KEY` is empty. It stopped before dependency install, Chromium, ingestion or side effects. Existing docs prescribe safe `preflight_only=true`; owner action tracked in [Stock issue #42](https://github.com/phanthienquoc/stockdividend/issues/42). Keep cron `0 1 * * 0,6`; do not weaken fail-closed credential validation.
+- K3s read-only snapshot #42681626973 generated 19:15:47Z; 48m42s old at 20:04:29Z, within 75m budget. Node Ready/ARM64; disk 56%, ~20 GiB free; RAM ~19 GiB; restart required. Media and MicroFE core pods 1/1; TCE/Auth/Keycloak 0/0; Stock desired Admin/Backend pulls fail on historical tag `12d63b4` without ARM64 manifest. Media runner service/listener still active. Only PVC is `k3s-debug`; backup/retention/DNS and remote runner unregister remain unverified.
+- Native schedule latest ages at 20:04:29Z: Platform reconcile 9,586s; inspection 37,621s; recovery 12,163s; watchdog 12,067s; TCE WF-06 37,666s; WF-12 3,077s. All exceed budgets; last inter-arrival gaps are 37,823s / 27,768s / 37,669s / 37,408s / 27,454s / 37,832s against 2,700s / 4,500s / 2,700s / 2,700s / 1,500s / 1,500s. Evidence in [issue #1497](https://github.com/phanthienquoc/platform-infra/issues/1497#issuecomment-6750159483).
+- TCE public health fallback #42681311390: four strict HTTP 200 probes returned 503. TCE/Auth remain intentional 0/0; no live health claim. No production publication, dispatch, digest promotion, manifest apply, rollout, scaling, decommission, runner retirement, DNS/storage/database mutation or host maintenance.
+- Ownership and authority unchanged: app repos own builds/tests and immutable GHCR publication; Platform owns manifests, shared pull credentials, digest/provenance verification, GitOps promotion/reconciliation, rollout and health. `reconcile-vps.yml` sole apply authority; `inspect-vps.yml` read-only. TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-10 02:28 ICT — TCE sender/receiver merged; current schedule and K3s evidence
 
 - Platform #1539 exact TCE receiver schema and TCE #1033 exact sender/source-context contract are merged. Platform exact-head and post-merge validation runs passed; TCE exact-head WF-01P/WF-05/WF-02 and post-merge WF-01/WF-05/WF-02 passed. No production dispatch or publication was executed.
