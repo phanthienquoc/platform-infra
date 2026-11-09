@@ -1,3 +1,18 @@
+## Execution delta — 2026-11-09 20:04 ICT / 13:04:20 UTC
+
+- Current master heads: Platform `f9984d4dcac473164102d5217ff2a177877fad34`; TCE `65af89f69ffe0d844a9b63e2434bc3f8cedfebb7`; Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication `b71834758d278e50e6ce07b5086fe45e9d9b3350`.
+- Platform PR #1520 exact-head #42614267017 and post-merge master push #42614397667 PASS. Latest master app runs: TCE WF-02 #42586356008 PASS with native/manual WF-06 and native WF-12 failures; Stock CI #42610360402 PASS 7/7; Media CI #42539512417 PASS; Auth CI #42586362115 PASS.
+- Open human-decision drafts: Platform #1314/#544/#541/#539 and Authentication #76. No open PRs in TCE, Stock or Media. Current combined commit-status queries for draft heads returned no status contexts; do not infer check success.
+- Native `event=schedule` query at 13:04:20Z (master, attempt 1 only) confirms gaps/ages: Platform reconcile 24,326s/22,200s; inspection 27,768s/12,412s; recovery 22,459s/24,623s; watchdog 22,698s/24,266s; TCE WF-06 27,454s/12,457s; WF-12 25,452s/15,700s. All exceed budgets. Issue #1497 received fresh evidence comment #6740838807; administrator scheduler delivery evidence remains outstanding. No cron/freshness or TCE market-scan schedule changes.
+- Latest K3s inspection #42594848960 succeeded, but `debug/vps-latest.md` was generated 09:37:36Z and is 12,404s old at checkpoint, beyond 4,500s freshness. Node was Ready/ARM64, disk 56%, RAM ~19 GiB, restart required; Platform and Media runner services active; Media/MicroFE 1/1; Stock desired workloads ImagePullBackOff; TCE/Auth/Keycloak 0/0; public OIDC 503. Stale snapshot cannot authorize rollout/decommission.
+- Scheduled reconciliation #42575932602 (06:54:20Z) completed with mode=apply, target=all, allow_image_changes=false. Logs confirm Auth runtime Secret provisioned and verified; shared `ghcr-pull` unchanged; no blocked image pulls in MicroFE/TCE; diff clean; manifest apply skipped; Auth/TCE/MicroFE rollout checks skipped; Keycloak skipped. This internal lane success is distinct from TCE public WF-06 HTTP 503 failures.
+- Stock current-master credential preflight is still unverified; prior scraper failure #42457182511 used old SHA `e6469ac`. No production publisher/digest handoff. Auth/TCE remain tag-pinned and fail-closed pending digest promotion. Stock/Media remain retired from Platform GitOps but workloads still exist; decommission gates remain open.
+- No production publication/promotion/apply/rollout/scaling/deletion, runner retirement, DNS/database/storage mutation or host maintenance. `reconcile-vps.yml` remains sole apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
+Checkpoint: `docs/cross-repo-deployment-checkpoints/2026-11-09-2004-ict.md`.
+
+---
+
 ## Execution delta — 2026-11-09 19:00 ICT / 11:59:26 UTC
 
 - Platform master `5647035abe2f787185a8089970b7f67312170f8a`; PR #1519 exact-head validate-manifests #42610714863 PASS and post-merge master push #42610795648 PASS. PR #1518 post-merge #42609219961 PASS.
