@@ -1,3 +1,14 @@
+## 2026-11-09 23:09 ICT — decommission evidence contract and readiness
+
+- Platform PR #1529 merged at `9fbf172c7e0b2a60b96f6fdd75f48860aa813647`. The manual-only `decommission-stock-media.yml` workflow now requires stable HTTPS references for backup/retention and authoritative DNS/provider evidence in delete mode. The lightweight validation job checks them before the protected `production` Environment gate and records the links in the run summary. It rejects non-HTTPS, host-only, embedded credentials, query strings, fragments and whitespace. Plan mode is unchanged.
+- Exact-head checks #42651633999 (`validate-github-actions`) and #42651634041 (`validate-manifests`) passed on head `9b5fcf4518fbe5b5714f71c098c55081eb867507`. Post-merge #42651796084 (`validate-manifests`) passed; #42651796227 (`validate-github-actions`) was still running at checkpoint time.
+- Evidence URLs are auditable references only; reviewers must inspect the linked backup and DNS evidence. The workflow still requires typed confirmations, protected production Environment approval, local Media service/process retirement, GitHub runner unregister verification with the scoped audit token, the retired-manifest guard and a fresh read-only storage preflight before deletion.
+- Latest read-only K3s snapshot is generated 15:23:26Z, within the 4,500s freshness budget at this checkpoint. Media runner service/listener is still active; remote registration, external backup/retention and authoritative DNS ownership remain unverified. No deletion.
+- Native schedule issue #1497 updated with current filtered event evidence in comment #6744779547. All six tracked Platform/TCE gaps and ages remain outside budgets; administrator enqueue/delivery evidence is still required. Do not count fallback events as native acceptance.
+- App repositories continue to own tests/builds and immutable GHCR publication; Platform alone owns production manifests, shared pull credentials, provenance/digest/ARM64 verification, GitOps promotion/reconciliation, rollout/health and protected decommission. No duplicate SSH/Compose authority; TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-09 22:25 ICT — Stock publisher/decommission distinction
 
 - Stock current master `deploy.yml` is app-owned and ARM64-only: three images (scraper/admin/backend) publish full-source-SHA and version+SHA tags, reject existing immutable tags and verify linux/arm64 registry manifests/digests. CI separately builds all three ARM64 images with push=false; master CI #42610360402 PASS 7/7.
