@@ -676,7 +676,7 @@ if "`PLATFORM_INFRA_AUTOMATION_TOKEN`" in credentials_key:
     fail("credentials-key.md must not list the retired GitOps automation PAT.")
 
 # The generic promotion receiver is Auth-only; TCE and MicroFE use dedicated jobs.
-if promotion.count("SOURCE_RUN_ATTEMPT: ${{ github.event.client_payload.source_run_attempt }}") != 2:
+if promotion.count("          SOURCE_RUN_ATTEMPT: ${{ github.event.client_payload.source_run_attempt }}") != 2:
     fail("TCE and MicroFE promotion jobs must receive the source Actions run attempt.")
 if "- auth-image-published" not in promotion:
     fail("GitOps promotion must consume the Auth immutable-digest event.")
