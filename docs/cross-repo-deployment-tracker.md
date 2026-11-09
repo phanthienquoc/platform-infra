@@ -1,3 +1,41 @@
+## Execution delta — 2026-11-09 18:23 ICT
+
+### Repository heads, PRs and validation evidence
+
+- Platform Infra master: `4348742602f6be4ba4ead0893026f21704053fdb`. PR [#1518](https://github.com/phanthienquoc/platform-infra/pull/1518) squash-merged at this SHA from exact head `d6169ae151a6d0dc5a8cb5f257f7a7f4c644a86f`; exact-head `validate-manifests` [#42608166754](https://github.com/phanthienquoc/platform-infra/actions/runs/42608166754) PASS. The connector does not expose post-merge push/schedule/dispatch runs for this master commit; no post-merge result is claimed.
+- PR [#1517](https://github.com/phanthienquoc/platform-infra/pull/1517) remains merged at `f480b8e3fbca130e0d64277983a9c12e55a470f7`. Exact-head #42607555613/#42607555700 and post-merge #42607717790/#42607718023 all PASS. The final delete step re-audits the exact Media runner immediately before namespace deletion and unsets the read-only audit token before invoking the namespace script; it does not stop/unregister the runner or delete namespaces.
+- TCE Dashboard master: `65af89f69ffe0d844a9b63e2434bc3f8cedfebb7`; last verified WF-01 #42586355695, WF-02 #42586356008 and WF-05 #42586355696 PASS. Latest confirmed strict WF-06 failure #42594757482 returned HTTP 503 from all four public TCE/Auth probes; WF-12 #42587926693 remains stale-delivery evidence.
+- StockDividend master: `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; PR [#41](https://github.com/phanthienquoc/stockdividend/pull/41) squash-merged at this SHA from exact head `b212fa0c4f2e2640230977b3d4c8184a7130998e`. Exact-head StockDividend CI [#42609809654](https://github.com/phanthienquoc/stockdividend/actions/runs/42609809654) completed PASS 7/7, including the release/preflight contract and native ARM64 non-publishing builds. The PR changed only the validator; no scraper dispatch or production publication occurred. The connector does not expose post-merge push runs for this commit.
+- Media Generation master: `dcd698699c65ba6e73f6b43838975144777131c3`; last verified application CI #42539512417 PASS.
+- Authentication master: `b71834758d278e50e6ce07b5086fe45e9d9b3350`; last verified CI #42586362115 PASS.
+- Open human-decision drafts remain Platform #1314/#544/#541/#539 and Authentication #76. Stock PR #41 is merged; TCE, StockDividend and Media Generation have no open PRs.
+
+### Stock scraper preflight contract hardening
+
+- The existing manual `run_scraper.yml` supports `preflight_only=true`: it checks `VNSTOCK_API_KEY`, verifies an authenticated non-guest VNStock tier, and guards Chromium installation and scraper ingestion with `preflight_only != true`.
+- PR #41 merged at `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` from exact head `b212fa0c4f2e2640230977b3d4c8184a7130998e`; exact-head CI #42609809654 passed all seven jobs, including native ARM64 non-publishing builds.
+- `scripts/validate-production-release-contract.sh` now enforces the exact eight-step scraper job sequence, so an added/renamed/reordered step fails CI until explicitly reviewed. MongoDB and Telegram credentials must appear exactly once and only inside the final scraper-ingestion step. No post-merge push result is claimed.
+- This is validator-only. No scraper dispatch, credential read, ingestion, MongoDB/Telegram write, GHCR publication or Platform handoff was performed. The weekend schedule remains `0 1 * * 0,6`.
+
+### Schedule, reconciliation and runtime evidence
+
+- Latest complete native schedule evidence in the tracker remains 11:17:20Z on 2026-11-09; all six Platform/TCE gaps and ages exceeded their existing budgets. Issue [#1497](https://github.com/phanthienquoc/platform-infra/issues/1497) remains open for authoritative GitHub administrator enqueue/delivery evidence. The available commit-workflow-runs connector is PR-event filtered; empty master results do not prove no newer scheduled runs exist.
+- Reconciliation #42595146384 was `workflow_dispatch`, not native schedule: Auth runtime Secret provisioned/verified, shared `ghcr-pull` unchanged, drift=false, manifest apply and image promotion skipped. Recovery #42595660819 was `repository_dispatch` fallback, not native schedule acceptance.
+- Latest K3s snapshot remains `debug/vps-latest.md`, generated 2026-11-09T09:37:36Z. It is now beyond the 75-minute inspection budget. Node Ready/ARM64, disk 56% (~21 GiB free), RAM ~19 GiB, host restart required; Media/MicroFE 1/1 with digest evidence; Stock desired tag `12d63b4` lacks a matching ARM64 manifest; TCE/Auth/Keycloak 0/0. Do not use this stale snapshot to authorize rollout or decommission.
+- Media runner was active/enabled in that snapshot. External backup/retention, authoritative DNS ownership and remote runner registration remain unverified. The final runner audit guard is defense in depth only; no runner retirement or namespace deletion occurred.
+
+### Next actions and safety
+
+1. GitHub administrator: provide authoritative schedule enqueue/delivery evidence for #1497; preserve cron and freshness budgets.
+2. Stock owner: run the manual `preflight_only=true` workflow against current master to verify `VNSTOCK_API_KEY` and authenticated tier without ingestion; separately approve ARM64 publication and digest capture.
+3. TCE/Auth owners: resolve HTTP 503 and approve recovery/rollback before restoring replicas.
+4. Media owner/operator: verify external backup/retention, authoritative DNS ownership and remote runner registration before protected decommission.
+5. Platform operator: obtain a fresh read-only K3s inspection before any runtime mutation; host maintenance requires an approved window and rollback plan.
+
+No production GHCR publication, digest promotion, production manifest apply, rollout, scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host reboot/upgrade occurred in this execution. The earlier Auth runtime Secret provisioning in #42595146384 remains the only confirmed production mutation in the latest reconciliation evidence; shared `ghcr-pull` was unchanged. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
+Last reviewed: **2026-11-09 18:23 ICT**
+
 # Cross-Repository Production Deployment Tracker
 
 ## Execution delta — 2026-11-09 18:17 ICT / 11:17 UTC
