@@ -1,6 +1,6 @@
 # Cross-repo workflow inventory and deployment ownership
 
-Current review: **2026-11-09 14:00 ICT / 2026-11-09 07:00 UTC**
+Current review: **2026-11-09 14:10 ICT / 2026-11-09 07:10 UTC**
 
 ## 2026-11-09 14:00 ICT execution delta
 
@@ -12,8 +12,7 @@ Current review: **2026-11-09 14:00 ICT / 2026-11-09 07:00 UTC**
 - Decommission defense-in-depth follow-up requires the runner-retirement attestation in the workflow's final delete step, namespace script and root-owned wrapper, not only the preceding workflow validation/remote audit step. Regression tests reject missing/mismatched runner attestations. Remote GitHub runner absence still comes only from the protected read-only API audit.
 - Native schedule cadence remains unverified after the 05:02:47Z all-event snapshot in issue #1497. Preserve cron and budgets. TCE market-scan schedule unchanged.
 - No production publication/promotion/apply/rollout/scaling, namespace or storage deletion, runner retirement, DNS/database/storage mutation, or host maintenance occurred.
-
-| Repository | App-owned workflows and release contract | Platform-owned responsibilities / boundary | Current evidence |
+- Platform PR #1507 merged at `a619815d` from exact head `e65dbb62`; exact-head `validate-github-actions` #42577373795 and `validate-manifests` #42577373702 PASS. Post-merge CI is not exposed by the connector and remains unverified.
 
 | Repository | App-owned workflows and release contract | Platform-owned responsibilities / boundary | Current evidence |
 |---|---|---|---|
