@@ -1,3 +1,17 @@
+## 2026-11-09 21:22 ICT — workflow ownership and readiness delta
+
+- Platform master `49e5e764`; PR #1522 merged after exact-head `validate-github-actions` #42633638893 and `validate-manifests` #42633638946 PASS; post-merge master push #42633860020/#42633860140 PASS. The GitOps-ready dispatch verifier now requires exactly one matching completed-success promotion job for each app-specific promotion gate and rejects duplicates (4 positive, 26 negative self-test cases). Open owner-decision drafts: #1314/#544/#541/#539.
+- TCE master `65af89f6`; WF-01/WF-02/WF-05 pass. Native WF-06 #42594757482 and manual WF-06 #42594805077 fail all four strict public probes with HTTP 503; native WF-12 #42587926693 fails freshness. WF-13/WF-12 workflow_run fallbacks do not count as native schedule acceptance. No open PR.
+- Stock master `b1b5e177`; CI #42610360402 PASS 7/7, including scraper side-effect-free credential preflight contract and ARM64 non-publishing build. Current-master authenticated VNSTOCK credential preflight and production digest publication remain unverified. No open PR.
+- Media master `dcd69869`; CI #42539512417 PASS. No new publisher run or Platform handoff; runner remote registration, external backup/retention and DNS ownership remain unverified. No open PR.
+- Authentication master `b7183475`; CI #42586362115 PASS; no production release run. Draft PR #76 remains open.
+- TCE native WF-06/WF-12 ages at 14:21:58Z are 17,115s/20,358s versus 1,500s budgets. Platform's latest unfiltered first page (30 items) has no schedule event; this is a pagination-limited observation, not proof of no newer event. Last fully filtered Platform evidence remains 13:04:20Z. Issue #1497 updated with comment #6742393810; administrator scheduler enqueue/delivery evidence remains required.
+- K3s inspection snapshot generated 09:37:36Z is 17,062s old (>4,500s budget). Do not authorize runtime mutation from this snapshot.
+- App repositories continue to own tests/builds and immutable GHCR publication; Platform alone owns production manifests, shared pull credentials, source/run-attempt provenance, digest/ARM64 verification, GitOps promotion/apply, rollout/health and protected decommission. `reconcile-vps.yml` sole apply authority; `inspect-vps.yml` read-only; no duplicate SSH/Compose authority.
+- No production publication/promotion/apply/rollout, scaling, deletion, runner retirement, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-09 20:04 ICT — workflow ownership and readiness delta
 
 - Platform master `f9984d4d`; PR #1520 exact-head validate-manifests #42614267017 and post-merge push #42614397667 PASS. Open human-decision drafts #1314/#544/#541/#539.
