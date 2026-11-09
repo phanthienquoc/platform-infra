@@ -1,3 +1,15 @@
+## 2026-11-10 05:14 ICT — fresh K3s inspection and cross-repo CI
+
+- Platform master `051f7b83`; TCE `68660a20`; Stock `b1b5e177`; Media `dcd69869`; Auth `eab85fab`. Open drafts Platform #1314/#544/#541/#539 and Auth #76; no open PRs in TCE/Stock/Media.
+- MicroFE WF-08B exact sender/receiver schema contracts are merged (TCE #1034, Platform #1548). Sender tests 1 positive/19 negative; receiver 1 positive/17 negative. Receiver gate is before kubectl/GHCR/provenance/promotion. TCE post-merge WF-01/02/05 all PASS; Platform post-merge validations PASS.
+- Platform inspection PR #1550 merged at exact validated head after validate-manifests #42709965064 PASS. Snapshot generated 22:12:13Z: node Ready/ARM64, RAM 19 GiB available, disk 56%/20 GiB free, Docker 9.195 GB/5.773 GB reclaimable, host restart required. Media and MicroFE core pods 1/1; TCE/Auth/Keycloak 0/0; Stock desired Admin/Backend pulls fail on historical tag `12d63b4` with no ARM64 manifest. Storage preflight clean (only k3s-debug PVC/PV, no Stock/Media snapshots); Media runner service/Listener remains active. OIDC probes 503.
+- Reconciliation #42709362025 used `ALLOW_IMAGE_CHANGES=false`, passed GHCR read preflight, provisioned/verified Auth runtime Secret, left shared `ghcr-pull` unchanged, passed TCE release pairing, found drift=false and skipped manifest apply.
+- All six native schedule inter-arrival gaps remain above unchanged budgets; manual inspection #42709680634 does not count as a native tick. GitHub administrator enqueue/delivery evidence remains required.
+- Stock scraper #42457182511 remains fail-closed on missing `VNSTOCK_API_KEY`; issue #42 open. Media runner unregister, backup/retention and DNS ownership remain unverified. No decommission.
+- No production publication, release dispatch, digest promotion, manifest apply, scaling, namespace/storage deletion, runner retirement, DNS/database mutation or host maintenance. TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-10 05:10 ICT — MicroFE exact dispatch and reconciliation delta
 
 - Platform PR #1548 and TCE PR #1034 are merged. Platform exact-head lint/manifests #42709136411/#42709136264 and post-merge #42709336655/#42709336764 PASS. TCE exact-head WF-01P/WF-02/WF-05/WF-08B #42709203603/#42709204042/#42709203626/#42709203665 PASS. Post-merge WF-02 #42709513839 PASS; WF-01 #42709513845 and WF-05 #42709513831 were still running at checkpoint.

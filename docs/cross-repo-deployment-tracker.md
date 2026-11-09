@@ -1,3 +1,19 @@
+## 2026-11-10 05:14 ICT — fresh full K3s inspection and MicroFE contract completion
+
+- Current master: Platform `051f7b8325c6a79e4b3a91a97f57b61169721f0c`; TCE `68660a20e5bf3472a122c59d75b49ffce16a2ce9`; Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media `dcd698699c65ba6e73f6b43838975144777131c3`; Auth `eab85fab32d7c9baef750c1fedbb93deb8c1333f`. Open drafts: Platform #1314/#544/#541/#539; Auth #76; no TCE/Stock/Media open PRs.
+- Platform PR #1548 and TCE PR #1034 merged with exact-head and post-merge validations passing. TCE post-merge WF-01 #42709513845, WF-02 #42709513839 and WF-05 #42709513831 all passed. Platform docs PR #1549 merged; validate-manifests #42709840664 exact-head and #42709950464 post-merge passed.
+- Fresh read-only [inspect-vps #42709680634](https://github.com/phanthienquoc/platform-infra/actions/runs/42709680634) generated `debug/vps-latest.md` at 22:12:13Z. Inspection PR #1550 merged at exact validated head `e678cfe383f82b169a2f51da06b45b1d32fcd0e5` as master `051f7b83`; exact-head validate-manifests #42709965064 passed.
+- Full host snapshot: ARM64 Ubuntu 22.04.5; K3s v1.36.3+k3s1; containerd 2.3.2-k3s2; node Ready. RAM 23 GiB total/19 GiB available; root disk 45 GiB/20 GiB free/56% used; Docker image store 9.195 GB with 5.773 GB reclaimable; `restart_required=yes`. No cleanup, reboot or upgrade.
+- Workloads: Media backend/frontend 1/1; MicroFE Shell/WS/NATS 1/1; Auth/Keycloak and TCE frontend/service 0/0; Stock Admin 0/1 with two ImagePullBackOff pods; desired Stock Backend pod ImagePullBackOff while legacy Backend/Frontend remain 1/1. Stock tag `12d63b4` fails with no matching ARM64 manifest. Media runner service/listener remains active; Platform runner active.
+- Storage preflight: only PVC/PV is `k3s-debug/k3s-debug-logs`; no Stock/Media VolumeSnapshot refs; `storage-clean`. Stock/Media namespaces, Services and Ingresses remain. External backup/retention, authoritative DNS and remote Media runner unregister remain unverified; protected decommission stays blocked.
+- Public OIDC probes for both master and mrcute realms returned HTTP 503; Keycloak is 0/0 and condition wait timed out. TCE remains 0/0; latest strict WF-06 probes also returned 503. No TCE/Auth live-health claim.
+- Controlled reconciliation #42709362025 passed GHCR preflight for Auth/MicroFE/TCE, provisioned/verified Auth runtime Secret with values suppressed, left shared `ghcr-pull` unchanged, found no managed image-pull failures, passed TCE pairing `prod-v0.1.0-e75e338`, found drift=false and skipped manifest apply.
+- Native schedule IDs/gaps/budgets remain unchanged: reconcile #42664347392 / 37,823s / 2,700s; inspection #42694932077 / 39,672s / 4,500s; recovery #42657359651 / 37,669s / 2,700s; watchdog #42657625219 / 37,408s / 2,700s; TCE WF-06 #42689871258 / 37,834s / 1,500s; WF-12 #42681246237 / 37,832s / 1,500s. All six native ages/gaps remain out of budget. Fresh manual inspection #42709680634 is not native schedule acceptance. Admin telemetry remains outstanding in [issue #1497](https://github.com/phanthienquoc/platform-infra/issues/1497).
+- Stock scraper #42457182511 remains fail-closed on empty `VNSTOCK_API_KEY`; Stock issue #42 remains open. No owner response.
+- No GHCR publication, production dispatch, digest promotion, manifest apply, workload scaling, namespace/storage deletion, runner retirement, DNS/database mutation or host maintenance. Auth runtime Secret provision/verification did occur; shared `ghcr-pull` unchanged. TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-10 05:10 ICT — MicroFE exact dispatch contract merged; controlled reconciliation
 
 - Platform PR [#1548](https://github.com/phanthienquoc/platform-infra/pull/1548) merged at `8a603a5b3b2c25064fccfc68c57837aa47c59429`; exact-head `validate-github-actions` #42709136411 and `validate-manifests` #42709136264 PASS; post-merge #42709336655/#42709336764 PASS.
