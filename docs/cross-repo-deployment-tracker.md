@@ -1,3 +1,17 @@
+## Execution delta — 2026-11-09 21:25 ICT / 14:25 UTC
+
+- Platform master is now `81191ee478c97a436a1f91feacf1f042c90d8a27` after PR [#1523](https://github.com/phanthienquoc/platform-infra/pull/1523) merged at this SHA. PR #1523 exact-head `validate-manifests` #42634259014 PASS; post-merge master push #42634355055 PASS. Its 21:22 checkpoint correctly captured the pre-merge Platform head `49e5e764`; this delta records the resulting master head.
+- PR #1522 remains merged at `49e5e764f6aca5108ac6d01166aef5a274f8e644`. Its exact-head `validate-github-actions` #42633638893 and `validate-manifests` #42633638946 PASS; post-merge #42633860020/#42633860140 PASS. Dispatch verifier requires unique completed-success promotion jobs; self-tests report 4 positive and 26 negative cases.
+- Other master heads unchanged: TCE `65af89f69ffe0d844a9b63e2434bc3f8cedfebb7`; Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication `b71834758d278e50e6ce07b5086fe45e9d9b3350`.
+- Open owner-decision drafts remain Platform #1314/#544/#541/#539 and Authentication #76. No open PRs in TCE, Stock or Media.
+- TCE latest strict health evidence remains WF-06 #42594757482 (native) and #42594805077 (manual), with all four public probes HTTP 503; WF-12 #42587926693 remains failed freshness evidence. TCE/Auth remain intentional 0/0; no scaling or health-check weakening.
+- Stock master CI #42610360402 PASS 7/7; current-master authenticated VNSTOCK preflight and production digest publication remain unverified. Media master CI #42539512417 PASS; Auth master CI #42586362115 PASS. No production publisher run/digest handoff was verified for these apps.
+- Scheduler evidence and limitations are recorded in issue #1497 comment #6742393810. TCE latest visible native WF-06/WF-12 events are still #42594757482/#42587926693; Platform latest unfiltered first page contains no schedule event but is pagination-limited. Administrator scheduler enqueue/delivery telemetry remains required. Preserve all cron/freshness budgets and TCE market-scan schedule.
+- Latest K3s snapshot remains generated at 09:37:36Z and is stale beyond 4,500s; do not authorize rollout/decommission from it. No new read-only inspection was available in this run.
+- No production publication/promotion/apply/rollout, scaling, deletion, runner retirement, DNS/database/storage mutation or host maintenance. `reconcile-vps.yml` remains sole apply authority; `inspect-vps.yml` remains read-only; no direct SSH/Compose authority.
+
+Checkpoint: `docs/cross-repo-deployment-checkpoints/2026-11-09-2125-ict.md`.
+
 ## Execution delta — 2026-11-09 21:22 ICT / 14:21:58 UTC
 
 - Current master heads: Platform `49e5e764f6aca5108ac6d01166aef5a274f8e644`; TCE `65af89f69ffe0d844a9b63e2434bc3f8cedfebb7`; Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication `b71834758d278e50e6ce07b5086fe45e9d9b3350`.
