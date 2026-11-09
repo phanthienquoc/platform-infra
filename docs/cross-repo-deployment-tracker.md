@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: **2026-11-09 10:04 ICT / 2026-11-09 03:04 UTC**
+Last reviewed: **2026-11-09 10:12 ICT / 2026-11-09 03:12 UTC**
 
 This rolling tracker distinguishes native schedule events from manual, push, workflow_run and repository_dispatch fallbacks. Timestamped evidence is archived under `docs/cross-repo-deployment-checkpoints/`.
 
@@ -1481,17 +1481,19 @@ The helper initially had 5 positive extraction and 6 negative contract cases and
 
 ## Manifest image identity hardening — 2026-11-09 10:04 ICT / 03:04 UTC
 
-### PR #1500 — open, exact-head validation pending
+### PR #1500 — squash-merged and exact-head validated
 
-[PR #1500](https://github.com/phanthienquoc/platform-infra/pull/1500) is open from `fix/gitops-ready-image-identity-20261109-1004-ict`, based on master `c0c4417c8b317ced59444d61d2671edf879f646a`. Initial implementation head: `72dde2e70cb4f6c51de1828fa4ab150aca1b46f5`; documentation updates in this PR may advance the head and require exact-head revalidation.
+[PR #1500](https://github.com/phanthienquoc/platform-infra/pull/1500) was squash-merged at `640eab00e13ff1460c47f394138598da98e096cb` from exact head `046d323593c0546a5119895c77ff945456874b54`, based on master `c0c4417c8b317ced59444d61d2671edf879f646a`.
 
 Review found that `verify-gitops-ready-image-refs.py` verified the digest for each allowlisted `- name:` but did not bind optional Kustomize `newName:` to that same repository and did not reject additional image entries in the manifest. A `newName` override could therefore redirect the rendered image while the preflight verified the original GHCR repository.
 
-The follow-up adds:
+The merged change adds:
 - Exactly one `images:` section and an exact per-app image-name set; missing, duplicate, malformed or unexpected image entries fail closed.
 - Optional `newName:` must equal the allowlisted repository; duplicate, malformed or redirected overrides fail closed.
 - Regression coverage expands from 5 positive / 6 negative to 5 positive / 12 negative cases.
-- Workflow-contract validation asserts the image-set and repository-identity checks remain present. The existing GitHub Actions workflow already runs the helper self-test.
+- Workflow-contract validation asserts the image-set and repository-identity checks remain present. The existing GitHub Actions workflow runs the helper self-test.
+
+Exact-head validation on SHA `046d323593c0546a5119895c77ff945456874b54`: `validate-github-actions` #42555164957 PASS (including actionlint, yamllint, shellcheck, ops regression, 5 positive/12 negative image-ref tests and workflow-contract validation); `validate-manifests` #42555164890 PASS. PR mergeability was true and squash merge used the exact expected head. No post-merge workflow run was available in this inspection, so post-merge validation remains pending.
 
 Current master Auth and TCE manifests are still tag-pinned before a release promotion; the authenticated ready-event gate intentionally rejects them until the app-specific promotion workflow has merged digest-pinned manifest changes. MicroFE is already digest-pinned. This PR changes only read-only validation and does not alter normal scheduled reconciliation.
 
@@ -1504,3 +1506,14 @@ Current master Auth and TCE manifests are still tag-pinned before a release prom
 - Stock still needs `VNSTOCK_API_KEY` and an owner-approved ARM64 publication; TCE/Auth remain intentional 0/0 pending service-owner recovery/rollback approval; Media runner retirement remains blocked by remote registration, backup/retention and DNS evidence.
 
 No production image publication/promotion, manifest apply, workload scaling, credential mutation, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose authority. TCE market-scan schedule unchanged.
+
+
+## Post-merge follow-up — 2026-11-09 10:12 ICT / 03:12 UTC
+
+Platform PR [#1500](https://github.com/phanthienquoc/platform-infra/pull/1500) was squash-merged at `640eab00e13ff1460c47f394138598da98e096cb` from exact head `046d323593c0546a5119895c77ff945456874b54`. Exact-head `validate-github-actions` #42555164957 and `validate-manifests` #42555164890 both completed successfully. The GitHub Actions log confirms the GitOps image-ref helper passed 5 positive extraction and 12 negative contract cases, and `validate-workflow-contracts.py` passed. Master now contains the exact image-set and `newName` repository-binding checks. No post-merge run was visible during this inspection; do not claim post-merge validation yet.
+
+Current Platform master: `640eab00e13ff1460c47f394138598da98e096cb`. Open human-decision drafts remain #1314/#544/#541/#539; Auth PR #76 remains draft. The docs follow-up branch `docs/cross-repo-post-merge-1500-20261109-1012-ict` records this checkpoint.
+
+The Auth and TCE production manifests remain tag-pinned at master until their app-specific digest promotion jobs run and merge. Their authenticated ready events remain fail-closed until the digest-pinned manifest is present and registry tag-to-digest/ARM64 checks pass. MicroFE is already digest-pinned. This does not affect normal scheduled reconciliation.
+
+No production image publication/promotion, manifest apply, workload scaling, credential mutation, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
