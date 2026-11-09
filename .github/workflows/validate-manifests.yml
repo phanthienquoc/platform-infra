@@ -31,6 +31,12 @@ jobs:
       - name: Test Auth digest promotion helper
         run: python3 scripts/promote-auth-image-digest.py --self-test
 
+      - name: Test exact Auth and TCE dispatch payload contracts
+        run: |
+          set -euo pipefail
+          bash scripts/tests/verify-auth-dispatch-payload.test.sh
+          bash scripts/tests/verify-tce-dispatch-payload.test.sh
+
 
       - name: Validate changed production image references
         if: github.event_name == 'pull_request'
