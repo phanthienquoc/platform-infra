@@ -30,6 +30,30 @@ def require(condition: bool, message: str) -> None:
         raise ValueError(message)
 
 
+def require_unique_successful_job(jobs: list, expected_name: str, *, prefix: bool = False) -> None:
+    matching_jobs = [
+        job
+        for job in jobs
+        if isinstance(job, dict)
+        and isinstance(job.get("name"), str)
+        and (
+            job["name"].startswith(expected_name)
+            if prefix
+            else job["name"] == expected_name
+        )
+    ]
+    require(
+        len(matching_jobs) == 1,
+        f"Promotion run must contain exactly one required job matching {expected_name!r}; found {len(matching_jobs)}.",
+    )
+    job = matching_jobs[0]
+    require(
+        job.get("status") == "completed" and job.get("conclusion") == "success",
+        f"Required promotion job {job.get('name')!r} is not completed-success "
+        f"(status={job.get('status')!r}, conclusion={job.get('conclusion')!r}).",
+    )
+
+
 def validate(event: dict, promotion_run: dict, promotion_jobs: dict) -> None:
     require(event.get("action") == "gitops-promoted-ready", "Unsupported repository_dispatch action.")
     payload = event.get("client_payload")
@@ -93,29 +117,16 @@ def validate(event: dict, promotion_run: dict, promotion_jobs: dict) -> None:
 
     jobs = promotion_jobs.get("jobs") if isinstance(promotion_jobs, dict) else None
     require(isinstance(jobs, list), "Promotion run jobs response must contain a jobs array.")
-    successful_names = {
-        job.get("name")
-        for job in jobs
-        if isinstance(job, dict)
-        and isinstance(job.get("name"), str)
-        and job.get("status") == "completed"
-        and job.get("conclusion") == "success"
-    }
     if app == "microfe":
-        require(
-            "Promote MicroFE image digests as one GitOps change" in successful_names,
-            "MicroFE promotion run did not successfully execute its digest-promotion job.",
+        require_unique_successful_job(
+            jobs,
+            "Promote MicroFE image digests as one GitOps change",
         )
     elif app == "tce-dashboard":
-        require(
-            {"Promote TCE web/service digests atomically", "Coordinate TCE release"} <= successful_names,
-            "TCE promotion run must successfully execute both paired promotion and release-coordinator jobs.",
-        )
+        require_unique_successful_job(jobs, "Promote TCE web/service digests atomically")
+        require_unique_successful_job(jobs, "Coordinate TCE release")
     else:
-        require(
-            any(name.startswith("Promote auth-service /") for name in successful_names),
-            "Auth promotion run did not successfully execute the Auth promotion job.",
-        )
+        require_unique_successful_job(jobs, "Promote auth-service /", prefix=True)
 
 
 def self_test() -> None:
@@ -214,6 +225,17 @@ def self_test() -> None:
     negative.append((event, run, jobs))
     event, run, jobs = case("microfe", "release", f"microfe-{source[:7]}")
     jobs["jobs"] = []
+    negative.append((event, run, jobs))
+
+    # A successful duplicate must not hide an ambiguous or partially failed promotion job.
+    event, run, jobs = case("microfe", "release", f"microfe-{source[:7]}")
+    jobs["jobs"].append({**jobs["jobs"][0], "conclusion": "failure"})
+    negative.append((event, run, jobs))
+    event, run, jobs = case("tce-dashboard", "release", f"prod-v1.2.3-{source}")
+    jobs["jobs"].append(dict(jobs["jobs"][1]))
+    negative.append((event, run, jobs))
+    event, run, jobs = case("auth-service", "auth", f"prod-v1.2.3-{source}", "workflow_dispatch")
+    jobs["jobs"].append(dict(jobs["jobs"][0]))
     negative.append((event, run, jobs))
 
     for event, run, jobs in negative:
