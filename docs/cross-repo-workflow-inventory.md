@@ -1032,3 +1032,44 @@ Platform master dd1bca11e3c59c92f920ec5e4896fb8d643be272 after PR #1490; exact-h
 - Stock/Media storage preflight is clean for PVC/PV/VolumeSnapshot references; only PVC is in `k3s-debug`. Production manifests contain no active Stock/Media references. This does not prove external backup/retention/DNS ownership or remote Media runner unregistration. No delete plan/action.
 - Auth receiver exact schema merged in Platform #1534; Auth master CI fixtures PASS. Auth/TCE remain tag-pinned pending app publication and Platform digest promotion. MicroFE remains digest-pinned. Stock/Media remain retired from active GitOps but workloads are not deleted.
 - No production image publication/promotion, apply, rollout, scaling, deletion, runner retirement, DNS/database/storage mutation or host maintenance. No cron/freshness change; TCE market-scan schedule unchanged.
+
+
+## Cross-repo execution inventory — 2026-11-10 06:00 ICT / 2026-11-09 23:00 UTC
+
+### Verified current repository heads and workflow state
+
+| Repository | Master SHA | Open PRs | Latest master CI evidence |
+|---|---|---|---|
+| `platform-infra` | `5a97c734db120c8cea76a3971e01d2a2ef3b84e8` | #1314/#544/#541/#539 (drafts) | `validate-manifests` #42710407011 PASS |
+| `TCE-dashboard` | `68660a20e5bf3472a122c59d75b49ffce16a2ce9` | none | WF-01 #42709513845, WF-02 #42709513839, WF-05 #42709513831 PASS |
+| `stockdividend` | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS 7/7 |
+| `media-generation` | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS |
+| `phanthienquoc-authentication` | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft) | CI #42654579277 PASS |
+
+### Workflow event classification and latest operational evidence
+
+- TCE native WF-07 #42711312505 succeeded; it is a third-party integration schedule and not a WF-06/WF-12 deployment-health freshness event.
+- TCE WF-12 #42711341231 is a `workflow_run` watchdog failure caused by stale native WF-06 delivery. Its Platform heartbeat dispatch succeeded.
+- TCE WF-13 #42711368741 successfully dispatched a deduplicated read-only WF-06 fallback; fallback #42711398985 failed all four public HTTP 200 probes with HTTP 503.
+- Platform recovery #42711357014 succeeded on the exact TCE heartbeat. It did not dispatch duplicate reconciliation or inspection because recent runs existed.
+- Latest reconciliation #42709362025 passed GHCR read preflight, Auth runtime Secret verification/provisioning, shared pull-credential reconciliation, managed image-pull checks and TCE tag pairing. `ALLOW_IMAGE_CHANGES=false`; image promotion and production manifest apply were skipped.
+- Latest K3s snapshot is #42709680634 (`workflow_dispatch`, not native schedule), generated 22:12:13Z. Media/MicroFE core workloads are 1/1; TCE/Auth/Keycloak are 0/0; Stock desired Admin/Backend pods still fail ARM64 image pull on `12d63b4`; public OIDC is HTTP 503. Host restart is required but not authorized.
+- Native freshness lanes remain outside budget: Platform reconcile #42664347392 (gap 37,823s), inspection #42694932077 (39,672s), recovery #42657359651 (37,669s), watchdog #42657625219 (37,408s), TCE WF-06 #42689871258 (37,834s), WF-12 #42681246237 (37,832s). Budgets remain 2,700s / 4,500s / 2,700s / 2,700s / 1,500s / 1,500s respectively. Do not count manual, workflow_run, repository_dispatch or WF-07 runs as acceptance for these lanes.
+
+### Ownership and preserved workflows
+
+- App repositories own tests/builds and immutable GHCR image publication: TCE, StockDividend, Media Generation and Authentication.
+- Platform Infra owns production manifests, shared GHCR pull credentials, publisher provenance/digest verification, GitOps promotion/reconciliation, rollout and health verification.
+- Preserve CI/test/security workflows and purposeful manual/release/scheduled jobs. Keep TCE WF-06 strict HTTP 200 probes and its separate WF-12/WF-13 stale-schedule watchdog/recovery. Keep Stock's weekend scraper fail-closed; the current missing-secret owner action is tracked in Stock issue #42.
+- StockDividend and Media Generation stay retired from active Platform GitOps until an explicit reactivation decision; do not delete namespaces or retire the dedicated Media runner without backup, retention, DNS and remote-registration evidence.
+- `reconcile-vps.yml` remains the sole production apply authority. `inspect-vps.yml` is read-only. Do not add direct SSH/Compose deployment authorities.
+
+### Outstanding owner/operator dependencies
+
+1. GitHub administrator: schedule enqueue/delivery telemetry for Platform issue #1497.
+2. TCE/Auth owners: recovery/rollback approval, app-owned release digests and live HTTP 200 health evidence.
+3. Stock owner: private `VNSTOCK_API_KEY` configuration and authenticated `preflight_only=true`.
+4. Media owner: remote runner unregister proof, external backup/retention and authoritative DNS ownership.
+5. Platform operator: approved maintenance window and rollback plan for host package updates/restart.
+
+No production release, digest promotion, manifest apply, scaling, deletion, credential rotation, runner retirement or host maintenance was performed. TCE market-scan schedule unchanged.
