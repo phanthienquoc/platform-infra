@@ -1,3 +1,15 @@
+## 2026-11-10 05:10 ICT — MicroFE exact dispatch and reconciliation delta
+
+- Platform PR #1548 and TCE PR #1034 are merged. Platform exact-head lint/manifests #42709136411/#42709136264 and post-merge #42709336655/#42709336764 PASS. TCE exact-head WF-01P/WF-02/WF-05/WF-08B #42709203603/#42709204042/#42709203626/#42709203665 PASS. Post-merge WF-02 #42709513839 PASS; WF-01 #42709513845 and WF-05 #42709513831 were still running at checkpoint.
+- WF-08B MicroFE sender now validates the exact two-key sender envelope and 11-key client payload before dispatch; tests 1 positive/19 negative. Platform receiver validates the exact 11-key payload before tooling/GHCR/provenance/promotion; tests 1 positive/17 negative. Receiver CI enforces step ordering; MicroFE source run ID zero is rejected. PR checks did not publish GHCR images or dispatch production events.
+- Recovery-triggered reconciliation #42709362025 completed successfully with `mode=apply`, `target=all`, `ALLOW_IMAGE_CHANGES=false`. GHCR read preflight passed for Auth, MicroFE Shell/WS and TCE web/service; Auth runtime Secret provisioned/verified; shared `ghcr-pull` unchanged; no managed image-pull failures; TCE pairing passed; drift=false, apply skipped. K3s node Ready/ARM64; Media/MicroFE workloads 1/1; TCE/Auth/Keycloak 0/0; Stock desired Admin/Backend ImagePullBackOff while legacy Backend/Frontend 1/1.
+- Reconcile pod readout is fresh at 22:10:30Z but does not include disk/RAM/restart-required metrics. Full inspection #42694932077 is beyond 75m freshness and cannot authorize mutation. No public HTTP 200 claim for 0/0 TCE/Auth.
+- All six native schedule gaps remain above unchanged budgets; latest IDs/gaps are recorded in the deployment tracker and issue #1497. Recovery push/manual runs are not native acceptance. GitHub administrator enqueue/delivery evidence still required.
+- Stock weekend scraper #42457182511 remains fail-closed on missing `VNSTOCK_API_KEY`; owner action issue #42 open. Media runner remains active; external backup/retention/DNS and remote unregister are unverified.
+- No image publication, production dispatch, digest promotion, manifest apply, scaling, decommission, runner retirement, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-10 04:03 ICT — fresh inspection and schedule evidence
 
 - Current master heads: Platform `827d8d442cf7de344be04a246e56ee2ee3148657`; TCE `aea2755f164186eb6172d9e11afece98227907f9`; Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
