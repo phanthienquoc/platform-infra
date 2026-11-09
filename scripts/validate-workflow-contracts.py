@@ -50,6 +50,8 @@ def schedule_max_minute_gap(workflow_text: str, workflow_name: str) -> int:
 
 reconcile = read("reconcile-vps.yml")
 promotion = read("gitops-image-promotion.yml")
+validate_github_actions = read("validate-github-actions.yml")
+microfe_publisher_provenance = (ROOT / "scripts" / "verify-tce-microfe-publisher-run.sh").read_text(encoding="utf-8")
 recovery = read("recover-stale-ops.yml")
 watchdog = read("reconcile-schedule-watchdog.yml")
 inspection = read("inspect-vps.yml")
@@ -186,6 +188,17 @@ for job_name in ("promote-microfe-digests", "promote-tce-digests", "promote"):
             actual[key] = value.strip()
     if actual != expected:
         fail(f"GitOps PR promotion job {job_name} must explicitly retain only its required Actions/Contents/Pull requests write scopes.")
+
+microfe_job = promotion_job_block("promote-microfe-digests")
+microfe_schema_command = 'run: bash scripts/verify-tce-microfe-dispatch-payload.sh "$GITHUB_EVENT_PATH"'
+if microfe_schema_command not in microfe_job:
+    fail("MicroFE repository_dispatch must validate the exact payload schema before image promotion.")
+if microfe_job.index(microfe_schema_command) > microfe_job.index("name: Install pinned kubectl for MicroFE manifest render"):
+    fail("MicroFE dispatch schema validation must run before tooling installation, GHCR access or GitOps mutation.")
+if "bash scripts/tests/verify-tce-microfe-dispatch-payload.test.sh" not in validate_github_actions:
+    fail("validate-github-actions must execute the MicroFE dispatch payload regression suite.")
+if '[[ "$SOURCE_RUN_ID" =~ ^[1-9][0-9]*$ ]]' not in microfe_publisher_provenance:
+    fail("MicroFE publisher provenance must reject zero and non-positive source run IDs.")
 
 # Automated inspection and GitOps promotion PRs must use the verified Node24 action release.
 create_pull_request_pin = "peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1"

@@ -68,6 +68,9 @@ jobs:
         with:
           persist-credentials: true
 
+      - name: Validate exact MicroFE dispatch payload schema
+        run: bash scripts/verify-tce-microfe-dispatch-payload.sh "$GITHUB_EVENT_PATH"
+
       - name: Install pinned kubectl for MicroFE manifest render
         env:
           KUBECTL_VERSION: v1.36.3
