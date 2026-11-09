@@ -164,4 +164,5 @@ jobs:
           CONFIRMATION: ${{ inputs.confirmation }}
           DATA_RETENTION_REVIEW: ${{ inputs.data_retention_review }}
           DNS_OWNERSHIP_REVIEW: ${{ inputs.dns_ownership_review }}
+          RUNNER_RETIREMENT: ${{ inputs.runner_retirement }}
         run: bash scripts/decommission-stock-media-namespaces.sh delete
