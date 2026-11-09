@@ -74,7 +74,7 @@ jobs:
         run: |
           set -euo pipefail
           policy="$(sudo /usr/local/sbin/platform-kubectl policy-version)"
-          test "$policy" = "platform-kubectl policy: rollout-status-v15-core-workloads" || {
+          test "$policy" = "platform-kubectl policy: rollout-status-v16-decommission-runner-attestation" || {
             echo "::error::Runner bootstrap policy v15 is required before preflight."
             exit 1
           }
@@ -117,7 +117,7 @@ jobs:
         run: |
           set -euo pipefail
           policy="$(sudo /usr/local/sbin/platform-kubectl policy-version)"
-          test "$policy" = "platform-kubectl policy: rollout-status-v15-core-workloads" || {
+          test "$policy" = "platform-kubectl policy: rollout-status-v16-decommission-runner-attestation" || {
             echo "::error::Runner bootstrap policy v15 is required before decommission."
             exit 1
           }
