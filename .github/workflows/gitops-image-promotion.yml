@@ -497,6 +497,10 @@ jobs:
           # authenticated; actions/checkout removes them during post-job cleanup.
           persist-credentials: true
 
+      - name: Validate exact Auth dispatch payload schema
+        if: github.event_name == 'repository_dispatch' && github.event.action == 'auth-image-published'
+        run: bash scripts/verify-auth-dispatch-payload.sh "$GITHUB_EVENT_PATH"
+
       - name: Resolve event inputs
         id: input
         env:
@@ -546,7 +550,7 @@ jobs:
             [[ "$APP" == "auth-service" && "$COMPONENT" == "auth" ]] || { echo "::error::Auth digest event target must be auth-service/auth"; exit 1; }
             [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Auth source commit must be a full 40-character SHA"; exit 1; }
             [[ "$TAG" =~ ^prod-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{40}$ && "$TAG" == *-"$SOURCE_COMMIT" ]] || { echo "::error::Auth release tag must contain the full source SHA"; exit 1; }
-            [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]] || { echo "::error::Auth source run ID must be numeric"; exit 1; }
+            [[ "$SOURCE_RUN_ID" =~ ^[1-9][0-9]*$ ]] || { echo "::error::Auth source run ID must be a positive integer"; exit 1; }
             [[ "$SOURCE_RUN_ATTEMPT" =~ ^[1-9][0-9]*$ ]] || { echo "::error::Auth source run attempt must be a positive integer"; exit 1; }
             [[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/release.yml" ]] || { echo "::error::Auth source workflow path is not approved"; exit 1; }
             [[ "$SOURCE_EVENT" == "workflow_dispatch" ]] || { echo "::error::Auth production publisher must originate from workflow_dispatch"; exit 1; }

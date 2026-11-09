@@ -1829,6 +1829,7 @@ for required in (
     'verify_step_success "Verify auth service" "Run npm test"',
     'verify_step_success "Verify auth service" "Run npm run typecheck"',
     'verify_step_success "Verify auth service" "Run npm run build"',
+    '[[ "$SOURCE_RUN_ID" =~ ^[1-9][0-9]*$ ]]',
     '[[ "$SOURCE_RUN_ATTEMPT" =~ ^[1-9][0-9]*$ ]]',
     '[[ "$run_attempt" == "$SOURCE_RUN_ATTEMPT" ]]',
 ):
@@ -1844,6 +1845,7 @@ for required in (
     "Run npm run typecheck",
     "Run npm run build",
     "SOURCE_RUN_ATTEMPT=1",
+    "SOURCE_RUN_ID=0",
     'run_attempt:($run_attempt|tonumber)',
     'expect_failure "run attempt mismatch"',
     'expect_failure "missing run attempt"',
@@ -1873,6 +1875,49 @@ if "python3 scripts/promote-auth-image-digest.py --self-test" not in manifest_va
 ghcr_reference_validator = ROOT / "scripts" / "validate-ghcr-image-reference.sh"
 if "GHCR_EXPECTED_DIGEST" not in ghcr_reference_validator.read_text(encoding="utf-8"):
     fail("GHCR reference validation must support tag-to-digest correlation.")
+
+# The Auth receiver must reject unknown/missing client-payload keys before resolving
+# values or querying publisher provenance. The sender and receiver share one exact schema.
+auth_payload_verifier = ROOT / "scripts" / "verify-auth-dispatch-payload.sh"
+auth_payload_tests = ROOT / "scripts" / "tests" / "verify-auth-dispatch-payload.test.sh"
+if not auth_payload_verifier.is_file() or not auth_payload_tests.is_file():
+    fail("Exact Auth dispatch payload receiver and regression tests are required.")
+auth_payload_verifier_text = auth_payload_verifier.read_text(encoding="utf-8")
+for required in (
+    '"auth-image-published"',
+    '"auth-service"',
+    'sha256:[0-9a-f]{64}',
+    '".github/workflows/release.yml"',
+    '"^[1-9][0-9]*$"',
+    '"source_run_attempt"',
+    '"source_run_id"',
+    '"source_workflow_path"',
+    'endswith("-" + $payload.commit)',
+):
+    if required not in auth_payload_verifier_text:
+        fail(f"Exact Auth dispatch payload verifier is missing required schema rule: {required}")
+if "bash scripts/tests/verify-auth-dispatch-payload.test.sh" not in actions_validation:
+    fail("GitHub Actions validation must execute exact Auth dispatch payload receiver tests.")
+for required in (
+    "name: Validate exact Auth dispatch payload schema",
+    "if: github.event_name == 'repository_dispatch' && github.event.action == 'auth-image-published'",
+    'run: bash scripts/verify-auth-dispatch-payload.sh "$GITHUB_EVENT_PATH"',
+):
+    if required not in promotion:
+        fail(f"Auth dispatch receiver must validate the exact client payload before promotion: {required}")
+payload_validation_step = promotion.find("name: Validate exact Auth dispatch payload schema")
+input_resolution_step = promotion.find("name: Resolve event inputs")
+if payload_validation_step < 0 or input_resolution_step <= payload_validation_step:
+    fail("Exact Auth dispatch payload validation must run before resolving promotion inputs.")
+if '[[ "$SOURCE_RUN_ID" =~ ^[1-9][0-9]*$ ]]' not in promotion:
+    fail("Auth promotion must reject zero/invalid source run IDs before provenance lookup.")
+for required in (
+    "zero source run ID",
+    "unexpected payload key",
+    "release tag not bound to source commit",
+):
+    if required not in auth_payload_tests.read_text(encoding="utf-8"):
+        fail(f"Auth dispatch payload regression tests are missing: {required}")
 
 # Canonical Auth release promotion must independently correlate both immutable
 # producer tags (full source SHA and versioned full-SHA tag) to the dispatch digest.

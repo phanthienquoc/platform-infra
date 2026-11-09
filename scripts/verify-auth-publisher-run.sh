@@ -15,7 +15,7 @@ fail() {
   exit 1
 }
 
-[[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]] || fail "Auth source run ID must be numeric."
+[[ "$SOURCE_RUN_ID" =~ ^[1-9][0-9]*$ ]] || fail "Auth source run ID must be a positive integer."
 [[ "$SOURCE_RUN_ATTEMPT" =~ ^[1-9][0-9]*$ ]] || fail "Auth source run attempt must be a positive integer."
 [[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/release.yml" ]] || fail "Auth source workflow path is not approved."
 [[ "$SOURCE_EVENT" == "workflow_dispatch" ]] || fail "Auth production publisher must originate from workflow_dispatch."
