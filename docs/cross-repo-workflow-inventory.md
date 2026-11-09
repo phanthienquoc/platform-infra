@@ -640,3 +640,17 @@ Platform master dd1bca11e3c59c92f920ec5e4896fb8d643be272 after PR #1490; exact-h
 - Auth/TCE production manifests remain tag-pinned until digest promotion; their ready events remain fail-closed. MicroFE remains digest-pinned. Stock/Media remain retired from Platform GitOps.
 - Native schedule issue #1497 remains open; latest K3s snapshot is stale (>3h at checkpoint). Stock ARM64 publication/credential, TCE/Auth owner approvals, Media runner retirement and external backup/DNS evidence remain blockers.
 - App-owned GHCR guards are workflow-level overwrite prevention, not registry-side immutable-tag enforcement. No production image publication/promotion, apply, rollout, scaling, deletion or credential mutation. No cron/freshness or TCE market-scan schedule changes.
+
+
+## Observed execution state — 2026-11-09 12:02 ICT / 05:02 UTC
+
+- Current master heads: Platform 4e5d77df98fd86adac8670170440c0201d6f2be5; TCE ddf5811a7994aab08236028cff04e0a78ffd2e3e; Stock 1a18cabf32c6cc5f85f4157b5142a6d9b5; Media dcd698699c65ba6e73f6b43838975144777131c3; Authentication 047abc08e123d8bde7678104899d00aa8782624a.
+- Platform PR #1502 post-merge validate-github-actions #42559897903 and validate-manifests #42559897980 PASS; PR #1503 post-merge validate-manifests #42560097448 PASS.
+- TCE latest master unit-test lane #42538802541 PASS; native WF-06 #42548397383 and WF-12 #42546629459 FAIL. WF-06 has four strict public health probes failing (TCE web/API and Auth liveness/readiness) while TCE/Auth are intentional 0/0.
+- Stock master CI #42533562194 PASS 7/7. Scheduled scraper #42457182511 stops at missing VNSTOCK_API_KEY preflight before dependency installation or scrape.
+- Media master CI #42539512417 PASS; Authentication master CI #42539350154 PASS. App-owned GHCR guards remain merged; no current production image publication/digest handoff.
+- Open drafts: Platform #1314/#544/#541/#539 and Authentication #76. No open PRs in TCE, Stock or Media.
+- Native schedule latest events as of 05:02:47Z: Platform reconcile #42538596496 (17,633s gap), inspection #42548015626 (11,287s), recovery #42537793367 (18,189s), watchdog #42537967026 (18,071s); TCE WF-06 #42548397383 (11,018s), WF-12 #42546629459 (12,259s). All exceed existing budgets. Platform issue #1497 updated with fresh evidence; administrator action required.
+- K3s snapshot #42548015626 / debug/vps-latest.md generated 01:54:48Z and is stale at this checkpoint. Node Ready, disk 56%, RAM ~19 GiB, restart_required=yes; Media/MicroFE 1/1, Stock desired Admin/Backend image pulls failing (12d63b4), TCE/Auth/Keycloak 0/0. Media and Platform runner services active. Do not use this stale snapshot for rollout/decommission authorization.
+- Auth/TCE manifests remain tag-pinned; ready-event remains fail-closed until app-owned digest publication and Platform promotion. MicroFE is digest-pinned. Stock/Media remain retired from Platform GitOps.
+- No production publication, promotion, apply, rollout, scaling, deletion, runner retirement, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
