@@ -49,8 +49,10 @@ make_run() {
   local branch="${7:-master}"
   local sha="${8:-$sample_sha}"
   local id="${9:-$sample_run_id}"
+  local run_attempt="${10:-1}"
   jq -n \
     --arg id "$id" \
+    --arg run_attempt "$run_attempt" \
     --arg repo "$repo" \
     --arg head_repo "$head_repo" \
     --arg path "$path" \
@@ -59,7 +61,7 @@ make_run() {
     --arg sha "$sha" \
     --arg status "$status" \
     --arg conclusion "$conclusion" \
-    '{id:($id|tonumber),repository:{full_name:$repo},head_repository:{full_name:$head_repo},path:$path,event:$event,head_branch:$branch,head_sha:$sha,status:$status,conclusion:$conclusion}'
+    '{id:($id|tonumber),run_attempt:($run_attempt|tonumber),repository:{full_name:$repo},head_repository:{full_name:$head_repo},path:$path,event:$event,head_branch:$branch,head_sha:$sha,status:$status,conclusion:$conclusion}'
 }
 
 make_jobs() {
@@ -92,6 +94,7 @@ run_validator() {
     MOCK_CURL_FIRST_RESPONSE="${MOCK_CURL_FIRST_RESPONSE:-}" \
     MOCK_API_URL="$sample_api_url" \
     SOURCE_RUN_ID="$sample_run_id" \
+    SOURCE_RUN_ATTEMPT=1 \
     SOURCE_WORKFLOW_PATH="$sample_path" \
     SOURCE_EVENT=workflow_dispatch \
     SOURCE_HEAD_SHA="$sample_sha" \
@@ -121,6 +124,12 @@ run_validator >/dev/null
 
 make_run completed success "$sample_repo" "$sample_repo" "$sample_path" workflow_dispatch master "$sample_sha" 42000000002 > "$tmp_dir/response.json"
 expect_failure "run ID mismatch"
+make_run completed success > "$tmp_dir/response.json"
+jq '.run_attempt = 2' "$tmp_dir/response.json" > "$tmp_dir/response-invalid.json" && mv "$tmp_dir/response-invalid.json" "$tmp_dir/response.json"
+expect_failure "run attempt mismatch"
+make_run completed success > "$tmp_dir/response.json"
+jq 'del(.run_attempt)' "$tmp_dir/response.json" > "$tmp_dir/response-invalid.json" && mv "$tmp_dir/response-invalid.json" "$tmp_dir/response.json"
+expect_failure "missing run attempt"
 make_run completed success another-owner/authentication > "$tmp_dir/response.json"
 expect_failure "repository mismatch"
 make_run completed success "$sample_repo" another-owner/authentication > "$tmp_dir/response.json"
@@ -191,6 +200,13 @@ if PATH="$tmp_dir/bin:$PATH" MOCK_CURL_COUNT_FILE="$tmp_dir/count" MOCK_CURL_RES
   SOURCE_RUN_ID="$sample_run_id" SOURCE_WORKFLOW_PATH="$sample_path" SOURCE_EVENT=workflow_dispatch \
   SOURCE_HEAD_SHA="$sample_sha" SOURCE_COMMIT=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa bash "$validator" >/dev/null 2>&1; then
   echo "Expected Auth source commit mismatch to fail before API access." >&2
+  exit 1
+fi
+
+if PATH="$tmp_dir/bin:$PATH" MOCK_CURL_COUNT_FILE="$tmp_dir/count" MOCK_CURL_RESPONSE_FILE="$tmp_dir/response.json" \
+  SOURCE_RUN_ID="$sample_run_id" SOURCE_RUN_ATTEMPT=0 SOURCE_WORKFLOW_PATH="$sample_path" SOURCE_EVENT=workflow_dispatch \
+  SOURCE_HEAD_SHA="$sample_sha" SOURCE_COMMIT="$sample_sha" bash "$validator" >/dev/null 2>&1; then
+  echo "Expected invalid Auth source run attempt to fail before API access." >&2
   exit 1
 fi
 
