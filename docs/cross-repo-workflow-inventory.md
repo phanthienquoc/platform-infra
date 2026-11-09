@@ -627,3 +627,16 @@ Platform master dd1bca11e3c59c92f920ec5e4896fb8d643be272 after PR #1490; exact-h
 - Master is `640eab00e13ff1460c47f394138598da98e096cb`. No post-merge workflow run was visible at checkpoint time; post-merge CI remains unverified.
 - Auth/TCE current manifests are tag-pinned until a promotion PR merges digest pins; ready-event validation intentionally blocks before production mutation. MicroFE remains digest-pinned.
 - Native schedule investigation remains issue #1497. No cron/freshness changes and no TCE market-scan schedule change.
+
+
+## Root-scoped GitOps image-ref contract — merged Platform PR #1502 (2026-11-09 11:00 ICT)
+
+- PR [#1502](https://github.com/phanthienquoc/platform-infra/pull/1502) merged by squash at \`f23f272a746dd1991f868630c57c914f2ebac1b4\` from exact head \`51dd0b5e1c1bc804a0a24b4b57437175f19176f7\`.
+- \`verify-gitops-ready-image-refs.py\` now scopes extraction to exactly one root-level \`images:\` block. It no longer counts unrelated \`- name:\` entries from \`configMapGenerator\` or other root sections.
+- Nested/mis-scoped entries, empty image blocks, unsupported fields, malformed indentation, duplicate fields, image-set mismatches and repository redirects fail closed. Existing per-app allowlists and digest-only ready-event requirements remain.
+- Regression coverage: 5 positive digest extractions, 1 section-scope isolation case, 16 negative cases.
+- Exact-head \`validate-github-actions\` #42559803093 PASS and \`validate-manifests\` #42559803103 PASS. The superseded earlier head had a self-test failure, corrected before merge. No post-merge push run was exposed by the connector at checkpoint time; post-merge CI remains unverified.
+- Current heads: Platform \`f23f272a\`, TCE \`ddf5811a\`, Stock \`1a18cabf\`, Media \`dcd69869\`, Authentication \`047abc08\`. Open drafts: Platform #1314/#544/#541/#539 and Authentication #76; no app publisher PR remains open.
+- Auth/TCE production manifests remain tag-pinned until digest promotion; their ready events remain fail-closed. MicroFE remains digest-pinned. Stock/Media remain retired from Platform GitOps.
+- Native schedule issue #1497 remains open; latest K3s snapshot is stale (>3h at checkpoint). Stock ARM64 publication/credential, TCE/Auth owner approvals, Media runner retirement and external backup/DNS evidence remain blockers.
+- App-owned GHCR guards are workflow-level overwrite prevention, not registry-side immutable-tag enforcement. No production image publication/promotion, apply, rollout, scaling, deletion or credential mutation. No cron/freshness or TCE market-scan schedule changes.
