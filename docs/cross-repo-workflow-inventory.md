@@ -1,3 +1,14 @@
+## 2026-11-09 23:26 ICT — Auth exact payload filter tests
+
+- Authentication PR #93 merged at `eab85fab32d7c9baef750c1fedbb93deb8c1333f`. Exact PR CI #42654291067 passed tests, typecheck, build, immutable release contract, manual-only release pin validation and native ARM64 non-publishing build. Post-merge master CI #42654579277 was still in progress at 16:25:21Z.
+- Auth's release-contract validator now extracts the actual jq filter from `release.yml` and executes it against one valid and eight invalid payload fixtures. The test covers exact root/client keys, event, app/component, digest, source SHA, run ID/attempt and workflow path. It runs both in CI and before the manual release workflow publishes an image.
+- Auth dispatch uses the same validated JSON file via `gh api --input`; no release or repository_dispatch was triggered.
+- Preserve the unrelated Platform mirror schedule; its last visible run #41737911916 failed because `PLATFORM_INFRA_MIRROR_TOKEN` is missing. The `vps-image-cleanup` schedule #42472343489 was a dry run with 8 candidates, retain 10, remove 0. TCE WF-07 integration and backup schedules remain purposeful.
+- Issue #1497 comment #6745121718 contains the latest filtered native schedule evidence; all six deployment lanes remain outside budgets. Administrator delivery telemetry is still outstanding.
+- K3s snapshot from 15:23:26Z is within the 4,500s budget but approaching expiry. Media runner service/listener active; remote unregister, external backup/retention and DNS ownership remain blockers. No deletion or runtime mutation.
+
+---
+
 ## 2026-11-09 23:20 ICT — Auth dispatch payload and scheduled-job audit
 
 - Authentication PR #92 merged at `135a60a4f0af1a74c6cd23cc5b2dc12b6a7f4a2a`. Exact PR CI #42653356621 passed, including tests/typecheck/build, immutable release contract, manual-only release pin validation and native ARM64 non-publishing build. Post-merge #42653598077 completed successfully at 16:21:09Z.
