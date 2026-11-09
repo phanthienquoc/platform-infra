@@ -1,3 +1,16 @@
+## 2026-11-09 23:36 ICT — Auth receiver exact-schema contract
+
+- Platform PR #1534 merged at `a58d801e1770fad464477729ab49da64796fd4a1` from exact head `436ad889ba1c52ea7486ea881a559746d15fda87`. Exact-head `validate-github-actions` #42656332110 and `validate-manifests` #42656332072 passed. Post-merge push validation not yet observed.
+- Added `scripts/verify-auth-dispatch-payload.sh` and sixteen negative/one positive fixtures. Receiver checks the exact ten-key `client_payload`, app/component, SHA-256 digest, full source SHA/head equality, positive string run ID/attempt, approved `.github/workflows/release.yml`, `workflow_dispatch` source event and immutable full-SHA tag. It runs before resolving promotion inputs and only for `auth-image-published`.
+- Tightened Auth source run ID to positive integer in both the receiver workflow and provenance helper; zero ID is covered by regression tests. Auth remains publisher owner; Platform remains promotion/apply owner. Manual workflow_dispatch path unchanged.
+- Current master heads: Platform `a58d801e`; TCE `65af89f6`; Stock `b1b5e177`; Media `dcd69869`; Authentication `eab85fab`. Open drafts: Platform #1314/#544/#541/#539 and Authentication #76.
+- Latest verified app checks: Auth #42654291067 and post-merge #42654579277 PASS; Stock #42610360402 PASS 7/7; Media #42539512417 PASS; TCE WF-06 #42594757482 fails four HTTP 503 probes; WF-12 #42587926693 fails freshness.
+- Latest K3s snapshot generated 15:23:26Z; at 16:36:42Z it was 73m16s old (104s inside 75m budget). Node Ready/ARM64, disk 56%, ~19 GiB available RAM, restart required. Media/MicroFE 1/1; Stock desired Admin/Backend ImagePullBackOff; TCE/Auth/Keycloak 0/0. Storage-clean is not delete authorization; Media runner still active and external backup/DNS/remote unregister remain unverified.
+- Latest filtered native schedule query remains #1497 comment #6745121718 at 16:18:30Z; all six deployment lanes exceed budgets. Preserve cleanup, TCE WF-07 integration/backup and mirror schedules; no cron or TCE market-scan change.
+- No production publication, dispatch, digest promotion, manifest apply, rollout, scaling, deletion, runner retirement or host/DNS/storage mutation.
+
+---
+
 ## 2026-11-09 23:26 ICT — Auth exact payload filter tests
 
 - Authentication PR #93 merged at `eab85fab32d7c9baef750c1fedbb93deb8c1333f`. Exact PR CI #42654291067 passed tests, typecheck, build, immutable release contract, manual-only release pin validation and native ARM64 non-publishing build. Post-merge master CI #42654579277 was still in progress at 16:25:21Z.
