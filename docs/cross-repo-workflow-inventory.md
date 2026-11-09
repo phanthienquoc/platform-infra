@@ -472,3 +472,13 @@ App-owned publication and Platform-owned production GitOps boundaries remain unc
 - WF-03 remains manual-only/master-only. It now serializes publication per source SHA and checks both web/service version+full-SHA GHCR tags before the first push. Only explicit HTTP 404/known missing-manifest responses count as absent; existing tags, 401/403, ambiguous repository-not-found and unknown errors fail closed. This is workflow-level overwrite prevention, not registry-side tag immutability.
 - Post-merge TCE CI #42538802539/#42538802538/#42538802541 was still running at review. No production image publication or Platform dispatch occurred.
 - Platform documentation PR #1490 records the 07:08 snapshot and this 07:11 post-merge delta; revalidate its updated exact head before merge. No cron, freshness budget or TCE market-scan schedule change.
+
+
+## Publisher guard rollout update — 2026-11-09 07:18 ICT
+
+- TCE Dashboard PR #1031 merged at ddf5811a7994aab08236028cff04e0a78ffd2e3e. Exact-head checks passed; post-merge WF-01 #42538802539, WF-02 #42538802538 and WF-05 #42538802541 all PASS. WF-03 remains manual/master-only; no publication or Platform dispatch.
+- Authentication PR #90 merged at 047abc08e123d8bde7678104899d00aa8782624a. Exact-head PR CI #42539110908 passed; logs show 26 suites/135 tests, typecheck/build, native ARM64 non-publishing build and Auth GHCR guard tests passed. Post-merge #42539350154 was still in progress. No Auth release or dispatch occurred.
+- Media Generation PR #74 is open at 5ed0d0bbf7bbd5942fa5a865f7e5c2de4ee72411. It adds a fail-closed pre-push check for frontend/backend release tags, same-SHA non-cancelling concurrency, negative tests and paths-ignore for guard/test-only changes. PR #42539297802 and push #42539276866 were still in progress. Media remains outside Platform GitOps; no runtime or runner changes.
+- Platform latest native reconcile #42538596496 PASS at 00:08:54Z; watchdog workflow_run #42538746501 FAIL due gaps: 12,675s/14,280s/12,727s/12,672s against existing 2,700s/4,500s/2,700s/2,700s budgets. TCE WF-06/WF-12 gaps 13,481s/14,317s against 1,500s. Inspection queue wait 0m and no deployment lane >15m; investigate GitHub scheduler, do not change cron/budgets.
+- Reconciliation #42538596496: shared ghcr-pull unchanged, Auth runtime Secret verified, active MicroFE/TCE scopes no image-pull failures, drift=false, apply skipped, no image changes. Auth zero-replica maintenance remains not live health.
+- Platform PR #1490 validation #42538879776 passed at previous head 914f5ab; this delta requires a new exact-head validation. Latest K3s snapshot remains #42537975671 at 00:01:52Z. TCE market-scan schedule unchanged.
