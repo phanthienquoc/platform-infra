@@ -2,10 +2,10 @@
 
 - Platform master `43487426`; PR #1518 merged after exact-head validate-manifests #42608166754 PASS. PR #1517 final Media runner audit change is merged with exact-head and post-merge validate-github-actions/validate-manifests all PASS.
 - TCE master `65af89f6`; WF-01/WF-02/WF-05 last verified PASS; WF-06 four public health probes last confirmed HTTP 503; WF-12 stale-delivery evidence remains.
-- Stock master `1a18cabf`; PR #41 adds exact scraper step-sequence and MongoDB/Telegram secret-scope assertions to the release-contract validator. Exact-head run #42609809654: release/preflight contract, scraper syntax, backend tests/build, Admin build and non-publishing amd64 builds PASS; native ARM64 final Scraper image build still running. No production publication.
+- Stock master `b1b5e177`; PR #41 merged from exact head `b212fa0c`. Exact-head CI #42609809654 passed all seven jobs, including native ARM64 non-publishing builds. The release-contract validator now enforces the exact scraper step sequence and confines MongoDB/Telegram secrets to the ingestion step. No scraper dispatch or production publication.
 - Media master `dcd69869`; application CI #42539512417 last verified PASS. Dedicated runner retirement and external backup/DNS prerequisites remain unresolved.
 - Authentication master `b7183475`; CI #42586362115 last verified PASS; PR #76 remains draft.
-- Open PRs: Platform #1314/#544/#541/#539, Stock #41, Authentication #76. TCE and Media have none.
+- Open PRs: Platform #1314/#544/#541/#539 and Authentication #76. TCE, Stock and Media have none.
 - Reconciliation #42595146384 is workflow_dispatch; recovery #42595660819 is repository_dispatch. Neither is native schedule acceptance. Auth runtime Secret provisioned/verified; shared `ghcr-pull` unchanged; drift false; apply/promotion skipped.
 - Latest complete native schedule evidence is 11:17:20Z; issue #1497 remains administrator-owned. Connector master-run enumeration is incomplete; do not infer no later events. Preserve all cron/freshness budgets and TCE market-scan schedule.
 - Latest K3s snapshot #1515 remains generated 09:37:36Z and is stale beyond the 75m budget. Stock tag `12d63b4` lacks ARM64 manifest; TCE/Auth/Keycloak 0/0; Media/MicroFE 1/1 in that point-in-time snapshot. No rollout/decommission authorization.
