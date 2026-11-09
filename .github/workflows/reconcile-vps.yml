@@ -113,7 +113,7 @@ jobs:
             if run_json="$(gh api -X GET -H "Accept: application/vnd.github+json" "repos/${GITHUB_REPOSITORY}/actions/runs/${PROMOTION_RUN_ID}" 2>/dev/null)"; then
               status="$(jq -r '.status // empty' <<< "$run_json")"
               if [[ "$status" == "completed" ]]; then
-                printf '%s\\n' "$run_json" > "$RUNNER_TEMP/gitops-promotion-run.json"
+                printf '%s\n' "$run_json" > "$RUNNER_TEMP/gitops-promotion-run.json"
                 python3 scripts/verify-gitops-ready-dispatch.py \
                   --event "$GITHUB_EVENT_PATH" \
                   --promotion-run "$RUNNER_TEMP/gitops-promotion-run.json"
