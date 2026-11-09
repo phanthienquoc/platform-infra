@@ -1,3 +1,35 @@
+## Latest full read-only inspection — 2026-11-10 05:14 ICT / 2026-11-09 22:12:13 UTC
+
+Source: [inspect-vps #42709680634](https://github.com/phanthienquoc/platform-infra/actions/runs/42709680634), snapshot `debug/vps-latest.md`, exact-head validated by #42709965064 and squash-merged through inspection PR [#1550](https://github.com/phanthienquoc/platform-infra/pull/1550) at master `051f7b8325c6a79e4b3a91a97f57b61169721f0c`. This supersedes the earlier 04:03 and 05:10 readouts for current host/workload/storage evidence.
+
+### Host and capacity
+
+- `tce-k3s-01`: Ready, ARM64; Ubuntu 22.04.5; K3s `v1.36.3+k3s1`; containerd `2.3.2-k3s2`; kernel `6.8.0-1049-oracle`.
+- RAM 23 GiB total, 19 GiB available. Root disk 45 GiB total, 25 GiB used, 20 GiB free (56%, normal pressure).
+- Uptime 192 days, 8 hours. `restart_required=yes`; pending updates include containerd/Docker. No reboot or package upgrade.
+- Docker image store 9.195 GB, 5.773 GB reclaimable; build cache 519.4 MB, 154.4 MB reclaimable. No cleanup.
+
+### Workload and image state
+
+- Media backend/frontend 1/1 Running, digest-pinned.
+- MicroFE Shell/WS/NATS 1/1 Running.
+- Auth and Keycloak 0/0; TCE frontend/service 0/0.
+- Stock Admin desired 0/1 with two pods ImagePullBackOff; desired Backend has one legacy Running pod and one new ImagePullBackOff pod; Frontend 1/1 Running.
+- Stock desired tag `12d63b4` fails with `no match for platform in manifest` on ARM64. Do not interpret this as shared GHCR credential failure.
+
+### Storage and runners
+
+- Only PVC/PV is `k3s-debug/k3s-debug-logs` (1 GiB, Bound); no Stock/Media VolumeSnapshot references. Preflight reports `storage-clean`.
+- Stock/Media namespaces remain Active with Services/Ingresses. Storage-clean does not establish external backup/retention or DNS ownership.
+- Platform runner service active/enabled. Dedicated Media runner service active/enabled and `Runner.Listener` present. Host inspection cannot establish GitHub-side registration; remote unregister remains unverified.
+
+### Health and drift
+
+- GitOps drift status clean.
+- Public OIDC probes for `sso.mrcute.space` master and mrcute discovery both returned HTTP 503; Keycloak remains 0/0 and condition wait timed out.
+- TCE frontend/service remain 0/0; no live TCE health assertion. Latest known strict WF-06 probes returned 503.
+- No protected namespace/runner deletion, workload scaling, storage cleanup, DNS/database change or host maintenance.
+
 ## Latest live workload readout — 2026-11-10 05:10 ICT / 2026-11-09 22:10:30 UTC
 
 Source: successful recovery-triggered [reconcile-vps run #42709362025](https://github.com/phanthienquoc/platform-infra/actions/runs/42709362025). This is a fresh node/pod readout during controlled reconciliation, not a replacement for the full disk/RAM/runner/storage inspection.
