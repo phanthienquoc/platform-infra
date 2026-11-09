@@ -482,3 +482,11 @@ App-owned publication and Platform-owned production GitOps boundaries remain unc
 - Platform latest native reconcile #42538596496 PASS at 00:08:54Z; watchdog workflow_run #42538746501 FAIL due gaps: 12,675s/14,280s/12,727s/12,672s against existing 2,700s/4,500s/2,700s/2,700s budgets. TCE WF-06/WF-12 gaps 13,481s/14,317s against 1,500s. Inspection queue wait 0m and no deployment lane >15m; investigate GitHub scheduler, do not change cron/budgets.
 - Reconciliation #42538596496: shared ghcr-pull unchanged, Auth runtime Secret verified, active MicroFE/TCE scopes no image-pull failures, drift=false, apply skipped, no image changes. Auth zero-replica maintenance remains not live health.
 - Platform PR #1490 validation #42538879776 passed at previous head 914f5ab; this delta requires a new exact-head validation. Latest K3s snapshot remains #42537975671 at 00:01:52Z. TCE market-scan schedule unchanged.
+
+
+## Media guard merge — 2026-11-09 07:20 ICT
+
+- Media Generation PR #74 merged at dcd698699c65ba6e73f6b43838975144777131c3 after exact-head CI #42539297802 passed. The validator log confirms mocked GHCR tag-preflight tests passed. The publisher now checks both frontend/backend release tags before the first push, binds the tag to the full source SHA, serializes same-SHA publication without cancellation, and excludes helper/test-only changes from the production publisher trigger.
+- Post-merge Media CI #42539512417 was still running; release-contract validation passed and dependency installation was in progress. No production publisher run, image publication or Platform dispatch occurred. Media remains retired from Platform GitOps ownership; runner/runtime state unchanged.
+- Auth PR #90 merged at 047abc08e123d8bde7678104899d00aa8782624a; post-merge CI #42539350154 PASS. TCE PR #1031 merged at ddf5811a7994aab08236028cff04e0a78ffd2e3e; post-merge WF-01/WF-02/WF-05 all PASS. Stock PR #39/#40 merged; CI #42533562194 PASS 7/7.
+- Platform docs PR #1490's previous head c4f36d0db6f5ddb8f25b53baba1c3183a17ac066 was under validation #42539467189 before this delta; revalidate the new exact head before merge. TCE market-scan schedule unchanged.
