@@ -1,3 +1,16 @@
+## Execution delta — 2026-11-09 23:12 ICT / 16:12 UTC
+
+- Platform master at checkpoint entry is `abad728979ea245e026be7681da16a3c0dadcbbc`, following documentation PR [#1530](https://github.com/phanthienquoc/platform-infra/pull/1530). Exact-head `validate-manifests` #42652140427 passed; post-merge #42652306568 passed.
+- Code PR [#1529](https://github.com/phanthienquoc/platform-infra/pull/1529) remains merged at `9fbf172c7e0b2a60b96f6fdd75f48860aa813647`. Exact-head `validate-github-actions` #42651633999 and `validate-manifests` #42651634041 passed; post-merge #42651796084 and #42651796227 both passed. Its delete-mode backup/DNS evidence-reference validation is now in master.
+- Five-repository master heads at checkpoint entry: Platform `abad7289`; TCE `65af89f6`; Stock `b1b5e177`; Media `dcd69869`; Authentication `b7183475`. Open owner-decision drafts remain Platform #1314/#544/#541/#539 and Authentication #76. TCE, Stock and Media have no open PRs.
+- Latest application CI evidence remains TCE WF-01/WF-02/WF-05 PASS with WF-06 public health failing HTTP 503; Stock master CI #42610360402 PASS 7/7; Media CI #42539512417 PASS; Auth CI #42586362115 PASS. No new app publisher run, production GHCR publication or digest handoff was observed.
+- K3s snapshot `debug/vps-latest.md` generated 15:23:26Z; age 48m51s at 16:12:17Z, within the 4,500s inspection budget. Node Ready/ARM64, disk 56% (~21 GiB free), RAM ~19 GiB, host restart required. Media/MicroFE active; Stock desired images ImagePullBackOff on historical ARM64-incompatible tag; TCE/Auth/Keycloak 0/0; public OIDC 503. Media runner service/listener remains active.
+- Storage remains clean only in the narrow PVC/PV/VolumeSnapshot sense; Stock/Media namespaces still contain workloads, Services, Ingresses and Secrets/TLS. Media runner remote registration, external backup/retention and authoritative DNS ownership remain unverified. PR #1529's evidence references improve auditability but do not verify linked content; no decommission.
+- Native schedule evidence remains the filtered 16:02:40Z query in issue #1497 comment #6744779547. All six Platform/TCE gaps and ages exceed existing budgets. No administrator enqueue/delivery telemetry. Preserve cron expressions, freshness budgets and TCE market-scan schedule.
+- No production publication, digest promotion, manifest apply, rollout, scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host reboot/upgrade. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose authority.
+
+Checkpoint: `docs/cross-repo-deployment-checkpoints/2026-11-09-2312-ict.md`.
+
 ## Execution delta — 2026-11-09 23:09 ICT / 16:09 UTC
 
 - Platform master is `9fbf172c7e0b2a60b96f6fdd75f48860aa813647` after [PR #1529](https://github.com/phanthienquoc/platform-infra/pull/1529) squash-merged from exact head `9b5fcf4518fbe5b5714f71c098c55081eb867507`. Exact-head `validate-manifests` #42651634041 and `validate-github-actions` #42651633999 both passed. Post-merge `validate-manifests` #42651796084 passed; post-merge `validate-github-actions` #42651796227 completed successfully at 16:09:40Z; all post-merge Platform validation passed. The first head attempt #124e301 had a yamllint line-length failure; it was corrected before the final exact-head checks.
