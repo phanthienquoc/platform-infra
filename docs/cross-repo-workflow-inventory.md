@@ -1,3 +1,17 @@
+## 2026-11-09 21:25 ICT — post-merge readiness delta
+
+- Platform master `81191ee4`; PR #1523 exact-head validate-manifests #42634259014 and post-merge master push #42634355055 PASS. PR #1522 exact-head validate-github-actions #42633638893 / validate-manifests #42633638946 and post-merge #42633860020/#42633860140 all PASS. The GitOps-ready verifier rejects duplicate promotion-job evidence (4 positive, 26 negative self-tests). Open human-decision drafts #1314/#544/#541/#539.
+- TCE master `65af89f6`; WF-01/WF-02/WF-05 PASS; native and manual WF-06 fail all four strict HTTP 200 probes with HTTP 503; native WF-12 freshness failure remains. No open PR.
+- Stock master `b1b5e177`; CI #42610360402 PASS 7/7. Current-master authenticated VNSTOCK preflight and production digest publication are not verified. No open PR.
+- Media master `dcd69869`; CI #42539512417 PASS; no new publisher run or Platform handoff. Runner retirement, external backup/retention and DNS ownership remain gated. No open PR.
+- Authentication master `b7183475`; CI #42586362115 PASS; draft #76 remains open; no production release run.
+- Issue #1497 comment #6742393810 records the current TCE schedule ages and the Platform first-page pagination limitation. Scheduler-side enqueue/delivery evidence from GitHub administrator is still outstanding. Preserve all cron/freshness budgets and TCE market-scan schedule.
+- K3s inspection snapshot generated 09:37:36Z remains stale (>4,500s); no runtime mutation is authorized from it.
+- App repositories own tests/builds and immutable GHCR publication; Platform alone owns manifests, shared pull credentials, provenance/digest/ARM64 verification, GitOps promotion/apply, rollout/health and protected decommission. `reconcile-vps.yml` sole apply authority; `inspect-vps.yml` read-only; no direct SSH/Compose authority.
+- No production publication/promotion/apply/rollout, scaling, deletion, runner retirement, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-09 21:22 ICT — workflow ownership and readiness delta
 
 - Platform master `49e5e764`; PR #1522 merged after exact-head `validate-github-actions` #42633638893 and `validate-manifests` #42633638946 PASS; post-merge master push #42633860020/#42633860140 PASS. The GitOps-ready dispatch verifier now requires exactly one matching completed-success promotion job for each app-specific promotion gate and rejects duplicates (4 positive, 26 negative self-test cases). Open owner-decision drafts: #1314/#544/#541/#539.
