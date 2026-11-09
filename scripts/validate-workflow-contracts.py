@@ -789,7 +789,7 @@ if microfe_ghcr_validation.index('GHCR_IMAGE_REFERENCE="$image:$SOURCE_COMMIT"')
 if "scripts/tests/verify-tce-microfe-publisher-run.test.sh" not in (ROOT / ".github" / "workflows" / "validate-github-actions.yml").read_text(encoding="utf-8"):
     fail("MicroFE publisher provenance regression tests must run in validate-github-actions.")
 microfe_provenance_tests = (ROOT / "scripts" / "tests" / "verify-tce-microfe-publisher-run.test.sh").read_text(encoding="utf-8")
-for required in ("SOURCE_RUN_ATTEMPT=1", 'run_attempt:($run_attempt|tonumber)', 'expect_failure "run attempt mismatch"', 'expect_failure "missing run attempt"'):
+for required in ("SOURCE_APP=microfe", "SOURCE_RUN_ATTEMPT=1", 'run_attempt:($run_attempt|tonumber)', 'expect_failure "run attempt mismatch"', 'expect_failure "missing run attempt"'):
     if required not in microfe_provenance_tests:
         fail(f"MicroFE publisher provenance tests must cover exact run-attempt binding: {required}")
 
