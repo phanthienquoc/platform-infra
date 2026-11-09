@@ -113,10 +113,23 @@ jobs:
             if run_json="$(gh api -X GET -H "Accept: application/vnd.github+json" "repos/${GITHUB_REPOSITORY}/actions/runs/${PROMOTION_RUN_ID}" 2>/dev/null)"; then
               status="$(jq -r '.status // empty' <<< "$run_json")"
               if [[ "$status" == "completed" ]]; then
-                printf '%s\n' "$run_json" > "$RUNNER_TEMP/gitops-promotion-run.json"
-                python3 scripts/verify-gitops-ready-dispatch.py \
-                  --event "$GITHUB_EVENT_PATH" \
-                  --promotion-run "$RUNNER_TEMP/gitops-promotion-run.json"
+                printf '%s\\n' "$run_json" > "$RUNNER_TEMP/gitops-promotion-run.json"
+                if jobs_json="$(gh api -X GET -H "Accept: application/vnd.github+json" "repos/${GITHUB_REPOSITORY}/actions/runs/${PROMOTION_RUN_ID}/jobs?per_page=100" 2>/dev/null)"; then
+                  total_jobs="$(jq -r '.total_count // empty' <<< "$jobs_json")"
+                  returned_jobs="$(jq -r 'if (.jobs | type) == "array" then (.jobs | length) else -1 end' <<< "$jobs_json")"
+                  if [[ ! "$total_jobs" =~ ^[0-9]+$ || ! "$returned_jobs" =~ ^[0-9]+$ || "$total_jobs" != "$returned_jobs" ]]; then
+                    echo "::error::Promotion run #$PROMOTION_RUN_ID returned incomplete or malformed job evidence (total=${total_jobs:-unknown}, returned=${returned_jobs:-unknown})."
+                    exit 1
+                  fi
+                  printf '%s\\n' "$jobs_json" > "$RUNNER_TEMP/gitops-promotion-jobs.json"
+                else
+                  echo "::error::Unable to retrieve Actions jobs for completed promotion run #$PROMOTION_RUN_ID."
+                  exit 1
+                fi
+                python3 scripts/verify-gitops-ready-dispatch.py \\
+                  --event "$GITHUB_EVENT_PATH" \\
+                  --promotion-run "$RUNNER_TEMP/gitops-promotion-run.json" \\
+                  --promotion-jobs "$RUNNER_TEMP/gitops-promotion-jobs.json"
                 exit 0
               fi
               echo "Waiting for originating GitOps promotion run #$PROMOTION_RUN_ID to complete (status=${status:-unknown})."
