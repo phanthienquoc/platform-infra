@@ -1,3 +1,16 @@
+## 2026-11-09 22:19 ICT — decommission guard and readiness delta
+
+- Platform master `542e3d37`; PR #1525 merged after exact-head `validate-manifests` #42643198502, `validate-github-actions` #42643198496 and `keycloak-ci` #42643198522 PASS. Post-merge #42643433458/#42643433572/#42643433668 PASS.
+- New shared guard `scripts/verify-retired-production-manifests.sh` is invoked by manifest validation and by the Stock/Media namespace decommission preflight. It fails closed if `apps/stockdividend` or `apps/media-generation` reappears, if active production trees reference `stock-prod`/`media-prod`, or if retired GHCR image paths return. Regression suite: 1 positive and 5 negative fixtures PASS; workflow contract validator PASS.
+- Decommission remains manual-only. The guard is not a delete authorization: backup/retention, authoritative DNS, Media runner service/process/GitHub registration, typed confirmations, production Environment and fresh storage checks remain mandatory.
+- Post-merge `inspect-vps` run #42643433567 was in progress at 15:19:08Z; until it completes and publishes a new snapshot, the committed 09:37:36Z snapshot remains stale (~5h41m). Push recovery #42643433651 success is not native schedule evidence.
+- Latest native schedule evidence is issue #1497 comment #6743653448. All six tracked Platform/TCE native gaps and ages remain beyond existing budgets; administrator scheduler delivery telemetry is still required. No cron or TCE market-scan changes.
+- TCE application build/format/test PASS; public WF-06 probes remain HTTP 503 and WF-12 freshness is stale. Stock CI PASS 7/7 but current-master authenticated scraper preflight and production digest publication are unverified. Media and Auth CI PASS; neither has a current production digest handoff. TCE/Auth remain intentional 0/0.
+- Current master heads: Platform `542e3d37`, TCE `65af89f6`, Stock `b1b5e177`, Media `dcd69869`, Authentication `b7183475`. Open drafts: Platform #1314/#544/#541/#539; Authentication #76.
+- Production publication/promotion/apply/rollout, scaling, deletion, runner retirement, DNS/database/storage mutation and host maintenance were not performed. `reconcile-vps.yml` remains the only apply authority; `inspect-vps.yml` remains read-only.
+
+---
+
 ## 2026-11-09 21:25 ICT — post-merge readiness delta
 
 - Platform master `81191ee4`; PR #1523 exact-head validate-manifests #42634259014 and post-merge master push #42634355055 PASS. PR #1522 exact-head validate-github-actions #42633638893 / validate-manifests #42633638946 and post-merge #42633860020/#42633860140 all PASS. The GitOps-ready verifier rejects duplicate promotion-job evidence (4 positive, 26 negative self-tests). Open human-decision drafts #1314/#544/#541/#539.
