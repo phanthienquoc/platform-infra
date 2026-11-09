@@ -207,3 +207,19 @@ Source: inspection snapshot committed by [PR #1506](https://github.com/phanthien
 - GHCR digest coverage remains warning because the cached Stock legacy Backend/User images lack RepoDigest; local image IDs are not registry proof.
 
 No Stock/Media namespace, workload, PVC/PV, runner, DNS record, external database/storage, GHCR package or app repository was deleted. No image was published/promoted, no manifest was applied, no workload was scaled, and no host package/reboot maintenance was performed.
+
+
+## Latest read-only K3s inspection — 2026-11-09 14:10 ICT / 07:10 UTC
+
+Source: `debug/vps-latest.md` generated at `2026-11-09T07:10:37Z`, committed by inspection PR [#1508](https://github.com/phanthienquoc/platform-infra/pull/1508) as master `1433711b25926d528f16df4f727a8e0929ea354c`.
+
+- Node `tce-k3s-01` is Ready/ARM64 on K3s `v1.36.3+k3s1` and containerd `2.3.2-k3s2`; disk 56% (~21 GiB free), available RAM ~19 GiB, uptime 191d17h. Host reports `restart_required=yes`.
+- Media backend/frontend and MicroFE Shell/WS/NATS are 1/1 Running with registry RepoDigest evidence.
+- Stock Admin has two ImagePullBackOff pods on `12d63b4`; desired Backend pod also ImagePullBackOff because GHCR reports no matching platform manifest. Legacy Backend and Frontend remain 1/1 on `23b2878`, but those cached images lack RepoDigest.
+- TCE frontend/service, Auth and Keycloak remain 0/0. Both public OIDC realm probes returned HTTP 503.
+- No Stock/Media PVC/PV claims or VolumeSnapshot references were found. Both namespaces remain Active and contain namespaced Secrets (`ghcr-pull`, `ghcr-secret`, TLS and app Secrets), Services, Ingresses, Deployments and many ReplicaSets. Namespace deletion would remove these namespaced objects; external backup/retention and credential ownership/rotation review are still required.
+- Stock Ingresses still expose `mrcute.space`, `www.mrcute.space`, `admin.mrcute.space` and `api.mrcute.space`; Media exposes `media.mrcute.space`. DNS/provider ownership is not inferred.
+- Dedicated Media runner service is active/enabled and Listener present; shared Platform runner remains active and must be preserved. Remote Media registration still requires the read-only API audit.
+- GHCR digest coverage warning is limited to the legacy cached Stock Backend/User images. No local image ID is accepted as registry promotion evidence.
+
+No namespace, workload, PVC/PV, runner, DNS record, external database/storage, GHCR package or application repository was deleted. No manifest apply, image promotion, workload scaling, cleanup or host maintenance occurred.
