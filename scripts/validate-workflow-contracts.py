@@ -1961,6 +1961,8 @@ for required in (
     "wrong repository-dispatch action",
     "unexpected payload key",
     "zero source run ID",
+    "non-string source run attempt",
+    "uppercase source head SHA",
     "release tag not bound to source head",
 ):
     if required not in tce_payload_tests.read_text(encoding="utf-8"):
