@@ -23,14 +23,7 @@ jobs:
           persist-credentials: false
 
       - name: Reject retired StockDividend and Media production manifests
-        run: |
-          set -euo pipefail
-          test ! -e apps/stockdividend
-          test ! -e apps/media-generation
-          if grep -R -nE 'stock-prod|media-prod|ghcr\.io/phanthienquoc/(stockdividend|media-generation)' environments/prod platform apps; then
-            echo "::error::Retired StockDividend/Media resources remain in active production manifests."
-            exit 1
-          fi
+        run: bash scripts/verify-retired-production-manifests.sh
 
       - name: Test immutable image-change contract
         run: python3 scripts/validate-image-change-contract.py --self-test
