@@ -113,4 +113,4 @@ make_valid
 jq '.client_payload.commit = "0123456789ABCDEF0123456789ABCDEF01234567"' "$event_file" > "$tmp_dir/invalid.json" && mv "$tmp_dir/invalid.json" "$event_file"
 expect_failure "uppercase source SHA"
 
-printf '%s\\n' "MicroFE exact receiver dispatch payload tests passed (1 positive, 17 negative)."
+printf '%s\n' "MicroFE exact receiver dispatch payload tests passed (1 positive, 17 negative)."
