@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: **2026-11-09 07:22 ICT / 2026-11-09 00:22 UTC**
+Last reviewed: **2026-11-09 07:57 ICT / 2026-11-09 00:57 UTC**
 
 This rolling tracker distinguishes native schedule events from manual, push, workflow_run and repository_dispatch fallbacks. Timestamped evidence is archived under `docs/cross-repo-deployment-checkpoints/`.
 
@@ -8,11 +8,12 @@ This rolling tracker distinguishes native schedule events from manual, push, wor
 
 | Repository | Master SHA | Open PRs | Readiness evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `819215cc0c6b295f746e1a43cd6747df4fe292b8` | #1314/#544/#541/#539 (open planning/docs) | PR #1468 merged at `45fae050`; exact-head `validate-github-actions` #42493255493 and `validate-manifests` #42493255334 PASS. Latest inspection PR #1469 is on master; snapshot generated 2026-11-08T15:10:12Z and the new GHCR digest-coverage warning actually reported Stock `backend:23b2878` and `user:23b2878` without RepoDigest. Event type/run ID not surfaced. PR #1470 was closed as superseded. |
-| phanthienquoc/TCE-dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None | Latest verified native WF-07 #42484929411 PASS; WF-12 heartbeat #42484941935 reached Platform recovery #42484949353 PASS. Latest recorded native WF-06 #42458256899 failed 4×HTTP 503; WF-12 #42479336350 failed stale-WF-06 freshness. No new publisher/digest evidence. |
-| phanthienquoc/stockdividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | None | Snapshot #1469 confirms Admin×2 and desired Backend ImagePullBackOff on `12d63b4` (no linux/arm64 manifest); legacy Backend/Frontend on `23b2878`. New read-only digest coverage warning found blank RepoDigest for cached `backend:23b2878` and `user:23b2878`. Scraper #42457182511 still fail-closed on missing `VNSTOCK_API_KEY`; no new publisher/digest evidence. |
-| phanthienquoc/media-generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | Snapshot #1469 shows backend/frontend 1/1 with GHCR RepoDigests; dedicated Media runner service active/enabled and Listener present. `MEDIA_RUNNER_AUDIT_TOKEN`, external backup/retention and authoritative DNS remain unverified. |
-| phanthienquoc/phanthienquoc-authentication | `cb907a63df0e0441b54b7b930ecdbfa97a5e52e1` | #76 draft/open | Master CI #42478653766 PASS; prior Supabase check showed 84/84 migration version/name parity and no count change after #75. Snapshot #1469 still shows Keycloak 0/0 and public OIDC HTTP 503. No new Auth publisher evidence. |
+| phanthienquoc/platform-infra | `2ab93d7736f520383764b9cb0f739d98a6696f58` | #1314/#544/#541/#539 (draft planning/docs) | Latest master validation #42539863349 PASS. Native reconcile #42538596496 PASS but its 12,675s inter-arrival gap exceeds the 2,700s budget; watchdog #42537967026 FAIL. Latest committed inspection #42530192980 is stale at 00:57Z. |
+
+| phanthienquoc/TCE-dashboard | `ddf5811a7994aab08236028cff04e0a78ffd2e3e` | None | Post-merge WF-01 #42538802539, WF-02 #42538802538 and WF-05 #42538802541 PASS. Native WF-06 #42531446260 FAIL (four HTTP 503 endpoints); WF-12 #42527713763 FAIL on stale WF-06 delivery. |
+| phanthienquoc/stockdividend | `1a18cabf32c6cc5f85f4157b5142a6d9f0d9d9b5` | None | Master CI #42533562194 PASS. Weekend scraper #42457182511 failed closed before dependencies because `VNSTOCK_API_KEY` is missing. Immutable publisher guard PRs #39/#40 are merged; no new production publication/digest handoff. |
+| phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | None | Post-merge CI #42539512417 PASS. Backend/frontend were 1/1 with RepoDigests in the last K3s snapshot; dedicated runner remains active/enabled/listener-present. No Platform GitOps handoff while retired. |
+| phanthienquoc/phanthienquoc-authentication | `047abc08e123d8bde7678104899d00aa8782624a` | #76 draft/open | Master CI #42539350154 PASS. Auth/Keycloak remain intentional 0/0 maintenance; no new release, digest handoff or production activation. |
 
 ## Current actions
 
@@ -1274,3 +1275,55 @@ Platform documentation PR #1490 currently includes the 07:18 checkpoint. Its lat
 ## Cross-repo completion checkpoint — 2026-11-09 07:22 ICT
 
 Platform PR #1490 merged at dd1bca11e3c59c92f920ec5e4896fb8d643be272; exact-head validation #42539583925 and post-merge validation #42539638207 passed. TCE #1031, Auth #90 and Media #74 publisher guards are merged; their post-merge CI runs all passed. Stock #39/#40 guards remain merged and master CI #42533562194 passed 7/7. The full current heads, open PRs, schedule gaps, K3s snapshot, reconciliation evidence, owner blockers and safety boundaries are recorded in [2026-11-09-0722-ict.md](cross-repo-deployment-checkpoints/2026-11-09-0722-ict.md). Native Platform/TCE schedule cadence remains outside budget; no cron/freshness change. TCE market-scan schedule unchanged.
+
+
+## Cross-repo execution — 2026-11-09 07:57 ICT / 2026-11-09 00:57 UTC
+
+### Current repository and workflow state
+
+- Platform Infra master is `2ab93d7736f520383764b9cb0f739d98a6696f58`; latest master validation #42539863349 PASS. Open human-decision drafts #1314/#544/#541/#539 remain unmerged.
+- TCE Dashboard master is `ddf5811a7994aab08236028cff04e0a78ffd2e3e`; no open PRs. Its post-merge CI #42538802539/#42538802538/#42538802541 passed. Native WF-06 #42531446260 and WF-12 #42527713763 still fail.
+- StockDividend master is `1a18cabf32c6cc5f85f4157b5142a6d9f0d9d9b5`; CI #42533562194 passed. Scraper #42457182511 failed closed because `VNSTOCK_API_KEY` was empty; no secret was changed.
+- Media Generation master is `dcd698699c65ba6e73f6b43838975144777131c3`; post-merge CI #42539512417 passed. No runner/runtime or Platform ownership change occurred.
+- Authentication master is `047abc08e123d8bde7678104899d00aa8782624a`; CI #42539350154 passed. PR #76 remains draft.
+- App-owned workflow-level GHCR tag guards are merged in Stock #39/#40, TCE #1031, Auth #90 and Media #74. These guards prevent workflow-level tag overwrites but are not GHCR server-side immutable-tag enforcement; registry digest verification and digest-pinned Platform promotion remain mandatory.
+
+### Native schedule acceptance — still blocked
+
+| Workflow | Latest native event | Previous native event | Observed gap | Existing budget |
+|---|---|---|---:|---:|
+| Platform reconcile | #42538596496, 00:08:54Z, success | #42521088881, 20:37:39Z | 12,675s | 2,700s |
+| Platform inspection | #42530192980, 22:25:47Z, success | #42510125328 | 14,280s | 4,500s |
+| Platform recovery | #42537793367, 23:59:38Z, success | #42520213983, 20:27:31Z | 12,727s | 2,700s |
+| Platform watchdog | #42537967026, 00:01:36Z, failure | #42520452305, 20:30:24Z | 12,672s | 2,700s |
+| TCE WF-06 | #42531446260, 22:41:01Z, failure | #42512468931, 18:56:20Z | 13,481s | 1,500s |
+| TCE WF-12 | #42527713763, 21:56:51Z, failure | #42507582654, 17:58:14Z | 14,317s | 1,500s |
+
+TCE WF-06 job logs confirm HTTP 503 from TCE web, TCE API, Auth readiness and Auth liveness. WF-12's heartbeat job succeeded but its WF-06 schedule-delivery verification failed. Platform inspection queue wait telemetry was 0m in the latest watchdog evidence; there is no demonstrated runner-queue saturation cause. Manual, push, workflow_run and repository_dispatch events do not count as native schedule acceptance. Do not alter cron expressions or freshness budgets; GitHub administrator investigation remains required.
+
+### Last known K3s state — stale snapshot, not current health
+
+The latest committed read-only snapshot is inspection #42530192980, generated at 22:25:55Z. At 00:57Z it is about 151 minutes old, beyond the 75-minute snapshot budget. It last showed node `tce-k3s-01` Ready/ARM64, disk 56% (~21 GiB free), RAM ~19 GiB available and host uptime 191 days. Media backend/frontend and MicroFE Shell/WS/NATS were 1/1; Stock Admin×2 and desired Backend remained ImagePullBackOff on tags without a matching ARM64 manifest; TCE/Auth/Keycloak remained 0/0. Treat this as historical evidence only until a new inspection completes.
+
+The last recorded reconciliation #42538596496 succeeded with no GitOps drift; shared `ghcr-pull` remained unchanged, Auth runtime Secret was verified, and manifest apply, image promotion and rollout were skipped. No newer production apply or rollout is evidenced in the current run history.
+
+### New deployment contract under review
+
+Branch `fix/gitops-promotion-dispatch-provenance-20261109-0757-ict` adds a fail-closed second-stage contract for the production-capable `gitops-promoted-ready` event:
+
+- MicroFE, TCE and Auth promotion producers attach full app source SHA plus the originating Platform promotion run ID/attempt, workflow path and head SHA.
+- `reconcile-vps.yml` reads Actions metadata and waits for that exact promotion run to complete successfully on master before it can proceed with repository-dispatch apply/image-change behavior.
+- `scripts/verify-gitops-ready-dispatch.py` allowlists only Auth/TCE/MicroFE, validates component/release/source-SHA binding, rejects unknown payload keys, and verifies the exact run ID, attempt, workflow path, master branch, head SHA, event, completed status and success conclusion.
+- The validator has 4 positive and 20 negative self-test cases. The existing GitOps promotion workflow remains the only producer of these ready events. The new read-only helper is excluded from recovery push bootstrap, and GitHub Actions CI executes its regression tests.
+- The change is still on a dedicated branch and has not been applied to production. Exact-head CI and manifest validation must pass before merge.
+
+### Exact next actions and safety boundary
+
+1. Validate the exact head of the GitOps dispatch-provenance PR; merge only if all required checks pass on the current head.
+2. GitHub administrator: investigate native schedule event delivery without changing cron or budgets.
+3. Stock owner: provide `VNSTOCK_API_KEY`, run the safe scraper preflight, then separately approve an ARM64 publication from a current source SHA.
+4. TCE/Auth owners: approve or reject a documented recovery/rollback plan before any replica restoration; 0/0 is not live health.
+5. Media owner/operator: stop/disable/unregister the runner and provide remote audit, external backup/retention and authoritative DNS ownership evidence before protected decommission.
+6. Platform operator: plan host maintenance separately with a maintenance window and rollback; no unattended reboot/upgrade.
+
+No image publication, image promotion, manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred in this execution. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose authority was added. TCE market-scan schedule unchanged.
