@@ -41,8 +41,10 @@ make_run() {
   local branch="${7:-master}"
   local sha="${8:-$sample_sha}"
   local id="${9:-$sample_run_id}"
+  local run_attempt="${10:-1}"
   jq -n \
     --arg id "$id" \
+    --arg run_attempt "$run_attempt" \
     --arg repo "$repo" \
     --arg head_repo "$head_repo" \
     --arg path "$path" \
@@ -51,7 +53,7 @@ make_run() {
     --arg sha "$sha" \
     --arg status "$status" \
     --arg conclusion "$conclusion" \
-    '{id:($id|tonumber),repository:{full_name:$repo},head_repository:{full_name:$head_repo},path:$path,event:$event,head_branch:$branch,head_sha:$sha,status:$status,conclusion:$conclusion}'
+    '{id:($id|tonumber),run_attempt:($run_attempt|tonumber),repository:{full_name:$repo},head_repository:{full_name:$head_repo},path:$path,event:$event,head_branch:$branch,head_sha:$sha,status:$status,conclusion:$conclusion}'
 }
 
 make_jobs() {
@@ -81,6 +83,7 @@ run_validator() {
     SOURCE_APP=microfe \
     SOURCE_REPOSITORY="$sample_repo" \
     SOURCE_RUN_ID="$sample_run_id" \
+    SOURCE_RUN_ATTEMPT=1 \
     SOURCE_WORKFLOW_PATH="$sample_path" \
     SOURCE_EVENT=push \
     SOURCE_HEAD_SHA="$sample_sha" \
@@ -112,6 +115,12 @@ run_validator >/dev/null
 # Reject mismatched source identity and event provenance.
 make_run completed success "$sample_repo" "$sample_repo" "$sample_path" push master "$sample_sha" 41246414187 > "$tmp_dir/run.json"
 expect_failure "run ID mismatch"
+make_run completed success > "$tmp_dir/run.json"
+jq '.run_attempt = 2' "$tmp_dir/run.json" > "$tmp_dir/run-invalid.json" && mv "$tmp_dir/run-invalid.json" "$tmp_dir/run.json"
+expect_failure "run attempt mismatch"
+make_run completed success > "$tmp_dir/run.json"
+jq 'del(.run_attempt)' "$tmp_dir/run.json" > "$tmp_dir/run-invalid.json" && mv "$tmp_dir/run-invalid.json" "$tmp_dir/run.json"
+expect_failure "missing run attempt"
 make_run completed success another-owner/TCE-dashboard > "$tmp_dir/run.json"
 expect_failure "repository mismatch"
 make_run completed success "$sample_repo" another-owner/TCE-dashboard > "$tmp_dir/run.json"
@@ -164,6 +173,14 @@ if PATH="$tmp_dir/bin:$PATH" \
   SOURCE_EVENT=push SOURCE_HEAD_SHA="$sample_sha" SOURCE_COMMIT=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
   bash "$validator" >/dev/null 2>&1; then
   echo "Expected MicroFE source commit mismatch to fail before API access." >&2
+  exit 1
+fi
+
+if PATH="$tmp_dir/bin:$PATH" \
+  SOURCE_REPOSITORY="$sample_repo" SOURCE_RUN_ID="$sample_run_id" SOURCE_RUN_ATTEMPT=0 SOURCE_WORKFLOW_PATH="$sample_path" \
+  SOURCE_EVENT=push SOURCE_HEAD_SHA="$sample_sha" SOURCE_COMMIT="$sample_sha" \
+  bash "$validator" >/dev/null 2>&1; then
+  echo "Expected invalid MicroFE source run attempt to fail before API access." >&2
   exit 1
 fi
 
