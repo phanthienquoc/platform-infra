@@ -1243,6 +1243,14 @@ if "DELETE-STOCK-PROD-AND-MEDIA-PROD" in plan_job or "BACKUP-AND-EXTERNAL-DATA-R
     fail("Read-only plan mode must not require destructive operator attestations.")
 if "environment: production" in plan_job:
     fail("Read-only plan mode must not request the production deployment environment.")
+plan_policy_start = plan_job.find("name: Verify installed runner policy")
+plan_policy_block = plan_job[plan_policy_start:].split("name: Report dedicated Media runner state", 1)[0]
+if plan_policy_start < 0 or "rollout-status-v15-core-workloads" not in plan_policy_block or "rollout-status-v16-decommission-runner-attestation" not in plan_policy_block:
+    fail("Read-only decommission plan must remain available on installed v15 and upgraded v16 wrappers.")
+delete_policy_start = delete_job.find("name: Verify installed runner policy")
+delete_policy_block = delete_job[delete_policy_start:].split("name: Validate exact deletion confirmations", 1)[0]
+if delete_policy_start < 0 or "rollout-status-v16-decommission-runner-attestation" not in delete_policy_block or "rollout-status-v15-core-workloads" in delete_policy_block:
+    fail("Destructive decommission must fail closed until the installed root-owned wrapper is upgraded to v16.")
 for required in (
     "Validate exact deletion confirmations",
     "DNS_OWNERSHIP_REVIEW",
