@@ -1,3 +1,20 @@
+## Execution delta — 2026-11-09 19:00 ICT / 11:59:26 UTC
+
+- Platform master `5647035abe2f787185a8089970b7f67312170f8a`; PR #1519 exact-head validate-manifests #42610714863 PASS and post-merge master push #42610795648 PASS. PR #1518 post-merge #42609219961 PASS.
+- TCE master `65af89f69ffe0d844a9b63e2434bc3f8cedfebb7`; WF-01P #42586355695, WF-02 #42586356008 and WF-05 #42586355696 PASS. Native WF-06 #42594757482 and manual WF-06 #42594805077 fail all four strict endpoint checks; manual logs confirm HTTP 503 for TCE API/web and Auth readiness/liveness.
+- Stock master `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; PR #41 exact-head CI #42609809654 and post-merge master CI #42610360402 both PASS 7/7. Native ARM64 build validation used non-publishing mode. No production publisher run or digest handoff. Last scraper failure #42457182511 used older commit `e6469ac`; current master secret state is unverified.
+- Media master `dcd698699c65ba6e73f6b43838975144777131c3`; master CI #42539512417 PASS. Dedicated runner remained active/enabled/listener-present in the latest inspection snapshot; remote registration absence is unverified.
+- Authentication master `b71834758d278e50e6ce07b5086fe45e9d9b3350`; master CI #42586362115 PASS; PR #76 remains draft.
+- Open PRs: Platform #1314/#544/#541/#539 (drafts) and Auth #76 (draft); no open PRs in TCE, Stock or Media.
+- Native schedule evidence as of 11:59:26Z: Platform reconcile/inspection/recovery/watchdog gaps 24,326s/27,768s/22,459s/22,698s; TCE WF-06/WF-12 gaps 27,454s/25,452s. All six exceed existing budgets and ages. Issue #1497 received evidence comment #6739589506; administrator enqueue/delivery telemetry is still required.
+- Latest K3s inspection #42594848960 generated `debug/vps-latest.md` at 09:37:36Z and is 8,510s old (>75m budget). Do not use for rollout/decommission authorization. Last observed Stock desired `12d63b4` has no matching ARM64 manifest; TCE/Auth/Keycloak 0/0; Media runner active.
+- Reconciliation #42595146384 was workflow_dispatch: `ALLOW_IMAGE_CHANGES=false`, drift=false, apply skipped; TCE/Auth intentional zero-replica maintenance; MicroFE active health gate passed; Auth runtime Secret keys present; Keycloak lane skipped. Recovery #42595660819 was repository_dispatch. Neither is native schedule acceptance.
+- No production publication/promotion, manifest apply, rollout, scaling, namespace/storage deletion, runner retirement, DNS/database/storage mutation or host maintenance. `reconcile-vps.yml` sole production apply authority; `inspect-vps.yml` read-only. TCE market-scan schedule unchanged.
+
+## 2026-11-09 19:00 ICT readiness checkpoint
+
+See [checkpoint](cross-repo-deployment-checkpoints/2026-11-09-1900-ict.md) for exact run IDs, inter-arrival gaps, ages, K3s snapshot limits, owner actions and safety evidence.
+
 ## Execution delta — 2026-11-09 18:23 ICT
 
 ### Repository heads, PRs and validation evidence

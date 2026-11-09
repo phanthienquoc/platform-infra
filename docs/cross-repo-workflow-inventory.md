@@ -1,3 +1,14 @@
+## 2026-11-09 19:00 ICT ownership and readiness delta
+
+- Platform master `5647035a`; PR #1519 exact-head #42610714863 and post-merge #42610795648 PASS; PR #1518 post-merge #42609219961 PASS. Open human-decision drafts #1314/#544/#541/#539.
+- TCE master `65af89f6`; WF-01P/WF-02/WF-05 last verified PASS. Native WF-06 #42594757482 and manual WF-06 #42594805077 fail four strict public probes with HTTP 503; TCE/Auth intentional 0/0 is not live health. No open PR.
+- Stock master `b1b5e177`; PR #41 exact-head and post-merge CI #42609809654/#42610360402 both PASS 7/7, including non-publishing ARM64 builds. No publisher/digest handoff. Current `VNSTOCK_API_KEY` state is unverified; last scraper failure used older SHA. No open PR.
+- Media master `dcd69869`; CI #42539512417 PASS. Dedicated runner active/enabled/listener-present in stale snapshot; remote registration and external backup/DNS remain unverified. No open PR.
+- Auth master `b7183475`; CI #42586362115 PASS; PR #76 remains draft.
+- Native schedule query filtered to `event=schedule`: Platform reconcile/inspection/recovery/watchdog gaps 24,326s/27,768s/22,459s/22,698s; TCE WF-06/WF-12 gaps 27,454s/25,452s. All exceed budgets. Issue #1497 updated with current evidence; GitHub administrator must provide scheduler enqueue/delivery telemetry. No cron/freshness changes.
+- Latest inspection #42594848960 snapshot generated 09:37:36Z, stale at 19:00 ICT. No runtime mutation may be authorized from it. Latest workflow_dispatch reconciliation #42595146384 had drift=false/apply skipped and no image changes; repository_dispatch recovery #42595660819 is not native acceptance.
+- App repos own tests/builds and immutable GHCR publication. Platform owns manifests, shared pull credentials, digest/provenance validation, GitOps promotion/apply, rollout/health and protected decommission. `reconcile-vps.yml` sole apply authority; `inspect-vps.yml` read-only; no direct SSH/Compose authority. TCE market-scan schedule unchanged.
+
 ## 2026-11-09 18:23 ICT ownership and readiness delta
 
 - Platform master `43487426`; PR #1518 merged after exact-head validate-manifests #42608166754 PASS. PR #1517 final Media runner audit change is merged with exact-head and post-merge validate-github-actions/validate-manifests all PASS.
