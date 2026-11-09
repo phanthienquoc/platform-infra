@@ -1,8 +1,22 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: **2026-11-09 14:00 ICT / 2026-11-09 07:00 UTC**
+Last reviewed: **2026-11-09 14:12 ICT / 2026-11-09 07:12 UTC**
 
 This rolling tracker distinguishes native schedule events from manual, push, workflow_run and repository_dispatch fallbacks. Timestamped evidence is archived under `docs/cross-repo-deployment-checkpoints/`.
+
+## Post-merge and fresh-inspection delta — 2026-11-09 14:12 ICT / 07:12 UTC
+
+- Platform PR [#1507](https://github.com/phanthienquoc/platform-infra/pull/1507) squash-merged at `a619815db94db2a407f9abf8d9e19595bcdc1146` from exact head `e65dbb62b541870aff3704dcabf0faa6913f923d`.
+- Exact-head `validate-github-actions` [#42577373795](https://github.com/phanthienquoc/platform-infra/actions/runs/42577373795) PASS. The lint job completed actionlint, yamllint, shellcheck, ops regression tests, immutable image-change contract tests and workflow-contract checks.
+- Exact-head `validate-manifests` [#42577373702](https://github.com/phanthienquoc/platform-infra/actions/runs/42577373702) PASS. Merge was performed after verifying the exact head and both required checks.
+- Current Platform master is `1433711b25926d528f16df4f727a8e0929ea354c`, inspection snapshot PR #1508. PR #1507 post-merge push CI is not exposed by the connected run/status view and remains unverified.
+- New read-only snapshot `debug/vps-latest.md` generated `2026-11-09T07:10:37Z` (14:10:37 ICT): node Ready/ARM64; Media backend/frontend and MicroFE Shell/WS/NATS 1/1; Stock Admin 0/1 and desired Backend pod ImagePullBackOff because GHCR has no matching platform manifest; legacy Stock Backend/Frontend 1/1 but without RepoDigest; TCE/Auth/Keycloak 0/0; both OIDC realm probes HTTP 503.
+- In-cluster Stock/Media preflight remains storage-clean (no target PVC/PV claims or VolumeSnapshot references), but both namespaces remain Active and contain namespaced Secrets/TLS credentials, Services, Ingresses, Deployments and many ReplicaSets. Deleting namespaces removes those resources. External backup/retention, credential rotation/ownership, authoritative DNS and Media runner retirement remain blockers.
+- Media runner service remains active/enabled with Listener present; remote registration is not inferred. Preserve the shared Platform runner. Host still reports `restart_required=yes`; no upgrade/reboot or cleanup.
+
+No decommission dispatch, production image publication/promotion, manifest apply, scaling, namespace deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred. TCE market-scan schedule unchanged.
+
+
 
 # Cross-repository deployment checkpoint — 2026-11-09 14:00 ICT / 07:00 UTC
 
