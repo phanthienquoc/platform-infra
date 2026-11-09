@@ -223,3 +223,17 @@ Source: `debug/vps-latest.md` generated at `2026-11-09T07:10:37Z`, committed by 
 - GHCR digest coverage warning is limited to the legacy cached Stock Backend/User images. No local image ID is accepted as registry promotion evidence.
 
 No namespace, workload, PVC/PV, runner, DNS record, external database/storage, GHCR package or application repository was deleted. No manifest apply, image promotion, workload scaling, cleanup or host maintenance occurred.
+
+
+## Runner bootstrap policy v16 rollout gate — 2026-11-09 14:20 ICT
+
+The 14:10 ICT inspection still reports the installed host wrapper as `rollout-status-v15-core-workloads`. PR #1507 updated the repository bootstrap source so the root-owned wrapper now requires the fourth Media runner-retirement attestation, but changing the repository script does not mutate the already-installed VPS wrapper.
+
+A follow-up policy version is therefore required:
+- The bootstrap script advertises `rollout-status-v16-decommission-runner-attestation`.
+- The manual `bootstrap-runner.yml` workflow verifies v16 after installing the wrapper.
+- The destructive Stock/Media decommission plan and delete jobs require v16 and fail closed on the currently installed v15 wrapper.
+- Production reconciliation and Auth runtime Secret provisioning also require v16 so they cannot report success against an obsolete installed wrapper.
+- Workflow-contract validation checks all version references and rejects stale v15 acceptance.
+
+No bootstrap was dispatched in this change. The VPS remains on v15 until the operator runs the approved manual runner-bootstrap workflow and verifies its read-only post-bootstrap checks. Until then, Stock/Media decommission and production apply remain blocked by policy-version mismatch; no namespace, runner or workload is changed.
