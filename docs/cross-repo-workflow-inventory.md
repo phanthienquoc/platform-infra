@@ -1,6 +1,12 @@
 # Cross-repo workflow inventory and deployment ownership
 
-Current review: **2026-11-09 14:12 ICT / 2026-11-09 07:12 UTC**
+Current review: **2026-11-09 14:20 ICT / 2026-11-09 07:20 UTC**
+
+## 2026-11-09 14:20 ICT runner policy delta
+
+- PR #1507 is merged at `a619815d`; exact-head `validate-github-actions` #42577373795 and `validate-manifests` #42577373702 PASS.
+- The latest inspection (PR #1508, generated 07:10:37Z) still reports installed host policy v15. The new root-owned wrapper contract is not active on the VPS until the manual bootstrap workflow installs and verifies v16.
+- The manual bootstrap workflow, Stock/Media decommission plan/delete, production reconcile apply and Auth runtime Secret provisioning now require `rollout-status-v16-decommission-runner-attestation`. No bootstrap dispatch or host mutation occurred; protected operations fail closed until operator bootstrap.
 
 ## 2026-11-09 14:00 ICT execution delta
 
