@@ -18,7 +18,7 @@ fail() {
   exit 1
 }
 
-[[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]] || fail "TCE source run ID must be numeric."
+[[ "$SOURCE_RUN_ID" =~ ^[1-9][0-9]*$ ]] || fail "TCE source run ID must be a positive integer."
 [[ "$SOURCE_RUN_ATTEMPT" =~ ^[1-9][0-9]*$ ]] || fail "TCE source run attempt must be a positive integer."
 [[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/wf-03-tce-production-deploy.yml" ]] || fail "TCE source workflow path is not approved."
 [[ "$SOURCE_EVENT" == "workflow_dispatch" ]] || fail "TCE source event must be workflow_dispatch."
