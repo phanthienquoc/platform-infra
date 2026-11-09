@@ -1,16 +1,16 @@
 # Cross-repo workflow inventory and deployment ownership
 
-Current review: **2026-11-09 08:59 ICT / 2026-11-09 01:59 UTC**
+Current review: **2026-11-09 09:05 ICT / 2026-11-09 02:05 UTC**
 
 | Repository | App-owned workflows and release contract | Platform-owned responsibilities / boundary | Current evidence |
 |---|---|---|---|
-| Platform Infra | No application image builds. Receives provenance-bound TCE/Auth/MicroFE digest events; owns native inspection, reconciliation, watchdog, recovery and image-cleanup dry-run. | Sole production manifests, shared GHCR pull credentials, runtime Secrets, source/digest/provenance validation, GitOps promotion/reconciliation, rollout/health and protected Stock/Media decommission. | Master `e5288041`; inspection PR #1496 merged; run #42548015626 PASS, snapshot generated 01:54:48Z. Latest reconcile #42538596496 PASS with no drift; no apply/promotion/rollout. Native schedule gaps remain outside budget; issue #1497 tracks administrator investigation. |
+| Platform Infra | No application image builds. Receives provenance-bound TCE/Auth/MicroFE digest events; owns native inspection, reconciliation, watchdog, recovery and image-cleanup dry-run. | Sole production manifests, shared GHCR pull credentials, runtime Secrets, source/digest/provenance validation, GitOps promotion/reconciliation, rollout/health and protected Stock/Media decommission. | Master `346ecfed`; PR #1498 merged; exact-head #42548807576 and post-merge #42548906576 PASS. Latest workflow_dispatch reconcile #42546651537 PASS: Auth runtime Secret provisioned/verified, `ghcr-pull` unchanged, no drift, apply/promotion/rollout skipped. Native schedule issue #1497 remains open. |
 | TCE Dashboard | App-owned CI/tests; manual WF-03 ARM64 immutable web/service publisher with digest verification and provenance-bound `tce-release-requested` handoff; WF-08B MicroFE ARM64 publisher and digest-bound Platform handoff; WF-06/WF-07/WF-12/WF-13 health, integration, watchdog and recovery. WF-09 remains a safe manual VPS utility; WF-10 remains staging-only. | No production SSH/Compose/K3s apply authority. Platform alone owns production manifests, runtime Secrets, image promotion/reconciliation and health. | Master `ddf5811a`; core CI WF-01/WF-02/WF-05 PASS. Native WF-06 #42548397383 failed 4/4 HTTP 503; WF-12 #42546629459 failed stale-WF-06 delivery (0m queue). No open PR. Market-scan schedule unchanged. |
 | StockDividend | CI/tests; deploy.yml is the app-owned ARM64 GHCR publisher for Scraper/Admin/Backend, using full-SHA and version/full-SHA tags, pre-push tag-absence guard, digest equality and ARM64 checks. Weekend scraper cron remains separate and fail-closed on `VNSTOCK_API_KEY`. | Retired from active Platform GitOps; legacy namespace/workloads await protected decommission. No production SSH/Compose authority. | Master `1a18cabf`; CI #42533562194 all 7 jobs PASS, ARM64 builds use push=false. Scraper #42457182511 failed closed on empty `VNSTOCK_API_KEY`. Desired Stock `12d63b4` lacks ARM64 manifest; cached `23b2878` tags lack RepoDigest. No open PR. |
 | Media Generation | CI/tests; app-owned master-push/manual ARM64 publisher verifies immutable version/full-SHA images, pre-push tag absence and registry digests. No Platform handoff while retired. | No active Platform GitOps handoff; legacy namespace and dedicated runner await protected decommission. No direct SSH/Compose production authority. | Master `dcd69869`; CI #42539512417 PASS. Latest snapshot shows backend/frontend 1/1 with RepoDigest; dedicated runner active/enabled/listener-present. No open PR. Decommission still blocked by external backup/retention, DNS and runner-registration evidence. |
 | Authentication | CI/tests; release.yml is workflow_dispatch-only app publisher with ARM64, provenance/SBOM, SHA/version tag preflight, digest verification and `auth-image-published` handoff. | Platform owns runtime manifests/Secrets, digest-pinned GitOps promotion/apply, rollout and health. | Master `047abc08`; CI #42539350154 PASS; PR #76 draft. Auth runtime Secret verified by latest reconcile, but Auth/Keycloak remain 0/0 and no live health is asserted. |
 
-## Latest execution evidence — 2026-11-09 08:59 ICT / 01:59 UTC
+## Previous execution evidence — 2026-11-09 08:59 ICT / 01:59 UTC (reconciliation evidence corrected in the 09:05 checkpoint below)
 
 | Workflow | Latest native run | Previous native run | Gap | Budget |
 |---|---|---|---:|---:|
@@ -31,7 +31,7 @@ All six native inter-arrival gaps exceed the existing budgets. TCE WF-06 #425483
 - K3s snapshot: node Ready/ARM64; Media and MicroFE active workloads 1/1; Stock Admin×2 and desired Backend are not ready because tag `12d63b4` has no matching ARM64 manifest; cached Stock `23b2878` images lack RepoDigest. TCE/Auth/Keycloak are intentional 0/0.
 - Media and Platform runner services remain active/enabled with listeners present. Host restart is required; Docker reports 5.773 GB reclaimable. No runner retirement, image cleanup, package upgrade or reboot.
 - Stock/Media PVC/PV and VolumeSnapshot preflight is clean in those namespaces, but external backup/retention, DNS ownership and Media remote runner registration remain unverified. Decommission remains blocked.
-- Latest reconcile #42538596496: GHCR access PASS, Auth runtime Secret verified, shared `ghcr-pull` unchanged, `drift=false`; apply/promotion/rollout skipped.
+- Latest workflow_dispatch reconcile #42546651537: GHCR read access PASS for Auth/MicroFE/TCE; Auth runtime Secret provisioned/verified; shared `ghcr-pull` unchanged; `drift=false`; manifest apply and image promotion skipped; rollouts skipped. TCE/Auth zero-replica maintenance was recognized without asserting live health. Post-reconcile recovery #42546778524 PASS. Later TCE-heartbeat recovery #42548422877 PASS and avoided duplicate fallback because reconciliation was 19m old and inspection 4m old. Latest native scheduled reconcile remains #42538596496.
 
 ### Open PRs and owner dependencies
 
@@ -44,7 +44,18 @@ All six native inter-arrival gaps exceed the existing budgets. TCE WF-06 #425483
 
 Safety: no production publish/promotion/apply/rollout, no scaling, no namespace/PVC/PV deletion, no runner retirement, no DNS/database/storage mutation. `reconcile-vps.yml` remains sole apply authority; `inspect-vps.yml` is read-only. TCE market-scan schedule unchanged.
 
-## Previous checkpoint schedule table (08:31 ICT; superseded by the 08:59 evidence above)
+## Latest reconciliation/recovery evidence — 2026-11-09 09:05 ICT / 02:05 UTC
+
+- Platform PR #1498 merged at `346ecfed57fdd1179abda8c114574d9e3dd575a3`; exact-head `validate-manifests` #42548807576 PASS and post-merge #42548906576 PASS.
+- Latest completed reconciliation is workflow_dispatch #42546651537 (01:38:43Z; source master `3ea55b827c85c2e2e815fecaa067a99edc0ed043`), inputs `mode=apply`, `target_app=all`, `allow_image_changes=false`. GHCR access for Auth/MicroFE/TCE passed; Auth runtime Secret was provisioned and verified; shared `ghcr-pull` remained unchanged; no drift; production manifest apply and image promotion skipped.
+- MicroFE health passed. TCE/Auth lanes recognized intentional 0/0 maintenance and did not assert live health; rollouts and Keycloak lane skipped. Final deployment gate passed. Recovery controller #42546778524 passed.
+- TCE heartbeat recovery #42548422877 passed for source WF-06 #42548397383. It observed reconciliation #42546651537 age 19m and inspection #42548015626 age 4m, so no duplicate fallback dispatch was needed. This does not count as native schedule acceptance.
+- Latest native scheduled reconciliation remains #42538596496. The native schedule table above/below remains unchanged: all six inter-arrival gaps exceed their existing budgets. Latest TCE WF-06 #42548397383 returned HTTP 503 on all four strict endpoints.
+- Latest K3s snapshot #42548015626 remains unchanged: node Ready/ARM64; Media/MicroFE 1/1; Stock Admin×2 and desired Backend fail on missing ARM64 manifest for `12d63b4`; cached `23b2878` images lack RepoDigest; TCE/Auth/Keycloak 0/0; Media runner active/enabled. Host restart required; no maintenance or decommission.
+- Stock CI #42533562194 all seven jobs PASS with push=false ARM64 builds; scraper #42457182511 failed closed on missing `VNSTOCK_API_KEY`. Media #42539512417 and Auth #42539350154 PASS. Open drafts: Platform #1314/#544/#541/#539 and Auth #76.
+- No production image publication/promotion, manifest apply, workload scaling, namespace/storage deletion, runner retirement, DNS/database/storage mutation or host maintenance. Auth runtime Secret provisioning is the only confirmed production mutation in the latest reconcile; shared `ghcr-pull` was unchanged. TCE market-scan schedule unchanged.
+
+## Previous checkpoint schedule table (08:59 ICT; superseded by the 09:05 reconciliation evidence above)
 
 ## Platform workflow schedule and acceptance
 
@@ -58,7 +69,7 @@ Safety: no production publish/promotion/apply/rollout, no scaling, no namespace/
 
 Only original `event=schedule`, master, attempt 1, exact workflow path and full source SHA count as native. Manual, push, workflow_run and repository_dispatch remain separate. Push smoke reports schedule observations as warnings; it does not assert cadence acceptance.
 
-## Previous reconciliation, TCE health and K3s evidence — 2026-11-09 08:31 ICT (superseded by the 08:59 evidence above)
+## Historical reconciliation, TCE health and K3s evidence — 2026-11-09 08:31 ICT
 
 ### Promotion-ready reconciliation contract
 
