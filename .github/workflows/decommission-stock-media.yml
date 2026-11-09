@@ -165,4 +165,11 @@ jobs:
           DATA_RETENTION_REVIEW: ${{ inputs.data_retention_review }}
           DNS_OWNERSHIP_REVIEW: ${{ inputs.dns_ownership_review }}
           RUNNER_RETIREMENT: ${{ inputs.runner_retirement }}
-        run: bash scripts/decommission-stock-media-namespaces.sh delete
+          MEDIA_RUNNER_AUDIT_TOKEN: ${{ secrets.MEDIA_RUNNER_AUDIT_TOKEN }}
+        run: |
+          set -euo pipefail
+          # Re-check local service/process state and the authoritative GitHub runner
+          # registry in the same step immediately before namespace deletion.
+          bash scripts/verify-media-runner-retired.sh
+          unset MEDIA_RUNNER_AUDIT_TOKEN
+          bash scripts/decommission-stock-media-namespaces.sh delete
