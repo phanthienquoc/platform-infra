@@ -121,6 +121,11 @@ def extract_digest(content: str, image: str) -> str:
     matches = [entry for entry in entries if entry["name"] == image]
     require(len(matches) == 1, f"Expected exactly one GitOps image entry for {image}, found {len(matches)}.")
     fields = matches[0]["fields"]
+    if "newName" in fields:
+        require(
+            fields["newName"] == image,
+            f"newName for {image} must resolve to the allowlisted repository {image}.",
+        )
     require(
         "digest" in fields and "newTag" not in fields,
         f"{image} is not digest-pinned in the current GitOps manifest.",
