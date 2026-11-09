@@ -1243,3 +1243,18 @@ Post-merge TCE CI is now running on the new master SHA: WF-01 #42538802539, WF-0
 Platform tracker/inventory PR #1490 remains open at exact head c132840342d0c92859114eaea14fec899c268735. Exact-head validate-manifests #42538755907 passed before this post-checkpoint update; a new validation run is required after the update is committed. Platform master remains ecafca5f594f9984baa294ee679afed6afd245bb. No Platform production manifests or runtime state changed.
 
 Native schedule gaps, K3s snapshot #42537975671, Stock/Media/Auth blockers and all safety boundaries remain as recorded in the 07:08 ICT checkpoint. TCE market-scan schedule unchanged.
+
+
+## Cross-repo publisher guard update — 2026-11-09 07:18 ICT / 00:18 UTC
+
+TCE Dashboard PR #1031 merged at ddf5811a7994aab08236028cff04e0a78ffd2e3e after exact-head validation. Its post-merge master CI is now fully green: WF-01 #42538802539 PASS, WF-02 #42538802538 PASS and WF-05 #42538802541 PASS. No TCE release was dispatched and no image was published.
+
+Authentication PR #90 merged at 047abc08e123d8bde7678104899d00aa8782624a after exact-head PR CI #42539110908 passed. The CI log confirms 26 test suites/135 tests passed, typecheck/build passed, native ARM64 non-publishing build passed, and the Auth immutable GHCR preflight tests passed. Post-merge master CI #42539350154 was still in progress at the last check. Auth release remains manual-only; no image was published and no Platform dispatch occurred.
+
+Media Generation PR #74 is open at exact head 5ed0d0bbf7bbd5942fa5a865f7e5c2de4ee72411. It adds a fail-closed pre-push guard for frontend/backend prod-vX.Y.Z-full-SHA tags, same-source non-cancelling concurrency, mocked negative tests, and paths-ignore for helper/test-only changes so they cannot trigger the production publisher. PR CI #42539297802 and push CI #42539276866 were still in progress. Media remains retired from Platform GitOps ownership; this PR does not change runtime/runner state or send a Platform dispatch.
+
+The latest native Platform reconciliation is #42538596496 at 00:08:54Z, success. Its follow-on watchdog workflow_run #42538746501 failed native cadence acceptance. Updated observed gaps: reconcile 12,675s vs 2,700s; inspection 14,280s vs 4,500s; recovery 12,727s vs 2,700s; watchdog 12,672s vs 2,700s. TCE WF-06/WF-12 observations remain 13,481s/14,317s vs 1,500s. Inspection queue wait was 0m and no deployment lane exceeded 15m; no runner queue saturation evidence. Native schedule delivery remains a GitHub administrator blocker; cron and budgets are unchanged.
+
+Reconciliation #42538596496 verified shared ghcr-pull unchanged, Auth runtime Secret present/verified with values suppressed, active MicroFE/TCE scopes without image-pull failures, drift=false, apply skipped and image changes disabled. Auth remains intentional 0/0; no live Auth health was asserted. Latest K3s snapshot remains read-only inspection #42537975671 at 00:01:52Z; no newer snapshot was committed in this delta.
+
+Platform docs PR #1490 was validated at head 914f5abef2a3f5da65791d05dcc51042a2ba8dc5 by #42538879776 PASS before this delta. The new tracker/inventory/checkpoint commit requires a fresh exact-head validation before merge. Platform master remains ecafca5f594f9984baa294ee679afed6afd245bb. TCE market-scan schedule unchanged.
