@@ -11,7 +11,7 @@ from pathlib import Path
 
 PROMOTION_WORKFLOW = ".github/workflows/gitops-image-promotion.yml"
 SHA = re.compile(r"^[0-9a-f]{40}$")
-PROD_RELEASE = re.compile(r"^prod-v[0-9]+\\.[0-9]+\\.[0-9]+-([0-9a-f]{40})$")
+PROD_RELEASE = re.compile(r"^prod-v[0-9]+\.[0-9]+\.[0-9]+-([0-9a-f]{40})$")
 MICROFE_RELEASE = re.compile(r"^microfe-([0-9a-f]{7})$")
 PAYLOAD_KEYS = {
     "app",
