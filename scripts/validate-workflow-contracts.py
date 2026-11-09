@@ -1379,7 +1379,7 @@ for required in ("stock-prod|media-prod", "ghcr\\.io/phanthienquoc/(stockdividen
         fail(f"Retired production manifest guard is missing: {required}")
 if 'bash "$SCRIPT_DIR/verify-retired-production-manifests.sh"' not in decommission_script:
     fail("Namespace decommission plan/delete preflight must re-check active GitOps manifests before touching namespaces.")
-for required in ("Retired StockDividend tree", "retired Media namespace manifest", "retired Stock namespace", "retired Media GHCR image", "missing active platform manifest path"):
+for required in ("retired StockDividend tree", "retired Media namespace manifest", "retired Stock namespace", "retired Media GHCR image", "missing active platform manifest path"):
     if required not in retired_manifest_test.read_text(encoding="utf-8"):
         fail(f"Retired production manifest guard tests are missing: {required}")
 
