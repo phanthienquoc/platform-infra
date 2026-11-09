@@ -1,6 +1,6 @@
 # Cross-repo workflow inventory and deployment ownership
 
-Current review: **2026-11-09 09:05 ICT / 2026-11-09 02:05 UTC**
+Current review: **2026-11-09 10:04 ICT / 2026-11-09 03:04 UTC**
 
 | Repository | App-owned workflows and release contract | Platform-owned responsibilities / boundary | Current evidence |
 |---|---|---|---|
@@ -606,3 +606,14 @@ Platform master dd1bca11e3c59c92f920ec5e4896fb8d643be272 after PR #1490; exact-h
 - Reconcile re-reads each immutable source tag using the expected manifest digest and then reads the digest reference itself through `validate-ghcr-image-reference.sh`. This prevents a successful but unrelated/replayed promotion run from authorizing an arbitrary manifest image change.
 - This registry check runs after GHCR read-access preflight and before runtime Secret provisioning or shared pull-credential mutation. It is read-only and does not change the normal scheduled reconciliation path.
 - The image-ref helper is self-tested in GitHub Actions and excluded from recovery push bootstrap. No cron, freshness budget or TCE market-scan schedule change.
+
+
+## GitOps manifest image-identity hardening — 2026-11-09 10:04 ICT
+
+- Platform PR #1500 is open from `fix/gitops-ready-image-identity-20261109-1004-ict` (base master `c0c4417c8b317ced59444d61d2671edf879f646a`); exact-head validation is pending.
+- The ready-event manifest validator now checks that each app's entire Kustomize image set exactly equals the allowlist. Extra, missing, duplicate or malformed `- name:` entries are rejected.
+- If `newName:` is present, it must equal the allowlisted GHCR repository associated with the verified immutable tag/digest. A redirect to another repository or duplicate/malformed override is rejected.
+- Self-test target is 5 positive extraction cases and 12 negative contract cases. The GitHub Actions workflow already invokes this helper and workflow-contract validator.
+- This closes a repository-identity gap: previously the preflight could verify `image:$immutable_tag` in the allowlisted repository while Kustomize rendered a different `newName`.
+- No production dispatch, publication, promotion, apply, rollout or credential mutation. Auth/TCE tag-only manifests continue to fail the ready-event gate until their own promotion workflows merge digest pins; MicroFE remains digest-pinned.
+- Issue #1497 remains the administrator-owned native schedule investigation. Cron, freshness budgets and TCE market-scan schedule unchanged.

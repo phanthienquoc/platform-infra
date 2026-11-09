@@ -12,6 +12,10 @@ DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 SHA = re.compile(r"^[0-9a-f]{40}$")
 PROD_RELEASE = re.compile(r"^prod-v[0-9]+\.[0-9]+\.[0-9]+-([0-9a-f]{40})$")
 MICROFE_RELEASE = re.compile(r"^microfe-([0-9a-f]{7})$")
+IMAGE_NAME_PREFIX = re.compile(r"^\s*-\s*name\s*:")
+IMAGE_NAME = re.compile(r"^\s*-\s*name:\s*([^\s#]+)\s*$")
+NEW_NAME_PREFIX = re.compile(r"^\s*newName\s*:")
+NEW_NAME = re.compile(r"^\s*newName:\s*([^\s#]+)\s*$")
 
 APP_IMAGES = {
     "auth-service": (
@@ -44,6 +48,23 @@ def require(condition: bool, message: str) -> None:
         raise ContractError(message)
 
 
+def validate_image_set(content: str, expected_images: tuple[str, ...]) -> None:
+    lines = content.splitlines()
+    image_sections = [line for line in lines if line.strip() == "images:"]
+    require(len(image_sections) == 1, "GitOps manifest must contain exactly one images section.")
+    name_lines = [line for line in lines if IMAGE_NAME_PREFIX.match(line)]
+    parsed_names = [IMAGE_NAME.fullmatch(line) for line in name_lines]
+    require(
+        len(parsed_names) == len(expected_images) and all(match is not None for match in parsed_names),
+        "GitOps image entries must use an unambiguous '- name: <repository>' form.",
+    )
+    actual_images = [match.group(1) for match in parsed_names if match is not None]
+    require(
+        len(actual_images) == len(set(actual_images)) and set(actual_images) == set(expected_images),
+        "GitOps image set does not exactly match the allowlist (unexpected, missing or duplicate image names).",
+    )
+
+
 def extract_digest(content: str, image: str) -> str:
     lines = content.splitlines()
     starts = [index for index, line in enumerate(lines) if line.strip() == f"- name: {image}"]
@@ -52,6 +73,18 @@ def extract_digest(content: str, image: str) -> str:
     end = start + 1
     while end < len(lines) and not lines[end].lstrip().startswith("- name:"):
         end += 1
+    new_name_fields = [
+        lines[index].strip()
+        for index in range(start + 1, end)
+        if NEW_NAME_PREFIX.match(lines[index])
+    ]
+    require(len(new_name_fields) <= 1, f"Expected at most one newName field for {image}.")
+    if new_name_fields:
+        new_name = NEW_NAME.fullmatch(new_name_fields[0])
+        require(
+            new_name is not None and new_name.group(1) == image,
+            f"newName for {image} must resolve to the allowlisted repository {image}.",
+        )
     fields = [
         lines[index].strip()
         for index in range(start + 1, end)
@@ -82,6 +115,7 @@ def resolve(app: str, release: str, source_commit: str, root: Path = Path(".")) 
     path = root / manifest_path
     require(path.is_file(), f"GitOps image manifest does not exist: {manifest_path}.")
     content = path.read_text(encoding="utf-8")
+    validate_image_set(content, images)
     return [(image, immutable_tag, extract_digest(content, image)) for image in images]
 
 
@@ -114,13 +148,43 @@ def self_test() -> None:
         (auth_fixture.replace(f"  digest: {digest_a}", f"  digest: {digest_a}\n  digest: {digest_b}"), auth_image),
         (auth_fixture.replace(auth_image, "ghcr.io/phanthienquoc/other/image"), auth_image),
         (auth_fixture.replace(digest_a, "sha256:bad"), auth_image),
+        (auth_fixture.replace(f"  newName: {auth_image}", "  newName: ghcr.io/phanthienquoc/untrusted/auth"), auth_image),
+        (
+            auth_fixture.replace(
+                f"  newName: {auth_image}",
+                f"  newName: {auth_image}\n  newName: ghcr.io/phanthienquoc/untrusted/auth",
+            ),
+            auth_image,
+        ),
     ]
     for fixture_text, image in bad_cases:
         try:
             extract_digest(fixture_text, image)
         except ContractError:
             continue
-        raise SystemExit("GitOps image-ref self-test accepted a non-digest or ambiguous manifest entry.")
+        raise SystemExit("GitOps image-ref self-test accepted an invalid digest or image identity.")
+
+    validate_image_set(auth_fixture, (auth_image,))
+    validate_image_set(tce_fixture, (tce_web, tce_service))
+    validate_image_set(microfe_fixture, (microfe_shell, microfe_ws))
+    image_set_cases = [
+        (
+            tce_fixture + f"- name: ghcr.io/phanthienquoc/unexpected/sidecar\n  digest: {digest_a}\n",
+            (tce_web, tce_service),
+        ),
+        (tce_fixture.replace(f"- name: {tce_service}", f"- name: {tce_web}"), (tce_web, tce_service)),
+        (
+            tce_fixture.replace(f"- name: {tce_service}\n  digest: {digest_b}\n", ""),
+            (tce_web, tce_service),
+        ),
+        (tce_fixture.replace("images:\n", ""), (tce_web, tce_service)),
+    ]
+    for fixture_text, expected_images in image_set_cases:
+        try:
+            validate_image_set(fixture_text, expected_images)
+        except ContractError:
+            continue
+        raise SystemExit("GitOps image-ref self-test accepted an unexpected, missing or duplicate image entry.")
 
     try:
         resolve("auth-service", f"prod-v1.2.3-{'b' * 40}", source)
@@ -135,7 +199,7 @@ def self_test() -> None:
     else:
         raise SystemExit("GitOps image-ref self-test accepted a retired app.")
 
-    print("GitOps ready image-ref self-tests passed (5 positive extraction, 6 negative contract cases).")
+    print("GitOps ready image-ref self-tests passed (5 positive extraction, 12 negative contract cases).")
 
 
 def main() -> int:

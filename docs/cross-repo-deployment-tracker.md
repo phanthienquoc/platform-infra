@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: **2026-11-09 09:05 ICT / 2026-11-09 02:05 UTC**
+Last reviewed: **2026-11-09 10:04 ICT / 2026-11-09 03:04 UTC**
 
 This rolling tracker distinguishes native schedule events from manual, push, workflow_run and repository_dispatch fallbacks. Timestamped evidence is archived under `docs/cross-repo-deployment-checkpoints/`.
 
@@ -1476,4 +1476,31 @@ A further review closed the replay/tampering gap between a successful promotion 
 4. Calls the existing `validate-ghcr-image-reference.sh` for each immutable source tag with `GHCR_EXPECTED_DIGEST`, then for the digest reference itself. This revalidates exact registry mapping and `linux/arm64` availability.
 5. Runs after the read-only GHCR access preflight and before Auth runtime Secret provisioning or shared `ghcr-pull` mutation.
 
-The helper has 5 positive extraction and 6 negative contract cases and is included in GitHub Actions regression tests. It is excluded from recovery push bootstrap. The PR remains unmerged until exact-head checks pass. No production event, registry write, manifest apply or rollout was executed.
+The helper initially had 5 positive extraction and 6 negative contract cases and is included in GitHub Actions regression tests. It is excluded from recovery push bootstrap. PR #1493 was subsequently squash-merged at `891a07c06bc541f2df420d6d085d77f49121602d`; the statement that it remained unmerged was only true at this historical 08:14 checkpoint. No production event, registry write, manifest apply or rollout was executed by that change.
+
+
+## Manifest image identity hardening — 2026-11-09 10:04 ICT / 03:04 UTC
+
+### PR #1500 — open, exact-head validation pending
+
+[PR #1500](https://github.com/phanthienquoc/platform-infra/pull/1500) is open from `fix/gitops-ready-image-identity-20261109-1004-ict`, based on master `c0c4417c8b317ced59444d61d2671edf879f646a`. Initial implementation head: `72dde2e70cb4f6c51de1828fa4ab150aca1b46f5`; documentation updates in this PR may advance the head and require exact-head revalidation.
+
+Review found that `verify-gitops-ready-image-refs.py` verified the digest for each allowlisted `- name:` but did not bind optional Kustomize `newName:` to that same repository and did not reject additional image entries in the manifest. A `newName` override could therefore redirect the rendered image while the preflight verified the original GHCR repository.
+
+The follow-up adds:
+- Exactly one `images:` section and an exact per-app image-name set; missing, duplicate, malformed or unexpected image entries fail closed.
+- Optional `newName:` must equal the allowlisted repository; duplicate, malformed or redirected overrides fail closed.
+- Regression coverage expands from 5 positive / 6 negative to 5 positive / 12 negative cases.
+- Workflow-contract validation asserts the image-set and repository-identity checks remain present. The existing GitHub Actions workflow already runs the helper self-test.
+
+Current master Auth and TCE manifests are still tag-pinned before a release promotion; the authenticated ready-event gate intentionally rejects them until the app-specific promotion workflow has merged digest-pinned manifest changes. MicroFE is already digest-pinned. This PR changes only read-only validation and does not alter normal scheduled reconciliation.
+
+### Current cross-repo evidence and blockers
+
+- Platform master at branch base: `c0c4417c8b317ced59444d61d2671edf879f646a`; open human-decision drafts #1314/#544/#541/#539 remain unmerged. New PR #1500 is validation-only.
+- TCE master `ddf5811a7994aab08236028cff04e0a78ffd2e3e`; Stock master `1a18cabf32c6cc5f85f4157b5142a6d9f0d9d9b5`; Media master `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication master `047abc08e123d8bde7678104899d00aa8782624a`. App publisher guards remain merged; no production publication is evidenced.
+- Native schedule delivery remains tracked by issue [#1497](https://github.com/phanthienquoc/platform-infra/issues/1497). Do not change cron expressions, freshness budgets or TCE market-scan scheduling. Fallback dispatches do not count as native schedule acceptance.
+- Latest recorded K3s inspection remains #42548015626 (generated 01:54:48Z); it is stale for current readiness. No new rollout or health claim is made. Last known reconciliation #42546651537 was workflow_dispatch, not native schedule; it provisioned/verified Auth runtime Secret, left shared `ghcr-pull` unchanged, found no drift and skipped manifest apply, image promotion and rollout.
+- Stock still needs `VNSTOCK_API_KEY` and an owner-approved ARM64 publication; TCE/Auth remain intentional 0/0 pending service-owner recovery/rollback approval; Media runner retirement remains blocked by remote registration, backup/retention and DNS evidence.
+
+No production image publication/promotion, manifest apply, workload scaling, credential mutation, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose authority. TCE market-scan schedule unchanged.
