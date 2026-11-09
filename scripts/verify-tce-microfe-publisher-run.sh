@@ -19,7 +19,7 @@ fail() {
 
 [[ "$SOURCE_APP" == "microfe" ]] || fail "MicroFE publisher app is not approved."
 [[ "$SOURCE_REPOSITORY" == "phanthienquoc/TCE-dashboard" ]] || fail "MicroFE publisher repository is not approved."
-[[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]] || fail "MicroFE publisher run ID must be numeric."
+[[ "$SOURCE_RUN_ID" =~ ^[1-9][0-9]*$ ]] || fail "MicroFE publisher run ID must be a positive integer."
 [[ "$SOURCE_RUN_ATTEMPT" =~ ^[1-9][0-9]*$ ]] || fail "MicroFE publisher run attempt must be a positive integer."
 [[ "$SOURCE_WORKFLOW_PATH" == ".github/workflows/wf-08b-tce-microfe-build-publish.yml" ]] || fail "MicroFE publisher workflow path is not approved."
 [[ "$SOURCE_EVENT" == "push" || "$SOURCE_EVENT" == "workflow_dispatch" ]] || fail "MicroFE publisher event must be push or workflow_dispatch."
