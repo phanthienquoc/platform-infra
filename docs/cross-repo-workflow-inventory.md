@@ -1,5 +1,17 @@
 # Cross-repo workflow inventory and deployment ownership
 
+## 2026-11-09 18:17 ICT ownership and readiness delta
+
+- Platform PR #1517 merged at `f480b8e3fbca130e0d64277983a9c12e55a470f7`. Exact-head validate-github-actions #42607555613 and validate-manifests #42607555700 PASS; post-merge push validate-github-actions #42607717790 and validate-manifests #42607718023 PASS.
+- Final Stock/Media namespace-delete step now re-runs the dedicated Media runner local/GitHub registration audit immediately before deletion and unsets the read-only audit token before invoking the namespace script. Existing typed confirmations, production Environment, fresh storage preflight and root-owned wrapper remain mandatory. No deletion or runner retirement occurred.
+- Current masters: Platform `f480b8e3`, TCE `65af89f6`, Stock `1a18cabf`, Media `dcd69869`, Auth `b7183475`. Open drafts: Platform #1314/#544/#541/#539 and Auth #76.
+- Latest app CI remains PASS: TCE WF-01/WF-02/WF-05 #42586355695/#42586356008/#42586355696; Stock #42533562194 (7/7, non-publishing ARM64); Media #42539512417; Auth #42586362115.
+- No new native schedule events since 11:02Z. Platform reconcile/inspection/recovery/watchdog gaps remain 24,326s/27,768s/22,459s/22,698s; TCE WF-06/WF-12 gaps remain 27,454s/25,452s. All ages/gaps exceed existing budgets. Issue #1497 remains administrator-owned; no cron/budget change.
+- Platform reconciliation #42595146384 was workflow_dispatch: Auth runtime Secret provisioned/verified, shared `ghcr-pull` unchanged, no drift, apply/image promotion skipped; TCE/Auth zero-replica maintenance not live health. Recovery #42595660819 was repository_dispatch fallback.
+- Stock manual `run_scraper.yml` `preflight_only=true` is available to verify current `VNSTOCK_API_KEY` and authenticated tier without ingestion; current secret state remains unverified until the owner runs it. Stock desired image still lacks ARM64 evidence.
+- Latest K3s snapshot #1515 is ~100m old and beyond the 75m inspection budget. No rollout/decommission authorization is inferred. Media external backup/retention, DNS and remote runner registration remain unverified.
+- App repos own tests/builds and immutable GHCR publication; Platform owns manifests, shared pull credentials, digest/provenance validation, GitOps apply, rollout and health. `reconcile-vps.yml` sole apply authority; `inspect-vps.yml` read-only; no direct SSH/Compose authority. TCE market-scan schedule unchanged.
+
 ## 2026-11-09 18:02 ICT execution and ownership refresh
 
 - Current masters: Platform `7c6f2b32`; TCE `65af89f6`; Stock `1a18cabf`; Media `dcd69869`; Authentication `b7183475`.
@@ -12,7 +24,7 @@
 - Stock/Media decommission remains blocked by external backup/retention, authoritative DNS ownership and remote Media runner registration. PR #1517 tightens final-step runner retirement verification but performs no deletion.
 - App repos continue to own tests/builds and immutable GHCR publication; Platform alone owns production manifests, shared pull credentials, digest/provenance validation, GitOps apply, rollout and health. `reconcile-vps.yml` remains sole apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose authority.
 
-Current review: **2026-11-09 18:02 ICT / 2026-11-09 11:02 UTC**
+Current review: **2026-11-09 18:17 ICT / 2026-11-09 11:17 UTC**
 
 ## 2026-11-09 17:00 ICT inspection and evidence refresh
 
