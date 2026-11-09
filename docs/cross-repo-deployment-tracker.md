@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: **2026-11-09 08:14 ICT / 2026-11-09 01:14 UTC**
+Last reviewed: **2026-11-09 08:31 ICT / 2026-11-09 01:31 UTC**
 
 This rolling tracker distinguishes native schedule events from manual, push, workflow_run and repository_dispatch fallbacks. Timestamped evidence is archived under `docs/cross-repo-deployment-checkpoints/`.
 
@@ -8,11 +8,51 @@ This rolling tracker distinguishes native schedule events from manual, push, wor
 
 | Repository | Master SHA | Open PRs | Readiness evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `a614b3a6549cdccd2d5f2c9af3e86245df5a58ce` | #1314/#544/#541/#539 (draft); #1493 (dispatch-job attestation) | PR #1492 merged. Exact-head validation #42543963303/#42543963257/#42543963209 PASS; post-merge #42544069779/#42544069795/#42544069796 PASS. PR #1493 adds app-specific successful-job and current manifest tag-to-digest/ARM64 evidence before reconcile. |
-| phanthienquoc/TCE-dashboard | `ddf5811a7994aab08236028cff04e0a78ffd2e3e` | None | Post-merge WF-01 #42538802539, WF-02 #42538802538 and WF-05 #42538802541 PASS. Native WF-06 #42531446260 FAIL (four HTTP 503 endpoints); WF-12 #42527713763 FAIL on stale WF-06 delivery. |
-| phanthienquoc/stockdividend | `1a18cabf32c6cc5f85f4157b5142a6d9f0d9d9b5` | None | Master CI #42533562194 PASS. Weekend scraper #42457182511 failed closed before dependencies because `VNSTOCK_API_KEY` is missing. Immutable publisher guard PRs #39/#40 are merged; no new production publication/digest handoff. |
-| phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | None | Post-merge CI #42539512417 PASS. Backend/frontend were 1/1 with RepoDigests in the last K3s snapshot; dedicated runner remains active/enabled/listener-present. No Platform GitOps handoff while retired. |
-| phanthienquoc/phanthienquoc-authentication | `047abc08e123d8bde7678104899d00aa8782624a` | #76 draft/open | Master CI #42539350154 PASS. Auth/Keycloak remain intentional 0/0 maintenance; no new release, digest handoff or production activation. |
+| phanthienquoc/platform-infra | `891a07c06bc541f2df420d6d085d77f49121602d` | #1314/#544/#541/#539 (draft planning/docs) | PR #1493 merged at `891a07c0`; exact-head checks #42545953263/#42545953756/#42545953254 PASS; post-merge #42546040759/#42546040835/#42546040757 PASS. App-specific promotion-job attestation, complete Actions jobs evidence, current manifest tag-to-digest binding and linux/arm64 digest verification are now enforced before Secret/pull-credential mutation. |
+| phanthienquoc/TCE-dashboard | `ddf5811a7994aab08236028cff04e0a78ffd2e3e` | None | Master post-merge WF-01 #42538802539, WF-02 #42538802538 and WF-05 #42538802541 PASS. Native WF-06 #42531446260 FAIL (four HTTP 503 endpoints); WF-12 #42527713763 FAIL on stale WF-06 delivery. |
+| phanthienquoc/stockdividend | `1a18cabf32c6cc5f85f4157b5142a6d9f0d9d9b5` | None | Master CI #42533562194 PASS. Scraper #42457182511 failed closed before dependencies because `VNSTOCK_API_KEY` is missing. Immutable publisher guards #39/#40 merged; no new production publication/digest handoff. |
+| phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | None | Master CI #42539512417 PASS. Backend/frontend were 1/1 with RepoDigests in the last committed K3s snapshot; dedicated runner remains active/enabled/listener-present. No Platform GitOps handoff while retired. |
+| phanthienquoc/phanthienquoc-authentication | `047abc08e123d8bde7678104899d00aa8782624a` | #76 draft/open | Master CI #42539350154 PASS. Auth/Keycloak remain intentional 0/0 maintenance; Auth runtime Secret was verified by reconciliation #42538596496, but no live health or activation is asserted. |
+
+## Latest execution — 2026-11-09 08:31 ICT / 01:31 UTC
+
+### GitOps promotion provenance and digest binding
+
+Platform PR [#1493](https://github.com/phanthienquoc/platform-infra/pull/1493) was squash-merged at `891a07c06bc541f2df420d6d085d77f49121602d` from exact head `e97e9a536bf7390a03ff2c2269e49f9e63708500`.
+
+- Exact-head checks: `validate-github-actions` #42545953263, `validate-manifests` #42545953756 and `keycloak-ci` #42545953254 all PASS.
+- Post-merge checks: #42546040759, #42546040835 and #42546040757 all PASS.
+- The reconcile gate fetches the exact originating promotion run and its Actions jobs (`actions/runs/{run_id}/jobs?per_page=100`). It rejects malformed/truncated job evidence unless API `total_count` equals the returned job count.
+- It requires the app-specific completed-successful jobs: MicroFE digest promotion; both TCE paired promotion and release coordinator; or Auth promotion. A successful no-op workflow envelope is insufficient.
+- It resolves the expected current GitOps image set (Auth 1, TCE 2, MicroFE 2), requires exactly one valid digest-pinned entry per image, verifies the immutable source tag against the exact manifest digest, then re-verifies the digest reference for `linux/arm64`.
+- These read-only checks run before Auth runtime Secret provisioning or shared `ghcr-pull` mutation. Helpers remain excluded from recovery push bootstrap.
+
+No production ready-event was replayed or dispatched by this change. No image was published/promoted, no manifest was applied and no workload was rolled out.
+
+### Native schedule acceptance — still outside budget
+
+Latest original `event=schedule` runs returned by GitHub Actions API:
+
+| Workflow | Latest native run | Previous native run | Inter-arrival gap | Existing budget |
+|---|---|---|---:|---:|
+| Platform reconcile | #42538596496 PASS, 00:08:54Z | #42521088881, 20:37:39Z | 12,675s | 2,700s |
+| Platform inspection | #42530192980 PASS, 22:25:47Z | #42510125328, 18:27:47Z | 14,280s | 4,500s |
+| Platform recovery | #42537793367 PASS, 23:59:38Z | #42520213983, 20:27:31Z | 12,727s | 2,700s |
+| Platform watchdog | #42537967026 FAIL, 00:01:36Z | #42520452305, 20:30:24Z | 12,672s | 2,700s |
+| TCE WF-06 | #42531446260 FAIL, 22:41:01Z | #42512468931, 18:56:20Z | 13,481s | 1,500s |
+| TCE WF-12 | #42527713763 FAIL, 21:56:51Z | #42507582654, 17:58:14Z | 14,317s | 1,500s |
+
+No newer native schedule events appeared in this inspection. TCE WF-06 logs report HTTP 503 from four public health endpoints; WF-12's heartbeat succeeded but native WF-06 freshness failed. Platform inspection queue telemetry previously reported 0m, so runner queue saturation is not established as the cause. Manual, push, workflow_run and repository_dispatch events do not count as native acceptance. Preserve every cron and freshness budget; GitHub administrator investigation remains required.
+
+### Runtime and production boundary
+
+- Latest reconciliation #42538596496 PASS: GHCR read access PASS; Auth runtime Secret verified; shared `ghcr-pull` unchanged; `drift=false`; manifest apply, image promotion and rollout skipped.
+- Latest committed K3s snapshot remains inspection #42530192980, generated 22:25:55Z. It is stale at this review and must not be described as current health. It last showed node Ready/ARM64, Media/MicroFE 1/1, Stock Admin×2 and desired Backend ImagePullBackOff on missing ARM64 manifest, and TCE/Auth/Keycloak intentional 0/0.
+- Stock scraper remains blocked by missing `VNSTOCK_API_KEY`; no ARM64 publication or digest handoff is evidenced.
+- Media runner remains active/enabled/listener-present. Remote runner registration, external backup/retention and authoritative DNS ownership are still unverified; protected decommission remains blocked.
+- Open human-decision drafts remain Platform #1314/#544/#541/#539 and Auth #76. TCE, Stock and Media have no open PRs.
+
+`reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only. No direct SSH/Compose authority, cron/freshness change, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
 
 ## Current actions
 
