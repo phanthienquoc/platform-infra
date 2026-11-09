@@ -114,9 +114,12 @@ jobs:
               status="$(jq -r '.status // empty' <<< "$run_json")"
               if [[ "$status" == "completed" ]]; then
                 printf '%s\n' "$run_json" > "$RUNNER_TEMP/gitops-promotion-run.json"
+                jobs_json="$(gh api -X GET -H "Accept: application/vnd.github+json" "repos/${GITHUB_REPOSITORY}/actions/runs/${PROMOTION_RUN_ID}/jobs?per_page=100")"
+                printf '%s\n' "$jobs_json" > "$RUNNER_TEMP/gitops-promotion-jobs.json"
                 python3 scripts/verify-gitops-ready-dispatch.py \
                   --event "$GITHUB_EVENT_PATH" \
-                  --promotion-run "$RUNNER_TEMP/gitops-promotion-run.json"
+                  --promotion-run "$RUNNER_TEMP/gitops-promotion-run.json" \
+                  --promotion-jobs "$RUNNER_TEMP/gitops-promotion-jobs.json"
                 exit 0
               fi
               echo "Waiting for originating GitOps promotion run #$PROMOTION_RUN_ID to complete (status=${status:-unknown})."
