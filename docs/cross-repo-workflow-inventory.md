@@ -1,3 +1,13 @@
+## 2026-11-10 02:00 ICT — TCE source-context gate and receiver PR status
+
+- TCE PR #1033 merged at `aea2755f164186eb6172d9e11afece98227907f9`. Exact-head WF-01P #42679926050, WF-05 #42679926049 and WF-02 #42679925453 passed. WF-01P executed the release contract validator and frontend build; WF-05 executed backend build/unit tests; WF-02 formatting passed.
+- WF-03's first release gate now executes `scripts/verify-tce-release-source-context.sh` before notifications, builds or GHCR publication. It binds the run to `phanthienquoc/TCE-dashboard`, the exact `.github/workflows/wf-03-tce-production-deploy.yml@refs/heads/master`, manual `workflow_dispatch`, positive run ID/attempt and full source SHA. The validator tests 1 positive and 8 negative contexts. The existing exact two-key sender envelope/nine-key client payload tests remain in the release-contract validation.
+- Post-merge TCE master: WF-02 #42680305431 PASS, WF-05 #42680305566 PASS, WF-01 #42680305817 was still in progress at 19:00:27Z. No production release was run.
+- Platform receiver PR #1539 adds the exact nine-key TCE dispatch receiver and 1 positive/16 negative fixtures. Exact-head validate-github-actions #42672541843 and Keycloak CI #42672541506 passed. validate-manifests #42672541861 failed with only a skipped report job exposed and no validate job/logs; keep open until a real successful manifest validation is observed.
+- No workflow was removed. TCE market-scan schedule, all deployment cron expressions and freshness budgets remain unchanged.
+
+---
+
 ## 2026-11-10 00:56 ICT — native schedule and reconciliation recheck
 
 - Current heads: Platform `4ddbcaeafe95002308cb127601445d37e74635df`; TCE `65af89f69ffe0d844a9b63e2434bc3f8cedfebb7`; Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
