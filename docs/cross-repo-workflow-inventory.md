@@ -1,10 +1,10 @@
 # Cross-repo workflow inventory and deployment ownership
 
-Current review: **2026-11-09 08:14 ICT / 2026-11-09 01:14 UTC**
+Current review: **2026-11-09 08:31 ICT / 2026-11-09 01:31 UTC**
 
 | Repository | App-owned workflows and release contract | Platform-owned responsibilities / boundary | Current evidence |
 |---|---|---|---|
-| Platform Infra | No application image builds. Receives provenance-bound TCE/Auth/MicroFE digest events; owns native inspection, reconciliation, watchdog, recovery and image-cleanup dry-run. | Sole production manifests, shared GHCR pull credentials, runtime Secrets, source/digest/provenance validation, GitOps promotion/reconciliation, rollout/health and protected Stock/Media decommission. | Master `a614b3a6`; PR #1492 dispatch-run provenance merged with exact-head and post-merge validation PASS. Open human-decision drafts #1314/#544/#541/#539; PR #1493 adds app-specific successful-job attestation plus current manifest tag-to-digest/ARM64 verification before reconciliation. |
+| Platform Infra | No application image builds. Receives provenance-bound TCE/Auth/MicroFE digest events; owns native inspection, reconciliation, watchdog, recovery and image-cleanup dry-run. | Sole production manifests, shared GHCR pull credentials, runtime Secrets, source/digest/provenance validation, GitOps promotion/reconciliation, rollout/health and protected Stock/Media decommission. | Master `891a07c0`; PR #1493 merged after exact-head and post-merge validation PASS. Ready-event reconciliation now attests the exact promotion run's app-specific successful jobs, complete Actions job list, current digest-pinned manifest and tag-to-digest/linux/arm64 evidence before any Secret/pull-credential mutation. |
 | TCE Dashboard | App-owned CI/tests; manual WF-03 ARM64 immutable web/service publisher with digest verification and provenance-bound `tce-release-requested` handoff; WF-08B MicroFE ARM64 publisher and digest-bound Platform handoff; WF-06/WF-07/WF-12/WF-13 health, integration, watchdog and recovery. WF-09 remains a safe manual VPS utility; WF-10 remains staging-only. | No production SSH/Compose/K3s apply authority. Platform alone owns production manifests, runtime Secrets, image promotion/reconciliation and health. | Master `ddf5811a`; no open PR. Publisher guard #1031 merged; post-merge WF-01/WF-02/WF-05 #42538802539/#42538802538/#42538802541 PASS. Native WF-06 #42531446260 4×HTTP 503; WF-12 #42527713763 stale. Market-scan schedule unchanged. |
 | StockDividend | CI/tests; deploy.yml is the app-owned ARM64 GHCR publisher for Scraper/Admin/Backend, using full-SHA and version/full-SHA tags, pre-push tag-absence guard, digest equality and ARM64 checks. Weekend scraper cron remains separate and fail-closed on `VNSTOCK_API_KEY`. | Retired from active Platform GitOps; legacy namespace/workloads await protected decommission. No production SSH/Compose authority. | Master `1a18cabf`; no open PR. PRs #39/#40 merged; master CI #42533562194 PASS. Scraper #42457182511 failed closed on missing key. Desired Stock images still have ARM64 manifest mismatch in the last K3s snapshot. |
 | Media Generation | CI/tests; app-owned master-push/manual ARM64 publisher verifies immutable version/full-SHA images, pre-push tag absence and registry digests. No Platform handoff while retired. | No active Platform GitOps handoff; legacy namespace and dedicated runner await protected decommission. No direct SSH/Compose production authority. | Master `dcd69869`; no open PR. Publisher guard #74 merged; CI #42539512417 PASS. Last K3s snapshot shows backend/frontend 1/1 with RepoDigests; runner active/enabled/listener present. |
@@ -12,29 +12,59 @@ Current review: **2026-11-09 08:14 ICT / 2026-11-09 01:14 UTC**
 
 ## Platform workflow schedule and acceptance
 
-| Workflow | Native cron (UTC) | Freshness budget | Latest confirmed native evidence at 21:57 ICT |
+| Workflow | Native cron (UTC) | Freshness budget | Latest confirmed native evidence at 08:31 ICT / inter-arrival gap |
 |---|---|---:|---|
-| reconcile-vps.yml | `7,22,37,52 * * * *` | 45m | #42467231073 FAIL at 09:27:03Z; no newer native run verified. |
-| inspect-vps.yml | `2,32 * * * *` | 75m | #42483869620 PASS at 13:12:54Z; snapshot PR #1469 generated 15:10:12Z and confirms new digest-coverage diagnostic, but event type is not surfaced, so it is not counted as native acceptance. |
-| reconcile-schedule-watchdog.yml | `12,27,42,57 * * * *` | 45m | #42467080859 FAIL at 09:24:53Z; no newer native run verified. |
-| recover-stale-ops.yml | `10,25,40,55 * * * *` | 45m | #42466737776 PASS at 09:20:06Z; no newer native run verified. |
+| reconcile-vps.yml | `7,22,37,52 * * * *` | 45m | #42538596496 PASS at 00:08:54Z; previous #42521088881 at 20:37:39Z; gap 12,675s (budget 2,700s). |
+| inspect-vps.yml | `2,32 * * * *` | 75m | #42530192980 PASS at 22:25:47Z; previous #42510125328 at 18:27:47Z; gap 14,280s (budget 4,500s). Snapshot is stale at this review. |
+| reconcile-schedule-watchdog.yml | `12,27,42,57 * * * *` | 45m | #42537967026 FAIL at 00:01:36Z; previous #42520452305 at 20:30:24Z; gap 12,672s (budget 2,700s). |
+| recover-stale-ops.yml | `10,25,40,55 * * * *` | 45m | #42537793367 PASS at 23:59:38Z; previous #42520213983 at 20:27:31Z; gap 12,727s (budget 2,700s). |
 | vps-image-cleanup.yml | `30 3 * * 0` | N/A (weekly dry-run) | #42472343489 PASS at 10:39:26Z, DRY_RUN=true, remove_count=0; no deletion. |
 
 Only original `event=schedule`, master, attempt 1, exact workflow path and full source SHA count as native. Manual, push, workflow_run and repository_dispatch remain separate. Push smoke reports schedule observations as warnings; it does not assert cadence acceptance.
 
-## Reconciliation and production health
+## Current reconciliation, TCE health and K3s evidence — 2026-11-09 08:31 ICT
+
+### Promotion-ready reconciliation contract
+
+Platform PR #1493 merged at `891a07c06bc541f2df420d6d085d77f49121602d`. Exact-head #42545953263/#42545953756/#42545953254 and post-merge #42546040759/#42546040835/#42546040757 all PASS.
+
+For a `gitops-promoted-ready` event, `reconcile-vps.yml` now requires:
+- Exact completed-successful Platform promotion run on master, matching run ID, attempt, workflow path and head SHA.
+- Complete Actions job evidence from `actions/runs/{run_id}/jobs?per_page=100`; `total_count` must equal returned job count.
+- The expected app-specific promotion job(s) must be completed-successful (MicroFE digest promotion; both TCE promotion and coordinator; Auth promotion).
+- Current GitOps manifests must contain exactly one digest-pinned entry per expected image. Immutable source tags must resolve to those exact manifest digests, and digest references must pass the existing linux/arm64 verifier.
+- All checks run before Auth runtime Secret provisioning and shared `ghcr-pull` mutation.
+
+No production ready event, image promotion, manifest apply or rollout was triggered by the merge.
+
+### Native TCE schedule and public health
+
+- WF-06 #42531446260 failed at 22:41:01Z; inter-arrival gap 13,481s versus the 1,500s budget. Its job logs reported HTTP 503 from TCE web, TCE API, Auth readiness and Auth liveness.
+- WF-12 #42527713763 failed at 21:56:51Z; inter-arrival gap 14,317s versus the 1,500s budget. Its heartbeat succeeded but the native WF-06 freshness gate failed.
+- WF-07 integration #42528513790 passed at 22:06:09Z.
+- Platform native reconcile/inspection/recovery/watchdog gaps are 12,675s/14,280s/12,727s/12,672s against 2,700s/4,500s/2,700s/2,700s. Inspection queue telemetry was 0m in prior watchdog evidence; scheduler delivery remains the unresolved administrator investigation.
+- Do not count manual, push, workflow_run or repository_dispatch runs as native schedule acceptance. Preserve all cron/freshness settings and the TCE market-scan schedule.
+
+### Last known production runtime — snapshot is stale
+
+- Reconciliation #42538596496 PASS at 00:08:54Z: GHCR read access PASS, Auth runtime Secret verified, shared `ghcr-pull` unchanged, `drift=false`, apply/promotion/rollout skipped.
+- Latest committed inspection #42530192980 generated 22:25:55Z; stale at this review. It last showed K3s node Ready/ARM64, Media/MicroFE active pods 1/1, Stock Admin×2 and desired Backend ImagePullBackOff from missing ARM64 manifest, and TCE/Auth/Keycloak 0/0.
+- Stock `VNSTOCK_API_KEY` remains missing; no current Stock ARM64 publication/digest handoff is evidenced.
+- Media runner remains active/enabled/listener-present. Remote registration, external backup/retention and authoritative DNS ownership are unverified; decommission remains blocked.
+
+## Historical reconciliation and production health evidence (earlier checkpoint)
 
 - Native reconcile #42439099803 PASS but stale. Workflow_dispatch reconcile #42452324950 PASS at 05:50:26Z on prior master SHA `5513c0bc...`; GHCR preflight, Auth runtime Secret, shared pull credentials and scoped image-pull restart passed.
 - Manifest apply and image-change guard skipped; no image promotion or production rollout. Recovery #42453078467 verified TCE heartbeat and avoided duplicate fallback because reconciliation and inspection were recent.
 - TCE/Auth are intentional zero-replica maintenance; lane success is not live-service health. Stock/Media remain outside active rollout scope.
 
-## TCE schedule and health
+## Historical TCE schedule and health evidence (earlier checkpoint)
 
 - WF-06 remains `*/15 * * * *`; latest native #42432710149 stale; manual #42452331522 failed all four strict probes with HTTP 503.
 - WF-12 remains `7,22,37,52 * * * *`; native #42452308083 failed WF-06 freshness. WF-07 scheduled #42453060493 PASS; WF-12 workflow_run #42453071754 failed stale-WF-06 gate; WF-13 #42453081086 recovered; Platform heartbeat #42453078467 passed.
 - Keep strict HTTP 200 checks and TCE market-scan schedule unchanged. No replica scaling without explicit owner approval.
 
-## Latest K3s inspection and protected decommission
+## Historical K3s inspection and protected decommission evidence (earlier checkpoint)
 
 - Formal read-only snapshot #42452273701 generated 05:49:48Z. Node `tce-k3s-01` Ready/ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2; RAM ~19 GiB available, disk 56%/~21 GiB free.
 - Media backend/frontend and MicroFE Shell/WS/NATS Running 1/1. Stock Admin (two pods) and desired Backend pod ImagePullBackOff on `12d63b4`; kubelet reports no matching platform manifest. Old Stock Backend and Frontend on `23b2878` remain Running.
@@ -190,7 +220,7 @@ Only original `event=schedule`, master, attempt 1, exact workflow path and full 
 
 | Repository | Master SHA | Open PRs | Latest relevant evidence |
 |---|---|---|---|
-| Platform Infra | `192187fffb416dba326055c1a729510d48cb612a` | #1314/#544/#541/#539 (draft) | validate-manifests #42478871584 PASS; heartbeat receiver #42479344664 failed on GitHub API 500 |
+| Platform Infra | No application image builds. Receives provenance-bound TCE/Auth/MicroFE digest events; owns native inspection, reconciliation, watchdog, recovery and image-cleanup dry-run. | Sole production manifests, shared GHCR pull credentials, runtime Secrets, source/digest/provenance validation, GitOps promotion/reconciliation, rollout/health and protected Stock/Media decommission. | Master `891a07c0`; PR #1493 merged after exact-head and post-merge validation PASS. Ready-event reconciliation now attests the exact promotion run's app-specific successful jobs, complete Actions job list, current digest-pinned manifest and tag-to-digest/linux/arm64 evidence before any Secret/pull-credential mutation. |
 | TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | None | WF-12 #42479336350 schedule/FAIL; WF-13 #42479348862 PASS; fallback WF-06 #42479362379 FAIL 4×503 |
 | StockDividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | None | scraper #42457182511 fail-closed on missing `VNSTOCK_API_KEY`; CI #42440810105 PASS/non-publishing |
 | Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | None | CI #42239703151 PASS; no new publisher run |
@@ -277,7 +307,7 @@ Preserve the existing separation: app repos own tests/builds/immutable GHCR publ
 
 | Repository | Current master | Latest relevant run evidence | Open PRs |
 |---|---|---|---|
-| Platform Infra | `eac9ca7eafca1cd1399b5237188be6dda4675880` | Native reconcile #42499043683 PASS; native recovery #42498266478 PASS; native watchdog #42498640135 FAIL on historic inter-arrival gaps; native inspection #42483869620 stale; manual inspection #42498449089 PASS | #1314/#544/#541/#539 (planning/docs) |
+| Platform Infra | No application image builds. Receives provenance-bound TCE/Auth/MicroFE digest events; owns native inspection, reconciliation, watchdog, recovery and image-cleanup dry-run. | Sole production manifests, shared GHCR pull credentials, runtime Secrets, source/digest/provenance validation, GitOps promotion/reconciliation, rollout/health and protected Stock/Media decommission. | Master `891a07c0`; PR #1493 merged after exact-head and post-merge validation PASS. Ready-event reconciliation now attests the exact promotion run's app-specific successful jobs, complete Actions job list, current digest-pinned manifest and tag-to-digest/linux/arm64 evidence before any Secret/pull-credential mutation. |
 | TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | WF-06 native #42489680372 FAIL (four public probes; TCE web log confirms 503); WF-12 latest native #42479336350 FAIL; WF-07 native #42484929411 PASS; no recent publisher run | None |
 | StockDividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | Scraper #42457182511 FAIL closed on missing `VNSTOCK_API_KEY`; CI #42440810105 PASS; publisher #41563856933 (Nov 3) PASS with three verified ARM64 digests but is stale vs current master | None |
 | Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | CI #42239703151 PASS; latest publisher #41158598649 (Oct 31) PASS, no newer publication | None |
@@ -346,7 +376,7 @@ Latest read-only K3s snapshot is debug/vps-latest.md, generated 2026-11-08 18:00
 
 | Repository | Current master | Latest relevant evidence | Open PRs |
 |---|---|---|---|
-| Platform Infra | `e412faffc669a766176adccec7207c5cc02306f5` | Native inspection #42510125328 PASS; exact-head validation #42510263923 PASS; native reconcile #42499043683 PASS but stale; native recovery #42498266478 PASS but stale; native watchdog #42498640135 FAIL; manual reconcile #42512502763 PASS; recovery dispatch #42512617350 PASS | #1314/#544/#541/#539, all draft |
+| Platform Infra | No application image builds. Receives provenance-bound TCE/Auth/MicroFE digest events; owns native inspection, reconciliation, watchdog, recovery and image-cleanup dry-run. | Sole production manifests, shared GHCR pull credentials, runtime Secrets, source/digest/provenance validation, GitOps promotion/reconciliation, rollout/health and protected Stock/Media decommission. | Master `891a07c0`; PR #1493 merged after exact-head and post-merge validation PASS. Ready-event reconciliation now attests the exact promotion run's app-specific successful jobs, complete Actions job list, current digest-pinned manifest and tag-to-digest/linux/arm64 evidence before any Secret/pull-credential mutation. |
 | TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | WF-06 native #42512468931 FAIL (four HTTP 503 probes); WF-12 native #42507582654 FAIL (stale WF-06); later workflow_run heartbeat path reached Platform | None |
 | StockDividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | CI #42440810105 PASS; scraper #42457182511 FAIL closed on missing `VNSTOCK_API_KEY`; no current-master publisher evidence | None |
 | Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | CI #42239703151 PASS; no new publisher run; live images remain digest-pinned | None |
@@ -387,7 +417,7 @@ App repositories retain tests/builds and immutable GHCR publication. Platform In
 
 | Repository | Master SHA | Latest relevant workflow evidence | Open PRs |
 |---|---|---|---|
-| Platform Infra | `0c29f9c38964d6e78ac0295a0073bf571b62116f` | Reconcile schedule #42521088881 PASS; watchdog workflow_run #42521222353 FAIL on stale inspection/inter-arrival gaps; recovery #42521222393 PASS | #1314/#544/#541/#539 (draft) |
+| Platform Infra | No application image builds. Receives provenance-bound TCE/Auth/MicroFE digest events; owns native inspection, reconciliation, watchdog, recovery and image-cleanup dry-run. | Sole production manifests, shared GHCR pull credentials, runtime Secrets, source/digest/provenance validation, GitOps promotion/reconciliation, rollout/health and protected Stock/Media decommission. | Master `891a07c0`; PR #1493 merged after exact-head and post-merge validation PASS. Ready-event reconciliation now attests the exact promotion run's app-specific successful jobs, complete Actions job list, current digest-pinned manifest and tag-to-digest/linux/arm64 evidence before any Secret/pull-credential mutation. |
 | TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | WF-06 schedule #42512468931 FAIL; manual fallback #42512497073 confirms four HTTP 503 endpoints; WF-12 #42507582654 FAIL stale | None |
 | StockDividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | CI #42440810105 PASS; scraper #42457182511 fail-closed on missing `VNSTOCK_API_KEY`; deploy.yml has ARM64 immutable publisher and manual gate `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED` | None |
 | Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | CI #42239703151 PASS; no new current-master publisher run | None |
@@ -404,7 +434,7 @@ Latest committed K3s snapshot is PR #1484, generated 21:59:12Z; it is a successf
 
 | Repository | Master SHA | Current workflow evidence | Open PRs |
 |---|---|---|---|
-| Platform Infra | `da24edc6019ac18be2f298eed06803848362aa68` | #1483 and inspection PR #1484 merged; #1484 inspection validation #42528039006 PASS. Native reconcile #42521088881 PASS but stale; native watchdog #42520452305 FAIL; native inspection #42510125328 stale. TCE heartbeat recovery #42527720332 PASS; reconciliation #42527730424 PASS with GHCR/Secret preflight, `ghcr-pull` unchanged, drift=false and apply/promotion/rollout skipped. Read-only inspection #42527885366 completed successfully; PR #1484 merged at `da24edc6019ac18be2f298eed06803848362aa68` and validation #42528039006 passed. | #1314/#544/#541/#539 (draft) |
+| Platform Infra | No application image builds. Receives provenance-bound TCE/Auth/MicroFE digest events; owns native inspection, reconciliation, watchdog, recovery and image-cleanup dry-run. | Sole production manifests, shared GHCR pull credentials, runtime Secrets, source/digest/provenance validation, GitOps promotion/reconciliation, rollout/health and protected Stock/Media decommission. | Master `891a07c0`; PR #1493 merged after exact-head and post-merge validation PASS. Ready-event reconciliation now attests the exact promotion run's app-specific successful jobs, complete Actions job list, current digest-pinned manifest and tag-to-digest/linux/arm64 evidence before any Secret/pull-credential mutation. |
 | TCE Dashboard | `7ab52078c4250829e158f05b2695ceb9d11bdbe3` | Native WF-12 #42527713763 FAIL: WF-06 #42512468931 was 180m old, queue 0m. Heartbeat job PASS. WF-13 #42527723683 PASS and fallback WF-06 #42527735064 FAIL: four HTTP 503 probes. | None |
 | StockDividend | `e6469ac6617142b349144101a1192cb6aa7104ad` | CI #42440810105 PASS; scraper #42457182511 fail-closed before dependencies because `VNSTOCK_API_KEY` is missing. No current-master publisher run; workflow-only changes are excluded by `.github/**` path-ignore. | None |
 | Media Generation | `54f3a76a5f8861842fd1bae698c4cb0fa8c9034d` | CI #42239703151 PASS; no new publisher. Last snapshot showed digest-resolved backend/frontend 1/1; runner active/enabled/listener-present. | None |
