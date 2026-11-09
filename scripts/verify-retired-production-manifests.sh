@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="$RETIRED_MANIFESTS_ROOT"
+ROOT="$(printenv RETIRED_MANIFESTS_ROOT 2>/dev/null || true)"
 if [[ -z "$ROOT" ]]; then
   ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 fi
