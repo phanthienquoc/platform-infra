@@ -1933,4 +1933,32 @@ if "python3 scripts/verify-gitops-ready-dispatch.py --self-test" not in github_a
 if '"!scripts/verify-gitops-ready-dispatch.py"' not in recovery_push_paths:
     fail("The read-only GitOps-ready dispatch validator must not trigger production recovery on push.")
 
+
+image_ref_guard = "      - name: Verify GitOps-ready release tags against current pinned digests\\n"
+image_ref_guard_index = reconcile.find(image_ref_guard)
+secret_provision_index = reconcile.find("      - name: Provision Auth runtime Secret from platform-infra Environment\\n")
+if image_ref_guard_index < 0 or secret_provision_index <= image_ref_guard_index:
+    fail("GitOps-ready tag-to-digest verification must run before any runtime Secret or pull-credential mutation.")
+for required in (
+    "python3 scripts/verify-gitops-ready-image-refs.py",
+    "--source-commit \"$SOURCE_COMMIT\"",
+    "GHCR_EXPECTED_DIGEST=\"$digest\"",
+    "bash scripts/validate-ghcr-image-reference.sh",
+):
+    if required not in reconcile:
+        fail(f"reconcile-vps is missing the GitOps-ready manifest/tag digest binding: {required}")
+image_ref_validator = (ROOT / "scripts" / "verify-gitops-ready-image-refs.py").read_text(encoding="utf-8")
+for required in (
+    "APP_IMAGES",
+    "digest:",
+    "not digest-pinned",
+    "Retired or unsupported GitOps-ready application",
+):
+    if required not in image_ref_validator:
+        fail(f"GitOps-ready image-ref validator is missing fail-closed rule: {required}")
+if "python3 scripts/verify-gitops-ready-image-refs.py --self-test" not in github_actions:
+    fail("GitHub Actions validation must run GitOps-ready image-ref regression tests.")
+if '"!scripts/verify-gitops-ready-image-refs.py"' not in recovery_push_paths:
+    fail("The read-only GitOps-ready image-ref validator must not trigger production recovery on push.")
+
 print("Workflow contract validation passed.")
