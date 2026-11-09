@@ -158,7 +158,7 @@ jobs:
             sudo /usr/local/sbin/platform-kubectl version >/dev/null
             sudo /usr/local/sbin/platform-kubectl get nodes >/dev/null
             policy="$(sudo /usr/local/sbin/platform-kubectl policy-version)"
-            test "$policy" = "platform-kubectl policy: rollout-status-v15-core-workloads"
+            test "$policy" = "platform-kubectl policy: rollout-status-v16-decommission-runner-attestation"
             echo "Runner service, policy and read-only cluster access verified."
             echo "No Kubernetes resources were changed; reconcile-vps.yml is the sole production apply authority."
           '
