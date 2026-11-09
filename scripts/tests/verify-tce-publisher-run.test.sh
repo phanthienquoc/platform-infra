@@ -208,6 +208,13 @@ done
 
 make_jobs > "$tmp_dir/jobs.json"
 if PATH="$tmp_dir/bin:$PATH" MOCK_CURL_COUNT_FILE="$tmp_dir/count" MOCK_CURL_RESPONSE_FILE="$tmp_dir/response.json" \
+  SOURCE_RUN_ID=0 SOURCE_WORKFLOW_PATH="$sample_path" SOURCE_EVENT=workflow_dispatch \
+  SOURCE_HEAD_SHA="$sample_sha" SOURCE_COMMIT="$sample_sha" RELEASE="$sample_release" \
+  WEB_DIGEST="$sample_web_digest" SERVICE_DIGEST="$sample_service_digest" bash "$validator" >/dev/null 2>&1; then
+  echo "Expected zero TCE source run ID to fail before API access." >&2
+  exit 1
+fi
+if PATH="$tmp_dir/bin:$PATH" MOCK_CURL_COUNT_FILE="$tmp_dir/count" MOCK_CURL_RESPONSE_FILE="$tmp_dir/response.json" \
   SOURCE_RUN_ID=not-a-run SOURCE_WORKFLOW_PATH="$sample_path" SOURCE_EVENT=workflow_dispatch \
   SOURCE_HEAD_SHA="$sample_sha" SOURCE_COMMIT="$sample_sha" RELEASE="$sample_release" \
   WEB_DIGEST="$sample_web_digest" SERVICE_DIGEST="$sample_service_digest" bash "$validator" >/dev/null 2>&1; then
