@@ -1,3 +1,15 @@
+## 2026-11-10 00:56 ICT — native schedule and reconciliation recheck
+
+- Current heads: Platform `4ddbcaeafe95002308cb127601445d37e74635df`; TCE `65af89f69ffe0d844a9b63e2434bc3f8cedfebb7`; Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
+- Latest Platform scheduled reconcile #42664347392 succeeded: GHCR read preflight passed for Auth/MicroFE/TCE images; Auth runtime Secret keys verified; shared `ghcr-pull` unchanged; drift=false and apply skipped. MicroFE health passed; TCE/Auth were explicit zero-replica maintenance scopes. This is preflight/reconciliation evidence, not a production rollout.
+- Latest native schedule event IDs: reconcile #42664347392; inspect #42594848960; recovery #42657359651; watchdog #42657625219; TCE WF-06 #42594757482; TCE WF-12 #42587926693. At 17:56:36Z their ages were 1,913s / 29,948s / 42,159s / 41,802s / 29,993s / 33,236s. Inter-arrival gaps were 37,823s / 27,768s / 37,669s / 37,408s / 27,454s / 25,452s against unchanged budgets 2,700s / 4,500s / 2,700s / 2,700s / 1,500s / 1,500s. Watchdog #42664637994 independently reports these gaps and fails closed. Require consecutive native runs within budget; fallbacks are not acceptance.
+- Latest K3s inspection #42657403805 generated 16:42:11Z and was 74m25s old at 17:56:36Z, near the 75-minute freshness limit. A fresh read-only inspection is required before runtime mutation. Node Ready/ARM64; disk 56%, ~20 GiB free; ~19 GiB available RAM; restart required. Stock desired pods ImagePullBackOff on historical ARM64-incompatible tag; Media/MicroFE core workloads 1/1; TCE/Auth/Keycloak 0/0.
+- TCE build/format/backend CI passes; public health WF-06 and freshness WF-12 fail. Stock master CI 7/7, Media master CI and Auth master CI pass. No app publisher/digest handoff was observed.
+- Open drafts: Platform #1314/#544/#541/#539; Authentication #76. No open PRs in TCE, Stock or Media.
+- Preserve all workflow purposes, cron expressions, freshness budgets and TCE market-scan schedule. No production publication, dispatch, promotion, apply, rollout, scaling, deletion, runner retirement or host/DNS/storage mutation.
+
+---
+
 ## 2026-11-09 23:36 ICT — Auth receiver exact-schema contract
 
 - Platform PR #1534 merged at `a58d801e1770fad464477729ab49da64796fd4a1` from exact head `436ad889ba1c52ea7486ea881a559746d15fda87`. Exact-head `validate-github-actions` #42656332110 and `validate-manifests` #42656332072 passed. Post-merge push validation not yet observed.
