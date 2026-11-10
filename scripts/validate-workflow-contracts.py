@@ -733,7 +733,7 @@ for required in (
     "x-access-token:%s",
     "base64 | tr -d",
     'http.https://github.com/.extraheader=AUTHORIZATION: basic $auth_header',
-    "fetch --no-tags origin refs/heads/master:refs/remotes/origin/master",
+    "fetch --no-tags origin +refs/heads/master:refs/remotes/origin/master",
     "git checkout --force -B master refs/remotes/origin/master",
     'install -m 0644 "$RUNNER_TEMP/vps-latest.md" debug/vps-latest.md',
     "Unexpected worktree changes while rebasing inspection snapshot onto latest master.",
