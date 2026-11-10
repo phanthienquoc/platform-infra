@@ -3,7 +3,7 @@
 | Repository | Master SHA | Open PRs | Latest relevant CI |
 |---|---|---|---|
 | Platform Infra | `48695d2ad98b7e85bcc8a7d356a7dc9c60190236` | #1314, #544, #541, #539 (draft/owner decisions) | `validate-manifests` #42780082451 PASS |
-| TCE Dashboard | `0f71aa56eb728abbd87907e07739e08684b86724` | none | PR #1035 merged; exact-head checks PASS; post-merge WF-01/WF-05 still running |
+| TCE Dashboard | `0f71aa56eb728abbd87907e07739e08684b86724` | none | PR #1035 merged; exact-head checks PASS; post-merge WF-02/WF-05 PASS; WF-01 still running |
 | StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS (7/7) |
 | Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS |
 | Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft/owner decision) | auth-service-ci #42654579277 PASS |
