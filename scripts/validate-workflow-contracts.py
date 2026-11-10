@@ -926,6 +926,25 @@ if "run-name:" not in reconcile or "github.event.client_payload.app" not in reco
 if "microfe" not in reconcile:
     fail("reconcile-vps.yml must retain MicroFE deployment scope support.")
 
+# Image replacement is authorized only by the provenance-verified GitOps-ready event.
+manual_reconcile_inputs = reconcile.split("  workflow_dispatch:", 1)[1].split(
+    "  repository_dispatch:", 1
+)[0]
+if "allow_image_changes" in manual_reconcile_inputs or "github.event.inputs.allow_image_changes" in reconcile:
+    fail("Manual reconcile-vps dispatch must not expose an image-change bypass input.")
+expected_image_authorization = (
+    "ALLOW_IMAGE_CHANGES: ${{ github.event_name == 'repository_dispatch' "
+    "&& github.event.action == 'gitops-promoted-ready' }}"
+)
+if expected_image_authorization not in reconcile:
+    fail("Only the GitOps-ready repository_dispatch may authorize workload image replacement.")
+provenance_index = reconcile.find("name: Validate GitOps promotion dispatch provenance")
+image_guard_index = reconcile.find("name: Guard workload image changes")
+if provenance_index < 0 or image_guard_index < 0 or provenance_index > image_guard_index:
+    fail("GitOps promotion provenance must be validated before the workload image guard can be bypassed.")
+if "-f allow_image_changes=" in recovery:
+    fail("Stale-ops recovery must not pass the removed manual image-change override input.")
+
 # TCE release must promote the verified web/service digest pair atomically.
 tce_promotion = promotion.split("  promote-tce-digests:", 1)[1].split(
     "  coordinate-tce-release:", 1
@@ -1657,14 +1676,13 @@ if "actions: write" not in recovery or "contents: read" not in recovery:
 for required in (
     "gh workflow run reconcile-vps.yml",
     "-f mode=apply",
-    "-f allow_image_changes=false",
     "-f target_app=all",
+    "Dispatch payload: ref=master sha=$dispatch_sha mode=apply target_app=all",
     "gh workflow run inspect-vps.yml",
     ".updated_at // .run_started_at // .created_at",
     ".run_started_at // .created_at",
     "gh api -X GET",
     "head_sha == $sha",
-    "Dispatch payload: ref=master sha=$dispatch_sha",
     "sort_by(.created_at) | last // empty",
     "steps.reconcile.outputs.busy != 'true'",
 ):
