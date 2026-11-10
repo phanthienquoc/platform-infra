@@ -14,7 +14,7 @@ from typing import Any
 FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
 RUN_NAME = re.compile(
     r"^Recover Stale Scheduled Ops — repository_dispatch / source "
-    r"([1-9][0-9]*) / (?P<path>\.github/workflows/[A-Za-z0-9._/-]+\.yml)$"
+    r"([1-9][0-9]*)(?: / (?P<path>\.github/workflows/[A-Za-z0-9._/-]+\.yml))?$"
 )
 RECEIVER_PATH = ".github/workflows/recover-stale-ops.yml"
 ALLOWED_WORKFLOWS = {
@@ -80,13 +80,13 @@ def normalize_receipts(
             if receipt.get("conclusion") != "success":
                 raise ValueError("Platform heartbeat receiver did not complete successfully")
 
-            run_name = receipt.get("name") or receipt.get("display_title") or ""
+            run_name = receipt.get("display_title") or receipt.get("name") or ""
             match = RUN_NAME.fullmatch(run_name) if isinstance(run_name, str) else None
             if match is None:
                 raise ValueError("Platform receipt run-name does not carry a source run ID and workflow path")
             source_run_id = positive_int(match.group(1), "source run ID")
             source_path = match.group("path")
-            if source_path != workflow_path:
+            if source_path is not None and source_path != workflow_path:
                 raise ValueError("Platform receipt belongs to a different TCE workflow")
 
             positive_int(receipt.get("id"), "Platform receipt ID")
@@ -184,6 +184,12 @@ def self_test() -> None:
     other_path["source_run"]["path"] = wf12
     only_wf12, _ = normalize_receipts([other_path], wf12, "master")
     assert [run["id"] for run in only_wf12] == [114]
+
+    legacy = make(116, "2026-11-10T04:45:05Z")
+    legacy["receipt"]["name"] = "Recover Stale Scheduled Ops — repository_dispatch / source 116"
+    legacy_runs, legacy_warnings = normalize_receipts([legacy], path, "master")
+    assert [run["id"] for run in legacy_runs] == [116]
+    assert not legacy_warnings
 
     duplicate = make(101, "2026-11-10T01:00:06Z")
     deduped, _ = normalize_receipts([make(101, "2026-11-10T01:00:05Z"), duplicate], path, "master")
