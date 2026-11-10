@@ -1435,3 +1435,16 @@ No production image publication/promotion, manifest apply, rollout, scaling, del
 - Preserve TCE WF-06 strict HTTP 200 probes, WF-12/WF-13 heartbeat/recovery, WF-07 backup, WF-03 publisher, WF-09 manual development utility and WF-10 staging utility. Preserve Stock and Media app-owned immutable publishers and Authentication release/CI. Platform `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only.
 - Outstanding external gates remain GitHub schedule telemetry and effective branch rulesets (#1497/#1575); TCE/Auth runtime recovery and immutable digests (#872); Stock `VNSTOCK_API_KEY` and ARM64 release (#42/#43); Media remote runner unregister/backup/DNS proof; Platform host maintenance approval; TCE verified SSH fingerprint.
 - No workflow removal was justified. No publication, promotion, apply, rollout/scaling, deletion, runner retirement, shared credential rotation, DNS/database/storage mutation or host maintenance occurred. TCE market-scan schedule unchanged.
+
+ 
+## 2026-11-10 20:16 ICT — merged TCE healthcheck contract and readiness delta
+
+- Platform PR #1582 merged at `18d07f2b09dd02cb923af666b1f135f91ee8d45c`; exact-head validation #42822159770 and post-merge #42822299182 passed.
+- TCE PR #1036 merged at `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab`; exact-head WF-05 #42822645162, WF-02 #42822644739, WF-08B #42822644695 and post-merge WF-05 #42822853137/WF-02 #42822853121 all passed.
+- New TCE contract in `scripts/validate-wf-06-healthcheck-contract.sh` requires exactly four approved public-smoke endpoints and `expected_status: "200"` for each. Existing WF-05 invokes it unconditionally. No health endpoint, workflow YAML, schedule, heartbeat payload or recovery path changed.
+- Latest app CI evidence: TCE post-merge WF-05/WF-02 PASS; Stock #42610360402 PASS; Media #42539512417 PASS; Authentication #42654579277 PASS. TCE public runtime remains unverified/failed: latest native WF-06 #42799497774 and manual #42799558399 fail; latest native WF-12 #42795292155 fails freshness.
+- All six native schedule ages and inter-arrival gaps remain outside existing budgets at 13:16:15Z. Manual, workflow_run and repository_dispatch events are excluded.
+- Latest K3s inspection #42809278936 (5,194s old) and reconciliation #42809629336 (5,038s old) exceed their freshness budgets; do not authorize rollout from last-known snapshots.
+- Preserve app-owned immutable publishers and Platform's single production apply authority. No workflow removal was justified.
+- Owner dependencies remain scheduler telemetry/effective branch rulesets (#1497/#1575), TCE/Auth recovery and immutable digests (#872), Stock credential/ARM64 release (#42/#43), Media runner unregister/backup/DNS, Platform maintenance approval and TCE verified SSH fingerprint.
+- No publication/promotion/apply/rollout/scaling/deletion, runner retirement, credential rotation, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
