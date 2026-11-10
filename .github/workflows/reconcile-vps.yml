@@ -482,6 +482,10 @@ jobs:
   deploy-auth-service:
     name: Deploy lane — Auth
     needs: reconcile
+    outputs:
+      health_state: ${{ steps.health.outputs.health_state }}
+      active_scopes: ${{ steps.health.outputs.active_scopes }}
+      maintenance_scopes: ${{ steps.health.outputs.maintenance_scopes }}
     if: ${{ needs.reconcile.result == 'success' && needs.reconcile.outputs.mode == 'apply' && (needs.reconcile.outputs.target_app == 'all' || needs.reconcile.outputs.target_app == 'auth-service') }}
     runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
     environment: production
@@ -514,6 +518,7 @@ jobs:
           printf '%s\\n' "$tls_output" | grep -q "Verify return code: 0 (ok)"
           printf '%s\\n' "$tls_output" | grep -Eq "subject=.*CN|subject=.*auth.mrcute.space|DNS:auth.mrcute.space"
       - name: Verify Auth workload health
+        id: health
         env:
           TARGET_APP: auth-service
         run: |
@@ -533,6 +538,10 @@ jobs:
   deploy-microfe:
     name: Deploy lane — MicroFE Shell / WS
     needs: reconcile
+    outputs:
+      health_state: ${{ steps.health.outputs.health_state }}
+      active_scopes: ${{ steps.health.outputs.active_scopes }}
+      maintenance_scopes: ${{ steps.health.outputs.maintenance_scopes }}
     if: ${{ needs.reconcile.result == 'success' && needs.reconcile.outputs.mode == 'apply' && (needs.reconcile.outputs.target_app == 'all' || needs.reconcile.outputs.target_app == 'microfe') }}
     runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
     environment: production
@@ -562,6 +571,7 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl rollout status deployment/microfe-ws -n microfe-platform --timeout=180s || rc=1
           exit "$rc"
       - name: Verify MicroFE workload health
+        id: health
         env:
           TARGET_APP: microfe
         run: |
@@ -581,6 +591,10 @@ jobs:
   deploy-keycloak:
     name: Deploy lane — Keycloak SSO
     needs: reconcile
+    outputs:
+      health_state: ${{ steps.health.outputs.health_state }}
+      active_scopes: ${{ steps.health.outputs.active_scopes }}
+      maintenance_scopes: ${{ steps.health.outputs.maintenance_scopes }}
     if: ${{ needs.reconcile.result == 'success' && needs.reconcile.outputs.mode == 'apply' && needs.reconcile.outputs.target_app == 'keycloak' }}
     runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
     environment: production
@@ -634,6 +648,7 @@ jobs:
       - name: Verify Keycloak rollout
         run: sudo /usr/local/sbin/platform-kubectl rollout status deployment/keycloak -n microfe-platform --timeout=300s
       - name: Verify Keycloak workload health
+        id: health
         env:
           TARGET_APP: keycloak
         run: |
@@ -690,6 +705,10 @@ jobs:
   deploy-tce-dashboard:
     name: Deploy lane — TCE Dashboard
     needs: reconcile
+    outputs:
+      health_state: ${{ steps.health.outputs.health_state }}
+      active_scopes: ${{ steps.health.outputs.active_scopes }}
+      maintenance_scopes: ${{ steps.health.outputs.maintenance_scopes }}
     if: ${{ needs.reconcile.result == 'success' && needs.reconcile.outputs.mode == 'apply' && (needs.reconcile.outputs.target_app == 'all' || needs.reconcile.outputs.target_app == 'tce-dashboard') }}
     runs-on: [self-hosted, linux, arm64, platform-infra, k3s, vps]
     environment: production
@@ -723,6 +742,7 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl rollout status deployment/tce-frontend -n tce-prod --timeout=180s || rc=1
           exit "$rc"
       - name: Verify TCE workload health
+        id: health
         env:
           TARGET_APP: tce-dashboard
         run: |
@@ -754,36 +774,49 @@ jobs:
         env:
           TARGET_APP: ${{ needs.reconcile.outputs.target_app }}
           AUTH_RESULT: ${{ needs.deploy-auth-service.result }}
+          AUTH_HEALTH_STATE: ${{ needs.deploy-auth-service.outputs.health_state }}
           MICROFE_RESULT: ${{ needs.deploy-microfe.result }}
+          MICROFE_HEALTH_STATE: ${{ needs.deploy-microfe.outputs.health_state }}
           TCE_RESULT: ${{ needs.deploy-tce-dashboard.result }}
+          TCE_HEALTH_STATE: ${{ needs.deploy-tce-dashboard.outputs.health_state }}
           KEYCLOAK_RESULT: ${{ needs.deploy-keycloak.result }}
+          KEYCLOAK_HEALTH_STATE: ${{ needs.deploy-keycloak.outputs.health_state }}
         run: |
           set -euo pipefail
           failed=0
           check_lane() {
-            local app="$1" result="$2"
+            local app="$1" result="$2" health_state="$3"
             if [ "$TARGET_APP" = "all" ] || [ "$TARGET_APP" = "$app" ]; then
               if [ "$result" != "success" ]; then
                 echo "::error::Deployment lane $app finished with result: $result"
                 failed=1
               else
-                echo "Deployment lane $app succeeded."
+                case "$health_state" in
+                  healthy)
+                    echo "::notice::Deployment lane $app completed with live workload health verified."
+                    ;;
+                  maintenance)
+                    echo "::notice::Deployment lane $app is in intentional zero-replica maintenance; no live workload health is asserted."
+                    ;;
+                  partial-maintenance)
+                    echo "::notice::Deployment lane $app has live health verified for active scopes; zero-replica maintenance scopes are not asserted healthy."
+                    ;;
+                  *)
+                    echo "::error::Deployment lane $app did not publish a valid machine-readable health state (state=${health_state:-missing})."
+                    failed=1
+                    ;;
+                esac
               fi
             fi
           }
-          check_lane auth-service "$AUTH_RESULT"
-          check_lane microfe "$MICROFE_RESULT"
-          check_lane tce-dashboard "$TCE_RESULT"
+          check_lane auth-service "$AUTH_RESULT" "$AUTH_HEALTH_STATE"
+          check_lane microfe "$MICROFE_RESULT" "$MICROFE_HEALTH_STATE"
+          check_lane tce-dashboard "$TCE_RESULT" "$TCE_HEALTH_STATE"
           if [ "$TARGET_APP" = "keycloak" ]; then
-            if [ "$KEYCLOAK_RESULT" != "success" ]; then
-              echo "::error::Deployment lane keycloak finished with result: $KEYCLOAK_RESULT"
-              failed=1
-            else
-              echo "Deployment lane keycloak succeeded."
-            fi
+            check_lane keycloak "$KEYCLOAK_RESULT" "$KEYCLOAK_HEALTH_STATE"
           fi
           [ "$failed" -eq 0 ] || exit 1
-          echo "All targeted deployment lanes passed."
+          echo "All targeted deployment lanes completed; health state for each lane is recorded above."
 # yamllint enable rule:line-length
 
   notify-recovery-controller:
