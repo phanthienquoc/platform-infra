@@ -1,3 +1,63 @@
+## 2026-11-10 21:01 ICT / 14:01:49 UTC — five-repository operational revalidation
+
+### Repository heads, open PRs and latest checks
+
+| Repository | `master` SHA | Open PRs | Latest verified CI / operational evidence |
+|---|---|---|---|
+| Platform Infra | `b18d3ea74499acc3eda83b6196da9b1d37c34f36` | #1314, #544, #541, #539 (owner decisions/drafts) | `validate-manifests` #42823322147 PASS on current master |
+| TCE Dashboard | `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab` | none | WF-02 #42822853121 and WF-05 #42822853137 PASS on current master; WF-01 #42781396893 PASS on prior parent SHA `0f71aa56`; native WF-06 #42799497774 FAIL and WF-12 #42795292155 FAIL |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | StockDividend CI #42610360402 PASS; scraper schedule #42457182511 failed closed because `VNSTOCK_API_KEY` was unavailable |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | Media CI #42539512417 PASS |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft/owner decision) | `auth-service-ci` #42654579277 PASS |
+
+All five repository default branches and open-PR inventories were re-read. No open PR exists in TCE, Stock or Media. Platform #1314/#544/#541/#539 and Auth #76 remain owner-decision drafts; none was merged or retargeted. The latest Platform manifest check passed on the exact current master SHA. TCE WF-02/WF-05 passed on current master after PR #1036; WF-01's latest successful master run is on the parent SHA, so do not represent it as a current-head check.
+
+### Native schedule freshness — reference 14:01:49 UTC
+
+Only first-attempt `event=schedule`, `head_branch=master` runs count. Push, pull_request, workflow_run, workflow_dispatch and repository_dispatch are excluded.
+
+| Lane | Latest native run | Result | Current age | Inter-arrival gap | Existing budget |
+|---|---:|---|---:|---:|---:|
+| Platform reconcile | #42778829676 | success | 21,918s | 25,539s | 2,700s |
+| Platform inspection | #42809278936 | success | 8,528s | 29,694s | 4,500s |
+| Platform recovery | #42777251549 | success | 22,715s | 26,068s | 2,700s |
+| Platform watchdog | #42777386082 | failure | 22,647s | 25,992s | 2,700s |
+| TCE WF-06 | #42799497774 | failure | 12,774s | 27,892s | 1,500s |
+| TCE WF-12 | #42795292155 | failure | 14,544s | 27,790s | 1,500s |
+
+All six current ages and inter-arrival gaps exceed their unchanged budgets. The latest event pages were queried directly with `event=schedule` and `branch=master`; no newer native event is present. Keep issue #1497 open for administrator-side enqueue/delivery/service telemetry. Do not alter cron, freshness budgets, strict health thresholds or the TCE market-scan schedule.
+
+### Latest reconciliation and runtime evidence
+
+Platform manual reconciliation [#42809629336](https://github.com/phanthienquoc/platform-infra/actions/runs/42809629336) completed SUCCESS at 11:42:17Z with `mode=apply`, `target_app=all`, `allow_image_changes=false`. Job logs independently confirm:
+
+- GHCR read preflight passed for Auth, MicroFE Shell/WS and TCE web/service packages.
+- Auth runtime Secret was provisioned and verified with values suppressed.
+- Shared `ghcr-pull` Secret was unchanged in both inspected namespaces.
+- No image-pull failures were found in the managed MicroFE/Auth/TCE allowlist.
+- Stock Admin (two pods) and desired Backend still showed `ImagePullBackOff` in the cluster inventory.
+- `DRIFT=false`; image guard and production manifest apply were skipped; rollout steps were skipped.
+- MicroFE health verification passed. Auth/TCE zero-replica maintenance checks do not establish live application health; Keycloak lane was skipped.
+- Follow-up recovery #42809812621 completed SUCCESS as workflow_dispatch; it is not native schedule evidence.
+
+Latest full K3s inspection [#42809278936](https://github.com/phanthienquoc/platform-infra/actions/runs/42809278936) was generated at 11:39:41Z. At this checkpoint it is 8,528 seconds old, exceeding the 4,500-second / 75-minute inspection freshness budget. Treat its data as last-known only, not current live health: node Ready/ARM64; Media backend/frontend and MicroFE core were 1/1; TCE/Auth/Keycloak were 0/0; Stock desired Admin/Backend showed ImagePullBackOff; public OIDC last returned HTTP 503; Media runner service/listener was active; host restart was required. No fresh inspection dispatch is available through the connected GitHub operations in this run.
+
+The last verified reconciliation is also older than its 45-minute operational evidence budget. No production mutation is authorized from stale evidence.
+
+### Health, publication and ownership gates
+
+- TCE native WF-06 #42799497774 failed the four strict HTTP 200 endpoint probes; manual WF-06 #42799558399 also failed. WF-12 #42795292155 failed its stale-WF-06 delivery check. Preserve HTTP 200 as the only healthy response; intentional 0/0 maintenance is not live health.
+- Stock scraper remains fail-closed before dependency/browser/ingestion steps because `VNSTOCK_API_KEY` is missing. Stock Admin/Backend historical tag `12d63b4` remains ARM64-incompatible; no new app-owned immutable ARM64 release or paired digest authorization was observed.
+- App repositories remain owners of tests/builds and immutable GHCR image publication. Platform remains sole owner of production manifests, shared pull credentials, digest/provenance promotion, GitOps reconciliation, rollout and health verification.
+- Digest-pinned references and pre-push tag-absence checks do not prove GHCR server-side immutable-tag policy. Registry-side enforcement remains unverified; do not claim it is enabled.
+- Preserve TCE WF-03/07/09/10, Stock publisher/scraper, Media publisher and Auth release workflows. No workflow was confirmed redundant/obsolete. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only.
+- Branch metadata previously reported `protected=false` for all five master branches. Rulesets API reads returned HTTP 403, so inherited organization/account ruleset coverage remains unknown. Keep administrator verification in issue #1575; exact-head checks and expected-head merges remain the available manual gate.
+- Issues #1497 (schedule delivery), #872 (TCE/Auth runtime recovery), #1575 (branch governance), Stock #42 (VNStock credential) and #43 (ARM64 immutable release) remain open/owner-gated.
+
+No new GHCR publication, digest promotion, production manifest apply, workload rollout/scaling, namespace/PVC/PV deletion, runner retirement, shared GHCR credential rotation, DNS/database/storage mutation or host reboot occurred in this checkpoint. The approved reconciliation did provision/verify the Auth runtime Secret with values suppressed; shared `ghcr-pull` remained unchanged. TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-10 18:02 ICT / 11:02:41 UTC — current five-repository and schedule checkpoint
 
 ### Repository heads, open PRs and CI
