@@ -223,6 +223,26 @@ if [ "$failed" -ne 0 ]; then
   exit 1
 fi
 
+# Publish a machine-readable distinction between live health and intentional
+# zero-replica maintenance so downstream deployment summaries cannot label a
+# maintenance-only lane as live healthy.
+health_state=healthy
+if [ "$maintenance_scopes" -gt 0 ]; then
+  if [ "$active_scopes" -gt 0 ]; then
+    health_state=partial-maintenance
+  else
+    health_state=maintenance
+  fi
+fi
+
+if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
+  {
+    printf 'health_state=%s\n' "$health_state"
+    printf 'active_scopes=%s\n' "$active_scopes"
+    printf 'maintenance_scopes=%s\n' "$maintenance_scopes"
+  } >> "$GITHUB_OUTPUT"
+fi
+
 if [ "$maintenance_scopes" -gt 0 ]; then
   if [ "$active_scopes" -gt 0 ]; then
     echo "::notice::Workload health verified for ${active_scopes} active scope(s); ${maintenance_scopes} scope(s) are intentionally scaled to zero, so no live workload health is asserted for those scopes."
