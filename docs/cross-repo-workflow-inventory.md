@@ -1,3 +1,14 @@
+## 2026-11-10 17:01 ICT — native heartbeat and recovery reconciliation inventory delta
+
+- TCE WF-12 native schedule #42795292155 ran at 09:59:25Z on master SHA `0f71aa56`, attempt 1. Heartbeat dispatch succeeded; WF-06 delivery verification failed because latest WF-06 #42744759966 was 26,122s old against 1,500s (25m), with 0m queue wait. WF-12 inter-arrival gap was 27,790s against 1,500s.
+- Platform receipt #42795310808 verified source run ID/path/event/master SHA/attempt and succeeded. This is delivery identity only, not service health or cadence acceptance. Issue #1497 updated.
+- Heartbeat recovery dispatched Platform reconcile #42795334693 with `mode=apply`, `target_app=all`, `allow_image_changes=false`. GHCR read preflight passed for Auth/MicroFE/TCE; Auth runtime Secret verified; shared `ghcr-pull` unchanged; no image-pull failures for managed MicroFE/TCE workloads; TCE release pairing passed; drift=false and production manifest apply skipped.
+- Reconcile and final lane gate passed. MicroFE health passed; TCE/Auth were classified as intentional zero-replica maintenance (no live health assertion); Auth TLS verified; Keycloak skipped. Fresh pod inventory at 10:00:07Z: K3s ARM64 node Ready; Media and MicroFE core 1/1; Stock desired Admin/Backend ImagePullBackOff; legacy Stock Backend/Frontend 1/1.
+- Post-reconcile inspection recovery was still in progress at 10:01:16Z. This workflow_dispatch/recovery is not native schedule evidence.
+- Branch metadata `protected=false` on all five masters; inherited ruleset status unverified due rulesets API 403. Track in Platform issue #1575. Preserve all existing publishers, backup, test/security and scheduled workflows. No TCE market-scan schedule change.
+
+---
+
 ## 2026-11-10 16:57 ICT — five-repository workflow inventory and governance refresh
 
 - Current `master` heads: Platform `d93292c4`; TCE `0f71aa56`; Stock `b1b5e177`; Media `dcd69869`; Authentication `eab85fab`. Open owner-decision drafts: Platform #1314/#544/#541/#539 and Authentication #76. No open PRs in TCE, Stock or Media.
