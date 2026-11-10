@@ -1,3 +1,31 @@
+## 2026-11-10 08:12 ICT — PR #1557 merged; isolate read-only helper pushes
+
+### Merge and validation
+
+- Platform master: `2c62973ff2feddcd9e3a4cec5932cd62908d43c6`.
+- [PR #1557](https://github.com/phanthienquoc/platform-infra/pull/1557) merged 01:11:35Z at exact head `595b586ecd72788ae93b961acb05502a6c685b50`; squash SHA `2c62973ff2feddcd9e3a4cec5932cd62908d43c6`.
+- Exact-head `validate-github-actions` #42733851718 PASS and `validate-manifests` #42733852287 PASS.
+- Post-merge `validate-github-actions` #42733984606 PASS and `validate-manifests` #42733984453 PASS.
+- Post-merge watchdog push smoke #42733985163 SUCCESS (warning-only native cadence observations); recovery push #42733984764 SUCCESS with no fallback dispatch.
+
+### Post-merge smoke findings and next PR
+
+- The post-merge smoke confirmed `TCE_ACTIONS_READ_TOKEN` is empty/unavailable in the Platform job environment. Both TCE WF-06/WF-12 cross-repository history reads remain explicitly unverified/warning-only. Owner must configure the Platform repository secret with the documented fine-grained PAT scope.
+- WF-06 API status is now exported and passed to the inter-arrival verifier. However, the second step did not find the prior step's JSON fixture in `RUNNER_TEMP`; it emitted a second "history file unavailable" warning. Branch `fix/read-only-schedule-helper-push-filter-20261110` recreates the empty JSON fixture when the propagated status is `missing-token` and adds a static contract assertion. It will be merged only after exact-head checks pass.
+- The same code PR changed `scripts/verify-native-schedule-gap.py`, which was not yet excluded from `recover-stale-ops.yml`'s broad `scripts/**` push filter. This triggered read-only recovery run #42733984764. Logs confirm reconciliation age=19m (below the 20m fallback threshold) and inspection fallback age=38m (below the 75m threshold); both dispatch outputs were false. No reconciliation/inspection fallback was dispatched. The follow-up branch adds `!scripts/verify-native-schedule-gap.py` to the recovery push exclusions and enforces it in the workflow-contract validator. `reconcile-vps.yml` has explicit deployment script paths and did not trigger from this helper change.
+
+### Current schedule status
+
+Reference 01:12:00Z:
+- Latest native TCE schedule query still showed WF-07 #42711312505 (22:22:36Z), WF-06 #42689871258 (20:07:17Z) and WF-12 #42681246237 (19:13:12Z). No 01:07Z WF-12 event was visible at 01:12Z; treat as delayed/unobserved, not proof of permanent drop.
+- Last inter-arrival gaps remain: Platform reconcile 26,769s/2,700s; inspection 39,672s/4,500s; recovery 28,020s/2,700s; watchdog 28,068s/2,700s; TCE WF-06 37,834s/1,500s; WF-12 37,832s/1,500s.
+- Current ages at 01:12Z: reconcile 1,268s; inspection 16,400s; recovery 2,594s; watchdog 2,450s; TCE WF-06 17,983s; WF-12 21,528s. Platform recovery/watchdog are near their age budget; the inter-arrival gaps remain out of budget.
+- K3s snapshot #42728878765 generated 00:31:02Z remains within the 75-minute snapshot budget but is a manual fallback, not native inspection cadence.
+
+No cron, freshness budget, deployment authority, production mutation or TCE market-scan schedule changed.
+
+---
+
 ## 2026-11-10 08:10 ICT — PR #1556 merged; post-merge validation and token preflight
 
 ### Merge and validation evidence
