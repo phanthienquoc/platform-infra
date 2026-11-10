@@ -1899,6 +1899,7 @@ for required in (
     'contains(" / source ")',
     "https://api.github.com/repos/phanthienquoc/TCE-dashboard/actions/runs/${source_run_id}",
     "verify-tce-heartbeat-receipts.py",
+    "source ([1-9][0-9]*)",
 ):
     if required not in receipt_collection_block:
         fail(f"Platform TCE heartbeat receipt collection is missing: {required}")
