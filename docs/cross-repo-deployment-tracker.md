@@ -64,7 +64,7 @@ Configured schedules remain unchanged:
 
 Do not change cron, freshness budgets, strict health thresholds or TCE market-scan scheduling to hide delivery gaps.
 
-## Current runtime evidence
+## Current runtime blockers
 
 - Latest full read-only host inspection fallback #42907109988 generated `debug/vps-latest.md` at 21:39:20Z. At the 22:55:22Z reference it is 4562s old, just beyond the 4500s budget; its disk/RAM/restart measurements are stale and cannot authorize maintenance or reboot.
 - More recent workload/node evidence comes from reconciliation #42915749236 at 22:34:27Z (1255s old at this reference): `tce-k3s-01` was Ready, ARM64, Ubuntu 22.04.5, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2. This reconcile log does not provide fresh disk/RAM measurements.
