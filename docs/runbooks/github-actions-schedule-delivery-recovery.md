@@ -15,7 +15,7 @@ A run counts as native schedule evidence only when all of these are true:
 - Original attempt `run_attempt=1`
 - Valid, monotonically increasing `created_at`
 
-Do not substitute `workflow_dispatch`, `workflow_run`, `repository_dispatch`, push, rerun attempts, or a successful fallback. A manual watchdog run is a diagnostic only; it does not restore native schedule evidence.
+Do not count `workflow_dispatch`, `workflow_run`, `repository_dispatch`, push, rerun attempts, or a successful fallback as native schedule events. For TCE cross-repository observation only, a successful Platform `recover-stale-ops` heartbeat receipt may locate the source run; Platform re-fetches that exact TCE run ID and counts only the verified source object with `event=schedule`, the exact workflow path, `master`, full SHA, and attempt 1. The `repository_dispatch` receipt itself is transport metadata, not native schedule evidence. A manual watchdog run is diagnostic only.
 
 Use GitHub Actions API timestamps for comparisons. Do not infer queue delay from the local runner clock.
 
@@ -40,7 +40,7 @@ The values below are the checked-in contracts. Do not change cron expressions or
 | TCE Dashboard | `.github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml` | `7,22,37,52 * * * *` | 25 minutes | Schedule-delivery watchdog and Platform heartbeat |
 | StockDividend | `.github/workflows/run_scraper.yml` | `0 1 * * 0,6` | Weekend event; observe delayed delivery window | App-owned data ingestion, not deployment |
 
-TCE cross-repo observations are advisory to Platform reconciliation. Keep the TCE market-scan schedule unchanged; it is outside this recovery procedure.
+TCE cross-repo observations are advisory to Platform reconciliation. The watchdog reads successful Platform-owned heartbeat receipt runs and verifies the source TCE run by ID; it does not need a cross-repository Actions-read PAT. A receipt history needs two distinct source runs before an inter-arrival gap can be measured; legacy receipts without a path in the run-name are still accepted only after the source run-by-ID API confirms the exact workflow path. Keep the TCE market-scan schedule unchanged; it is outside this recovery procedure.
 
 ## 3. Inspect workflow state before changing anything
 
