@@ -182,11 +182,17 @@ for required in (
     if required not in health_test:
         fail(f"Workload health regression tests are missing state assertion: {required}")
 
+job_names = ("deploy-auth-service", "deploy-microfe", "deploy-keycloak", "deploy-tce-dashboard", "deployment-lane-summary", "notify-recovery-controller")
 for job in ("deploy-auth-service", "deploy-microfe", "deploy-tce-dashboard", "deploy-keycloak"):
     marker = f"  {job}:\n"
     if reconcile.count(marker) != 1:
         fail(f"Expected exactly one {job} deployment job.")
-    job_block = reconcile.split(marker, 1)[1].split("\n  ", 1)[0]
+    job_block = reconcile.split(marker, 1)[1]
+    for other_job in job_names:
+        if other_job != job:
+            next_marker = f"\n  {other_job}:\n"
+            if next_marker in job_block:
+                job_block = job_block.split(next_marker, 1)[0]
     for required in (
         "health_state: ${{ steps.health.outputs.health_state }}",
         "active_scopes: ${{ steps.health.outputs.active_scopes }}",
