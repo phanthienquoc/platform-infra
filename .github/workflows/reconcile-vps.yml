@@ -43,7 +43,7 @@ run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target
       - platform/k3s-debug-logs/**
       - platform/microfe/**
       - platform/keycloak/**
-      - '!platform/keycloak/*.md'
+      - '!platform/keycloak/**/*.md'
       - scripts/reconcile-vps.sh
       - scripts/guard-reconcile-images.sh
       - scripts/validate-ghcr-pull-access.sh
