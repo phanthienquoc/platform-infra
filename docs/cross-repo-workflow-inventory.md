@@ -1,3 +1,17 @@
+## 2026-11-10 18:02 ICT — five-repository workflow inventory refresh
+
+- Current master heads: Platform 53e43fc15ac58eab943c548f96ac781a831a59e3; TCE 0f71aa56eb728abbd87907e07739e08684b86724; Stock b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61; Media dcd698699c65ba6e73f6b43838975144777131c3; Authentication eab85fab32d7c9baef750c1fedbb93deb8c1333f.
+- Open owner-decision PRs: Platform #1314/#544/#541/#539 and Auth #76 (all draft). TCE, Stock and Media have no open PRs.
+- Latest app CI remains green: TCE WF-01/WF-02/WF-05; Stock CI #42610360402; Media CI #42539512417; Auth CI #42654579277. Stock scraper #42457182511 remains fail-closed on missing VNSTOCK_API_KEY. Native TCE WF-06 #42799497774 fails all four strict public probes with HTTP 503; native WF-12 #42795292155 fails its stale-WF-06 delivery check.
+- Platform native schedule evidence remains outside budget: reconcile #42778829676 age 11,170s/gap 25,539s; inspection #42749270072 age 27,474s/gap 24,367s; recovery #42777251549 age 11,967s/gap 26,068s; watchdog #42777386082 age 11,899s/gap 25,992s. TCE WF-06 #42799497774 age 2,026s/gap 27,892s; WF-12 #42795292155 age 3,796s/gap 27,790s. Only first-attempt master schedule events count.
+- Manual reconcile #42799573178 succeeded with allow_image_changes=false; GHCR read preflight passed; Auth runtime Secret provision/verification succeeded with values suppressed; shared ghcr-pull unchanged; drift=false and production manifest apply/image promotion skipped. TCE/Auth remain 0/0 maintenance; MicroFE health passed; Keycloak skipped.
+- Latest full read-only K3s snapshot #42795611235 is 60m56 old at the 11:02:41Z reference (within 75m budget, but not a native scheduled inspection). Last-known state: K3s node Ready/ARM64; Media and MicroFE core 1/1; TCE/Auth/Keycloak 0/0; Stock desired Admin/Backend ImagePullBackOff; OIDC 503; Media runner service/listener active; host restart required.
+- Preserve app-owned immutable publishers and useful CI/test/security/manual/release/backup/scheduled jobs. Platform remains sole production apply authority. No duplicate direct SSH/Compose authority and no workflow removal were justified.
+- GitHub branch metadata reports protected=false on all five master branches; inherited ruleset coverage remains unverified due HTTP 403. Admin follow-up is issue #1575. Scheduler telemetry is issue #1497; TCE/Auth P0 is issue #872; Stock owner actions are issues #42/#43.
+- No image publication/promotion, manifest apply, rollout/scaling, namespace/storage deletion, runner retirement, shared pull credential rotation, DNS/database/storage mutation or host reboot. Auth runtime Secret provision/verification did occur via Platform reconciliation. TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-10 17:04 ICT — workflow inventory and fresh runtime evidence
 
 - Current `master` heads: Platform `11751365a0a68d4ec8e33cce8663927c5056dde8`; TCE `0f71aa56`; Stock `b1b5e177`; Media `dcd69869`; Authentication `eab85fab`. Open owner-decision drafts: Platform #1314/#544/#541/#539 and Auth #76. No open PRs in TCE, Stock or Media.
