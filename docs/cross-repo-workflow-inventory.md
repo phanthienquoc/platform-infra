@@ -1170,3 +1170,23 @@ Platform master dd1bca11e3c59c92f920ec5e4896fb8d643be272 after PR #1490; exact-h
 5. Platform operator: approved maintenance window and rollback plan for host package updates/restart.
 
 No production release, digest promotion, manifest apply, scaling, deletion, credential rotation, runner retirement or host maintenance was performed. TCE market-scan schedule unchanged.
+
+
+## 2026-11-10 09:04 ICT — TCE backup workflow classification and current readiness
+
+### Purposeful backup workflow — preserve
+
+- TCE Dashboard `.github/workflows/wf-07-tce-backup.yml` is a distinct scheduled/manual backup job (`30 18 * * *` UTC), separate from `.github/workflows/wf-07-tce-integration-check.yml`.
+- Native backup run [#42737399806](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42737399806) succeeded on master SHA `68660a20e5bf3472a122c59d75b49ffce16a2ce9`. Its job log confirms an SSH tar backup of TCE development/staging/production directories and seven-day archive retention cleanup.
+- This is backup/retention only: it does not run Compose, kubectl, Kustomize, GitOps promotion, rollout or manifest apply. Keep it; do not classify it as a competing deployment authority or as WF-06/WF-12 health freshness evidence.
+- Security follow-up: it currently disables SSH host-key checking. Before changing it, obtain and verify the authoritative VPS host key from the owner; do not trust an unverified `ssh-keyscan` result. The Actions log does not prove archive restoreability.
+
+### Current readiness evidence
+
+- Current master heads: Platform `8e5ed100`, TCE `68660a20`, Stock `b1b5e177`, Media `dcd69869`, Authentication `eab85fab`. Open owner-decision drafts: Platform #1314/#544/#541/#539; Authentication #76. No open PRs in TCE/Stock/Media.
+- Native schedule freshness remains out of budget for all six monitored lanes. The TCE WF-07 Backup schedule is deliberately excluded from the WF-06/WF-12 health lanes.
+- Platform `TCE_ACTIONS_READ_TOKEN` remains absent; TCE Actions history is warning-only/unverified inside Platform until a read-only fine-grained PAT is configured.
+- Latest scheduled reconcile #42731410572 passed GHCR pull preflight, provisioned/verified Auth runtime Secret, left shared `ghcr-pull` unchanged, found no active TCE/MicroFE image-pull failures, confirmed TCE release pairing and drift=false, and skipped manifest apply.
+- Stock desired Admin/Backend pods remain ImagePullBackOff on historical ARM64-incompatible tag `12d63b4`; do not rotate shared credentials or republish a mutable tag as a workaround.
+- TCE/Auth are intentional 0/0 maintenance; HTTP 503 remains a real health failure. The latest full K3s snapshot is manual and stale at this checkpoint. No runtime change is authorized from it.
+
