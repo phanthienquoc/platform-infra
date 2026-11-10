@@ -527,6 +527,8 @@ jobs:
 
       - name: Verify native schedule inter-arrival gaps
         if: always()
+        env:
+          TCE_ACTIONS_READ_TOKEN: ${{ secrets.TCE_ACTIONS_READ_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
