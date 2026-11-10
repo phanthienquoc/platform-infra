@@ -1,3 +1,28 @@
+## 2026-11-10 08:15 ICT — PR #1558 validation correction and operational status
+
+- Platform master: `2c62973ff2feddcd9e3a4cec5932cd62908d43c6`; PR #1557 merged with exact-head and post-merge `validate-github-actions`/`validate-manifests` PASS.
+- `TCE_ACTIONS_READ_TOKEN` is empty in the Platform job environment; WF-06/WF-12 history is warning-only/unverified until the Platform repository owner configures the least-privilege fine-grained PAT (TCE Dashboard only; Actions: read + Metadata: read).
+- PR #1558 (open, head `69bc98b6209616fdf5e1604a1d7cf1dfa5d5227b`) excludes `scripts/verify-native-schedule-gap.py` from recovery push triggers and recreates the WF-06 missing-token JSON fixture in the next step.
+- Initial PR #1558 `validate-manifests` passed; `validate-github-actions` failed because a new static assertion split on substring `fi` (matching `if`). Assertion corrected to split on the actual newline/indentation of the closing `fi`; exact-head validation must rerun before merge.
+- Recovery push #42733984764, triggered by the helper change before the exclusion, completed without dispatch: reconcile age 19m and read-only inspection fallback age 38m were within fallback thresholds.
+- At 01:14Z no new TCE WF-12 01:07 schedule event was visible. Native gaps remain above all six budgets; Platform recovery age has now crossed its 45m age budget.
+- No production release, image publication, promotion, apply, rollout, scaling, deletion, runner retirement or host mutation. No cron/freshness-budget or TCE market-scan schedule change.
+
+---
+
+## 2026-11-10 08:12 ICT — current post-merge checks and read-only push filter follow-up
+
+- Platform master: `2c62973ff2feddcd9e3a4cec5932cd62908d43c6`.
+- PR #1557 merged; exact-head `validate-github-actions` #42733851718 and `validate-manifests` #42733852287 PASS; post-merge #42733984606 and #42733984453 PASS.
+- Push smoke #42733985163 confirmed the TCE read token secret is empty. WF-06/WF-12 history remains unverified/warning-only until the Platform repository secret is configured with Actions: read + Metadata: read on TCE Dashboard only.
+- WF-06 API status propagation is active; a missing-token fixture was not visible to the following step in the post-merge smoke. Follow-up branch `fix/read-only-schedule-helper-push-filter-20261110` recreates the fixture when status is `missing-token`.
+- Read-only helper `scripts/verify-native-schedule-gap.py` triggered the broad `recover-stale-ops.yml` push filter. Recovery #42733984764 completed without dispatch because current reconciliation and inspection fallback were fresh. Follow-up branch excludes this helper from recovery push paths and adds validator coverage.
+- `reconcile-vps.yml` uses explicit production-path filters; no competing apply authority triggered. `reconcile-vps.yml` remains sole apply authority; `inspect-vps.yml` remains read-only.
+- Native cadence gaps remain above all six budgets; latest TCE WF-12 tick was not yet visible at 01:12Z. Do not infer cause without GitHub enqueue/delivery telemetry.
+- No production image publication, digest promotion, manifest apply, rollout, scaling, deletion, runner retirement or host maintenance. No cron/budget or TCE market-scan schedule changes.
+
+---
+
 ## 2026-11-10 08:10 ICT — TCE schedule history token merged; owner configuration pending
 
 - Platform master: `ea393a6936f96559b1da597fd3378f3e0ffe63ed`; PR #1556 merged with exact-head and post-merge `validate-github-actions`/`validate-manifests` PASS.
