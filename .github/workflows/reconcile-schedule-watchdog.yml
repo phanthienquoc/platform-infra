@@ -538,7 +538,7 @@ jobs:
             : > "$evidence_ndjson"
             while IFS= read -r receipt; do
               receipt_name="$(jq -r '.display_title // .name // empty' <<< "$receipt")"
-              source_run_id="$(sed -nE 's/^.*source ([1-9][0-9]*) \/ \.github\/workflows\/[^[:space:]]+$/\1/p' <<< "$receipt_name")"
+              source_run_id="$(sed -nE 's/^.*source ([1-9][0-9]*)( \/ \.github\/workflows\/[^[:space:]]+)?$/\1/p' <<< "$receipt_name")"
               if [[ ! "$source_run_id" =~ ^[1-9][0-9]*$ ]]; then
                 echo "::warning::Skipping Platform receipt with an unparseable source run name: ${receipt_name}"
                 continue
