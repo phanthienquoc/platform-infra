@@ -3696,3 +3696,92 @@ Stock's desired Admin/Backend images still reference historical tag `12d63b4` wi
 6. TCE owner: authoritative SSH host key/fingerprint before removing WF-07 backup's `StrictHostKeyChecking=no`.
 
 No GHCR publication, digest promotion, production manifest apply, rollout/scaling, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation or host maintenance occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
+
+## 2026-11-10 19:01 ICT / 12:01:42 UTC — current five-repository, schedule and runtime checkpoint
+
+### Repository heads, open PRs and latest workflow evidence
+
+| Repository | master SHA | Open PRs | Latest relevant CI / operational evidence |
+|---|---|---|---|
+| Platform Infra | `a49cedc3b91ff2506085f9fa8f253e57c686b995` | #1314, #544, #541, #539 (draft/owner decisions) | Inspection #42809278936 SUCCESS; exact-head manifest validation #42809513153 PASS; reconcile #42809629336 workflow_dispatch SUCCESS; watchdog observer #42809593761 FAILURE; recovery #42809812621 workflow_dispatch SUCCESS |
+| TCE Dashboard | `0f71aa56eb728abbd87907e07739e08684b86724` | none | WF-01 #42781396893, WF-02 #42781396928 and WF-05 #42781396803 PASS; native WF-06 #42799497774 FAILURE; native WF-12 #42795292155 FAILURE; manual WF-06 #42799558399 returned four HTTP 503 responses |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS; scraper #42457182511 failed closed before dependency installation/ingestion because VNSTOCK_API_KEY was unavailable |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS; no new image publication or Platform handoff |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft/owner decision) | auth-service-ci #42654579277 PASS |
+
+Platform inspection PR #1580 was created by scheduled inspection #42809278936, validated on exact PR head `a6facd2385c84fad3400422ac214ebf63b617982` by #42809513153, then squash-merged as master commit `a49cedc3b91ff2506085f9fa8f253e57c686b995`. It changes only `debug/vps-latest.md`. No open PR remains in TCE, Stock or Media. Do not merge the existing owner-decision drafts.
+
+### Native schedule freshness — reference 12:01:42Z
+
+Only first-attempt `event=schedule` runs on master count. Manual, push, workflow_run and repository_dispatch events are not native schedule acceptance.
+
+| Lane | Latest native run | Current age | Previous-to-latest gap | Existing budget |
+|---|---:|---:|---:|---:|
+| Platform reconcile | #42778829676 (07:56:31Z) | 14,711s | 25,539s | 2,700s |
+| Platform inspection | #42809278936 (11:39:41Z) | 1,321s | 29,694s | 4,500s |
+| Platform recovery | #42777251549 (07:43:14Z) | 15,508s | 26,068s | 2,700s |
+| Platform watchdog | #42777386082 (07:44:22Z, failure) | 15,440s | 25,992s | 2,700s |
+| TCE WF-06 | #42799497774 (10:28:55Z, failure) | 5,567s | 27,892s | 1,500s |
+| TCE WF-12 | #42795292155 (09:59:25Z, failure) | 7,337s | 27,790s | 1,500s |
+
+All six inter-arrival gaps exceed their unchanged budgets. Only Platform inspection current age is within its current-age budget at this reference time; the other five current ages are stale.
+
+Watchdog observer #42809593761 (event=workflow_run, 11:42:02Z) verified inspection #42809278936 at age 2m, but failed because the latest native recovery run was #42777251549 at age 238m and because all four Platform inter-arrival gaps exceeded budget. TCE receipt collection was skipped by the event guard because this was a workflow_run observer, not a native schedule or permitted receipt-collection event. Manual recovery #42809812621 SUCCESS is workflow_dispatch and does not refresh the native recovery lane.
+
+The current workflow YAML retains these configured schedules:
+- Platform reconcile: `7,22,37,52 * * * *`.
+- Platform inspection: `2,32 * * * *`.
+- Platform recovery: `10,25,40,55 * * * *`.
+- Platform watchdog: `12,27,42,57 * * * *`.
+- TCE WF-06: `*/15 * * * *`.
+- TCE WF-12: `7,22,37,52 * * * *`.
+
+No cron expression, freshness budget or strict health threshold was changed. The schedule YAML is present; missing/delayed GitHub Actions enqueue/delivery remains unproven without administrator telemetry. Keep issue #1497 open.
+
+### TCE/Auth public health and reconciliation
+
+Native TCE WF-06 #42799497774 and manual WF-06 #42799558399 independently failed all four strict HTTP 200 probes:
+- TCE web `https://tce.mrcute.space/`: HTTP 503.
+- TCE API `https://tce.mrcute.space/api/health`: HTTP 503.
+- Auth liveness `https://auth.mrcute.space/api/health`: HTTP 503.
+- Auth readiness `https://auth.mrcute.space/api/ready`: HTTP 503.
+
+Native WF-12 #42795292155 failed its schedule watchdog. WF-12 workflow_run #42799530489 completed SUCCESS and dispatched a heartbeat, but that event is not native schedule evidence and does not establish application health.
+
+Manual reconciliation #42809629336 completed SUCCESS with `TARGET_APP=all`, `ALLOW_IMAGE_CHANGES=false`:
+- GHCR read preflight passed for Auth, MicroFE Shell/WS and TCE service/web packages.
+- Auth runtime Secret was provisioned and verified; values were suppressed.
+- Shared `ghcr-pull` remained unchanged; ServiceAccounts and managed deployments were patched with no change.
+- The scoped image-pull helper found no image-pull failures in the allowlisted MicroFE Auth/Shell/WS and TCE service/frontend deployments; no rollout restart occurred.
+- TCE release pairing passed for `prod-v0.1.0-e75e338`.
+- GitOps drift=false; production manifest apply, image promotion and rollout were skipped.
+- This is workflow_dispatch reconciliation, not native schedule acceptance.
+
+### Fresh read-only K3s inspection
+
+Inspection #42809278936 generated `debug/vps-latest.md` at 11:39:49Z (20m56s old at the 12:01:42Z reference; within the 75-minute snapshot budget).
+
+- K3s node `tce-k3s-01`: Ready, ARM64, v1.36.3+k3s1.
+- Root disk: 56% used, approximately 20 GiB available; `restart_required=yes`.
+- Media backend/frontend: 1/1.
+- MicroFE Shell/WS/NATS: 1/1.
+- TCE frontend/service, Auth and Keycloak: 0/0 maintenance; do not label these lanes healthy.
+- Stock Admin pods and desired Backend pod: ImagePullBackOff/ErrImagePull on historical tag `12d63b4`, with explicit `no match for platform in manifest`; legacy Stock Backend and Frontend remain 1/1.
+- Public OIDC master and mrcute discovery endpoints: HTTP 503.
+- Media runner service active/enabled and listener present. Storage preflight reports `storage-clean`, but that does not prove remote runner unregister, external backup/retention or DNS ownership.
+- GitOps drift: clean.
+
+No production image publication/promotion, manifest apply, workload rollout/scaling, namespace/PVC/PV deletion, runner retirement, shared GHCR credential rotation, DNS/database/storage mutation or host reboot occurred. The Auth runtime Secret provision/verification above did occur through the approved Platform reconciliation, with values suppressed.
+
+### Ownership, open dependencies and next actions
+
+- App repositories own tests/builds and immutable GHCR image publication. Platform owns production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps reconciliation, rollout and health verification.
+- `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. Preserve TCE backup/release/schedule workflows, Stock and Media publishers, and Auth release/CI workflows.
+- GitHub administrator: provide authoritative Actions enqueue/delivery/service telemetry for #1497 and verify effective master rulesets tracked in #1575.
+- TCE/Auth owners: provide recovery/rollback approval and app-owned immutable release digests; restore replicas only after the narrow runtime cause and rollback path are established. Keep issue #872 open and strict HTTP 200 probes unchanged.
+- Stock owner: provision private `VNSTOCK_API_KEY`, run authenticated `preflight_only=true`, and approve a new immutable ARM64-compatible publisher release under issue #43; keep issue #42 open.
+- Media owner: provide remote runner unregister proof, external backup/retention and authoritative DNS ownership before decommission.
+- Platform operator: approve maintenance window and rollback plan before host restart; TCE owner must provide independently verified SSH host fingerprint before removing the existing backup workflow host-key bypass.
+
+TCE market-scan schedule unchanged.
