@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-10 22:57 ICT (2026-11-10 15:57:57 UTC)
+Last reviewed: 2026-11-11 00:30 ICT (2026-11-10 17:30:23 UTC)
 
 This is the compact current workflow inventory. The previous append-only inventory is preserved at docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md. Historical timestamped workflow checkpoints remain under docs/cross-repo-workflow-inventory-checkpoints/.
 
@@ -69,9 +69,9 @@ Platform reconcile-vps.yml is the single production apply authority. Platform in
 
 ## StockDividend workflow files on master
 
-- ci.yml — app CI/tests.
-- deploy.yml — app-owned manual/release-gated native ARM64 immutable image publisher; not direct production deployment.
-- run_scraper.yml — weekend scraper with fail-closed VNSTOCK_API_KEY preflight.
+- `ci.yml` — app CI/tests, including non-publishing native ARM64 builds for scraper/admin/backend.
+- `deploy.yml` — app-owned, gated native ARM64 immutable image publisher. Code review confirms the workflow requires a native `ubuntu-24.04-arm` runner, publishes scraper/admin/backend with full-source-SHA and `prod-v<semver>-<sha>` tags, verifies `linux/arm64` descriptors and digest equality for both tags, and refuses existing immutable tags. Manual publication requires `STOCKDIVIDEND_PRODUCTION_RELEASE_ENABLED=true`. The workflow does not dispatch to Platform; approved digests are handed off separately. No publication was run in this checkpoint.
+- `run_scraper.yml` — weekend scraper with fail-closed `VNSTOCK_API_KEY` preflight and side-effect-free `preflight_only=true` path.
 
 ## Media Generation workflow files on master
 
@@ -116,15 +116,15 @@ Current native evidence and exact age/gap values are in docs/cross-repo-deployme
 - Do not add duplicate direct SSH/Compose deployment authorities.
 - Do not change the TCE market-scan schedule.
 
-## Latest verification — 2026-11-10 22:57 ICT / 15:57:57 UTC
+## Latest verification — 2026-11-11 00:30 ICT / 17:30:23 UTC
 
-- Platform master is `f8743521ffb578c46abdc95dc56fc8bed028f114`, produced by inspection-only PR #1586. Read-only inspection #42849443955 succeeded; snapshot #debug/vps-latest.md was generated at 15:55:38Z. Exact inspection-head validation #42849732813 passed on PR head `19ba9510`; it is not a post-merge master validation.
-- Native Platform recovery schedule #42848981485 succeeded at 15:52:52Z. Its current age is 305s, but its 29378s inter-arrival gap exceeds the 2700s budget. Its fallback reconciliation #42849053816 was workflow_dispatch, not a native schedule.
-- Reconciliation #42849053816 verified GHCR read access for Auth, MicroFE Shell/WS and TCE web/service packages; Auth runtime Secret provision/verification succeeded with values suppressed; shared `ghcr-pull` was unchanged. GitOps drift=false, so manifest apply, image replacement and rollout were skipped.
-- TCE and Auth deployment lanes explicitly reported intentional zero-replica maintenance and did not assert live health. Active MicroFE Shell/WS health passed. Keycloak remains 0/0; public OIDC discovery probes returned HTTP 503.
-- Fresh K3s snapshot: ARM64 node Ready; Media backend/frontend and MicroFE Shell/WS/NATS 1/1; TCE/Auth/Keycloak 0/0; Stock Admin and desired Backend remain unavailable on historical ARM64-incompatible tag `12d63b4`; existing Stock Backend/Frontend pods remain 1/1; host restart_required=yes.
-- TCE WF-06 #42799497774 still records four public HTTP 503 responses against strict expected HTTP 200. Stock CI #42610360402, Media CI #42539512417 and Auth CI #42654579277 remain the latest successful master CI evidence; Stock scraper #42457182511 remains fail-closed on missing `VNSTOCK_API_KEY`.
-- No cron, freshness budget, strict health threshold, image publication, digest promotion, production apply, rollout, scale, credential rotation, DNS/database/storage mutation, runner retirement or host reboot occurred. TCE market-scan schedule unchanged.
+- Platform master is `0ee1fd060616571ef3790286bb7ea7d7723ed31d`, produced by inspection-only PR #1591. Read-only inspection #42863102352 succeeded and updated only `debug/vps-latest.md`; snapshot generated at 17:15:51Z. PR #1590's prior checkpoint branch was closed without merge because it was behind current master; its 00:11/00:18 checkpoint files are preserved in the replacement branch.
+- Latest native Platform reconcile is #42854065227 (16:23:35Z, success); inspection #42809278936 (11:39:41Z, success); recovery #42848981485 (15:52:52Z, success); watchdog #42850178931 (15:59:51Z, failure). TCE native WF-06 #42799497774 and WF-12 #42795292155 remain failed/stale. At the 17:30:23Z reference, all six current ages and inter-arrival gaps exceed their unchanged budgets; manual/dispatch and workflow_run events do not count.
+- Latest manual reconciliation #42862361821 completed at 17:11:32Z. GHCR read preflight passed for Auth, MicroFE Shell/WS and TCE web/service packages; Auth runtime Secret was provisioned/verified with values suppressed; shared `ghcr-pull` was unchanged. The image-pull helper found no failures for MicroFE Auth/Shell/WS or TCE service/frontend. GitOps drift=false, so production manifest apply, image replacement and rollout were skipped. This manual run does not refresh native schedule cadence.
+- Fresh K3s snapshot: ARM64 node Ready; disk 56% (~20 GiB free), available RAM ~19 GiB, host restart_required=yes. Media backend/frontend and MicroFE Shell/WS/NATS 1/1; TCE/Auth/Keycloak 0/0 maintenance. Stock Admin 0/1 (two ImagePullBackOff pods), desired Backend 0/1 ErrImagePull on historical `12d63b4`; existing Backend/Frontend remain 1/1. Both public OIDC discovery probes HTTP 503; Keycloak diagnostic timed out. Media runner service/listener active; GitHub registration is not inferred.
+- Stock publisher code review confirms native ARM64 builds for all three components, full-source-SHA and version+SHA tags, linux/arm64 manifest verification, per-component digest equality and pre-push tag-absence checks. The manual release gate remains disabled until owner approval; no publication/digest handoff occurred. GHCR server-side immutable-tag policy remains unverified.
+- Branch API reports `protected=false` on all five master branches; inherited organization ruleset coverage remains unknown because rulesets reads return HTTP 403. Administrator action remains open in issue #1575.
+- No workflow was removed; no production apply, rollout, scale, credential rotation, DNS/database/storage mutation, runner retirement or host reboot occurred. TCE market-scan schedule unchanged.
 
 ## Historical evidence
 
