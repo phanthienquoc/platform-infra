@@ -1,3 +1,56 @@
+## 2026-11-10 08:15 ICT — PR #1558 validation failure corrected; exact-head rerun pending
+
+### Repository state
+
+| Repository | Master SHA | Open PRs | Latest relevant CI |
+|---|---|---|---|
+| Platform Infra | `2c62973ff2feddcd9e3a4cec5932cd62908d43c6` | #1314/#544/#541/#539 (draft), #1558 (active) | PR #1557 exact-head and post-merge validation PASS |
+| TCE Dashboard | `68660a20e5bf3472a122c59d75b49ffce16a2ce9` | none | WF-01 #42709513845, WF-02 #42709513839, WF-05 #42709513831 PASS |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS (7/7) |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft) | auth-service-ci #42654579277 PASS |
+
+### PR #1557 merged; exact and post-merge validation passed
+
+- PR #1557 merged at `2c62973ff2feddcd9e3a4cec5932cd62908d43c6`.
+- Exact-head: `validate-github-actions` #42733851718 PASS; `validate-manifests` #42733852287 PASS.
+- Post-merge: `validate-github-actions` #42733984606 PASS; `validate-manifests` #42733984453 PASS.
+- Push smoke #42733985163 PASS, but confirms Platform repository secret `TCE_ACTIONS_READ_TOKEN` is empty. Both TCE WF-06/WF-12 history observations are warning-only/unverified until owner configures a fine-grained PAT limited to TCE Dashboard with Actions: read + Metadata: read.
+
+### PR #1558 — read-only helper path filter and fixture correction
+
+Open PR [#1558](https://github.com/phanthienquoc/platform-infra/pull/1558), current head `69bc98b6209616fdf5e1604a1d7cf1dfa5d5227b`, based on master `2c62973ff2feddcd9e3a4cec5932cd62908d43c6`.
+
+- Adds `!scripts/verify-native-schedule-gap.py` to `recover-stale-ops.yml` push exclusions and enforces it in the workflow-contract validator.
+- Recreates the WF-06 empty JSON fixture in the inter-arrival step when propagated API status is `missing-token`; static contract verifies this behavior.
+- Initial exact-head `validate-manifests` #42734315264 PASS. Initial `validate-github-actions` #42734315465 FAIL was a defect in the new static assertion itself: it split on the substring `fi`, matching the start of `if`, instead of the closing YAML-block `fi`. The assertion was corrected to delimit the actual newline/indentation; a fresh exact-head check is required.
+- The helper change had triggered recovery push run #42733984764 before the exclusion existed. Logs confirm no dispatch: reconciliation age was 19m (<20m threshold), and inspection fallback age was 38m (<75m threshold). No production reconcile or inspection dispatch occurred.
+
+### Latest native schedule state — reference 01:14:00Z
+
+No new native event was visible in the latest query:
+- Platform reconcile #42731410572 00:50:52Z; inspection #42694932077 20:38:40Z; recovery #42728605270 00:28:46Z; watchdog #42728915720 00:31:10Z.
+- TCE WF-07 #42711312505 22:22:36Z; WF-06 #42689871258 20:07:17Z; WF-12 #42681246237 19:13:12Z. The expected 01:07Z WF-12 tick was not visible by 01:14Z; this is not proof of a permanent drop.
+
+| Lane | Inter-arrival gap | Budget | Current age at 01:14Z |
+|---|---:|---:|---:|
+| Platform reconcile | 26,769s | 2,700s | 1,388s |
+| Platform inspection | 39,672s | 4,500s | 16,520s |
+| Platform recovery | 28,020s | 2,700s | 2,714s |
+| Platform watchdog | 28,068s | 2,700s | 2,570s |
+| TCE WF-06 | 37,834s | 1,500s | 18,403s |
+| TCE WF-12 | 37,832s | 1,500s | 21,648s |
+
+All inter-arrival gaps remain outside budget. Recovery current age is now 14s beyond its age budget; inspection and both TCE lanes are stale. No cron/budget changes.
+
+### K3s and safety
+
+Latest read-only snapshot #42728878765 generated 00:31:02Z; age 2,578s at 01:14Z, within the 4,500s snapshot limit but not native inspection cadence. Node Ready/ARM64; Media and MicroFE core 1/1; TCE/Auth/Keycloak 0/0; Stock desired Admin/Backend ImagePullBackOff on historical ARM64-incompatible `12d63b4`; Media runner active. External backup/retention/DNS and remote runner unregistration remain unverified.
+
+No GHCR publication, production release dispatch, digest promotion, manifest apply, rollout, scaling, deletion, runner retirement, DNS/database/storage mutation or host maintenance. `reconcile-vps.yml` remains sole apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-10 08:12 ICT — PR #1557 merged; isolate read-only helper pushes
 
 ### Merge and validation
