@@ -181,16 +181,16 @@ for required in (
         fail(f"Workload health regression tests are missing state assertion: {required}")
 
 for job in ("deploy-auth-service", "deploy-microfe", "deploy-tce-dashboard", "deploy-keycloak"):
-    marker = f"  {job}:\\n"
+    marker = f"  {job}:\n"
     if reconcile.count(marker) != 1:
         fail(f"Expected exactly one {job} deployment job.")
-    job_block = reconcile.split(marker, 1)[1].split("\\n  ", 1)[0]
+    job_block = reconcile.split(marker, 1)[1].split("\n  ", 1)[0]
     if "health_state: ${{ steps.health.outputs.health_state }}" not in job_block:
         fail(f"{job} must expose the health gate's health_state output.")
     if "id: health" not in job_block:
         fail(f"{job} must assign id=health to its workload health step.")
 
-summary = reconcile.split("  deployment-lane-summary:\\n", 1)[1].split("\\n  notify-recovery-controller:", 1)[0]
+summary = reconcile.split("  deployment-lane-summary:\n", 1)[1].split("\n  notify-recovery-controller:", 1)[0]
 for required in (
     "AUTH_HEALTH_STATE: ${{ needs.deploy-auth-service.outputs.health_state }}",
     "MICROFE_HEALTH_STATE: ${{ needs.deploy-microfe.outputs.health_state }}",
