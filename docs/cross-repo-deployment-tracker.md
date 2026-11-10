@@ -1,3 +1,74 @@
+## 2026-11-10 06:57 ICT — repository, publisher and scheduler audit
+
+Evidence timestamp: 2026-11-09 23:57:54 UTC. Re-read all five default-branch heads, open PRs, recent master workflow runs and this tracker during this execution.
+
+### Current repository state
+
+| Repository | Default branch | Current master SHA | Open PRs | Latest relevant master CI |
+|---|---|---|---|---|
+| Platform Infra | master | `47c5866dc046d93c406ba4b52785c82531edbb3d` | #1314/#544/#541/#539 (all draft/owner decision) | validate-manifests #42717334146 PASS on current head |
+| TCE Dashboard | master | `68660a20e5bf3472a122c59d75b49ffce16a2ce9` | none | WF-01 #42709513845, WF-02 #42709513839, WF-05 #42709513831 PASS |
+| StockDividend | master | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS (7/7) |
+| Media Generation | master | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS |
+| Authentication | master | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft/owner decision) | CI #42654579277 PASS |
+
+Platform current-head post-merge `validate-manifests` #42717334146 completed success. The latest `validate-github-actions` evidence #42709336655 is on the immediately preceding Platform commit `8a603a5b`; the current head change is documentation-only and adds no workflow code. Do not mislabel the older workflow-contract run as a current-head run.
+
+### Workflow authority and publisher audit
+
+Read-only review of the current default-branch workflow files confirms the intended separation:
+
+- TCE `.github/workflows/wf-03-tce-production-deploy.yml` is manual `workflow_dispatch` from master only. It builds native ARM64 app images, refuses pre-existing full-source-SHA release tags, resolves registry digests/ARM64 descriptors, and requests the Platform GitOps promotion through the exact dispatch contract. It does not perform SSH/Compose or Kubernetes apply.
+- Stock `.github/workflows/deploy.yml` publishes app-owned full-SHA/version+SHA images on master pushes after its immutable-tag guard and ARM64 digest checks. Its manual publication path is explicitly fail-closed/disabled and it sends no Platform handoff. It is not a cluster deployment authority.
+- Media `.github/workflows/wf-03-media-production-deploy.yml` publishes app-owned full-source-SHA images and verifies ARM64 registry digests. It does not dispatch Platform promotion and does not perform SSH/Compose or Kubernetes apply. Media remains retired from active Platform GitOps.
+- Authentication `.github/workflows/release.yml` is explicit manual master-only publication, verifies immutable tags and ARM64 digest, then sends the exact Auth promotion payload to Platform. It does not perform cluster apply.
+- Platform `gitops-image-promotion.yml` and the sole `reconcile-vps.yml` apply authority remain on the Platform side; `inspect-vps.yml` remains read-only.
+
+No workflow was removed: the similarly named app-side “production deploy” workflows are publishers, not competing direct deployment authorities. Workflow-level tag-absence checks and post-push digest inspection reduce overwrite risk but do not prove GHCR server-side immutable-tag policy. No fresh production publication or tag-to-digest mapping was produced in this execution.
+
+### Latest operational runs
+
+- Platform current-head `validate-manifests` [#42717334146](https://github.com/phanthienquoc/platform-infra/actions/runs/42717334146): SUCCESS.
+- Platform recovery workflow_run #42711416702 and schedule-watchdog workflow_run #42711403937: SKIPPED; Platform repository_dispatch recovery #42711357014: SUCCESS.
+- TCE native WF-07 integration check [#42711312505](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42711312505): SUCCESS, but this is not WF-06/WF-12 deployment-health freshness acceptance.
+- TCE WF-12 watchdog #42711341231: FAILURE; WF-13 recovery #42711368741: SUCCESS; its read-only WF-06 fallback [#42711398985](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42711398985): FAILURE. All four strict public probes (TCE web/API and Auth readiness/liveness) returned HTTP 503, not HTTP 200.
+- Stock CI #42610360402: SUCCESS 7/7. Weekend scraper #42457182511 failed closed on older source SHA `e6469ac` because `VNSTOCK_API_KEY` was empty; the job stopped before dependencies, Chromium or ingestion. Current secret state cannot be read through this workflow evidence; do not infer that the current secret is still empty. Stock issue [#42](https://github.com/phanthienquoc/stockdividend/issues/42) remains open with the owner-only safe `preflight_only=true` procedure.
+- Media CI #42539512417: SUCCESS. Authentication CI #42654579277: SUCCESS.
+- No app publisher release run, production GHCR publication, Platform repository-dispatch promotion or digest promotion was observed.
+
+### Native schedule freshness
+
+Only original `event=schedule`, `head_branch=master`, first-attempt runs count. Latest native events and previous inter-arrival gaps remain:
+
+| Lane | Latest native run | Age at 23:57:54Z | Inter-arrival gap | Existing budget |
+|---|---:|---:|---:|---:|
+| Platform reconcile | #42664347392 | 23,591s | 37,823s | 2,700s |
+| Platform inspection | #42694932077 | 11,954s | 39,672s | 4,500s |
+| Platform recovery | #42657359651 | 26,168s | 37,669s | 2,700s |
+| Platform watchdog | #42657625219 | 26,072s | 37,408s | 2,700s |
+| TCE WF-06 | #42689871258 | 13,837s | 37,834s | 1,500s |
+| TCE WF-12 | #42681246237 | 17,082s | 37,832s | 1,500s |
+
+All six lanes remain outside their existing age/gap budgets. Latest native run IDs remain Platform reconcile #42664347392, inspection #42694932077, recovery #42657359651, watchdog #42657625219, TCE WF-06 #42689871258 and WF-12 #42681246237. The successful TCE WF-07 event, manual WF-06 fallback, workflow_run recovery and manual inspection do not substitute for native delivery. GitHub administrator enqueue/delivery telemetry remains outstanding in [Platform issue #1497](https://github.com/phanthienquoc/platform-infra/issues/1497). Preserve every cron expression and freshness budget.
+
+### K3s evidence freshness
+
+The latest full hardware/pod snapshot remains read-only inspection #42709680634, generated at 2026-11-09 22:12:13Z. At this checkpoint it is 6,341 seconds old (1h45m41s), exceeding the 75-minute/4,500-second freshness limit by 1,841 seconds. No newer full K3s snapshot is available in the inspected workflow evidence. Treat the old snapshot as historical diagnosis only; it cannot authorize rollout, decommission, cleanup, restart or other runtime mutation.
+
+Last-known snapshot details: ARM64 Ubuntu 22.04.5, K3s v1.36.3+k3s1, node Ready; disk 56% with ~20 GiB free, ~19 GiB RAM available, host restart required. Media backend/frontend and MicroFE Shell/WS/NATS were 1/1; TCE/Auth/Keycloak were 0/0; Stock desired Admin/Backend image pulls were failing on historical tag `12d63b4` without a linux/arm64 manifest. Media runner service/listener remained active. External backup/retention, authoritative DNS ownership and remote runner unregistration remain unverified.
+
+### Owner dependencies and safety
+
+1. GitHub administrator: authoritative schedule enqueue/delivery telemetry for issue #1497.
+2. TCE/Auth owners: approve recovery/rollback plan and provide live HTTP 200 evidence before replica restoration.
+3. Stock owner: privately configure/confirm `VNSTOCK_API_KEY`, then run `preflight_only=true`; separately approve any full-source-SHA ARM64 publication.
+4. Media owner: verify remote runner unregistration, external backup/retention and authoritative DNS ownership before decommission.
+5. Platform operator: obtain fresh inspection and approved maintenance/rollback window before host restart or package maintenance.
+
+No GHCR publication, production dispatch, digest promotion, manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No cron or TCE market-scan schedule changed.
+
+---
+
 ## 2026-11-10 05:14 ICT — fresh full K3s inspection and MicroFE contract completion
 
 - Current master: Platform `051f7b8325c6a79e4b3a91a97f57b61169721f0c`; TCE `68660a20e5bf3472a122c59d75b49ffce16a2ce9`; Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media `dcd698699c65ba6e73f6b43838975144777131c3`; Auth `eab85fab32d7c9baef750c1fedbb93deb8c1333f`. Open drafts: Platform #1314/#544/#541/#539; Auth #76; no TCE/Stock/Media open PRs.
