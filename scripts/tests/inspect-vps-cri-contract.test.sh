@@ -9,6 +9,7 @@ bash -n "$inspect_script"
 # The self-hosted runner reuses its checkout. Force-update only the local
 # remote-tracking ref so a stale/divergent origin/master cannot block inspection.
 grep -Fq "fetch --no-tags origin +refs/heads/master:refs/remotes/origin/master" "$inspect_workflow"
+grep -Fq 'git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth_header" \' "$inspect_workflow"
 grep -Fq 'CRI=/usr/local/sbin/platform-crictl' "$inspect_script"
 grep -Fq "sudo \"\$CRI\" images" "$inspect_script"
 grep -Fq "sudo \"\$CRI\" ps" "$inspect_script"
