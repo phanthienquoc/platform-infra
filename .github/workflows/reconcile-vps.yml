@@ -13,11 +13,6 @@ run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target
         options:
           - plan
           - apply
-      allow_image_changes:
-        description: "Allow deliberate workload image replacement during apply"
-        required: false
-        default: false
-        type: boolean
       target_app:
         description: "Application scope for rollout verification"
         required: false
@@ -66,7 +61,8 @@ env:
   RECONCILE_MODE: ${{ (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'repository_dispatch') && 'apply' || github.event.inputs.mode }}
   TARGET_APP: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.app || github.event.inputs.target_app || 'all' }}
   RELEASE_TAG: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.release || '' }}
-  ALLOW_IMAGE_CHANGES: ${{ (github.event_name == 'repository_dispatch' && github.event.action == 'gitops-promoted-ready') || (github.event_name == 'workflow_dispatch' && github.event.inputs.allow_image_changes == 'true') }}
+  # Only the provenance-verified GitOps-ready dispatch may authorize image replacement.
+  ALLOW_IMAGE_CHANGES: ${{ github.event_name == 'repository_dispatch' && github.event.action == 'gitops-promoted-ready' }}
   TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
 
 jobs:
