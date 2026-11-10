@@ -509,76 +509,67 @@ jobs:
             printf '[]\n' > "$receipt_runs_file"
           fi
 
-          collect_tce_schedule_history() {
-            local workflow_path="$1"
-            local label="$2"
-            local output_file="$3"
-            local selected_file="${RUNNER_TEMP}/${label}-receipt-runs.json"
-            local evidence_ndjson="${RUNNER_TEMP}/${label}-receipt-evidence.ndjson"
-            local evidence_file="${RUNNER_TEMP}/${label}-receipt-evidence.json"
-            local source_run_id receipt_name receipt source_file http_code evidence_item
+          selected_file="${RUNNER_TEMP}/tce-heartbeat-selected-receipts.json"
+          evidence_ndjson="${RUNNER_TEMP}/tce-heartbeat-evidence.ndjson"
+          evidence_file="${RUNNER_TEMP}/tce-heartbeat-evidence.json"
 
-            jq --arg path "$workflow_path" '
-              [ .[]
-                | select(
-                    .event == "repository_dispatch"
-                    and .path == ".github/workflows/recover-stale-ops.yml"
-                    and .head_branch == "master"
-                    and (.run_attempt // 1) == 1
-                    and .conclusion == "success"
-                    and ((.display_title // .name // "") | contains(" / source "))
-                  )
-              ]
-              | map(. + {heartbeat_key: (.display_title // .name // "")})
-              | group_by(.heartbeat_key)
-              | map(max_by(.created_at))
-              | sort_by(.created_at) | reverse | .[:8]
-            ' "$receipt_runs_file" > "$selected_file"
+          jq '
+            [ .[]
+              | select(
+                  .event == "repository_dispatch"
+                  and .path == ".github/workflows/recover-stale-ops.yml"
+                  and .head_branch == "master"
+                  and (.run_attempt // 1) == 1
+                  and .conclusion == "success"
+                  and ((.display_title // .name // "") | contains(" / source "))
+                )
+            ]
+            | map(. + {heartbeat_key: (.display_title // .name // "")})
+            | group_by(.heartbeat_key)
+            | map(max_by(.created_at))
+            | sort_by(.created_at) | reverse | .[:8]
+          ' "$receipt_runs_file" > "$selected_file"
 
-            : > "$evidence_ndjson"
-            while IFS= read -r receipt; do
-              receipt_name="$(jq -r '.display_title // .name // empty' <<< "$receipt")"
-              source_run_id="$(sed -nE 's/^.*source ([1-9][0-9]*)( \/ \.github\/workflows\/[^[:space:]]+)?$/\1/p' <<< "$receipt_name")"
-              if [[ ! "$source_run_id" =~ ^[1-9][0-9]*$ ]]; then
-                echo "::warning::Skipping Platform receipt with an unparseable source run name: ${receipt_name}"
-                continue
-              fi
+          : > "$evidence_ndjson"
+          while IFS= read -r receipt; do
+            receipt_name="$(jq -r '.display_title // .name // empty' <<< "$receipt")"
+            source_run_id="$(sed -nE 's/^.*source ([1-9][0-9]*)( \/ \.github\/workflows\/[^[:space:]]+)?$/\1/p' <<< "$receipt_name")"
+            if [[ ! "$source_run_id" =~ ^[1-9][0-9]*$ ]]; then
+              echo "::warning::Skipping Platform receipt with an unparseable source run name: ${receipt_name}"
+              continue
+            fi
 
-              source_file="${RUNNER_TEMP}/${label}-source-${source_run_id}.json"
-              http_code="$(curl --silent --show-error --location --retry 3 --retry-delay 1 --retry-max-time 20 \
-                --connect-timeout 5 --max-time 15 \
-                --header "Accept: application/vnd.github+json" \
-                --header "X-GitHub-Api-Version: 2022-11-28" \
-                --header "User-Agent: platform-infra-tce-heartbeat-verifier" \
-                --output "$source_file" --write-out '%{http_code}' \
-                "https://api.github.com/repos/phanthienquoc/TCE-dashboard/actions/runs/${source_run_id}" || true)"
-              if [[ "$http_code" != "200" ]]; then
-                echo "::warning::Unable to verify TCE source run #${source_run_id} by ID (HTTP ${http_code}); receipt is not counted."
-                continue
-              fi
+            source_file="${RUNNER_TEMP}/tce-source-${source_run_id}.json"
+            http_code="$(curl --silent --show-error --location --retry 3 --retry-delay 1 --retry-max-time 20 \
+              --connect-timeout 5 --max-time 15 \
+              --header "Accept: application/vnd.github+json" \
+              --header "X-GitHub-Api-Version: 2022-11-28" \
+              --header "User-Agent: platform-infra-tce-heartbeat-verifier" \
+              --output "$source_file" --write-out '%{http_code}' \
+              "https://api.github.com/repos/phanthienquoc/TCE-dashboard/actions/runs/${source_run_id}" || true)"
+            if [[ "$http_code" != "200" ]]; then
+              echo "::warning::Unable to verify TCE source run #${source_run_id} by ID (HTTP ${http_code}); receipt is not counted."
+              continue
+            fi
 
-              evidence_item="$(jq -cn --argjson receipt "$receipt" --slurpfile source "$source_file" \
-                '{receipt:$receipt,source_run:$source[0]}')"
-              printf '%s\n' "$evidence_item" >> "$evidence_ndjson"
-            done < <(jq -c '.[]' "$selected_file")
+            evidence_item="$(jq -cn --argjson receipt "$receipt" --slurpfile source "$source_file" \
+              '{receipt:$receipt,source_run:$source[0]}')"
+            printf '%s\n' "$evidence_item" >> "$evidence_ndjson"
+          done < <(jq -c '.[]' "$selected_file")
 
-            jq -s '{receipts: .}' "$evidence_ndjson" > "$evidence_file"
-            python3 scripts/verify-tce-heartbeat-receipts.py \
-              --receipts-file "$evidence_file" \
-              --workflow-path "$workflow_path" \
-              --branch master \
-              --output-runs-file "$output_file" \
-              --warn-only
-          }
-
-          collect_tce_schedule_history \
-            ".github/workflows/wf-06-tce-healthcheck.yml" \
-            "tce-wf06" \
-            "${RUNNER_TEMP}/tce-wf06-scheduled-runs.json"
-          collect_tce_schedule_history \
-            ".github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml" \
-            "tce-wf12" \
-            "${RUNNER_TEMP}/tce-wf12-scheduled-runs.json"
+          jq -s '{receipts: .}' "$evidence_ndjson" > "$evidence_file"
+          python3 scripts/verify-tce-heartbeat-receipts.py \
+            --receipts-file "$evidence_file" \
+            --workflow-path ".github/workflows/wf-06-tce-healthcheck.yml" \
+            --branch master \
+            --output-runs-file "$RUNNER_TEMP/tce-wf06-scheduled-runs.json" \
+            --warn-only
+          python3 scripts/verify-tce-heartbeat-receipts.py \
+            --receipts-file "$evidence_file" \
+            --workflow-path ".github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml" \
+            --branch master \
+            --output-runs-file "$RUNNER_TEMP/tce-wf12-scheduled-runs.json" \
+            --warn-only
 
       - name: Observe TCE WF-06 schedule delivery from verified heartbeat receipts
         if: ${{ always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
