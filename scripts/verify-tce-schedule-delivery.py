@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Observe native TCE WF-06 schedule delivery from the public Actions API.
+"""Observe native TCE WF-06 schedule delivery from the authenticated Actions API.
 
 This is an advisory cross-repository signal. It deliberately does not gate
 Platform reconciliation: a TCE schedule outage must not trigger a production
@@ -38,7 +38,7 @@ def verify_response(
     max_age_minutes: int,
 ) -> tuple[dict[str, object], int]:
     if http_status != "200":
-        raise ValueError(f"GitHub public Actions API returned HTTP {http_status}; schedule delivery is unverified")
+        raise ValueError(f"GitHub Actions API returned HTTP {http_status}; schedule delivery is unverified")
     if reference_epoch <= 0:
         raise ValueError("watchdog reference epoch must be a positive GitHub Actions API timestamp")
     if max_age_minutes <= 0:
@@ -129,6 +129,7 @@ def self_test() -> None:
     expect_error("future timestamp", "200", {"workflow_runs": [{**base_run, "created_at": "2026-11-06T11:00:00Z"}]})
     expect_error("short source SHA", "200", {"workflow_runs": [{**base_run, "head_sha": "abc1234"}]})
     expect_error("API rate limit", "403", {})
+    expect_error("missing read token", "missing-token", {})
     print("TCE native schedule delivery verifier self-tests passed.")
 
 

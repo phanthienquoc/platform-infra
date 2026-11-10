@@ -1,3 +1,39 @@
+## 2026-11-10 08:00 ICT — schedule-observer credential and current deployment inventory
+
+### Current master heads and open PRs
+
+- Platform Infra: `179c28906d7f5dbc6f2f83a8b53ecafb17ea069c`; open drafts #1314/#544/#541/#539.
+- TCE Dashboard: `68660a20e5bf3472a122c59d75b49ffce16a2ce9`; no open PR.
+- StockDividend: `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; no open PR.
+- Media Generation: `dcd698699c65ba6e73f6b43838975144777131c3`; no open PR.
+- Authentication: `eab85fab32d7c9baef750c1fedbb93deb8c1333f`; open draft #76.
+
+### Schedule-observer credential delta
+
+- Platform `.github/workflows/reconcile-schedule-watchdog.yml` uses the new step-scoped repository secret `TCE_ACTIONS_READ_TOKEN` for only the two read-only TCE WF-06/WF-12 Actions-history queries.
+- Both requests send a Bearer authorization header. If the secret is absent, the workflow records an explicit `missing-token` warning and leaves the TCE cross-repository observation unverified; it does not issue an anonymous request.
+- Minimum fine-grained PAT scope: repository access limited to `phanthienquoc/TCE-dashboard`, **Actions: read** and **Metadata: read** only. No Contents, Packages, dispatch, or write permission.
+- The credential name/scope is recorded in `docs/credentials.md` and `docs/credentials-key.md`. Secret configuration is an owner action and has not been verified by the connector.
+- `scripts/validate-workflow-contracts.py` enforces both step-scoped secret references, both Authorization headers, explicit missing-token branches and both credential inventory entries. `validate-github-actions.yml` already runs this contract validator.
+
+### Current operational evidence
+
+- Native reconcile #42731410572 SUCCESS; drift=false, apply skipped; `ALLOW_IMAGE_CHANGES=false`.
+- Native Platform inter-arrival gaps: reconcile 26,769s/2,700s; inspection 39,672s/4,500s; recovery 28,020s/2,700s; watchdog 28,068s/2,700s.
+- TCE WF-06/WF-12 gaps: 37,834s and 37,832s against 1,500s budgets. Strict WF-06 public probes remain HTTP 503.
+- Latest K3s snapshot #42728878765 is a fresh `workflow_dispatch` fallback (not native schedule): node Ready/ARM64; Media/MicroFE core 1/1; TCE/Auth/Keycloak 0/0; Stock desired Admin/Backend ImagePullBackOff on historical ARM64-incompatible `12d63b4`.
+- No new GHCR publication, Platform promotion, manifest apply, scaling, deletion, runner retirement or host maintenance. Existing app publisher authority and sole Platform apply authority are unchanged.
+
+### Authority boundary
+
+- TCE/Stock/Media/Authentication continue to own app tests/builds and immutable GHCR publication.
+- Platform continues to own production manifests, shared GHCR pull credentials, publisher provenance/digest verification, GitOps promotion/reconciliation, rollout and health.
+- App-side publisher workflows remain publishers; no SSH/Compose/Kubernetes apply authority was added or removed.
+- `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only.
+- Preserve existing CI/security/release/backup/scheduled jobs. No cron, freshness budget or TCE market-scan schedule changed.
+
+---
+
 ## 2026-11-10 06:57 ICT — cross-repo workflow authority audit
 
 - Current master heads: Platform `47c5866d`; TCE `68660a20`; Stock `b1b5e177`; Media `dcd69869`; Authentication `eab85fab`. Open owner-decision drafts: Platform #1314/#544/#541/#539 and Authentication #76; no TCE/Stock/Media open PRs.

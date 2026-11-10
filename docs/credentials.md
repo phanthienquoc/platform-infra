@@ -1,6 +1,6 @@
 # Credentials and Token Scope Guide
 
-Last reviewed: 2026-11-06
+Last reviewed: 2026-11-10
 
 This file documents credential purpose and safe selection only. **Never store secret values, PATs, passwords, environment files, or token fragments in this repository.**
 
@@ -18,7 +18,7 @@ This file documents credential purpose and safe selection only. **Never store se
 Keep application dispatch credentials separate from platform-owned GHCR pull access:
 - `PLATFORM_INFRA_TOKEN`: TCE Dashboard release handoff to Platform Infra. TCE WF-08B dispatches MicroFE image digests and polls Platform Actions runs to correlate promotion/reconciliation, so its repository secret needs `Contents: write` and `Actions: read` on `phanthienquoc/platform-infra`. TCE WF-12 also uses it to send the `tce-schedule-heartbeat` repository dispatch. StockDividend and Media Generation are publisher-only and no longer send production handoffs to Platform Infra. The TCE token does not need `Packages` or workflow-dispatch permission.
 - `PLATFORM_INFRA_DISPATCH_TOKEN`: Authentication release handoff only. Its repository secret needs `Contents: write` on `phanthienquoc/platform-infra`. Media Generation is publisher-only and does not dispatch production promotions to Platform Infra.
-- Platform Infra verifies TCE publisher provenance by reading the public `phanthienquoc/TCE-dashboard` Actions run endpoint without a cross-repository token. TCE's existing `PLATFORM_INFRA_TOKEN` remains the producer-side credential for dispatching to and reading Platform Infra workflows; it is not used by the Platform consumer to read TCE run metadata. If TCE becomes private, fail closed until a dedicated Actions:read credential is configured.
+- Platform Infra `reconcile-schedule-watchdog.yml` reads TCE WF-06/WF-12 Actions history using the Platform repository Actions secret `TCE_ACTIONS_READ_TOKEN`. Configure a fine-grained PAT with repository access limited to `phanthienquoc/TCE-dashboard` and **Actions: read** plus **Metadata: read**; grant no Contents, Packages, or write permissions. This authenticated read avoids relying on anonymous public-API rate limits. The token is scoped to the two read-only TCE history steps; if it is absent, those cross-repository observations remain explicitly unverified/warning-only and do not count as fresh schedule evidence. TCE's existing `PLATFORM_INFRA_TOKEN` remains the producer-side credential for dispatching to and reading Platform Infra workflows; it is not used by the Platform consumer to read TCE run metadata.
 
 ## Other production credentials
 
