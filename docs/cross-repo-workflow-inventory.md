@@ -1,3 +1,18 @@
+## 2026-11-10 15:57 ICT — workflow inventory and runtime evidence refresh
+
+- Confirmed master heads: Platform `17a27437`; TCE `0f71aa56`; Stock `b1b5e177`; Media `dcd69869`; Authentication `eab85fab`. Open owner-decision drafts: Platform #1314/#544/#541/#539 and Authentication #76. No open PRs in TCE, Stock or Media.
+- Platform PR #1573 is merged; exact-head and post-merge manifest validation #42781706247/#42781784063 PASS. TCE PR #1035 is merged; exact-head WF-01P/WF-02/WF-05/WF-08B and post-merge WF-01/WF-02/WF-05 all PASS.
+- Latest app CI: Stock #42610360402 PASS (7/7); Media #42539512417 PASS; Authentication #42654579277 PASS. These are app CI/build results, not production release/promotion evidence.
+- Stock `run_scraper.yml` remains a purposeful weekend scheduled/manual job. Its schedule `0 1 * * 0,6` is already asserted by `scripts/validate-production-release-contract.sh`. Failure #42457182511 is the expected fail-closed missing-`VNSTOCK_API_KEY` preflight; all later ingestion/browser steps were skipped. Do not alter the schedule or weaken the guard. Owner action: provision the key out-of-band, then manually run `preflight_only=true`; see issue #42.
+- TCE WF-09 remains manual-only and development-source-only after PR #1035's production-authority guard. WF-03 remains app-owned ARM64 publisher/Platform handoff; WF-10 remains staging-only. SSH host-key pinning remains blocked on an owner-verified fingerprint.
+- Media WF-03 and Authentication release workflow remain app-owned publishers; Stock deploy.yml remains native-ARM64 app-owned publisher. Preserve tests/builds, security, backup, release and scheduled workflows. No duplicate direct SSH/Compose production deployment authority found.
+- Platform remains sole owner of production manifests, shared GHCR pull credentials, provenance/digest promotion, GitOps reconciliation, rollout and health verification. `reconcile-vps.yml` remains sole production apply authority; `inspect-vps.yml` remains read-only.
+- Six native cadence lanes remain stale at 08:57:49Z: Platform reconcile age 3,678s/gap 25,539s/budget 2,700s; inspection 19,982s/24,367s/4,500s; recovery 4,475s/26,068s/2,700s; watchdog 4,407s/25,992s/2,700s; TCE WF-06 22,426s/23,806s/1,500s; WF-12 24,094s/25,383s/1,500s. TCE heartbeat receipts prove event/source identity, not freshness or health. Keep issue #1497 open; no cron or budget changes.
+- Latest scheduled reconcile #42778829676 succeeded with GHCR preflight PASS, shared pull Secret unchanged, TCE pairing PASS, drift=false and apply/rollout skipped. Its cluster inventory is now older than 45 minutes. Full inspection fallback #42774740602 is older than 75 minutes; native inspection #42749270072 is stale. Last-known workload states must not be described as current health.
+- No GHCR publication/promotion, manifest apply, rollout/scaling, deletion, runner retirement, credential rotation, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-10 15:18 ICT — TCE WF-09 development-only authority guard merged
 
 - TCE master is `0f71aa56` after PR #1035. WF-09 remains manual-only and is explicitly labeled as uploading to the isolated development directory; `validate-tce-release-contract.sh` now enforces its trigger, single extraction target, no production Compose/Kubernetes/service mutations and always-run SSH-key cleanup.

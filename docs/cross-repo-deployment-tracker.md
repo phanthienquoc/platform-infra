@@ -1,3 +1,59 @@
+## 2026-11-10 15:57 ICT / 08:57:49 UTC — five-repository audit and stale-runtime checkpoint
+
+### Confirmed repository heads and open PRs
+
+All default branches were read directly from `refs/heads/master`:
+
+| Repository | Master SHA | Open PRs | Latest relevant workflow evidence |
+|---|---|---|---|
+| Platform Infra | `17a27437d0eab0ad6e4bcaf7d5f3cb6f09e74f8b` | #1314, #544, #541, #539 (all drafts/owner decisions) | Post-merge `validate-manifests` #42781784063 SUCCESS |
+| TCE Dashboard | `0f71aa56eb728abbd87907e07739e08684b86724` | none | WF-01 #42781396893, WF-02 #42781396928, WF-05 #42781396803 SUCCESS |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | StockDividend CI #42610360402 SUCCESS (7/7) |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | Media CI #42539512417 SUCCESS |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft/owner decision) | auth-service-ci #42654579277 SUCCESS |
+
+Platform PR #1573 is merged at `17a27437`. Its exact-head `validate-manifests` #42781706247 and post-merge `validate-manifests` #42781784063 both passed. TCE PR #1035 is merged at `0f71aa56`; all four exact-head PR checks and post-merge WF-01/WF-02/WF-05 now pass. No open PR was force-merged; the remaining Platform/Auth PRs are drafts with explicit owner decisions.
+
+### Native schedule freshness — reference 08:57:49Z
+
+Only first-attempt `event=schedule`, `head_branch=master` runs count. Push, pull_request, workflow_run, workflow_dispatch and repository_dispatch are excluded.
+
+| Lane | Latest native run | Previous native run | Inter-arrival gap | Current age | Existing budget |
+|---|---:|---:|---:|---:|---:|
+| Platform reconcile | #42778829676 (07:56:31Z) | #42731410572 | 25,539s | 3,678s | 2,700s |
+| Platform inspection | #42749270072 (03:24:47Z) | #42694932077 | 24,367s | 19,982s | 4,500s |
+| Platform recovery | #42777251549 (07:43:14Z) | #42728605270 | 26,068s | 4,475s | 2,700s |
+| Platform watchdog | #42777386082 (07:44:22Z, failure) | #42728915720 | 25,992s | 4,407s | 2,700s |
+| TCE WF-06 | #42744759966 (02:44:03Z, failure) | #42689871258 | 23,806s | 22,426s | 1,500s |
+| TCE WF-12 | #42741584886 (02:16:15Z, failure) | #42681246237 | 25,383s | 24,094s | 1,500s |
+
+All six current ages and inter-arrival gaps are outside their unchanged budgets. Platform schedule events resumed after long gaps, but this is not cadence recovery. Receipt-backed TCE history has already been runtime-exercised (three verified receipts per WF-06/WF-12); receipt identity/delivery does not make old source runs fresh or prove application health. Keep issue #1497 open for authoritative GitHub Actions enqueue/delivery/service telemetry. Do not change cron expressions, freshness budgets, strict HTTP 200 health thresholds or the TCE market-scan schedule.
+
+### Latest GitOps/K3s evidence and freshness limitation
+
+Scheduled reconciliation #42778829676 succeeded at 07:56:31Z with `TARGET_APP=all`, `ALLOW_IMAGE_CHANGES=false`. GHCR read preflight passed; Auth runtime Secret was verified; shared `ghcr-pull` was unchanged; TCE release pairing passed; drift=false; production apply and rollout were skipped. Auth/TCE were explicitly maintenance 0/0, MicroFE healthy and Keycloak skipped.
+
+Its read-only cluster inventory was recorded at 07:56:53Z, 3,656s old at this reference, beyond the 2,700s (45-minute) runtime evidence budget. The latest full read-only inspection fallback #42774740602 was generated at 07:21:49Z, 5,760s old, beyond the 4,500s snapshot budget; latest native inspection #42749270072 is older still. Therefore no live K3s/health assertion or runtime mutation is authorized from these snapshots.
+
+Last-known state only: ARM64 K3s node Ready; Media and MicroFE core 1/1; TCE/Auth/Keycloak 0/0 maintenance; Stock desired Admin/Backend ImagePullBackOff on historical ARM64-incompatible tag `12d63b4`; Media runner service/listener active. Last full inspection showed disk 56% (~20 GiB free), ~19 GiB RAM available, host restart required and public OIDC HTTP 503. These are historical observations, not current health.
+
+### Stock scraper credential failure is intentional fail-closed behavior
+
+Stock weekend scraper run #42457182511 failed at `Require VNStock API key before installing dependencies`. Job steps confirm Python setup, dependency installation, entitlement check, Chromium installation and scraper ingestion were all skipped. No MongoDB write or Telegram notification was attempted. The existing `scripts/validate-production-release-contract.sh` already enforces the exact weekend cron `0 1 * * 0,6`, read-only permissions, secret non-disclosure, missing-key preflight ordering, and the `preflight_only=true` no-ingestion path. Do not weaken the failure or alter the schedule. Stock owner must provision `VNSTOCK_API_KEY` out-of-band and run manual `preflight_only=true`; issue #42 remains open.
+
+### Remaining owner dependencies and safety
+
+1. GitHub administrator: authoritative Actions enqueue/delivery/service telemetry for issue #1497.
+2. TCE/Auth owners: recovery/rollback approval and app-owned immutable release digests before restoring replicas.
+3. Stock owner: authorized `VNSTOCK_API_KEY`, authenticated `preflight_only=true`, and a new ARM64-compatible immutable digest before any reactivation.
+4. Media owner: remote runner unregister proof, external backup/retention and authoritative DNS ownership.
+5. Platform operator: a fresh inspection and approved maintenance window/rollback plan before host restart or package updates.
+6. TCE owner: verified SSH host fingerprint before removing the remaining `StrictHostKeyChecking=no` utility configuration.
+
+No new GHCR publication, digest promotion, production manifest apply, rollout/scaling, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation or host maintenance occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-10 15:18 ICT / 08:17:48 UTC — TCE WF-09 scope guard merged; post-merge CI running
 
 | Repository | Master SHA | Open PRs | Latest relevant CI |
