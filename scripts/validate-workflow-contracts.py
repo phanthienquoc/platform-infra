@@ -1870,38 +1870,73 @@ if "age_minutes > MAX_RECOVERY_AGE_MINUTES" in recovery_watchdog_block:
     fail("Scheduled recovery freshness must not truncate elapsed time to whole minutes.")
 
 
-# Platform independently observes TCE's native WF-06 schedule delivery.
-# This is advisory only: TCE schedule failure must not trigger a production reconcile loop.
+# Platform observes TCE native schedule events through successful, source-verified Platform receipts.
+# repository_dispatch is only the transport; only the re-fetched TCE source run with event=schedule is counted.
 tce_schedule_verifier = ROOT / "scripts" / "verify-tce-schedule-delivery.py"
 if not tce_schedule_verifier.is_file():
     fail("The cross-repo TCE native schedule verifier is missing.")
 tce_schedule_verifier_text = tce_schedule_verifier.read_text(encoding="utf-8")
 if "python3 scripts/verify-tce-schedule-delivery.py --self-test" not in github_actions:
     fail("Workflow validation must execute TCE native schedule delivery regression fixtures.")
+if "python3 scripts/verify-tce-heartbeat-receipts.py --self-test" not in github_actions:
+    fail("Workflow validation must execute TCE heartbeat receipt normalization regression fixtures.")
 if 'MAX_TCE_WF06_AGE_MINUTES: "25"' not in watchdog:
     fail("The Platform watchdog must use the same 25-minute native WF-06 freshness budget as TCE WF-12.")
-tce_schedule_step = watchdog.find("name: Observe native TCE WF-06 schedule delivery")
-if tce_schedule_step < 0 or "if: always()" not in watchdog[tce_schedule_step:]:
+receipt_collection_step = watchdog.find("name: Collect TCE schedule history from verified Platform heartbeat receipts")
+if receipt_collection_step < 0:
+    fail("The Platform watchdog must collect verified TCE heartbeat receipt history.")
+receipt_collection_block = watchdog[receipt_collection_step:].split("\n      - name:", 1)[0]
+for required in (
+    "always()",
+    "github.event_name == 'schedule'",
+    "github.event_name == 'workflow_dispatch'",
+    'receipt_runs_prefix="repos/${GITHUB_REPOSITORY}/actions/workflows/"',
+    'receipt_runs_workflow="recover-stale-ops.yml/runs"',
+    'receipt_runs_query="event=repository_dispatch&branch=master&per_page=100"',
+    '.conclusion == "success"',
+    '.head_branch == "master"',
+    '(.run_attempt // 1) == 1',
+    'contains(" / " + $path)',
+    "https://api.github.com/repos/phanthienquoc/TCE-dashboard/actions/runs/${source_run_id}",
+    "verify-tce-heartbeat-receipts.py",
+):
+    if required not in receipt_collection_block:
+        fail(f"Platform TCE heartbeat receipt collection is missing: {required}")
+tce_schedule_step = watchdog.find("name: Observe TCE WF-06 schedule delivery from verified heartbeat receipts")
+if tce_schedule_step < 0 or "always()" not in watchdog[tce_schedule_step:]:
     fail("The Platform watchdog must observe TCE native schedule delivery even when another diagnostic fails.")
 tce_schedule_block = watchdog[tce_schedule_step:].split("\n      - name:", 1)[0]
 for required in (
-    'TCE_API_BASE="https://api.github.com/repos/phanthienquoc/TCE-dashboard/actions/workflows"',
-    'tce_runs_url="${TCE_API_BASE}/wf-06-tce-healthcheck.yml/runs?event=schedule&per_page=10"',
-    '--http-status "$api_status"',
+    '--runs-file "${RUNNER_TEMP}/tce-wf06-scheduled-runs.json"',
+    "--http-status 200",
     '--reference-epoch "${reference_epoch:-0}"',
     '--max-age-minutes "$MAX_TCE_WF06_AGE_MINUTES"',
     "--warn-only",
 ):
     if required not in tce_schedule_block:
         fail(f"Platform TCE schedule observation is missing: {required}")
+tce_gap_block_start = watchdog.find('if [[ "$GITHUB_EVENT_NAME" == "schedule"')
+if tce_gap_block_start < 0:
+    fail("Platform TCE WF-06/WF-12 native inter-arrival verification is missing.")
+tce_gap_block_end = watchdog.find("schedule_gap_failures", tce_gap_block_start)
+tce_gap_block = watchdog[tce_gap_block_start:tce_gap_block_end]
+for required in (
+    ".github/workflows/wf-06-tce-healthcheck.yml|tce-wf06|$MAX_TCE_WF06_AGE_MINUTES",
+    ".github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml|tce-wf12|$MAX_TCE_WF12_GAP_MINUTES",
+    '--workflow-path "$workflow_path"',
+    '--max-gap-minutes "$max_gap_minutes"',
+    "--warn-only",
+):
+    if required not in tce_gap_block:
+        fail(f"Platform TCE native schedule gap verification is missing: {required}")
 for required in (
     'run.get("event") != "schedule"',
     'run.get("path") != EXPECTED_PATH',
     'run.get("head_branch") != EXPECTED_BRANCH',
-    'if attempt != 1:',
-    'FULL_SHA.fullmatch(head_sha)',
-    'age_seconds > max_age_minutes * 60',
-    'latest native WF-06 schedule run is newer than the watchdog API reference clock',
+    "if attempt != 1:",
+    "FULL_SHA.fullmatch(head_sha)",
+    "age_seconds > max_age_minutes * 60",
+    "latest native WF-06 schedule run is newer than the watchdog API reference clock",
 ):
     if required not in tce_schedule_verifier_text:
         fail(f"TCE schedule verifier is missing its native-event safety check: {required}")
