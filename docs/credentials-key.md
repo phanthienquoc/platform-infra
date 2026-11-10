@@ -30,7 +30,6 @@ GitHub Actions can resolve secrets/variables from repository, organization, and 
 | `KEYCLOAK_DB_URL` | Platform Infra: `reconcile-vps.yml` | Keycloak database connection URL; may itself embed credentials, so never log it. |
 | `KEYCLOAK_DB_USERNAME` | Platform Infra: `reconcile-vps.yml` | Keycloak database username; currently referenced through the secret context. |
 | `MEDIA_RUNNER_AUDIT_TOKEN` | Platform Infra: `decommission-stock-media.yml` | Read-only repository self-hosted-runner inventory for the exact Media runner `media-generation-k3s-01`; requires fine-grained repository **Administration: read** on `phanthienquoc/media-generation` only. Used only by protected delete mode; it cannot unregister or delete the runner. Secret configuration existence is not verified by this source inventory. |
-| `TCE_ACTIONS_READ_TOKEN` | Platform Infra: `reconcile-schedule-watchdog.yml` | Platform repository Actions secret for read-only cross-repository Actions history (TCE WF-06/WF-12); fine-grained PAT restricted to `phanthienquoc/TCE-dashboard` with **Actions: read** and **Metadata: read** only. No Contents, Packages, or write permission. Missing configuration leaves TCE history explicitly unverified/warning-only. |
 | `MFA_ENCRYPTION_KEY` | TCE Dashboard: `wf-01-tce-build-verify.yml`; Platform Infra: `provision-auth-runtime-secret.yml`, `reconcile-vps.yml` | Backend MFA-encryption key. Platform Infra maps the production Environment secret into the Auth runtime secret. Preserve ciphertext compatibility. |
 | `MFA_ENCRYPTION_KEY_PROD` | TCE Dashboard: `wf-10-tce-k3s-bootstrap.yml` | Separate TCE production bootstrap key name; do not assume it is a synonym for `MFA_ENCRYPTION_KEY`. |
 | `MFA_ENCRYPTION_KEY_STG` | TCE Dashboard: `wf-10-tce-k3s-bootstrap.yml` | Separate TCE staging bootstrap key name; do not reuse the production value by assumption. |
@@ -44,6 +43,8 @@ GitHub Actions can resolve secrets/variables from repository, organization, and 
 | `VPS_SSH_PRIVATE_KEY` | TCE Dashboard: `wf-01-tce-build-verify.yml`, `wf-04-tce-k3s-cleanup.yml`, `wf-06-tce-healthcheck.yml`, `wf-07-tce-backup.yml`, `wf-09-nginx-readonly-audit.yml`, `wf-09-tce-vps-safe-setup.yml`, `wf-10-tce-k3s-bootstrap.yml`; Platform Infra: `bootstrap-runner.yml` | SSH private key for VPS access. Never commit, echo, upload as an artifact, or broaden runner permissions. |
 | `VPS_USER` | Platform Infra: `bootstrap-runner.yml` | SSH login user for runner bootstrap; currently stored under the secret context. |
 
+
+Platform's TCE schedule watchdog does not require a cross-repository Actions-read PAT. It consumes successful `tce-schedule-heartbeat` receipts from Platform's own `recover-stale-ops` Actions history and validates the source TCE run IDs against the public run-by-ID API. The Platform workflow token reads only Platform-owned receipt history.
 
 ## Quick index — GitHub Variables
 
