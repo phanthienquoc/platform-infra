@@ -170,6 +170,7 @@ def self_test() -> None:
         make(111, "2026-11-10T03:30:05Z", source={"id": 999}),
         make(112, "2026-11-10T03:45:05Z", receipt={"head_branch": "feature/test"}),
         make(113, "2026-11-10T04:00:05Z", receipt={"name": "untrusted source 113"}),
+        make(115, "2026-11-10T04:30:05Z", source={"created_at": "2026-11-10T04:30:06Z"}),
     ]
     valid_after_rejection, warnings = normalize_receipts(invalid_cases, path, "master")
     assert valid_after_rejection == []
