@@ -3,8 +3,12 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 inspect_script="$repo_root/scripts/inspect-vps.sh"
+inspect_workflow="$repo_root/.github/workflows/inspect-vps.yml"
 
 bash -n "$inspect_script"
+# The self-hosted runner reuses its checkout. Force-update only the local
+# remote-tracking ref so a stale/divergent origin/master cannot block inspection.
+grep -Fq "fetch --no-tags origin +refs/heads/master:refs/remotes/origin/master" "$inspect_workflow"
 grep -Fq 'CRI=/usr/local/sbin/platform-crictl' "$inspect_script"
 grep -Fq "sudo \"\$CRI\" images" "$inspect_script"
 grep -Fq "sudo \"\$CRI\" ps" "$inspect_script"
