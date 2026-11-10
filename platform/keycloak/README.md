@@ -36,7 +36,7 @@ Email ownership is not verified in this phase. The registration URL is protected
 
 ## Deployment and validation
 
-Use workflow dispatch `reconcile-vps.yml` with `mode=apply`, `target_app=keycloak`, and `allow_image_changes=false`. This path provisions only Keycloak's Secret, applies only `platform/keycloak`, waits for Keycloak readiness, then invokes the idempotent realm provisioner and verifies the live realm policy. It does not reconcile the shared production stack or change `auth.mrcute.space`.
+Use workflow dispatch `reconcile-vps.yml` with `mode=apply` and `target_app=keycloak`. This path provisions only Keycloak's Secret, applies only `platform/keycloak`, waits for Keycloak readiness, then invokes the idempotent realm provisioner and verifies the live realm policy. It does not reconcile the shared production stack or change `auth.mrcute.space`.
 
 The provisioner authenticates with the production Environment admin credentials and does not print tokens or response bodies. It preserves existing `mrcute` clients and unrelated realm settings. If Admin API authentication fails, stop and verify that the configured bootstrap account remains a valid persistent admin; do not work around this by enabling registration on `master`.
 
