@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-10 22:57 ICT (2026-11-10 15:57:57 UTC)
+Last reviewed: 2026-11-11 00:11 ICT (2026-11-10 17:11:58 UTC)
 
 This is the compact current readiness view. Historical append-only content from the previous rolling tracker is preserved at docs/archive/cross-repo-deployment-tracker-append-only-2026-11-10.md. Timestamped checkpoints remain under docs/cross-repo-deployment-checkpoints/.
 
@@ -8,7 +8,7 @@ This is the compact current readiness view. Historical append-only content from 
 
 | Repository | Current master SHA | Open PRs | Latest verified CI / operational evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | f8743521ffb578c46abdc95dc56fc8bed028f114 | #1314, #544, #541, #539 (all drafts / owner decisions) | inspection-only PR #1586 merged as this SHA; exact inspection-head validation #42849732813 SUCCESS on PR head 19ba9510 (not a post-merge master check) |
+| phanthienquoc/platform-infra | bfd0ea66ee005bd47b4dbcc85ced6428d78d9f44 | #1314, #544, #541, #539 (all drafts / owner decisions) | PR #1588 merged; exact-head validate-github-actions #42862175393 and validate-manifests #42862174503 PASS on head 3faf1a73; post-merge push checks not observable via PR-only run reader |
 | phanthienquoc/TCE-dashboard | c4602be3b0a7b624bdb9cd41519cfc70a14d92ab | none | WF-02 #42822853121 and WF-05 #42822853137 PASS on current master; WF-06 #42799497774 FAIL (four public endpoints HTTP 503); WF-12 #42795292155 FAIL |
 | phanthienquoc/stockdividend | b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61 | none | StockDividend CI #42610360402 PASS on current master; scraper #42457182511 failed closed because VNSTOCK_API_KEY was missing |
 | phanthienquoc/media-generation | dcd698699c65ba6e73f6b43838975144777131c3 | none | Media CI #42539512417 PASS on current master; production promotion remains owner/token gated |
@@ -20,18 +20,18 @@ Open draft PRs remain unchanged: Platform #1314 (mail plan), #544 (Keycloak acti
 
 ## Native schedule freshness
 
-Reference time: 2026-11-10 15:57:57 UTC. Only first-attempt event=schedule runs on master count. Manual, push, workflow_run and repository_dispatch events are excluded.
+Reference time: 2026-11-10 17:11:58 UTC. Only first-attempt event=schedule runs on master count. The connected workflow-run reader exposes PR-triggered runs only; ages below are for the last-confirmed native events from the 15:57:57Z inventory and cannot prove that no later event occurred. Manual, push, workflow_run and repository_dispatch events are excluded.
 
-| Lane | Latest native run | Result / created UTC | Current age (s) | Inter-arrival gap (s) | Existing budget (s) |
+| Lane | Last-confirmed native run | Result / created UTC | Age of last-confirmed run (s) | Inter-arrival gap (s) | Existing budget (s) |
 |---|---:|---|---:|---:|---:|
-| Platform reconcile | #42778829676 | success / 07:56:31 | 28886 | 25539 | 2700 |
-| Platform inspection | #42809278936 | success / 11:39:41 | 15496 | 29694 | 4500 |
-| Platform recovery | #42848981485 | success / 15:52:52 | 305 | 29378 | 2700 |
-| Platform watchdog | #42777386082 | failure / 07:44:22 | 29615 | 25992 | 2700 |
-| TCE WF-06 | #42799497774 | failure / 10:28:55 | 19742 | 27892 | 1500 |
-| TCE WF-12 | #42795292155 | failure / 09:59:25 | 21512 | 27790 | 1500 |
+| Platform reconcile | #42778829676 | success / 07:56:31 | 33327 | 25539 | 2700 |
+| Platform inspection | #42809278936 | success / 11:39:41 | 19937 | 29694 | 4500 |
+| Platform recovery | #42848981485 | success / 15:52:52 | 4746 | 29378 | 2700 |
+| Platform watchdog | #42777386082 | failure / 07:44:22 | 34056 | 25992 | 2700 |
+| TCE WF-06 | #42799497774 | failure / 10:28:55 | 24183 | 27892 | 1500 |
+| TCE WF-12 | #42795292155 | failure / 09:59:25 | 25953 | 27790 | 1500 |
 
-All six inter-arrival gaps exceed their unchanged budgets. Platform recovery is currently within its age budget at 305s after native schedule run #42848981485, but its inter-arrival gap is 29378s and still fails the 2700s budget. The other five lanes also exceed their current-age budgets. Fresh inspection #42849443955 is workflow_dispatch and does not refresh the inspection schedule lane; watchdog observer #42849104532 is workflow_run and does not count. Configured schedules remain unchanged: Platform reconcile 7,22,37,52; inspection 2,32; recovery 10,25,40,55; watchdog 12,27,42,57; TCE WF-06 every 15 minutes; TCE WF-12 at 7,22,37,52. Do not change any cron, freshness budget, strict health threshold or TCE market-scan schedule.
+All six inter-arrival gaps in the last-confirmed inventory exceed their unchanged budgets. At 17:11:58Z, all six last-confirmed event ages also exceed their budgets; Platform recovery's last-confirmed run #42848981485 is 4746s old and its 29378s inter-arrival gap exceeds the 2700s budget. These are last-confirmed ages, not proof that no later native event exists. Inspection #42849443955 is workflow_dispatch and does not refresh the inspection schedule lane; watchdog observer #42849104532 is workflow_run and does not count. The connected run reader cannot query later non-PR schedule events. Configured schedules remain unchanged: Platform reconcile 7,22,37,52; inspection 2,32; recovery 10,25,40,55; watchdog 12,27,42,57; TCE WF-06 every 15 minutes; TCE WF-12 at 7,22,37,52. Do not change any cron, freshness budget, strict health threshold or TCE market-scan schedule.
 
 ## Current actions
 
@@ -46,14 +46,16 @@ All six inter-arrival gaps exceed their unchanged budgets. Platform recovery is 
 
 ## Current runtime blockers
 
-- Latest full read-only K3s inspection is #42849443955; its snapshot was generated at 15:55:38 UTC. At the 15:57:57 UTC reference it is 139 seconds old, within the 4500-second inspection freshness budget. It is a fresh read-only snapshot; its manual dispatch event does not count as native schedule delivery.
-- Latest reconciliation #42849053816 completed at 15:55:16 UTC; at the reference time it is 161 seconds old, within the 2700-second evidence budget. Payload was mode=apply, target_app=all, allow_image_changes=false. Logs verify read access to Auth, MicroFE Shell/WS and TCE web/service GHCR packages; Auth runtime Secret provision/verification with values suppressed; shared ghcr-pull unchanged; DRIFT=false; production apply, image replacement and rollout skipped. TCE and Auth lanes explicitly reported intentional zero-replica maintenance with no live health asserted; active MicroFE Shell/WS health passed.
-- Fresh K3s inventory at 15:55:38Z: ARM64 node Ready; disk 56% with about 20 GiB free and RAM available about 19 GiB; Media backend/frontend and MicroFE Shell/WS/NATS 1/1; TCE frontend/service, Auth and Keycloak 0/0 maintenance; Stock Admin 0/1 (two pods ImagePullBackOff/ErrImagePull) and desired Backend 0/1 on historical ARM64-incompatible tag 12d63b4, while the existing Backend and Frontend pods remain 1/1; both public OIDC discovery probes return HTTP 503; Media and Platform runner services/listeners are active; host reports restart_required=yes. This snapshot does not authorize rollout, restart, deletion or retirement.
-- TCE WF-06 #42799497774 logs show TCE web, TCE API, Auth liveness and Auth readiness each returned HTTP 503 while expected_status remained 200; the fresh inspection #42849443955 independently confirms both public OIDC discovery probes still return HTTP 503. The strict HTTP 200 contract is correct; TCE/Auth/Keycloak remain 0/0 maintenance and runtime recovery is outstanding.
+- Latest completed full read-only K3s inspection remains #42849443955, generated at 15:55:38 UTC. At 17:11:58Z it is 4580 seconds old, beyond the 4500-second inspection freshness budget. Rerun attempt 2 passed the host inspection and output validation but failed during the local remote-tracking ref update; PR #1588 merged the fix. A post-merge push-triggered inspection is not yet confirmed, so all K3s details below are last-known only.
+- Latest reconciliation #42849053816 completed at 15:55:16 UTC; at 17:11:58Z it is 4602 seconds old, beyond the 2700-second evidence budget. Its logs verify GHCR read access to Auth, MicroFE Shell/WS and TCE web/service packages; Auth runtime Secret provision/verification with values suppressed; shared ghcr-pull unchanged; DRIFT=false; production apply, image replacement and rollout skipped. TCE and Auth lanes explicitly reported intentional zero-replica maintenance with no live health asserted; active MicroFE Shell/WS health passed. This is last-known evidence, not current runtime health.
+- Last-known K3s inventory at 15:55:38Z: ARM64 node Ready; disk 56% with about 20 GiB free and RAM available about 19 GiB; Media backend/frontend and MicroFE Shell/WS/NATS 1/1; TCE frontend/service, Auth and Keycloak 0/0 maintenance; Stock Admin 0/1 (two pods ImagePullBackOff/ErrImagePull) and desired Backend 0/1 on historical ARM64-incompatible tag 12d63b4, while the existing Backend and Frontend pods remain 1/1; both public OIDC discovery probes return HTTP 503; Media and Platform runner services/listeners are active; host reports restart_required=yes. This stale snapshot does not authorize rollout, restart, deletion or retirement.
+- TCE WF-06 #42799497774 logs show TCE web, TCE API, Auth liveness and Auth readiness each returned HTTP 503 while expected_status remained 200; the last-known inspection #42849443955 independently confirmed both public OIDC discovery probes returned HTTP 503. The strict HTTP 200 contract is correct; TCE/Auth/Keycloak remain 0/0 maintenance and runtime recovery is outstanding.
 - Stock scraper remains fail-closed on missing VNSTOCK_API_KEY. The historical Stock ARM64 pull failure is not evidence that the shared GHCR credential is invalid.
 - GHCR tag absence guards, SHA tags and digest equality do not prove registry-side immutable-tag enforcement. Registry-side policy remains unverified.
 
 ## Current deployment authority and safety
+
+- Platform PR #1587 merged as `ec8b91f1fb9c66740562d50cc73c4b68c6cb8422`; PR #1588 merged as `bfd0ea66ee005bd47b4dbcc85ced6428d78d9f44`. Exact-head validation for #1588 passed in both `validate-github-actions` #42862175393 and `validate-manifests` #42862174503. Post-merge push workflow results are not exposed by the connected PR-only run reader.
 
 - App repositories own CI/tests/builds and immutable GHCR publication.
 - Platform Infra owns production manifests, shared GHCR pull credentials, source-run/provenance verification, digest promotion, GitOps reconciliation, rollout and post-rollout health.
