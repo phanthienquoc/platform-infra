@@ -523,6 +523,8 @@ if '"!apps/**/*.md"' not in recovery_push_paths:
     fail("Recovery push must exclude Markdown-only app documentation from production bootstrap.")
 if "'!apps/tce-vps-control-mcp/**'" not in recovery_push_paths:
     fail("Recovery push must exclude the diagnostics-only VPS MCP from production bootstrap.")
+if "'!platform/keycloak/**/*.md'" not in recovery_push_paths:
+    fail("Recovery push must exclude Keycloak operator Markdown from production bootstrap.")
 if '".github/workflows/reconcile-vps.yml"' in recovery_push_paths:
     fail("Changes to the production apply workflow must be validated but must not auto-dispatch production reconciliation.")
 if '".github/workflows/recover-stale-ops.yml"' in recovery_push_paths:
@@ -602,15 +604,18 @@ if "- apps/**" not in reconcile_push_paths or "- '!apps/**/*.md'" not in reconci
     fail("Production reconciliation push paths must exclude Markdown-only app documentation.")
 if "'!apps/tce-vps-control-mcp/**'" not in reconcile_push_paths:
     fail("Production reconciliation push paths must exclude the diagnostics-only VPS MCP.")
-if "- scripts/resolve-push-deployment-scope.sh" not in reconcile_push_paths:
-    fail("Changes to the push-scope resolver must trigger the sole production reconciliation workflow.")
+if "- scripts/resolve-push-deployment-scope.sh" in reconcile_push_paths:
+    fail("Changing the push-scope resolver alone must not trigger a production apply.")
+if "- '!platform/keycloak/**/*.md'" not in reconcile_push_paths:
+    fail("Production reconciliation push paths must exclude Keycloak operator Markdown.")
 scope_resolver = (ROOT / "scripts" / "resolve-push-deployment-scope.sh").read_text(encoding="utf-8")
-if "assert_scope all scripts/resolve-push-deployment-scope.sh" not in scope_resolver:
-    fail("Push-scope resolver changes must resolve to the cluster-wide reconciliation scope.")
+if "assert_failure scripts/resolve-push-deployment-scope.sh" not in scope_resolver:
+    fail("Push-scope resolver-only changes must fail closed without selecting a production workload.")
 for required in (
     "apps/**/*.md|apps/**/docs/*",
     "apps/tce-vps-control-mcp/*",
     "assert_failure apps/tce-vps-control-mcp/package.json",
+    "assert_failure platform/keycloak/README.md",
     "assert_scope tce-dashboard apps/tce-dashboard/overlays/prod/kustomization.yaml apps/tce-vps-control-mcp/package.json",
 ):
     if required not in scope_resolver:
@@ -1606,6 +1611,7 @@ for path_contract in (
     "platform/microfe/*",
     "platform/auth-service/*",
     "apps/tce-dashboard/*",
+    "platform/keycloak/*.md",
     "platform/keycloak/*",
     "environments/prod/*",
 ):
@@ -1620,6 +1626,7 @@ for ignored_path_contract in (
     "scripts/validate-*.py",
     "scripts/tests/*",
     "docs/*",
+    "platform/keycloak/*.md",
     "debug/vps-latest.md",
 ):
     if ignored_path_contract not in push_scope_contract:

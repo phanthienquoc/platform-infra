@@ -18,6 +18,7 @@ run-name: >-
       - "!apps/**/*.md"
       - '!apps/tce-vps-control-mcp/**'
       - "platform/**"
+      - '!platform/keycloak/**/*.md'
       - "environments/prod/**"
       - "scripts/**"
       # VPS inspection is read-only; its own push/schedule workflow owns snapshot refresh.
