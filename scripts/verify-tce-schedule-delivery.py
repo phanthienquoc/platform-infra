@@ -3,7 +3,7 @@
 
 The input is normalized source-run metadata recovered from successful
 Platform-owned heartbeat receipts. This is advisory and does not gate
-Platform reconciliation; public endpoint health remains separate.
+Platform reconciliation. It does not assert public endpoint health.
 """
 
 from __future__ import annotations
