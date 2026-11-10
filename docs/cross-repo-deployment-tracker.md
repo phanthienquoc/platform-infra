@@ -1,3 +1,32 @@
+## 2026-11-10 08:10 ICT — PR #1556 merged; post-merge validation and token preflight
+
+### Merge and validation evidence
+
+- Platform master is now `ea393a6936f96559b1da597fd3378f3e0ffe63ed`.
+- [PR #1556](https://github.com/phanthienquoc/platform-infra/pull/1556) merged 01:08:43Z at exact head `949a44826c9f00877f332c345ba1bab269d74e19`; squash merge SHA `ea393a6936f96559b1da597fd3378f3e0ffe63ed`.
+- Exact-head `validate-github-actions` #42733427626 PASS and `validate-manifests` #42733427740 PASS (a duplicate exact-head pair also passed).
+- Post-merge `validate-github-actions` #42733625672 PASS; `validate-manifests` #42733625689 PASS.
+- Post-merge read-only watchdog push smoke #42733625753 PASS. Its logs confirm the new `TCE_ACTIONS_READ_TOKEN` secret was empty/unavailable in the Platform repository job environment. The two TCE history observations correctly stayed warning-only/unverified; no anonymous request was made.
+
+### Follow-up defect found in post-merge smoke
+
+The first post-merge smoke exposed a small reporting defect: WF-06's inter-arrival verifier consumed the empty JSON fixture but did not receive the prior step's `missing-token` HTTP status, so it could say "no original native schedule run" rather than "history unverified because the read token is missing."
+
+Branch `fix/tce-wf06-status-propagation-20261110` carries a dependency-safe follow-up:
+- export the WF-06 API status to `GITHUB_ENV`;
+- pass it to `verify-native-schedule-gap.py` so missing-token/403 states remain explicit;
+- add static workflow-contract assertions and a missing-token negative self-test.
+
+This follow-up does not change schedules, budgets, production permissions or deployment behavior. It will be merged only after exact-head `validate-github-actions` and `validate-manifests` pass.
+
+### Current owner action
+
+Configure Platform repository secret `TCE_ACTIONS_READ_TOKEN` using a fine-grained PAT limited to `phanthienquoc/TCE-dashboard` with **Actions: read** and **Metadata: read** only. The post-merge smoke proves no value was supplied; secret provisioning remains outstanding. After configuration, verify both TCE history requests return HTTP 200 and report actual WF-06/WF-12 native history. Do not expose the value.
+
+TCE market-scan schedule unchanged; no production mutation occurred.
+
+---
+
 ## 2026-11-10 08:00 ICT — TCE Actions-history authentication fix and fresh K3s checkpoint
 
 Evidence reference time: 2026-11-10 01:00:00 UTC. Re-read all five master heads, open PRs, recent Actions runs/checks, the prior deployment tracker, workflow inventory, latest reconciliation, native schedule watchdog and the committed K3s snapshot.

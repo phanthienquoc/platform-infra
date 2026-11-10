@@ -1,3 +1,14 @@
+## 2026-11-10 08:10 ICT — TCE schedule history token merged; owner configuration pending
+
+- Platform master: `ea393a6936f96559b1da597fd3378f3e0ffe63ed`; PR #1556 merged with exact-head and post-merge `validate-github-actions`/`validate-manifests` PASS.
+- The watchdog now uses step-scoped `TCE_ACTIONS_READ_TOKEN` for read-only TCE WF-06/WF-12 Actions-history queries. Missing token is warning-only/unverified and does not weaken Platform native freshness gates.
+- Post-merge push smoke #42733625753 showed `TCE_ACTIONS_READ_TOKEN` empty in the job environment. Platform repository secret configuration is still required.
+- Follow-up branch `fix/tce-wf06-status-propagation-20261110` exports the WF-06 API status across steps and passes it into the inter-arrival verifier, preventing missing-token from being misreported as an empty schedule history. It adds static contract assertions and a missing-token negative self-test; PR validation is pending.
+- Required token scope: fine-grained PAT limited to `phanthienquoc/TCE-dashboard`, **Actions: read** + **Metadata: read** only. No Contents, Packages, or write.
+- App publishers and Platform production authority boundaries are unchanged. No production image publication, digest promotion, manifest apply, rollout, scaling, deletion or host mutation. No cron/budget or TCE market-scan schedule changes.
+
+---
+
 ## 2026-11-10 08:00 ICT — schedule-observer credential and current deployment inventory
 
 ### Current master heads and open PRs

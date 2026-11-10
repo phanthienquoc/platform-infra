@@ -158,6 +158,7 @@ def self_test() -> None:
     expect_error("future latest run", "200", {"workflow_runs": [run(9, "2026-11-07T02:01:00Z")]})
     expect_error("short source SHA", "200", {"workflow_runs": [run(10, "2026-11-07T01:50:00Z", head_sha="abc1234")]})
     expect_error("API rate limit", "403", {})
+    expect_error("missing read token", "missing-token", {})
 
     expect_error(
         "single-run history",
