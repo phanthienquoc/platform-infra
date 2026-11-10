@@ -84,7 +84,7 @@ The declarative deployment path is:
 2. Publish an immutable Git-SHA/digest image to GHCR.
 3. A scoped release handoff or approved promotion updates the appropriate image reference in `platform-infra`.
 4. Manifest validation renders `environments/prod` and checks YAML, first-party image policy, secret references, and network boundaries.
-5. `reconcile-vps.yml` is the actual VPS/K3s reconciliation path. It is triggered by manual dispatch, repository dispatch, a schedule every 15 minutes, and selected pushes to `master`. Schedule/push/repository-dispatch currently set effective mode to `apply`; repository dispatch can permit image changes for the `gitops-promoted-ready` event. Treat those triggers as production-capable.
+5. `reconcile-vps.yml` is the actual VPS/K3s reconciliation path. It is triggered by manual dispatch, repository dispatch, a schedule every 15 minutes, and selected pushes to `master`. Schedule/push/repository-dispatch currently set effective mode to `apply`; only the provenance-verified `gitops-promoted-ready` repository dispatch can authorize image changes. Manual dispatch has no image-change override. Treat production-capable triggers as production actions.
 6. Inspect rollout status/health and reconcile drift before declaring completion.
 
 Relevant source:
@@ -97,7 +97,8 @@ Relevant source:
 - Never assume a docs-only PR has no operational effect until all triggered workflows and downstream dispatches have been inspected.
 - Before merging **any** PR, inspect path filters, triggers, workflow inputs/defaults, dispatch payloads, self-hosted runners, protected Environments, and whether the merge can run an apply, promote images, provision secrets, or restart workloads.
 - `workflow_dispatch` with `mode=apply` is a production action. `target_app=all` can affect multiple workloads.
-- Prefer the narrowest `target_app` and an explicit intended action; keep `allow_image_changes=false` unless a reviewed image promotion explicitly requires otherwise.
+- Manual, scheduled and push-triggered reconciliations cannot authorize workload image replacement. The manual reconcile workflow exposes no image-change override.
+- Only a `gitops-promoted-ready` repository dispatch may bypass the image-change guard, after Platform verifies the originating promotion run, required job results, source commit, release identity and digest-pinned references. Route every image change through `gitops-image-promotion.yml`; do not use a direct manual reconcile as an image-promotion path.
 - Preserve immutable image references. Never use `latest`, mutable convenience tags, or guessed SHAs for production.
 - A successful manifest render is not a live-cluster health check. A successful deploy workflow does not prove API/session compatibility or database correctness.
 - Do not merge or rerun unrelated pending production actions simply to make CI green.

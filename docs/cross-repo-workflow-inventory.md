@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-11 04:59 ICT (2026-11-10 21:59:33 UTC).
+Last reviewed: 2026-11-11 05:55 ICT (2026-11-10 22:55:22 UTC).
 
 This is the compact current workflow inventory. The previous append-only inventory is preserved at docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md. Historical timestamped workflow checkpoints remain under docs/cross-repo-workflow-inventory-checkpoints/.
 
@@ -14,7 +14,7 @@ This is the compact current workflow inventory. The previous append-only invento
 | phanthienquoc-authentication | Auth CI, tests, release/provenance and immutable app publication | Shared pull credentials, production manifests, direct production apply |
 | platform-infra | Production manifests, shared GHCR pull credentials, source-run/provenance verification, digest promotion, GitOps reconciliation, rollout, runtime inspection and health verification | App source tests/builds or app-owned image publication |
 
-Platform reconcile-vps.yml is the single production apply authority. Platform inspect-vps.yml is read-only. Do not add competing SSH/Compose deployment authorities in app repositories.
+Platform reconcile-vps.yml is the single production apply authority. Platform inspect-vps.yml is read-only. Manual reconcile dispatch has no image-change override; only the provenance-verified gitops-promoted-ready repository_dispatch may bypass the image guard after the originating promotion run and required jobs are verified. Do not add competing SSH/Compose deployment authorities in app repositories.
 
 ## Platform Infra workflow files on master
 
@@ -32,7 +32,7 @@ Platform reconcile-vps.yml is the single production apply authority. Platform in
 | provision-keycloak-tce-client.yml | Keycloak TCE client provisioning |
 | reconcile-observability.yml | Observability reconciliation |
 | reconcile-schedule-watchdog.yml | Read-only native schedule freshness watchdog |
-| reconcile-vps.yml | Sole production manifest reconciliation/apply authority |
+| reconcile-vps.yml | Sole production manifest reconciliation/apply authority; image-change bypass only for provenance-verified gitops-promoted-ready dispatch |
 | recover-stale-ops.yml | Scheduled and receipt-backed recovery controller |
 | runtime-secret-readiness.yml | Runtime Secret readiness validation |
 | smoke-production.yml | Production smoke checks |
@@ -104,9 +104,11 @@ Current native evidence and exact age/gap values are in docs/cross-repo-deployme
 1. App repository builds/tests and publishes immutable full-source-SHA plus version/source-SHA tags.
 2. Publisher verifies architecture descriptors and registry-resolved digest equality before dispatch.
 3. Platform verifies source workflow path, source SHA, run ID, attempt, release tag and image digests; it does not trust mutable tags or caller-supplied payloads alone.
-4. Platform validates digest references, reconciles production manifests and verifies rollout/health only with fresh runtime evidence.
-5. Shared ghcr-pull credentials are Platform-owned; app workflows must not rotate or mutate them.
-6. Repository-level pre-push tag-absence guards and digest checks do not prove GHCR server-side immutable-tag policy. Registry-side enforcement remains unverified.
+4. Only the `gitops-promoted-ready` repository_dispatch may authorize workload image replacement, and only after Platform validates the originating promotion run, required job results, release identity, source commit and digest-pinned image references. Manual `reconcile-vps.yml` dispatch exposes no image-change override.
+5. Manual, scheduled and push-triggered reconciliation remain subject to `guard-reconcile-images.sh`; non-image manifest changes can still be applied through the single Platform apply authority.
+6. Platform validates digest references, reconciles production manifests and verifies rollout/health only with fresh runtime evidence.
+7. Shared `ghcr-pull` credentials are Platform-owned; app workflows must not rotate or mutate them.
+8. Repository-level pre-push tag-absence guards and digest checks do not prove GHCR server-side immutable-tag policy. Registry-side enforcement remains unverified.
 
 ## Preservation decisions
 
@@ -116,17 +118,21 @@ Current native evidence and exact age/gap values are in docs/cross-repo-deployme
 - Do not add duplicate direct SSH/Compose deployment authorities.
 - Do not change the TCE market-scan schedule.
 
-## Latest verification — 2026-11-11 04:59 ICT / 21:59:33 UTC
+## Latest verification — 2026-11-11 05:55 ICT / 22:55:22 UTC
 
-- Direct Git ref reads confirm current master SHAs: Platform 925397ca9a4f6180450eed03d1e1da167bd50666; TCE c4602be3b0a7b624bdb9cd41519cfc70a14d92ab; Stock b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61; Media dcd698699c65ba6e73f6b43838975144777131c3; Authentication eab85fab32d7c9baef750c1fedbb93deb8c1333f.
-- Open owner-decision drafts: Platform #1314, #544, #541, #539; Authentication #76. No open PRs in TCE, Stock or Media. Platform PR #1599 merged as 925397ca; exact-head validate-manifests #42907375231 passed. No separate post-merge validate-manifests check-run was found. Latest native reconciliation #42909757881 succeeded on the current master SHA. Open draft PR exact-head checks all passed; Authentication Supabase Preview was intentionally skipped.
-- Current-head check-runs: Platform reconciliation #42909757881 succeeded; schedule watchdog #42908417737 failed its native inspection/inter-arrival checks. TCE backend tests #42822853137 passed, while public health #42888337472 failed all four endpoints at HTTP 503; native WF-06 #42872071366 and WF-12 #42867304730 failed. Stock CI #42610360402 passed all seven jobs including non-publishing ARM64 builds and release-hold contract; scraper #42457182511 failed closed because VNSTOCK_API_KEY was absent. Media CI #42539512417 passed. Authentication CI #42654579277 passed; Supabase Preview was intentionally skipped.
-- Latest native schedule evidence (first-attempt event=schedule, branch=master only): Platform reconcile #42909757881 (21:55:56Z), inspection #42887151366 (19:37:38Z), recovery #42906791198 (21:37:08Z), watchdog #42908417737 (21:47:23Z); TCE WF-06 #42872071366 (18:08:09Z), WF-12 #42867304730 (17:40:12Z). At 21:59:33Z all six inter-arrival gaps exceed their unchanged budgets. Platform reconcile/recovery/watchdog current ages are within budget; native inspection and both TCE health lanes are stale. Separate TCE WF-07 schedule #42888228034 succeeded at 19:44:10Z but does not substitute for WF-06/WF-12.
-- Read-only inspection fallback #42907109988 generated debug/vps-latest.md at 21:39:20Z and is 1213s old at this reference, within the 4500s read-only evidence budget. The latest native inspection schedule remains stale.
-- Native reconciliation #42909757881 succeeded at 21:55:56Z with runner policy v15, GHCR read preflight for five packages, Auth runtime Secret verified with values suppressed, shared ghcr-pull unchanged, no MicroFE/TCE image-pull failures, TCE desired/live tag pairing at prod-v0.1.0-e75e338 and GitOps drift=false. Manifest apply, image replacement and workload rollout were correctly skipped. TCE/Auth were intentional zero-replica maintenance; Keycloak lane skipped.
-- K3s snapshot: node Ready ARM64, Ubuntu 22.04.5, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2, disk 56% (~20 GiB free), RAM ~19 GiB, restart_required=yes. Media and MicroFE workloads were 1/1. TCE/Auth/Keycloak were 0/0 maintenance. Stock Admin (two pods) and desired Backend failed pulling historical 12d63b4 with no match for platform in manifest; legacy Backend/Frontend were 1/1 on 23b2878 without RepoDigest evidence. No Stock/Media PVC or VolumeSnapshot references were found, but active workloads/namespaces remain and decommission is not complete. Media runner service/listener remains active.
-- TCE manual WF-06 #42888337472 failed all four approved endpoints at HTTP 503 against required HTTP 200. Stock scraper remains failed closed due missing VNSTOCK_API_KEY. No Stock production publication or digest handoff occurred. GHCR server-side immutable-tag enforcement remains unverified.
-- Last verified branch endpoint reported protected=false for all five master branches; branch-protection detail GET returned 403 and effective inherited ruleset coverage remains unverified. Administrator action remains tracked in issue #1575.
+- Direct Git ref reads confirm current master SHAs: Platform `89b39427c78510cdcf30326a30737fe9bbe0f4c2`; TCE `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab`; Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
+- Open owner-decision drafts: Platform #1314, #544, #541, #539; Authentication #76. No open PRs in TCE, Stock or Media. Exact PR heads/check-runs: Platform #1314 `db152c9a` validate PASS; #544 `c95e7dae` PASS; #541 `b8f7c6ba` PASS; #539 `2dc48b97` PASS; Authentication #76 `f19cacb0` validate PASS and Supabase Preview skipped. New Platform PR #1601 is open on dedicated branch `fix/require-provenance-for-image-changes-20261111-0555-ict`; validation is pending on its final docs-updated head.
+- Platform PR #1600 is the latest merged readiness checkpoint at master `89b39427`; post-merge validation #42911038235 passed. Latest manual reconciliation #42915749236 succeeded on current master. Recovery #42915997996 succeeded as workflow_dispatch; neither is native schedule evidence.
+- Current relevant CI: Platform reconciliation #42915749236 SUCCESS; TCE backend unit tests #42822853137 PASS, manual public health #42915762180 FAIL; Stock CI #42610360402 PASS, scheduled scraper #42457182511 FAIL closed; Media CI #42539512417 PASS; Authentication CI #42654579277 PASS. The old Supabase Preview check on Auth #76 is intentionally skipped.
+- Latest native schedule evidence (first-attempt event=schedule, branch=master only): Platform reconcile #42909757881 (21:55:56Z), inspection #42887151366 (19:37:38Z), recovery #42906791198 (21:37:08Z), watchdog #42908417737 (21:47:23Z); TCE WF-06 #42872071366 (18:08:09Z), WF-12 #42915709227 (22:33:49Z). At 22:55:22Z all six inter-arrival gaps exceed their unchanged budgets; five current ages exceed budget. WF-12 age is within budget but its run fails because WF-06 is stale. WF-12 heartbeat dispatch succeeded and Platform receiver #42915725335 accepted it; neither substitutes for a native WF-06 run.
+- Native gaps/ages at reference: Platform reconcile 19941s/3566s; inspection 28677s/11864s; recovery 20656s/4694s; watchdog 20852s/4079s; TCE WF-06 27554s/17233s; WF-12 17617s/1293s. Budgets remain 2700/4500/2700/2700/1500/1500s. Cron and market-scan schedules are unchanged.
+- Latest full read-only inspection fallback #42907109988 generated `debug/vps-latest.md` at 21:39:20Z and is now 4562s old, just beyond the 4500s budget. A newer workload/node snapshot in reconciliation #42915749236 (22:34:27Z) showed `tce-k3s-01` Ready/ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2; it did not include fresh disk/RAM/restart measurements.
+- Reconciliation #42915749236 verified GHCR read access for Auth, MicroFE Shell/WS and TCE web/service packages; Auth runtime Secret was provisioned and verified with values suppressed; shared `ghcr-pull` remained unchanged; managed MicroFE/TCE image-pull helpers found no failures; TCE desired/live images paired at `prod-v0.1.0-e75e338`. GitOps drift=false; production manifest apply, image replacement and rollout were correctly skipped. Auth/TCE are intentional zero-replica maintenance; MicroFE is active/healthy; Keycloak skipped.
+- Current workload snapshot: Media backend/frontend and MicroFE Shell/WS/NATS 1/1; TCE/Auth 0/0 maintenance; Stock Admin two pods and desired Backend one pod ImagePullBackOff; legacy Stock Backend/Frontend 1/1. Stock historical tag `12d63b4` still has the known ARM64 manifest mismatch; legacy cached image IDs have no RepoDigest and cannot be promoted.
+- TCE manual WF-06 #42915762180 failed all four approved endpoints at HTTP 503 against required HTTP 200. Native WF-12 #42915709227 failed because latest native WF-06 was 265m old at its own reference. Stock scraper #42457182511 failed before dependencies/ingestion because `VNSTOCK_API_KEY` was empty. No Stock production publication or digest handoff occurred.
+- Media runner service/listener remains active; remote unregister, backup/retention and authoritative DNS ownership remain unverified. GHCR server-side immutable-tag enforcement remains unverified.
+- Last verified branch endpoint reported protected=false for all five master branches; branch-protection detail access and effective inherited rulesets remain unverified. Administrator action remains tracked in issue #1575.
+- PR #1601 addresses a source-verified safety gap: the old master workflow_dispatch input could set `ALLOW_IMAGE_CHANGES=true` and bypass the image guard without publisher/promotion provenance. The PR removes the input, restricts authorization to `gitops-promoted-ready` after provenance validation, removes the obsolete recovery/Keycloak input references and adds regression assertions. Current master remains unchanged until the PR passes and merges.
 - No workflow was removed; no new image publication, digest promotion, production apply, rollout, scale, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation or host reboot occurred. TCE market-scan schedule unchanged.
 
 ## Historical evidence
