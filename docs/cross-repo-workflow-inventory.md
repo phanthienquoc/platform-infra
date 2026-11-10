@@ -1,3 +1,16 @@
+## 2026-11-10 15:18 ICT — TCE WF-09 development-only authority guard merged
+
+- TCE master is `0f71aa56` after PR #1035. WF-09 remains manual-only and is explicitly labeled as uploading to the isolated development directory; `validate-tce-release-contract.sh` now enforces its trigger, single extraction target, no production Compose/Kubernetes/service mutations and always-run SSH-key cleanup.
+- WF-01P now triggers on WF-09 workflow changes. Exact-head PR runs #42781237215/#42781237078/#42781237093/#42781237139 all PASS on `09f73261d632d7a9fe4bfee83b96d52183302b0a`. Post-merge WF-02 #42781396928 PASS; WF-01 #42781396893 and WF-05 #42781396803 were still running after their contract/preflight steps passed.
+- WF-09's `StrictHostKeyChecking=no` remains a documented security follow-up until a verified SSH host fingerprint is supplied. WF-03 remains the app-owned manual ARM64 publisher/Platform handoff; WF-10 remains staging-only. No production SSH/Compose/Kubernetes authority was added and no workflow was removed.
+- Current Platform native gaps remain reconcile 25,539s/2,700s; inspection 24,367s/4,500s; recovery 26,068s/2,700s; watchdog 25,992s/2,700s. TCE WF-06/WF-12 gaps remain 23,806s/1,500s and 25,383s/1,500s. Receipt collector runtime remains verified; receipts do not establish service health or cadence.
+- Scheduled reconciliation #42778829676 passed GHCR preflight and TCE release pairing, shared `ghcr-pull` unchanged, drift=false and apply/rollout skipped. Auth/TCE remain 0/0 maintenance; MicroFE healthy. Freshness-limited full K3s snapshot is manual fallback #42774740602, not native inspection.
+- Platform master `48695d2`; TCE `0f71aa56`; Stock `b1b5e177`; Media `dcd69869`; Authentication `eab85fab`. Open owner-decision PRs remain Platform #1314/#544/#541/#539 and Auth #76.
+- Issue #1497 remains open for authoritative GitHub Actions enqueue/delivery telemetry. Stock issue #42 remains open for owner-provided `VNSTOCK_API_KEY` and authenticated safe preflight. Media runner unregister/backup/DNS evidence and TCE/Auth recovery approval remain owner-blocked.
+- No new GHCR publication, digest promotion, manifest apply, rollout/scaling, decommission, credential rotation, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-10 08:20 ICT — PR #1558 merged; read-only helper path exclusion verified
 
 - Platform master: `30e1cd22ed887d1ce35be99e8fac97e206e35aaa`; PR #1558 exact-head checks #42734643361/#42734643354 PASS and post-merge #42734770070/#42734770118 PASS.
