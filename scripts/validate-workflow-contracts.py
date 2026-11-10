@@ -1916,7 +1916,7 @@ for required in (
 ):
     if required not in tce_schedule_block:
         fail(f"Platform TCE schedule observation is missing: {required}")
-tce_gap_block_start = watchdog.find('if [[ "$GITHUB_EVENT_NAME" == "schedule"')
+tce_gap_block_start = watchdog.find('if [[ "${GITHUB_EVENT_NAME}" == "schedule"')
 if tce_gap_block_start < 0:
     fail("Platform TCE WF-06/WF-12 native inter-arrival verification is missing.")
 tce_gap_block_end = watchdog.find("schedule_gap_failures", tce_gap_block_start)
