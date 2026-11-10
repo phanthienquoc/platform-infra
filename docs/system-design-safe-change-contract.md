@@ -84,7 +84,7 @@ The declarative deployment path is:
 2. Publish an immutable Git-SHA/digest image to GHCR.
 3. A scoped release handoff or approved promotion updates the appropriate image reference in `platform-infra`.
 4. Manifest validation renders `environments/prod` and checks YAML, first-party image policy, secret references, and network boundaries.
-5. `reconcile-vps.yml` is the actual VPS/K3s reconciliation path. It is triggered by manual dispatch, repository dispatch, a schedule every 15 minutes, and selected pushes to `master`. Schedule/push/repository-dispatch currently set effective mode to `apply`; repository dispatch can permit image changes for the `gitops-promoted-ready` event. Treat those triggers as production-capable.
+5. `reconcile-vps.yml` is the actual VPS/K3s reconciliation path. It is triggered by manual dispatch, repository dispatch, a schedule every 15 minutes, and selected pushes to `master`. Schedule/push/repository-dispatch currently set effective mode to `apply`; only the provenance-verified `gitops-promoted-ready` repository dispatch can authorize image changes. Manual dispatch has no image-change override. Treat production-capable triggers as production actions.
 6. Inspect rollout status/health and reconcile drift before declaring completion.
 
 Relevant source:
