@@ -496,9 +496,10 @@ jobs:
         run: |
           set -euo pipefail
           receipt_runs_file="${RUNNER_TEMP}/tce-heartbeat-receipt-runs.json"
-          receipt_runs_endpoint="repos/${GITHUB_REPOSITORY}/actions/workflows/recover-stale-ops.yml/runs"
+          receipt_runs_prefix="repos/${GITHUB_REPOSITORY}/actions/workflows/"
+          receipt_runs_workflow="recover-stale-ops.yml/runs"
           receipt_runs_query="event=repository_dispatch&branch=master&per_page=100"
-          if ! receipt_response="$(gh api --paginate "${receipt_runs_endpoint}?${receipt_runs_query}")"; then
+          if ! receipt_response="$(gh api --paginate "${receipt_runs_prefix}${receipt_runs_workflow}?${receipt_runs_query}")"; then
             echo "::warning::Unable to query Platform's own TCE heartbeat receipt history."
             receipt_response=""
           fi
