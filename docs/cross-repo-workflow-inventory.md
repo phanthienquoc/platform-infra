@@ -1,3 +1,17 @@
+## 2026-11-10 16:57 ICT — five-repository workflow inventory and governance refresh
+
+- Current `master` heads: Platform `d93292c4`; TCE `0f71aa56`; Stock `b1b5e177`; Media `dcd69869`; Authentication `eab85fab`. Open owner-decision drafts: Platform #1314/#544/#541/#539 and Authentication #76. No open PRs in TCE, Stock or Media.
+- Latest master CI: Platform `validate-manifests` #42787531522 PASS; TCE WF-01 #42781396893, WF-02 #42781396928, WF-05 #42781396803 PASS; Stock CI #42610360402 PASS; Media CI #42539512417 PASS; Auth CI #42654579277 PASS. Stock scraper schedule #42457182511 remains fail-closed on missing `VNSTOCK_API_KEY`, before dependency/browser/ingestion steps.
+- Platform PR #1574 is merged at `d93292c4`; exact-head #42787395953 and post-merge #42787531522 manifest validation PASS. TCE PR #1035 is merged at `0f71aa56`; exact-head WF-01P/WF-02/WF-05/WF-08B and post-merge WF-01/WF-02/WF-05 PASS.
+- Branch metadata reports `protected=false` for master in all five repositories. Rulesets read returned HTTP 403 due GitHub plan/feature restriction; inherited ruleset coverage is unverified, not presumed absent. No settings were changed. Track admin verification and required-check enforcement in Platform issue #1575. Until verified, retain exact-head CI and expected-head merge checks.
+- Six native schedule lanes remain outside unchanged age and inter-arrival budgets at 09:57:31Z: Platform reconcile #42778829676 age 7,260s/gap 25,539s/budget 2,700s; inspection #42749270072 age 23,564s/gap 24,367s/budget 4,500s; recovery #42777251549 age 8,057s/gap 26,068s/budget 2,700s; watchdog #42777386082 age 7,989s/gap 25,992s/budget 2,700s; TCE WF-06 #42744759966 age 26,008s/gap 23,806s/budget 1,500s; WF-12 #42741584886 age 27,676s/gap 25,383s/budget 1,500s. Push/manual/workflow_run/repository_dispatch receipts do not satisfy native cadence. Keep issue #1497 open; no cron or budget changes.
+- Latest scheduled reconcile #42778829676 is now older than its 45-minute runtime evidence budget. Latest full K3s inspection fallback #42774740602 is older than its 75-minute snapshot budget; native inspection is older still. No current health claim or runtime mutation is authorized.
+- Preserve app-owned immutable GHCR publishers and all useful CI/test/security/manual/release/backup/scheduled workflows. Pre-push tag guards and digest verification are not proof of GHCR server-side immutable-tag enforcement. No fresh production publisher run/digest was observed.
+- Platform remains sole owner of production manifests, shared pull credentials, digest/provenance promotion, GitOps reconciliation, rollout and health. `reconcile-vps.yml` is sole production apply authority; `inspect-vps.yml` is read-only. No duplicate direct SSH/Compose production authority found.
+- No production publication/promotion/apply/rollout/scaling/deletion, runner retirement, credential rotation, DNS/database/storage mutation or host maintenance. TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-10 15:57 ICT — workflow inventory and runtime evidence refresh
 
 - Confirmed master heads: Platform `17a27437`; TCE `0f71aa56`; Stock `b1b5e177`; Media `dcd69869`; Authentication `eab85fab`. Open owner-decision drafts: Platform #1314/#544/#541/#539 and Authentication #76. No open PRs in TCE, Stock or Media.
