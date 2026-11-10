@@ -527,6 +527,9 @@ jobs:
                     and ((.name // .display_title // "") | contains(" / " + $path))
                   )
               ]
+              | map(. + {heartbeat_key: (.name // .display_title // "")})
+              | group_by(.heartbeat_key)
+              | map(max_by(.created_at))
               | sort_by(.created_at) | reverse | .[:2]
             ' "$receipt_runs_file" > "$selected_file"
 
