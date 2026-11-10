@@ -1,3 +1,68 @@
+## 2026-11-10 15:18 ICT / 08:17:48 UTC — TCE WF-09 scope guard merged; post-merge CI running
+
+| Repository | Master SHA | Open PRs | Latest relevant CI |
+|---|---|---|---|
+| Platform Infra | `48695d2ad98b7e85bcc8a7d356a7dc9c60190236` | #1314, #544, #541, #539 (draft/owner decisions) | `validate-manifests` #42780082451 PASS |
+| TCE Dashboard | `0f71aa56eb728abbd87907e07739e08684b86724` | none | PR #1035 merged; exact-head checks PASS; post-merge WF-02/WF-05 PASS; WF-01 still running |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS (7/7) |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft/owner decision) | auth-service-ci #42654579277 PASS |
+
+
+PR [TCE #1035](https://github.com/phanthienquoc/TCE-dashboard/pull/1035) merged at exact validated head `09f73261d632d7a9fe4bfee83b96d52183302b0a`, squash SHA `0f71aa56eb728abbd87907e07739e08684b86724`. WF-01P #42781237215, WF-02 #42781237078, WF-05 #42781237093 and WF-08B #42781237139 all passed on the exact PR head. Post-merge WF-02 #42781396928 passed; WF-01 #42781396893 and WF-05 #42781396803 were still running at the reference time after their contract/preflight steps passed.
+
+WF-09 remains manual-only, development-source-only and is now guarded against production Compose/Kubernetes/service mutation. The workflow path is included in WF-01P PR validation. `StrictHostKeyChecking=no` remains an owner-dependent security follow-up pending a verified host fingerprint. No workflow was removed.
+
+Only first-attempt `event=schedule` runs on `master` count. Manual, push, pull_request, workflow_run and repository_dispatch runs are not native acceptance.
+
+| Lane | Latest native run | Previous native run | Inter-arrival gap | Current age | Budget |
+|---|---:|---:|---:|---:|---:|
+| Platform reconcile | #42778829676 (07:56:31Z) | #42731410572 | 25,539s | 1,277s | 2,700s |
+| Platform inspection | #42749270072 (03:24:47Z) | #42694932077 | 24,367s | 17,581s | 4,500s |
+| Platform recovery | #42777251549 (07:43:14Z) | #42728605270 | 26,068s | 2,074s | 2,700s |
+| Platform watchdog | #42777386082 (07:44:22Z, failure) | #42728915720 | 25,992s | 2,006s | 2,700s |
+| TCE WF-06 | #42744759966 (02:44:03Z, failure) | #42689871258 | 23,806s | 20,025s | 1,500s |
+| TCE WF-12 | #42741584886 (02:16:15Z, failure) | #42681246237 | 25,383s | 21,693s | 1,500s |
+
+All six inter-arrival gaps remain outside their unchanged budgets. Platform inspection and both TCE lanes also exceed current-age budgets. Platform reconcile/recovery/watchdog ages remain within their age budgets, but the long gaps are not repaired by one resumed tick.
+
+- Scheduled watchdog #42777386082 and follow-on observer #42779022182 failed on Platform inter-arrival checks.
+- Recovery observer #42779022304 succeeded and confirmed native inspection #42749270072 stale at 273m, while manual read-only fallback #42774740602 was 34m old and fresh at that reference. At 08:17:48Z the fallback remains within the 75-minute snapshot budget, but it is not native cadence evidence.
+- TCE heartbeat receipt collector runtime was verified after PR #1570: three verified receipts each for WF-06/WF-12. Receipts prove source identity/delivery, not health or freshness.
+- Issue [#1497](https://github.com/phanthienquoc/platform-infra/issues/1497) remains open for authoritative GitHub Actions enqueue/delivery/service telemetry. No cron or freshness budget changes.
+
+## GitOps and K3s
+
+Scheduled reconciliation [#42778829676](https://github.com/phanthienquoc/platform-infra/actions/runs/42778829676) succeeded at 07:56:31Z with `TARGET_APP=all`, `ALLOW_IMAGE_CHANGES=false`.
+
+- GHCR read preflight passed for Auth, MicroFE Shell/WS and TCE packages.
+- Shared `ghcr-pull` remained unchanged.
+- TCE release pairing passed for `prod-v0.1.0-e75e338`.
+- GitOps drift=false; production manifest apply and rollout were skipped.
+- Auth and TCE were classified as intentional zero-replica maintenance; MicroFE was healthy; Keycloak was skipped.
+
+The reconcile's read-only inventory at 07:56:53Z showed the ARM64 K3s node Ready; Media and MicroFE core 1/1; Stock Admin and desired Backend ImagePullBackOff; legacy Stock Backend/frontend 1/1; TCE/Auth/Keycloak 0/0. The full inspection snapshot #42774740602 is a manual fallback generated at 07:21:49Z; it is still within the 75-minute age budget at this reference. Last snapshot metrics: disk 56% (~20 GiB free), RAM available ~19 GiB, host restart required, Media runner service/listener active. The snapshot's OIDC observation was HTTP 503; reconcile did not re-probe public OIDC.
+
+Stock desired image tag `12d63b4` remains ARM64-incompatible. Do not rotate shared GHCR credentials to mask an architecture mismatch. No new app-owned image digest was published or promoted.
+
+
+Scheduled reconciliation [#42778829676](https://github.com/phanthienquoc/platform-infra/actions/runs/42778829676) succeeded at 07:56:31Z with `TARGET_APP=all`, `ALLOW_IMAGE_CHANGES=false`.
+
+- GHCR read preflight passed for Auth, MicroFE Shell/WS and TCE packages.
+- Shared `ghcr-pull` remained unchanged.
+- TCE release pairing passed for `prod-v0.1.0-e75e338`.
+- GitOps drift=false; production manifest apply and rollout were skipped.
+- Auth and TCE were classified as intentional zero-replica maintenance; MicroFE was healthy; Keycloak was skipped.
+
+The reconcile's read-only inventory at 07:56:53Z showed the ARM64 K3s node Ready; Media and MicroFE core 1/1; Stock Admin and desired Backend ImagePullBackOff; legacy Stock Backend/frontend 1/1; TCE/Auth/Keycloak 0/0. The full inspection snapshot #42774740602 is a manual fallback generated at 07:21:49Z; it is still within the 75-minute age budget at this reference. Last snapshot metrics: disk 56% (~20 GiB free), RAM available ~19 GiB, host restart required, Media runner service/listener active. The snapshot's OIDC observation was HTTP 503; reconcile did not re-probe public OIDC.
+
+Stock desired image tag `12d63b4` remains ARM64-incompatible. Do not rotate shared GHCR credentials to mask an architecture mismatch. No new app-owned image digest was published or promoted.
+
+
+No production mutation or TCE market-scan schedule change occurred.
+
+---
+
 ## 2026-11-10 08:20 ICT — PR #1558 merged; post-merge observer checks pass
 
 ### Current repository state
