@@ -3072,3 +3072,55 @@ The health-state contract from PR #1562 remains the last production-exercised co
 6. Platform operator: approve a maintenance window and rollback plan before host package updates/restart.
 
 No GHCR publication, production release dispatch, digest promotion, manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation or host maintenance occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
+
+## 2026-11-10 12:02 ICT / 05:02:17 UTC — cross-repo operational recheck
+
+### Current repository heads, open PRs and CI
+
+| Repository | Master SHA | Open PRs | Latest relevant workflow evidence |
+|---|---|---|---|
+| `platform-infra` | `e69d92e6` | #1314, #544, #541, #539 (draft/owner decision) | `validate-manifests` #42752967420 PASS on master; documentation-only checkpoint PR #1565 is merged |
+| `TCE-dashboard` | `68660a20` | none | WF-06 native #42744759966 FAILURE; manual fallback #42744807014 FAILURE; WF-12 native #42741584886 FAILURE; WF-07 backup #42737399806 SUCCESS |
+| `stockdividend` | `b1b5e177` | none | CI #42610360402 PASS (7/7); historical scraper #42457182511 failed closed on older SHA `e6469ac` |
+| `media-generation` | `dcd69869` | none | Media CI #42539512417 PASS |
+| `phanthienquoc-authentication` | `eab85fab` | #76 (draft/owner decision) | auth-service-ci #42654579277 PASS |
+
+No new app publisher, production release, or Platform promotion run is present in the inspected first-page Actions history. Current Platform master checks are documentation-path validation only; workflow-contract validation was not triggered by this docs-only change.
+
+### Native schedule evidence — reference 05:02:17Z
+
+Only first-attempt `event=schedule` runs on master count. Manual, push, `workflow_run`, `repository_dispatch`, TCE backup and TCE integration runs are not substitutes for the six monitored lanes.
+
+| Lane | Latest native run | Current age | Previous inter-arrival gap | Existing budget |
+|---|---:|---:|---:|---:|
+| Platform reconcile | #42731410572 (00:50:52Z) | 15,085s | 26,769s | 2,700s |
+| Platform inspection | #42749270072 (03:24:47Z) | 5,850s | 24,367s | 4,500s |
+| Platform recovery | #42728605270 (00:28:46Z) | 16,411s | 28,020s | 2,700s |
+| Platform watchdog | #42728915720 (00:31:10Z) | 16,267s | 28,068s | 2,700s |
+| TCE WF-06 | #42744759966 (02:44:03Z, FAILURE) | 8,294s | 23,806s | 1,500s |
+| TCE WF-12 | #42741584886 (02:16:15Z, FAILURE) | 9,962s | 25,383s | 1,500s |
+
+All six current ages and all six inter-arrival gaps exceed their existing budgets. Platform watchdog observer #42749529614 failed the four Platform cadence checks; recovery observer #42749529310 succeeded but is not a native schedule event. TCE WF-13 fallback #42744807014 failed the strict public probes. Do not change cron expressions or freshness budgets, and do not count the separate WF-07 backup run #42737399806 as WF-06/WF-12 evidence.
+
+### GitOps and K3s evidence freshness
+
+- Latest confirmed reconciliation remains #42731410572 at 00:50:52Z (age 15,085s, beyond the 45-minute reconcile budget). It passed GHCR read preflight, verified Auth runtime Secret, left shared `ghcr-pull` unchanged, confirmed TCE release pairing and `drift=false`, and skipped manifest apply because `ALLOW_IMAGE_CHANGES=false`.
+- Latest read-only K3s snapshot is #42749270072, generated at 03:24:55Z. At 05:02:17Z it is 5,842s old, beyond the 4,500-second snapshot budget. Treat its workload inventory as last-known state only; it does not authorize runtime mutation.
+- Last-known snapshot: node Ready/ARM64; K3s v1.36.3+k3s1; disk 56% (~20 GiB free); available RAM ~19 GiB; host restart required. Media backend/frontend and MicroFE Shell/WS/NATS were 1/1. TCE/Auth/Keycloak were 0/0. Stock desired Admin/Backend pods were ImagePullBackOff on historical ARM64-incompatible tag `12d63b4`; legacy Stock Backend/Frontend were 1/1. Public OIDC probes returned HTTP 503; Media runner remained active/enabled.
+- Stock's ARM64 manifest mismatch is not evidence of a shared GHCR pull-credential failure. Do not rotate `ghcr-pull` to work around it.
+- TCE WF-06 #42744759966 and manual fallback #42744807014 failed all four strict HTTP 200 probes with HTTP 503. The machine-readable health contract remains correct: intentional TCE/Auth zero-replica maintenance is not live health.
+
+### Owner dependencies and security follow-up
+
+1. GitHub administrator: provide authoritative Actions schedule enqueue/delivery/service telemetry for issue #1497; run history alone cannot distinguish delayed, dropped or never-enqueued ticks.
+2. Platform owner: configure `TCE_ACTIONS_READ_TOKEN` as a fine-grained PAT restricted to `phanthienquoc/TCE-dashboard`, Actions: read + Metadata: read only. Last confirmed smoke #42734770430 found the secret empty; no later provisioning evidence is visible.
+3. TCE/Auth owners: approve recovery/rollback and provide app-owned immutable release/digest evidence before restoring replicas. Keep strict HTTP 200 probes.
+4. Stock owner: privately configure/verify `VNSTOCK_API_KEY` and run `preflight_only=true`; issue #42 remains open with no owner confirmation.
+5. Media owner: provide remote runner unregister proof, external backup/retention evidence and authoritative DNS ownership before decommission.
+6. Platform operator: approve a maintenance window and rollback plan before host package updates/restart.
+7. TCE owner: provide the authoritative VPS SSH host key/fingerprint before replacing WF-07 backup's current `StrictHostKeyChecking=no`. Preserve the purposeful scheduled backup; do not trust an unverified keyscan result.
+
+### Safety
+
+No new GHCR publication, production dispatch, digest promotion, manifest apply, workload rollout/scaling, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation or host reboot/upgrade occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
