@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-11 06:08 ICT (2026-11-10 23:08:55 UTC).
+Last reviewed: 2026-11-11 06:14 ICT (2026-11-10 23:14:15 UTC).
 
 This is the compact current workflow inventory. The previous append-only inventory is preserved at docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md. Historical timestamped workflow checkpoints remain under docs/cross-repo-workflow-inventory-checkpoints/.
 
@@ -32,8 +32,8 @@ Platform reconcile-vps.yml is the single production apply authority. Platform in
 | provision-keycloak-tce-client.yml | Keycloak TCE client provisioning |
 | reconcile-observability.yml | Observability reconciliation |
 | reconcile-schedule-watchdog.yml | Read-only native schedule freshness watchdog |
-| reconcile-vps.yml | Sole production manifest reconciliation/apply authority; image-change bypass only for provenance-verified gitops-promoted-ready dispatch; Keycloak Markdown excluded from push trigger |
-| recover-stale-ops.yml | Scheduled and receipt-backed recovery controller; Keycloak operator Markdown excluded from push recovery |
+| reconcile-vps.yml | Sole production manifest reconciliation/apply authority; image-change bypass only for provenance-verified gitops-promoted-ready dispatch; recursive Keycloak Markdown excluded from push trigger; resolver-only edits do not auto-apply |
+| recover-stale-ops.yml | Scheduled and receipt-backed recovery controller; recursive Keycloak operator Markdown excluded from push recovery |
 | runtime-secret-readiness.yml | Runtime Secret readiness validation |
 | smoke-production.yml | Production smoke checks |
 | sso-auto-onboarding.yml | SSO onboarding utility |
@@ -118,19 +118,21 @@ Current native evidence and exact age/gap values are in docs/cross-repo-deployme
 - Do not add duplicate direct SSH/Compose deployment authorities.
 - Do not change the TCE market-scan schedule.
 
-## Latest verification — 2026-11-11 06:08 ICT / 23:08:55 UTC
+## Latest verification — 2026-11-11 06:14 ICT / 23:14:15 UTC
 
-- Current master refs: Platform `8b11d6629863b90536066d4e134a089b69dd6182`; TCE `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab`; Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
-- PR #1601 merged at `72ed11ef`, removing manual `allow_image_changes`; exact-head and post-merge validation passed. PR #1602 inspection-only merged at `8b11d662`, carrying read-only inspection #42920320410.
-- Push reconciliation #42920184478 was triggered by `platform/keycloak/README.md`, misclassified it as a Keycloak workload change, applied the dedicated Keycloak resource set and executed the allowlisted Auth/Keycloak scale-to-zero command. The run verified no matching pods remained; it did not record pre-scale replica values, so the exact state transition is unknown. This was an unintended side effect of operator documentation. PR #1603 fixes the scope classification and both reconcile/recovery push filters.
-- PR #1603 is open on `fix/push-scope-ignore-keycloak-docs-20261111-0610-ict`, based on exact master `8b11d662`. It adds a Keycloak Markdown exclusion, treats resolver-only changes as non-deploying metadata, adds negative scope fixtures, and prevents those changes from forcing cluster-wide apply. Final-head checks are pending.
-- Fresh full read-only inspection #42920320410 at 23:05:16Z is 219s old at this reference. Host ARM64 Ubuntu 22.04.5; RAM 19 GiB available; disk 56% used / 20 GiB free; `restart_required=yes`; no restart or package upgrade performed. K3s node Ready, v1.36.3+k3s1, containerd 2.3.2-k3s2.
-- Current workload evidence: Media backend/frontend 1/1 and digest-pinned; MicroFE Shell/WS/NATS 1/1; TCE frontend/service 0/0; Auth/Keycloak 0/0; public OIDC discovery for both realms HTTP 503. Stock Admin has two ImagePullBackOff pods and desired Backend one ImagePullBackOff pod on `12d63b4` with `no match for platform in manifest`; legacy Backend/Frontend 1/1 on `23b2878` without RepoDigest evidence.
-- Storage preflight reports no Stock/Media PVC or VolumeSnapshot references; the separate `k3s-debug/k3s-debug-logs` PVC remains bound. Media runner service/listener is active/enabled; remote GitHub unregister, backup/retention and DNS ownership remain unverified.
-- Inspection reports GitOps drift clean. Reconciliation #42915749236 previously verified five GHCR package reads, Auth runtime Secret with values suppressed, unchanged shared `ghcr-pull`, no managed MicroFE/TCE pull failures and TCE desired/live pairing. It skipped manifest apply, image replacement and rollout.
-- Native schedule evidence at 23:08:55Z: Platform reconcile #42909757881 age 4379s/gap 19941s; inspection #42887151366 12677s/28677s; recovery #42906791198 5507s/20656s; watchdog #42908417737 4892s/20852s; TCE WF-06 #42872071366 18046s/27554s; WF-12 #42915709227 2106s/17617s. All six current-age and inter-arrival budgets are exceeded. Cron and TCE market-scan schedule unchanged.
-- CI evidence: Platform post-merge #42920184484, #42920184389 and #42920184623 passed; TCE backend tests #42822853137 passed but manual public health #42915762180 failed four HTTP 200 probes with HTTP 503; Stock CI #42610360402 passed but scraper #42457182511 failed closed due missing `VNSTOCK_API_KEY`; Media CI #42539512417 and Auth CI #42654579277 passed.
-- GHCR server-side immutable-tag enforcement remains unverified. No new image publication, digest promotion, shared production manifest apply, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation or host reboot occurred. The narrow Auth/Keycloak scale-to-zero command in #42920184478 is the one production-side effect documented above; no other workload rollout was observed. No workflow removed. TCE market-scan schedule unchanged.
+- Current master refs: Platform `98bc3d8c84fdd667d42ca1b938633dd2951ed9f8`; TCE `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab`; Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
+- PR #1601 merged at `72ed11ef`, removing the manual image-change override. PR #1602 merged at `8b11d662`, adding fresh read-only inspection #42920320410. PR #1603 merged at `98bc3d8c`, fixing Keycloak Markdown and resolver-only push scope.
+- PR #1603 exact-head checks: #42921447020 workflow/lint PASS, #42921447003 manifest validation PASS, #42921446835 Keycloak CI PASS. Post-merge checks: #42921556638 workflow/lint PASS, #42921556488 manifest validation PASS, #42921556572 Keycloak CI PASS.
+- PR #1603 merge triggered validation workflows only. No `reconcile-vps.yml` or `recover-stale-ops.yml` push run was created. This verifies that the metadata path exclusions prevented a repeat of the earlier docs-only production action.
+- Historical push run #42920184478 from PR #1601 misclassified `platform/keycloak/README.md` as a Keycloak workload change, applied the Keycloak resource set and executed the Auth/Keycloak scale-to-zero command. It verified no matching pods remained; pre-scale replicas were not captured, so the exact state transition is unknown. PR #1603 now excludes Keycloak Markdown and adds regression fixtures.
+- Fresh full read-only inspection #42920320410 at 23:05:16Z is 539s old, within the 4500s budget. Host ARM64 Ubuntu 22.04.5; 19 GiB RAM available; root disk 56% used / 20 GiB free; `restart_required=yes`; K3s node Ready, v1.36.3+k3s1, containerd 2.3.2-k3s2.
+- Workloads: Media backend/frontend 1/1 and digest-pinned; MicroFE Shell/WS/NATS 1/1; TCE frontend/service 0/0; Auth/Keycloak 0/0; public OIDC HTTP 503. Stock Admin two pods and desired Backend one pod ImagePullBackOff on historical ARM64-incompatible `12d63b4`; legacy Backend/Frontend 1/1 on `23b2878`.
+- Storage preflight: no Stock/Media PVC or VolumeSnapshot references; the k3s-debug PVC remains. Media runner service/listener active; remote unregister, backup/retention and DNS ownership remain unverified.
+- GitOps drift clean. Previous reconciliation #42915749236 verified GHCR read access, Auth runtime Secret with values suppressed, unchanged shared `ghcr-pull`, no managed MicroFE/TCE pull failures and TCE desired/live pairing; manifest apply, image replacement and rollout skipped.
+- Native schedule evidence at 23:14:15Z: Platform reconcile #42909757881 age 4699s/gap 19941s; inspection #42887151366 12997s/28677s; recovery #42906791198 5827s/20656s; watchdog #42908417737 5212s/20852s; TCE WF-06 #42872071366 18366s/27554s; WF-12 #42915709227 2426s/17617s. All six current-age and inter-arrival budgets exceeded. Cron and TCE market-scan schedule unchanged.
+- CI: TCE backend tests #42822853137 PASS, manual public health #42915762180 FAIL (four HTTP 503 responses); Stock CI #42610360402 PASS, scraper #42457182511 FAIL closed due missing `VNSTOCK_API_KEY`; Media CI #42539512417 PASS; Auth CI #42654579277 PASS.
+- GHCR server-side immutable-tag enforcement remains unverified. Branch protection/effective inherited rulesets remain administrator-owned and unverified.
+- No new image publication, digest promotion, shared production apply, rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation or host reboot occurred in this update. The narrow Auth/Keycloak scale-to-zero command from #42920184478 is the documented earlier side effect. No workflow removed.
 
 ## Historical evidence
 
