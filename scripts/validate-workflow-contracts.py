@@ -523,6 +523,8 @@ if '"!apps/**/*.md"' not in recovery_push_paths:
     fail("Recovery push must exclude Markdown-only app documentation from production bootstrap.")
 if "'!apps/tce-vps-control-mcp/**'" not in recovery_push_paths:
     fail("Recovery push must exclude the diagnostics-only VPS MCP from production bootstrap.")
+if "'!platform/keycloak/**/*.md'" not in recovery_push_paths:
+    fail("Recovery push must exclude Keycloak operator Markdown from production bootstrap.")
 if '".github/workflows/reconcile-vps.yml"' in recovery_push_paths:
     fail("Changes to the production apply workflow must be validated but must not auto-dispatch production reconciliation.")
 if '".github/workflows/recover-stale-ops.yml"' in recovery_push_paths:
@@ -604,7 +606,7 @@ if "'!apps/tce-vps-control-mcp/**'" not in reconcile_push_paths:
     fail("Production reconciliation push paths must exclude the diagnostics-only VPS MCP.")
 if "- scripts/resolve-push-deployment-scope.sh" in reconcile_push_paths:
     fail("Changing the push-scope resolver alone must not trigger a production apply.")
-if "- '!platform/keycloak/*.md'" not in reconcile_push_paths:
+if "- '!platform/keycloak/**/*.md'" not in reconcile_push_paths:
     fail("Production reconciliation push paths must exclude Keycloak operator Markdown.")
 scope_resolver = (ROOT / "scripts" / "resolve-push-deployment-scope.sh").read_text(encoding="utf-8")
 if "assert_failure scripts/resolve-push-deployment-scope.sh" not in scope_resolver:
