@@ -1896,7 +1896,7 @@ for required in (
     '.conclusion == "success"',
     '.head_branch == "master"',
     '(.run_attempt // 1) == 1',
-    'contains(" / " + $path)',
+    'contains(" / source ")',
     "https://api.github.com/repos/phanthienquoc/TCE-dashboard/actions/runs/${source_run_id}",
     "verify-tce-heartbeat-receipts.py",
 ):
