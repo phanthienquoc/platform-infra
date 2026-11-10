@@ -67,7 +67,7 @@ if 'echo "TCE_WF06_API_STATUS=$api_status" >> "$GITHUB_ENV"' not in watchdog or 
     fail("WF-06 API authentication status must reach the inter-arrival verifier; missing credentials must not masquerade as empty history.")
 if 'if [[ "${TCE_WF06_API_STATUS:-0}" == "missing-token" ]]; then' not in watchdog:
     fail("The WF-06 inter-arrival step must recognize the missing-token status.")
-missing_token_fixture = watchdog.split('if [[ "${TCE_WF06_API_STATUS:-0}" == "missing-token" ]]; then', 1)[1].split("fi", 1)[0]
+missing_token_fixture = watchdog.split('if [[ "${TCE_WF06_API_STATUS:-0}" == "missing-token" ]]; then', 1)[1].split("\n          fi\n", 1)[0]
 if "printf" not in missing_token_fixture or "tce_runs_file" not in missing_token_fixture:
     fail("The WF-06 inter-arrival step must recreate its empty JSON fixture when the prior step reports missing-token.")
 if watchdog.count('            api_status="missing-token"') != 1 or watchdog.count('            tce_wf12_api_status="missing-token"') != 1:
