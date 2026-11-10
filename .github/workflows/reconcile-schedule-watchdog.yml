@@ -526,18 +526,18 @@ jobs:
                     and .head_branch == "master"
                     and (.run_attempt // 1) == 1
                     and .conclusion == "success"
-                    and ((.name // .display_title // "") | contains(" / " + $path))
+                    and ((.display_title // .name // "") | contains(" / source "))
                   )
               ]
-              | map(. + {heartbeat_key: (.name // .display_title // "")})
+              | map(. + {heartbeat_key: (.display_title // .name // "")})
               | group_by(.heartbeat_key)
               | map(max_by(.created_at))
-              | sort_by(.created_at) | reverse | .[:2]
+              | sort_by(.created_at) | reverse | .[:8]
             ' "$receipt_runs_file" > "$selected_file"
 
             : > "$evidence_ndjson"
             while IFS= read -r receipt; do
-              receipt_name="$(jq -r '.name // .display_title // empty' <<< "$receipt")"
+              receipt_name="$(jq -r '.display_title // .name // empty' <<< "$receipt")"
               source_run_id="$(sed -nE 's/^.*source ([1-9][0-9]*) \/ \.github\/workflows\/[^[:space:]]+$/\1/p' <<< "$receipt_name")"
               if [[ ! "$source_run_id" =~ ^[1-9][0-9]*$ ]]; then
                 echo "::warning::Skipping Platform receipt with an unparseable source run name: ${receipt_name}"
