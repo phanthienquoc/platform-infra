@@ -2902,3 +2902,65 @@ No production image publication/promotion, repository release dispatch, producti
 - TCE/Auth remain intentional 0/0 maintenance; strict public WF-06 probes still fail HTTP 503. Full K3s inspection #42728878765 is manual and its 00:31:02Z snapshot is now stale (>4,500s); no runtime mutation may rely on it.
 - TCE WF-07 Backup is now explicitly classified in the workflow inventory as a backup/retention-only SSH job, not a production deploy authority. Preserve it; pin its SSH host key only after the owner verifies the authoritative fingerprint. The separate WF-07 integration-check workflow remains distinct.
 - No new publication, promotion, apply, rollout, scaling, deletion, runner retirement, DNS/database/storage mutation or host maintenance. Auth runtime Secret provisioning/verification occurred in the existing reconciliation; shared pull Secret was unchanged. TCE market-scan schedule unchanged.
+
+
+## Cross-repo execution checkpoint — 2026-11-10 09:59 ICT / 02:59:54 UTC
+
+### Repository state, open PRs and current CI evidence
+
+- Current master heads: Platform `80f137db9f1325d4882783f06945ecb8bc0e6e5a`; TCE `68660a20e5bf3472a122c59d75b49ffce16a2ce9`; StockDividend `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media Generation `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
+- Open PRs: Platform #1562 (health-state contract, validation pending) plus owner-decision drafts #1314/#544/#541/#539; Authentication #76 (draft); TCE, StockDividend and Media Generation have no open PRs.
+- Latest app CI evidence remains TCE WF-01/WF-02/WF-05 #42709513845/#42709513839/#42709513831 PASS; Stock CI #42610360402 PASS 7/7; Media CI #42539512417 PASS; Authentication CI #42654579277 PASS. TCE's later WF-06/WF-12 runs are health/schedule monitors, not app build CI.
+- Platform inspection PR #1561 was exact-head validated by `validate-manifests` #42742055306 and squash-merged at `80f137db9f1325d4882783f06945ecb8bc0e6e5a`. This is the current Platform master; no separate post-merge validation run for that merge was visible in the latest run listing.
+
+### Latest Platform reconciliation and recovery evidence
+
+- Read-only inspection [#42741845747](https://github.com/phanthienquoc/platform-infra/actions/runs/42741845747) completed SUCCESS as `workflow_dispatch`; it generated `debug/vps-latest.md` at `2026-11-10T02:18:38Z` and was merged through inspection PR #1561. The snapshot is 2,476 seconds old at this checkpoint, within the existing 4,500-second snapshot budget. It is not native schedule evidence.
+- Reconciliation [#42744815372](https://github.com/phanthienquoc/platform-infra/actions/runs/42744815372) completed SUCCESS as `workflow_dispatch` on master, with `TARGET_APP=all` and `ALLOW_IMAGE_CHANGES=false`. GHCR read access passed for Auth, MicroFE Shell/WS and TCE web/service. Auth runtime Secret was provisioned and verified with values suppressed. Shared `ghcr-pull` was unchanged in both production namespaces. TCE release pairing passed for `prod-v0.1.0-e75e338`.
+- The same reconciliation found no active image-pull failures for Auth/MicroFE/TCE, reported `drift=false`, and correctly skipped production manifest apply. Stock's historical Admin/desired Backend ImagePullBackOff remained visible in the cluster inventory. No image promotion, manifest apply or workload rollout occurred.
+- Recovery [#42744976026](https://github.com/phanthienquoc/platform-infra/actions/runs/42744976026) completed SUCCESS as `workflow_dispatch`. Its log confirms the native inspection lane remains stale (latest native inspection #42694932077); the manual inspection snapshot is a fallback and does not satisfy native cadence.
+
+### Native schedule freshness and service health
+
+Only original `event=schedule`, master-branch, first-attempt runs count. Manual, push, `workflow_run`, `repository_dispatch`, and the separate TCE WF-07 backup job are excluded.
+
+| Lane | Latest native run | Current age at 02:59:54Z | Previous inter-arrival gap | Existing budget |
+|---|---:|---:|---:|---:|
+| Platform reconcile | #42731410572 (00:50:52Z) | 7,742s | 26,769s | 2,700s |
+| Platform inspection | #42694932077 (Nov 9 20:38:40Z) | 22,874s | 39,672s | 4,500s |
+| Platform recovery | #42728605270 (00:28:46Z) | 9,068s | 28,020s | 2,700s |
+| Platform watchdog | #42728915720 (00:31:10Z) | 8,924s | 28,068s | 2,700s |
+| TCE WF-06 | #42744759966 (02:44:03Z, FAILURE) | 951s | 23,806s | 1,500s |
+| TCE WF-12 | #42741584886 (02:16:15Z, FAILURE) | 2,619s | 25,383s | 1,500s |
+
+- All six native inter-arrival gaps remain outside their unchanged budgets. Current age for TCE WF-06 is fresh, but its run failed service-health probes; this is not a schedule-delivery failure. TCE WF-12's latest native schedule event is stale.
+- TCE WF-06 [#42744759966](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42744759966) ran natively at 02:44:03Z and all four strict public probes returned HTTP 503 (TCE web/API and Auth liveness/readiness). WF-12's native scheduled run #42741584886 failed because the preceding WF-06 event was stale at its check time. The later WF-12 `workflow_run` #42744783670 verified the new WF-06 schedule delivery and succeeded; it is not a native WF-12 schedule event.
+- WF-13 [#42744783933](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42744783933) dispatched one read-only WF-06 fallback [#42744807014](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42744807014); the fallback again failed all four HTTP 200 probes with HTTP 503. Keep the strict health contract unchanged.
+- Separate TCE WF-07 Backup #42737399806 succeeded at 01:40:05Z; it remains backup/retention only and is not a health or deployment lane.
+- The last verified Platform `TCE_ACTIONS_READ_TOKEN` observation is still empty in post-merge smoke #42734770430; no later evidence of secret provisioning was found. TCE cross-repository history remains warning-only/unverified until the owner configures a fine-grained token restricted to TCE Dashboard with Actions: read and Metadata: read only. GitHub administrator enqueue/delivery telemetry is still required for issue #1497.
+
+### Current K3s snapshot and workload state
+
+- Snapshot source: `debug/vps-latest.md`, generated `2026-11-10T02:18:38Z` by inspection #42741845747. At this checkpoint it is 2,476 seconds old (<4,500-second budget).
+- Node `tce-k3s-01` is Ready, ARM64, Ubuntu 22.04.5, K3s `v1.36.3+k3s1`, containerd `2.3.2-k3s2`. Disk use 56% (about 20 GiB free); available RAM about 19 GiB; uptime about 192 days; `restart_required=yes`.
+- Media backend/frontend are 1/1 Running and digest-pinned. MicroFE Shell/WS/NATS are 1/1 Running and digest-pinned. Auth and Keycloak are intentional 0/0 maintenance; TCE frontend/service are 0/0 maintenance.
+- Stock Admin is 0/1 with two ImagePullBackOff pods; desired Backend is 0/1 with one ImagePullBackOff pod; legacy Backend and Frontend remain 1/1. The failing historical tag `12d63b4` produces `no match for platform in manifest` for ARM64. This is an image-platform compatibility issue, not evidence of a shared GHCR credential failure.
+- Public OIDC probes return HTTP 503. Platform and Media runner services are active/enabled; the Media listener is present. Stock/Media storage preflight found no target-namespace PVC/PV claim or VolumeSnapshot references; this does not prove external backup/retention or authoritative DNS ownership, and remote Media runner unregister remains unverified.
+- GitOps drift is clean. Do not infer that TCE/Auth are live healthy from successful reconciliation lane jobs: their current replicas are zero and public health probes fail.
+
+### New Platform health-state reporting contract — PR #1562
+
+- PR [#1562](https://github.com/phanthienquoc/platform-infra/pull/1562) is open from `fix/deployment-health-state-contract-20261110-0959-ict`, based on exact master `80f137db9f1325d4882783f06945ecb8bc0e6e5a`. Exact-head validation is pending; do not merge until `validate-github-actions` and `validate-manifests` pass on the current head.
+- The shared health helper now exports `healthy`, `maintenance`, or `partial-maintenance` plus active/maintenance scope counts through `GITHUB_OUTPUT`. Auth, MicroFE, TCE and Keycloak deployment jobs expose those outputs; the final summary explicitly reports maintenance without calling it live health and fails closed on a missing/invalid state.
+- Regression tests assert all three output states. The workflow-contract validator requires all four job output bindings and explicit final-summary handling. No runtime behavior, replica count, manifest, secret, GHCR package, schedule or production apply authority changes in this PR.
+
+### Owner dependencies and safety
+
+1. GitHub administrator: provide authoritative Actions schedule enqueue/delivery/service telemetry for issue #1497; preserve all cron expressions and budgets.
+2. Platform owner: configure `TCE_ACTIONS_READ_TOKEN` as a fine-grained PAT limited to `phanthienquoc/TCE-dashboard`, Actions: read + Metadata: read only.
+3. TCE/Auth owners: approve recovery/rollback and provide app-owned immutable release/digest evidence before restoring replicas; keep HTTP 200 probes strict.
+4. Stock owner: privately verify `VNSTOCK_API_KEY` and run `preflight_only=true`; the historical scraper failure #42457182511 is on older SHA `e6469ac` and does not establish current secret state.
+5. Media owner: verify GitHub remote runner unregister, external backup/retention and authoritative DNS ownership before decommission.
+6. Platform operator: host package upgrades/restart require an approved maintenance window and rollback plan.
+
+No production image publication, digest promotion, production dispatch, manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host reboot/upgrade occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No cron, freshness budget or TCE market-scan schedule changed.
