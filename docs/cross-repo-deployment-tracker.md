@@ -1,3 +1,36 @@
+## 2026-11-10 17:01 ICT / 10:01:16 UTC — fresh TCE WF-12 receipt and GitOps reconciliation follow-up
+
+### Native TCE WF-12 and heartbeat receipt
+
+TCE native schedule [WF-12 #42795292155](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42795292155) started at 09:59:25Z on master SHA `0f71aa56eb728abbd87907e07739e08684b86724`, attempt 1. The authenticated heartbeat dispatch succeeded. Its WF-06 delivery-verification job failed closed: latest WF-06 was still #42744759966 at 02:44:03Z, age 26,122s (435m) at the watchdog API reference, exceeding the unchanged 25m budget; measured runner queue wait was 0m. WF-12's inter-arrival gap was 27,790s against the 1,500s budget. A fresh WF-12 event does not repair the long gap or WF-06 staleness.
+
+Platform received and verified the heartbeat in [#42795310808](https://github.com/phanthienquoc/platform-infra/actions/runs/42795310808), SUCCESS. Logs verify exact approved source path `.github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml`, source run ID 42795292155, event=schedule, master SHA, attempt 1. Receipt success proves event/source identity and delivery only, not health or cadence acceptance. Issue [#1497](https://github.com/phanthienquoc/platform-infra/issues/1497) was updated with this evidence; keep it open.
+
+### Heartbeat-triggered GitOps reconciliation and fresh cluster inventory
+
+The existing Platform recovery controller dispatched [reconcile-vps #42795334693](https://github.com/phanthienquoc/platform-infra/actions/runs/42795334693) as `workflow_dispatch`, `mode=apply`, `target_app=all`, `allow_image_changes=false`. This is a recovery/manual dispatch, not a native schedule event.
+
+- GHCR read preflight passed for Auth, MicroFE Shell/WS and TCE web/service packages.
+- Auth runtime Secret provision/verification step succeeded with values suppressed.
+- Shared `ghcr-pull` was unchanged.
+- Image-pull restart inspection found no failures for MicroFE or TCE managed workloads.
+- TCE release pairing passed; image-change guard and production manifest apply were skipped because preflight reported drift=false.
+- The reconcile job and final deployment-lane gate succeeded.
+- MicroFE health lane passed with one active scope.
+- TCE and Auth health lanes passed only as intentional zero-replica maintenance; they do not assert live application health. Auth TLS verification passed. Keycloak lane was skipped.
+
+Fresh read-only K3s inventory at 10:00:07Z: node `tce-k3s-01` Ready, ARM64, K3s v1.36.3+k3s1; Media backend/frontend 1/1; MicroFE Shell/WS/NATS 1/1; Stock Admin×2 and desired Backend remain ImagePullBackOff; legacy Stock Backend and Frontend 1/1. TCE/Auth remain zero replicas. No manifest apply or image replacement occurred. The post-reconcile read-only inspection-recovery child was still running at 10:01:16Z; await its result before claiming a fresh full debug snapshot.
+
+### Schedule and governance status
+
+At the 10:01:16Z reference, native schedule state remains outside cadence budgets: Platform reconcile #42778829676 age 7,485s/gap 25,539s/budget 2,700s; inspection #42749270072 age 23,789s/gap 24,367s/budget 4,500s; recovery #42777251549 age 8,182s/gap 26,068s/budget 2,700s; watchdog #42777386082 age 8,114s/gap 25,992s/budget 2,700s; TCE WF-06 #42744759966 age 26,233s/gap 23,806s/budget 1,500s; WF-12 #42795292155 age 111s/gap 27,790s/budget 1,500s. Only first-attempt master `event=schedule` runs count. Heartbeat receipts, repository_dispatch, workflow_dispatch and recovery jobs do not satisfy native cadence.
+
+Branch metadata still reports `protected=false` for master in all five repositories; inherited ruleset coverage is unverified because rulesets API reads return HTTP 403. Admin verification is tracked in Platform issue #1575. No settings changed. Keep cron/freshness budgets, strict health thresholds and TCE market-scan schedule unchanged.
+
+No new GHCR publication, digest promotion, production manifest apply, image replacement, workload scaling, namespace/storage deletion, runner retirement, credential rotation, DNS/database/storage mutation or host maintenance occurred.
+
+---
+
 ## 2026-11-10 16:57 ICT / 09:57:31 UTC — five-repository state, schedule freshness and branch-governance checkpoint
 
 ### Repository heads, open PRs and latest CI
