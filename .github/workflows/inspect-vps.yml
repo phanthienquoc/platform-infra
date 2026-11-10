@@ -95,7 +95,10 @@ jobs:
           cp debug/vps-latest.md "$RUNNER_TEMP/vps-latest.md"
           auth_header="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')"
           git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth_header" \
-            fetch --no-tags origin refs/heads/master:refs/remotes/origin/master
+            # The persistent self-hosted runner may retain a remote-tracking ref from a
+            # newer/divergent checkout. Force-update only refs/remotes/origin/master;
+            # this does not force-push or modify the remote master branch.
+            fetch --no-tags origin +refs/heads/master:refs/remotes/origin/master
           git checkout --force -B master refs/remotes/origin/master
           install -m 0644 "$RUNNER_TEMP/vps-latest.md" debug/vps-latest.md
           if [[ "$(git status --short)" != " M debug/vps-latest.md" ]]; then
