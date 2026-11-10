@@ -65,6 +65,23 @@ if "actions/workflows/" not in watchdog or "recover-stale-ops.yml/runs" not in w
     fail("TCE schedule history must come from Platform-owned repository_dispatch receipt runs.")
 if "verify-tce-heartbeat-receipts.py" not in watchdog:
     fail("The watchdog must normalize only verified TCE heartbeat receipt history.")
+receipt_collector = watchdog.split(
+    "      - name: Collect TCE schedule history from verified Platform heartbeat receipts", 1
+)[1].split("      - name: Observe TCE WF-06 schedule delivery", 1)[0]
+receipt_cap_index = receipt_collector.find("| sort_by(.created_at) | reverse | .[:8]")
+if receipt_cap_index < 0:
+    fail("TCE heartbeat receipt selection must retain its bounded last-eight history.")
+for required in (
+    'endswith(" / .github/workflows/wf-06-tce-healthcheck.yml")',
+    'endswith(" / .github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml")',
+    'contains(" / .github/workflows/") | not',
+):
+    position = receipt_collector.find(required)
+    if position < 0 or position > receipt_cap_index:
+        fail(
+            "The TCE heartbeat collector must filter WF-06/WF-12 receipts before the cap "
+            "while retaining legacy path-less receipts for run-by-ID verification."
+        )
 if "https://api.github.com/repos/phanthienquoc/TCE-dashboard/actions/runs/${source_run_id}" not in watchdog:
     fail("TCE heartbeat history must verify source run metadata by its exact public run ID.")
 if "python3 scripts/verify-tce-heartbeat-receipts.py --self-test" not in validate_github_actions:
