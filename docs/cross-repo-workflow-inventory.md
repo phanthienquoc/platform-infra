@@ -1,3 +1,14 @@
+## 2026-11-10 08:20 ICT — PR #1558 merged; read-only helper path exclusion verified
+
+- Platform master: `30e1cd22ed887d1ce35be99e8fac97e206e35aaa`; PR #1558 exact-head checks #42734643361/#42734643354 PASS and post-merge #42734770070/#42734770118 PASS.
+- Post-merge watchdog push smoke #42734770430 PASS; both TCE WF-06/WF-12 observations now report explicit `missing-token` / history-unverified. The secondary WF-06 fixture-unavailable warning is no longer emitted.
+- `recover-stale-ops.yml` now excludes `scripts/verify-native-schedule-gap.py` from the broad read-only helper push path; no recovery push run followed the PR #1558 merge.
+- `TCE_ACTIONS_READ_TOKEN` remains empty in the Platform job environment. Owner must configure the Platform repository secret with a fine-grained PAT restricted to TCE Dashboard, Actions: read + Metadata: read only.
+- Native inter-arrival gaps remain over all six budgets; Platform recovery/watchdog age also exceeds 45m. Latest K3s inspection is a fresh manual fallback, not native schedule evidence.
+- App publisher and sole Platform apply authority boundaries unchanged. No production publication, promotion, apply, rollout, scaling, deletion, runner retirement or host mutation. No cron/budget or TCE market-scan schedule change.
+
+---
+
 ## 2026-11-10 08:15 ICT — PR #1558 validation correction and operational status
 
 - Platform master: `2c62973ff2feddcd9e3a4cec5932cd62908d43c6`; PR #1557 merged with exact-head and post-merge `validate-github-actions`/`validate-manifests` PASS.
