@@ -61,7 +61,7 @@ credentials_key = (ROOT / "docs" / "credentials-key.md").read_text(encoding="utf
 # The recovery receiver validates the source TCE run by ID before a successful receipt exists.
 if "TCE_ACTIONS_READ_TOKEN" in watchdog or "TCE_ACTIONS_READ_TOKEN" in credentials_guide or "TCE_ACTIONS_READ_TOKEN" in credentials_key:
     fail("TCE schedule history must not depend on a separate cross-repository Actions-read PAT.")
-if "recover-stale-ops.yml/runs?event=repository_dispatch&branch=master&per_page=100" not in watchdog:
+if "actions/workflows/recover-stale-ops.yml/runs" not in watchdog or "event=repository_dispatch&branch=master&per_page=100" not in watchdog:
     fail("TCE schedule history must come from Platform-owned repository_dispatch receipt runs.")
 if "verify-tce-heartbeat-receipts.py" not in watchdog:
     fail("The watchdog must normalize only verified TCE heartbeat receipt history.")
