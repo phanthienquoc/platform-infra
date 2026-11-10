@@ -1224,3 +1224,22 @@ No production release, digest promotion, manifest apply, scaling, deletion, cred
 - Last verified Platform `TCE_ACTIONS_READ_TOKEN` was empty in smoke #42734770430. GitHub administrator telemetry and owner provisioning remain outstanding.
 - Latest K3s snapshot #42741845747 is a fresh manual inspection (generated 02:18:38Z; 2,476s old at checkpoint). Node Ready; Media/MicroFE core workloads healthy; TCE/Auth/Keycloak 0/0; Stock desired Admin/Backend ARM64 image pulls fail on `12d63b4`; public OIDC 503; Media runner active.
 - No production image publication/promotion, manifest apply, rollout, scaling, deletion, runner retirement, credential rotation, DNS/database/storage mutation or host maintenance occurred. TCE market-scan schedule unchanged.
+
+
+## Post-merge workflow inventory checkpoint — 2026-11-10 10:12 ICT / 03:12:17 UTC
+
+### Health-state reporting contract is merged and exercised
+
+- Platform PR [#1562](https://github.com/phanthienquoc/platform-infra/pull/1562) merged at `03:10:23Z`, squash SHA `79df5adabf5e2060d94ececcf02f0b3bd97a9ca6`. Exact-head `validate-github-actions` #42747586573, `validate-manifests` #42747586404 and `keycloak-ci` #42747586455 passed; post-merge #42747680413/#42747679518/#42747679458 also passed.
+- The first post-merge `reconcile-vps.yml` push run [#42747679517](https://github.com/phanthienquoc/platform-infra/actions/runs/42747679517) completed SUCCESS. `TARGET_APP=all`, `ALLOW_IMAGE_CHANGES=false`; GHCR preflight passed; Auth runtime Secret verified; shared `ghcr-pull` unchanged; TCE release pairing passed; `drift=false`; production apply and rollout were skipped.
+- The new machine-readable output was exercised against the real cluster: Auth=`maintenance` (0 active/1 maintenance scope), TCE=`maintenance` (0 active/1 maintenance scope), MicroFE=`healthy` (1 active scope), Keycloak skipped for target `all`. The final summary explicitly reports Auth/TCE as intentional zero-replica maintenance with no live health asserted, and MicroFE as live health verified.
+
+### Workflow ownership and follow-up
+
+- No competing deploy workflow was introduced or removed. App repositories remain responsible for tests/builds and immutable GHCR publication; Platform remains responsible for production manifests, shared GHCR pull credentials, provenance/digest promotion, GitOps reconciliation, rollout and health verification.
+- TCE WF-07 Backup remains preserved as backup/retention-only SSH. TCE WF-06/WF-12/WF-13 remain separate health/schedule-monitoring lanes. The TCE market-scan schedule and all cron expressions remain unchanged.
+- All six monitored native schedule ages and inter-arrival gaps are now outside their existing budgets at 03:12:17Z. TCE WF-06 latest native run #42744759966 failed HTTP 503 and is now older than its 1,500-second age budget; WF-12 #42741584886 is also stale. Platform's latest confirmed native lanes remain stale. Manual and `workflow_run` fallbacks do not count as native acceptance.
+- Latest manual K3s inspection #42741845747 remains within its 75-minute snapshot budget but does not satisfy native inspection cadence. TCE/Auth/Keycloak remain 0/0; Stock desired Admin/Backend remain blocked by ARM64 image-manifest incompatibility; Media runner retirement evidence is incomplete.
+- Owner dependencies remain: Platform `TCE_ACTIONS_READ_TOKEN` (last verified empty in #42734770430), GitHub Actions schedule delivery telemetry, TCE/Auth recovery approval and app-owned digests, Stock private `VNSTOCK_API_KEY` preflight, Media runner unregister/backup/DNS proof, and Platform maintenance-window approval.
+
+No production image publication/promotion, manifest apply, rollout, scaling, deletion, runner retirement, credential rotation, DNS/database/storage mutation or host maintenance occurred. Auth runtime Secret was provisioned/verified and shared `ghcr-pull` was unchanged. `reconcile-vps.yml` remains the sole production apply authority.

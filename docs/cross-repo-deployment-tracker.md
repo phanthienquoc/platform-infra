@@ -2964,3 +2964,42 @@ Only original `event=schedule`, master-branch, first-attempt runs count. Manual,
 6. Platform operator: host package upgrades/restart require an approved maintenance window and rollback plan.
 
 No production image publication, digest promotion, production dispatch, manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host reboot/upgrade occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No cron, freshness budget or TCE market-scan schedule changed.
+
+## Cross-repo post-merge checkpoint — 2026-11-10 10:12 ICT / 03:12:17 UTC
+
+### PR #1562 merged and validated
+
+- [PR #1562](https://github.com/phanthienquoc/platform-infra/pull/1562) merged by squash at `2026-11-10T03:10:23Z`; merge SHA/current Platform master: `79df5adabf5e2060d94ececcf02f0b3bd97a9ca6`. Final PR head: `0cb06d4cbc9685a83518143ac8f2d502ebb28499`.
+- Exact-head checks on the final PR head all passed: `validate-github-actions` #42747586573, `validate-manifests` #42747586404, and `keycloak-ci` #42747586455. The superseded earlier head `ebfd1a75` had a validator block-slicing failure; the top-level job-block extraction was corrected on the final head and the final checks passed.
+- Post-merge master checks all passed: `validate-github-actions` #42747680413, `validate-manifests` #42747679518, and `keycloak-ci` #42747679458, all on merge SHA `79df5ad`.
+
+### First post-merge production-authority run exercised the new contract
+
+- The normal existing `reconcile-vps.yml` push authority ran as [#42747679517](https://github.com/phanthienquoc/platform-infra/actions/runs/42747679517) on master after the health-gate script/workflow merge. It resolved `TARGET_APP=all`, `ALLOW_IMAGE_CHANGES=false`; GHCR read preflight passed for Auth, MicroFE Shell/WS and TCE web/service; Auth runtime Secret was provisioned/verified with values suppressed; shared `ghcr-pull` remained unchanged; TCE release pairing passed for `prod-v0.1.0-e75e338`.
+- The same run reported `drift=false`; `Apply Auth and Keycloak shutdown only`, `Guard workload image changes`, and `Apply production manifests` were skipped. The preflight explicitly reported that no manifest drift existed and apply was correctly skipped. No image promotion, manifest apply, workload rollout or replica change occurred.
+- The existing blocked-image-pull check found no failures in the active Auth/MicroFE/TCE workloads. Stock's retired GitOps namespace was not part of those active checks; its historical ARM64 ImagePullBackOff remains unchanged and must not be treated as a shared GHCR credential problem.
+- All targeted deployment jobs completed successfully: Auth and TCE health outputs were `maintenance` (0 active scopes, 1 intentional zero-replica scope each); MicroFE was `healthy` (1 active scope); Keycloak was skipped because the target was `all`. The final gate emitted explicit notices: Auth/TCE are intentional zero-replica maintenance and no live health is asserted; MicroFE live workload health was verified. It did not label all successful jobs as live healthy.
+- The reconciliation's post-run recovery dispatch was correlated exactly: [#42747843227](https://github.com/phanthienquoc/platform-infra/actions/runs/42747843227) completed SUCCESS. It observed native inspection #42694932077 still stale, but manual inspection fallback #42741845747 was fresh at 51 minutes (<75-minute budget), so it did not dispatch a duplicate inspection.
+- The push-triggered recovery observer [#42747680279](https://github.com/phanthienquoc/platform-infra/actions/runs/42747680279) completed SUCCESS and did not duplicate reconciliation while #42747679517 was in progress.
+
+### Updated native schedule ages at 03:12:17Z
+
+| Lane | Latest native run | Current age | Previous inter-arrival gap | Existing budget |
+|---|---:|---:|---:|---:|
+| Platform reconcile | #42731410572 (00:50:52Z) | 8,485s | 26,769s | 2,700s |
+| Platform inspection | #42694932077 (Nov 9 20:38:40Z) | 23,617s | 39,672s | 4,500s |
+| Platform recovery | #42728605270 (00:28:46Z) | 9,811s | 28,020s | 2,700s |
+| Platform watchdog | #42728915720 (00:31:10Z) | 9,667s | 28,068s | 2,700s |
+| TCE WF-06 | #42744759966 (02:44:03Z, FAILURE) | 1,694s | 23,806s | 1,500s |
+| TCE WF-12 | #42741584886 (02:16:15Z, FAILURE) | 3,362s | 25,383s | 1,500s |
+
+- All six native inter-arrival gaps remain above budget, and all six current ages are now over budget at this checkpoint. TCE WF-06 had been fresh by age at the 09:59 checkpoint but has since crossed its 25-minute age threshold; its 02:44 native run itself failed strict HTTP 200 probes with HTTP 503.
+- TCE WF-12's later `workflow_run` verification after WF-06 and WF-13's read-only fallback are not native schedule events. The fallback #42744807014 still failed HTTP 503. Do not change cron or freshness budgets.
+
+### K3s and owner dependencies
+
+- The latest full read-only snapshot remains #42741845747, generated `2026-11-10T02:18:38Z`; at 03:12:17Z it is 3,219 seconds old, within the 4,500-second snapshot budget. It remains manual fallback evidence, not native schedule acceptance.
+- Snapshot state is unchanged: node `tce-k3s-01` Ready/ARM64; disk 56% (about 20 GiB free), available RAM about 19 GiB, `restart_required=yes`; Media backend/frontend and MicroFE Shell/WS/NATS 1/1; Auth/Keycloak/TCE 0/0; Stock desired Admin/Backend pulls fail on ARM64-incompatible historical tag `12d63b4`; public OIDC HTTP 503; Media runner active/enabled.
+- Platform `TCE_ACTIONS_READ_TOKEN` was last verified empty in smoke #42734770430; no later provisioning evidence is visible. GitHub administrator schedule enqueue/delivery telemetry remains outstanding in issue #1497. Stock issue #42 still awaits owner-managed `VNSTOCK_API_KEY` preflight. Media remote runner unregister, external backup/retention and authoritative DNS ownership remain unverified.
+
+No production image publication, digest promotion, manifest apply, workload rollout, scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host reboot/upgrade occurred in this post-merge reconciliation. Auth runtime Secret was provisioned/verified; shared `ghcr-pull` was unchanged. `reconcile-vps.yml` remains the sole production apply authority and `inspect-vps.yml` remains read-only. No cron, freshness budget or TCE market-scan schedule changed.
