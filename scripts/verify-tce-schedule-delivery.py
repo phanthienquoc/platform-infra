@@ -129,14 +129,14 @@ def self_test() -> None:
     expect_error("future timestamp", "200", {"workflow_runs": [{**base_run, "created_at": "2026-11-06T11:00:00Z"}]})
     expect_error("short source SHA", "200", {"workflow_runs": [{**base_run, "head_sha": "abc1234"}]})
     expect_error("API rate limit", "403", {})
-    expect_error("missing read token", "missing-token", {})
+    expect_error("unavailable receipt history status", "unavailable", {})
     print("TCE native schedule delivery verifier self-tests passed.")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--runs-file", help="JSON file returned by the GitHub Actions runs API")
-    parser.add_argument("--http-status", default="200", help="HTTP status returned by the public GitHub API request")
+    parser.add_argument("--runs-file", help="Normalized TCE source-run metadata derived from successful Platform heartbeat receipts")
+    parser.add_argument("--http-status", default="200", help="Heartbeat source-history input status (200 when the receipt collector produced normalized metadata)")
     parser.add_argument("--reference-epoch", type=int, help="Current watchdog run created_at epoch from the GitHub API")
     parser.add_argument("--max-age-minutes", type=int, default=25)
     parser.add_argument("--warn-only", action="store_true", help="Report an observation warning without failing the watchdog")
