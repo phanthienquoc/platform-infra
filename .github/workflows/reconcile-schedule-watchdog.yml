@@ -497,8 +497,8 @@ jobs:
           set -euo pipefail
           receipt_runs_file="${RUNNER_TEMP}/tce-heartbeat-receipt-runs.json"
           if ! receipt_response="$(gh api --paginate \
-            "repos/${GITHUB_REPOSITORY}/actions/workflows/recover-stale-ops.yml/runs?event=repository_dispatch&branch=master&per_page=100" 2>&1)"; then
-            echo "::warning::Unable to query Platform's own TCE heartbeat receipt history: $receipt_response"
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/recover-stale-ops.yml/runs?event=repository_dispatch&branch=master&per_page=100")"; then
+            echo "::warning::Unable to query Platform's own TCE heartbeat receipt history."
             receipt_response=""
           fi
           if [[ -n "$receipt_response" ]]; then
@@ -594,8 +594,6 @@ jobs:
 
       - name: Verify native schedule inter-arrival gaps
         if: always()
-        env:
-          TCE_ACTIONS_READ_TOKEN: ${{ secrets.TCE_ACTIONS_READ_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
