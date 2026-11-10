@@ -22,6 +22,7 @@ run-name: >-
       # Read-only CI/watchdog helpers must not trigger a production reconcile.
       - "!scripts/verify-tce-schedule-delivery.py"
       - "!scripts/verify-native-schedule-gap.py"
+      - "!scripts/verify-tce-heartbeat-receipts.py"
       - "!scripts/verify-scheduled-run-result.py"
       - "!scripts/verify-gitops-ready-dispatch.py"
       - "!scripts/verify-gitops-ready-image-refs.py"
