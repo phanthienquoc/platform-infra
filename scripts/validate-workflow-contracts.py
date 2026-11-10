@@ -54,6 +54,19 @@ validate_github_actions = read("validate-github-actions.yml")
 microfe_publisher_provenance = (ROOT / "scripts" / "verify-tce-microfe-publisher-run.sh").read_text(encoding="utf-8")
 recovery = read("recover-stale-ops.yml")
 watchdog = read("reconcile-schedule-watchdog.yml")
+credentials_guide = (ROOT / "docs" / "credentials.md").read_text(encoding="utf-8")
+credentials_key = (ROOT / "docs" / "credentials-key.md").read_text(encoding="utf-8")
+
+# Cross-repository Actions history uses a dedicated read-only TCE token. The
+# Platform GITHUB_TOKEN remains scoped to Platform-owned Actions history.
+if watchdog.count("TCE_ACTIONS_READ_TOKEN: ${{ secrets.TCE_ACTIONS_READ_TOKEN }}") != 2:
+    fail("Both TCE schedule-history observations must scope TCE_ACTIONS_READ_TOKEN to their own step.")
+if watchdog.count('Authorization: Bearer ${TCE_ACTIONS_READ_TOKEN}') != 2:
+    fail("Both cross-repository TCE Actions-history requests must authenticate with TCE_ACTIONS_READ_TOKEN.")
+if watchdog.count('api_status="missing-token"') != 1 or watchdog.count('tce_wf12_api_status="missing-token"') != 1:
+    fail("Missing TCE Actions read credentials must remain explicit and warning-only, never silently query anonymously.")
+if "TCE_ACTIONS_READ_TOKEN" not in credentials_guide or "TCE_ACTIONS_READ_TOKEN" not in credentials_key:
+    fail("TCE_ACTIONS_READ_TOKEN scope and ownership must be documented in both credential inventories.")
 inspection = read("inspect-vps.yml")
 lane_queue = (ROOT / "scripts" / "verify-reconcile-lane-queue.py").read_text(encoding="utf-8")
 scheduled_run_result = (ROOT / "scripts" / "verify-scheduled-run-result.py").read_text(encoding="utf-8")
