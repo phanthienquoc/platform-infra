@@ -3305,3 +3305,72 @@ WF-12 workflow_run #42774478939's `Verify WF-06 schedule delivery` job reported 
 6. TCE owner: authoritative VPS SSH host key/fingerprint before changing WF-07 backup's current host-key bypass.
 
 No GHCR publication, image promotion, manifest apply, rollout/scaling, deletion, runner retirement, credential rotation, DNS/database/storage mutation or host maintenance occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
+
+## 2026-11-10 15:01 ICT / 08:01:44 UTC — native events resumed after long gaps; receipt collector runtime verified
+
+### Repository state and open pull requests
+
+| Repository | Master SHA | Open PRs | Latest inspected CI evidence |
+|---|---|---|---|
+| Platform Infra | `482b6c92e3898ab9dd3b4c704655627a41d312ac` | #1314, #544, #541, #539 (draft/owner decisions) | PR #1570 and #1571 merged; exact-head and applicable post-merge validations passed |
+| TCE Dashboard | `68660a20e5bf3472a122c59d75b49ffce16a2ce9` | none | WF-06 manual #42774522833 failed; WF-12 workflow_run #42774478939 failed; latest native WF-07 #42774461163 succeeded |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 succeeded (7/7) |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 succeeded |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft/owner decision) | auth-service-ci #42654579277 succeeded |
+
+Platform PRs #1570 (receipt selector fix) and #1571 (tracker/inventory refresh) are closed/merged. Existing owner-decision drafts remain untouched.
+
+### Receipt collector post-merge runtime acceptance
+
+- Native Platform watchdog [#42777386082](https://github.com/phanthienquoc/platform-infra/actions/runs/42777386082) ran at 07:44:22Z after PR #1570 merged at 07:38:06Z.
+- Its job executed the Platform-owned repository_dispatch receipt query and `scripts/verify-tce-heartbeat-receipts.py` for both monitored TCE workflows.
+- Logs report **3 verified TCE schedule heartbeat receipts for WF-06 and 3 for WF-12**, with source metadata checked by run ID. Nonmatching workflow-path receipts were ignored as intended.
+- This completes post-merge runtime exercise of the receipt selector and verifier. It does not establish current TCE schedule freshness or application health: the verified source runs are old.
+- WF-07 native #42774461163 → TCE sender #42774478939 → Platform receiver #42774493174 remains a valid delivery chain for WF-07 only; WF-07 is not a monitored WF-06/WF-12 lane.
+- No Platform-specific TCE Actions PAT is required; the obsolete `TCE_ACTIONS_READ_TOKEN` dependency remains removed.
+
+### Native schedule evidence — reference 08:01:44Z
+
+Only first-attempt `event=schedule` runs on `master` count. Manual, push, workflow_run and repository_dispatch events do not satisfy native cadence.
+
+| Lane | Latest native run | Previous native run | Inter-arrival gap | Age at reference | Budget |
+|---|---:|---:|---:|---:|---:|
+| Platform reconcile | #42778829676 (07:56:31Z) | #42731410572 | 25,539s | 313s | 2,700s |
+| Platform inspection | #42749270072 (03:24:47Z) | #42694932077 | 24,367s | 16,617s | 4,500s |
+| Platform recovery | #42777251549 (07:43:14Z) | #42728605270 | 26,068s | 1,110s | 2,700s |
+| Platform watchdog | #42777386082 (07:44:22Z) | #42728915720 | 25,992s | 1,042s | 2,700s |
+| TCE WF-06 | #42744759966 (02:44:03Z) | #42689871258 | 23,806s | 19,061s | 1,500s |
+| TCE WF-12 | #42741584886 (02:16:15Z) | #42681246237 | 25,383s | 20,729s | 1,500s |
+
+All six inter-arrival gaps remain outside their unchanged budgets. Current age is within budget for Platform reconcile/recovery/watchdog, but inspection and both TCE monitored lanes remain stale by age. The newest Platform native events at 07:43–07:56Z show that schedule runs resumed after a long gap; repository run history alone still cannot distinguish delayed, dropped or never-enqueued ticks.
+
+- Scheduled watchdog #42777386082 failed on the four Platform inter-arrival gaps. It also recorded the TCE receipt history and warned that WF-06 source #42744759966 was 18,019s old at 07:44:22Z.
+- Follow-on watchdog observer [#42779022182](https://github.com/phanthienquoc/platform-infra/actions/runs/42779022182), triggered by scheduled reconcile #42778829676, failed on the updated Platform gaps: reconcile 25,539s; inspection 24,367s; recovery 26,068s; watchdog 25,992s.
+- Do not change cron expressions, freshness budgets or strict HTTP 200 health thresholds. Keep issue #1497 open for authoritative GitHub Actions enqueue/delivery telemetry.
+
+### Latest scheduled GitOps reconciliation and K3s evidence
+
+Scheduled reconciliation [#42778829676](https://github.com/phanthienquoc/platform-infra/actions/runs/42778829676) completed SUCCESS at 07:56:31Z on current master SHA `482b6c92`.
+
+- Payload: `TARGET_APP=all`, `ALLOW_IMAGE_CHANGES=false`.
+- GHCR read preflight passed for Auth, MicroFE Shell/WS and TCE service/web packages.
+- Shared `ghcr-pull` Secret was unchanged.
+- TCE release pairing passed for `prod-v0.1.0-e75e338`; desired and live web/service tags matched.
+- GitOps drift was false; production manifest apply and rollout were correctly skipped.
+- Auth and TCE lanes were classified as intentional zero-replica maintenance (no live health asserted); MicroFE was healthy; Keycloak was skipped.
+
+The reconcile job's read-only cluster inventory at 07:56:53Z recorded the ARM64 K3s node Ready; Media backend/frontend and MicroFE Shell/WS/NATS at 1/1; Stock Admin pods ImagePullBackOff; the existing Stock Backend and frontend at 1/1; and the new desired Stock Backend pod ImagePullBackOff. TCE/Auth/Keycloak have no active pods under their maintenance posture. The last read-only inspection file `debug/vps-latest.md` was generated at 07:21:49Z (2,395s old at this reference, within the 4,500s inspection snapshot budget): disk 56% (~20 GiB free), available RAM ~19 GiB, host restart still required, Media runner service active/enabled and listener present. Last public OIDC probe in that snapshot was HTTP 503; the scheduled reconcile did not re-probe OIDC.
+
+Stock's desired Admin/Backend images still reference historical tag `12d63b4` with an ARM64 manifest mismatch. Do not rotate shared GHCR credentials for this architecture issue. No new app-owned image digest was published or promoted.
+
+### Remaining dependencies and safety
+
+1. GitHub administrator: authoritative Actions enqueue/delivery/service telemetry for issue #1497; the new schedule events prove eventual delivery, not why the previous gaps exceeded 6–7 hours.
+2. TCE/Auth service owners: explicit recovery/rollback approval and app-owned immutable release digests before restoring replicas; preserve strict HTTP 200 probes.
+3. Stock owner: private `VNSTOCK_API_KEY`, authenticated `preflight_only=true`, and a new immutable ARM64-compatible image digest before any reactivation.
+4. Media owner: remote runner unregister proof, external backup/retention and authoritative DNS ownership.
+5. Platform operator: fresh inspection and approved maintenance window/rollback plan before host restart or package updates.
+6. TCE owner: authoritative SSH host key/fingerprint before removing WF-07 backup's `StrictHostKeyChecking=no`.
+
+No GHCR publication, digest promotion, production manifest apply, rollout/scaling, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation or host maintenance occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
