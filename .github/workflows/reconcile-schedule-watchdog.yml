@@ -513,6 +513,10 @@ jobs:
           evidence_ndjson="${RUNNER_TEMP}/tce-heartbeat-evidence.ndjson"
           evidence_file="${RUNNER_TEMP}/tce-heartbeat-evidence.json"
 
+          # Filter to monitored health workflows before the last-eight cap. WF-07
+          # receipts are valid delivery receipts, but are not part of WF-06/WF-12
+          # health cadence and must not crowd out those histories. Keep legacy
+          # path-less receipts until source run-by-ID verification can classify them.
           jq '
             [ .[]
               | select(
@@ -522,6 +526,11 @@ jobs:
                   and (.run_attempt // 1) == 1
                   and .conclusion == "success"
                   and ((.display_title // .name // "") | contains(" / source "))
+                  and (
+                    ((.display_title // .name // "") | endswith(" / .github/workflows/wf-06-tce-healthcheck.yml"))
+                    or ((.display_title // .name // "") | endswith(" / .github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml"))
+                    or ((.display_title // .name // "") | contains(" / .github/workflows/") | not)
+                  )
                 )
             ]
             | map(. + {heartbeat_key: (.display_title // .name // "")})
