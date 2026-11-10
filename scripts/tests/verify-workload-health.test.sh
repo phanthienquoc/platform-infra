@@ -134,10 +134,13 @@ run_case() {
   local expected_status="$2"
   local target_app="${3:-tce-dashboard}"
   local actual_status=0
+  local output_file="$tmp_dir/$scenario-$target_app.output"
+  : > "$output_file"
 
   if HEALTH_GATE_TEST_SCENARIO="$scenario" \
     HEALTH_GATE_KUBECTL_BIN="$tmp_dir/kubectl-mock" \
     TARGET_APP="$target_app" \
+    GITHUB_OUTPUT="$output_file" \
     bash "$health_gate" >"$tmp_dir/$scenario-$target_app.log" 2>&1; then
     actual_status=0
   else
@@ -149,6 +152,25 @@ run_case() {
     echo "Expected $scenario/$target_app to exit $expected_status, got $actual_status." >&2
     exit 1
   fi
+
+  if [ "$expected_status" -eq 0 ]; then
+    case "$scenario" in
+      healthy)
+        grep -Fxq "health_state=healthy" "$output_file"
+        ;;
+      scaled-down)
+        grep -Fxq "health_state=maintenance" "$output_file"
+        grep -Fxq "active_scopes=0" "$output_file"
+        grep -Fxq "maintenance_scopes=1" "$output_file"
+        ;;
+      mixed)
+        grep -Fxq "health_state=partial-maintenance" "$output_file"
+        grep -Fxq "active_scopes=1" "$output_file"
+        grep -Fxq "maintenance_scopes=1" "$output_file"
+        ;;
+    esac
+  fi
+
   if [ "$scenario" = "image-pull" ]; then
     grep -Fq "manifest unknown" "$tmp_dir/$scenario-$target_app.log" || {
       cat "$tmp_dir/$scenario-$target_app.log" >&2

@@ -159,6 +159,69 @@ required_bash_invocations = (
 for invocation in required_bash_invocations:
     if invocation not in reconcile:
         fail(f"reconcile-vps.yml is missing safe bash invocation: {invocation}")
+
+# Deployment jobs must export the health gate's machine-readable state. This
+# keeps intentional zero-replica maintenance distinct from live health success.
+health_gate = (ROOT / "scripts" / "verify-workload-health.sh").read_text(encoding="utf-8")
+health_test = (ROOT / "scripts" / "tests" / "verify-workload-health.test.sh").read_text(encoding="utf-8")
+for required in (
+    "health_state=healthy",
+    "health_state=partial-maintenance",
+    "health_state=maintenance",
+    "active_scopes=%s",
+    "maintenance_scopes=%s",
+    '>> "$GITHUB_OUTPUT"',
+):
+    if required not in health_gate:
+        fail(f"Workload health gate is missing machine-readable state output: {required}")
+for required in (
+    'grep -Fxq "health_state=healthy"',
+    'grep -Fxq "health_state=maintenance"',
+    'grep -Fxq "health_state=partial-maintenance"',
+):
+    if required not in health_test:
+        fail(f"Workload health regression tests are missing state assertion: {required}")
+
+job_names = ("deploy-auth-service", "deploy-microfe", "deploy-keycloak", "deploy-tce-dashboard", "deployment-lane-summary", "notify-recovery-controller")
+for job in ("deploy-auth-service", "deploy-microfe", "deploy-tce-dashboard", "deploy-keycloak"):
+    marker = f"  {job}:\n"
+    if reconcile.count(marker) != 1:
+        fail(f"Expected exactly one {job} deployment job.")
+    job_block = reconcile.split(marker, 1)[1]
+    for other_job in job_names:
+        if other_job != job:
+            next_marker = f"\n  {other_job}:\n"
+            if next_marker in job_block:
+                job_block = job_block.split(next_marker, 1)[0]
+    for required in (
+        "health_state: ${{ steps.health.outputs.health_state }}",
+        "active_scopes: ${{ steps.health.outputs.active_scopes }}",
+        "maintenance_scopes: ${{ steps.health.outputs.maintenance_scopes }}",
+    ):
+        if required not in job_block:
+            fail(f"{job} must expose every workload health output: {required}")
+    if "id: health" not in job_block:
+        fail(f"{job} must assign id=health to its workload health step.")
+
+summary = reconcile.split("  deployment-lane-summary:\n", 1)[1].split("\n  notify-recovery-controller:", 1)[0]
+for required in (
+    "AUTH_HEALTH_STATE: ${{ needs.deploy-auth-service.outputs.health_state }}",
+    "MICROFE_HEALTH_STATE: ${{ needs.deploy-microfe.outputs.health_state }}",
+    "TCE_HEALTH_STATE: ${{ needs.deploy-tce-dashboard.outputs.health_state }}",
+    "KEYCLOAK_HEALTH_STATE: ${{ needs.deploy-keycloak.outputs.health_state }}",
+    'check_lane auth-service "$AUTH_RESULT" "$AUTH_HEALTH_STATE"',
+    'check_lane microfe "$MICROFE_RESULT" "$MICROFE_HEALTH_STATE"',
+    'check_lane tce-dashboard "$TCE_RESULT" "$TCE_HEALTH_STATE"',
+    'check_lane keycloak "$KEYCLOAK_RESULT" "$KEYCLOAK_HEALTH_STATE"',
+    "intentional zero-replica maintenance",
+    "partial-maintenance",
+    "did not publish a valid machine-readable health state",
+):
+    if required not in summary:
+        fail(f"Deployment summary is missing explicit maintenance/health-state contract: {required}")
+if 'Deployment lane $app succeeded.' in summary:
+    fail("Deployment summary must not label every successful job as live workload health.")
+
 if "Checkout is not clean; refusing to use persistent self-hosted workspace." not in reconcile:
     fail("The primary reconcile job must reject a dirty self-hosted checkout before using it.")
 if reconcile.count("name: Verify clean runner worktree") != 4:

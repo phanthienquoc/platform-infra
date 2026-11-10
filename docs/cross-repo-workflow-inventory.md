@@ -1190,3 +1190,37 @@ No production release, digest promotion, manifest apply, scaling, deletion, cred
 - Stock desired Admin/Backend pods remain ImagePullBackOff on historical ARM64-incompatible tag `12d63b4`; do not rotate shared credentials or republish a mutable tag as a workaround.
 - TCE/Auth are intentional 0/0 maintenance; HTTP 503 remains a real health failure. The latest full K3s snapshot is manual and stale at this checkpoint. No runtime change is authorized from it.
 
+
+
+## Cross-repo workflow inventory checkpoint — 2026-11-10 09:59 ICT / 02:59:54 UTC
+
+### Current heads and open PRs
+
+| Repository | Current master | Open PRs | Latest relevant evidence |
+|---|---|---|---|
+| `platform-infra` | `80f137db` | #1562 health-state contract; drafts #1314/#544/#541/#539 | Reconcile #42744815372 SUCCESS; inspection #42741845747 SUCCESS; recovery #42744976026 SUCCESS |
+| `TCE-dashboard` | `68660a20` | none | WF-06 schedule #42744759966 FAILURE (HTTP 503); WF-12 schedule #42741584886 FAILURE; WF-07 backup #42737399806 SUCCESS |
+| `stockdividend` | `b1b5e177` | none | CI #42610360402 PASS 7/7; Stock issue #42 still awaits owner credential preflight |
+| `media-generation` | `dcd69869` | none | CI #42539512417 PASS; runtime remains active but remote runner unregister/backup/DNS evidence is incomplete |
+| `phanthienquoc-authentication` | `eab85fab` | draft #76 | CI #42654579277 PASS; production runtime remains intentional 0/0 maintenance |
+
+### Authority boundaries and preserved workflows
+
+- App repositories own application tests/builds and immutable GHCR publication. Platform Infra owns production manifests, shared GHCR pull credentials, publisher provenance/digest verification, GitOps promotion/reconciliation, rollout and health verification.
+- `reconcile-vps.yml` remains the only production apply authority. `inspect-vps.yml` remains read-only. Do not introduce direct SSH/Compose deploy authorities.
+- Preserve TCE WF-06 strict HTTP 200 checks, WF-12 schedule watchdog, WF-13 read-only fallback, and the separate WF-07 backup/retention workflow. WF-07 backup is not a deployment authority or health freshness lane.
+- Preserve Stock weekend scraper fail-closed credential preflight. The historical missing-secret observation is on older SHA `e6469ac`; current `VNSTOCK_API_KEY` state is not established by that run.
+- StockDividend and Media Generation remain retired from active Platform GitOps; existing workloads/namespaces are not deleted. The observed Stock ARM64 image failure is not a reason to rotate shared GHCR credentials.
+
+### New machine-readable workload health contract (PR #1562)
+
+- `verify-workload-health.sh` emits `health_state=healthy|maintenance|partial-maintenance`, `active_scopes`, and `maintenance_scopes` to `GITHUB_OUTPUT` only after all active-scope checks pass.
+- All four deployment jobs expose the outputs. `deployment-lane-summary` distinguishes live health from zero-replica maintenance and rejects absent/unknown state. This prevents an intentional 0/0 lane from being reported as live healthy while keeping maintenance non-blocking.
+- `verify-workload-health.test.sh` covers healthy, all-maintenance and mixed scopes. `validate-workflow-contracts.py` enforces output wiring and summary semantics. PR #1562 is pending exact-head checks; no merge yet.
+
+### Native schedule and production readiness
+
+- All six monitored native inter-arrival gaps remain above existing budgets. Latest TCE WF-06 is now fresh by age but failed all four HTTP 200 probes with 503; latest native WF-12 remains stale. Platform's latest confirmed native reconcile/inspection/recovery/watchdog events remain stale. Do not count manual, workflow_run, repository_dispatch or WF-07 backup events as native acceptance.
+- Last verified Platform `TCE_ACTIONS_READ_TOKEN` was empty in smoke #42734770430. GitHub administrator telemetry and owner provisioning remain outstanding.
+- Latest K3s snapshot #42741845747 is a fresh manual inspection (generated 02:18:38Z; 2,476s old at checkpoint). Node Ready; Media/MicroFE core workloads healthy; TCE/Auth/Keycloak 0/0; Stock desired Admin/Backend ARM64 image pulls fail on `12d63b4`; public OIDC 503; Media runner active.
+- No production image publication/promotion, manifest apply, rollout, scaling, deletion, runner retirement, credential rotation, DNS/database/storage mutation or host maintenance occurred. TCE market-scan schedule unchanged.
