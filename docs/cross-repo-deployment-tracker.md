@@ -1,3 +1,74 @@
+## 2026-11-10 08:00 ICT — TCE Actions-history authentication fix and fresh K3s checkpoint
+
+Evidence reference time: 2026-11-10 01:00:00 UTC. Re-read all five master heads, open PRs, recent Actions runs/checks, the prior deployment tracker, workflow inventory, latest reconciliation, native schedule watchdog and the committed K3s snapshot.
+
+### Current repository heads and PRs
+
+| Repository | Master SHA | Open PRs | Latest relevant CI evidence |
+|---|---|---|---|
+| Platform Infra | `179c28906d7f5dbc6f2f83a8b53ecafb17ea069c` | #1314/#544/#541/#539 (draft/owner decision) | Inspection PR #1554 exact-head `validate-manifests` #42729091795 PASS; native reconcile #42731410572 SUCCESS |
+| TCE Dashboard | `68660a20e5bf3472a122c59d75b49ffce16a2ce9` | none | WF-01 #42709513845, WF-02 #42709513839, WF-05 #42709513831 PASS |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS (7/7) |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft/owner decision) | auth-service-ci #42654579277 PASS |
+
+Platform inspection PR [#1554](https://github.com/phanthienquoc/platform-infra/pull/1554) merged at exact validated head `7e4f1b8384b01ea53aa32d0ecf256d37c1b5f6c7`, merge SHA `179c28906d7f5dbc6f2f83a8b53ecafb17ea069c`. Its exact-head `validate-manifests` run #42729091795 passed. Combined commit-status queries return no legacy status contexts; Actions runs are the available check evidence.
+
+### Latest reconciliation and recovery
+
+- Native [reconcile-vps #42731410572](https://github.com/phanthienquoc/platform-infra/actions/runs/42731410572), `event=schedule`, created 00:50:52Z, SUCCESS. Payload was `mode=apply`, `target=all`, `ALLOW_IMAGE_CHANGES=false`.
+- Shared preflight passed; drift=false; manifest apply was correctly skipped. Auth, TCE and MicroFE lanes completed successfully; Keycloak was skipped. TCE/Auth zero-replica maintenance is not live health acceptance.
+- Recovery [#42731588250](https://github.com/phanthienquoc/platform-infra/actions/runs/42731588250) verified the post-reconcile controller dispatch. It found the 00:31 read-only inspection fallback fresh and avoided a duplicate inspection dispatch.
+- Watchdog [#42731624870](https://github.com/phanthienquoc/platform-infra/actions/runs/42731624870) failed native cadence checks as expected. Logs also show HTTP 403 / missing `workflow_runs` for both unauthenticated cross-repository TCE Actions-history requests. The 403 cause is not established; do not infer a missing TCE schedule tick from that response.
+
+### Native schedule freshness — reference 01:00:00Z
+
+Only first-attempt `event=schedule` runs on `master` count. Manual, push, workflow_run and repository_dispatch fallbacks are excluded.
+
+| Lane | Latest native run | Previous native run | Inter-arrival gap | Current age | Existing budget |
+|---|---:|---:|---:|---:|---:|
+| Platform reconcile | #42731410572 SUCCESS, 00:50:52Z | #42664347392 | 26,769s | 548s | 2,700s |
+| Platform inspection | #42694932077 SUCCESS, 20:38:40Z | #42594848960 | 39,672s | 15,680s | 4,500s |
+| Platform recovery | #42728605270 SUCCESS, 00:28:46Z | #42657359651 | 28,020s | 1,874s | 2,700s |
+| Platform watchdog | #42728915720 FAILURE, 00:31:10Z | #42657625219 | 28,068s | 1,750s | 2,700s |
+| TCE WF-06 | #42689871258 FAILURE, 20:07:17Z | #42594757482 | 37,834s | 17,563s | 1,500s |
+| TCE WF-12 | #42681246237 FAILURE, 19:13:12Z | #42587926693 | 37,832s | 20,808s | 1,500s |
+
+All six last inter-arrival gaps exceed their unchanged budgets. Platform reconcile/recovery/watchdog ages are now within current age budgets after new ticks, but this does not erase the missed-interval gaps. Native inspection remains stale; TCE WF-06/WF-12 remain stale.
+
+### K3s inspection and health
+
+- Latest full read-only snapshot is [inspect-vps #42728878765](https://github.com/phanthienquoc/platform-infra/actions/runs/42728878765), `workflow_dispatch`, SUCCESS; `debug/vps-latest.md` generated at 00:31:02Z. At 01:00Z it is 1,738s old, within the 4,500s snapshot freshness limit, but it is not native schedule acceptance.
+- Node `tce-k3s-01`: Ready/ARM64, Ubuntu 22.04.5, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2. Disk 56% (~20 GiB free), ~19 GiB RAM available, host restart required.
+- Media backend/frontend and MicroFE Shell/WS/NATS are 1/1. TCE frontend/service, Auth and Keycloak remain 0/0. Stock Admin x2 and desired Backend remain ImagePullBackOff on historical tag `12d63b4` with `no match for platform in manifest`; legacy Stock Backend/Frontend remain 1/1.
+- Media runner service/listener remains active. Stock/Media storage preflight found no target PVC/PV/VolumeSnapshot references; external backup/retention, DNS ownership and remote runner unregistration remain unverified. No decommission authorization.
+- TCE WF-06 [#42689871258](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42689871258) returned HTTP 503 for all four strict public probes (TCE web/API, Auth readiness/liveness; expected 200). Keep health checks strict; no live TCE/Auth health claim.
+
+### Cross-repository Actions-history auth contract
+
+Platform watchdog previously queried public TCE Actions history without an Authorization header and received HTTP 403 in run #42731624870. A new branch `fix/tce-actions-history-read-token-20261110` adds:
+
+- Step-scoped Platform repository secret `TCE_ACTIONS_READ_TOKEN` to both TCE WF-06/WF-12 read-only history steps.
+- Bearer authentication on both requests; missing secret creates an explicit warning and an unverified result rather than an anonymous request.
+- Static workflow-contract assertions requiring both secret scopes, both Authorization headers, explicit missing-secret branches and credential documentation.
+- Credential inventory guidance: fine-grained PAT limited to `phanthienquoc/TCE-dashboard`, **Actions: read** + **Metadata: read**, no Contents/Packages/write.
+- TCE schedule history remains advisory/warn-only in Platform; this token does not grant dispatch, promotion, package or deployment permissions.
+
+The secret itself is not configured or verified by this change. The exact owner action is to add `TCE_ACTIONS_READ_TOKEN` under Platform Infra repository Actions secrets with the scope above, then verify the next watchdog's two TCE history reads return HTTP 200. Platform-native schedule gates remain strict.
+
+### Owner dependencies and safety
+
+1. GitHub administrator: provide authoritative Actions schedule enqueue/delivery telemetry; run history proves gaps but not whether events were delayed, dropped or never enqueued.
+2. Platform repository owner: configure `TCE_ACTIONS_READ_TOKEN` as described; do not paste the value into Git/issues/chat.
+3. TCE/Auth owners: approve recovery/rollback before any replica restoration; keep HTTP 200 health acceptance.
+4. Stock owner: configure `VNSTOCK_API_KEY` privately and run `preflight_only=true`; no ingestion.
+5. Media owner: verify remote runner unregistration, external backup/retention and authoritative DNS ownership before decommission.
+6. Platform operator: fresh inspection and approved maintenance/rollback window before host package updates or restart.
+
+No GHCR publication, production release dispatch, digest promotion, production manifest apply, workload scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance occurred. `reconcile-vps.yml` remains the sole production apply authority; `inspect-vps.yml` remains read-only. No cron or freshness budget changed. TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-10 06:57 ICT — repository, publisher and scheduler audit
 
 Evidence timestamp: 2026-11-09 23:57:54 UTC. Re-read all five default-branch heads, open PRs, recent master workflow runs and this tracker during this execution.
