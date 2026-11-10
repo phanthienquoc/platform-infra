@@ -2177,20 +2177,17 @@ for required in (
     'verify_platform_schedule_gap inspect-vps.yml "$MAX_INSPECTION_AGE_MINUTES"',
     'verify_platform_schedule_gap recover-stale-ops.yml "$MAX_RECOVERY_AGE_MINUTES"',
     'verify_platform_schedule_gap reconcile-schedule-watchdog.yml "$MAX_WATCHDOG_AGE_MINUTES"',
-    '--workflow-path ".github/workflows/wf-06-tce-healthcheck.yml"',
-    '--max-gap-minutes "$MAX_TCE_WF06_AGE_MINUTES"',
-    '--workflow-path ".github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml"',
-    '--max-gap-minutes "$MAX_TCE_WF12_GAP_MINUTES"',
-    'per_page=100',
+    '.github/workflows/wf-06-tce-healthcheck.yml|tce-wf06|$MAX_TCE_WF06_AGE_MINUTES',
+    '.github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml|tce-wf12|$MAX_TCE_WF12_GAP_MINUTES',
+    '--workflow-path "$workflow_path"',
+    '--max-gap-minutes "$max_gap_minutes"',
+    '--warn-only',
 ):
-    if required not in watchdog:
+    if required not in native_schedule_gap_block:
         fail(f"Native schedule inter-arrival watchdog contract is missing: {required}")
-tce_wf06_gap_observer = native_schedule_gap_block.split('tce_runs_file="$RUNNER_TEMP/tce-wf06-scheduled-runs.json"', 1)[1]
-if '--workflow-path ".github/workflows/wf-06-tce-healthcheck.yml"' not in tce_wf06_gap_observer or "--warn-only" not in tce_wf06_gap_observer:
-    fail("TCE WF-06 schedule inter-arrival observation must remain warning-only for Platform.")
-tce_wf12_gap_observer = native_schedule_gap_block.split('tce_wf12_runs_file="$RUNNER_TEMP/tce-wf12-scheduled-runs.json"', 1)[1]
-if '--workflow-path ".github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml"' not in tce_wf12_gap_observer or "--warn-only" not in tce_wf12_gap_observer:
-    fail("TCE WF-12 schedule inter-arrival observation must remain warning-only for Platform.")
+if "per_page=100" not in watchdog:
+    fail("The Platform watchdog must bound its receipt-history page size.") 
+
 
 # Optional VPS MCP must remain read-only and subordinate to the sole GitOps apply authority.
 vps_mcp_contract = ROOT / "scripts" / "validate-vps-control-mcp-contract.py"
