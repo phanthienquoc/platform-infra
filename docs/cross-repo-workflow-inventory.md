@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-11 00:11 ICT (2026-11-10 17:11:58 UTC)
+Last reviewed: 2026-11-11 00:18 ICT (2026-11-10 17:18:32 UTC)
 
 This is the compact current workflow inventory. The previous append-only inventory is preserved at docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md. Historical timestamped workflow checkpoints remain under docs/cross-repo-workflow-inventory-checkpoints/.
 
@@ -116,18 +116,17 @@ Current native evidence and exact age/gap values are in docs/cross-repo-deployme
 - Do not add duplicate direct SSH/Compose deployment authorities.
 - Do not change the TCE market-scan schedule.
 
-## Latest verification — 2026-11-11 00:11 ICT / 17:11:58 UTC
+## Latest verification — 2026-11-11 00:18 ICT / 17:18:32 UTC
 
-- Platform master is `bfd0ea66ee005bd47b4dbcc85ced6428d78d9f44`. PR #1587 merged as `ec8b91f1fb9c66740562d50cc73c4b68c6cb8422` after exact-head manifest validation #42850835140 passed. PR #1588 merged as `bfd0ea66ee005bd47b4dbcc85ced6428d78d9f44` after exact-head `validate-github-actions` #42862175393 and `validate-manifests` #42862174503 passed on head `3faf1a73`.
-- PR #1588 fixes a read-only inspection failure: rerun attempt 2 of #42849443955 passed `Inspect VPS` and output validation but the rebase fetch rejected a non-fast-forward update to the runner-local `refs/remotes/origin/master`. The workflow now force-updates only that local remote-tracking ref; no remote branch is force-pushed. The inspection CRI test and workflow-contract validator enforce the refspec and authenticated fetch command.
-- The same PR replaces the Go-module actionlint install (which failed because Go attempted to fetch unavailable toolchain `go1.26.11`, HTTP 404 from sum.golang.org) with official actionlint v1.7.12 Linux binary installation. The official checksums manifest is verified against its pinned SHA-256 before the archive checksum is verified. Exact-head validation passed actionlint, yamllint, shellcheck, all regression tests and workflow-contract checks.
-- Post-merge push-triggered inspection/lint runs on `bfd0ea66` are not observable through the connected workflow-run reader, which returns PR-triggered runs only. No newer inspection snapshot or post-merge check result is claimed.
-- Last completed read-only K3s snapshot #42849443955 was generated at 15:55:38Z and is now 4580s old, just beyond the 4500s freshness budget. Its last-known state: ARM64 node Ready; Media and MicroFE core 1/1; TCE/Auth/Keycloak 0/0 maintenance; Stock Admin and desired Backend ImagePullBackOff on historical tag `12d63b4`; existing Stock Backend/Frontend 1/1; public OIDC HTTP 503; Media/Platform runner services active; host restart_required=yes.
-- Last reconciliation #42849053816 completed at 15:55:16Z and is 4602s old, beyond its 2700s evidence budget. It verified GHCR read access, Auth runtime Secret presence with values suppressed, shared `ghcr-pull` unchanged and GitOps drift=false; production apply, image replacement and rollout were skipped.
-- Last-confirmed native recovery schedule #42848981485 succeeded at 15:52:52Z, but its 29378s inter-arrival gap exceeds the unchanged 2700s budget. The connected workflow-run reader cannot enumerate later non-PR schedule events; current ages in the deployment tracker are ages of last-confirmed events, not proof no later event exists.
-- TCE WF-06 #42799497774 still records four public HTTP 503 responses against strict expected HTTP 200. Stock CI #42610360402, Media CI #42539512417 and Auth CI #42654579277 remain the last successful master CI evidence; Stock scraper #42457182511 remains fail-closed on missing `VNSTOCK_API_KEY`.
-- No cron, freshness budget, strict health threshold, image publication, digest promotion, production apply, rollout, scale, credential rotation, DNS/database/storage mutation, runner retirement or host reboot occurred. TCE market-scan schedule unchanged.
-
+- Platform master is `61bbb9c0927ba43902f59344c38b289d493934b3`. PR #1587 and #1588 are merged. PR #1589 is the inspection-only auto-merge produced by workflow #42862329716; all inspection, output validation, latest-master rebase, PR creation and exact-head validation steps passed. Snapshot `debug/vps-latest.md` was generated at 17:11:28Z.
+- PR #1588 fixed the persistent runner's non-fast-forward update of its local `refs/remotes/origin/master` by force-updating only that remote-tracking ref. It also pins actionlint v1.7.12 to the official Linux release and verifies the official checksum manifest and archive before execution. Exact-head `validate-github-actions` #42862175393 and `validate-manifests` #42862174503 both passed.
+- Last completed K3s inspection snapshot is 424s old at this reference, within the 4500s freshness budget. K3s node Ready/ARM64; disk 56% with ~20 GiB free; available RAM ~19 GiB. Media backend/frontend and MicroFE Shell/WS/NATS are 1/1. TCE frontend/service, Auth and Keycloak are 0/0 maintenance. Stock Admin is 0/1 (two ImagePullBackOff pods) and desired Backend 0/1 on historical `12d63b4`; existing Backend/Frontend remain 1/1. Both public OIDC discovery probes return HTTP 503; Keycloak diagnostic timed out while deployment is 0/0. Host restart_required=yes.
+- GitOps drift is clean. Protected decommission preflight found no Stock/Media namespace/image refs in the active Platform production manifest tree; no Stock/Media VolumeSnapshot refs or PVCs were found (only `k3s-debug` PVC exists), and preserved `tce-prod` and `microfe-platform` remain. Media runner service/listener is still active; GitHub runner registration and DNS ownership are not inferred. Decommission remains gated on remote unregister, backup/retention and DNS evidence.
+- GHCR digest coverage remains warning: cached Stock backend/user tags `23b2878` lack RepoDigest; local image IDs are not registry digests or publication evidence. Stock Admin/desired Backend continue to fail with `no match for platform in manifest` on `12d63b4`.
+- Last reconciliation #42849053816 completed at 15:55:16Z and is 4996s old, outside the 2700s evidence budget. It verified GHCR read access, Auth runtime Secret presence with values suppressed, shared `ghcr-pull` unchanged and GitOps drift=false; production apply, image replacement and rollout were skipped.
+- Last-confirmed native schedule inventory is from 15:57:57Z. The connected workflow-run reader exposes PR-triggered runs only; later native schedule events cannot be enumerated here. Last-confirmed event ages are recorded in the deployment tracker and must not be treated as proof no later event occurred. Cron and freshness budgets remain unchanged.
+- TCE WF-06 #42799497774 still records four HTTP 503 responses against strict expected HTTP 200. Stock CI #42610360402, Media CI #42539512417 and Auth CI #42654579277 remain the last successful master CI evidence; Stock scraper #42457182511 remains fail-closed on missing `VNSTOCK_API_KEY`.
+- No image publication, digest promotion, production apply, workload rollout/scaling, credential rotation, DNS/database/storage mutation, runner retirement or host reboot occurred. TCE market-scan schedule unchanged.
 ## Historical evidence
 
 - Previous full append-only inventory preserved at docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md.
