@@ -518,6 +518,7 @@ jobs:
               --header "User-Agent: platform-infra-schedule-watchdog" \
               --output "$runs_file" --write-out '%{http_code}' "$tce_runs_url" || true)"
           fi
+          echo "TCE_WF06_API_STATUS=$api_status" >> "$GITHUB_ENV"
           python3 scripts/verify-tce-schedule-delivery.py \
             --runs-file "$runs_file" \
             --http-status "$api_status" \
@@ -606,6 +607,7 @@ jobs:
           if [[ -s "$tce_runs_file" ]]; then
             python3 scripts/verify-native-schedule-gap.py \
               --runs-file "$tce_runs_file" \
+              --http-status "${TCE_WF06_API_STATUS:-0}" \
               --workflow-path ".github/workflows/wf-06-tce-healthcheck.yml" \
               --branch master \
               --reference-epoch "$reference_epoch" \
