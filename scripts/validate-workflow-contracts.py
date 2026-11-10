@@ -63,6 +63,8 @@ if watchdog.count("TCE_ACTIONS_READ_TOKEN: ${{ secrets.TCE_ACTIONS_READ_TOKEN }}
     fail("Both TCE schedule-history observations must scope TCE_ACTIONS_READ_TOKEN to their own step.")
 if watchdog.count('Authorization: Bearer ${TCE_ACTIONS_READ_TOKEN}') != 2:
     fail("Both cross-repository TCE Actions-history requests must authenticate with TCE_ACTIONS_READ_TOKEN.")
+if 'echo "TCE_WF06_API_STATUS=$api_status" >> "$GITHUB_ENV"' not in watchdog or '--http-status "${TCE_WF06_API_STATUS:-0}"' not in watchdog:
+    fail("WF-06 API authentication status must reach the inter-arrival verifier; missing credentials must not masquerade as empty history.")
 if watchdog.count('            api_status="missing-token"') != 1 or watchdog.count('            tce_wf12_api_status="missing-token"') != 1:
     fail("Missing TCE Actions read credentials must remain explicit and warning-only, never silently query anonymously.")
 if "TCE_ACTIONS_READ_TOKEN" not in credentials_guide or "TCE_ACTIONS_READ_TOKEN" not in credentials_key:
