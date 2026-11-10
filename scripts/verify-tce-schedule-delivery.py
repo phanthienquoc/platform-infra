@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Observe native TCE WF-06 schedule delivery from the authenticated Actions API.
+"""Observe native TCE WF-06 delivery from verified Platform heartbeat receipts.
 
-This is an advisory cross-repository signal. It deliberately does not gate
-Platform reconciliation: a TCE schedule outage must not trigger a production
-reconcile loop. Public endpoint health is reported separately from delivery.
+The input is normalized source-run metadata recovered from successful
+Platform-owned heartbeat receipts. This is advisory and does not gate
+Platform reconciliation; public endpoint health remains separate.
 """
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ def verify_response(
     max_age_minutes: int,
 ) -> tuple[dict[str, object], int]:
     if http_status != "200":
-        raise ValueError(f"GitHub Actions API returned HTTP {http_status}; schedule delivery is unverified")
+        raise ValueError(f"TCE heartbeat source-history input returned status {http_status}; schedule delivery is unverified")
     if reference_epoch <= 0:
         raise ValueError("watchdog reference epoch must be a positive GitHub Actions API timestamp")
     if max_age_minutes <= 0:
