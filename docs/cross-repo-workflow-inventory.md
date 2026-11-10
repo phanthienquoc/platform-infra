@@ -1,3 +1,18 @@
+## 2026-11-10 21:01 ICT — five-repository workflow inventory refresh
+
+- Current master heads: Platform `b18d3ea74499acc3eda83b6196da9b1d37c34f36`; TCE `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab`; Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
+- Open owner-decision PRs: Platform #1314/#544/#541/#539 and Auth #76. TCE, Stock and Media have no open PRs.
+- Latest CI: Platform `validate-manifests` #42823322147 PASS on current master; TCE WF-02 #42822853121 and WF-05 #42822853137 PASS on current master (WF-01 #42781396893 is on parent SHA); Stock CI #42610360402 PASS; Media CI #42539512417 PASS; Auth CI #42654579277 PASS. Stock scraper #42457182511 remains fail-closed on missing `VNSTOCK_API_KEY`.
+- Latest native schedule lanes at 14:01:49Z: Platform reconcile #42778829676 age 21,918s/gap 25,539s; inspection #42809278936 age 8,528s/gap 29,694s; recovery #42777251549 age 22,715s/gap 26,068s; watchdog #42777386082 age 22,647s/gap 25,992s; TCE WF-06 #42799497774 age 12,774s/gap 27,892s; WF-12 #42795292155 age 14,544s/gap 27,790s. All six exceed unchanged budgets; only first-attempt master schedule events count.
+- Manual Platform reconcile #42809629336 succeeded with `allow_image_changes=false`; GHCR read preflight passed for Auth/MicroFE/TCE; Auth runtime Secret provision/verification succeeded with values suppressed; shared `ghcr-pull` remained unchanged; managed MicroFE/Auth/TCE image-pull checks found no failures. Stock Admin×2 and desired Backend remained ImagePullBackOff. `DRIFT=false`, production apply/image replacement/rollout skipped.
+- Latest K3s inspection #42809278936 at 11:39:41Z is 8,528s old at this checkpoint, exceeding 75-minute freshness. Last-known state only: node Ready/ARM64; Media/MicroFE core 1/1; TCE/Auth/Keycloak 0/0; Stock desired Admin/Backend ImagePullBackOff; OIDC last probe HTTP 503; Media runner active; host restart required.
+- Preserve strict TCE HTTP 200 health contract and app-owned immutable publishers. Registry-side GHCR immutable-tag enforcement is not verified by SHA tags/digest checks alone.
+- Platform remains sole production apply authority; `reconcile-vps.yml` is the only production apply workflow and `inspect-vps.yml` is read-only. Preserve useful manual, release, backup, CI, security and scheduled workflows; no workflow removal justified.
+- Branch metadata previously returned `protected=false` for all five master branches; inherited ruleset coverage remains unverified due HTTP 403. Admin follow-up: #1575. Scheduler telemetry: #1497. TCE/Auth recovery: #872. Stock owner actions: #42/#43.
+- No GHCR publication/promotion, production manifest apply, rollout/scaling, deletion, runner retirement, credential rotation, DNS/database/storage mutation or host reboot. Auth runtime Secret provision/verification occurred through the approved reconciliation; TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-10 18:02 ICT — five-repository workflow inventory refresh
 
 - Current master heads: Platform 53e43fc15ac58eab943c548f96ac781a831a59e3; TCE 0f71aa56eb728abbd87907e07739e08684b86724; Stock b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61; Media dcd698699c65ba6e73f6b43838975144777131c3; Authentication eab85fab32d7c9baef750c1fedbb93deb8c1333f.
