@@ -496,8 +496,9 @@ jobs:
         run: |
           set -euo pipefail
           receipt_runs_file="${RUNNER_TEMP}/tce-heartbeat-receipt-runs.json"
-          if ! receipt_response="$(gh api --paginate \
-            "repos/${GITHUB_REPOSITORY}/actions/workflows/recover-stale-ops.yml/runs?event=repository_dispatch&branch=master&per_page=100")"; then
+          receipt_runs_endpoint="repos/${GITHUB_REPOSITORY}/actions/workflows/recover-stale-ops.yml/runs"
+          receipt_runs_query="event=repository_dispatch&branch=master&per_page=100"
+          if ! receipt_response="$(gh api --paginate "${receipt_runs_endpoint}?${receipt_runs_query}")"; then
             echo "::warning::Unable to query Platform's own TCE heartbeat receipt history."
             receipt_response=""
           fi
@@ -685,7 +686,8 @@ jobs:
                 --warn-only
             done
           else
-            echo "::notice::TCE heartbeat history collection is skipped for diagnostic push/workflow_run events; no TCE cadence acceptance is inferred."
+            echo "::notice::TCE heartbeat history collection is skipped for diagnostic push/workflow_run events."
+            echo "::notice::No TCE cadence acceptance is inferred."
           fi
 
           if (( ${#schedule_gap_failures[@]} > 0 )); then
