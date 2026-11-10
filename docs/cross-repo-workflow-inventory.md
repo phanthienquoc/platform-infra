@@ -1,3 +1,17 @@
+## 2026-11-10 06:57 ICT — cross-repo workflow authority audit
+
+- Current master heads: Platform `47c5866d`; TCE `68660a20`; Stock `b1b5e177`; Media `dcd69869`; Authentication `eab85fab`. Open owner-decision drafts: Platform #1314/#544/#541/#539 and Authentication #76; no TCE/Stock/Media open PRs.
+- Current-head Platform `validate-manifests` #42717334146 PASS. Latest Platform `validate-github-actions` #42709336655 is on the immediately previous code head `8a603a5b`; current docs-only head adds no workflow code. TCE WF-01/02/05 pass; Stock CI 7/7 pass; Media CI pass; Auth CI pass.
+- TCE WF-03 is a manual master-only app publisher: native ARM64 builds, full-source-SHA tag guard, registry digest/ARM64 verification, exact Platform dispatch. Stock `deploy.yml` is app-owned master-push GHCR publication with immutable-tag/ARM64 checks; manual publication is disabled and no Platform handoff is sent. Media WF-03 is app-owned GHCR publication with full-SHA tags/digest checks and no Platform handoff. Auth release is manual master-only app publication with exact Platform digest-promotion payload. None of these app workflows performs SSH/Compose or Kubernetes apply.
+- No duplicate direct deployment authority was found in these four app publisher workflows. Keep them; do not remove by name alone. Platform `reconcile-vps.yml` remains the only production apply authority; `inspect-vps.yml` remains read-only.
+- App-level pre-push tag guards and post-push digest/ARM64 inspection do not prove GHCR server-side immutable-tag enforcement. No current production release run supplied a fresh tag-to-digest attestation.
+- TCE WF-07 #42711312505 native integration check PASS (not health freshness). WF-12 #42711341231 failed stale WF-06; WF-13 #42711368741 recovery PASS; read-only WF-06 fallback #42711398985 failed all four strict HTTP 200 probes with 503.
+- Six native Platform/TCE deployment lanes remain stale/outside unchanged budgets. Last native IDs: reconcile #42664347392; inspection #42694932077; recovery #42657359651; watchdog #42657625219; TCE WF-06 #42689871258; WF-12 #42681246237. Latest full K3s snapshot #42709680634 is 6,341s old (>4,500s freshness budget) and cannot authorize runtime mutation.
+- Stock scraper #42457182511 failed closed on an older SHA with empty VNSTOCK_API_KEY; current secret state is not exposed. Issue #42 remains owner action. Do not repeat ingestion or expose credentials.
+- Preserve CI/test/security, manual release, backup, and scheduled jobs. Do not change cron/freshness budgets or TCE market-scan schedule. No publication, dispatch, promotion, apply, scaling, deletion, runner retirement, DNS/database/storage mutation or host maintenance in this checkpoint.
+
+---
+
 ## 2026-11-10 05:14 ICT — fresh K3s inspection and cross-repo CI
 
 - Platform master `051f7b83`; TCE `68660a20`; Stock `b1b5e177`; Media `dcd69869`; Auth `eab85fab`. Open drafts Platform #1314/#544/#541/#539 and Auth #76; no open PRs in TCE/Stock/Media.
