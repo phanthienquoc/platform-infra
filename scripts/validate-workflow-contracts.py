@@ -168,6 +168,8 @@ for required in (
     "health_state=healthy",
     "health_state=partial-maintenance",
     "health_state=maintenance",
+    "active_scopes=%s",
+    "maintenance_scopes=%s",
     '>> "$GITHUB_OUTPUT"',
 ):
     if required not in health_gate:
@@ -185,8 +187,13 @@ for job in ("deploy-auth-service", "deploy-microfe", "deploy-tce-dashboard", "de
     if reconcile.count(marker) != 1:
         fail(f"Expected exactly one {job} deployment job.")
     job_block = reconcile.split(marker, 1)[1].split("\n  ", 1)[0]
-    if "health_state: ${{ steps.health.outputs.health_state }}" not in job_block:
-        fail(f"{job} must expose the health gate's health_state output.")
+    for required in (
+        "health_state: ${{ steps.health.outputs.health_state }}",
+        "active_scopes: ${{ steps.health.outputs.active_scopes }}",
+        "maintenance_scopes: ${{ steps.health.outputs.maintenance_scopes }}",
+    ):
+        if required not in job_block:
+            fail(f"{job} must expose every workload health output: {required}")
     if "id: health" not in job_block:
         fail(f"{job} must assign id=health to its workload health step.")
 
@@ -199,12 +206,15 @@ for required in (
     'check_lane auth-service "$AUTH_RESULT" "$AUTH_HEALTH_STATE"',
     'check_lane microfe "$MICROFE_RESULT" "$MICROFE_HEALTH_STATE"',
     'check_lane tce-dashboard "$TCE_RESULT" "$TCE_HEALTH_STATE"',
+    'check_lane keycloak "$KEYCLOAK_RESULT" "$KEYCLOAK_HEALTH_STATE"',
     "intentional zero-replica maintenance",
     "partial-maintenance",
     "did not publish a valid machine-readable health state",
 ):
     if required not in summary:
         fail(f"Deployment summary is missing explicit maintenance/health-state contract: {required}")
+if 'Deployment lane $app succeeded.' in summary:
+    fail("Deployment summary must not label every successful job as live workload health.")
 
 if "Checkout is not clean; refusing to use persistent self-hosted workspace." not in reconcile:
     fail("The primary reconcile job must reject a dirty self-hosted checkout before using it.")
