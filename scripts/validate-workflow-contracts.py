@@ -521,6 +521,7 @@ for excluded_path in (
     "scripts/resolve-push-deployment-scope.sh",
     "scripts/verify-tce-schedule-delivery.py",
     "scripts/verify-native-schedule-gap.py",
+    "scripts/verify-tce-heartbeat-receipts.py",
     "scripts/verify-scheduled-run-result.py",
 ):
     if f'"!{excluded_path}"' not in recovery_push_paths:
