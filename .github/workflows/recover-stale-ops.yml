@@ -1,8 +1,11 @@
 name: Recover Stale Scheduled Ops
 run-name: >-
-  Recover Stale Scheduled Ops — ${{ github.event_name }} / source
-  ${{ inputs.source_run_id || github.event.client_payload.source_run_id
-  || github.event.workflow_run.id || 'none' }}${{ github.event_name == 'repository_dispatch' && format(' / {0}', github.event.client_payload.source_workflow_path) || '' }}
+  ${{ format(
+    'Recover Stale Scheduled Ops — {0} / source {1}{2}',
+    github.event_name,
+    inputs.source_run_id || github.event.client_payload.source_run_id || github.event.workflow_run.id || 'none',
+    github.event_name == 'repository_dispatch' && format(' / {0}', github.event.client_payload.source_workflow_path) || ''
+  ) }}
 
 'on':
   schedule:
