@@ -57,23 +57,18 @@ watchdog = read("reconcile-schedule-watchdog.yml")
 credentials_guide = (ROOT / "docs" / "credentials.md").read_text(encoding="utf-8")
 credentials_key = (ROOT / "docs" / "credentials-key.md").read_text(encoding="utf-8")
 
-# Cross-repository Actions history uses a dedicated read-only TCE token. The
-# Platform GITHUB_TOKEN remains scoped to Platform-owned Actions history.
-if watchdog.count("TCE_ACTIONS_READ_TOKEN: ${{ secrets.TCE_ACTIONS_READ_TOKEN }}") != 2:
-    fail("Both TCE schedule-history observations must scope TCE_ACTIONS_READ_TOKEN to their own step.")
-if watchdog.count('Authorization: Bearer ${TCE_ACTIONS_READ_TOKEN}') != 2:
-    fail("Both cross-repository TCE Actions-history requests must authenticate with TCE_ACTIONS_READ_TOKEN.")
-if 'echo "TCE_WF06_API_STATUS=$api_status" >> "$GITHUB_ENV"' not in watchdog or '--http-status "${TCE_WF06_API_STATUS:-0}"' not in watchdog:
-    fail("WF-06 API authentication status must reach the inter-arrival verifier; missing credentials must not masquerade as empty history.")
-if 'if [[ "${TCE_WF06_API_STATUS:-0}" == "missing-token" ]]; then' not in watchdog:
-    fail("The WF-06 inter-arrival step must recognize the missing-token status.")
-missing_token_fixture = watchdog.split('if [[ "${TCE_WF06_API_STATUS:-0}" == "missing-token" ]]; then', 1)[1].split("\n          fi\n", 1)[0]
-if "printf" not in missing_token_fixture or "tce_runs_file" not in missing_token_fixture:
-    fail("The WF-06 inter-arrival step must recreate its empty JSON fixture when the prior step reports missing-token.")
-if watchdog.count('            api_status="missing-token"') != 1 or watchdog.count('            tce_wf12_api_status="missing-token"') != 1:
-    fail("Missing TCE Actions read credentials must remain explicit and warning-only, never silently query anonymously.")
-if "TCE_ACTIONS_READ_TOKEN" not in credentials_guide or "TCE_ACTIONS_READ_TOKEN" not in credentials_key:
-    fail("TCE_ACTIONS_READ_TOKEN scope and ownership must be documented in both credential inventories.")
+# TCE schedule history is reconstructed from successful Platform-owned heartbeat receipts.
+# The recovery receiver validates the source TCE run by ID before a successful receipt exists.
+if "TCE_ACTIONS_READ_TOKEN" in watchdog or "TCE_ACTIONS_READ_TOKEN" in credentials_guide or "TCE_ACTIONS_READ_TOKEN" in credentials_key:
+    fail("TCE schedule history must not depend on a separate cross-repository Actions-read PAT.")
+if "recover-stale-ops.yml/runs?event=repository_dispatch&branch=master&per_page=100" not in watchdog:
+    fail("TCE schedule history must come from Platform-owned repository_dispatch receipt runs.")
+if "verify-tce-heartbeat-receipts.py" not in watchdog:
+    fail("The watchdog must normalize only verified TCE heartbeat receipt history.")
+if "https://api.github.com/repos/phanthienquoc/TCE-dashboard/actions/runs/${source_run_id}" not in watchdog:
+    fail("TCE heartbeat history must verify source run metadata by its exact public run ID.")
+if "python3 scripts/verify-tce-heartbeat-receipts.py --self-test" not in validate_github_actions:
+    fail("validate-github-actions must execute TCE heartbeat receipt history regression tests.")
 inspection = read("inspect-vps.yml")
 lane_queue = (ROOT / "scripts" / "verify-reconcile-lane-queue.py").read_text(encoding="utf-8")
 scheduled_run_result = (ROOT / "scripts" / "verify-scheduled-run-result.py").read_text(encoding="utf-8")
@@ -570,6 +565,7 @@ if not all(
         "github.event.workflow_run.id",
         "'none'",
         " / source ",
+        "github.event.client_payload.source_workflow_path",
     )
 ):
     fail("Recovery workflow run-name must expose the exact source run id for workflow_dispatch, repository_dispatch, and workflow_run correlation.")
