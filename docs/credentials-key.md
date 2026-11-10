@@ -123,6 +123,7 @@ These are sourced from Platform Infra's protected GitHub Actions Environment nam
 - `keycloak-ci.yml`
 - `provision-auth-runtime-secret.yml`
 - `reconcile-observability.yml`
+- `reconcile-schedule-watchdog.yml`
 - `reconcile-vps.yml`
 - `recover-stale-ops.yml`
 - `runtime-secret-readiness.yml`
