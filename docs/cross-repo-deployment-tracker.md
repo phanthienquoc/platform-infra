@@ -1,3 +1,51 @@
+## 2026-11-10 08:20 ICT — PR #1558 merged; post-merge observer checks pass
+
+### Current repository state
+
+| Repository | Master SHA | Open PRs | Latest relevant CI |
+|---|---|---|---|
+| Platform Infra | `30e1cd22ed887d1ce35be99e8fac97e206e35aaa` | #1314/#544/#541/#539 (draft/owner decision) | PR #1558 post-merge checks #42734770070/#42734770118 PASS |
+| TCE Dashboard | `68660a20e5bf3472a122c59d75b49ffce16a2ce9` | none | WF-01 #42709513845, WF-02 #42709513839, WF-05 #42709513831 PASS |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS (7/7) |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft/owner decision) | auth-service-ci #42654579277 PASS |
+
+### PR #1558 merged and verified
+
+- [PR #1558](https://github.com/phanthienquoc/platform-infra/pull/1558) merged at 01:17:47Z, exact head `0d59db90c892edba4090c5a01003ec4399ce1f3b`, squash SHA `30e1cd22ed887d1ce35be99e8fac97e206e35aaa`.
+- Exact-head `validate-github-actions` #42734643361 PASS and `validate-manifests` #42734643354 PASS.
+- Post-merge `validate-github-actions` #42734770070 PASS and `validate-manifests` #42734770118 PASS.
+- Read-only watchdog push smoke #42734770430 PASS. It emits explicit `missing-token` / history-unverified results for both TCE workflows. The secondary WF-06 fixture-unavailable warning no longer appears as an emitted warning.
+- No `Recover Stale Scheduled Ops — push` run was triggered by the helper/workflow change after merge; only its `workflow_run` observer was skipped. The new path exclusion prevents read-only schedule-gap helper changes from bootstrapping recovery.
+
+### TCE Actions read credential remains owner-blocked
+
+The push smoke still shows `TCE_ACTIONS_READ_TOKEN` empty in the Platform job environment. Configure the Platform repository Actions secret with a fine-grained PAT restricted to `phanthienquoc/TCE-dashboard`, **Actions: read** + **Metadata: read** only. No Contents, Packages or write scope. Until configured, TCE WF-06/WF-12 history remains explicitly unverified; do not infer schedule freshness from missing API data.
+
+### Native schedule evidence — reference 01:20:00Z
+
+| Lane | Latest native run | Previous native run | Inter-arrival gap | Current age | Budget |
+|---|---:|---:|---:|---:|---:|
+| Platform reconcile | #42731410572 SUCCESS, 00:50:52Z | #42664347392 | 26,769s | 1,748s | 2,700s |
+| Platform inspection | #42694932077 SUCCESS, 20:38:40Z | #42594848960 | 39,672s | 16,880s | 4,500s |
+| Platform recovery | #42728605270 SUCCESS, 00:28:46Z | #42657359651 | 28,020s | 3,074s | 2,700s |
+| Platform watchdog | #42728915720 FAILURE, 00:31:10Z | #42657625219 | 28,068s | 2,930s | 2,700s |
+| TCE WF-06 | #42689871258 FAILURE, 20:07:17Z | #42594757482 | 37,834s | 18,763s | 1,500s |
+| TCE WF-12 | #42681246237 FAILURE, 19:13:12Z | #42587926693 | 37,832s | 22,008s | 1,500s |
+
+No newer native event was visible in the latest schedule-only query. All inter-arrival gaps remain above budgets. Platform recovery/watchdog current ages are also now beyond their 45-minute age budget; inspection and both TCE lanes remain stale. No cron or freshness budget changed.
+
+### K3s and service state
+
+- Latest snapshot [inspect-vps #42728878765](https://github.com/phanthienquoc/platform-infra/actions/runs/42728878765) is `workflow_dispatch`, generated 00:31:02Z; age 2,938s at 01:20Z (within 4,500s), but it is not native schedule acceptance.
+- Node Ready/ARM64; K3s v1.36.3+k3s1; disk 56% (~20 GiB free); ~19 GiB RAM available; restart required.
+- Media backend/frontend and MicroFE Shell/WS/NATS 1/1; TCE/Auth/Keycloak 0/0; Stock desired Admin/Backend ImagePullBackOff on historical ARM64-incompatible `12d63b4`; Media runner service/listener active.
+- TCE WF-06 #42689871258 remains the latest strict health evidence and returned HTTP 503 on all four public probes. No TCE/Auth live-health claim.
+
+No GHCR publication, production release dispatch, digest promotion, manifest apply, rollout, scaling, namespace/PVC/PV deletion, runner retirement, DNS/database/storage mutation or host maintenance. `reconcile-vps.yml` remains sole production apply authority; `inspect-vps.yml` remains read-only. TCE market-scan schedule unchanged.
+
+---
+
 ## 2026-11-10 08:15 ICT — PR #1558 validation failure corrected; exact-head rerun pending
 
 ### Repository state
