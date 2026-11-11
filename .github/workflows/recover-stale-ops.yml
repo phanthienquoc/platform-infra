@@ -418,7 +418,8 @@ jobs:
             )"; then
               if grep -Eq 'HTTP (500|502|503|504)' <<< "$response"; then
                 retry_delay=$((attempt * 5))
-                echo "::warning::Transient GitHub HTTP 5xx while correlating reconciliation dispatch (attempt $attempt/6); retrying in ${retry_delay}s."
+                printf '::warning::Transient GitHub HTTP 5xx while correlating %s dispatch (attempt %s/6); retrying in %ss.\n' \
+                  "reconciliation" "$attempt" "$retry_delay"
                 sleep "$retry_delay"
                 continue
               fi
@@ -601,7 +602,8 @@ jobs:
             )"; then
               if grep -Eq 'HTTP (500|502|503|504)' <<< "$response"; then
                 retry_delay=$((attempt * 5))
-                echo "::warning::Transient GitHub HTTP 5xx while correlating inspection dispatch (attempt $attempt/6); retrying in ${retry_delay}s."
+                printf '::warning::Transient GitHub HTTP 5xx while correlating %s dispatch (attempt %s/6); retrying in %ss.\n' \
+                  "inspection" "$attempt" "$retry_delay"
                 sleep "$retry_delay"
                 continue
               fi
