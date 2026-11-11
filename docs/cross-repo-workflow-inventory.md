@@ -10,7 +10,7 @@ This is the compact current workflow inventory. Historical append-only inventory
 |---|---|---|---|---|
 | Platform Infra | `99509adb` | #1314/#544/#541/#539 (owner decisions) | Validation, inspection and repository automation only | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, K3s inspection, rollout and health verification |
 | TCE Dashboard | `5b425bde` | None | Tests/builds, immutable GHCR publishers, strict WF-06 HTTP-200 probes, WF-12 schedule watchdog, WF-13 maintenance-aware fallback, integration and backup | No direct production apply; authenticated release handoffs to Platform |
-| StockDividend | `b1b5e177` | None | Tests/builds, native ARM64 immutable publisher, fail-closed scraper | No active production manifests; residual `stock-prod` resources remain in K3s and require owner retirement/restoration decision |
+| StockDividend | `b1b5e177` | None | Tests/builds, native ARM64 immutable publisher, fail-closed scraper | No active production manifests; approved decommission scope remains, with residual `stock-prod` resources gated by backup/DNS evidence and protected namespace deletion |
 | Media Generation | `dcd69869` | None | Tests/builds, immutable GHCR publisher and release workflow | No active production manifests; residual Media pods 1/1 and runner active. Decommission requires backup/retention, DNS ownership and remote runner unregister evidence |
 | Authentication | `eab85fab` | #76 (owner decision) | Auth CI/security, ARM64 immutable release publisher, provenance/SBOM and auth-image-published handoff | No direct production apply; Platform validates dispatch and owns GitOps promotion/reconcile |
 
@@ -63,9 +63,17 @@ All six current-age and all six inter-arrival budgets fail at 19:58:49Z. WF-06 m
 - App repositories own application code, dependencies, tests/builds, Dockerfiles, immutable GHCR publication and source provenance. Use full source SHA tags and verify registry digest/ARM64 descriptors before handoff.
 - Platform Infra alone owns production Kustomize manifests, shared GHCR pull credentials, authenticated dispatch validation, provenance/digest promotion, GitOps plan/apply, rollout and live health.
 - `reconcile-vps.yml` manual dispatch defaults to `mode=plan`; explicit manual apply and existing schedule/push/authenticated promotion events retain their documented behavior. `inspect-vps.yml` remains read-only.
-- Keep Stock/Media out of active Platform production manifests while preserving their app CI/publish workflows. Do not remove residual cluster resources until owner decision and fresh evidence; do not confuse cached/local image IDs with registry RepoDigests.
+- Keep Stock/Media out of active Platform production manifests while preserving app CI/publish workflows. The decommission scope is approved; delete only through the protected manual workflow after same-run storage preflight, external backup/retention and authoritative DNS evidence, Media runner stop/disable/unregister plus read-only GitHub runner audit, and production Environment approval. Do not confuse cached/local image IDs with registry RepoDigests.
 - Preserve useful CI, test, security, backup, integration, release, manual and scheduled workflows. No workflow is confirmed redundant/obsolete in this checkpoint.
 - No duplicate direct SSH/Compose deployment authority. No change to TCE market-scan schedule.
+
+## Stock/Media decommission workflow
+
+- Workflow: `.github/workflows/decommission-stock-media.yml`; `workflow_dispatch` only; default `mode=plan`.
+- Plan mode verifies Platform runner policy v15, reports the dedicated Media systemd unit/enablement/Listener state, and runs the read-only namespace/storage/Ingress inventory. It does not stop or unregister a runner or delete resources.
+- Delete mode uses the protected `production` Environment and requires exact confirmations `DELETE-STOCK-PROD-AND-MEDIA-PROD`, `BACKUP-AND-EXTERNAL-DATA-REVIEWED`, `AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED`, and `MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED`, plus stable HTTPS backup/DNS evidence references.
+- Before deleting, it verifies the Media service is inactive and disabled/masked or absent, no Listener process exists, and the GitHub Media repository runner list has no `media-generation-k3s-01` entry via read-only `MEDIA_RUNNER_AUDIT_TOKEN`; it repeats the storage preflight in the same run and deletes only `stock-prod` and `media-prod`.
+- Current inspection #43089176130 shows target namespaces storage-clean but the Media runner service is active/enabled and Listener present. No delete run is authorized or executed. Preserve the shared Platform runner, TCE/Auth/MicroFE/Keycloak and all app CI/publisher workflows.
 
 ## Governance evidence
 
