@@ -411,21 +411,34 @@ jobs:
 
           dispatched_run=""
           for attempt in $(seq 1 6); do
-            response="$(
+            if ! response="$(
               gh api -X GET \
                 "repos/${GITHUB_REPOSITORY}/actions/workflows/reconcile-vps.yml/runs" \
-                -f event=workflow_dispatch -F branch=master -F per_page=100
-            )"
-              dispatched_run="$(
-                jq -c --arg started "$REFERENCE_AT" --arg sha "$dispatch_sha" \
-                  '[.workflow_runs[] | select(
-                    .event == "workflow_dispatch"
-                    and .head_branch == "master"
-                    and .head_sha == $sha
-                    and .created_at >= $started
-                  )] | sort_by(.created_at) | last // empty' \
-                  <<< "$response"
-              )"
+                -f event=workflow_dispatch -F branch=master -F per_page=100 2>&1
+            )"; then
+              if grep -Eq 'HTTP (500|502|503|504)' <<< "$response"; then
+                retry_delay=$((attempt * 5))
+                echo "::warning::Transient GitHub HTTP 5xx while correlating reconciliation dispatch (attempt $attempt/6); retrying in ${retry_delay}s."
+                sleep "$retry_delay"
+                continue
+              fi
+              echo "::error::GitHub Actions API failed while correlating reconciliation dispatch; refusing to report success." >&2
+              printf '%s\n' "$response" >&2
+              exit 1
+            fi
+            if ! dispatched_run="$(
+              jq -c --arg started "$REFERENCE_AT" --arg sha "$dispatch_sha" \
+                '[.workflow_runs[] | select(
+                  .event == "workflow_dispatch"
+                  and .head_branch == "master"
+                  and .head_sha == $sha
+                  and .created_at >= $started
+                )] | sort_by(.created_at) | last // empty' \
+                <<< "$response"
+            )"; then
+              echo "::error::GitHub Actions API returned malformed reconciliation run history; refusing to report success." >&2
+              exit 1
+            fi
             if [[ -n "$dispatched_run" ]]; then
               run_id="$(jq -r '.id' <<< "$dispatched_run")"
               run_url="$(jq -r '.html_url' <<< "$dispatched_run")"
@@ -581,21 +594,34 @@ jobs:
 
           dispatched_run=""
           for attempt in $(seq 1 6); do
-            response="$(
+            if ! response="$(
               gh api -X GET \
                 "repos/${GITHUB_REPOSITORY}/actions/workflows/inspect-vps.yml/runs" \
-                -f event=workflow_dispatch -F branch=master -F per_page=100
-            )"
-              dispatched_run="$(
-                jq -c --arg started "$REFERENCE_AT" --arg sha "$dispatch_sha" \
-                  '[.workflow_runs[] | select(
-                    .event == "workflow_dispatch"
-                    and .head_branch == "master"
-                    and .head_sha == $sha
-                    and .created_at >= $started
-                  )] | sort_by(.created_at) | last // empty' \
-                  <<< "$response"
-              )"
+                -f event=workflow_dispatch -F branch=master -F per_page=100 2>&1
+            )"; then
+              if grep -Eq 'HTTP (500|502|503|504)' <<< "$response"; then
+                retry_delay=$((attempt * 5))
+                echo "::warning::Transient GitHub HTTP 5xx while correlating inspection dispatch (attempt $attempt/6); retrying in ${retry_delay}s."
+                sleep "$retry_delay"
+                continue
+              fi
+              echo "::error::GitHub Actions API failed while correlating inspection dispatch; refusing to report success." >&2
+              printf '%s\n' "$response" >&2
+              exit 1
+            fi
+            if ! dispatched_run="$(
+              jq -c --arg started "$REFERENCE_AT" --arg sha "$dispatch_sha" \
+                '[.workflow_runs[] | select(
+                  .event == "workflow_dispatch"
+                  and .head_branch == "master"
+                  and .head_sha == $sha
+                  and .created_at >= $started
+                )] | sort_by(.created_at) | last // empty' \
+                <<< "$response"
+            )"; then
+              echo "::error::GitHub Actions API returned malformed inspection run history; refusing to report success." >&2
+              exit 1
+            fi
             if [[ -n "$dispatched_run" ]]; then
               run_id="$(jq -r '.id' <<< "$dispatched_run")"
               run_url="$(jq -r '.html_url' <<< "$dispatched_run")"
