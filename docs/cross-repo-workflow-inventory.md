@@ -502,3 +502,35 @@ No workflow was added or removed in this checkpoint. Keep CI, tests, security, a
 - Media backend/frontend and MicroFE Shell/WS/NATS are 1/1 Running with registry digests. TCE/Auth/Keycloak are 0/0 maintenance, not healthy. Stock Admin (2) and desired Backend (1) remain ImagePullBackOff on tag `12d63b4` with no registry digest; legacy Backend/Frontend 1/1 have only local image IDs and are not promotion evidence.
 - All six native schedule current-age/inter-arrival budgets fail. Manual inspection rerun is not native schedule evidence. TCE market-scan schedule unchanged.
 - Platform #1632/#1633 validations and post-merge validations PASS; inspection PR #1634 exact-head validation PASS. TCE #1037 exact-head and post-merge checks PASS. No workflow removed, no SSH/Compose authority, Platform remains sole production apply authority.
+
+
+## Latest workflow inventory verification — 2026-11-11 19:01 ICT / 12:01:39 UTC
+
+### Repository workflow and ownership snapshot
+
+| Repository | Current master | Latest workflow evidence | Ownership / preserved lanes |
+|---|---|---|---|
+| Platform Infra | `8da047c223a2c10b5e0dd6a08aa8770fbc7f92c1` | `validate-manifests` #43009993417 PASS. Native reconcile #42993779924 (schedule/success), inspection #42981286761 (schedule/success), recovery #42986496462 (schedule/success), watchdog #42986833403 (schedule/failure). | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, rollout and health verification. Preserve reconcile, read-only inspection, recovery, watchdog, manifest/contract validation, backup and guarded maintenance workflows. |
+| TCE Dashboard | `5b425bdeab457e943bcecf1831836fc698e24394` | Master WF-01 #43008514423 PASS, WF-05 #43008514459 PASS, WF-02 #43008514481 PASS. Native WF-06 #43003016447 FAIL (four HTTP 503 probes); native WF-12 #42996293386 FAIL (WF-06 source stale, queue 0m). | Owns app tests/builds/immutable GHCR publication, strict public health probes, integration/backup and maintenance-aware recovery. Preserve WF-06 HTTP 200, WF-12 schedule watchdog, WF-13 maintenance-aware fallback, WF-07 integration/backup and release publishers. |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | CI #42610360402 PASS; scheduled scraper #42457182511 FAIL CLOSED because `VNSTOCK_API_KEY` was empty. | Owns app tests/builds/native ARM64 immutable publication only if retention is approved. Preserve fail-closed scraper and gated publisher; no secret in Git/logs/chat and no publication while retirement scope remains active. |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | CI #42539512417 PASS; last full K3s snapshot shows backend/frontend 1/1 with registry digest references; runner service/listener active. | Owns tests/builds/immutable publication. Preserve CI/release. Runner retirement requires remote unregister, backup/retention and DNS ownership evidence. |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | CI #42654579277 PASS; Auth remains 0/0 maintenance; Auth runtime Secret was provisioned/verified in historical reconciliation #43003088695 with values suppressed. | Owns Auth tests/builds/release provenance/immutable publication. Preserve CI/security/release. Zero replicas and OIDC/health 503 are not live health. |
+
+### Open PRs and checks
+
+- Platform open owner-decision drafts: #1314, #544, #541 and #539; TCE/Stock/Media have no open PRs; Authentication draft #76 remains open.
+- Exact-head PR validation evidence: Platform #1314 #42161859747 PASS, #544 #38575430454 PASS, #541 #38567431761 PASS, #539 #38548718033 PASS; Auth #76 #41329425940 PASS (Supabase Preview skipped by design). Keep these drafts unmerged pending their documented owner decisions.
+- Current master refs were read directly from `refs/heads/master`. Direct branch-protection GET returned 403 for all five repositories; repository metadata allows squash, merge commit and rebase. Do not claim effective inherited rulesets are absent; administrator verification is required.
+
+### Schedule and runtime evidence
+
+- At 12:01:39Z, all six native schedule lanes exceed both current-age and inter-arrival budgets. Latest run IDs/gaps: Platform reconcile #42993779924 / 14,244s; inspection #42981286761 / 25,617s; recovery #42986496462 / 24,822s; watchdog #42986833403 / 24,297s; TCE WF-06 #43003016447 / 12,853s; WF-12 #42996293386 / 13,126s. Do not count manual, push, `workflow_run` or `repository_dispatch` as native delivery.
+- Watchdog logs confirm the four Platform schedule inter-arrival failures. WF-12 logs report WF-06 source #42949191917 age 399m and queue 0m. WF-06 logs confirm all four public endpoints returned 503 rather than the required 200.
+- K3s snapshot #42994074939 was generated 11:06:54Z; age 3,285s / 4,500s budget at reference, expires 12:21:54Z. Media/MicroFE/NATS 1/1; TCE/Auth/Keycloak 0/0 maintenance; Stock desired Admin/Backend ImagePullBackOff; legacy Stock Backend/Frontend 1/1 without registry RepoDigest. Preserve the Bound debug PVC.
+- Reconciliation #43003088695 succeeded on old SHA `ff401dad`, not current master `8da047c2`; it found no drift, verified GHCR read access and Auth runtime Secret, left shared `ghcr-pull` unchanged, and skipped apply/image replacement/rollout. It is older than the 20-minute recovery freshness window. Run current-master `reconcile-vps.yml` in `mode=plan` before any deployment decision.
+- TCE `TCE_MAINTENANCE_MODE` Actions variable could not be read through the current connector; its value remains unverified. Keep WF-06 strict and WF-12 active. Do not change the TCE market-scan schedule.
+
+### Authority and safety
+
+- App repositories retain tests/builds and immutable GHCR publication. Platform Infra remains the only production manifest/credential/GitOps apply, rollout and health authority.
+- No workflow removed or added, no direct SSH/Compose authority, no new image publication or digest promotion, no current-master production apply, no workload rollout, no namespace/PVC/PV deletion, no runner retirement, no credential rotation, no DNS/database/storage mutation and no host reboot.
