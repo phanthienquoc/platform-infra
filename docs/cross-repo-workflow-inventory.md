@@ -1,14 +1,14 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-12 02:58 ICT (2026-11-11 19:58:49 UTC).
+Last reviewed: 2026-11-12 03:05 ICT (2026-11-11 20:04:47 UTC).
 
-This is the compact current workflow inventory. Historical append-only inventory is preserved at `docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md`; timestamped checkpoints remain under `docs/cross-repo-workflow-inventory-checkpoints/`. This review used read-only GitHub Actions REST run listings (first page per repository/query). Workflow dispatch is not exposed by the current connector.
+This is the compact current workflow inventory. Historical append-only inventory is preserved at `docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md`; timestamped checkpoints remain under `docs/cross-repo-workflow-inventory-checkpoints/`. This review used read-only GitHub Actions REST run listings (first page per repository/query). Workflow dispatch is not exposed by the current connector. PR #1650 merged at `31b1245c`; exact-head #43092982966 and post-merge #43093109452 both PASS.
 
 ## Repository refs, PRs and workflow ownership
 
 | Repository | Master SHA | Open PRs | App-owned workflows | Platform-owned workflows |
 |---|---|---|---|---|
-| Platform Infra | `3e6d3f48` | #1314/#544/#541/#539 (owner decisions) | Validation, inspection and repository automation only | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, K3s inspection, rollout and health verification |
+| Platform Infra | `31b1245c` | #1314/#544/#541/#539 (owner decisions) | Validation, inspection and repository automation only | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, K3s inspection, rollout and health verification |
 | TCE Dashboard | `5b425bde` | None | Tests/builds, immutable GHCR publishers, strict WF-06 HTTP-200 probes, WF-12 schedule watchdog, WF-13 maintenance-aware fallback, integration and backup | No direct production apply; authenticated release handoffs to Platform |
 | StockDividend | `b1b5e177` | None | Tests/builds, native ARM64 immutable publisher, fail-closed scraper | No active production manifests; residual `stock-prod` resources remain in K3s and require owner retirement/restoration decision |
 | Media Generation | `dcd69869` | None | Tests/builds, immutable GHCR publisher and release workflow | No active production manifests; residual Media pods 1/1 and runner active. Decommission requires backup/retention, DNS ownership and remote runner unregister evidence |
@@ -18,7 +18,8 @@ This is the compact current workflow inventory. Historical append-only inventory
 
 | Repository / workflow | Run | Event / result | Notes |
 |---|---:|---|---|
-| Platform inspect-vps | #43089176130 | workflow_dispatch / SUCCESS | Fresh snapshot generated 19:39:15Z; inspection PR #1649 merged at master `3e6d3f48`. |
+| Platform validate-manifests | #43093109452 | push / SUCCESS | PR #1650 post-merge validation on master `31b1245c`; all required validation steps PASS. |
+| Platform inspect-vps | #43089176130 | workflow_dispatch / SUCCESS | Fresh snapshot generated 19:39:15Z; inspection PR #1649 merged at `3e6d3f48`. |
 | Platform validate-manifests | #43089441872 | workflow_dispatch / SUCCESS | Exact inspection PR head validation, 20/20 steps PASS; not a separate post-merge master run. |
 | Platform reconcile-vps | #43088879697 | workflow_dispatch / SUCCESS | Parent `9093831c`, mode=apply, image changes false; five GHCR package preflight PASS; Auth Secret verified; shared `ghcr-pull` unchanged; no drift; apply/image replacement/rollout skipped. |
 | Platform recover-stale-ops | #43089116141 | workflow_dispatch / SUCCESS | Manual recovery; not native schedule delivery. |
