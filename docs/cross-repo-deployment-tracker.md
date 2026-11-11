@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-12 06:02 ICT (2026-11-11 23:02:43 UTC).
+Last reviewed: 2026-11-12 06:05 ICT (2026-11-11 23:05:33 UTC).
 
 ## Latest verification — 2026-11-11 23:02:43 UTC / 2026-11-12 06:02:43 ICT
 
@@ -10,7 +10,7 @@ This refresh supersedes the 05:02 ICT snapshot. Direct GitHub REST reads covered
 
 | Repository | Verified master | Open PRs | Latest relevant evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `c0f30978087420e7463e16e9f3196b11151362cb` | #1314/#544/#541/#539 owner-decision drafts | PR #1655 merged by squash; exact-head validation #43116264561 PASS. Native inspection #43116036275 SUCCESS. Recovery-dispatched current-master reconciliation #43116379969 SUCCESS. |
+| phanthienquoc/platform-infra | `9d84aa020c5aacd28c56ef68d5a81a0a9acccfe2` | #1657 recovery API retry fix; #1314/#544/#541/#539 owner-decision drafts | PR #1655 merged by squash; exact-head validation #43116264561 PASS. Native inspection #43116036275 SUCCESS. Recovery-dispatched current-master reconciliation #43116379969 SUCCESS. |
 | phanthienquoc/TCE-dashboard | `5b425bdeab457e943bcecf1831836fc698e24394` | none | Native WF-06 #43073311537 FAIL; native WF-12 #43068077606 FAIL. Manual WF-06 #43088897948 FAIL with four HTTP 503 probes. WF-13 #43088861304 SUCCESS but logged empty `TCE_MAINTENANCE_MODE`. WF-07 integration #43088811861 SUCCESS. |
 | phanthienquoc/stockdividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS. Scraper #42457182511 FAIL CLOSED because `VNSTOCK_API_KEY` is missing. No current-master image publication/promotion is evidenced. |
 | phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS. No current-master production publication is evidenced. Fresh K3s snapshot shows backend/frontend 1/1 with registry RepoDigests; dedicated runner remains active/enabled. |
@@ -1505,3 +1505,9 @@ All six inter-arrival budgets fail. Four current-age budgets fail: Platform insp
 - No new app image publication or digest promotion. No production manifest apply, image replacement or workload rollout in #43073396454 because GitOps drift was false. Auth runtime Secret provisioning/verification occurred; shared `ghcr-pull` was unchanged.
 - No namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot. No workflow is confirmed obsolete/removed. No duplicate SSH/Compose authority.
 - Exact next actions: obtain a fresh read-only K3s inspection before the 4,500s budget expires; continue native scheduler telemetry; GitHub administrator to enforce PR-only/required checks/force-push and deletion protection/squash-only; TCE administrator to verify `TCE_MAINTENANCE_MODE`; TCE/Auth owners to supply release digest/rollback approval; Stock owner to decide retirement/restoration; Media owner to verify remote runner unregister, backup/retention and DNS; Platform operator to obtain maintenance approval before host upgrades/restart.
+
+
+## Recovery controller follow-up — 2026-11-12 06:05 ICT
+
+- PR #1657 adds bounded retry for transient GitHub HTTP 500/502/503/504 during the recovery controller's reconciliation and inspection workflow-dispatch correlation GETs. The previous run #43116633087 failed because GitHub returned HTTP 502 during reconciliation-run correlation after the dispatch itself had succeeded. The change keeps non-5xx/auth failures fail-closed and adds static contract assertions.
+- This is a workflow/validator change only; it does not change cron, dispatch mode, deployment scope, manifest ownership, or production state. Exact-head validation is required before merge.
