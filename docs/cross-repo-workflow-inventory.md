@@ -1,5 +1,45 @@
 # Cross-Repository Workflow Inventory
 
+Last reviewed: 2026-11-12 05:02 ICT (2026-11-11 22:02:56 UTC).
+
+## Latest workflow inventory verification — 2026-11-11 22:02:56 UTC / 2026-11-12 05:02:56 ICT
+
+This verification supersedes the prior 04:02 ICT compact inventory snapshot. Current master refs were read directly from GitHub refs; latest master-branch Actions runs and open PRs were inspected across all five repositories.
+
+### Repository refs, PRs and workflow ownership
+
+| Repository | Master SHA | Open PRs | App-owned workflows | Platform-owned workflows |
+|---|---|---|---|---|
+| Platform Infra | `f2ad42a5` | #1314/#544/#541/#539 (owner decisions) | Manifest validation, read-only inspection and repository automation | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, K3s inspection, rollout and health verification |
+| TCE Dashboard | `5b425bde` | none | Tests/builds, immutable GHCR publishers, strict WF-06 HTTP-200 probes, WF-12 native schedule watchdog, WF-13 maintenance-aware recovery, integration and backup | No direct production apply; authenticated release handoffs to Platform |
+| StockDividend | `b1b5e177` | none | Tests/builds, native ARM64 immutable publisher, fail-closed scraper | No active production manifests; approved K3s decommission remains gated by fresh preflight and owner evidence |
+| Media Generation | `dcd69869` | none | Tests/builds, immutable GHCR publisher and release workflow | No active production manifests; residual K3s workloads/runner require backup, DNS and local/remote runner retirement evidence |
+| Authentication | `eab85fab` | #76 (owner-decision draft) | Auth CI/security, ARM64 immutable release publisher, provenance/SBOM and auth-image-published handoff | No direct production apply; Platform validates dispatch and owns GitOps promotion/reconcile |
+
+### Latest workflow evidence
+
+| Repository / workflow | Run | Event / result | Notes |
+|---|---:|---|---|
+| Platform validate-manifests | #43108386625 | push / IN_PROGRESS | Current master after PR #1653 merge; network-boundary validation step in progress at 22:02:56Z. |
+| Platform PR #1653 validate-manifests | #43100250244 | pull_request / SUCCESS | Exact head `dae50fe614dcdf6432de1b1c616f3034a1146f6c`; 20/20 steps PASS. |
+| Platform inspect-vps | #43089176130 | workflow_dispatch / SUCCESS | Full snapshot generated 19:39:15Z; expired at current reference. |
+| Platform reconcile-vps | #43088879697 | workflow_dispatch / SUCCESS | Parent `9093831c`, apply/all/image changes false; 5 GHCR reads PASS, Auth Secret verified, shared pull Secret unchanged, no drift, apply/image replacement/rollout skipped; expired. |
+| TCE WF-06 / WF-12 / WF-13 | #43088897948 / #43088836266 / #43088861304 | manual FAIL / workflow_run FAIL / workflow_run SUCCESS | WF-06 four 503s; WF-13 logged empty maintenance flag; none resets native schedule age. |
+| TCE WF-07 | #43088811861 | schedule / SUCCESS | Third-party integration only. |
+| Stock CI / scraper | #42610360402 / #42457182511 | push / SUCCESS; schedule / FAILURE | Scraper fail-closed on missing `VNSTOCK_API_KEY`. |
+| Media CI | #42539512417 | push / SUCCESS | No current-master publication evidence. |
+| Authentication CI | #42654579277 | push / SUCCESS | No current-master release evidence. |
+
+### Native schedule and ownership acceptance
+
+Only first-attempt `event=schedule` runs on master count toward cadence. Latest age/gap values at 22:02:56Z are recorded in the deployment tracker: all six age budgets and all six inter-arrival budgets fail. Do not count manual, push, pull_request, workflow_run, repository_dispatch or reruns as native delivery. Keep all cron expressions and TCE market-scan schedule unchanged.
+
+App repositories own tests/builds, security workflows, immutable GHCR publication, provenance and source metadata. Platform Infra alone owns production manifests, shared pull credentials, digest/provenance validation, GitOps plan/apply, K3s rollout and health verification. Keep CI/test/security, backup, integration, manual, release and scheduled workflows; none is proven redundant/obsolete. Do not add competing SSH/Compose deployment authority.
+
+Stock/Media GitOps ownership retirement is merged and decommission scope approved, but namespace deletion is still gated by fresh same-run storage preflight, backup/retention, authoritative DNS, local runner stop/disable/Listener absence, GitHub-side runner unregister and protected production approval. Preserve the separate debug PVC and all TCE/Auth/MicroFE/Keycloak resources.
+
+PR #1653 is merged by squash after exact-head validation #43100250244 passed 20/20 steps. Current master validation #43108386625 is still in progress. Current-master GitOps plan and fresh K3s inspection are not evidenced. Workflow dispatch is not available through the current connector.
+
 Last reviewed: 2026-11-12 04:02 ICT (2026-11-11 21:02:52 UTC).
 
 This is the compact current workflow inventory; the 04:02 ICT verification above supersedes the prior 03:12 ICT snapshot. Historical append-only inventory is preserved at `docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md`; timestamped checkpoints remain under `docs/cross-repo-workflow-inventory-checkpoints/`. This review used read-only GitHub Actions REST run listings (first page per repository/query). Workflow dispatch is not exposed by the current connector. PR #1650 merged at `31b1245c`; PR #1651 merged at `7ff2da75`; PR #1652 merged at `99509adb`; current docs PR #1653 is open with latest exact-head validation #43095125265 queued.
