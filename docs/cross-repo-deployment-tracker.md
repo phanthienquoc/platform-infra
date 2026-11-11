@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-11 12:04 ICT (2026-11-11 05:04:56 UTC).
+Last reviewed: 2026-11-11 12:08 ICT (2026-11-11 05:08:18 UTC).
 
 This is the compact current readiness view. Historical append-only content is preserved under `docs/archive`; timestamped checkpoints remain under `docs/cross-repo-deployment-checkpoints`.
 
@@ -8,7 +8,7 @@ This is the compact current readiness view. Historical append-only content is pr
 
 | Repository | Current master SHA | Open PRs | Latest verified CI / operational evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `bfa50827eacdb6675f718593c0b38cf693a38b01` | #1314, #544, #541, #539 (draft / owner decision) | Post-merge validation #42956212725 PASS; native reconcile and K3s inspection evidence are stale. |
+| phanthienquoc/platform-infra | `0191e968d11a3b9096ddd24d46fa8daeb03fec3a` | #1314, #544, #541, #539 (draft / owner decision) | Post-merge validation #42963772141 PASS; native reconcile and K3s inspection evidence are stale. |
 | phanthienquoc/TCE-dashboard | `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab` | none | WF-06 #42949191917 and manual #42949231253 fail strict HTTP 200 probes (503); WF-12 #42944415193 fails freshness. |
 | phanthienquoc/stockdividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS; scraper #42457182511 failed closed on missing `VNSTOCK_API_KEY`; remains retirement scope. |
 | phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS; last K3s snapshot is stale; runner retirement evidence incomplete. |
@@ -273,3 +273,11 @@ All six current-age checks and all six inter-arrival gaps exceed their configure
 6. Registry administrator: verify GHCR server-side immutable-tag enforcement. TCE owner: verify SSH host fingerprint before any SSH maintenance.
 
 No new GHCR publication, digest promotion, production manifest apply, workload rollout/scaling, namespace/PVC/PV deletion, Media runner retirement, credential rotation, DNS/database/object-storage mutation, host reboot/package upgrade or workflow removal occurred. Preserve all useful CI/test/security, release, backup, integration, manual and scheduled workflows. No duplicate SSH/Compose deployment authority was added. TCE market-scan schedule and all six cron expressions/budgets remain unchanged.
+
+
+## Post-checkpoint merge verification — 2026-11-11 12:08 ICT / 05:08:18 UTC
+
+- Documentation PR #1614 was squash-merged at `0191e968d11a3b9096ddd24d46fa8daeb03fec3a`; direct `refs/heads/master` read matches this SHA.
+- Exact-head validation #42963714334 PASS; post-merge `validate-manifests` #42963772141 PASS.
+- The 12:04 ICT readiness section and checkpoint preserve the pre-merge master SHA `bfa50827...` as a timestamped snapshot. This addendum advances only the compact current master reference.
+- The post-merge Actions run list for SHA `0191e968...` contains only `validate-manifests`; no `reconcile-vps.yml` or `recover-stale-ops.yml` push run was triggered by the docs-only merge.
