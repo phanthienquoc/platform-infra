@@ -8,7 +8,7 @@ This is the compact current readiness view. Historical append-only content is pr
 
 | Repository | Current master SHA | Open PRs | Latest verified CI / operational evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `14e79f1c90f8390636f13a06a899c0de0ab85bd0` | #1314, #544, #541, #539 (draft / owner decision) | Current-master validation #42963960326 PASS; all four Platform native schedule lanes stale; no native run validates current master. |
+| phanthienquoc/platform-infra | `14e79f1c90f8390636f13a06a899c0de0ab85bd0` | #1314, #544, #541, #539 (draft / owner decision) | Current-master post-merge validation #42969724857 PASS; all four Platform native schedule lanes stale; no native schedule run validates current master. |
 | phanthienquoc/TCE-dashboard | `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab` | none | WF-06 #42949191917 and manual #42949231253 fail four strict HTTP 200 probes (503); WF-12 #42944415193 fails freshness. |
 | phanthienquoc/stockdividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS; scraper #42457182511 failed closed on missing `VNSTOCK_API_KEY`; remains retirement scope. |
 | phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS; K3s snapshot stale; runner retirement evidence incomplete. |
