@@ -900,12 +900,12 @@ Open Platform PR exact-head validations remain PASS: #1314 run #42161859747, #54
 
 | Lane | Latest native run | Latest created_at (UTC) | Current age (s) | Inter-arrival gap (s) | Budget (s) |
 |---|---:|---|---:|---:|---:|
-| Platform reconcile | #42993779924 | 09:16:25 | 9,914 | 14,244 | 2,700 |
+| Platform reconcile | #42993779924 | 09:16:25 | 9,914 | 26,585 | 2,700 |
 | Platform inspection | #42981286761 | 07:41:06 | 15,633 | 25,617 | 4,500 |
 | Platform recovery | #42986496462 | 08:22:19 | 13,160 | 24,822 | 2,700 |
 | Platform watchdog | #42986833403 | 08:24:50 | 13,009 | 24,297 | 2,700 |
-| TCE WF-06 | #43003016447 | 10:22:03 | 5,976 | 12,853 | 1,500 |
-| TCE WF-12 | #42996293386 | 09:34:18 | 8,841 | 13,126 | 1,500 |
+| TCE WF-06 | #43003016447 | 10:22:03 | 5,976 | 26,842 | 1,500 |
+| TCE WF-12 | #42996293386 | 09:34:18 | 8,841 | 26,503 | 1,500 |
 
 All six current-age and inter-arrival budgets fail. These are native `event=schedule` runs; manual, push, `workflow_run` and `repository_dispatch` are not substitutes. The Platform watchdog log #42986833403 independently reports the four Platform inter-arrival failures. TCE WF-12 log #42996293386 reports its latest WF-06 source #42949191917 was 399 minutes old while measured runner queue was 0 minutes; this supports a delivery/freshness gap rather than runner queue congestion. No GitHub scheduler enqueue/delivery telemetry is available to attribute the root cause.
 
