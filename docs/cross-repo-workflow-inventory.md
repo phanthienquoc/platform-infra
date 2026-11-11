@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-11 15:09 ICT (2026-11-11 08:09:56 UTC).
+Last reviewed: 2026-11-11 15:18 ICT (2026-11-11 08:18 UTC).
 
 This is the compact current workflow inventory. The previous append-only inventory is preserved at docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md. Historical timestamped workflow checkpoints remain under docs/cross-repo-workflow-inventory-checkpoints/.
 
@@ -14,6 +14,14 @@ This is the compact current workflow inventory. The previous append-only invento
 - Fresh read-only K3s snapshot #42981286761 generated at 07:41:14Z and is 1,722s old at reference (within 4,500s). Node Ready/ARM64; K3s v1.36.3+k3s1; disk 56% / ~20 GiB free; ~19 GiB RAM available; host restart required. Media and MicroFE core pods 1/1; TCE/Auth/Keycloak 0/0 maintenance; Stock Admin/desired Backend ImagePullBackOff; legacy Stock Backend/Frontend 1/1. Media runner service/listener active; retirement evidence incomplete.
 - No new app image publication or digest promotion. No GitOps drift, manifest apply, image replacement or workload rollout in reconciliation #42981589486. Shared pull Secret unchanged; Auth runtime Secret provision/verification succeeded. No namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation or host reboot.
 - Preserve CI/test/security, app-owned immutable publishers, release, backup, integration, manual and scheduled workflows. No workflow confirmed obsolete. No direct SSH/Compose authority. Platform remains the only production apply authority.
+
+## Post-merge verification — 2026-11-11 15:18 ICT
+
+- Platform master advanced documentation-only to `9c2e4e0efb54aad29bcdb82afeaf06c187c60499` through PR #1621.
+- Exact-head validation #42985848211 and post-merge master validation #42985958377 both PASS.
+- Only `validate-manifests` ran after the docs-only merge; no production reconcile/recovery push run was triggered.
+- The 15:09 ICT workflow checkpoint remains the latest operational snapshot; this addendum updates only the Platform master SHA and merge receipt.
+- Workflow ownership and production authority boundaries are unchanged; no workflow was removed, no SSH/Compose authority added, and TCE market-scan schedule unchanged.
 
 ## Ownership and production authority
 
