@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-11 10:01 ICT (2026-11-11 03:01:03 UTC).
+Last reviewed: 2026-11-11 10:55 ICT (2026-11-11 03:55:46 UTC).
 
 This is the compact current readiness view. Historical append-only content is preserved under `docs/archive`; timestamped checkpoints remain under `docs/cross-repo-deployment-checkpoints`.
 
@@ -8,11 +8,11 @@ This is the compact current readiness view. Historical append-only content is pr
 
 | Repository | Current master SHA | Open PRs | Latest verified CI / operational evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `1accff7fd7cc1ae733513dfa7eb6067a660f030a` | #1314, #544, #541, #539 (draft / owner decision) | Master push validation #42935987763 PASS. Manual reconciliation #42949244537 SUCCESS with clean drift and apply skipped; recovery receipt #42949413722 SUCCESS. Manual K3s fallback #42942360712 remains fresh but is within 558s of its 4,500s age limit at the latest reference. |
-| phanthienquoc/TCE-dashboard | `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab` | none | Native WF-06 #42949191917 and manual WF-06 #42949231253 failed all four strict HTTP 200 probes (HTTP 503); native WF-12 #42944415193 failed freshness. TCE remains intentional zero-replica maintenance in Platform. |
-| phanthienquoc/stockdividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 passed. Scraper #42457182511 failed closed because `VNSTOCK_API_KEY` was absent. Stock remains in the approved retirement scope; no production publication or digest handoff. |
-| phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 passed. Inspection #42942360712 shows backend/frontend 1/1 and digest-pinned; dedicated Media runner remains active/enabled and retirement evidence is incomplete. |
-| phanthienquoc/phanthienquoc-authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft / owner decision) | Auth CI #42654579277 passed. Runtime Secret keys verified in reconciliation with values suppressed; Auth remains 0/0 maintenance and public OIDC discovery remains HTTP 503. |
+| phanthienquoc/platform-infra | `9848cdeb97a29ff3833378013f4932e6558cb933` | #1314, #544, #541, #539 (draft / owner decision) | Post-merge validation #42950290166 PASS; latest reconcile/inspection evidence is stale. |
+| phanthienquoc/TCE-dashboard | `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab` | none | WF-06 #42949191917 and manual #42949231253 fail strict HTTP 200 probes (503); WF-12 #42944415193 fails freshness. |
+| phanthienquoc/stockdividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS; scraper #42457182511 failed closed on missing `VNSTOCK_API_KEY`; remains retirement scope. |
+| phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS; last K3s snapshot is stale; runner retirement evidence incomplete. |
+| phanthienquoc/phanthienquoc-authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft / owner decision) | CI #42654579277 PASS; runtime Secret verification is historical; Auth remains 0/0 maintenance and OIDC HTTP 503. |
 ## Open PRs and exact-head checks
 
 - Platform #1314: head `db152c9a17416d1a7f82165597dfe478321bd055`; validation run #42161859747 PASS; draft managed-mail plan remains owner decision.
@@ -166,3 +166,49 @@ All six inter-arrival gaps exceed budget. Five of six current-age checks exceed 
 5. Registry administrator: verify GHCR server-side immutable-tag enforcement. TCE owner: verify SSH host fingerprint before any SSH-based maintenance.
 
 No GHCR publication, digest promotion, production manifest apply, workload rollout/scaling, namespace/PVC/PV deletion, Media runner retirement, credential rotation, DNS/database/object-storage mutation, host reboot or workflow removal occurred in this checkpoint. Shared `ghcr-pull` remained unchanged. Preserve all useful CI/test/security, release, backup, integration, manual and scheduled workflows. No duplicate direct SSH/Compose deployment authority was added. TCE market-scan schedule and all six cron expressions/budgets remain unchanged.
+
+
+## Latest verification — 2026-11-11 10:55 ICT / 03:55:46 UTC
+
+This checkpoint supersedes the 10:01 ICT compact readiness values above. It is a read-only evidence refresh plus documentation update; no production mutation was authorized or performed.
+
+### Direct repository state and open PRs
+
+- Direct master refs at this checkpoint: Platform Infra `9848cdeb97a29ff3833378013f4932e6558cb933`; TCE Dashboard `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab`; StockDividend `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media Generation `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
+- Open PRs remain Platform #1314 (head `db152c9a17416d1a7f82165597dfe478321bd055`), #544 (`c95e7daecb83b65577b54303427fe4ea81adfe06`), #541 (`b8f7c6ba04e3d971336a899b2efd5894662083b3`), #539 (`2dc48b97017ecb08e49682633303a2f1d5e991a1`), and Authentication #76 (`f19cacb0bf2b454b3152bd3a501f6f88d0a14a58`). All remain drafts/owner decisions. No open PRs in TCE, Stock or Media. No head changes were observed; previously recorded exact-head validation remains PASS, with Auth Supabase Preview intentionally skipped.
+- Latest Platform master run is post-merge `validate-manifests` #42950290166 (push, master SHA `9848cdeb...`), completed SUCCESS at 03:04:36Z. Exact-head PR validation #42950213555 also succeeded. The latest 10-run listing contained no later production reconcile/recovery push.
+- Latest TCE native WF-06 #42949191917 (schedule, 02:54:41Z) failed; manual WF-06 #42949231253 (02:55:03Z) also failed. Native WF-12 #42944415193 (02:12:35Z) failed freshness. All four strict public probes remain HTTP 503 versus required 200.
+- Latest app-repository master CI evidence remains Stock #42610360402 PASS (2026-11-09), Media #42539512417 PASS (2026-11-09), and Authentication #42654579277 PASS (2026-11-09). Stock scraper #42457182511 remains failed closed because `VNSTOCK_API_KEY` was absent. No new application build or image publication was observed.
+
+### Native schedule freshness
+
+Reference: 2026-11-11 03:55:46 UTC. Only first-attempt `event=schedule` runs on `master` count. Manual, push, workflow_run and repository_dispatch receipts do not replace native schedule delivery.
+
+| Lane | Latest native run | Previous native run | Current age (s) | Inter-arrival gap (s) | Budget (s) |
+|---|---:|---:|---:|---:|---:|
+| Platform reconcile | #42942147668 | #42909757881 | 7346 | 14244 | 2700 |
+| Platform inspection | #42932368784 | #42887151366 | 12097 | 17791 | 4500 |
+| Platform recovery | #42939222343 | #42906791198 | 8829 | 13889 | 2700 |
+| Platform watchdog | #42940581820 | #42908417737 | 8153 | 13950 | 2700 |
+| TCE WF-06 | #42949191917 | #42922537816 | 3665 | 12853 | 1500 |
+| TCE WF-12 | #42944415193 | #42915709227 | 6191 | 13126 | 1500 |
+
+All six current-age checks and all six inter-arrival gaps exceed their budgets. No newer native schedule run appeared in the current Actions API query. Do not change cron expressions, freshness budgets or the TCE market-scan schedule. GitHub administrator enqueue/delivery/service telemetry remains unavailable and is still required to locate the delivery gap.
+
+### Runtime evidence freshness and deployment authority
+
+- Last full read-only K3s inspection is #42942360712, whose embedded snapshot was generated at 01:55:21Z. At 03:55:46Z its age is 7,225s, beyond the 4,500s budget by 2,725s. It is stale and must not be used to authorize rollout, deletion, restart or health claims. No fresh inspection run appeared in the latest Platform Actions listing.
+- Last manual reconciliation #42949244537 was created at 02:55:10Z; age 3,636s, beyond its 2,700s freshness budget. Native reconciliation #42942147668 is 7,346s old. Recovery receipt #42949413722 is 3,543s old. Their prior results (GHCR read preflight PASS, Auth runtime Secret verified with values suppressed, shared `ghcr-pull` unchanged, drift=false, apply/rollout skipped) are historical evidence only, not current production health.
+- Last-known K3s state from the stale inspection: node Ready/ARM64; K3s v1.36.3+k3s1; disk 56% / about 20 GiB free; about 19 GiB RAM available; host restart required. Media and MicroFE core workloads were 1/1; TCE/Auth/Keycloak were 0/0 maintenance; Stock Admin and desired Backend were ImagePullBackOff on `12d63b4` because the image manifest had no matching platform. Stock legacy Backend/Frontend were 1/1 but no registry RepoDigest evidence was available for promotion.
+- Media runner service/listener was active/enabled. Remote GitHub runner unregister, external DB/object-storage backup/retention and authoritative DNS/provider ownership remain unverified. Stock/Media namespaces remain present pending the guarded retirement workflow. The separate Bound `k3s-debug/k3s-debug-logs` PVC must be preserved.
+- No new GHCR publication, digest promotion, production manifest apply, workload rollout/scaling, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/object-storage mutation or host reboot occurred. Platform remains the sole production apply authority; app repositories remain responsible for tests/builds and immutable publication.
+
+### Exact next actions
+
+1. Platform operator: obtain a fresh read-only `inspect-vps.yml` snapshot before any deployment decision; current inspection and reconciliation evidence are stale. No reboot/package upgrade without a separately approved maintenance window.
+2. GitHub administrator: provide scheduler enqueue, delivery and Actions service telemetry for all six lanes; verify effective PR-only/required-check/force-push/deletion rulesets for all five repositories.
+3. TCE/Auth owners: diagnose four HTTP 503 endpoints and provide approved immutable release digests, rollback references and explicit recovery approval. Preserve strict HTTP 200 probes.
+4. Stock/Media owners: complete external backup/retention, DNS ownership and remote Media runner stop/disable/unregister evidence before the guarded namespace decommission. Stock remains in the retirement scope; do not publish/promote Stock images as a workaround.
+5. Registry administrator: verify GHCR server-side immutable-tag enforcement. TCE owner: verify SSH host fingerprint before any SSH maintenance.
+
+No workflow was removed; none was confirmed redundant/obsolete. Preserve CI/test/security, release, backup, integration, manual and scheduled workflows. No duplicate SSH/Compose deployment authority was added. TCE market-scan schedule unchanged.
