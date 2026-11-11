@@ -39,6 +39,8 @@ Only first-attempt `event=schedule` runs on `master` count. Manual, push, pull_r
 |---|---|---:|---:|---:|---:|
 | Platform reconcile-vps.yml | `7,22,37,52 * * * *` | #43066718643 | 6,189 | 28,867 | 2,700 |
 | Platform inspect-vps.yml | `2,32 * * * *` | #43054529460 | 10,616 | 30,151 | 4,500 |
+
+- A later partial pod inventory appears in reconciliation #43073396454 job logs at 2026-11-11T17:59:42Z. At the 19:00:41Z reference it is 3,659s old: within the 4,500s inspection window but beyond the 2,700s reconciliation window. It showed Media backend/frontend and MicroFE Shell 1/1 Running, plus two Stock Admin pods and one desired Stock Backend pod in ImagePullBackOff. This is not a full inspect-vps snapshot and does not authorize current-master apply.
 | Platform recover-stale-ops.yml | `10,25,40,55 * * * *` | #43058316157 | 9,266 | 29,036 | 2,700 |
 | Platform reconcile-schedule-watchdog | existing schedule unchanged | #43058640134 | 9,145 | 29,006 | 2,700 |
 | TCE WF-06 | existing schedule unchanged | #43073311537 | 3,715 | 54,245 | 1,500 |
