@@ -1,10 +1,60 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-12 03:12 ICT (2026-11-11 20:11:03 UTC).
+Last reviewed: 2026-11-12 04:02 ICT (2026-11-11 21:02:52 UTC).
 
-This is the compact current readiness view. Historical append-only content is preserved below and under `docs/archive`; timestamped checkpoints remain under `docs/cross-repo-deployment-checkpoints`. GitHub Actions run listing was retrieved through read-only Actions REST GET (first page per repository/query). PR #1651 merged at 20:09:00Z; exact-head #43093685819 and post-merge master validation #43093772516 completed SUCCESS.
+This is the compact current readiness view; the 04:02 ICT verification above supersedes the prior 03:12 ICT compact snapshot. Historical append-only content is preserved below and under `docs/archive`; timestamped checkpoints remain under `docs/cross-repo-deployment-checkpoints`. GitHub Actions run listing was retrieved through read-only Actions REST GET (first page per repository/query). PR #1651 merged at 20:09:00Z; exact-head #43093685819 and post-merge master validation #43093772516 completed SUCCESS.
 
-## Repository readiness — direct master refs verified at 20:11:03 UTC
+## Latest verification — 2026-11-12 04:02 ICT / 2026-11-11 21:02:52 UTC
+
+This refresh uses direct master refs, first-page Actions REST run listings, PR metadata and exact-head run/job inspection. Native cadence counts only first-attempt `event=schedule` runs on master. Manual, push, pull_request, workflow_run, repository_dispatch and reruns are not substitutes.
+
+### Direct repository refs and open PRs
+
+| Repository | Verified master SHA | Open PRs | Latest verified app CI / deployment evidence |
+|---|---|---|---|
+| phanthienquoc/platform-infra | `99509adbffb3888ac5bee59042c28292e5010919` | #1653 plus #1314/#544/#541/#539 owner-decision drafts | Master validation #43094091607 PASS. PR #1653 exact head `fb06a347831c5c814f3232a6c56b6694b6c73afc`, base `99509adb`, remains open/mergeable. Exact-head validation #43095467009 has been queued since 20:20:41Z; latest GET shows status=queued and its jobs collection is empty. Earlier queued validations are for superseded commits; older completed successes are not exact-head evidence. |
+| phanthienquoc/TCE-dashboard | `5b425bdeab457e943bcecf1831836fc698e24394` | none | WF-06 manual #43088897948 FAIL (four HTTP 503); latest native WF-06 #43073311537 FAIL; latest native WF-12 #43068077606 FAIL; WF-12 workflow_run #43088836266 FAIL; WF-13 workflow_run #43088861304 SUCCESS but its log showed `TCE_MAINTENANCE_MODE` empty; WF-07 integration schedule #43088811861 PASS (not WF-06/WF-12 health). |
+| phanthienquoc/stockdividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS. Scraper schedule #42457182511 FAIL CLOSED because `VNSTOCK_API_KEY` is missing. Latest successful image publication in the retrieved run window is #41563856933 (2026-11-03, older source SHA); no current-master publication or promotion is evidenced. |
+| phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS. Latest successful WF-03 publication in the retrieved run window is #41158598649 (2026-10-31, older source SHA); no current-master publication or Platform handoff is evidenced. |
+| phanthienquoc/phanthienquoc-authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 owner-decision draft | CI #42654579277 PASS. Latest successful release #41040510320 (2026-10-30, older source SHA); no current-master release/handoff is evidenced. |
+
+### Current native schedule freshness — reference 21:02:52Z
+
+| Lane | Latest qualifying native run | Previous | Age (s) | Gap (s) | Budget (s) |
+|---|---:|---:|---:|---:|---:|
+| Platform reconcile-vps.yml | #43066718643 | #42993779924 | 13,520 | 28,867 | 2,700 |
+| Platform inspect-vps.yml | #43054529460 | #42981286761 | 17,947 | 30,159 | 4,500 |
+| Platform recover-stale-ops.yml | #43058316157 | #42986496462 | 16,597 | 29,036 | 2,700 |
+| Platform reconcile-schedule-watchdog | #43058640134 | #42986833403 | 16,476 | 29,006 | 2,700 |
+| TCE WF-06 | #43073311537 | #42949191917 | 11,046 | 54,245 | 1,500 |
+| TCE WF-12 | #43068077606 | #42996293386 | 13,027 | 28,287 | 1,500 |
+
+All 6/6 current-age budgets and 6/6 inter-arrival budgets fail. TCE WF-06 and WF-12 latest qualifying native runs are both failures. WF-07 integration success, WF-13 workflow_run success, manual WF-06 runs and rerun attempts do not reset native schedule age. Preserve all cron expressions and the TCE market-scan schedule.
+
+### Runtime evidence freshness and interpretation
+
+- Latest full K3s inspection #43089176130 generated its snapshot at 19:39:15Z. At 21:02:52Z age=5,017s, exceeding the 4,500s budget by 517s. It is historical only; no current workload-health or decommission decision may rely on it.
+- Last successful reconciliation #43088879697 ran at 19:37:08Z on parent SHA `9093831c`, `mode=apply`, target=all, image changes=false. At 21:02:52Z age=5,144s, exceeding the 2,700s budget by 2,444s. Historical results: five GHCR package reads PASS; Auth runtime Secret provisioned/verified with values suppressed; shared `ghcr-pull` unchanged; drift=false; manifest apply/image replacement/rollout skipped. It is not current-master authorization.
+- Last-known K3s state from #43089176130: Media backend/frontend 1/1; MicroFE Shell/WS/NATS 1/1; TCE/Auth/Keycloak 0/0 maintenance; Stock desired Admin (two pods) and Backend (one pod) ImagePullBackOff on `12d63b4`; separate `k3s-debug/k3s-debug-logs` PVC 1Gi Bound/RWO. Media runner service was active/enabled with Listener present. Because the snapshot is expired, all of these are last-known observations, not current assertions.
+- Stock/Media decommission scope is approved and GitOps ownership retirement is merged. K3s namespace deletion remains blocked by missing fresh same-run preflight, external backup/retention evidence, authoritative DNS evidence and proof that the dedicated Media runner is stopped/disabled/unregistered. Preserve the separate debug PVC and all TCE/Auth/MicroFE/Keycloak resources.
+- WF-13 #43088861304 logged an empty `TCE_MAINTENANCE_MODE`; the workflow maps empty to `enabled=false`. The current repository variable value is not readable through this integration. Do not infer the current setting from that historical run.
+- The latest PR #1653 exact-head validation #43095467009 is queued (created 20:20:41Z; ~42 minutes old at this reference) with no jobs assigned/returned. Seven recent validation attempts for successive PR commits are queued; older successful validations target superseded heads. This establishes an Actions queue delay, not its root cause.
+
+### Exact next actions and safety
+
+1. Platform operator: obtain a fresh read-only `inspect-vps.yml` run; the previous full snapshot is expired.
+2. Platform operator: dispatch `reconcile-vps.yml` on current master `99509adb` with `mode=plan`; do not apply based on the expired parent-SHA reconciliation.
+3. Platform CI/GitHub administrator: investigate why exact-head `validate-manifests` #43095467009 remains queued with no job; do not merge PR #1653 until an exact-head run completes successfully.
+4. TCE administrator: verify the current repository variable; set `TCE_MAINTENANCE_MODE=true` only for an approved zero-replica maintenance window, otherwise restore service replicas. Keep strict HTTP-200 probes.
+5. Media operator/decommission owner: provide external backup/retention and authoritative DNS evidence; stop/disable the dedicated runner and verify both local Listener absence and GitHub-side registration removal; then run the protected same-run `mode=plan` before any delete.
+6. GitHub administrator: enforce PR-only, required CI/deployment checks, force-push/deletion protection and squash-only across all five repositories.
+
+No workflow dispatch, new GHCR publication, digest promotion, production apply, workload rollout, namespace/PVC/PV deletion, runner stop/unregister, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot occurred in this refresh. The current GitHub connector exposes read operations but no workflow-dispatch action. Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.
+
+
+## Previous compact snapshot — 2026-11-12 03:12 ICT
+
+### Repository readiness — direct master refs verified at 20:11:03 UTC
 
 | Repository | Current master SHA | Open PRs | Latest verified CI / operational evidence |
 |---|---|---|---|

@@ -1,8 +1,24 @@
 # StockDividend and Media Generation decommission plan
 
-Status: GitOps ownership retirement and the guarded manual decommission workflow are merged. The approved K3s decommission scope remains in force; namespace/workload deletion and dedicated Media runner retirement have **not** been executed. The delete gate is blocked by the active/enabled Media runner, unverified GitHub runner registration, missing external backup/retention and authoritative DNS evidence, and protected production Environment approval.
+Status: GitOps ownership retirement and the guarded manual decommission workflow are merged. The approved K3s decommission scope remains in force; namespace/workload deletion and Media runner retirement have not been executed. The last full snapshot is now expired; deletion remains blocked pending fresh same-run evidence, external backup/retention and DNS proof, and verified runner retirement.
 
-## Latest full read-only inspection — 2026-11-12 03:12 ICT / 2026-11-11 20:11:03 UTC
+## Current gate status — 2026-11-12 04:02 ICT / 2026-11-11 21:02:52 UTC
+
+The last full inspection #43089176130 was generated at 19:39:15Z. Its age at this reference is 5,017s, beyond the 4,500s freshness budget by 517s. It is now historical evidence only; this checkpoint does not assert that the previously observed workload or runner state is still current.
+
+The last-known snapshot showed:
+- `media-prod` backend/frontend 1/1 with registry RepoDigests; the dedicated Media runner service active/enabled and `Runner.Listener` present.
+- `stock-prod` with two desired Admin pods and one desired Backend pod in ImagePullBackOff for tag `12d63b4`, error `no match for platform in manifest`; legacy Backend/Frontend 1/1.
+- No PVC/PV claims or VolumeSnapshot references in the two target namespaces. Preserve the separate `k3s-debug/k3s-debug-logs` PVC (1Gi, Bound, RWO).
+- Target namespaces still contained Deployments, ReplicaSets, Services, Ingresses and namespaced Secrets; namespace deletion would remove these resources.
+- External backup/retention, authoritative DNS ownership and GitHub-side runner unregister remained unverified.
+
+No newer full inspection or protected `decommission-stock-media.yml` plan run is evidenced in this pass. The connector does not expose workflow dispatch. Do not infer that the Media runner has since been retired or that DNS/backup gates are satisfied. No stop/unregister/delete operation was executed. The protected delete workflow must repeat the storage preflight in the same run and verify local service/Listener plus remote GitHub registration before deleting only `stock-prod` and `media-prod`.
+
+
+## Previous inspection snapshot — 2026-11-12 03:12 ICT
+
+### Latest full read-only inspection — 2026-11-12 03:12 ICT / 2026-11-11 20:11:03 UTC
 
 Source: [inspect-vps #43089176130](https://github.com/phanthienquoc/platform-infra/actions/runs/43089176130), snapshot `debug/vps-latest.md`, exact-head validated by #43089441872 and merged through inspection PR [#1649](https://github.com/phanthienquoc/platform-infra/pull/1649) at `3e6d3f48`. Subsequent PRs #1650–#1652 changed documentation only; the active production manifest tree is unchanged. Snapshot generated at `2026-11-11T19:39:15Z`; at the 20:11:03Z reference its age is 1,908s within the 4,500s budget, with 2,592s remaining.
 
@@ -171,7 +187,7 @@ Merged Platform PR #1301 removed both application manifest trees from the produc
 5. The operation aborts if either target namespace is missing, any PVC exists, any PV claim or VolumeSnapshot/VolumeSnapshotContent reference still points to either namespace, any typed confirmation is wrong, or the installed runner policy is not v15. Review the fresh inventory and resolve storage before retrying; never delete PVs as a workaround.
 6. Capture a fresh post-decommission `inspect-vps.yml` run and verify the two namespaces are absent and TCE/Auth/MicroFE/Keycloak remain unchanged.
 
-## Current execution state — 2026-11-12 03:12 ICT / 20:11:03 UTC
+## Historical execution state — 2026-11-12 03:12 ICT / 20:11:03 UTC
 
 - GitOps ownership retirement is merged and the controlled decommission scope is approved. K3s namespace/workload deletion and Media runner retirement have not been executed.
 - Latest full read-only inspection: [#43089176130](https://github.com/phanthienquoc/platform-infra/actions/runs/43089176130), generated 2026-11-11T19:39:15Z and committed by inspection PR [#1649](https://github.com/phanthienquoc/platform-infra/pull/1649). At 20:11:03Z age=1,908s within the 4,500s budget (2,592s remaining). Node `tce-k3s-01` Ready/ARM64; Ubuntu 22.04.5; K3s v1.36.3+k3s1; containerd 2.3.2-k3s2; disk 56% (~20GiB free); RAM ~19GiB available. Host reports restart required with updates pending; no reboot.

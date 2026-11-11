@@ -1,10 +1,51 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-12 03:12 ICT (2026-11-11 20:11:03 UTC).
+Last reviewed: 2026-11-12 04:02 ICT (2026-11-11 21:02:52 UTC).
 
-This is the compact current workflow inventory. Historical append-only inventory is preserved at `docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md`; timestamped checkpoints remain under `docs/cross-repo-workflow-inventory-checkpoints/`. This review used read-only GitHub Actions REST run listings (first page per repository/query). Workflow dispatch is not exposed by the current connector. PR #1650 merged at `31b1245c`; PR #1651 merged at `7ff2da75`; PR #1652 merged at `99509adb`; current docs PR #1653 is open with latest exact-head validation #43095125265 queued.
+This is the compact current workflow inventory; the 04:02 ICT verification above supersedes the prior 03:12 ICT snapshot. Historical append-only inventory is preserved at `docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md`; timestamped checkpoints remain under `docs/cross-repo-workflow-inventory-checkpoints/`. This review used read-only GitHub Actions REST run listings (first page per repository/query). Workflow dispatch is not exposed by the current connector. PR #1650 merged at `31b1245c`; PR #1651 merged at `7ff2da75`; PR #1652 merged at `99509adb`; current docs PR #1653 is open with latest exact-head validation #43095125265 queued.
 
-## Repository refs, PRs and workflow ownership
+## Latest workflow inventory verification — 2026-11-12 04:02 ICT / 2026-11-11 21:02:52 UTC
+
+### Repository refs, open PRs and latest workflow evidence
+
+| Repository | Master SHA | Open PRs | Latest relevant evidence |
+|---|---|---|---|
+| Platform Infra | `99509adb` | #1653 (documentation PR), #1314/#544/#541/#539 (owner decisions) | Master `validate-manifests` #43094091607 PASS. PR #1653 head `fb06a347`; exact-head #43095467009 queued since 20:20:41Z with no jobs. Older validations on previous PR commits do not satisfy exact-head merge requirements. |
+| TCE Dashboard | `5b425bde` | none | Native WF-06 #43073311537 FAIL; native WF-12 #43068077606 FAIL; manual WF-06 #43088897948 returns four HTTP 503; WF-13 #43088861304 workflow_run success but maintenance variable logged empty; WF-07 #43088811861 schedule success is integration-only. |
+| StockDividend | `b1b5e177` | none | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED (missing `VNSTOCK_API_KEY`); latest successful Build and Publish Images #41563856933 is 2026-11-03 and not a current-master publication. |
+| Media Generation | `dcd69869` | none | CI #42539512417 PASS; latest successful WF-03 publication #41158598649 is 2026-10-31 and not a current-master publication. |
+| Authentication | `eab85fab` | #76 owner-decision draft | CI #42654579277 PASS; latest successful auth release #41040510320 is 2026-10-30 and not a current-master release. |
+
+### Native schedule inventory — reference 21:02:52Z
+
+| Lane | Latest qualifying native run | Previous | Age (s) | Gap (s) | Budget (s) |
+|---|---:|---:|---:|---:|---:|
+| Platform reconcile-vps.yml | #43066718643 | #42993779924 | 13,520 | 28,867 | 2,700 |
+| Platform inspect-vps.yml | #43054529460 | #42981286761 | 17,947 | 30,159 | 4,500 |
+| Platform recover-stale-ops.yml | #43058316157 | #42986496462 | 16,597 | 29,036 | 2,700 |
+| Platform reconcile-schedule-watchdog | #43058640134 | #42986833403 | 16,476 | 29,006 | 2,700 |
+| TCE WF-06 | #43073311537 | #42949191917 | 11,046 | 54,245 | 1,500 |
+| TCE WF-12 | #43068077606 | #42996293386 | 13,027 | 28,287 | 1,500 |
+
+All six native cadence lanes exceed both current-age and inter-arrival budgets. Count only first-attempt `event=schedule` runs on master. Manual, push, pull_request, workflow_run, repository_dispatch and rerun attempts are excluded. Keep existing TCE WF-06/WF-12/WF-13 contracts and all cron expressions; no market-scan schedule change.
+
+### Runtime freshness, ownership and preservation
+
+- Full K3s inspection #43089176130 (generated 19:39:15Z) is expired at this reference: age 5,017s vs 4,500s budget. Reconciliation #43088879697 (19:37:08Z, parent SHA `9093831c`) is expired: age 5,144s vs 2,700s budget. Both are historical evidence only.
+- Historical reconciliation verified five GHCR package reads and Auth runtime Secret, left shared `ghcr-pull` unchanged, found no drift, and skipped apply/image replacement/rollout. No current-master plan or rollout is evidenced.
+- Last-known Stock desired images fail ARM64 manifest resolution; Media workloads were 1/1 and the dedicated Media runner active/enabled with Listener present. Because the full snapshot is expired, do not assert these as current without a fresh inspection.
+- Stock/Media GitOps ownership retirement and the guarded manual decommission workflow remain in force. The delete gate requires fresh same-run storage preflight, external backup/retention and authoritative DNS evidence, local runner service inactive/disabled, Listener absent, GitHub-side runner registration absent, exact attestations and protected production Environment approval. Do not delete shared Platform runner or the separate `k3s-debug` PVC.
+- App repositories retain ownership of tests/builds, immutable GHCR publication and provenance. Platform Infra alone owns production manifests, shared pull credentials, digest promotion, GitOps plan/apply, rollout and health verification.
+- Preserve CI, tests, security, backup, integration, manual, release and scheduled workflows. No workflow is confirmed redundant/obsolete. No duplicate direct SSH/Compose deployment authority.
+
+### Current PR and merge gate
+
+PR [#1653](https://github.com/phanthienquoc/platform-infra/pull/1653) remains open/mergeable on exact head `fb06a347831c5c814f3232a6c56b6694b6c73afc`. Latest exact-head validation #43095467009 is queued and has no jobs. Do not merge until that exact head receives a completed successful validation and the PR head is re-read immediately before squash merge.
+
+
+## Previous inventory snapshot — 2026-11-12 03:12 ICT
+
+### Repository refs, PRs and workflow ownership
 
 | Repository | Master SHA | Open PRs | App-owned workflows | Platform-owned workflows |
 |---|---|---|---|---|
