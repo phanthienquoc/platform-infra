@@ -638,3 +638,32 @@ Only first-attempt `event=schedule` runs on `master` count. Platform reconcile #
 - Branch governance remains unverified/enforced: all five master branch API records report `protected=false` and required-check enforcement off; repository metadata permits merge commit and rebase as well as squash. Effective inherited organization rulesets need administrator verification.
 - Ownership remains unchanged: app repositories own tests/builds and immutable GHCR publication; Platform Infra alone owns production manifests, shared pull credentials, provenance/digest promotion, GitOps plan/apply, rollout and runtime verification.
 - No new GHCR publication/promotion, current-master GitOps plan/apply, manifest change, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot. No workflow is confirmed redundant/obsolete. No duplicate SSH/Compose authority. TCE market-scan schedule unchanged.
+
+
+## Latest workflow inventory verification — 2026-11-12 01:00 ICT / 18:00:25 UTC
+
+### Repository refs and workflow evidence
+
+| Repository | Current master | Latest relevant evidence | Ownership / preservation |
+|---|---|---|---|
+| Platform Infra | `fc9318db` | Inspection PR #1646 merged; inspection #43067027719 SUCCESS. Current-master manual reconcile #43073396454 SUCCESS (no drift; manifest/image apply and rollout skipped). Latest native scheduled reconcile #43066718643 SUCCESS on parent SHA `ee5485b`. | Sole production manifests, shared GHCR pull credentials, provenance/digest promotion, GitOps plan/apply, rollout and runtime verification. Preserve native schedules, manual reconciliation, read-only inspection, recovery, watchdog, validation, backup and guarded maintenance. |
+| TCE Dashboard | `5b425bde` | Native WF-06 #43073311537 FAIL on four HTTP-200 probes (503); native WF-12 #43068077606 FAIL. WF-12 workflow_run #43073350823 SUCCESS is not native delivery; WF-13 #43073377037 SKIPPED. | Owns tests/builds/immutable GHCR publication and strict public HTTP-200 health probes. Preserve WF-06, WF-12 native monitoring, WF-13 maintenance-aware fallback, integration/backup and release workflows. TCE/Auth remain 0/0 maintenance; do not weaken probes. |
+| StockDividend | `b1b5e177` | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED on missing `VNSTOCK_API_KEY`. Desired Admin/Backend `12d63b4` ImagePullBackOff; legacy Backend/Frontend `23b2878` are 1/1 with registry RepoDigests, but are not evidence for desired image repair. | Owns app tests/builds/native ARM64 immutable publication only if owner reverses retirement. Preserve fail-closed scraper and gated publisher; no secret in Git/logs/chat. |
+| Media Generation | `dcd69869` | CI #42539512417 PASS. Latest inspection snapshot shows backend/frontend 1/1 with registry RepoDigests; dedicated runner active/enabled. | Owns tests/builds/immutable publication. Preserve CI/release. Runner retirement requires remote unregister, backup/retention and DNS ownership evidence. |
+| Authentication | `eab85fab` | CI #42654579277 PASS; Auth remains 0/0 maintenance. Current-master reconciliation provisioned/verified runtime Secret with values suppressed; HTTPS/TLS probe passed, but no live Auth workload health is asserted. | Owns Auth tests/builds/release provenance/immutable publication. Preserve CI/security/release; zero replicas and OIDC 503 are not live health. |
+
+### Open PRs and branch governance
+
+- Open owner-decision drafts: Platform #1314/#544/#541/#539; Auth #76. No open PRs in TCE/Stock/Media. PR #1646 (automated read-only VPS inspection snapshot) is merged at `fc9318db`.
+- Repository metadata permits squash, merge commit and rebase across all five repositories. Effective inherited organization rulesets/branch protection are not established by these reads; administrator must enforce PR-only, required CI/deployment checks, force-push/deletion protection and squash-only.
+
+### GitOps, image and runtime evidence
+
+- Current-master manual reconciliation #43073396454: GHCR read preflight passed five packages; Auth runtime Secret provisioned/verified with values suppressed; shared `ghcr-pull` unchanged; no blocked image-pull failures in MicroFE Auth/Shell/WS or TCE service/frontend; TCE release pairing `prod-v0.1.0-e75e338` passed; drift=false; manifest apply/image replacement/rollout skipped. TCE/Auth intentionally zero-replica maintenance; MicroFE active-scope health passed; Keycloak skipped.
+- Latest K3s snapshot #43067027719 generated 17:19:36Z; at 18:00:25Z age 2,449s / 4,500s budget. Node Ready/ARM64, disk 56% (~20GiB free), ~19GiB RAM available, host restart required. Media/MicroFE/NATS 1/1. TCE/Auth/Keycloak 0/0; public OIDC 503. Stock desired Admin (2 pods) and Backend (1 pod) ImagePullBackOff due to missing platform-compatible manifest for tag `12d63b4`. Legacy Stock Backend/Frontend are 1/1 with old `23b2878` registry digests, not promotion evidence for desired release. Preserve PVC `k3s-debug/k3s-debug-logs`; no cleanup/reboot.
+- Native schedule reference 18:00:25Z: Platform reconcile #43066718643 age 2,573s/gap 28,867s; inspection #43054529460 age 7,000s/gap 30,151s; recovery #43058316157 age 5,650s/gap 29,036s; watchdog #43058640134 age 5,529s/gap 29,006s; TCE WF-06 #43073311537 age 99s/gap 54,245s; WF-12 #43068077606 age 2,080s/gap 28,287s. All six inter-arrival budgets fail; four current-age budgets fail. Do not count manual fallback, workflow_run, repository_dispatch or rerun attempts as native schedule delivery. TCE market-scan schedule unchanged.
+
+### Safety boundary
+
+- No new GHCR publication/digest promotion, production manifest apply, image replacement or workload rollout. Auth runtime Secret provisioning/verification occurred; shared `ghcr-pull` remained unchanged.
+- No namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot. No workflow added/removed; no duplicate SSH/Compose authority. Platform Infra remains the sole production apply authority.
