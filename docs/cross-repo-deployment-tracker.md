@@ -809,3 +809,74 @@ No new GHCR publication or digest promotion, production manifest apply, workload
 - TCE PR #1037 was squash-merged at `5b425bdeab457e943bcecf1831836fc698e24394`. Post-merge master WF-01 #43008514423, WF-05 #43008514459 and WF-02 #43008514481 all PASS. No GHCR publication occurred; the PR changed only health-recovery workflow behavior and its contract validation.
 - This receipt advances the compact Platform master SHA and records TCE post-merge CI completion only. The 18:01 ICT / 11:01:52Z runtime and native-schedule snapshot remains the latest operational reference; this SHA sync does not refresh K3s or scheduler evidence.
 - No production manifest, image, digest, Secret, workload, DNS, database, storage, namespace, runner or host state was changed by PR #1632. TCE market-scan schedule unchanged.
+
+
+## Fresh K3s inspection — 2026-11-11 18:09 ICT / 11:09:26 UTC
+
+- Read-only inspection [#42994074939 attempt 2](https://github.com/phanthienquoc/platform-infra/actions/runs/42994074939) completed SUCCESS; snapshot `debug/vps-latest.md` generated at 11:06:54Z (152s old at reference, within 4,500s budget). Inspection-only PR #1634 auto-squash-merged after exact-head validation #43009458775 PASS. Current Platform master: `388f96b7f7b0c97f461691b5862aff83b7d0b4f2`.
+
+### Host/K3s
+
+| Signal | Fresh evidence |
+|---|---|
+| Node | `tce-k3s-01` Ready, ARM64; K3s v1.36.3+k3s1; containerd 2.3.2-k3s2 |
+| OS/kernel | Ubuntu 22.04.5 LTS; 6.8.0-1049-oracle |
+| Memory | 23Gi total, 19Gi available, 3.6Gi used |
+| Disk | 45G total, 26G used, 20G available, 56%; pressure normal |
+| Uptime | 193 days, 20:57 |
+| Docker | 29.1.3; 20 images/9.195GB, 11 active, 5.773GB reclaimable; 12 containers; 5 volumes/66.2MB; 519.4MB build cache |
+| Runners | Platform and Media runner services active/enabled; `rollout-status-v15-core-workloads` policy |
+| Maintenance | `restart_required: yes`; kernel/containerd/Docker/OS updates pending |
+
+Do not reboot/upgrade without an approved maintenance window. Do not clean reclaimable Docker/containerd data; verify retention and consumers first. Largest disk consumers: `/var/log` 1.8G (journal 1.5G), `/var/lib/rancher/k3s` 236M.
+
+### Workload and digest inventory
+
+| Workload | READY | Image evidence | State |
+|---|---:|---|---|
+| Media backend | 1/1 | `prod-v0.3.0-58f80a8@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d` | Running |
+| Media frontend | 1/1 | `prod-v0.3.0-58f80a8@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a` | Running |
+| MicroFE Shell | 1/1 | `microfe-shell@sha256:ae64acc032ce13d046ab78c9628b5b0b308f812b67ddfab7503d91e5a3ed8dcd` | Running |
+| MicroFE WS | 1/1 | `microfe-ws@sha256:416bc16ade0becf398b0554571f6813985c55dffaf742042a7edef10ca2ea16d` | Running |
+| MicroFE NATS | 1/1 | `nats@sha256:b270f5e2428354c0335612694d7dd2fb588148e567a5757fdff325ef9c9332e6` | Running |
+| TCE frontend/service | 0/0 | — | Intentional maintenance; not healthy |
+| Auth / Keycloak | 0/0 | — | Intentional maintenance; not healthy |
+| Stock Admin (2) | 0/1 each | `admin:12d63b4`, no imageID digest | ImagePullBackOff |
+| Stock desired Backend | 0/1 | `backend:12d63b4`, no imageID digest | ImagePullBackOff |
+| Stock legacy Backend | 1/1 | `backend:23b2878`, local imageID only | Running; not promotion evidence |
+| Stock legacy Frontend | 1/1 | `user:23b2878`, local imageID only | Running; not promotion evidence |
+
+Stock desired images still lack compatible registry descriptors. Local SHA image IDs are not GHCR RepoDigest values. Preserve `k3s-debug/k3s-debug-logs` PVC/PV (Bound, 1Gi, RWO, local-path).
+
+### Cross-repo refs, PRs and CI
+
+- Platform `388f96b7f7b0c97f461691b5862aff83b7d0b4f2`; TCE `5b425bdeab457e943bcecf1831836fc698e24394`; Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media `dcd698699c65ba6e73f6b43838975144777131c3`; Auth `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
+- Open owner-decision drafts: Platform #1314/#544/#541/#539 and Auth #76. TCE #1037 and Platform docs #1632/#1633 plus inspection #1634 are merged; no Stock/Media PRs.
+- Platform #1632 exact-head #43008866804 and post-merge #43008949806 PASS; #1633 exact-head #43009127491 and post-merge #43009271130 PASS; inspection #1634 exact-head #43009458775 PASS (debug snapshot only).
+- TCE #1037 exact-head WF-01P #43008284677, WF-02 #43008284672, WF-05 #43008284792, WF-08B #43008284695 PASS; post-merge WF-01 #43008514423, WF-05 #43008514459 and WF-02 #43008514481 PASS. Stock CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED on missing `VNSTOCK_API_KEY`. Media CI #42539512417 PASS; Auth CI #42654579277 PASS.
+- All five master branches remain `protected=false`, required checks enforcement off/empty; merge commit and rebase still allowed. GitHub administrator action required.
+
+### Native schedule — 11:09:26 UTC
+
+| Lane | Latest native run | Age (s) | Gap (s) | Budget (s) |
+|---|---:|---:|---:|---:|
+| Platform reconcile | #42993779924 | 6,781 | 26,585 | 2,700 |
+| Platform inspection | #42981286761 | 12,500 | 25,617 | 4,500 |
+| Platform recovery | #42986496462 | 10,027 | 24,822 | 2,700 |
+| Platform watchdog | #42986833403 | 9,876 | 24,297 | 2,700 |
+| TCE WF-06 | #43003016447 | 2,843 | 26,842 | 1,500 |
+| TCE WF-12 | #42996293386 | 5,708 | 26,503 | 1,500 |
+
+All six current-age and inter-arrival budgets fail. Manual inspection rerun is not native schedule evidence. TCE WF-06 executed on schedule but failed four strict HTTP 200 probes with 503; WF-12 workflow_run #43003045329 is not a native schedule run. No cron or TCE market-scan schedule changed.
+
+### Exact next actions and safety
+
+1. Platform operator: run current-master `reconcile-vps.yml` in `mode=plan` before any apply decision. Last current-master reconciliation #43003088695 ran on prior master `ff401dad` and is beyond the 20-minute recovery freshness window.
+2. Platform operator: obtain maintenance approval before host restart/upgrade; no reboot or image cleanup.
+3. TCE administrator: set `TCE_MAINTENANCE_MODE=true` during intentional zero-replica maintenance; unset/set false on reactivation. Variable value was not changed or verified.
+4. GitHub administrator: provide scheduler enqueue/delivery telemetry and enforce PR-only, required checks, force-push/deletion protection and squash-only across all five repositories.
+5. TCE/Auth owners: provide immutable release digests, rollback references and explicit reactivation approval.
+6. Stock owner: decide retirement vs restoration; if restoring, provision `VNSTOCK_API_KEY` only through protected Actions Secrets and run safe preflight first.
+7. Media owner: complete external backup/retention, DNS ownership and remote runner unregister before retirement/deletion.
+
+No GHCR publication, digest promotion, production manifest apply, workload rollout, namespace/PVC/PV deletion, runner retirement, shared GHCR credential rotation, DNS/database/object-storage mutation or host reboot. Auth runtime Secret provisioning/verification occurred earlier in #43003088695 with values suppressed; shared `ghcr-pull` was unchanged. Platform remains sole production apply authority; no direct SSH/Compose authority. TCE market-scan schedule unchanged.
