@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-12 06:05 ICT (2026-11-11 23:05:33 UTC).
+Last reviewed: 2026-11-12 06:10 ICT (2026-11-11 23:10:24 UTC).
 
 ## Latest workflow inventory verification — 2026-11-12 06:02 ICT / 2026-11-11 23:02:43 UTC
 
@@ -8,7 +8,7 @@ Last reviewed: 2026-11-12 06:05 ICT (2026-11-11 23:05:33 UTC).
 
 | Repository | Master SHA | Open PRs | Latest relevant workflow evidence | Ownership / preservation |
 |---|---|---|---|---|
-| Platform Infra | `c0f30978` | #1314/#544/#541/#539 (owner decisions) | PR #1655 inspection snapshot merged; exact-head #43116264561 PASS. Native inspection #43116036275 SUCCESS. Current-master recovery-dispatched reconcile #43116379969 SUCCESS; watchdog #43116594502 FAIL on native schedule gaps. | Sole production manifests, shared GHCR pull credentials, provenance/digest promotion, GitOps plan/apply, K3s rollout and health verification. Preserve inspection, reconcile, recovery, watchdog, validation, backup and guarded maintenance. |
+| Platform Infra | `9d84aa02` | #1657 (recovery API retry fix); #1314/#544/#541/#539 (owner decisions) | PR #1655 inspection snapshot merged; exact-head #43116264561 PASS. Native inspection #43116036275 SUCCESS. Current-master recovery-dispatched reconcile #43116379969 SUCCESS; watchdog #43116594502 FAIL on native schedule gaps. | Sole production manifests, shared GHCR pull credentials, provenance/digest promotion, GitOps plan/apply, K3s rollout and health verification. Preserve inspection, reconcile, recovery, watchdog, validation, backup and guarded maintenance. |
 | TCE Dashboard | `5b425bde` | none | Native WF-06 #43073311537 FAIL; native WF-12 #43068077606 FAIL; manual WF-06 #43088897948 FAIL (four 503s); WF-13 #43088861304 SUCCESS but logged empty maintenance variable; WF-07 integration #43088811861 SUCCESS. | Owns tests/builds/immutable GHCR publishers and strict HTTP-200 health probes. Preserve WF-06, WF-12 native watchdog, WF-13 maintenance-aware fallback, integration, backup and release. No direct production apply. |
 | StockDividend | `b1b5e177` | none | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED on missing `VNSTOCK_API_KEY`. Desired Admin/Backend tag `12d63b4` has no compatible manifest/RepoDigest. | Owns tests/builds/native ARM64 immutable publisher only if retirement is reversed. Preserve fail-closed scraper and gated publisher; no secret in Git/logs/chat. |
 | Media Generation | `dcd69869` | none | CI #42539512417 PASS. Fresh inspection shows backend/frontend 1/1 with RepoDigests; dedicated runner active/enabled with Listener present. No current-master publication is evidenced. | Owns tests/builds/immutable publication. Preserve CI/release. Runner retirement requires stop/disable, local Listener absence, GitHub unregister, backup/retention and DNS evidence. |
@@ -16,9 +16,9 @@ Last reviewed: 2026-11-12 06:05 ICT (2026-11-11 23:05:33 UTC).
 
 ### Current-master GitOps and runtime receipt
 
-- Platform reconciliation #43116379969 ran on current master `c0f30978`, triggered by the existing recovery controller after watchdog-detected stale native reconciliation. Inputs: `mode=apply`, `target_app=all`, `allow_image_changes=false`.
+- Platform reconciliation #43116379969 ran on then-current master `c0f30978`, triggered by the existing recovery controller after watchdog-detected stale native reconciliation. Inputs: `mode=apply`, `target_app=all`, `allow_image_changes=false`. Docs-only PR #1656 later advanced master to `9d84aa02`; it did not change production manifests.
 - GHCR pull preflight passed five managed packages. Auth runtime Secret provision/verification succeeded with values suppressed. Shared `ghcr-pull` remained unchanged. TCE release pairing passed for `prod-v0.1.0-e75e338`; desired/live TCE web and service tags matched.
-- GitOps drift=false; manifest apply, image replacement and rollout were skipped. Auth and TCE deployment lanes returned `maintenance` (zero replicas; no live health asserted). MicroFE Shell/WS active-scope health passed. Keycloak was skipped. Overall run and final deployment-lane gate succeeded.
+- GitOps drift=false; manifest apply, image replacement and rollout were skipped. Auth and TCE deployment lanes returned `maintenance` (zero replicas; no live health asserted). MicroFE Shell/WS active-scope health passed. Keycloak was skipped. Overall run and final deployment-lane gate succeeded. PR #1656 exact-head validation #43116943500 PASS and post-merge validate-manifests #43117100616 PASS on current master `9d84aa02`; no exact-current-master reconciliation on `9d84aa02` is evidenced.
 - Fresh K3s inspection #43116036275 generated `debug/vps-latest.md` at 22:57:49Z. Node Ready/ARM64; disk 56% (~20GiB free), ~19GiB RAM available, host restart required. Media/MicroFE/NATS 1/1; TCE/Auth/Keycloak 0/0. Stock Admin (two pods) and desired Backend (one pod) ImagePullBackOff on `12d63b4`; legacy Stock pods run on `23b2878` but their cached images have no RepoDigest. Preserve Bound PVC `k3s-debug/k3s-debug-logs`; Media runner active/listener present; no cleanup/reboot.
 - Native schedule reference 23:02:43Z: Platform reconcile #43066718643 age 20,711s/gap 28,867s; inspection #43116036275 age 302s/gap 24,836s; recovery #43116568507 age 63s/gap 23,725s; watchdog #43058640134 age 23,667s/gap 29,006s; TCE WF-06 #43073311537 age 18,237s/gap 54,245s; WF-12 #43068077606 age 20,218s/gap 28,287s. All six inter-arrival budgets fail; four current-age budgets fail. Manual recovery and workflow_run receipts do not substitute for native delivery. TCE market-scan schedule unchanged.
 
@@ -864,3 +864,9 @@ Only first-attempt `event=schedule` runs on `master` count. Platform reconcile #
 ## Recovery API correlation resilience — 2026-11-12 06:05 ICT
 
 PR #1657 adds bounded retry/backoff for transient GitHub HTTP 5xx responses during both recovery-controller dispatch-correlation GETs (reconcile-vps and inspect-vps). Permanent 4xx/auth failures and malformed JSON remain fail-closed. The static workflow-contract validator now asserts both paths retain this behavior. No schedule expression or deployment authority changes.
+
+## Latest follow-up — 2026-11-12 06:10 ICT
+
+- Current Platform master is 9d84aa020c5aacd28c56ef68d5a81a0a9acccfe2; PR #1656 was docs-only and its post-merge validate-manifests run #43117100616 passed. Reconciliation #43116379969 ran on parent SHA c0f309; the production manifest tree was unchanged by PR #1656, but do not label that run exact-current-master evidence.
+- Watchdog #43116818114 (native schedule, 23:03:32Z) failed on native inter-arrival gaps. It verified 3 WF-06 and 4 WF-12 heartbeat receipts and reported no scheduled deployment lane exceeding the 15-minute queue budget. Recovery #43116883745 was a workflow_run success, not native schedule evidence.
+- PR #1657 fixes transient HTTP 5xx during both recovery dispatch-correlation GETs. Its latest exact-head validate-manifests check passed; validate-github-actions must pass before squash merge.
