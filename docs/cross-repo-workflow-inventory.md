@@ -534,3 +534,12 @@ No workflow was added or removed in this checkpoint. Keep CI, tests, security, a
 
 - App repositories retain tests/builds and immutable GHCR publication. Platform Infra remains the only production manifest/credential/GitOps apply, rollout and health authority.
 - No workflow removed or added, no direct SSH/Compose authority, no new image publication or digest promotion, no current-master production apply, no workload rollout, no namespace/PVC/PV deletion, no runner retirement, no credential rotation, no DNS/database/storage mutation and no host reboot.
+
+
+## Post-merge workflow inventory receipt — 2026-11-11 19:09 ICT / 12:09:43 UTC
+
+- Platform master is `815f87e14832d35970f3e43b8e9c309301b0fc81` after docs-only PR #1636 and corrective PR #1637. Exact-head validations #43017483631 and #43017776105 PASS; post-merge `validate-manifests` runs #43017580624 and #43017854916 PASS. Only manifest validation ran after both merges; no production reconcile/recovery push was triggered.
+- PR #1637 corrected the three interval pairs by exact run timestamps: Platform reconcile #42942147668 → #42993779924 = 26,585s; TCE WF-06 #42949191917 → #43003016447 = 26,842s; TCE WF-12 #42944415193 → #42996293386 = 26,503s. The other Platform gaps remain inspection 25,617s, recovery 24,822s and watchdog 24,297s.
+- No new native schedule run appeared by 12:09:43Z. All six current-age budgets and all six inter-arrival budgets remain failed. Do not count manual, push, `workflow_run` or `repository_dispatch` as native schedule delivery.
+- K3s snapshot #42994074939 is 3,769s old / 4,500s budget at the reference, with 731s remaining. Platform operator must refresh read-only inspection before 12:21:54Z. Last reconciliation #43003088695 is 6,429s old and is on pre-current SHA `ff401dad`; run current-master `mode=plan` before any apply decision.
+- Ownership boundaries unchanged: app repositories own tests/builds/immutable GHCR publication; Platform Infra alone owns production manifests, shared GHCR pull credentials, GitOps promotion/reconciliation, rollout and health verification. No workflow removed/added, no SSH/Compose authority, no production mutation, and TCE market-scan schedule unchanged.
