@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-11 16:00 ICT (2026-11-11 09:00:35 UTC).
+Last reviewed: 2026-11-11 16:58 ICT (2026-11-11 09:58:55 UTC).
 
 This is the compact current workflow inventory. The previous append-only inventory is preserved at docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md. Historical timestamped workflow checkpoints remain under docs/cross-repo-workflow-inventory-checkpoints/.
 
@@ -419,3 +419,28 @@ No workflow was added or removed in this checkpoint. Keep CI, tests, security, a
 - No reconcile/recovery push was triggered. Production apply authority remains Platform only; app repositories retain tests/builds/immutable GHCR publication ownership.
 - Last K3s snapshot #42981286761 is expired; last successful reconciliation #42986517013 is within its age budget but ran on older SHA `8f95ddd872...`. Neither authorizes a new rollout against current master.
 - Preserve CI/test/security, app publication, release, backup, integration, manual and scheduled jobs. No workflow removal/addition, no SSH/Compose authority, and no TCE market-scan schedule change.
+
+
+## Latest workflow inventory verification — 2026-11-11 16:58 ICT / 09:58:55 UTC
+
+### Repository workflow and ownership snapshot
+
+| Repository | Current master | Latest relevant workflow evidence | Ownership / preservation |
+|---|---|---|---|
+| Platform Infra | `e6b7156d191ff3ae9bcb8ff66f1b2a5259de331e` | Native reconcile #42993779924 SUCCESS (pre-merge SHA `c557b3f`); read-only inspection #42994074939 SUCCESS via workflow_dispatch and PR #1629 squash-merged; exact-head validation #42994322789 PASS; recovery #42996312662 SUCCESS; watchdog workflow_run #42996353169 SKIPPED. | Sole production manifests, shared GHCR pull credentials, source-run/provenance verification, digest promotion, GitOps reconciliation, rollout and health authority. Preserve native schedules, manual reconciliation, recovery, watchdog, inspection, CI/contract validation, backup/cleanup and purposeful dispatch jobs. |
+| TCE Dashboard | `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab` | Native WF-06 #42949191917 stale/failed; native WF-12 #42996293386 failed because WF-06 age was 399m; manual WF-06 #42996339882 failed four strict HTTP 200 probes (503); WF-13 #42996315416 recovery success. | Owns app tests/builds, immutable TCE/MicroFE GHCR publication, strict public health probes, backup and integration checks. Preserve WF-06/WF-12/WF-13, WF-07 backup/integration and release-gated publishers. Do not count fallback/integration/backup as native health delivery. |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED on empty `VNSTOCK_API_KEY`. K3s desired Stock Admin/Backend pods ImagePullBackOff; legacy Backend/Frontend 1/1. | Owns app tests/builds and native ARM64 immutable publication only if service retention is approved. Preserve fail-closed scraper and gated publisher; no secret in Git/logs/chat and no publication while retirement scope remains active. |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | CI #42539512417 PASS; K3s backend/frontend 1/1 with registry digest references; dedicated Media runner service/listener active/enabled. | Owns tests/builds/immutable publication. Preserve CI/release workflows. Runner retirement remains gated on remote unregister, backup/retention and DNS ownership. |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | CI #42654579277 PASS; Auth remains 0/0 maintenance; runtime Secret provision/verification succeeded in #42993779924 with values suppressed. | Owns Auth tests/builds/release provenance/immutable publication. Preserve CI/security/release contracts. Zero replicas and OIDC/health 503 are not live health. |
+
+### Open PR and governance inventory
+
+- Open owner-decision drafts: Platform #1314/#544/#541/#539 and Authentication #76; no open PRs in TCE, Stock or Media. Exact-head `validate` checks remain PASS on the unchanged heads; Auth Supabase Preview is skipped. Keep these drafts unmerged pending their stated owner decisions.
+- All five direct `branches/master` API responses report `protected=false`, `protection.enabled=false`, and no required status checks (`enforcement_level=off`, empty contexts/checks). Repository settings allow squash, merge commits and rebase. Effective inherited organization ruleset evaluation remains a separate administrator task.
+- No workflow was added or removed. Preserve app CI/tests/security, immutable publishers, backup, integration, manual/release and scheduled jobs. No direct SSH/Compose deployment authority. TCE market-scan schedule and all existing cron expressions remain unchanged.
+
+### Freshness and production authority
+
+- Six native cadence lanes all exceed inter-arrival budgets. Current-age budgets fail for Platform inspection/recovery/watchdog and TCE WF-06; Platform reconciliation and TCE WF-12 are still within current-age budgets at the 09:58:55Z reference. Do not count workflow_dispatch, workflow_run or repository_dispatch as native schedule delivery.
+- Read-only K3s snapshot #42994074939 is 2,415s old / 4,500s budget. Native reconciliation #42993779924 is 2,550s old / 2,700s budget but ran on pre-merge SHA `c557b3f`, not current master `e6b7156d`. It found no drift and skipped apply/image replacement/rollout; Auth runtime Secret provision/verification succeeded, shared `ghcr-pull` remained unchanged.
+- No new app image publication or digest promotion. No current-master production apply or workload rollout. Keep Platform `reconcile-vps.yml` as the single production apply authority; `inspect-vps.yml` remains read-only. No SSH/Compose authority in app repos.
