@@ -444,3 +444,11 @@ No workflow was added or removed in this checkpoint. Keep CI, tests, security, a
 - Six native cadence lanes all exceed inter-arrival budgets. Current-age budgets fail for Platform inspection/recovery/watchdog and TCE WF-06; Platform reconciliation and TCE WF-12 are still within current-age budgets at the 09:58:55Z reference. Do not count workflow_dispatch, workflow_run or repository_dispatch as native schedule delivery.
 - Read-only K3s snapshot #42994074939 is 2,415s old / 4,500s budget. Native reconciliation #42993779924 is 2,550s old / 2,700s budget but ran on pre-merge SHA `c557b3f`, not current master `e6b7156d`. It found no drift and skipped apply/image replacement/rollout; Auth runtime Secret provision/verification succeeded, shared `ghcr-pull` remained unchanged.
 - No new app image publication or digest promotion. No current-master production apply or workload rollout. Keep Platform `reconcile-vps.yml` as the single production apply authority; `inspect-vps.yml` remains read-only. No SSH/Compose authority in app repos.
+
+## Post-merge workflow inventory receipt — 2026-11-11 16:58 ICT
+
+- Platform master advanced documentation-only through PR #1630 to `1bd6ea38fcc4591da16422868ac03124704ea293`.
+- Exact-head validation #43000595633 PASS; post-merge master validation #43000748526 PASS.
+- Post-merge run contains `validate-manifests` only; no production reconcile/recovery push was triggered.
+- The 16:58 operational snapshot remains the latest runtime/schedule evidence; this receipt updates only the Platform master SHA and validation provenance.
+- Workflow ownership and production authority boundaries are unchanged. No workflow was added/removed, no SSH/Compose authority added, and TCE market-scan schedule unchanged.
