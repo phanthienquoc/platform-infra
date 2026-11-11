@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-11 18:01 ICT (2026-11-11 11:01:52 UTC).
+Last reviewed: 2026-11-11 18:05 ICT (post-merge SHA receipt only; operational snapshot 18:01 ICT).
 
 This is the compact current workflow inventory. The previous append-only inventory is preserved at docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md. Historical timestamped workflow checkpoints remain under docs/cross-repo-workflow-inventory-checkpoints/.
 
@@ -482,3 +482,13 @@ No workflow was added or removed in this checkpoint. Keep CI, tests, security, a
 - Current-master reconciliation #43003088695 passed GHCR read preflight for five packages, provisioned/verified Auth runtime Secret with values suppressed, left shared `ghcr-pull` unchanged, verified TCE pairing `prod-v0.1.0-e75e338`, found drift=false and skipped manifest apply/image replacement/rollout. Its post-check pod inventory showed Media/MicroFE 1/1, TCE/Auth/Keycloak 0/0 maintenance, Stock Admin/desired Backend ImagePullBackOff and legacy Stock Backend/Frontend 1/1.
 - Last full read-only inspection #42994074939 is older than the 4,500s budget. Partial node/pod output from #43003088695 is not a substitute for full disk/RAM/storage/runner inventory. Obtain a fresh inspect before any production decision.
 - All six native schedule lanes exceed both current-age and inter-arrival budgets at 11:01:52Z. Do not count manual/workflow_run/repository_dispatch as native delivery. Keep every cron expression and TCE market-scan schedule unchanged.
+
+
+## Post-merge workflow inventory receipt — 2026-11-11 18:05 ICT
+
+- Platform master advanced documentation-only through PR #1632 to `c49bb0f1f1df71f403c64cc17fada8d4ab99bc31`.
+- Exact-head `validate-manifests` #43008866804 PASS; post-merge master `validate-manifests` #43008949806 PASS.
+- Only `validate-manifests` ran after the Platform docs-only merge; no production reconciliation/recovery push was triggered.
+- TCE master `5b425bdeab457e943bcecf1831836fc698e24394`: post-merge WF-01 #43008514423, WF-05 #43008514459 and WF-02 #43008514481 all PASS after PR #1037. No GHCR publication was triggered.
+- The 18:01 ICT operational/schedule snapshot remains the latest runtime evidence; this receipt updates only current refs and validation provenance.
+- Workflow ownership and production authority boundaries are unchanged. No workflow removed, no SSH/Compose authority added, and TCE market-scan schedule unchanged.

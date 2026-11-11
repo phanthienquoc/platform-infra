@@ -799,3 +799,13 @@ All six current-age budgets and all six inter-arrival budgets fail. TCE WF-06's 
 7. Media owner: complete external backup/retention, authoritative DNS ownership and remote runner stop/disable/unregister evidence before deletion.
 
 No new GHCR publication or digest promotion, production manifest apply, workload rollout, namespace/PVC/PV deletion, runner retirement, shared GHCR credential rotation, DNS/database/object-storage mutation or host reboot occurred. Auth runtime Secret provisioning/verification did occur in #43003088695; values were suppressed and shared `ghcr-pull` was unchanged. No workflow was removed or duplicate SSH/Compose authority added. Platform remains the sole production apply authority. TCE market-scan schedule unchanged.
+
+
+## Post-merge verification — 2026-11-11 18:05 ICT / 11:05:31 UTC
+
+- PR #1632 was squash-merged at `c49bb0f1f1df71f403c64cc17fada8d4ab99bc31`; direct `refs/heads/master` read matches the merge SHA.
+- Exact-head `validate-manifests` [#43008866804](https://github.com/phanthienquoc/platform-infra/actions/runs/43008866804) PASS on PR head `bd0cbf654ce7d78f33af4b562898020f6fb5dcb5`; post-merge current-master `validate-manifests` [#43008949806](https://github.com/phanthienquoc/platform-infra/actions/runs/43008949806) PASS on `c49bb0f1...`.
+- The post-merge Platform run list contains `validate-manifests` only; no `reconcile-vps.yml` or `recover-stale-ops.yml` push run was triggered by this documentation-only merge.
+- TCE PR #1037 was squash-merged at `5b425bdeab457e943bcecf1831836fc698e24394`. Post-merge master WF-01 #43008514423, WF-05 #43008514459 and WF-02 #43008514481 all PASS. No GHCR publication occurred; the PR changed only health-recovery workflow behavior and its contract validation.
+- This receipt advances the compact Platform master SHA and records TCE post-merge CI completion only. The 18:01 ICT / 11:01:52Z runtime and native-schedule snapshot remains the latest operational reference; this SHA sync does not refresh K3s or scheduler evidence.
+- No production manifest, image, digest, Secret, workload, DNS, database, storage, namespace, runner or host state was changed by PR #1632. TCE market-scan schedule unchanged.
