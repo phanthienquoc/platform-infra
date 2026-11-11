@@ -1,61 +1,71 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-12 02:00 ICT (2026-11-11 19:00:41 UTC).
+Last reviewed: 2026-11-12 02:58 ICT (2026-11-11 19:58:49 UTC).
 
-This is the compact current workflow inventory. Historical append-only inventory is preserved at `docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md`; timestamped checkpoints remain under `docs/cross-repo-workflow-inventory-checkpoints/`. Current GitHub connector can inspect known run IDs/jobs but cannot enumerate all workflow runs or dispatch workflows; run IDs below are the latest directly inspected evidence from the existing checkpoints.
+This is the compact current workflow inventory. Historical append-only inventory is preserved at `docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md`; timestamped checkpoints remain under `docs/cross-repo-workflow-inventory-checkpoints/`. This review used read-only GitHub Actions REST run listings (first page per repository/query). Workflow dispatch is not exposed by the current connector.
 
 ## Repository refs, PRs and workflow ownership
 
 | Repository | Master SHA | Open PRs | App-owned workflows | Platform-owned workflows |
 |---|---|---|---|---|
-| Platform Infra | `7e48d388` | #1314/#544/#541/#539 (owner decisions) | None; validation and repository automation only | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, K3s inspection, rollout and health verification |
-| TCE Dashboard | `5b425bde` | None | Tests/builds, immutable GHCR publishers, strict WF-06 HTTP-200 probes, WF-12 schedule watchdog, WF-13 maintenance-aware fallback, integration and backup | No direct production apply; dispatches verified release handoffs to Platform |
-| StockDividend | `b1b5e177` | None | Tests/builds, native ARM64 immutable publisher, fail-closed scraper | No production apply; publication remains blocked pending owner retirement/restoration decision |
-| Media Generation | `dcd69869` | None | Tests/builds, immutable GHCR publisher and release workflow | No direct production apply; runner retirement requires remote unregister, backup/retention and DNS evidence |
+| Platform Infra | `3e6d3f48` | #1314/#544/#541/#539 (owner decisions) | Validation, inspection and repository automation only | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, K3s inspection, rollout and health verification |
+| TCE Dashboard | `5b425bde` | None | Tests/builds, immutable GHCR publishers, strict WF-06 HTTP-200 probes, WF-12 schedule watchdog, WF-13 maintenance-aware fallback, integration and backup | No direct production apply; authenticated release handoffs to Platform |
+| StockDividend | `b1b5e177` | None | Tests/builds, native ARM64 immutable publisher, fail-closed scraper | No active production manifests; residual `stock-prod` resources remain in K3s and require owner retirement/restoration decision |
+| Media Generation | `dcd69869` | None | Tests/builds, immutable GHCR publisher and release workflow | No active production manifests; residual Media pods 1/1 and runner active. Decommission requires backup/retention, DNS ownership and remote runner unregister evidence |
 | Authentication | `eab85fab` | #76 (owner decision) | Auth CI/security, ARM64 immutable release publisher, provenance/SBOM and auth-image-published handoff | No direct production apply; Platform validates dispatch and owns GitOps promotion/reconcile |
 
 ## Latest directly inspected workflow evidence
 
 | Repository / workflow | Run | Event / result | Notes |
 |---|---:|---|---|
-| Platform validate-manifests | #43074438975 | post-merge / SUCCESS | PR #1647 master validation; docs-only change, no reconcile/recovery push |
-| Platform reconcile-vps | #43073396454 | workflow_dispatch / SUCCESS | Parent SHA `fc9318db`, mode=apply, image changes false; five GHCR packages PASS, Auth Secret provisioned/verified, shared `ghcr-pull` unchanged, no drift; apply/image replacement/rollout skipped; now stale and not current-master |
-| Platform recover-stale-ops | #43073697990 | workflow_dispatch / SUCCESS | Avoided duplicate fallback because reconciliation/inspection evidence was fresh at that run's reference |
-| Platform inspect-vps | #43067027719 | workflow_dispatch / SUCCESS | Snapshot generated 17:19:36Z; now expired (6,065s age / 4,500s budget at 19:00:41Z) |
-| Platform reconcile-schedule-watchdog | #43058640134 | schedule / FAILURE | Stale native reconciliation/inter-arrival acceptance |
-| TCE WF-06 | #43073311537 | schedule / FAILURE | Four public endpoint jobs returned 503 instead of strict HTTP 200 |
-| TCE WF-12 | #43068077606 | schedule / FAILURE | Native WF-06 schedule delivery freshness verification failed; heartbeat notification succeeded |
-| TCE WF-13 | #43073377037 | workflow_run / SKIPPED | Not native schedule evidence; does not prove maintenance variable value |
-| Stock CI | #42610360402 | CI / SUCCESS | Build, test and release-hold contract jobs passed |
-| Stock scraper | #42457182511 | schedule / FAILURE | Fail-closed on missing `VNSTOCK_API_KEY`; do not bypass |
-| Media CI | #42539512417 | CI / SUCCESS | Application test/build passed |
-| Authentication CI | #42654579277 | CI / SUCCESS | Validation and ARM64 container build passed |
+| Platform inspect-vps | #43089176130 | workflow_dispatch / SUCCESS | Fresh snapshot generated 19:39:15Z; inspection PR #1649 merged at master `3e6d3f48`. |
+| Platform validate-manifests | #43089441872 | workflow_dispatch / SUCCESS | Exact inspection PR head validation, 20/20 steps PASS; not a separate post-merge master run. |
+| Platform reconcile-vps | #43088879697 | workflow_dispatch / SUCCESS | Parent `9093831c`, mode=apply, image changes false; five GHCR package preflight PASS; Auth Secret verified; shared `ghcr-pull` unchanged; no drift; apply/image replacement/rollout skipped. |
+| Platform recover-stale-ops | #43089116141 | workflow_dispatch / SUCCESS | Manual recovery; not native schedule delivery. |
+| Platform native reconcile / inspect / recovery / watchdog | #43066718643 / #43054529460 / #43058316157 / #43058640134 | schedule / SUCCESS / SUCCESS / SUCCESS / FAILURE | Latest qualifying native first-attempt runs; all outside their current freshness budgets. |
+| TCE WF-06 | #43088897948 | workflow_dispatch / FAILURE | Four public endpoints returned 503 instead of 200. |
+| TCE WF-12 | #43088836266 | workflow_run / FAILURE | Native WF-06 schedule freshness failed; heartbeat dispatch succeeded. |
+| TCE WF-13 | #43088861304 | workflow_run / SUCCESS | Recovery/fallback receipt; not native schedule delivery. |
+| TCE WF-07 integration | #43088811861 | schedule / SUCCESS | Integration check only; not WF-06/WF-12 health evidence. |
+| Stock CI / scraper | #42610360402 / #42457182511 | push / SUCCESS; schedule / FAILURE | Scraper fails closed on missing `VNSTOCK_API_KEY`. |
+| Media CI | #42539512417 | push / SUCCESS | Application tests/build passed; no new image publication. |
+| Authentication CI | #42654579277 | push / SUCCESS | Validation and ARM64 image build passed. |
 
 ## Native schedule inventory and acceptance
 
 Only first-attempt `event=schedule` runs on `master` count. Manual, push, pull_request, workflow_run, repository_dispatch and reruns are not native schedule substitutes.
 
-| Lane | Cron / schedule owner | Latest native run | Current age (s) | Inter-arrival gap (s) | Existing budget (s) |
-|---|---|---:|---:|---:|---:|
-| Platform reconcile-vps.yml | `7,22,37,52 * * * *` | #43066718643 | 6,189 | 28,867 | 2,700 |
-| Platform inspect-vps.yml | `2,32 * * * *` | #43054529460 | 10,616 | 30,151 | 4,500 |
+| Lane | Latest native run | Previous native run | Age (s) | Gap (s) | Budget (s) |
+|---|---:|---:|---:|---:|---:|
+| Platform reconcile-vps.yml | #43066718643 | #42993779924 | 9,677 | 28,867 | 2,700 |
+| Platform inspect-vps.yml | #43054529460 | #42981286761 | 14,104 | 30,159 | 4,500 |
+| Platform recover-stale-ops.yml | #43058316157 | #42986496462 | 12,754 | 29,036 | 2,700 |
+| Platform reconcile-schedule-watchdog | #43058640134 | #42986833403 | 12,633 | 29,006 | 2,700 |
+| TCE WF-06 | #43073311537 | #42949191917 | 7,203 | 54,245 | 1,500 |
+| TCE WF-12 | #43068077606 | #42996293386 | 9,184 | 28,287 | 1,500 |
 
-- A later partial pod inventory appears in reconciliation #43073396454 job logs at 2026-11-11T17:59:42Z. At the 19:00:41Z reference it is 3,659s old: within the 4,500s inspection window but beyond the 2,700s reconciliation window. It showed Media backend/frontend and MicroFE Shell 1/1 Running, plus two Stock Admin pods and one desired Stock Backend pod in ImagePullBackOff. This is not a full inspect-vps snapshot and does not authorize current-master apply.
-| Platform recover-stale-ops.yml | `10,25,40,55 * * * *` | #43058316157 | 9,266 | 29,036 | 2,700 |
-| Platform reconcile-schedule-watchdog | existing schedule unchanged | #43058640134 | 9,145 | 29,006 | 2,700 |
-| TCE WF-06 | existing schedule unchanged | #43073311537 | 3,715 | 54,245 | 1,500 |
-| TCE WF-12 | existing schedule unchanged | #43068077606 | 5,696 | 28,287 | 1,500 |
+All six current-age and all six inter-arrival budgets fail at 19:58:49Z. WF-06 manual #43088897948 does not count as schedule delivery. WF-12's latest log reports WF-06 source #43073311537 at 98m age and queue=0m; the observed failure is stale schedule delivery, not proven runner congestion. Preserve all cron expressions and TCE market-scan schedule.
 
-All six current-age and all six inter-arrival budgets fail at the 19:00:41Z reference. Preserve every cron expression and the TCE market-scan schedule. The manual health reruns and workflow_run/SKIPPED receipts do not count.
-
-## Contract and preservation rules
+## Deployment contract and preservation rules
 
 - App repositories own application code, dependencies, tests/builds, Dockerfiles, immutable GHCR publication and source provenance. Use full source SHA tags and verify registry digest/ARM64 descriptors before handoff.
 - Platform Infra alone owns production Kustomize manifests, shared GHCR pull credentials, authenticated dispatch validation, provenance/digest promotion, GitOps plan/apply, rollout and live health.
-- `reconcile-vps.yml` manual dispatch defaults to `mode=plan`; only explicit manual apply or existing schedule/push/authenticated promotion events retain their documented behavior. `inspect-vps.yml` remains read-only.
+- `reconcile-vps.yml` manual dispatch defaults to `mode=plan`; explicit manual apply and existing schedule/push/authenticated promotion events retain their documented behavior. `inspect-vps.yml` remains read-only.
+- Keep Stock/Media out of active Platform production manifests while preserving their app CI/publish workflows. Do not remove residual cluster resources until owner decision and fresh evidence; do not confuse cached/local image IDs with registry RepoDigests.
 - Preserve useful CI, test, security, backup, integration, release, manual and scheduled workflows. No workflow is confirmed redundant/obsolete in this checkpoint.
 - No duplicate direct SSH/Compose deployment authority. No change to TCE market-scan schedule.
-- No new image publication/promotion, manifest apply, rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot. Platform Infra remains sole production apply authority.
+
+## Governance evidence
+
+- Branch-protection GET returned HTTP 403 for all five repositories in this review. Repository metadata allows squash, merge commit and rebase; effective inherited organization rulesets could not be verified. GitHub administrator action is required for PR-only, required checks, force-push/deletion protection and squash-only.
+
+## Current safety state
+
+- No new app image publication or digest promotion.
+- No new GitOps dispatch/plan/apply on current master; latest successful apply-mode reconciliation was on parent `9093831c` before the inspection-only PR #1649 changed only `debug/vps-latest.md`.
+- No manifest apply, image replacement, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot.
+- Historical reconciliation provisioned/verified Auth runtime Secret with values suppressed; shared `ghcr-pull` was unchanged.
+- Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.
 
 ## Historical verification — 2026-11-11 15:09 ICT / 08:09:56 UTC
 
