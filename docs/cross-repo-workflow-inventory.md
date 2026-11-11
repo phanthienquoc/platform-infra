@@ -1,16 +1,57 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-12 03:09 ICT (2026-11-11 20:09:00 UTC).
+Last reviewed: 2026-11-12 04:02 ICT (2026-11-11 21:02:52 UTC).
 
-This is the compact current workflow inventory. Historical append-only inventory is preserved at `docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md`; timestamped checkpoints remain under `docs/cross-repo-workflow-inventory-checkpoints/`. This review used read-only GitHub Actions REST run listings (first page per repository/query). Workflow dispatch is not exposed by the current connector. PR #1650 merged at `31b1245c`; post-merge sync PR #1651 merged at `7ff2da75`; exact-head #43093685819 and post-merge #43093772516 both PASS.
+This is the compact current workflow inventory; the 04:02 ICT verification above supersedes the prior 03:12 ICT snapshot. Historical append-only inventory is preserved at `docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md`; timestamped checkpoints remain under `docs/cross-repo-workflow-inventory-checkpoints/`. This review used read-only GitHub Actions REST run listings (first page per repository/query). Workflow dispatch is not exposed by the current connector. PR #1650 merged at `31b1245c`; PR #1651 merged at `7ff2da75`; PR #1652 merged at `99509adb`; current docs PR #1653 is open with latest exact-head validation #43095125265 queued.
 
-## Repository refs, PRs and workflow ownership
+## Latest workflow inventory verification — 2026-11-12 04:02 ICT / 2026-11-11 21:02:52 UTC
+
+### Repository refs, open PRs and latest workflow evidence
+
+| Repository | Master SHA | Open PRs | Latest relevant evidence |
+|---|---|---|---|
+| Platform Infra | `99509adb` | #1653 (documentation PR), #1314/#544/#541/#539 (owner decisions) | Master `validate-manifests` #43094091607 PASS. PR #1653 head `fb06a347`; exact-head #43095467009 queued since 20:20:41Z with no jobs. Older validations on previous PR commits do not satisfy exact-head merge requirements. |
+| TCE Dashboard | `5b425bde` | none | Native WF-06 #43073311537 FAIL; native WF-12 #43068077606 FAIL; manual WF-06 #43088897948 returns four HTTP 503; WF-13 #43088861304 workflow_run success but maintenance variable logged empty; WF-07 #43088811861 schedule success is integration-only. |
+| StockDividend | `b1b5e177` | none | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED (missing `VNSTOCK_API_KEY`); latest successful Build and Publish Images #41563856933 is 2026-11-03 and not a current-master publication. |
+| Media Generation | `dcd69869` | none | CI #42539512417 PASS; latest successful WF-03 publication #41158598649 is 2026-10-31 and not a current-master publication. |
+| Authentication | `eab85fab` | #76 owner-decision draft | CI #42654579277 PASS; latest successful auth release #41040510320 is 2026-10-30 and not a current-master release. |
+
+### Native schedule inventory — reference 21:02:52Z
+
+| Lane | Latest qualifying native run | Previous | Age (s) | Gap (s) | Budget (s) |
+|---|---:|---:|---:|---:|---:|
+| Platform reconcile-vps.yml | #43066718643 | #42993779924 | 13,520 | 28,867 | 2,700 |
+| Platform inspect-vps.yml | #43054529460 | #42981286761 | 17,947 | 30,159 | 4,500 |
+| Platform recover-stale-ops.yml | #43058316157 | #42986496462 | 16,597 | 29,036 | 2,700 |
+| Platform reconcile-schedule-watchdog | #43058640134 | #42986833403 | 16,476 | 29,006 | 2,700 |
+| TCE WF-06 | #43073311537 | #42949191917 | 11,046 | 54,245 | 1,500 |
+| TCE WF-12 | #43068077606 | #42996293386 | 13,027 | 28,287 | 1,500 |
+
+All six native cadence lanes exceed both current-age and inter-arrival budgets. Count only first-attempt `event=schedule` runs on master. Manual, push, pull_request, workflow_run, repository_dispatch and rerun attempts are excluded. Keep existing TCE WF-06/WF-12/WF-13 contracts and all cron expressions; no market-scan schedule change.
+
+### Runtime freshness, ownership and preservation
+
+- Full K3s inspection #43089176130 (generated 19:39:15Z) is expired at this reference: age 5,017s vs 4,500s budget. Reconciliation #43088879697 (19:37:08Z, parent SHA `9093831c`) is expired: age 5,144s vs 2,700s budget. Both are historical evidence only.
+- Historical reconciliation verified five GHCR package reads and Auth runtime Secret, left shared `ghcr-pull` unchanged, found no drift, and skipped apply/image replacement/rollout. No current-master plan or rollout is evidenced.
+- Last-known Stock desired images fail ARM64 manifest resolution; Media workloads were 1/1 and the dedicated Media runner active/enabled with Listener present. Because the full snapshot is expired, do not assert these as current without a fresh inspection.
+- Stock/Media GitOps ownership retirement and the guarded manual decommission workflow remain in force. The delete gate requires fresh same-run storage preflight, external backup/retention and authoritative DNS evidence, local runner service inactive/disabled, Listener absent, GitHub-side runner registration absent, exact attestations and protected production Environment approval. Do not delete shared Platform runner or the separate `k3s-debug` PVC.
+- App repositories retain ownership of tests/builds, immutable GHCR publication and provenance. Platform Infra alone owns production manifests, shared pull credentials, digest promotion, GitOps plan/apply, rollout and health verification.
+- Preserve CI, tests, security, backup, integration, manual, release and scheduled workflows. No workflow is confirmed redundant/obsolete. No duplicate direct SSH/Compose deployment authority.
+
+### Current PR and merge gate
+
+PR [#1653](https://github.com/phanthienquoc/platform-infra/pull/1653) remains open/mergeable on exact head `fb06a347831c5c814f3232a6c56b6694b6c73afc`. Latest exact-head validation #43095467009 is queued and has no jobs. Do not merge until that exact head receives a completed successful validation and the PR head is re-read immediately before squash merge.
+
+
+## Previous inventory snapshot — 2026-11-12 03:12 ICT
+
+### Repository refs, PRs and workflow ownership
 
 | Repository | Master SHA | Open PRs | App-owned workflows | Platform-owned workflows |
 |---|---|---|---|---|
-| Platform Infra | `7ff2da75` | #1314/#544/#541/#539 (owner decisions) | Validation, inspection and repository automation only | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, K3s inspection, rollout and health verification |
+| Platform Infra | `99509adb` | #1314/#544/#541/#539 (owner decisions), #1653 (docs) | Validation, inspection and repository automation only | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, K3s inspection, rollout and health verification |
 | TCE Dashboard | `5b425bde` | None | Tests/builds, immutable GHCR publishers, strict WF-06 HTTP-200 probes, WF-12 schedule watchdog, WF-13 maintenance-aware fallback, integration and backup | No direct production apply; authenticated release handoffs to Platform |
-| StockDividend | `b1b5e177` | None | Tests/builds, native ARM64 immutable publisher, fail-closed scraper | No active production manifests; residual `stock-prod` resources remain in K3s and require owner retirement/restoration decision |
+| StockDividend | `b1b5e177` | None | Tests/builds, native ARM64 immutable publisher, fail-closed scraper | No active production manifests; approved decommission scope remains, with residual `stock-prod` resources gated by backup/DNS evidence and protected namespace deletion |
 | Media Generation | `dcd69869` | None | Tests/builds, immutable GHCR publisher and release workflow | No active production manifests; residual Media pods 1/1 and runner active. Decommission requires backup/retention, DNS ownership and remote runner unregister evidence |
 | Authentication | `eab85fab` | #76 (owner decision) | Auth CI/security, ARM64 immutable release publisher, provenance/SBOM and auth-image-published handoff | No direct production apply; Platform validates dispatch and owns GitOps promotion/reconcile |
 
@@ -18,6 +59,8 @@ This is the compact current workflow inventory. Historical append-only inventory
 
 | Repository / workflow | Run | Event / result | Notes |
 |---|---:|---|---|
+| Platform validate-manifests | pending | queued | PR #1653 final exact-head validation; do not merge until completed PASS. |
+| Platform validate-manifests | #43094091607 | push / SUCCESS | PR #1652 post-merge validation on master `99509adb`; all required validation steps PASS. |
 | Platform validate-manifests | #43093772516 | push / SUCCESS | PR #1651 post-merge validation on master `7ff2da75`; all required validation steps PASS. |
 | Platform validate-manifests | #43093109452 | push / SUCCESS | PR #1650 post-merge validation on master `31b1245c`; all required validation steps PASS. |
 | Platform inspect-vps | #43089176130 | workflow_dispatch / SUCCESS | Fresh snapshot generated 19:39:15Z; inspection PR #1649 merged at `3e6d3f48`. |
@@ -27,7 +70,7 @@ This is the compact current workflow inventory. Historical append-only inventory
 | Platform native reconcile / inspect / recovery / watchdog | #43066718643 / #43054529460 / #43058316157 / #43058640134 | schedule / SUCCESS / SUCCESS / SUCCESS / FAILURE | Latest qualifying native first-attempt runs; all outside their current freshness budgets. |
 | TCE WF-06 | #43088897948 | workflow_dispatch / FAILURE | Four public endpoints returned 503 instead of 200. |
 | TCE WF-12 | #43088836266 | workflow_run / FAILURE | Native WF-06 schedule freshness failed; heartbeat dispatch succeeded. |
-| TCE WF-13 | #43088861304 | workflow_run / SUCCESS | Recovery/fallback receipt; not native schedule delivery. |
+| TCE WF-13 | #43088861304 | workflow_run / SUCCESS | Job log shows `TCE_MAINTENANCE_MODE` empty; code maps empty to `enabled=false`, then dispatched fallback #43088897948. Not native schedule evidence. |
 | TCE WF-07 integration | #43088811861 | schedule / SUCCESS | Integration check only; not WF-06/WF-12 health evidence. |
 | Stock CI / scraper | #42610360402 / #42457182511 | push / SUCCESS; schedule / FAILURE | Scraper fails closed on missing `VNSTOCK_API_KEY`. |
 | Media CI | #42539512417 | push / SUCCESS | Application tests/build passed; no new image publication. |
@@ -39,12 +82,12 @@ Only first-attempt `event=schedule` runs on `master` count. Manual, push, pull_r
 
 | Lane | Latest native run | Previous native run | Age (s) | Gap (s) | Budget (s) |
 |---|---:|---:|---:|---:|---:|
-| Platform reconcile-vps.yml | #43066718643 | #42993779924 | 9,677 | 28,867 | 2,700 |
+| Platform reconcile-vps.yml | #43066718643 | #42993779924 | 10,411 | 28,867 | 2,700 |
 | Platform inspect-vps.yml | #43054529460 | #42981286761 | 14,104 | 30,159 | 4,500 |
-| Platform recover-stale-ops.yml | #43058316157 | #42986496462 | 12,754 | 29,036 | 2,700 |
-| Platform reconcile-schedule-watchdog | #43058640134 | #42986833403 | 12,633 | 29,006 | 2,700 |
-| TCE WF-06 | #43073311537 | #42949191917 | 7,203 | 54,245 | 1,500 |
-| TCE WF-12 | #43068077606 | #42996293386 | 9,184 | 28,287 | 1,500 |
+| Platform recover-stale-ops.yml | #43058316157 | #42986496462 | 13,488 | 29,036 | 2,700 |
+| Platform reconcile-schedule-watchdog | #43058640134 | #42986833403 | 13,367 | 29,006 | 2,700 |
+| TCE WF-06 | #43073311537 | #42949191917 | 7,937 | 54,245 | 1,500 |
+| TCE WF-12 | #43068077606 | #42996293386 | 9,918 | 28,287 | 1,500 |
 
 All six current-age and all six inter-arrival budgets fail at 19:58:49Z. WF-06 manual #43088897948 does not count as schedule delivery. WF-12's latest log reports WF-06 source #43073311537 at 98m age and queue=0m; the observed failure is stale schedule delivery, not proven runner congestion. Preserve all cron expressions and TCE market-scan schedule.
 
@@ -52,7 +95,7 @@ All six current-age and all six inter-arrival budgets fail at 19:58:49Z. WF-06 m
 
 - TCE `.github/workflows/wf-03-tce-production-deploy.yml`: manual release dispatch, full 40-character source SHA, refuse existing immutable tags, inspect registry manifests for `linux/arm64`, require valid SHA-256 web/service digests, validate exact repository-dispatch schema and wait for the Platform handoff run.
 - TCE `.github/workflows/wf-08b-tce-microfe-build-publish.yml`: `packages: write` is job-scoped to publisher jobs; Shell/WS builds target `linux/arm64` with provenance/SBOM; digests are validated; exact payload schema is checked before dispatch and the Platform promotion run is verified.
-- Stock `.github/workflows/deploy.yml`: manual production image publication is explicitly disabled; master-push artifact publication uses job-scoped package write, refuses tag overwrite, builds backend/admin/frontend for `linux/arm64`, verifies full-SHA and version+SHA tags resolve to the same valid registry digest. No Platform handoff is sent, consistent with the absence of active Stock production manifests and the pending owner decision.
+- Stock `.github/workflows/deploy.yml`: manual production image publication is explicitly disabled; master-push artifact publication uses job-scoped package write, refuses tag overwrite, builds backend/admin/frontend for `linux/arm64`, verifies full-SHA and version+SHA tags resolve to the same valid registry digest. No Platform handoff is sent, consistent with the approved decommission scope and absence of active Stock production manifests.
 - Media `.github/workflows/wf-03-media-production-deploy.yml`: full source SHA, immutable-tag preflight, ARM64 manifest and digest verification; explicitly no Platform deployment/dispatch is configured.
 - Authentication `.github/workflows/release.yml`: manual release from master only, immutable full-SHA tags, ARM64 build with provenance/SBOM, digest equality across tags, exact Auth dispatch schema and required Platform dispatch token.
 - Platform exact-head and post-merge validation for PR #1650 (#43092982966 and #43093109452) passed immutable image-change and exact Auth/TCE dispatch-payload contract tests. No image was published or promoted during this audit.
@@ -62,9 +105,17 @@ All six current-age and all six inter-arrival budgets fail at 19:58:49Z. WF-06 m
 - App repositories own application code, dependencies, tests/builds, Dockerfiles, immutable GHCR publication and source provenance. Use full source SHA tags and verify registry digest/ARM64 descriptors before handoff.
 - Platform Infra alone owns production Kustomize manifests, shared GHCR pull credentials, authenticated dispatch validation, provenance/digest promotion, GitOps plan/apply, rollout and live health.
 - `reconcile-vps.yml` manual dispatch defaults to `mode=plan`; explicit manual apply and existing schedule/push/authenticated promotion events retain their documented behavior. `inspect-vps.yml` remains read-only.
-- Keep Stock/Media out of active Platform production manifests while preserving their app CI/publish workflows. Do not remove residual cluster resources until owner decision and fresh evidence; do not confuse cached/local image IDs with registry RepoDigests.
+- Keep Stock/Media out of active Platform production manifests while preserving app CI/publish workflows. The decommission scope is approved; delete only through the protected manual workflow after same-run storage preflight, external backup/retention and authoritative DNS evidence, Media runner stop/disable/unregister plus read-only GitHub runner audit, and production Environment approval. Do not confuse cached/local image IDs with registry RepoDigests.
 - Preserve useful CI, test, security, backup, integration, release, manual and scheduled workflows. No workflow is confirmed redundant/obsolete in this checkpoint.
 - No duplicate direct SSH/Compose deployment authority. No change to TCE market-scan schedule.
+
+## Stock/Media decommission workflow
+
+- Workflow: `.github/workflows/decommission-stock-media.yml`; `workflow_dispatch` only; default `mode=plan`.
+- Plan mode verifies Platform runner policy v15, reports the dedicated Media systemd unit/enablement/Listener state, and runs the read-only namespace/storage/Ingress inventory. It does not stop or unregister a runner or delete resources.
+- Delete mode uses the protected `production` Environment and requires exact confirmations `DELETE-STOCK-PROD-AND-MEDIA-PROD`, `BACKUP-AND-EXTERNAL-DATA-REVIEWED`, `AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED`, and `MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED`, plus stable HTTPS backup/DNS evidence references.
+- Before deleting, it verifies the Media service is inactive and disabled/masked or absent, no Listener process exists, and the GitHub Media repository runner list has no `media-generation-k3s-01` entry via read-only `MEDIA_RUNNER_AUDIT_TOKEN`; it repeats the storage preflight in the same run and deletes only `stock-prod` and `media-prod`.
+- Current inspection #43089176130 shows target namespaces storage-clean but the Media runner service is active/enabled and Listener present. No delete run is authorized by the current evidence or executed. Preserve the shared Platform runner, TCE/Auth/MicroFE/Keycloak and all app CI/publisher workflows.
 
 ## Governance evidence
 
