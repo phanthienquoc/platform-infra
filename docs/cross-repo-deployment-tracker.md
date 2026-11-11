@@ -41,7 +41,7 @@ All six current-age budgets and all six inter-arrival budgets fail at this refer
 | Platform native reconcile/watchdog | #43066718643 / #43058640134 | schedule / SUCCESS / FAILURE | Latest qualifying native runs; both outside freshness budgets. |
 | TCE WF-06 | #43088897948 | workflow_dispatch / FAILURE | Four public endpoints returned HTTP 503 instead of 200. |
 | TCE WF-12 | #43088836266 | workflow_run / FAILURE | Native WF-06 schedule delivery stale; heartbeat notification succeeded. |
-| TCE WF-13 | #43088861304 | workflow_run / SUCCESS | Fallback receipt; not native schedule evidence and does not prove maintenance variable value. |
+| TCE WF-13 | #43088861304 | workflow_run / SUCCESS | Job log shows `TCE_MAINTENANCE_MODE` empty; current code maps empty to `enabled=false`, then dispatched read-only WF-06 fallback #43088897948. Not native schedule evidence. |
 | TCE WF-07 integration | #43088811861 | schedule / SUCCESS | Integration schedule only; does not replace WF-06/WF-12 health lanes. |
 | Stock CI / scraper | #42610360402 / #42457182511 | push / SUCCESS; schedule / FAILURE | Scraper remains fail-closed on missing `VNSTOCK_API_KEY`. |
 | Media CI | #42539512417 | push / SUCCESS | App test/build passed; no new image publication. |
