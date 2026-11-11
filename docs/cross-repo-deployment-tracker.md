@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-11 12:58 ICT (2026-11-11 05:58:04 UTC).
+Last reviewed: 2026-11-11 13:03 ICT (2026-11-11 06:03:28 UTC).
 
 This is the compact current readiness view. Historical append-only content is preserved under `docs/archive`; timestamped checkpoints remain under `docs/cross-repo-deployment-checkpoints`.
 
@@ -8,7 +8,7 @@ This is the compact current readiness view. Historical append-only content is pr
 
 | Repository | Current master SHA | Open PRs | Latest verified CI / operational evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `b88399f0b593f3e336db4d28b38d364c99215ce3` | #1314, #544, #541, #539 (draft / owner decision) | Current-master validation #42963960326 PASS; all four Platform native schedule lanes stale; no native run validates current master. |
+| phanthienquoc/platform-infra | `14e79f1c90f8390636f13a06a899c0de0ab85bd0` | #1314, #544, #541, #539 (draft / owner decision) | Current-master validation #42963960326 PASS; all four Platform native schedule lanes stale; no native run validates current master. |
 | phanthienquoc/TCE-dashboard | `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab` | none | WF-06 #42949191917 and manual #42949231253 fail four strict HTTP 200 probes (503); WF-12 #42944415193 fails freshness. |
 | phanthienquoc/stockdividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS; scraper #42457182511 failed closed on missing `VNSTOCK_API_KEY`; remains retirement scope. |
 | phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS; K3s snapshot stale; runner retirement evidence incomplete. |
@@ -47,6 +47,17 @@ No new image publication, digest promotion, effective production manifest change
 
 
 
+
+## Post-merge verification — 2026-11-11 13:03 ICT / 06:03:28 UTC
+
+- PR #1616 was squash-merged at `14e79f1c90f8390636f13a06a899c0de0ab85bd0`; direct `refs/heads/master` reads match the merge SHA.
+- Exact-head validation #42969674108 PASS for head `a6a015607dfeea1da64b012be53ddc9e71068d63`.
+- Post-merge `validate-manifests` #42969724857 PASS on master SHA `14e79f1c...`; failure-report job skipped by design.
+- The post-merge run list contains only `validate-manifests`; no `reconcile-vps.yml` or `recover-stale-ops.yml` push run was triggered by this documentation-only merge.
+- The 12:58 ICT checkpoint preserves pre-merge Platform SHA `b88399f0...` as a timestamped snapshot; this addendum advances the compact current SHA only.
+- No production manifest, image, Secret, workflow, workload, DNS, database or cluster resource was changed. TCE market-scan schedule unchanged.
+
+## Open PRs and exact-head checks
 
 - Platform #1314: head `db152c9a17416d1a7f82165597dfe478321bd055`; validation run #42161859747 PASS; draft managed-mail plan remains owner decision.
 - Platform #544: head `c95e7daecb83b65577b54303427fe4ea81adfe06`; validation run #38575430454 PASS; Keycloak activation remains secret/DNS/owner gated.
