@@ -1207,3 +1207,54 @@ All six inter-arrival gaps fail. Three current-age budgets fail: Platform reconc
 7. Platform operator: obtain maintenance approval before host restart/package upgrades; preserve PVC `k3s-debug/k3s-debug-logs`.
 
 No new GHCR publication/digest promotion, production manifest apply, image replacement, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot occurred in this checkpoint. Auth runtime Secret provisioning/verification did occur in the historical reconciliation above; shared `ghcr-pull` was unchanged. Preserve useful workflows; none is confirmed obsolete/removed. No direct SSH/Compose authority. Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.
+
+
+## Latest verification — 2026-11-12 01:00 ICT / 2026-11-11 18:00:25 UTC
+
+### Direct repository refs, PRs and latest workflow evidence
+
+- Direct master refs: Platform Infra `fc9318db48164a4b37a8003cf0fc201cb5e06e4f`; TCE Dashboard `5b425bdeab457e943bcecf1831836fc698e24394`; StockDividend `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media Generation `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
+- Platform inspection snapshot PR #1646 was squash-merged at `fc9318db48164a4b37a8003cf0fc201cb5e06e4f`; head `91cf3345a518e5911bfe41eea72ecd156ff33eba`, inspection #43067027719 SUCCESS, validation #43067326077 PASS on the PR head. The merged snapshot is `debug/vps-latest.md`, generated 2026-11-11T17:19:36Z.
+- Open owner-decision PRs: Platform #1314/#544/#541/#539 and Authentication #76. No open PRs in TCE/Stock/Media. Keep owner decisions unmerged.
+- Latest relevant runs: Platform current-master manual reconciliation #43073396454 SUCCESS; recovery #43073697990 SUCCESS. Latest native scheduled Platform reconciliation #43066718643 SUCCESS on parent SHA `ee5485b`. TCE native WF-06 #43073311537 FAIL (all four endpoint jobs fail); native WF-12 #43068077606 FAIL; WF-12 workflow_run #43073350823 SUCCESS is not native schedule delivery; WF-13 workflow_run #43073377037 SKIPPED. Stock CI #42610360402 PASS and scheduled scraper #42457182511 FAIL CLOSED. Media CI #42539512417 PASS. Auth CI #42654579277 PASS.
+- Repository metadata continues to allow squash, merge commits and rebase on all five repositories. Effective inherited organization rulesets/branch-protection enforcement are not established by these metadata reads; GitHub administrator action remains required.
+
+### Current-master GitOps reconciliation — run #43073396454
+
+- Manual `workflow_dispatch` on current Platform master `fc9318db`; inputs: `mode=apply`, `target_app=all`, `allow_image_changes=false`. Overall run and all deployment lane gates completed SUCCESS.
+- GHCR read preflight passed for five managed packages: Auth service, MicroFE Shell/WS and TCE service/web.
+- Auth runtime Secret was provisioned and verified; values were suppressed. Shared `ghcr-pull` Secret remained unchanged. ServiceAccount/Deployment patches reported no change.
+- Blocked-image-pull check found no image-pull failures in MicroFE Auth/Shell/WS or TCE service/frontend; no workload restart was needed for those scopes.
+- TCE release pairing passed for `prod-v0.1.0-e75e338`. GitOps diff reported no drift. Manifest apply, image replacement and rollout were skipped. Auth and TCE lanes were explicitly classified as intentional zero-replica maintenance; no live app health was asserted. Auth HTTPS/TLS check passed, MicroFE active-scope health passed, Keycloak lane skipped.
+- This run is current-master evidence, but it is a manual dispatch, not a native schedule delivery. The apply-mode run performed Auth Secret provisioning and GHCR credential reconciliation (shared pull Secret unchanged); it did not apply production manifests or roll workloads.
+
+### Fresh K3s snapshot — inspection #43067027719
+
+- Snapshot generated 2026-11-11T17:19:36Z; at 18:00:25Z its age is 2,449s, within the 4,500s budget by 2,051s. This is a workflow_dispatch fallback merged by PR #1646, not native schedule delivery.
+- Node `tce-k3s-01` Ready, ARM64; Ubuntu 22.04.5 LTS, kernel 6.8.0-1049-oracle, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2, Docker 29.1.3. RAM 23Gi total / ~19Gi available; root disk 45Gi / 26Gi used / 20Gi free (56%), disk pressure normal. Host reports `restart_required: yes` with kernel/containerd/Docker/OS updates pending. No reboot or package upgrade.
+- Media backend/frontend and MicroFE Shell/WS/NATS were 1/1 Running. Registry RepoDigests: Media backend `sha256:93ddb944…`, frontend `sha256:095c72ed…`; MicroFE Shell `sha256:ae64acc0…`, WS `sha256:416bc16a…`; NATS `sha256:b270f5e2…`.
+- TCE frontend/service, MicroFE Auth and Keycloak remain 0/0. Public OIDC probes return HTTP 503; maintenance workloads are not healthy/live and must not be represented as such.
+- Stock Admin has two ImagePullBackOff pods and desired Backend has one ImagePullBackOff pod; tags `12d63b4` report `no match for platform in manifest` and have no RepoDigest. Legacy Stock Backend/Frontend are 1/1 and do have registry RepoDigests for old tag `23b2878` (backend `sha256:bcf5f7b1…`, frontend `sha256:bca44dd3…`); these old digests do not validate or replace the failed desired `12d63b4` images.
+- PVC `k3s-debug/k3s-debug-logs` remains Bound (1Gi, RWO, local-path). Media and Platform runner services/listeners are active/enabled; remote runner unregister remains unproven. Docker inventory: 20 images / 9.195GB, 5.773GB reclaimable; no cleanup. External backup/retention and authoritative DNS ownership remain unverified.
+
+### Native schedule evidence at 18:00:25 UTC
+
+Only first-attempt `event=schedule` runs on `master` count. Current age is measured from latest `created_at`; inter-arrival is latest minus previous qualifying native schedule run.
+
+| Lane | Latest native run | Previous native run | Current age (s) | Inter-arrival gap (s) | Budget (s) |
+|---|---:|---:|---:|---:|---:|
+| Platform reconcile | #43066718643 | #42993779924 | 2,573 | 28,867 | 2,700 |
+| Platform inspection | #43054529460 | #42981286761 | 7,000 | 30,151 | 4,500 |
+| Platform recovery | #43058316157 | #42986496462 | 5,650 | 29,036 | 2,700 |
+| Platform watchdog | #43058640134 | #42986833403 | 5,529 | 29,006 | 2,700 |
+| TCE WF-06 | #43073311537 | #42949191917 | 99 | 54,245 | 1,500 |
+| TCE WF-12 | #43068077606 | #42996293386 | 2,080 | 28,287 | 1,500 |
+
+All six inter-arrival budgets fail. Four current-age budgets fail: Platform inspection, recovery, watchdog and TCE WF-12. Platform reconciliation is within age budget by 127s; TCE WF-06 is within age budget. Current-master manual reconciliation #43073396454 and manual inspection fallback #43067027719 do not count as native schedule delivery. TCE WF-06 #43073311537 failed all four strict HTTP-200 endpoint jobs (TCE web/API and Auth liveness/readiness); this is consistent with the zero-replica maintenance snapshot, not a reason to weaken health probes. Preserve every cron expression and the TCE market-scan schedule.
+
+### Safety and ownership
+
+- App repositories own tests/builds and immutable GHCR publication. Platform Infra alone owns production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, rollout and runtime verification.
+- No new app image publication or digest promotion. No production manifest apply, image replacement or workload rollout in #43073396454 because GitOps drift was false. Auth runtime Secret provisioning/verification occurred; shared `ghcr-pull` was unchanged.
+- No namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot. No workflow is confirmed obsolete/removed. No duplicate SSH/Compose authority.
+- Exact next actions: obtain a fresh read-only K3s inspection before the 4,500s budget expires; continue native scheduler telemetry; GitHub administrator to enforce PR-only/required checks/force-push and deletion protection/squash-only; TCE administrator to verify `TCE_MAINTENANCE_MODE`; TCE/Auth owners to supply release digest/rollback approval; Stock owner to decide retirement/restoration; Media owner to verify remote runner unregister, backup/retention and DNS; Platform operator to obtain maintenance approval before host upgrades/restart.
