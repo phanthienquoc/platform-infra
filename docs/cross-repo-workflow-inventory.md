@@ -1,14 +1,14 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-12 03:09 ICT (2026-11-11 20:09:00 UTC).
+Last reviewed: 2026-11-12 03:12 ICT (2026-11-11 20:11:03 UTC).
 
-This is the compact current workflow inventory. Historical append-only inventory is preserved at `docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md`; timestamped checkpoints remain under `docs/cross-repo-workflow-inventory-checkpoints/`. This review used read-only GitHub Actions REST run listings (first page per repository/query). Workflow dispatch is not exposed by the current connector. PR #1650 merged at `31b1245c`; post-merge sync PR #1651 merged at `7ff2da75`; exact-head #43093685819 and post-merge #43093772516 both PASS.
+This is the compact current workflow inventory. Historical append-only inventory is preserved at `docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md`; timestamped checkpoints remain under `docs/cross-repo-workflow-inventory-checkpoints/`. This review used read-only GitHub Actions REST run listings (first page per repository/query). Workflow dispatch is not exposed by the current connector. PR #1650 merged at `31b1245c`; post-merge sync PR #1651 merged at `7ff2da75`; PR #1652 merged at `99509adb`; exact-head #43093988090 and post-merge #43094091607 both PASS.
 
 ## Repository refs, PRs and workflow ownership
 
 | Repository | Master SHA | Open PRs | App-owned workflows | Platform-owned workflows |
 |---|---|---|---|---|
-| Platform Infra | `7ff2da75` | #1314/#544/#541/#539 (owner decisions) | Validation, inspection and repository automation only | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, K3s inspection, rollout and health verification |
+| Platform Infra | `99509adb` | #1314/#544/#541/#539 (owner decisions) | Validation, inspection and repository automation only | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, K3s inspection, rollout and health verification |
 | TCE Dashboard | `5b425bde` | None | Tests/builds, immutable GHCR publishers, strict WF-06 HTTP-200 probes, WF-12 schedule watchdog, WF-13 maintenance-aware fallback, integration and backup | No direct production apply; authenticated release handoffs to Platform |
 | StockDividend | `b1b5e177` | None | Tests/builds, native ARM64 immutable publisher, fail-closed scraper | No active production manifests; residual `stock-prod` resources remain in K3s and require owner retirement/restoration decision |
 | Media Generation | `dcd69869` | None | Tests/builds, immutable GHCR publisher and release workflow | No active production manifests; residual Media pods 1/1 and runner active. Decommission requires backup/retention, DNS ownership and remote runner unregister evidence |
@@ -18,6 +18,7 @@ This is the compact current workflow inventory. Historical append-only inventory
 
 | Repository / workflow | Run | Event / result | Notes |
 |---|---:|---|---|
+| Platform validate-manifests | #43094091607 | push / SUCCESS | PR #1652 post-merge validation on master `99509adb`; all required validation steps PASS. |
 | Platform validate-manifests | #43093772516 | push / SUCCESS | PR #1651 post-merge validation on master `7ff2da75`; all required validation steps PASS. |
 | Platform validate-manifests | #43093109452 | push / SUCCESS | PR #1650 post-merge validation on master `31b1245c`; all required validation steps PASS. |
 | Platform inspect-vps | #43089176130 | workflow_dispatch / SUCCESS | Fresh snapshot generated 19:39:15Z; inspection PR #1649 merged at `3e6d3f48`. |
@@ -39,12 +40,12 @@ Only first-attempt `event=schedule` runs on `master` count. Manual, push, pull_r
 
 | Lane | Latest native run | Previous native run | Age (s) | Gap (s) | Budget (s) |
 |---|---:|---:|---:|---:|---:|
-| Platform reconcile-vps.yml | #43066718643 | #42993779924 | 9,677 | 28,867 | 2,700 |
+| Platform reconcile-vps.yml | #43066718643 | #42993779924 | 10,411 | 28,867 | 2,700 |
 | Platform inspect-vps.yml | #43054529460 | #42981286761 | 14,104 | 30,159 | 4,500 |
-| Platform recover-stale-ops.yml | #43058316157 | #42986496462 | 12,754 | 29,036 | 2,700 |
-| Platform reconcile-schedule-watchdog | #43058640134 | #42986833403 | 12,633 | 29,006 | 2,700 |
-| TCE WF-06 | #43073311537 | #42949191917 | 7,203 | 54,245 | 1,500 |
-| TCE WF-12 | #43068077606 | #42996293386 | 9,184 | 28,287 | 1,500 |
+| Platform recover-stale-ops.yml | #43058316157 | #42986496462 | 13,488 | 29,036 | 2,700 |
+| Platform reconcile-schedule-watchdog | #43058640134 | #42986833403 | 13,367 | 29,006 | 2,700 |
+| TCE WF-06 | #43073311537 | #42949191917 | 7,937 | 54,245 | 1,500 |
+| TCE WF-12 | #43068077606 | #42996293386 | 9,918 | 28,287 | 1,500 |
 
 All six current-age and all six inter-arrival budgets fail at 19:58:49Z. WF-06 manual #43088897948 does not count as schedule delivery. WF-12's latest log reports WF-06 source #43073311537 at 98m age and queue=0m; the observed failure is stale schedule delivery, not proven runner congestion. Preserve all cron expressions and TCE market-scan schedule.
 
