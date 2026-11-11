@@ -6,7 +6,7 @@ This is the compact current readiness view. Historical append-only content is pr
 
 ## Repository readiness
 
-| Repository | Current master SHA | Open PRs | Latest verified CI / operational evidence |
+| Repository | Master SHA at 00:02:43Z snapshot | Open PRs | Latest verified CI / operational evidence |
 |---|---|---|---|
 | phanthienquoc/platform-infra | `ad54469d6cf0d2c3362d6105f50fa9131dadf8a5` | #1314, #544, #541, #539 (all draft / owner decision) | PR #1604 merged at `ad54469d`; exact-head #42921837403 and post-merge #42921972012 passed. Latest recovery receipt #42922588369 was repository_dispatch, not native schedule. |
 | phanthienquoc/TCE-dashboard | `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab` | none | Native WF-06 #42922537816 failed public HTTP 200 contract (Auth readiness observed 503; all four endpoint jobs failed). Native WF-12 #42915709227 failed freshness. Separate scheduled WF-07 backup #42924677977 passed; it does not satisfy WF-06/WF-12 cadence. |
@@ -30,7 +30,8 @@ This is the compact current readiness view. Historical append-only content is pr
 - PR #1602 merged at `8b11d662`, adding read-only inspection evidence #42920320410.
 - PR #1603 merged at `98bc3d8c`, excluding recursive Keycloak Markdown from reconcile/recovery push triggers and making resolver-only changes fail closed. Exact-head checks #42921447020, #42921447003 and #42921446835 passed; post-merge #42921556638, #42921556488 and #42921556572 passed. No reconcile/recovery push run was created by this merge.
 - PR #1604 merged at `ad54469d`, refreshing tracker/inventory. Exact-head #42921837403 and post-merge #42921972012 passed.
-- Latest Platform recovery receipt [#42922588369](https://github.com/phanthienquoc/platform-infra/actions/runs/42922588369) was `repository_dispatch`, source TCE WF-06 #42922537816. Logs verified the source heartbeat; reconcile fallback was skipped because #42920184478 was only 15 minutes old at recovery time. A read-only inspection fallback was dispatched and correlated to #42920320410. This is not a native schedule delivery and did not prove a new reconciliation.
+- The 00:02:43Z readiness snapshot predates PR #1605. PR #1605 subsequently merged at 00:07:34Z as `5348f63ba7dddf60b53728b80263308dfa57b9b1`; its exact-head #42928781279 and post-merge #42928846781 both passed. This is the Platform master SHA after the snapshot. PR #1606 corrects the recovery receipt wording only.
+- Latest Platform recovery receipt [#42922588369](https://github.com/phanthienquoc/platform-infra/actions/runs/42922588369) was `repository_dispatch`, source TCE WF-06 #42922537816. Logs verified the source heartbeat; reconcile fallback was skipped because #42920184478 was only 15 minutes old at recovery time. The controller found the existing read-only inspection fallback #42920320410 still fresh (age 13 minutes at that run), so it did not dispatch another inspection. This is not a native schedule delivery and did not prove a new reconciliation.
 - Current Platform master is `ad54469d`; latest post-merge manifest validation #42921972012 passed. Later #42922638144 was a skipped `workflow_run` recovery event, not a deployment.
 
 ## Native schedule freshness
@@ -61,7 +62,7 @@ The six cron expressions were re-read from the current workflow files and remain
 - Storage preflight is `storage-clean`: no Stock/Media PVC or VolumeSnapshot references; separate `k3s-debug/k3s-debug-logs` PVC remains bound. This does not authorize namespace or workload deletion.
 - Last reconcile workflow run [#42920184478](https://github.com/phanthienquoc/platform-infra/actions/runs/42920184478) was a push event at 23:04:13Z, last activity 23:04:57Z; age 3466s at this reference, beyond the 2700s reconciliation budget. It is the historical Keycloak README-triggered side-effect run; PR #1603 subsequently fixed the path/resolver guard. No newer reconciliation apply is evidenced.
 - Manual reconciliation [#42915749236](https://github.com/phanthienquoc/platform-infra/actions/runs/42915749236) at 22:34:05Z succeeded with GHCR preflight, Auth runtime Secret verified (values suppressed), shared `ghcr-pull` unchanged, GitOps drift=false and apply/image replacement/rollout skipped. It is now stale (5318s old).
-- Recovery [#42922588369](https://github.com/phanthienquoc/platform-infra/actions/runs/42922588369) at 23:20:48Z succeeded as `repository_dispatch`; it did not create a new reconcile run. It dispatched the read-only inspection fallback #42920320410.
+- Recovery [#42922588369](https://github.com/phanthienquoc/platform-infra/actions/runs/42922588369) at 23:20:48Z succeeded as `repository_dispatch`; it did not create a new reconcile run. It found the existing read-only inspection fallback #42920320410 still fresh (age 13 minutes at that run) and did not dispatch another inspection.
 - GHCR server-side immutable-tag enforcement remains unverified. Repository-level tag-absence guards and digest equality do not prove registry-side enforcement.
 - Stock scraper #42457182511 failed closed because `VNSTOCK_API_KEY` was empty. No Stock production image publication or digest handoff exists.
 - TCE native WF-06 #42922537816 failed all four endpoint jobs against required HTTP 200; Auth readiness log explicitly observed HTTP 503. TCE WF-12 #42915709227 failed due stale native WF-06 evidence.
