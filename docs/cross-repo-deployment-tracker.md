@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-11 15:55 ICT (2026-11-11 08:55:27 UTC).
+Last reviewed: 2026-11-11 16:00 ICT (2026-11-11 09:00:35 UTC).
 
 This is the compact current readiness view. Historical append-only content is preserved under `docs/archive`; timestamped checkpoints remain under `docs/cross-repo-deployment-checkpoints`.
 
@@ -8,7 +8,7 @@ This is the compact current readiness view. Historical append-only content is pr
 
 | Repository | Current master SHA | Open PRs | Latest verified CI / operational evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `4cb217722b77c190886cb2ce1c28fe26802bce19` | #1314, #544, #541, #539 (draft / owner decision) | PR #1626 squash-merged; exact-head #42989157609 PASS and post-merge master #42989295172 PASS. |
+| phanthienquoc/platform-infra | `37a5624a325c570df0fc689b4f6ecde5f9bae89e` | #1314, #544, #541, #539 (draft / owner decision) | PR #1627 squash-merged; exact-head #42991422461 PASS and post-merge master #42991499455 PASS. |
 | phanthienquoc/TCE-dashboard | `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab` | none | Native WF-06 #42949191917 and WF-12 #42944415193 fail; manual WF-06 #42972014911 fails four strict HTTP 200 probes (503); WF-07 integration #42971954835 and backup #42924677977 PASS. TCE/Auth remain 0/0 maintenance. |
 | phanthienquoc/stockdividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED on empty `VNSTOCK_API_KEY`; no publication/promotion while retirement scope remains active. |
 | phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS; last inspection #42981286761 showed backend/frontend 1/1 with registry digest references; runner remains active and retirement gates are incomplete. |
@@ -674,3 +674,14 @@ All six inter-arrival gaps exceed budget. Three of six current-age checks fail (
 7. Registry administrator: verify GHCR server-side immutable-tag enforcement.
 
 No new GHCR publication, digest promotion, current-master production apply, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/object-storage mutation or host reboot occurred. Preserve useful CI/test/security, release, backup, integration, manual and scheduled workflows; none is confirmed redundant/obsolete. App repositories retain tests/builds/immutable publication ownership; Platform remains the sole production manifest, shared credential, GitOps promotion/reconciliation, rollout and health authority. No direct SSH/Compose authority. TCE market-scan schedule unchanged.
+
+
+## Post-merge verification — 2026-11-11 16:00 ICT / 09:00:35 UTC
+
+- PR #1627 squash-merged at `37a5624a325c570df0fc689b4f6ecde5f9bae89e`; exact-head validation [#42991422461](https://github.com/phanthienquoc/platform-infra/actions/runs/42991422461) PASS and post-merge current-master validation [#42991499455](https://github.com/phanthienquoc/platform-infra/actions/runs/42991499455) PASS.
+- Master ref was read after merge and matched `37a5624a...`. Post-merge workflow ran `validate-manifests` only; no production reconciliation or recovery push run was triggered by this documentation-only merge.
+- PR #1627 changed only the tracker, workflow inventory and two timestamped checkpoints. No manifests, app code, workflows, secrets or production resources changed.
+- The embedded K3s inspection snapshot #42981286761 generated 07:41:14Z is now 4,761s old at this reference, exceeding the 4,500s budget by 261s. It is expired; no fresh inspection was obtained.
+- Latest successful manual reconciliation #42986517013 is 2,287s old against 2,700s (413s remaining) but ran on older Platform SHA `8f95ddd872...`, not current master `37a5624a...`. It reported drift=false and skipped apply/image replacement/rollout; do not treat it as current-master reconciliation evidence.
+- Six native schedule inter-arrival gaps remain outside budget. Current-age checks now also fail for inspection, in addition to Platform reconcile and TCE WF-06/WF-12. Recovery and watchdog remain within current-age budgets.
+- No production dispatch, GHCR publication, digest promotion, apply, rollout, deletion, credential/DNS/database/storage mutation or host restart occurred. TCE market-scan schedule unchanged.
