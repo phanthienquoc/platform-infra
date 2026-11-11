@@ -341,6 +341,32 @@ for required in (
 if "HTTP (500|502|503|504)" not in recovery:
     fail("Read-only inspection recovery must retry transient GitHub HTTP 5xx dispatch failures.")
 
+# Dispatch acceptance requires the run-history correlation GET to tolerate transient
+# GitHub 5xx responses in both recovery paths. Permanent API/auth failures stay fail-closed.
+reconcile_correlation = recovery.split(
+    "      - name: Recover missing reconciliation delivery", 1
+)[1].split("      - name: Recover missing inspection delivery", 1)[0].split(
+    '          dispatched_run=""', 1
+)[1]
+inspection_correlation = recovery.split(
+    "      - name: Recover missing inspection delivery", 1
+)[1].split('          dispatched_run=""', 1)[1]
+for lane_name, lane_text in (
+    ("reconciliation", reconcile_correlation),
+    ("inspection", inspection_correlation),
+):
+    for required in (
+        'if ! response="$(',
+        "HTTP (500|502|503|504)",
+        "retry_delay=$((attempt * 5))",
+        "continue",
+        "GitHub Actions API failed while correlating",
+        "refusing to report success.",
+    ):
+        if required not in lane_text:
+            fail(f"{lane_name} dispatch-correlation retry contract is missing: {required}")
+
+
 if not re.search(r"(?m)^  workflow_dispatch:", provision):
     fail("Keycloak provisioning must retain its explicit manual workflow_dispatch entry point.")
 if re.search(r"(?m)^  push:", provision):
