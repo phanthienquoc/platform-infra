@@ -1,5 +1,76 @@
 # Cross-Repository Production Deployment Tracker
 
+Last reviewed: 2026-11-12 05:02 ICT (2026-11-11 22:02:56 UTC).
+
+## Latest verification — 2026-11-11 22:02:56 UTC / 2026-11-12 05:02:56 ICT
+
+This post-merge refresh supersedes the prior 04:02 ICT compact snapshot. Repository refs and Actions runs were read directly from GitHub REST. Only first-attempt `event=schedule` runs on `master` count toward native cadence; manual, push, pull_request, workflow_run, repository_dispatch and reruns are excluded.
+
+### Direct master refs and open PRs
+
+| Repository | Verified master SHA | Open PRs | Latest relevant workflow evidence |
+|---|---|---|---|
+| phanthienquoc/platform-infra | `f2ad42a5a9437c35aad11f3a5eeab644902f6241` | #1314/#544/#541/#539 owner-decision drafts | PR #1653 merged by squash at 22:02:53Z; exact-head validation #43100250244 on `dae50fe614dcdf6432de1b1c616f3034a1146f6c` PASS (20/20 validation steps). New master validation #43108386625 on `f2ad42a5` is in progress; network-boundary step was still running at inspection. |
+| phanthienquoc/TCE-dashboard | `5b425bdeab457e943bcecf1831836fc698e24394` | none | Latest WF-06 manual #43088897948 FAIL (4 strict HTTP-200 probes returned 503); latest native WF-06 #43073311537 FAIL; latest native WF-12 #43068077606 FAIL; WF-13 #43088861304 workflow_run SUCCESS but logged empty `TCE_MAINTENANCE_MODE`; WF-07 integration schedule #43088811861 PASS (not health/schedule-watchdog evidence). |
+| phanthienquoc/stockdividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | Stock CI #42610360402 PASS. Scraper #42457182511 FAIL CLOSED because `VNSTOCK_API_KEY` is missing. No current-master image publication/promotion is evidenced in the inspected Actions run window. |
+| phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | Media CI #42539512417 PASS. Latest inspected successful production publication #41158598649 is older than current master; no current-master publication or Platform handoff is evidenced. |
+| phanthienquoc/phanthienquoc-authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 owner-decision draft | Auth CI #42654579277 PASS. Latest inspected release #41040510320 is older than current master; no current-master release/handoff is evidenced. |
+
+PR #1653 ([TCE maintenance and Stock/Media decommission gates](https://github.com/phanthienquoc/platform-infra/pull/1653)) is now merged. It changed documentation only; no Actions variable, secret, manifest, image, workload, namespace, runner, DNS, database, storage or host state was mutated. Its exact-head validation #43100250244 completed successfully with all 20 validation steps PASS. Merge SHA is the current master `f2ad42a5a9437c35aad11f3a5eeab644902f6241`.
+
+### Latest master workflow checks
+
+| Repository / workflow | Run | Event / state | Interpretation |
+|---|---:|---|---|
+| Platform validate-manifests | #43108386625 | push / in_progress | Current-master post-merge validation; validation job running, network-boundary step in progress at inspection. |
+| Platform validate-manifests | #43094091607 | push / SUCCESS | Previous master `99509adb`, superseded by PR #1653 merge. |
+| Platform inspect-vps | #43089176130 | workflow_dispatch / SUCCESS | Full snapshot generated 19:39:15Z on older SHA `9093831c`; now expired. |
+| Platform reconcile-vps | #43088879697 | workflow_dispatch / SUCCESS | Parent `9093831c`, `mode=apply`, target=all, image changes=false; 5 GHCR reads PASS; Auth runtime Secret provisioned/verified with values suppressed; shared `ghcr-pull` unchanged; drift=false; apply/image replacement/rollout skipped. Historical only, expired and not current-master authorization. |
+| TCE WF-06 | #43088897948 | workflow_dispatch / FAILURE | Four public HTTP-200 probes returned 503. |
+| TCE WF-13 | #43088861304 | workflow_run / SUCCESS | Log showed empty `TCE_MAINTENANCE_MODE`, which maps to disabled; does not prove the current repository variable value. |
+| TCE WF-12 | #43088836266 | workflow_run / FAILURE | Stale native WF-06 source; not a native schedule run. |
+| TCE WF-07 integration | #43088811861 | schedule / SUCCESS | Integration-only lane. |
+| Stock CI / scraper | #42610360402 / #42457182511 | push / SUCCESS; schedule / FAILURE | Scraper remains fail-closed on missing API key. |
+| Media CI | #42539512417 | push / SUCCESS | Tests/build passed; no current-master publication evidence. |
+| Authentication CI | #42654579277 | push / SUCCESS | CI passed; no current-master release evidence. |
+
+### Native schedule freshness — reference 22:02:56Z
+
+| Lane | Latest qualifying native run | Previous native run | Current age (s) | Inter-arrival gap (s) | Budget (s) |
+|---|---:|---:|---:|---:|---:|
+| Platform reconcile-vps.yml | #43066718643 | #42993779924 | 17,124 | 28,867 | 2,700 |
+| Platform inspect-vps.yml | #43054529460 | #42981286761 | 21,551 | 30,159 | 4,500 |
+| Platform recover-stale-ops.yml | #43058316157 | #42986496462 | 20,201 | 29,036 | 2,700 |
+| Platform schedule watchdog | #43058640134 | #42986833403 | 20,080 | 29,006 | 2,700 |
+| TCE WF-06 | #43073311537 | #42949191917 | 14,650 | 54,245 | 1,500 |
+| TCE WF-12 | #43068077606 | #42996293386 | 16,631 | 28,287 | 1,500 |
+
+All 6/6 current-age and 6/6 inter-arrival budgets fail. Queue telemetry in the last inspected WF-12 sample was zero minutes, so the available evidence does not establish runner congestion. WF-07, WF-13 workflow_run receipts, manual WF-06 runs and reruns do not substitute for native first-attempt schedule delivery. Preserve every cron expression and the TCE market-scan schedule.
+
+### Runtime freshness and production authority
+
+- Full K3s inspection #43089176130 generated `debug/vps-latest.md` at 19:39:15Z. At 22:02:56Z its age is 8,621s against a 4,500s budget; expired by 4,121s. It is historical only.
+- Reconciliation #43088879697 ran at 19:37:08Z on parent SHA `9093831c`. At 22:02:56Z its age is 8,748s against a 2,700s budget; expired by 6,048s. It is historical only and does not authorize current-master apply.
+- Last-known workloads: Media backend/frontend and MicroFE Shell/WS/NATS were 1/1; TCE/Auth/Keycloak were 0/0 maintenance; Stock desired Admin (two pods) and Backend (one pod) were ImagePullBackOff on `12d63b4`. Stock legacy workloads were running but did not provide compatible desired-release digest evidence. Do not assert these as current without a fresh inspection.
+- Historical reconciliation verified five GHCR package reads and Auth runtime Secret, left shared `ghcr-pull` unchanged, found no drift, and skipped apply/image replacement/rollout.
+- PR #1653 confirms the Stock/Media decommission scope is approved and GitOps ownership retirement is already merged. Namespace deletion remains blocked pending fresh same-run storage preflight, external backup/retention evidence, authoritative DNS/host/TLS review, local Media runner service stopped/disabled with no Listener, and GitHub-side runner registration absence. Preserve `k3s-debug/k3s-debug-logs` (1Gi, Bound, RWO) and all TCE/Auth/MicroFE/Keycloak resources.
+- WF-13 #43088861304 logged `TCE_MAINTENANCE_MODE` empty; that run resolved maintenance as disabled and dispatched a read-only WF-06 fallback. Current repository variable value remains inaccessible. TCE administrator must verify it; set true only for an approved zero-replica maintenance window, otherwise restore service replicas. Keep strict HTTP-200 probes.
+- GitHub repository metadata still permits squash, merge commit and rebase. Repo rulesets GET returned `[]` on Platform, TCE, Media and Auth; Stock rulesets GET returned 403. Branch-protection detail GET returned 403. Effective inherited organization rulesets and actual protection cannot be inferred from these reads; administrator verification/enforcement remains required.
+
+### Exact next actions
+
+1. Platform operator: obtain fresh read-only `inspect-vps.yml` and run `reconcile-vps.yml` on current master `f2ad42a5` with `mode=plan`; do not use expired parent-SHA evidence.
+2. Platform CI: verify current-master validation #43108386625 completes successfully; exact PR #1653 validation #43100250244 already passed.
+3. GitHub administrator: provide native schedule enqueue/delivery telemetry and enforce PR-only, required checks, force-push/deletion protection and squash-only across all five repositories.
+4. TCE administrator: verify `TCE_MAINTENANCE_MODE`; do not weaken HTTP-200 or native schedule checks.
+5. Media operator/decommission owner: provide backup/retention and authoritative DNS evidence; stop/disable runner, verify local Listener absence and GitHub-side registration removal; then run the protected same-run plan before any delete.
+6. Stock owner: keep desired image publication/promotion blocked until a compatible ARM64 immutable digest exists or the approved decommission path is completed.
+7. Preserve app-owned tests/builds/security and immutable publishers; Platform remains sole production manifest, shared pull credential, digest promotion, GitOps, rollout and health authority.
+
+No workflow dispatch, new GHCR publication, digest promotion, current-master GitOps plan/apply, workload rollout, namespace/PVC/PV deletion, runner stop/unregister, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot occurred. The current GitHub connector exposes read/write repository and PR operations but no Actions workflow-dispatch action. No direct SSH/Compose deployment authority was added. TCE market-scan schedule unchanged.
+
+---
+
 Last reviewed: 2026-11-12 04:02 ICT (2026-11-11 21:02:52 UTC).
 
 This is the compact current readiness view; the 04:02 ICT verification above supersedes the prior 03:12 ICT compact snapshot. Historical append-only content is preserved below and under `docs/archive`; timestamped checkpoints remain under `docs/cross-repo-deployment-checkpoints`. GitHub Actions run listing was retrieved through read-only Actions REST GET (first page per repository/query). PR #1651 merged at 20:09:00Z; exact-head #43093685819 and post-merge master validation #43093772516 completed SUCCESS.
