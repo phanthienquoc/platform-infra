@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-11 18:05 ICT (post-merge SHA receipt only; operational snapshot 18:01 ICT).
+Last reviewed: 2026-11-11 18:09 ICT (fresh read-only K3s inspection).
 
 This is the compact current workflow inventory. The previous append-only inventory is preserved at docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md. Historical timestamped workflow checkpoints remain under docs/cross-repo-workflow-inventory-checkpoints/.
 
@@ -492,3 +492,13 @@ No workflow was added or removed in this checkpoint. Keep CI, tests, security, a
 - TCE master `5b425bdeab457e943bcecf1831836fc698e24394`: post-merge WF-01 #43008514423, WF-05 #43008514459 and WF-02 #43008514481 all PASS after PR #1037. No GHCR publication was triggered.
 - The 18:01 ICT operational/schedule snapshot remains the latest runtime evidence; this receipt updates only current refs and validation provenance.
 - Workflow ownership and production authority boundaries are unchanged. No workflow removed, no SSH/Compose authority added, and TCE market-scan schedule unchanged.
+
+
+## Fresh K3s inspection inventory — 2026-11-11 18:09 ICT
+
+- Inspection #42994074939 attempt 2 SUCCESS; snapshot generated 11:06:54Z and was 152s old at the 11:09:26Z reference. Inspection-only PR #1634 auto-squash-merged after exact-head validation #43009458775 PASS; current Platform master `388f96b7f7b0c97f461691b5862aff83b7d0b4f2`.
+- Node `tce-k3s-01` Ready/ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2; Ubuntu 22.04.5; RAM 23Gi total/19Gi available; disk 45G/56% used/20G available; pressure normal. Host restart required; kernel/containerd/Docker updates pending. Do not reboot or clean images without approval.
+- Platform and Media runner services active/enabled. Docker has 5.773GB reclaimable image data; no cleanup performed. Preserve `k3s-debug/k3s-debug-logs` PVC/PV (Bound, 1Gi, RWO, local-path).
+- Media backend/frontend and MicroFE Shell/WS/NATS are 1/1 Running with registry digests. TCE/Auth/Keycloak are 0/0 maintenance, not healthy. Stock Admin (2) and desired Backend (1) remain ImagePullBackOff on tag `12d63b4` with no registry digest; legacy Backend/Frontend 1/1 have only local image IDs and are not promotion evidence.
+- All six native schedule current-age/inter-arrival budgets fail. Manual inspection rerun is not native schedule evidence. TCE market-scan schedule unchanged.
+- Platform #1632/#1633 validations and post-merge validations PASS; inspection PR #1634 exact-head validation PASS. TCE #1037 exact-head and post-merge checks PASS. No workflow removed, no SSH/Compose authority, Platform remains sole production apply authority.
