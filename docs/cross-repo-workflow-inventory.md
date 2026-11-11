@@ -543,3 +543,31 @@ No workflow was added or removed in this checkpoint. Keep CI, tests, security, a
 - No new native schedule run appeared by 12:09:43Z. All six current-age budgets and all six inter-arrival budgets remain failed. Do not count manual, push, `workflow_run` or `repository_dispatch` as native schedule delivery.
 - K3s snapshot #42994074939 is 3,769s old / 4,500s budget at the reference, with 731s remaining. Platform operator must refresh read-only inspection before 12:21:54Z. Last reconciliation #43003088695 is 6,429s old and is on pre-current SHA `ff401dad`; run current-master `mode=plan` before any apply decision.
 - Ownership boundaries unchanged: app repositories own tests/builds/immutable GHCR publication; Platform Infra alone owns production manifests, shared GHCR pull credentials, GitOps promotion/reconciliation, rollout and health verification. No workflow removed/added, no SSH/Compose authority, no production mutation, and TCE market-scan schedule unchanged.
+
+
+## Latest workflow inventory verification — 2026-11-11 19:59 ICT / 12:59:10 UTC
+
+### Repository workflow and ownership snapshot
+
+| Repository | Current master | Latest relevant workflow evidence | Ownership / preservation |
+|---|---|---|---|
+| Platform Infra | `47052106687e95a151da731f8fd28cddd872fbe6` | Current-master manifest validation #43018649706 PASS. No current-master reconcile or fresh inspection. Last full inspection #42994074939 attempt 2 is stale; last reconciliation #43003088695 succeeded on old SHA `ff401dad` and skipped apply/image replacement/rollout. | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, rollout and health verification. Preserve native schedules, manual reconciliation, read-only inspection, recovery, watchdog, CI/contract validation, backup and guarded maintenance workflows. |
+| TCE Dashboard | `5b425bdeab457e943bcecf1831836fc698e24394` | WF-01/02/05 master runs PASS. Native WF-06 #42949191917 and WF-12 #42996293386 FAIL/stale; WF-06 rerun attempt 2 #43003016447 excluded from native first-attempt cadence. Manual WF-06 #43003071073 returns four HTTP 503s. WF-12 #43019107548 and WF-13 #43019140175 workflow_run receipts SKIPPED. | Owns tests/builds/immutable TCE and MicroFE GHCR publication, strict public health probes, integration/backup and maintenance-aware recovery. Preserve WF-06 HTTP 200, WF-12 native schedule monitoring, WF-13 maintenance-aware fallback, integration/backup and release publishers. Do not count reruns/fallback/workflow_run as native schedule delivery. |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED on empty `VNSTOCK_API_KEY`. Last K3s snapshot shows desired Admin/Backend ImagePullBackOff; legacy Backend/Frontend 1/1. | Owns app tests/builds/native ARM64 immutable publication only if retention is approved. Preserve fail-closed scraper and gated publisher; no secret in Git/logs/chat and no publication while retirement scope remains active. |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | CI #42539512417 PASS; last full snapshot shows backend/frontend 1/1 with registry RepoDigests; dedicated runner service/listener active/enabled. | Owns tests/builds/immutable publication. Preserve CI/release workflows. Runner retirement requires remote unregister, backup/retention and DNS ownership evidence. |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | CI #42654579277 PASS; Auth 0/0 maintenance. Runtime Secret was verified by historical reconciliation #43003088695 on old Platform SHA with values suppressed. | Owns Auth tests/builds/release provenance/immutable publication. Preserve CI/security/release. Zero replicas and OIDC/health 503 are not live health. |
+
+### Open PR and check inventory
+
+- Platform owner-decision drafts: #1314/#544/#541/#539; Auth draft #76; no open PRs in TCE/Stock/Media. Current check-run API reads show the unchanged PR heads' `validate` checks PASS: Platform #1314 #42161859747, #544 #38575430454, #541 #38567431761, #539 #38548718033; Auth #76 #41329425940 PASS with Supabase Preview SKIPPED. Keep all owner-decision drafts unmerged.
+- Direct branch API: all five master branches report `protected=false`, protection disabled and no required status-check enforcement. Repository metadata permits squash, merge commit and rebase. Effective organization ruleset inheritance is unverified; GitHub administrator must confirm and enforce squash-only/required checks.
+
+### Native schedule evidence at 12:59:10 UTC
+
+Only first-attempt `event=schedule` runs on `master` count. Platform reconcile #42993779924 age 13,365s/gap 26,585s; inspection #42981286761 age 19,084s/gap 25,617s; recovery #42986496462 age 16,611s/gap 24,822s; watchdog #42986833403 age 16,460s/gap 24,297s; TCE WF-06 #42949191917 age 36,269s/gap 12,853s; TCE WF-12 #42996293386 age 12,292s/gap 26,503s. All current-age and inter-arrival budgets fail. WF-06 #43003016447 is attempt 2 and not counted; WF-12 #43019107548 is workflow_run/SKIPPED. Preserve all cron expressions and TCE market-scan schedule.
+
+### Runtime freshness and safety
+
+- Full K3s snapshot #42994074939 attempt 2 generated 11:06:54Z; age 6,736s / 4,500s budget, expired. Last reconciliation #43003088695 age 9,396s / 2,700s, old Platform SHA `ff401dad`; drift=false and no apply/image replacement/rollout. No current-master production authorization.
+- Last-known node/resources/workloads are historical only. Preserve `k3s-debug/k3s-debug-logs`; Stock desired pods ImagePullBackOff and legacy images have no RepoDigest; Media/MicroFE digest references are valid in the snapshot. Do not reboot, cleanup images, scale maintenance workloads, promote Stock, delete namespace/storage or unregister runner from stale evidence.
+- App repos retain tests/builds and immutable publication. Platform Infra alone owns production manifests, shared GHCR credentials, GitOps promotion/reconciliation, rollout and health. No direct SSH/Compose authority. No workflow added/removed in this checkpoint.
