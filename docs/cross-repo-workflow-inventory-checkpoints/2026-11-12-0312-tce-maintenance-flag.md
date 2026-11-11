@@ -17,3 +17,6 @@
 - Manual workflow `decommission-stock-media.yml` defaults to read-only plan; delete mode is gated by production Environment approval, exact typed confirmations, HTTPS backup/DNS evidence, same-run storage preflight, Media service inactive + disabled/masked or absent, no Listener and remote runner absence verified with read-only audit token.
 - Latest full snapshot #43089176130: no PVC/PV claims or VolumeSnapshot refs in target namespaces, but Services/Ingresses/Deployments/ReplicaSets/Secrets remain. Media runner is active/enabled with Listener present. Stock desired pods still ImagePullBackOff on incompatible ARM64 manifest. Keycloak OIDC probes 503, outside scope.
 - No decommission workflow was dispatched and no resources/runners were deleted. Keep application repositories and useful workflows intact; no duplicate SSH/Compose authority; TCE market-scan schedule unchanged.
+
+
+Current Platform documentation PR: #1653, branch `docs/tce-maintenance-flag-evidence-20261112-0312-ict`; latest exact-head validation run #43095125265 is queued/in progress. Do not merge until the exact current head passes.
