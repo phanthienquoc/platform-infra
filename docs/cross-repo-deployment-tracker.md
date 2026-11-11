@@ -7,11 +7,11 @@ Last reviewed: 2026-11-12 06:14 ICT (2026-11-11 23:14:06 UTC).
 
 This refresh supersedes the 06:10 ICT follow-up. Direct reads verified all five master refs/open PRs, current Platform Actions runs/checks, the merged recovery retry fix, and the latest K3s/GitOps evidence. Native cadence counts only first-attempt event=schedule runs on master.
 
-### Repository refs and open PRs
+## Repository readiness
 
 | Repository | Master SHA | Open PRs | Current relevant evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | 3ad8cc30535af6c627175b22070ee2ca3799d100 | #1314/#544/#541/#539 owner-decision drafts | PR #1657 merged; exact-head validate-github-actions #43118015009 PASS and validate-manifests #43118014978 PASS. Post-merge #43118124205 and #43118124229 both PASS. |
+| phanthienquoc/platform-infra | 3ad8cc30535af6c627175b22070ee2ca3799d100 | #1658 current readiness refresh; #1314/#544/#541/#539 owner-decision drafts | PR #1657 merged; exact-head validate-github-actions #43118015009 PASS and validate-manifests #43118014978 PASS. Post-merge #43118124205 and #43118124229 both PASS. |
 | phanthienquoc/TCE-dashboard | 5b425bdeab457e943bcecf1831836fc698e24394 | none | Native WF-06 #43073311537 FAIL; native WF-12 #43068077606 FAIL. Manual WF-06 #43088897948 FAIL (four HTTP 503 probes). WF-13 #43088861304 logged empty TCE_MAINTENANCE_MODE. WF-07 integration #43088811861 PASS. |
 | phanthienquoc/stockdividend | b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61 | none | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED because VNSTOCK_API_KEY is missing. Desired Admin/Backend image tag 12d63b4 has no compatible platform manifest/RepoDigest. |
 | phanthienquoc/media-generation | dcd698699c65ba6e73f6b43838975144777131c3 | none | CI #42539512417 PASS. Fresh K3s snapshot shows Media backend/frontend 1/1 with RepoDigests. Dedicated Media runner remains active/enabled; no current-master publication is evidenced. |
@@ -47,7 +47,16 @@ This refresh supersedes the 06:10 ICT follow-up. Direct reads verified all five 
 
 All 6/6 inter-arrival budgets fail; 3/6 current-age budgets fail (Platform reconcile, TCE WF-06 and TCE WF-12). Inspection, recovery and watchdog current-age are within budget, but their inter-arrival gaps still fail. Watchdog #43116818114 failed on native gaps. It verified three WF-06 and four WF-12 heartbeat receipts and reported no scheduled deployment lane over the 15-minute queue budget; runner congestion is not established. Recovery #43116883745 is a workflow_run success, not native schedule delivery. Preserve all cron expressions and the TCE market-scan schedule.
 
-### Current blockers and safety
+## Current actions
+
+1. Platform operator: run a fresh read-only inspection and a current-master reconcile-vps mode=plan on 3ad8cc; the last successful reconciliation #43116379969 ran on parent SHA c0f309, and no exact-current-master reconciliation is evidenced.
+2. GitHub administrator: repair native schedule delivery/telemetry and enforce PR-only, required checks, force-push/deletion protection and squash-only.
+3. TCE administrator: verify TCE_MAINTENANCE_MODE according to the approved zero-replica maintenance state; keep strict HTTP-200 probes.
+4. Media owner/operator: stop/disable/unregister the dedicated runner and provide backup/retention and authoritative DNS evidence before protected decommission.
+5. Stock owner: keep desired image promotion blocked until a compatible immutable ARM64 digest exists or the approved retirement path completes.
+6. Platform operator: obtain approval before host package upgrades/reboot; preserve k3s-debug/k3s-debug-logs.
+
+## Current runtime blockers
 
 - TCE administrator must verify TCE_MAINTENANCE_MODE. WF-13 #43088861304 logged it empty (mapped to disabled); strict WF-06 HTTP-200 probes returned four 503s. Do not weaken WF-06/WF-12.
 - Stock desired image remains unpromotable until a compatible immutable ARM64 digest exists or the approved retirement path completes. Scraper remains fail-closed on missing VNSTOCK_API_KEY.
