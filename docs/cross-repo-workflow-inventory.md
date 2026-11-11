@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-12 06:02 ICT (2026-11-11 23:02:43 UTC).
+Last reviewed: 2026-11-12 06:05 ICT (2026-11-11 23:05:33 UTC).
 
 ## Latest workflow inventory verification — 2026-11-12 06:02 ICT / 2026-11-11 23:02:43 UTC
 
@@ -859,3 +859,8 @@ Only first-attempt `event=schedule` runs on `master` count. Platform reconcile #
 
 - No new GHCR publication/digest promotion, production manifest apply, image replacement or workload rollout. Auth runtime Secret provisioning/verification occurred; shared `ghcr-pull` remained unchanged.
 - No namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot. No workflow added/removed; no duplicate SSH/Compose authority. Platform Infra remains the sole production apply authority.
+
+
+## Recovery API correlation resilience — 2026-11-12 06:05 ICT
+
+PR #1657 adds bounded retry/backoff for transient GitHub HTTP 5xx responses during both recovery-controller dispatch-correlation GETs (reconcile-vps and inspect-vps). Permanent 4xx/auth failures and malformed JSON remain fail-closed. The static workflow-contract validator now asserts both paths retain this behavior. No schedule expression or deployment authority changes.
