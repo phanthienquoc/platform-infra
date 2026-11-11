@@ -1,14 +1,14 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-12 02:58 ICT (2026-11-11 19:58:49 UTC).
+Last reviewed: 2026-11-12 03:05 ICT (2026-11-11 20:04:47 UTC).
 
-This is the compact current workflow inventory. Historical append-only inventory is preserved at `docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md`; timestamped checkpoints remain under `docs/cross-repo-workflow-inventory-checkpoints/`. This review used read-only GitHub Actions REST run listings (first page per repository/query). Workflow dispatch is not exposed by the current connector.
+This is the compact current workflow inventory. Historical append-only inventory is preserved at `docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md`; timestamped checkpoints remain under `docs/cross-repo-workflow-inventory-checkpoints/`. This review used read-only GitHub Actions REST run listings (first page per repository/query). Workflow dispatch is not exposed by the current connector. PR #1650 merged at `31b1245c`; exact-head #43092982966 and post-merge #43093109452 both PASS.
 
 ## Repository refs, PRs and workflow ownership
 
 | Repository | Master SHA | Open PRs | App-owned workflows | Platform-owned workflows |
 |---|---|---|---|---|
-| Platform Infra | `3e6d3f48` | #1314/#544/#541/#539 (owner decisions) | Validation, inspection and repository automation only | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, K3s inspection, rollout and health verification |
+| Platform Infra | `31b1245c` | #1314/#544/#541/#539 (owner decisions) | Validation, inspection and repository automation only | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, K3s inspection, rollout and health verification |
 | TCE Dashboard | `5b425bde` | None | Tests/builds, immutable GHCR publishers, strict WF-06 HTTP-200 probes, WF-12 schedule watchdog, WF-13 maintenance-aware fallback, integration and backup | No direct production apply; authenticated release handoffs to Platform |
 | StockDividend | `b1b5e177` | None | Tests/builds, native ARM64 immutable publisher, fail-closed scraper | No active production manifests; residual `stock-prod` resources remain in K3s and require owner retirement/restoration decision |
 | Media Generation | `dcd69869` | None | Tests/builds, immutable GHCR publisher and release workflow | No active production manifests; residual Media pods 1/1 and runner active. Decommission requires backup/retention, DNS ownership and remote runner unregister evidence |
@@ -18,7 +18,8 @@ This is the compact current workflow inventory. Historical append-only inventory
 
 | Repository / workflow | Run | Event / result | Notes |
 |---|---:|---|---|
-| Platform inspect-vps | #43089176130 | workflow_dispatch / SUCCESS | Fresh snapshot generated 19:39:15Z; inspection PR #1649 merged at master `3e6d3f48`. |
+| Platform validate-manifests | #43093109452 | push / SUCCESS | PR #1650 post-merge validation on master `31b1245c`; all required validation steps PASS. |
+| Platform inspect-vps | #43089176130 | workflow_dispatch / SUCCESS | Fresh snapshot generated 19:39:15Z; inspection PR #1649 merged at `3e6d3f48`. |
 | Platform validate-manifests | #43089441872 | workflow_dispatch / SUCCESS | Exact inspection PR head validation, 20/20 steps PASS; not a separate post-merge master run. |
 | Platform reconcile-vps | #43088879697 | workflow_dispatch / SUCCESS | Parent `9093831c`, mode=apply, image changes false; five GHCR package preflight PASS; Auth Secret verified; shared `ghcr-pull` unchanged; no drift; apply/image replacement/rollout skipped. |
 | Platform recover-stale-ops | #43089116141 | workflow_dispatch / SUCCESS | Manual recovery; not native schedule delivery. |
@@ -46,6 +47,15 @@ Only first-attempt `event=schedule` runs on `master` count. Manual, push, pull_r
 
 All six current-age and all six inter-arrival budgets fail at 19:58:49Z. WF-06 manual #43088897948 does not count as schedule delivery. WF-12's latest log reports WF-06 source #43073311537 at 98m age and queue=0m; the observed failure is stale schedule delivery, not proven runner congestion. Preserve all cron expressions and TCE market-scan schedule.
 
+## Source-level immutable publisher and dispatch contract audit — 2026-11-11
+
+- TCE `.github/workflows/wf-03-tce-production-deploy.yml`: manual release dispatch, full 40-character source SHA, refuse existing immutable tags, inspect registry manifests for `linux/arm64`, require valid SHA-256 web/service digests, validate exact repository-dispatch schema and wait for the Platform handoff run.
+- TCE `.github/workflows/wf-08b-tce-microfe-build-publish.yml`: `packages: write` is job-scoped to publisher jobs; Shell/WS builds target `linux/arm64` with provenance/SBOM; digests are validated; exact payload schema is checked before dispatch and the Platform promotion run is verified.
+- Stock `.github/workflows/deploy.yml`: manual production image publication is explicitly disabled; master-push artifact publication uses job-scoped package write, refuses tag overwrite, builds backend/admin/frontend for `linux/arm64`, verifies full-SHA and version+SHA tags resolve to the same valid registry digest. No Platform handoff is sent, consistent with the absence of active Stock production manifests and the pending owner decision.
+- Media `.github/workflows/wf-03-media-production-deploy.yml`: full source SHA, immutable-tag preflight, ARM64 manifest and digest verification; explicitly no Platform deployment/dispatch is configured.
+- Authentication `.github/workflows/release.yml`: manual release from master only, immutable full-SHA tags, ARM64 build with provenance/SBOM, digest equality across tags, exact Auth dispatch schema and required Platform dispatch token.
+- Platform exact-head and post-merge validation for PR #1650 (#43092982966 and #43093109452) passed immutable image-change and exact Auth/TCE dispatch-payload contract tests. No image was published or promoted during this audit.
+
 ## Deployment contract and preservation rules
 
 - App repositories own application code, dependencies, tests/builds, Dockerfiles, immutable GHCR publication and source provenance. Use full source SHA tags and verify registry digest/ARM64 descriptors before handoff.
@@ -57,7 +67,7 @@ All six current-age and all six inter-arrival budgets fail at 19:58:49Z. WF-06 m
 
 ## Governance evidence
 
-- Branch-protection GET returned HTTP 403 for all five repositories in this review. Repository metadata allows squash, merge commit and rebase; effective inherited organization rulesets could not be verified. GitHub administrator action is required for PR-only, required checks, force-push/deletion protection and squash-only.
+- Direct `GET /branches/master` returned `protected=false` for all five repositories. Branch-protection detail GET returned HTTP 403 for all five. `GET /rulesets?includes_parents=true` returned an empty array for Platform Infra, TCE Dashboard, Media Generation and Authentication; StockDividend returned HTTP 403 because GitHub rulesets require Pro or a public repository, so its inherited rulesets remain unverified. Repository metadata allows squash, merge commit and rebase on all five. This confirms all five master branches are unprotected at the branch API level; the administrator must enforce PR-only, required CI/deployment checks, force-push/deletion protection and squash-only.
 
 ## Current safety state
 
