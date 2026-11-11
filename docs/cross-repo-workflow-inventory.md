@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-11 16:58 ICT (2026-11-11 09:58:55 UTC).
+Last reviewed: 2026-11-11 18:01 ICT (2026-11-11 11:01:52 UTC).
 
 This is the compact current workflow inventory. The previous append-only inventory is preserved at docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md. Historical timestamped workflow checkpoints remain under docs/cross-repo-workflow-inventory-checkpoints/.
 
@@ -452,3 +452,33 @@ No workflow was added or removed in this checkpoint. Keep CI, tests, security, a
 - Post-merge run contains `validate-manifests` only; no production reconcile/recovery push was triggered.
 - The 16:58 operational snapshot remains the latest runtime/schedule evidence; this receipt updates only the Platform master SHA and validation provenance.
 - Workflow ownership and production authority boundaries are unchanged. No workflow was added/removed, no SSH/Compose authority added, and TCE market-scan schedule unchanged.
+
+## Latest verification — 2026-11-11 18:01 ICT / 11:01:52 UTC
+
+### Current refs and workflow ownership
+
+| Repository | Current master | Latest evidence | Ownership / preservation |
+|---|---|---|---|
+| Platform Infra | `ff401dadb1cac5b0647c1a4187fe171b2cfbc937` | Current-master manual reconcile #43003088695 SUCCESS; recovery #43003328970 SUCCESS; current-master manifest validation #43001011228 PASS. Native schedule lanes remain stale. | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps reconciliation, rollout and health authority. Preserve native schedules, read-only inspection, manual plan/apply, recovery, watchdog, validation, backup and guarded operations. |
+| TCE Dashboard | `5b425bdeab457e943bcecf1831836fc698e24394` | PR #1037 merged; exact-head WF-01P #43008284677, WF-02 #43008284672, WF-05 #43008284792, WF-08B #43008284695 PASS. Post-merge WF-01 #43008514423, WF-05 #43008514459 and WF-02 #43008514481 queued/in progress. Native WF-06 #43003016447 failed four HTTP 200 probes with 503. | Owns tests/builds/immutable GHCR publication, strict public health probes, integration/backup and maintenance-aware recovery. WF-13 honors `TCE_MAINTENANCE_MODE=true` only to suppress redundant read-only fallback; WF-06/12 remain strict and scheduled. WF-01P runs the health-recovery contract validator. |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED on empty `VNSTOCK_API_KEY`. Desired Stock Admin/Backend ImagePullBackOff; legacy Backend/Frontend 1/1. | Owns app tests/builds/native ARM64 immutable publication only if owner approves retention. Keep scraper fail-closed; no secret in Git/logs/chat and no image publication while retirement remains active. |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | CI #42539512417 PASS; last partial K3s inventory showed backend/frontend 1/1 and runner active. Full inspection is stale. | Owns tests/builds/immutable publication. Preserve CI/release. Runner retirement remains gated on remote unregister, backup/retention and DNS ownership. |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | CI #42654579277 PASS; Auth is intentional 0/0 maintenance; runtime Secret provision/verification succeeded in #43003088695 with values suppressed. | Owns Auth tests/builds/release provenance/immutable publication. Preserve CI/security/release. Zero replicas and OIDC/health 503 are not live health. |
+
+### Open PRs and branch governance
+
+- Open owner-decision drafts: Platform #1314/#544/#541/#539 and Authentication #76. Exact-head validation runs remain PASS: #42161859747, #38575430454, #38567431761, #38548718033 and Auth #41329425940 (Supabase Preview skipped). TCE #1037 is merged; no open PRs remain in Stock or Media.
+- Direct `branches/master` API responses still report `protected=false`, `protection.enabled=false`, and required status checks enforcement off/empty on all five repositories. Repository settings permit squash, merge commit and rebase. Administrator must enforce PR-only, required checks, force-push/deletion protection and squash-only.
+- No workflow was removed or added in this checkpoint. App repositories own tests/builds/immutable publication; Platform remains sole production apply authority. No direct SSH/Compose authority. TCE market-scan schedule unchanged.
+
+### TCE maintenance-aware recovery contract
+
+- TCE PR #1037 merged at `5b425bdeab457e943bcecf1831836fc698e24394`. WF-13 now reads the repository Actions variable `TCE_MAINTENANCE_MODE`; `true` suppresses only the redundant read-only WF-06 fallback. It does not change WF-06 expected HTTP 200 status, WF-12 schedule monitoring or cron expressions.
+- `scripts/validate-tce-health-recovery-contract.sh` is run by WF-01P and checks workflow YAML, both maintenance guards, four HTTP 200 endpoints and unchanged WF-06/WF-12 schedules. Exact-head PR validation passed.
+- Repository variable value was not changed or verified. An authorized TCE repository administrator must set `TCE_MAINTENANCE_MODE=true` while zero-replica maintenance is intentional; unset/set false after reactivation.
+
+### Runtime and schedule evidence
+
+- Current-master reconciliation #43003088695 passed GHCR read preflight for five packages, provisioned/verified Auth runtime Secret with values suppressed, left shared `ghcr-pull` unchanged, verified TCE pairing `prod-v0.1.0-e75e338`, found drift=false and skipped manifest apply/image replacement/rollout. Its post-check pod inventory showed Media/MicroFE 1/1, TCE/Auth/Keycloak 0/0 maintenance, Stock Admin/desired Backend ImagePullBackOff and legacy Stock Backend/Frontend 1/1.
+- Last full read-only inspection #42994074939 is older than the 4,500s budget. Partial node/pod output from #43003088695 is not a substitute for full disk/RAM/storage/runner inventory. Obtain a fresh inspect before any production decision.
+- All six native schedule lanes exceed both current-age and inter-arrival budgets at 11:01:52Z. Do not count manual/workflow_run/repository_dispatch as native delivery. Keep every cron expression and TCE market-scan schedule unchanged.
