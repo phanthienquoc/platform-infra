@@ -58,7 +58,7 @@ All six current-age and all six inter-arrival budgets fail at 19:58:49Z. WF-06 m
 
 ## Governance evidence
 
-- Branch-protection GET returned HTTP 403 for all five repositories in this review. Repository metadata allows squash, merge commit and rebase; effective inherited organization rulesets could not be verified. GitHub administrator action is required for PR-only, required checks, force-push/deletion protection and squash-only.
+- Direct `GET /branches/master` returned `protected=false` for all five repositories. Branch-protection detail GET returned HTTP 403 for all five. `GET /rulesets?includes_parents=true` returned an empty array for Platform Infra, TCE Dashboard, Media Generation and Authentication; StockDividend returned HTTP 403 because GitHub rulesets require Pro or a public repository, so its inherited rulesets remain unverified. Repository metadata allows squash, merge commit and rebase on all five. This confirms all five master branches are unprotected at the branch API level; the administrator must enforce PR-only, required CI/deployment checks, force-push/deletion protection and squash-only.
 
 ## Current safety state
 
