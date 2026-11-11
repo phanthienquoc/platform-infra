@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-11 23:09 ICT (PR #1642/#1643 merged; fresh K3s inspection and exact-head validation verified; current-master GitOps plan remains pending).
+Last reviewed: 2026-11-12 00:06 ICT (PR #1644 merged; current-master validation #43064658676 PASS; fresh K3s snapshot #43054529460).
 
 This is the compact current workflow inventory. The previous append-only inventory is preserved at docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md. Historical timestamped workflow checkpoints remain under docs/cross-repo-workflow-inventory-checkpoints/.
 
@@ -625,3 +625,16 @@ Only first-attempt `event=schedule` runs on `master` count. Platform reconcile #
 - Current snapshot: node Ready/ARM64; disk 56% (~20GiB free), ~19GiB RAM available, restart required; Media/MicroFE/NATS 1/1; TCE/Auth/Keycloak 0/0; Stock desired Admin/Backend ImagePullBackOff. Preserve Bound PVC `k3s-debug/k3s-debug-logs`; do not cleanup/reboot.
 - Preserve all app CI/test/security/build/immutable-publisher/release/backup/integration/manual/scheduled workflows. No workflow is confirmed obsolete or removed. No duplicate SSH/Compose production authority. Platform Infra remains the sole production apply authority.
 - No current-master GitOps `mode=plan`/apply, image promotion, manifest apply or workload rollout is evidenced. No credential rotation, destructive cleanup, runner retirement, DNS/database/storage change or host reboot.
+
+ 
+## Latest verification — 2026-11-12 00:06 ICT / 17:06:33 UTC
+
+- Direct master refs: Platform Infra `e6163feea2dabaeaa9abbdc8192b1da74ea0cbb1`; TCE `5b425bdeab457e943bcecf1831836fc698e24394`; Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
+- Platform PR #1644 merged at `e6163fe`; exact-head validation #43055819417 PASS and post-merge master validation #43064658676 PASS. Open owner-decision drafts: Platform #1314/#544/#541/#539 and Auth #76; none in TCE/Stock/Media.
+- Preserve all app CI/test/security/build/immutable-publisher/release/backup/integration/manual/scheduled workflows. No workflow additions/removals are justified by current evidence.
+- Platform manual reconciliation #43055528687 SUCCESS on parent SHA `4cb817c`, not current master. GHCR read preflight passed five packages; Auth runtime Secret provision/verification passed with values suppressed; shared `ghcr-pull` unchanged; no drift; manifest/image apply and rollout skipped. TCE/Auth remain intentional 0/0 maintenance; MicroFE active health passed. This run is beyond the 2,700s freshness budget at reference.
+- Fresh K3s inspection #43054529460 generated 16:03:55Z and is within its 4,500s budget by 742s at reference. Media/MicroFE/NATS 1/1 with registry digests; TCE/Auth/Keycloak 0/0; Stock desired Admin/Backend ImagePullBackOff. Preserve Bound `k3s-debug/k3s-debug-logs`; no cleanup/reboot.
+- Native schedule reference 17:06:33Z: Platform reconcile #42993779924 age 28,208s/gap 26,585s; inspection #43054529460 age 3,768s/gap 30,159s; recovery #43058316157 age 2,418s/gap 29,036s; watchdog #43058640134 age 2,297s/gap 29,006s; TCE WF-06 #42949191917 age 51,112s/gap 12,853s; WF-12 #42996293386 age 27,135s/gap 26,503s. All six inter-arrival budgets fail; current-age fails for reconcile and both TCE health lanes. Watchdog failed on missing scheduled reconciliation and inter-arrival gaps; queue sample found no lane over the 15-minute queue budget. Recovery #43058737375 succeeded without duplicate dispatch because the prior manual reconciliation and native inspection were still recent at its reference.
+- Branch governance remains unverified/enforced: all five master branch API records report `protected=false` and required-check enforcement off; repository metadata permits merge commit and rebase as well as squash. Effective inherited organization rulesets need administrator verification.
+- Ownership remains unchanged: app repositories own tests/builds and immutable GHCR publication; Platform Infra alone owns production manifests, shared pull credentials, provenance/digest promotion, GitOps plan/apply, rollout and runtime verification.
+- No new GHCR publication/promotion, current-master GitOps plan/apply, manifest change, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot. No workflow is confirmed redundant/obsolete. No duplicate SSH/Compose authority. TCE market-scan schedule unchanged.
