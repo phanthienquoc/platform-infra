@@ -6,7 +6,7 @@ This is the compact current readiness view. Historical append-only content is pr
 
 ## Repository readiness
 
-| Repository | Current master SHA | Open PRs | Latest verified CI / operational evidence |
+| Repository | Master SHA at 00:02:43Z snapshot | Open PRs | Latest verified CI / operational evidence |
 |---|---|---|---|
 | phanthienquoc/platform-infra | `ad54469d6cf0d2c3362d6105f50fa9131dadf8a5` | #1314, #544, #541, #539 (all draft / owner decision) | PR #1604 merged at `ad54469d`; exact-head #42921837403 and post-merge #42921972012 passed. Latest recovery receipt #42922588369 was repository_dispatch, not native schedule. |
 | phanthienquoc/TCE-dashboard | `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab` | none | Native WF-06 #42922537816 failed public HTTP 200 contract (Auth readiness observed 503; all four endpoint jobs failed). Native WF-12 #42915709227 failed freshness. Separate scheduled WF-07 backup #42924677977 passed; it does not satisfy WF-06/WF-12 cadence. |
@@ -30,6 +30,7 @@ This is the compact current readiness view. Historical append-only content is pr
 - PR #1602 merged at `8b11d662`, adding read-only inspection evidence #42920320410.
 - PR #1603 merged at `98bc3d8c`, excluding recursive Keycloak Markdown from reconcile/recovery push triggers and making resolver-only changes fail closed. Exact-head checks #42921447020, #42921447003 and #42921446835 passed; post-merge #42921556638, #42921556488 and #42921556572 passed. No reconcile/recovery push run was created by this merge.
 - PR #1604 merged at `ad54469d`, refreshing tracker/inventory. Exact-head #42921837403 and post-merge #42921972012 passed.
+- The 00:02:43Z readiness snapshot predates PR #1605. PR #1605 subsequently merged at 00:07:34Z as `5348f63ba7dddf60b53728b80263308dfa57b9b1`; its exact-head #42928781279 and post-merge #42928846781 both passed. This is the Platform master SHA after the snapshot. PR #1606 corrects the recovery receipt wording only.
 - Latest Platform recovery receipt [#42922588369](https://github.com/phanthienquoc/platform-infra/actions/runs/42922588369) was `repository_dispatch`, source TCE WF-06 #42922537816. Logs verified the source heartbeat; reconcile fallback was skipped because #42920184478 was only 15 minutes old at recovery time. The controller found the existing read-only inspection fallback #42920320410 still fresh (age 13 minutes at that run), so it did not dispatch another inspection. This is not a native schedule delivery and did not prove a new reconciliation.
 - Current Platform master is `ad54469d`; latest post-merge manifest validation #42921972012 passed. Later #42922638144 was a skipped `workflow_run` recovery event, not a deployment.
 
