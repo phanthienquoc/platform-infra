@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-11 22:03 ICT (direct refs and PR #1641 merge verified; current-master validation in progress; runtime evidence stale).
+Last reviewed: 2026-11-11 23:09 ICT (PR #1642/#1643 merged; fresh K3s inspection and exact-head validation verified; current-master GitOps plan remains pending).
 
 This is the compact current workflow inventory. The previous append-only inventory is preserved at docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md. Historical timestamped workflow checkpoints remain under docs/cross-repo-workflow-inventory-checkpoints/.
 
@@ -611,3 +611,17 @@ Only first-attempt `event=schedule` runs on `master` count. Platform reconcile #
 - Latest full K3s snapshot #42994074939 and reconciliation #43003088695 are expired. Do not use them for current health or rollout authorization. No current-master inspection/plan is present.
 - Branch-protection GET remains HTTP 403 on all five repositories; repo-level rulesets are [] for public repositories and inaccessible for private Stock. Merge commit and rebase remain enabled in repository metadata. Administrator action remains required.
 - No production mutation, image publication/promotion, credential rotation, destructive cleanup, host reboot or workflow removal. TCE market-scan schedule unchanged.
+
+
+## Latest verification — 2026-11-11 23:09 ICT / 16:09:29 UTC
+
+- Platform Infra master is `4cb817cba48119b04a38ba3ca1beefa579381571`. PR #1642 merged at `746596aa`; post-merge `validate-manifests` #43054650479 PASS on that parent SHA. PR #1643 merged at `4cb817c` after exact-head validation #43054831431 PASS; native inspection run #43054529460 completed SUCCESS and generated `debug/vps-latest.md` at 16:03:55Z. No post-merge manifest validation on SHA `4cb817c` is present in the run listing.
+- App master refs: TCE `5b425bde`; Stock `b1b5e177`; Media `dcd69869`; Authentication `eab85fab`. Open owner-decision drafts: Platform #1314/#544/#541/#539; Authentication #76. None in TCE/Stock/Media.
+- TCE WF-01 #43008514423, WF-02 #43008514481 and WF-05 #43008514459 PASS. Native WF-06 #42949191917 and WF-12 #42996293386 FAIL; WF-06 attempt 2 #43003016447 is excluded from first-attempt cadence; WF-12 #43019107548 and WF-13 #43019140175 are workflow_run/SKIPPED. Four strict HTTP-200 probes returned 503 in manual diagnostic #43003071073. Keep `TCE_MAINTENANCE_MODE` unverified until an administrator reads the Actions variable.
+- Stock CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED on empty `VNSTOCK_API_KEY`. Fresh K3s inspection shows desired Admin and Backend ImagePullBackOff due to missing ARM64-compatible image descriptors; legacy pods running do not provide registry RepoDigest evidence.
+- Media CI #42539512417 PASS. Fresh snapshot shows backend/frontend 1/1 with registry RepoDigests; Media runner service/listener active and enabled. Remote unregister, backup/retention and DNS ownership remain unverified.
+- Auth CI #42654579277 PASS. Fresh snapshot shows MicroFE Auth/Keycloak 0/0 and public OIDC 503. Historical Auth runtime Secret verification occurred on old Platform SHA `ff401dad` with values suppressed; no current-master reconciliation evidence.
+- Native schedule reference 16:07:41Z: reconcile #42993779924 age 24,676s/gap 26,585s; inspection #43054529460 age 236s/gap 30,159s; recovery #42986496462 age 27,922s/gap 24,822s; watchdog #42986833403 age 27,771s/gap 24,297s; TCE WF-06 #42949191917 age 47,580s/gap 12,853s; WF-12 #42996293386 age 23,603s/gap 26,503s. All six inter-arrival budgets fail; five current-age budgets fail. No cron or TCE market-scan schedule change.
+- Current snapshot: node Ready/ARM64; disk 56% (~20GiB free), ~19GiB RAM available, restart required; Media/MicroFE/NATS 1/1; TCE/Auth/Keycloak 0/0; Stock desired Admin/Backend ImagePullBackOff. Preserve Bound PVC `k3s-debug/k3s-debug-logs`; do not cleanup/reboot.
+- Preserve all app CI/test/security/build/immutable-publisher/release/backup/integration/manual/scheduled workflows. No workflow is confirmed obsolete or removed. No duplicate SSH/Compose production authority. Platform Infra remains the sole production apply authority.
+- No current-master GitOps `mode=plan`/apply, image promotion, manifest apply or workload rollout is evidenced. No credential rotation, destructive cleanup, runner retirement, DNS/database/storage change or host reboot.
