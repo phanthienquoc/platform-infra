@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-11 16:00 ICT (2026-11-11 09:00:35 UTC).
+Last reviewed: 2026-11-11 16:58 ICT (2026-11-11 09:58:55 UTC).
 
 This is the compact current readiness view. Historical append-only content is preserved under `docs/archive`; timestamped checkpoints remain under `docs/cross-repo-deployment-checkpoints`.
 
@@ -8,12 +8,11 @@ This is the compact current readiness view. Historical append-only content is pr
 
 | Repository | Current master SHA | Open PRs | Latest verified CI / operational evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `37a5624a325c570df0fc689b4f6ecde5f9bae89e` | #1314, #544, #541, #539 (draft / owner decision) | PR #1627 squash-merged; exact-head #42991422461 PASS and post-merge master #42991499455 PASS. |
-| phanthienquoc/TCE-dashboard | `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab` | none | Native WF-06 #42949191917 and WF-12 #42944415193 fail; manual WF-06 #42972014911 fails four strict HTTP 200 probes (503); WF-07 integration #42971954835 and backup #42924677977 PASS. TCE/Auth remain 0/0 maintenance. |
-| phanthienquoc/stockdividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED on empty `VNSTOCK_API_KEY`; no publication/promotion while retirement scope remains active. |
-| phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS; last inspection #42981286761 showed backend/frontend 1/1 with registry digest references; runner remains active and retirement gates are incomplete. |
-| phanthienquoc/phanthienquoc-authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft / owner decision) | CI #42654579277 PASS; Auth remains 0/0 maintenance; runtime Secret provisioned/verified by reconciliation #42986517013 with values suppressed; public OIDC is not asserted healthy. |
-
+| phanthienquoc/platform-infra | `e6b7156d191ff3ae9bcb8ff66f1b2a5259de331e` | #1314, #544, #541, #539 (draft / owner decision) | Inspection PR #1629 squash-merged at `e6b7156d`; exact-head `validate-manifests` #42994322789 PASS. Fresh read-only snapshot #42994074939 (age 2,415s / 4,500s). Native reconciliation #42993779924 SUCCESS but ran on pre-merge SHA `c557b3f`; drift=false, apply/image replacement/rollout skipped. No post-merge `validate-manifests` run found on current master. |
+| phanthienquoc/TCE-dashboard | `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab` | none | Native WF-12 #42996293386 FAIL because latest native WF-06 #42949191917 was 399m old; manual WF-06 #42996339882 failed all four strict HTTP 200 probes (503); WF-13 recovery #42996315416 SUCCESS. Preserve strict health contract and market-scan schedule. |
+| phanthienquoc/stockdividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED on empty `VNSTOCK_API_KEY`. K3s shows two Stock Admin pods and one desired Backend pod in ImagePullBackOff; legacy Backend remains 1/1. No publication/promotion while retirement scope remains active. |
+| phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS; fresh inspection #42994074939 shows backend/frontend 1/1 with registry digest references. Dedicated Media runner service/listener remains active/enabled; remote unregister, backup/retention and DNS gates remain incomplete. |
+| phanthienquoc/phanthienquoc-authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft / owner decision) | CI #42654579277 PASS; Auth runtime Secret provisioned/verified by reconciliation #42993779924 with values suppressed; shared `ghcr-pull` unchanged. Auth remains 0/0 maintenance; OIDC/health 503 is not healthy. |
 ## Historical verification — 2026-11-11 15:09 ICT / 08:09:56 UTC
 
 This is the current compact snapshot. Only first-attempt `event=schedule` runs on `master` count for native cadence. Manual, push, workflow_run and repository_dispatch receipts do not substitute.
@@ -685,3 +684,57 @@ No new GHCR publication, digest promotion, current-master production apply, work
 - Latest successful manual reconciliation #42986517013 is 2,287s old against 2,700s (413s remaining) but ran on older Platform SHA `8f95ddd872...`, not current master `37a5624a...`. It reported drift=false and skipped apply/image replacement/rollout; do not treat it as current-master reconciliation evidence.
 - Six native schedule inter-arrival gaps remain outside budget. Current-age checks now also fail for inspection, in addition to Platform reconcile and TCE WF-06/WF-12. Recovery and watchdog remain within current-age budgets.
 - No production dispatch, GHCR publication, digest promotion, apply, rollout, deletion, credential/DNS/database/storage mutation or host restart occurred. TCE market-scan schedule unchanged.
+
+
+## Latest verification — 2026-11-11 16:58 ICT / 09:58:55 UTC
+
+### Direct repository refs, open PRs and checks
+
+- Direct `refs/heads/master`: Platform Infra `e6b7156d191ff3ae9bcb8ff66f1b2a5259de331e`; TCE Dashboard `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab`; StockDividend `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media Generation `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
+- Open drafts/owner decisions: Platform #1314 (head `db152c9a`, validate PASS), #544 (`c95e7dae`, validate PASS; currently mergeable=false), #541 (`b8f7c6ba`, validate PASS), #539 (`2dc48b97`, validate PASS); Authentication #76 (`f19cacb0`, validate PASS; Supabase Preview skipped). No open PRs in TCE, Stock or Media. Keep all owner-decision PRs unmerged.
+- Platform inspection PR #1629 was squash-merged at `e6b7156d191ff3ae9bcb8ff66f1b2a5259de331e`; exact-head `validate-manifests` #42994322789 passed on branch `automation/vps-inspection-42994074939-1`, head `dc7f043a`. Current-master check-run history contains recovery #42996312662 SUCCESS plus watchdog/recovery workflow_run jobs SKIPPED; no post-merge `validate-manifests` run is present for `e6b7156d`. Do not report a post-merge validation that was not observed.
+- All five direct `branches/master` API responses report `protected=false`, `protection.enabled=false`, `required_status_checks.enforcement_level=off`, and no required contexts/checks. Repository metadata still allows squash, merge commits and rebase. This is direct branch-protection evidence; inherited organization ruleset evaluation remains a separate admin check.
+
+### Latest workflow evidence
+
+- Platform native reconciliation [#42993779924](https://github.com/phanthienquoc/platform-infra/actions/runs/42993779924) SUCCESS at 09:16:25Z on pre-merge SHA `c557b3f3405b8276c5930d3ffab93690b04694d4`. GHCR read preflight passed for Auth, MicroFE Shell/WS and TCE service/web. Auth runtime Secret was provisioned and verified with values suppressed; shared `ghcr-pull` was unchanged. TCE desired/live pairing passed for `prod-v0.1.0-e75e338`; GitOps drift=false, manifest apply skipped, image replacement skipped and no managed workload restart was required. Stock Admin and desired Backend still had ImagePullBackOff pods.
+- Read-only inspection [#42994074939](https://github.com/phanthienquoc/platform-infra/actions/runs/42994074939) SUCCESS at 09:18:31Z (snapshot `debug/vps-latest.md` generated 09:18:40Z). It created PR #1629; exact-head validation passed and the inspection automation squash-merged it to current master `e6b7156d`. This is workflow_dispatch fallback evidence, not a native scheduled inspection.
+- Recovery [#42996312662](https://github.com/phanthienquoc/platform-infra/actions/runs/42996312662) SUCCESS on current master after TCE WF-12 #42996293386. Logs say reconciliation #42993779924 was recent enough (age 16m at recovery reference), so no reconciliation fallback was dispatched. Native inspection #42981286761 was stale, but read-only fallback #42994074939 was fresh (age 13m at recovery reference), so no duplicate inspection fallback was dispatched. Native schedule remains stale.
+- Platform watchdog workflow_run #42996353169 and its recovery workflow_run #42996363913 were SKIPPED; neither counts as native schedule delivery.
+- TCE native WF-12 [#42996293386](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42996293386) FAILED because latest native WF-06 #42949191917 was 23,977s old (399m) at watchdog reference; measured runner queue was 0m. TCE manual WF-06 [#42996339882](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/42996339882) returned HTTP 503 for all four strict endpoints: TCE web, TCE API, Auth liveness and Auth readiness. WF-13 recovery #42996315416 succeeded as a fallback, not native schedule evidence.
+- Stock CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED because `VNSTOCK_API_KEY` was empty. Media CI #42539512417 PASS. Authentication CI #42654579277 PASS. No new app image publication or immutable digest promotion was observed.
+
+### Native schedule freshness
+
+Only first-attempt `event=schedule` runs on `master` count. Reference is 2026-11-11 09:58:55 UTC; age is from `created_at`; inter-arrival is latest minus previous native run.
+
+| Lane | Latest native run | Previous native run | Current age (s) | Inter-arrival gap (s) | Budget (s) |
+|---|---:|---:|---:|---:|---:|
+| Platform reconcile | #42993779924 | #42942147668 | 2,550 | 26,585 | 2,700 |
+| Platform inspection | #42981286761 | #42932368784 | 8,269 | 25,617 | 4,500 |
+| Platform recovery | #42986496462 | #42939222343 | 5,796 | 24,822 | 2,700 |
+| Platform watchdog | #42986833403 | #42940581820 | 5,645 | 24,297 | 2,700 |
+| TCE WF-06 | #42949191917 | #42922537816 | 25,454 | 12,853 | 1,500 |
+| TCE WF-12 | #42996293386 | #42971976274 | 1,477 | 11,506 | 1,500 |
+
+All six inter-arrival budgets fail. Four of six current-age budgets fail; Platform reconciliation and TCE WF-12 remain within current-age budget at this reference, with 150s and 23s remaining respectively. WF-12's own schedule age being fresh does not make its failed WF-06 freshness check healthy. Do not count manual, workflow_run or repository_dispatch receipts as native schedule delivery. Preserve all cron expressions and TCE market-scan scheduling.
+
+### K3s inspection and GitOps runtime
+
+- Fresh read-only fallback inspection #42994074939 generated `debug/vps-latest.md` at 09:18:40Z; age 2,415s at reference, within 4,500s budget (2,085s remaining). Node `tce-k3s-01` Ready/ARM64, Ubuntu 22.04.5, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2; disk 56% / about 20 GiB free; about 19 GiB RAM available. Host `restart_required=yes`; package/kernel/Docker updates pending. Do not reboot or upgrade without a maintenance window.
+- Media backend/frontend and MicroFE Shell/WS/NATS are 1/1 Running with registry digest references for Media and MicroFE images. Media and Platform self-hosted runner services/listeners are active/enabled. TCE frontend/service, Auth and Keycloak remain 0/0 maintenance.
+- Stock Admin has two ImagePullBackOff pods; desired Stock Backend has one ImagePullBackOff pod, while the legacy Stock Backend remains 1/1 and Stock Frontend remains 1/1. The failing desired images use historical tag `12d63b4` with no RepoDigest. Legacy Stock `23b2878` image IDs are local `sha256:` IDs, not registry RepoDigest promotion evidence. Preserve the existing healthy legacy replicas while owner retirement/restore decision remains unresolved.
+- PVC `k3s-debug/k3s-debug-logs` remains Bound (1Gi); preserve it. Docker reports 20 images / 9.195GB, 5.773GB reclaimable; `/var/log` about 1.8GB and journal about 1.5GB. This is diagnostic only; no cleanup was run.
+- Reconciliation #42993779924 ran on older SHA `c557b3f`, not current master `e6b7156d`. It verified GHCR access for five managed packages, Auth runtime Secret, shared `ghcr-pull` unchanged, TCE release pairing and no GitOps drift; apply/image replacement/rollout were skipped. Do not use this older-SHA receipt as authorization to apply current master.
+
+### Governance, ownership and next actions
+
+- Branch protection remains absent in direct API evidence on all five master branches; no required checks are configured and merge commit/rebase remain enabled. GitHub administrator must enforce PR-only, actual CI/contract checks, force-push/deletion protection and squash-only merge, then verify effective inherited rulesets.
+- GitHub administrator: provide scheduler enqueue/delivery and Actions service telemetry for the six lanes; runner queue evidence does not establish scheduler delivery cause.
+- Platform operator: obtain a new read-only inspection before fallback #42994074939 exceeds its 4,500s freshness budget (approximately 10:33:40Z / 17:33:40 ICT), and run read-only reconciliation on current master `e6b7156d` before any deployment decision. Do not reboot/upgrade without approval.
+- TCE/Auth owners: decide whether to reactivate maintenance; if approved, provide immutable release digests, rollback references and explicit recovery approval. Keep strict HTTP 200 health probes.
+- Stock owner: confirm continued retirement vs service restoration. If retained, provision `VNSTOCK_API_KEY` only via protected Actions Secrets and run safe `preflight_only=true`; do not publish while retirement scope remains active.
+- Media owner: complete external backup/retention, authoritative DNS ownership and remote runner stop/disable/unregister evidence before namespace deletion.
+- Registry administrator: verify GHCR server-side immutable-tag enforcement.
+
+No new GHCR publication, digest promotion, current-master manifest apply, workload rollout, namespace/PVC/PV deletion, Media runner retirement, credential rotation, DNS/database/object-storage mutation or host reboot occurred in this checkpoint. Auth runtime Secret provisioning/verification did run in native reconciliation #42993779924; values were suppressed and shared `ghcr-pull` was unchanged. Preserve useful CI/test/security, release, backup, integration, manual and scheduled workflows; none is confirmed obsolete. App repositories own tests/builds/immutable publication; Platform remains sole production apply authority. No direct SSH/Compose authority. TCE market-scan schedule unchanged.
