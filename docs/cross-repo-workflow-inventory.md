@@ -18,7 +18,7 @@ This is the compact current workflow inventory. Historical append-only inventory
 
 | Repository / workflow | Run | Event / result | Notes |
 |---|---:|---|---|
-| Platform validate-manifests | pending | queued | PR #1653 exact head `3495c6a7`; no validation job has started yet; do not merge until completed PASS. |
+| Platform validate-manifests | pending | queued | PR #1653 final exact-head validation; do not merge until completed PASS. |
 | Platform validate-manifests | #43094091607 | push / SUCCESS | PR #1652 post-merge validation on master `99509adb`; all required validation steps PASS. |
 | Platform validate-manifests | #43093772516 | push / SUCCESS | PR #1651 post-merge validation on master `7ff2da75`; all required validation steps PASS. |
 | Platform validate-manifests | #43093109452 | push / SUCCESS | PR #1650 post-merge validation on master `31b1245c`; all required validation steps PASS. |
