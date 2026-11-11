@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-11 19:59 ICT (2026-11-11 12:59:10 UTC).
+Last reviewed: 2026-11-11 20:05 ICT (2026-11-11 13:05:10 UTC).
 
 This is the compact current readiness view. Historical append-only content is preserved under `docs/archive`; timestamped checkpoints remain under `docs/cross-repo-deployment-checkpoints`.
 
@@ -8,7 +8,7 @@ This is the compact current readiness view. Historical append-only content is pr
 
 | Repository | Current master SHA | Open PRs | Latest verified CI / operational evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `47052106687e95a151da731f8fd28cddd872fbe6` | #1314, #544, #541, #539 (draft / owner decision) | Current-master `validate-manifests` #43018649706 PASS. Latest full K3s snapshot #42994074939 attempt 2 generated 11:06:54Z and is stale (6,736s / 4,500s). Last reconciliation #43003088695 SUCCESS on pre-current SHA `ff401dad`; stale and not current-master evidence. |
+| phanthienquoc/platform-infra | `11aab7a9241621dcd09cb580b2760f76f198edd0` | #1314, #544, #541, #539 (draft / owner decision) | Current-master `validate-manifests` #43025893643 PASS after PR #1639. Runtime/schedule snapshot remains 19:59 ICT; docs-only SHA sync did not refresh K3s or GitOps evidence. |
 | phanthienquoc/TCE-dashboard | `5b425bdeab457e943bcecf1831836fc698e24394` | none | WF-01 #43008514423, WF-02 #43008514481, WF-05 #43008514459 PASS. Native WF-06 first-attempt #42949191917 FAIL; native WF-12 #42996293386 FAIL. Manual WF-06 #43003071073 returned HTTP 503 on all four endpoints. WF-12 #43019107548 and WF-13 #43019140175 workflow_run receipts SKIPPED. `TCE_MAINTENANCE_MODE` value unverified. |
 | phanthienquoc/stockdividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED on empty `VNSTOCK_API_KEY`. Last K3s snapshot shows desired Admin/Backend ImagePullBackOff; legacy Backend/Frontend 1/1. No publication/promotion while retirement scope remains unresolved. |
 | phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS. Last K3s snapshot #42994074939 shows backend/frontend 1/1 with registry digest references. Dedicated runner service/listener active/enabled; remote unregister, backup/retention and DNS ownership remain unverified. |
@@ -995,3 +995,12 @@ All six current-age and all six inter-arrival budgets fail. WF-06 #43003016447 h
 - App repositories own tests/builds and immutable GHCR publication. Platform Infra remains the sole production manifest, shared pull-credential, digest promotion, GitOps apply, rollout and health authority. No direct SSH/Compose authority.
 
 No new image publication, digest promotion, production manifest apply, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation or host reboot occurred in this checkpoint. No workflow was added or removed. TCE market-scan schedule unchanged.
+
+
+## Post-merge receipt — 2026-11-11 20:05 ICT / 13:05:10 UTC
+
+- PR #1639 was squash-merged from exact head `cd1ef6a43984922d567b65d862ad0956c5ac040f` to master at `11aab7a9241621dcd09cb580b2760f76f198edd0`.
+- Exact-head `validate-manifests` #43025767904 PASS. Post-merge master `validate-manifests` #43025893643 PASS on the exact merge SHA.
+- Post-merge workflow run contains `validate` PASS and `report-validation-failure` SKIPPED. Only manifest validation ran; no production reconcile/recovery push was triggered by this docs-only merge.
+- The 19:59 ICT checkpoint remains the latest runtime and schedule evidence. This receipt advances documentation/master provenance only; it does not refresh K3s inspection, GitOps reconciliation, schedule cadence or public health.
+- No production manifest, image, Secret, workload, DNS, database, storage, namespace, runner or host state changed. TCE market-scan schedule unchanged.

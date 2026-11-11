@@ -571,3 +571,12 @@ Only first-attempt `event=schedule` runs on `master` count. Platform reconcile #
 - Full K3s snapshot #42994074939 attempt 2 generated 11:06:54Z; age 6,736s / 4,500s budget, expired. Last reconciliation #43003088695 age 9,396s / 2,700s, old Platform SHA `ff401dad`; drift=false and no apply/image replacement/rollout. No current-master production authorization.
 - Last-known node/resources/workloads are historical only. Preserve `k3s-debug/k3s-debug-logs`; Stock desired pods ImagePullBackOff and legacy images have no RepoDigest; Media/MicroFE digest references are valid in the snapshot. Do not reboot, cleanup images, scale maintenance workloads, promote Stock, delete namespace/storage or unregister runner from stale evidence.
 - App repos retain tests/builds and immutable publication. Platform Infra alone owns production manifests, shared GHCR credentials, GitOps promotion/reconciliation, rollout and health. No direct SSH/Compose authority. No workflow added/removed in this checkpoint.
+
+
+## Post-merge workflow inventory receipt — 2026-11-11 20:05 ICT / 13:05:10 UTC
+
+- Platform master advanced documentation-only through PR #1639 to `11aab7a9241621dcd09cb580b2760f76f198edd0`.
+- Exact-head `validate-manifests` #43025767904 PASS; post-merge master `validate-manifests` #43025893643 PASS on the exact merge SHA.
+- The post-merge run contained validation only. No production reconciliation/recovery push was triggered.
+- The 19:59 ICT operational/schedule snapshot remains the latest runtime evidence. This receipt changes only master SHA/validation provenance.
+- Workflow ownership and authority boundaries are unchanged. No workflow added/removed, no SSH/Compose authority, no production mutation, and TCE market-scan schedule unchanged.
