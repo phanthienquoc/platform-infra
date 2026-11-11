@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-11 15:40 ICT (2026-11-11 08:40:35 UTC).
+Last reviewed: 2026-11-11 15:55 ICT (2026-11-11 08:55:27 UTC).
 
 This is the compact current workflow inventory. The previous append-only inventory is preserved at docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md. Historical timestamped workflow checkpoints remain under docs/cross-repo-workflow-inventory-checkpoints/.
 
@@ -390,3 +390,23 @@ No workflow was added or removed in this checkpoint. Keep CI, tests, security, a
 - TCE strict HTTP 200 probes still returned 503 in the last manual WF-06 run while K3s shows zero replicas. Preserve strict health contract; maintenance is not healthy.
 - Stock CI PASS; scraper fails closed on empty `VNSTOCK_API_KEY`. Media CI PASS; digest-pinned workloads running; runner still active. Auth CI PASS; Auth remains maintenance.
 - Preserve app-owned tests/builds/immutable GHCR publication and Platform-only production apply. No workflow removed, no SSH/Compose authority, no production mutation, no credential/DNS/database/storage changes, no host reboot. TCE market-scan schedule unchanged.
+
+
+## Latest workflow inventory verification — 2026-11-11 15:55 ICT / 08:55:27 UTC
+
+### Repository workflow and ownership snapshot
+
+| Repository | Current master | Latest relevant workflow evidence | Ownership / preserved lanes |
+|---|---|---|---|
+| Platform Infra | `4cb217722b77c190886cb2ce1c28fe26802bce19` | `validate-manifests` #42989295172 PASS on current master; native reconcile #42942147668, inspection #42981286761, recovery #42986496462, watchdog #42986833403. | Sole production manifests, shared GHCR pull credentials, GitOps promotion/reconciliation, rollout and health authority. Preserve native schedules, manual reconciliation, recovery, watchdog, inspection, CI/contract validation, backup/cleanup and purposeful dispatch jobs. |
+| TCE Dashboard | `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab` | Native WF-06 #42949191917 FAIL; native WF-12 #42944415193 FAIL; latest manual WF-06 #42972014911 FAIL; WF-07 integration #42971954835 PASS; WF-07 backup #42924677977 PASS. | Owns application tests/builds and immutable image publication. Preserve WF-06 strict HTTP 200 probes, WF-12 freshness watchdog, WF-13 recovery, WF-07 integration and backup. Do not count integration/backup as health-lane substitutes. |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | CI #42610360402 PASS; weekend scraper #42457182511 FAIL CLOSED because `VNSTOCK_API_KEY` was empty. | Owns app tests/builds/publication if service retention is approved. Keep scraper fail-closed; no secret in Git/logs/chat; no image publication while approved retirement scope remains active. |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | CI #42539512417 PASS; last K3s snapshot #42981286761 showed backend/frontend 1/1 with registry digest references and runner service/listener active. | Owns tests/builds/immutable publication. Preserve CI/release workflows. Runner retirement remains gated on remote unregister, backup/retention and DNS ownership. |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | CI #42654579277 PASS; last reconciliation #42986517013 verified runtime Secret with values suppressed; Auth remains 0/0 maintenance. | Owns Auth tests/builds/immutable publication. Preserve CI, security and release contracts. Zero replicas and OIDC 503 are not live health. |
+
+### Open PR and governance inventory
+
+- Platform open drafts: #1314, #544, #541, #539. Authentication open draft: #76. No open PRs in TCE, Stock or Media.
+- Exact-head checks: Platform drafts each `validate=success`; Auth #76 `validate=success`, Supabase Preview skipped. Keep all owner-decision drafts unmerged.
+- All five master branches report `protected=false` and no required status checks; all five repository metadata records allow squash, merge commits and rebase. Effective inherited rulesets remain unverified. Administrator action is required; no repository setting was changed.
+- No workflow was removed or added. No direct SSH/Compose deployment authority was introduced. TCE market-scan schedule and all existing cron expressions are unchanged.
