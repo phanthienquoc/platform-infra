@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-11 21:03 ICT (current repository/workflow inventory; runtime evidence stale).
+Last reviewed: 2026-11-11 22:03 ICT (direct refs and PR #1641 merge verified; current-master validation in progress; runtime evidence stale).
 
 This is the compact current workflow inventory. The previous append-only inventory is preserved at docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md. Historical timestamped workflow checkpoints remain under docs/cross-repo-workflow-inventory-checkpoints/.
 
@@ -599,3 +599,15 @@ Only first-attempt `event=schedule` runs on `master` count. Platform reconcile #
 - At 14:03:27Z all six native schedule current-age and inter-arrival budgets fail. Latest run IDs/gaps: Platform reconcile #42993779924 / 26,585s; inspection #42981286761 / 25,617s; recovery #42986496462 / 24,822s; watchdog #42986833403 / 24,297s; TCE WF-06 #42949191917 / 12,853s; WF-12 #42996293386 / 26,503s. WF-06 #43003016447 is attempt 2; WF-12 #43019107548 and WF-13 #43019140175 are workflow_run/SKIPPED. None substitutes for native first-attempt delivery.
 - Full K3s inspection #42994074939 attempt 2 snapshot is approximately 10,593s old / 4,500s budget. Last reconciliation #43003088695 is 13,253s old / 2,700s budget and ran on pre-current SHA `ff401dad`. Neither authorizes a deployment. Obtain fresh read-only inspection and current-master `mode=plan` reconciliation before any production decision.
 - No new GHCR publication/digest promotion, current-master apply, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation or host reboot. Preserve useful workflows; none is confirmed obsolete. Platform Infra remains sole production apply authority; no SSH/Compose authority. TCE market-scan schedule unchanged.
+
+
+## Post-merge verification — 2026-11-11 22:03 ICT
+
+- Platform Infra PR #1641 was squash-merged after exact-head validation #43035377158 passed all contract steps. Merge SHA/current master: `1fdc57a8dc098fa5fdc1749f0e11ff0714209e42`.
+- Current-master `validate-manifests` #43044426610 was IN_PROGRESS at 15:03:23 UTC. Initial guard, immutable image-change, Auth digest promotion and TCE/Auth dispatch payload steps passed; offline dependency installation and subsequent checks had not yet completed.
+- Direct master refs: Platform `1fdc57a8`; TCE `5b425bde`; Stock `b1b5e177`; Media `dcd69869`; Authentication `eab85fab`. Open owner-decision drafts remain Platform #1314/#544/#541/#539 and Auth #76.
+- No workflow inventory additions/removals. Preserve all CI, test, security, build, immutable publisher, release, backup, integration, manual and scheduled workflows. No duplicate SSH/Compose production authority.
+- Native schedule reference 15:03:23 UTC: Platform reconcile #42993779924 age 20,798s/gap 26,585s; inspection #42981286761 age 26,517s/gap 25,617s; recovery #42986496462 age 24,044s/gap 24,822s; watchdog #42986833403 age 23,893s/gap 24,297s; TCE WF-06 #42949191917 age 43,702s/gap 12,853s; TCE WF-12 #42996293386 age 19,725s/gap 26,503s. All age and gap budgets fail. Manual, rerun attempt 2 and workflow_run receipts do not substitute.
+- Latest full K3s snapshot #42994074939 and reconciliation #43003088695 are expired. Do not use them for current health or rollout authorization. No current-master inspection/plan is present.
+- Branch-protection GET remains HTTP 403 on all five repositories; repo-level rulesets are [] for public repositories and inaccessible for private Stock. Merge commit and rebase remain enabled in repository metadata. Administrator action remains required.
+- No production mutation, image publication/promotion, credential rotation, destructive cleanup, host reboot or workflow removal. TCE market-scan schedule unchanged.
