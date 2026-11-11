@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-11 12:58 ICT (2026-11-11 05:58:04 UTC).
+Last reviewed: 2026-11-11 13:03 ICT (2026-11-11 06:03:28 UTC).
 
 This is the compact current workflow inventory. The previous append-only inventory is preserved at docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md. Historical timestamped workflow checkpoints remain under docs/cross-repo-workflow-inventory-checkpoints/.
 
@@ -292,3 +292,12 @@ All six current-age and all six inter-arrival checks exceed their budgets. The l
 6. Registry administrator: verify GHCR server-side immutable-tag enforcement.
 
 No new GHCR publication, digest promotion, effective production manifest change, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/object-storage mutation or host reboot occurred in this checkpoint. Preserve all useful CI/test/security, release, backup, integration, manual and scheduled workflows; none is confirmed redundant/obsolete. Do not add direct SSH/Compose deployment authority. TCE market-scan schedule unchanged.
+
+
+## Post-merge verification — 2026-11-11 13:03 ICT
+
+- PR #1616 squash merge SHA: `14e79f1c90f8390636f13a06a899c0de0ab85bd0`.
+- Exact-head validation #42969674108 PASS; post-merge master validation #42969724857 PASS.
+- Only `validate-manifests` ran after the docs-only merge. No production reconcile/recovery push run was triggered.
+- App repositories remain CI/build/immutable-publication owners; Platform remains the only production apply authority.
+- No workflow was removed; no SSH/Compose deployment authority added; TCE market-scan schedule unchanged.
