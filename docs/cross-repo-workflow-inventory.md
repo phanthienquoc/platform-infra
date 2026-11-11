@@ -28,7 +28,7 @@ This is the compact current workflow inventory. Historical append-only inventory
 | Platform native reconcile / inspect / recovery / watchdog | #43066718643 / #43054529460 / #43058316157 / #43058640134 | schedule / SUCCESS / SUCCESS / SUCCESS / FAILURE | Latest qualifying native first-attempt runs; all outside their current freshness budgets. |
 | TCE WF-06 | #43088897948 | workflow_dispatch / FAILURE | Four public endpoints returned 503 instead of 200. |
 | TCE WF-12 | #43088836266 | workflow_run / FAILURE | Native WF-06 schedule freshness failed; heartbeat dispatch succeeded. |
-| TCE WF-13 | #43088861304 | workflow_run / SUCCESS | Recovery/fallback receipt; not native schedule delivery. |
+| TCE WF-13 | #43088861304 | workflow_run / SUCCESS | Job log shows `TCE_MAINTENANCE_MODE` empty; code maps empty to `enabled=false`, then dispatched fallback #43088897948. Not native schedule evidence. |
 | TCE WF-07 integration | #43088811861 | schedule / SUCCESS | Integration check only; not WF-06/WF-12 health evidence. |
 | Stock CI / scraper | #42610360402 / #42457182511 | push / SUCCESS; schedule / FAILURE | Scraper fails closed on missing `VNSTOCK_API_KEY`. |
 | Media CI | #42539512417 | push / SUCCESS | Application tests/build passed; no new image publication. |
@@ -53,7 +53,7 @@ All six current-age and all six inter-arrival budgets fail at 19:58:49Z. WF-06 m
 
 - TCE `.github/workflows/wf-03-tce-production-deploy.yml`: manual release dispatch, full 40-character source SHA, refuse existing immutable tags, inspect registry manifests for `linux/arm64`, require valid SHA-256 web/service digests, validate exact repository-dispatch schema and wait for the Platform handoff run.
 - TCE `.github/workflows/wf-08b-tce-microfe-build-publish.yml`: `packages: write` is job-scoped to publisher jobs; Shell/WS builds target `linux/arm64` with provenance/SBOM; digests are validated; exact payload schema is checked before dispatch and the Platform promotion run is verified.
-- Stock `.github/workflows/deploy.yml`: manual production image publication is explicitly disabled; master-push artifact publication uses job-scoped package write, refuses tag overwrite, builds backend/admin/frontend for `linux/arm64`, verifies full-SHA and version+SHA tags resolve to the same valid registry digest. No Platform handoff is sent, consistent with the absence of active Stock production manifests and the pending owner decision.
+- Stock `.github/workflows/deploy.yml`: manual production image publication is explicitly disabled; master-push artifact publication uses job-scoped package write, refuses tag overwrite, builds backend/admin/frontend for `linux/arm64`, verifies full-SHA and version+SHA tags resolve to the same valid registry digest. No Platform handoff is sent, consistent with the approved decommission scope and absence of active Stock production manifests.
 - Media `.github/workflows/wf-03-media-production-deploy.yml`: full source SHA, immutable-tag preflight, ARM64 manifest and digest verification; explicitly no Platform deployment/dispatch is configured.
 - Authentication `.github/workflows/release.yml`: manual release from master only, immutable full-SHA tags, ARM64 build with provenance/SBOM, digest equality across tags, exact Auth dispatch schema and required Platform dispatch token.
 - Platform exact-head and post-merge validation for PR #1650 (#43092982966 and #43093109452) passed immutable image-change and exact Auth/TCE dispatch-payload contract tests. No image was published or promoted during this audit.
@@ -73,7 +73,7 @@ All six current-age and all six inter-arrival budgets fail at 19:58:49Z. WF-06 m
 - Plan mode verifies Platform runner policy v15, reports the dedicated Media systemd unit/enablement/Listener state, and runs the read-only namespace/storage/Ingress inventory. It does not stop or unregister a runner or delete resources.
 - Delete mode uses the protected `production` Environment and requires exact confirmations `DELETE-STOCK-PROD-AND-MEDIA-PROD`, `BACKUP-AND-EXTERNAL-DATA-REVIEWED`, `AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED`, and `MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED`, plus stable HTTPS backup/DNS evidence references.
 - Before deleting, it verifies the Media service is inactive and disabled/masked or absent, no Listener process exists, and the GitHub Media repository runner list has no `media-generation-k3s-01` entry via read-only `MEDIA_RUNNER_AUDIT_TOKEN`; it repeats the storage preflight in the same run and deletes only `stock-prod` and `media-prod`.
-- Current inspection #43089176130 shows target namespaces storage-clean but the Media runner service is active/enabled and Listener present. No delete run is authorized or executed. Preserve the shared Platform runner, TCE/Auth/MicroFE/Keycloak and all app CI/publisher workflows.
+- Current inspection #43089176130 shows target namespaces storage-clean but the Media runner service is active/enabled and Listener present. No delete run is authorized by the current evidence or executed. Preserve the shared Platform runner, TCE/Auth/MicroFE/Keycloak and all app CI/publisher workflows.
 
 ## Governance evidence
 
