@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-11 12:04 ICT (2026-11-11 05:04:56 UTC).
+Last reviewed: 2026-11-11 12:08 ICT (2026-11-11 05:08:18 UTC).
 
 This is the compact current workflow inventory. The previous append-only inventory is preserved at docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md. Historical timestamped workflow checkpoints remain under docs/cross-repo-workflow-inventory-checkpoints/.
 
@@ -220,3 +220,10 @@ Current native evidence and exact age/gap values are in docs/cross-repo-deployme
 - Latest K3s inspection #42942360712 is 11,375s old against 4,500s. Last manual reconciliation #42949244537 is 7,786s old against 2,700s. Both are stale; prior GHCR/Secret/drift results are historical and do not authorize rollout.
 - Direct branch reads report `protected=false` for all five master branches. Repository metadata allows squash, merge commits and rebase on all five; administrator must confirm effective inherited rulesets and enforce squash-only/PR-only policy.
 - App repositories retain ownership of CI/builds and immutable image publication. Platform remains the sole production apply authority. No new publication, promotion, apply, rollout, retirement, credential/DNS/database/storage mutation or host restart occurred. Preserve useful workflows; none was confirmed redundant/obsolete. No direct SSH/Compose authority added. TCE market-scan schedule unchanged.
+
+
+## Post-checkpoint merge verification — 2026-11-11 12:08 ICT
+
+- Platform master advanced documentation-only from `bfa50827...` to `0191e968d11a3b9096ddd24d46fa8daeb03fec3a` through PR #1614.
+- Exact-head validation #42963714334 and post-merge validation #42963772141 both PASS.
+- No production reconcile/recovery push run was triggered by the documentation-only merge. Workflow ownership and production authority boundaries are unchanged.
