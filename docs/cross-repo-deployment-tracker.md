@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-12 06:02 ICT (2026-11-11 23:02:43 UTC).
+Last reviewed: 2026-11-12 06:10 ICT (2026-11-11 23:10:24 UTC).
 
 ## Latest verification — 2026-11-11 23:02:43 UTC / 2026-11-12 06:02:43 ICT
 
@@ -10,7 +10,7 @@ This refresh supersedes the 05:02 ICT snapshot. Direct GitHub REST reads covered
 
 | Repository | Verified master | Open PRs | Latest relevant evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `c0f30978087420e7463e16e9f3196b11151362cb` | #1314/#544/#541/#539 owner-decision drafts | PR #1655 merged by squash; exact-head validation #43116264561 PASS. Native inspection #43116036275 SUCCESS. Recovery-dispatched current-master reconciliation #43116379969 SUCCESS. |
+| phanthienquoc/platform-infra | `9d84aa020c5aacd28c56ef68d5a81a0a9acccfe2` | #1657 recovery API retry fix; #1314/#544/#541/#539 owner-decision drafts | PR #1655 merged by squash; exact-head validation #43116264561 PASS. Native inspection #43116036275 SUCCESS. Recovery-dispatched reconciliation #43116379969 SUCCESS on parent SHA `c0f309`; docs-only PR #1656 later advanced master to `9d84aa`. |
 | phanthienquoc/TCE-dashboard | `5b425bdeab457e943bcecf1831836fc698e24394` | none | Native WF-06 #43073311537 FAIL; native WF-12 #43068077606 FAIL. Manual WF-06 #43088897948 FAIL with four HTTP 503 probes. WF-13 #43088861304 SUCCESS but logged empty `TCE_MAINTENANCE_MODE`. WF-07 integration #43088811861 SUCCESS. |
 | phanthienquoc/stockdividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS. Scraper #42457182511 FAIL CLOSED because `VNSTOCK_API_KEY` is missing. No current-master image publication/promotion is evidenced. |
 | phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS. No current-master production publication is evidenced. Fresh K3s snapshot shows backend/frontend 1/1 with registry RepoDigests; dedicated runner remains active/enabled. |
@@ -20,11 +20,11 @@ This refresh supersedes the 05:02 ICT snapshot. Direct GitHub REST reads covered
 
 - PR #1655 ([automated VPS inspection snapshot](https://github.com/phanthienquoc/platform-infra/pull/1655)) was squash-merged at 22:59:54Z. Exact head `bd6d83d18904695e279635865078073c37da29c7`; validation #43116264561 PASS; merge/current master `c0f30978087420e7463e16e9f3196b11151362cb`.
 - Native `inspect-vps` run #43116036275 completed SUCCESS at 22:57:41Z and generated `debug/vps-latest.md` at 22:57:49Z. At the 23:02:43Z reference its snapshot age was 294s, within the 4,500s freshness budget.
-- Watchdog #43116356220 failed because all four Platform native schedule inter-arrival gaps exceeded budget. Recovery controller #43116356175 succeeded and dispatched current-master reconciliation #43116379969 with `ref=master`, SHA `c0f30978087420e7463e16e9f3196b11151362cb`, `mode=apply`, `target_app=all`, and `allow_image_changes=false`.
+- Watchdog #43116356220 failed because all four Platform native schedule inter-arrival gaps exceeded budget. Recovery controller #43116356175 succeeded and dispatched reconciliation #43116379969 on then-current master SHA `c0f30978087420e7463e16e9f3196b11151362cb`, with `mode=apply`, `target_app=all`, and `allow_image_changes=false`. Docs-only PR #1656 later advanced master to `9d84aa` without changing production manifests.
 - Reconciliation #43116379969 completed SUCCESS. GHCR read preflight passed all five managed packages. Auth runtime Secret was provisioned and verified with values suppressed. Shared `ghcr-pull` was unchanged. Managed MicroFE/TCE image-pull checks found no blocked pulls. TCE release pairing passed for `prod-v0.1.0-e75e338`; desired/live TCE web and service image tags matched.
 - GitOps diff was clean (`drift=false\)); production manifest apply, image replacement and workload rollout were skipped. Auth lane succeeded with health state `maintenance` (zero replicas; no live health asserted). TCE lane succeeded with health state `maintenance` (zero replicas; no live health asserted). MicroFE Shell/WS lane succeeded with active-scope health verified. Keycloak lane was skipped. The final deployment-lane gate passed.
-- Post-reconciliation recovery dispatch #43116633087 was still in progress at the reference; it is not a native schedule run. No further inspection dispatch was confirmed in this snapshot.
-- The latest separate `validate-manifests` push run #43108732031 is PASS on parent SHA `51729f13`, not the current master. PR #1655 exact-head validation #43116264561 is the validation evidence for the inspection change; do not claim a separate post-merge manifest run on `c0f309` unless one appears in Actions.
+- Post-reconciliation recovery dispatch #43116633087 failed after the reconciliation dispatch itself succeeded because the Actions run-history correlation GET returned HTTP 502. This is a workflow_dispatch, not native schedule evidence. PR #1657 adds bounded 5xx retries to both reconciliation and inspection correlation GETs.
+- PR #1656 was squash-merged at 23:05:33Z after exact-head validation #43116943500 PASS; merge SHA/current master is `9d84aa020c5aacd28c56ef68d5a81a0a9acccfe2`. Post-merge validate-manifests #43117100616 PASS on `9d84aa`. PR #1656 changed only tracker/inventory/checkpoint documentation, so the production manifest tree was unchanged. Reconciliation #43116379969 remains parent-master evidence on `c0f309`; no separate reconciliation on exact SHA `9d84aa` is evidenced.
 
 ### Fresh K3s inspection — run #43116036275
 
@@ -1505,3 +1505,19 @@ All six inter-arrival budgets fail. Four current-age budgets fail: Platform insp
 - No new app image publication or digest promotion. No production manifest apply, image replacement or workload rollout in #43073396454 because GitOps drift was false. Auth runtime Secret provisioning/verification occurred; shared `ghcr-pull` was unchanged.
 - No namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot. No workflow is confirmed obsolete/removed. No duplicate SSH/Compose authority.
 - Exact next actions: obtain a fresh read-only K3s inspection before the 4,500s budget expires; continue native scheduler telemetry; GitHub administrator to enforce PR-only/required checks/force-push and deletion protection/squash-only; TCE administrator to verify `TCE_MAINTENANCE_MODE`; TCE/Auth owners to supply release digest/rollback approval; Stock owner to decide retirement/restoration; Media owner to verify remote runner unregister, backup/retention and DNS; Platform operator to obtain maintenance approval before host upgrades/restart.
+
+
+## Recovery controller follow-up — 2026-11-12 06:05 ICT
+
+- PR #1657 adds bounded retry for transient GitHub HTTP 500/502/503/504 during the recovery controller's reconciliation and inspection workflow-dispatch correlation GETs. The previous run #43116633087 failed because GitHub returned HTTP 502 during reconciliation-run correlation after the dispatch itself had succeeded. The change keeps non-5xx/auth failures fail-closed and adds static contract assertions.
+- This is a workflow/validator change only; it does not change cron, dispatch mode, deployment scope, manifest ownership, or production state. Exact-head validation is required before merge.
+
+## Current runtime blockers
+
+- Native schedule delivery: at the 23:02:43Z reference, all six inter-arrival budgets failed and four current-age budgets failed. The later native watchdog #43116818114 (23:03:32Z) also failed on inter-arrival gaps. Its queue diagnostic reported no scheduled deployment lane above the 15-minute queue budget; runner congestion is not established. Recovery #43116883745 is a workflow_run receipt, not native schedule delivery.
+- Recovery API transient: #43116633087 failed after HTTP 502 during the reconciliation dispatch-correlation GET. PR #1657 adds bounded retry/backoff for HTTP 500/502/503/504 in both recovery correlation paths; non-5xx/auth and malformed JSON remain fail-closed. On prior head b94f850, validate-manifests #43117701360 passed, but validate-github-actions #43117701372 failed because the tracker lacked the required Current runtime blockers heading. That section is restored on the current branch head; exact-head checks must rerun before merge. Earlier yamllint line-length errors on head 75dbc were also fixed.
+- TCE maintenance: WF-13 #43088861304 logged empty TCE_MAINTENANCE_MODE, which mapped to disabled; WF-06 strict HTTP-200 probes returned four 503s. TCE administrator must verify/set the variable according to the approved zero-replica maintenance state. Do not weaken WF-06/WF-12 or alter market-scan cron.
+- Stock: desired Admin/Backend tag 12d63b4 lacks a compatible platform manifest/RepoDigest; the scraper remains fail-closed on missing VNSTOCK_API_KEY. No image promotion is allowed.
+- Media decommission: Media runner service/Listener is active. Stop/disable/unregister, external backup/retention, authoritative DNS and protected production approval are still required before namespace deletion. Preserve k3s-debug/k3s-debug-logs.
+- Host maintenance: K3s host reports restart required with pending OS/kernel/containerd/Docker updates. No reboot or cleanup without platform approval.
+- Governance: branch-protection detail GET returned 403 for all five repositories; effective inherited organization rulesets remain unverified. GitHub administrator must enforce PR-only, required checks, force-push/deletion protection and squash-only.
