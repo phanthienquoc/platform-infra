@@ -1,4 +1,4 @@
-| phanthienquoc/phanthienquoc-authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft / owner decision) | CI #42654579277 PASS; Auth remains intentional 0/0 maintenance; runtime Secret provisioned/verified by reconciliation #42981589486; public OIDC is not asserted healthy. |
+# Cross-Repository Production Deployment Tracker
 
 Last reviewed: 2026-11-11 15:09 ICT (2026-11-11 08:09:56 UTC).
 
@@ -8,12 +8,11 @@ This is the compact current readiness view. Historical append-only content is pr
 
 | Repository | Current master SHA | Open PRs | Latest verified CI / operational evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `e6d6213ea5441622a314d1ccacfc3d5fe358fe40` | #1314, #544, #541, #539 (draft / owner decision) | Inspection PR #1618 exact-head validation #42972457127 PASS; fresh read-only K3s snapshot #42972248777; reconciliation #42972016233 SUCCESS, MicroFE healthy, TCE/Auth maintenance. |
-| phanthienquoc/TCE-dashboard | `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab` | none | WF-06 manual #42972014911 FAIL (four HTTP 503 probes); WF-12 workflow_run #42971976274 FAIL; latest native WF-06/WF-12 remain stale; WF-07 schedule #42971954835 PASS. |
-| phanthienquoc/stockdividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED on empty `VNSTOCK_API_KEY`; Stock remains guarded retirement scope and ARM64 tags remain unresolved. |
-| phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS; K3s backend/frontend 1/1 with registry digest references; dedicated runner still active/enabled, retirement evidence incomplete. |
-| phanthienquoc/phanthienquoc-authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft / owner decision) | CI #42654579277 PASS; Auth is intentional 0/0 maintenance; public OIDC returns 503; runtime Secret provisioned/verified by reconciliation #42972016233. |
-
+| phanthienquoc/platform-infra | `48c9cf344c40fb76b1c720149d67bbced29e9255` | #1314, #544, #541, #539 (draft / owner decision) | Native inspection #42981286761 SUCCESS; PR #1620 merged to this SHA; reconciliation #42981589486 SUCCESS with GHCR preflight/Secret verification and no GitOps drift; recovery #42981775331 SUCCESS. |
+| phanthienquoc/TCE-dashboard | `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab` | none | Native WF-06 #42949191917 and WF-12 #42944415193 remain failed/stale; manual WF-06 #42972014911 failed strict HTTP 200 probes (503); WF-07 integration schedule #42971954835 PASS. TCE/Auth are intentional 0/0 maintenance. |
+| phanthienquoc/stockdividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED on empty `VNSTOCK_API_KEY`; Stock remains approved retirement scope with historical ARM64 image-pull failures. |
+| phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS; fresh inspection #42981286761 shows backend/frontend 1/1 with registry digest references; dedicated runner service/listener remains active. |
+| phanthienquoc/phanthienquoc-authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft / owner decision) | CI #42654579277 PASS; Auth remains intentional 0/0 maintenance; runtime Secret provisioned/verified by reconciliation #42981589486; public OIDC is not asserted healthy. |
 
 ## Latest verification — 2026-11-11 15:09 ICT / 08:09:56 UTC
 
@@ -67,6 +66,7 @@ All six inter-arrival gaps exceed budget. Five of six current-age checks fail; o
 - Registry administrator: verify GHCR server-side immutable-tag enforcement.
 
 No image publication, digest promotion, manifest change, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation or host reboot occurred in this checkpoint. Auth runtime Secret provisioning/verification ran successfully; shared `ghcr-pull` was unchanged. Preserve useful workflows; none is confirmed redundant/obsolete. No direct SSH/Compose authority. TCE market-scan schedule unchanged.
+
 
 ## Historical verification — 2026-11-11 12:58 ICT / 05:58:04 UTC
 
@@ -191,7 +191,7 @@ The six cron expressions remain unchanged: Platform reconcile 7,22,37,52 * * * *
 - Stock ARM64 release: https://github.com/phanthienquoc/stockdividend/issues/43
 
 
-## Latest verification — 2026-11-11 09:02 ICT / 02:02:00 UTC
+## Historical verification — 2026-11-11 09:02 ICT / 02:02:00 UTC
 
 - Direct master refs at this checkpoint: Platform Infra `fbb479fc7e6415eeec8ef34fdaccf039f5477e17`; TCE Dashboard `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab`; StockDividend `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media Generation `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
 - Current open PRs from GitHub REST: Platform #1314 (`db152c9a`), #544 (`c95e7dae`), #541 (`b8f7c6ba`), #539 (`2dc48b97`); Authentication #76 (`f19cacb0`). All are drafts/owner-decision work. No open PRs in TCE, Stock or Media. Exact-head check-runs: Platform #1314/#544/#541/#539 each have `validate=success`; Auth #76 has `validate=success` and Supabase Preview `skipped`. Do not merge the Keycloak/database/identity or Auth migration-drift decisions without owner approval.
@@ -266,7 +266,7 @@ All six inter-arrival gaps exceed budget. Five of six current-age checks exceed 
 No GHCR publication, digest promotion, production manifest apply, workload rollout/scaling, namespace/PVC/PV deletion, Media runner retirement, credential rotation, DNS/database/object-storage mutation, host reboot or workflow removal occurred in this checkpoint. Shared `ghcr-pull` remained unchanged. Preserve all useful CI/test/security, release, backup, integration, manual and scheduled workflows. No duplicate direct SSH/Compose deployment authority was added. TCE market-scan schedule and all six cron expressions/budgets remain unchanged.
 
 
-## Latest verification — 2026-11-11 10:55 ICT / 03:55:46 UTC
+## Historical verification — 2026-11-11 10:55 ICT / 03:55:46 UTC
 
 This checkpoint supersedes the 10:01 ICT compact readiness values above. It is a read-only evidence refresh plus documentation update; no production mutation was authorized or performed.
 
@@ -312,7 +312,7 @@ All six current-age checks and all six inter-arrival gaps exceed their budgets. 
 No workflow was removed; none was confirmed redundant/obsolete. Preserve CI/test/security, release, backup, integration, manual and scheduled workflows. No duplicate SSH/Compose deployment authority was added. TCE market-scan schedule unchanged.
 
 
-## Latest verification — 2026-11-11 12:04 ICT / 05:04:56 UTC
+## Historical verification — 2026-11-11 12:04 ICT / 05:04:56 UTC
 
 This checkpoint supersedes the 10:55 ICT readiness values above. It is a read-only evidence refresh plus tracker/inventory documentation; no production mutation was authorized or performed.
 
@@ -381,7 +381,7 @@ No new GHCR publication, digest promotion, production manifest apply, workload r
 - The post-merge Actions run list for SHA `0191e968...` contains only `validate-manifests`; no `reconcile-vps.yml` or `recover-stale-ops.yml` push run was triggered by the docs-only merge.
 
 
-## Latest verification — 2026-11-11 14:03 ICT / 07:03:57 UTC
+## Historical verification — 2026-11-11 14:03 ICT / 07:03:57 UTC
 
 This checkpoint supersedes the 13:03 ICT compact readiness values. Evidence is from direct master refs, open PR metadata, exact-head check-runs, first-page Actions history (up to 100 schedule runs per workflow), decoded job logs and the current read-only VPS snapshot. Runtime freshness is bounded and stated explicitly.
 
