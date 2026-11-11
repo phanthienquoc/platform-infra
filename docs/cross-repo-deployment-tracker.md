@@ -747,3 +747,55 @@ No new GHCR publication, digest promotion, current-master manifest apply, worklo
 - Post-merge run list contains `validate-manifests` only; no production reconciliation or recovery push was triggered by this documentation-only merge.
 - This addendum advances the compact Platform master SHA only. The 09:58:55Z operational/schedule reference and K3s snapshot freshness remain unchanged; do not treat the SHA sync as new runtime evidence.
 - No manifests, app code, workflows, secrets, GHCR publication, digest promotion, production apply, rollout, deletion, host reboot or DNS/database/storage mutation occurred. TCE market-scan schedule unchanged.
+
+## Latest verification — 2026-11-11 18:01 ICT / 11:01:52 UTC
+
+### Direct repository refs, open PRs and exact-head checks
+
+- Platform Infra master: `ff401dadb1cac5b0647c1a4187fe171b2cfbc937`; TCE Dashboard master after PR #1037: `5b425bdeab457e943bcecf1831836fc698e24394`; StockDividend: `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media Generation: `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication: `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
+- TCE PR [#1037](https://github.com/phanthienquoc/TCE-dashboard/pull/1037) was squash-merged at `5b425bdeab457e943bcecf1831836fc698e24394`. Exact head `4abbcab17e4cc6257ab0e00ff7216eba5ce37fdd`; WF-01P #43008284677, WF-02 #43008284672, WF-05 #43008284792 and WF-08B #43008284695 all PASS. WF-01P logs confirm the new contract script parsed WF-13/WF-06/WF-12/WF-01P YAML, preserved all four HTTP 200 endpoint expectations and both schedule expressions, and passed the TCE release contract plus frontend build. Post-merge master WF-01 #43008514423, WF-05 #43008514459 and WF-02 #43008514481 were queued/in progress at this reference; do not claim post-merge completion yet.
+- Remaining open owner-decision drafts: Platform #1314/#544/#541/#539 and Authentication #76. Their exact-head validation runs remain PASS: Platform #42161859747, #38575430454, #38567431761 and #38548718033; Auth #41329425940 PASS with Supabase Preview skipped. No open PRs remain in TCE, Stock or Media after #1037 merged.
+- Direct `branches/master` API responses still show `protected=false`, `protection.enabled=false`, and required status checks enforcement off/empty on all five repositories. Repository metadata allows squash, merge commit and rebase. Administrator must enforce PR-only, required CI/deployment checks, force-push/deletion protection and squash-only; no settings change was made.
+
+### Current Platform reconciliation, credentials and runtime evidence
+
+- Manual reconciliation [#43003088695](https://github.com/phanthienquoc/platform-infra/actions/runs/43003088695) ran on current Platform master `ff401dad` with `mode=apply`, `target_app=all`, `allow_image_changes=false`. It completed successfully at 10:24:29Z. GHCR read preflight passed for five packages: Auth service, MicroFE Shell, MicroFE WS, TCE service and TCE web.
+- Auth runtime Secret was provisioned in `microfe-platform` and verified to contain required keys; values were suppressed. Shared `ghcr-pull` returned unchanged in both managed GHCR namespaces. The scoped image-pull restart check found no failures for the five managed MicroFE/TCE workloads.
+- TCE GitOps release pairing passed for `prod-v0.1.0-e75e338`. Read-only Kubernetes diff reported no drift. Manifest apply, image replacement and workload rollout were skipped. The run therefore did not change production manifests or workloads, although Auth runtime Secret provisioning was a real cluster credential operation.
+- Post-reconciliation node/pod inventory at 10:22:57Z showed node `tce-k3s-01` Ready/ARM64, K3s v1.36.3+k3s1; Media backend/frontend 1/1; MicroFE Shell/WS/NATS 1/1; TCE/Auth/Keycloak intentional zero-replica maintenance; Stock Admin two ImagePullBackOff pods and desired Stock Backend one ImagePullBackOff pod, while legacy Stock Backend/Frontend remained 1/1.
+- Stock desired admin image `ghcr.io/phanthienquoc/stockdividend/admin:12d63b4` still has no compatible platform descriptor. Do not promote local image IDs or cached tags as registry RepoDigest evidence. Stock scraper #42457182511 remains FAIL CLOSED on empty `VNSTOCK_API_KEY`; Stock CI #42610360402 PASS. Media CI #42539512417 PASS; Auth CI #42654579277 PASS.
+- Recovery [#43003328970](https://github.com/phanthienquoc/platform-infra/actions/runs/43003328970) completed SUCCESS. At its 10:24Z reference it correctly treated reconciliation #43003088695 as recent and read-only inspection fallback #42994074939 as fresh (age about 63m), so it dispatched no duplicate reconciliation or inspection. At 11:01:52Z, that reconciliation is now beyond the 20-minute recovery freshness window and inspection fallback #42994074939 is beyond the 75-minute inspection budget. The last full inspection is stale. The partial node/pod list from reconciliation is not a substitute for full disk/RAM/storage/runner inspection.
+
+### TCE maintenance-aware recovery contract
+
+- TCE native WF-06 [#43003016447](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/43003016447) failed all four strict public probes: TCE web, TCE API, Auth liveness and Auth readiness returned HTTP 503 instead of 200. TCE/Auth zero replicas are intentional maintenance; they are not live healthy.
+- WF-12 run #43003045329 was a `workflow_run` delivery watchdog with zero measured queue wait, not a native schedule run. WF-13 recovery #43003045466 dispatched manual fallback WF-06 #43003071073, which reproduced the same four HTTP 503 responses.
+- Merged TCE PR #1037 adds an explicit `TCE_MAINTENANCE_MODE` Actions-variable gate to WF-13. When set to `true`, it suppresses only the redundant read-only WF-06 fallback; strict WF-06 HTTP 200 probes and WF-12 native schedule monitoring remain unchanged. If unset/false, existing recovery behavior is preserved. The variable value was not changed or verified by this run; an authorized TCE repository administrator must set `TCE_MAINTENANCE_MODE=true` during the intentional zero-replica maintenance window, and unset/set false when services are reactivated.
+- WF-01P now runs `scripts/validate-tce-health-recovery-contract.sh`; its PASS evidence covers YAML syntax, both maintenance guards, all four HTTP 200 expectations and unchanged WF-06/WF-12 cron expressions. No schedule or TCE market-scan schedule changed.
+
+### Native schedule freshness
+
+Reference: 2026-11-11 11:01:52 UTC. Only first-attempt `event=schedule` runs on `master` count. Current age is measured from `created_at`; inter-arrival is the latest minus previous native run.
+
+| Lane | Latest native run | Previous native run | Current age (s) | Inter-arrival gap (s) | Budget (s) |
+|---|---:|---:|---:|---:|---:|
+| Platform reconcile | #42993779924 | #42942147668 | 6,327 | 26,585 | 2,700 |
+| Platform inspection | #42981286761 | #42932368784 | 12,046 | 25,617 | 4,500 |
+| Platform recovery | #42986496462 | #42939222343 | 9,573 | 24,822 | 2,700 |
+| Platform watchdog | #42986833403 | #42940581820 | 9,422 | 24,297 | 2,700 |
+| TCE WF-06 | #43003016447 | #42949191917 | 2,389 | 26,842 | 1,500 |
+| TCE WF-12 | #42996293386 | #42944415193 | 5,254 | 26,503 | 1,500 |
+
+All six current-age budgets and all six inter-arrival budgets fail. TCE WF-06's latest native run did execute on schedule but failed public health; the WF-12 workflow_run receipt is not native schedule evidence. Do not count manual/workflow_run/repository_dispatch fallbacks as native delivery. No scheduler enqueue/delivery telemetry is available to attribute the gaps to GitHub scheduler delivery vs other causes. Preserve all cron expressions and the TCE market-scan schedule.
+
+### Exact next actions and safety
+
+1. Platform operator: run a fresh read-only `inspect-vps.yml` now; the last full fallback snapshot #42994074939 has exceeded 4,500s. Do not reboot/upgrade the host.
+2. Platform operator: run `reconcile-vps.yml` on current master `ff401dad` in `mode=plan` before any new deployment decision; last successful current-master reconciliation #43003088695 is beyond the 20-minute recovery freshness window.
+3. TCE repository administrator: set `TCE_MAINTENANCE_MODE=true` for the intentional zero-replica maintenance period; keep WF-06 strict and WF-12 active.
+4. GitHub administrator: provide enqueue/delivery/Actions service telemetry and enforce master protection plus squash-only merge across all five repositories.
+5. TCE/Auth owners: provide approved immutable release digests, rollback references and explicit recovery approval before reactivation.
+6. Stock owner: confirm continued retirement vs restoration; if restored, provision `VNSTOCK_API_KEY` only via protected Actions Secrets and run safe preflight first.
+7. Media owner: complete external backup/retention, authoritative DNS ownership and remote runner stop/disable/unregister evidence before deletion.
+
+No new GHCR publication or digest promotion, production manifest apply, workload rollout, namespace/PVC/PV deletion, runner retirement, shared GHCR credential rotation, DNS/database/object-storage mutation or host reboot occurred. Auth runtime Secret provisioning/verification did occur in #43003088695; values were suppressed and shared `ghcr-pull` was unchanged. No workflow was removed or duplicate SSH/Compose authority added. Platform remains the sole production apply authority. TCE market-scan schedule unchanged.
