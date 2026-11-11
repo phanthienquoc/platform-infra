@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-11 15:18 ICT (2026-11-11 08:18 UTC).
+Last reviewed: 2026-11-11 15:20 ICT (2026-11-11 08:20:47 UTC).
 
 This is the compact current workflow inventory. The previous append-only inventory is preserved at docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md. Historical timestamped workflow checkpoints remain under docs/cross-repo-workflow-inventory-checkpoints/.
 
@@ -21,6 +21,14 @@ This is the compact current workflow inventory. The previous append-only invento
 - Exact-head validation #42985848211 and post-merge master validation #42985958377 both PASS.
 - Only `validate-manifests` ran after the docs-only merge; no production reconcile/recovery push run was triggered.
 - The 15:09 ICT workflow checkpoint remains the latest operational snapshot; this addendum updates only the Platform master SHA and merge receipt.
+- Workflow ownership and production authority boundaries are unchanged; no workflow was removed, no SSH/Compose authority added, and TCE market-scan schedule unchanged.
+
+## Post-merge verification — 2026-11-11 15:20 ICT
+
+- Platform master advanced documentation-only to `8f95ddd8729eae6fee662e3a395f083be4fc21b0` through PR #1622.
+- Exact-head validation #42986144723 and post-merge master validation #42986252700 both PASS.
+- Only `validate-manifests` ran after the docs-only merge; no production reconcile/recovery push was triggered.
+- The 15:09 ICT operational checkpoint remains the latest runtime/schedule evidence.
 - Workflow ownership and production authority boundaries are unchanged; no workflow was removed, no SSH/Compose authority added, and TCE market-scan schedule unchanged.
 
 ## Ownership and production authority

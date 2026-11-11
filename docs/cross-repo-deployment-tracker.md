@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-11 15:18 ICT (2026-11-11 08:18 UTC).
+Last reviewed: 2026-11-11 15:20 ICT (2026-11-11 08:20:47 UTC).
 
 This is the compact current readiness view. Historical append-only content is preserved under `docs/archive`; timestamped checkpoints remain under `docs/cross-repo-deployment-checkpoints`.
 
@@ -8,7 +8,7 @@ This is the compact current readiness view. Historical append-only content is pr
 
 | Repository | Current master SHA | Open PRs | Latest verified CI / operational evidence |
 |---|---|---|---|
-| phanthienquoc/platform-infra | `9c2e4e0efb54aad29bcdb82afeaf06c187c60499` | #1314, #544, #541, #539 (draft / owner decision) | PR #1621 merged; exact-head #42985848211 PASS and post-merge master validation #42985958377 PASS. Operational snapshot remains 15:09 ICT. |
+| phanthienquoc/platform-infra | `8f95ddd8729eae6fee662e3a395f083be4fc21b0` | #1314, #544, #541, #539 (draft / owner decision) | PR #1622 merged; exact-head #42986144723 PASS and post-merge master validation #42986252700 PASS. Operational snapshot remains 15:09 ICT. |
 | phanthienquoc/TCE-dashboard | `c4602be3b0a7b624bdb9cd41519cfc70a14d92ab` | none | Native WF-06 #42949191917 and WF-12 #42944415193 remain failed/stale; manual WF-06 #42972014911 failed strict HTTP 200 probes (503); WF-07 integration schedule #42971954835 PASS. TCE/Auth are intentional 0/0 maintenance. |
 | phanthienquoc/stockdividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED on empty `VNSTOCK_API_KEY`; Stock remains approved retirement scope with historical ARM64 image-pull failures. |
 | phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS; fresh inspection #42981286761 shows backend/frontend 1/1 with registry digest references; dedicated runner service/listener remains active. |
@@ -449,3 +449,13 @@ All six current-age checks and all six inter-arrival gaps exceed their budgets. 
 6. Registry administrator: verify GHCR server-side immutable-tag enforcement.
 
 No new GHCR publication or digest promotion occurred. The reconciliation did provision/verify the Auth runtime Secret and confirm shared `ghcr-pull` unchanged; no manifest apply, image replacement or workload rollout occurred. No namespace/PVC/PV deletion, Media runner retirement, credential rotation, DNS/database/object-storage mutation, host reboot/package upgrade or workflow removal occurred in this run. Preserve all useful CI/test/security, release, backup, integration, manual and scheduled workflows; none is confirmed redundant/obsolete. No duplicate SSH/Compose deployment authority was added. TCE market-scan schedule unchanged.
+
+
+## Post-merge verification — 2026-11-11 15:20 ICT / 08:20:47 UTC
+
+- PR #1622 was squash-merged at `8f95ddd8729eae6fee662e3a395f083be4fc21b0`; direct `refs/heads/master` reads match this SHA.
+- Exact-head `validate-manifests` #42986144723 PASS on PR head `88f22bb11a927e87af676d274b921cc9118b9805`.
+- Post-merge `validate-manifests` #42986252700 PASS on master SHA `8f95ddd8...`; retired Stock/Media guard, immutable image-change contract, Auth digest promotion, TCE/Auth dispatch payload, manifest rendering, Secret policy, Keycloak isolation and network boundaries passed. Changed-image reference validation was skipped because this was documentation-only.
+- The post-merge run list contains only `validate-manifests`; no `reconcile-vps.yml` or `recover-stale-ops.yml` push run was triggered by this documentation-only merge.
+- The 15:09 ICT operational checkpoint remains the latest runtime/schedule snapshot. This addendum advances the compact current Platform SHA only; it does not refresh K3s or native schedule evidence.
+- No production manifest, image, Secret, workload, DNS, database, storage, namespace or runner was changed by PR #1622. TCE market-scan schedule unchanged.
