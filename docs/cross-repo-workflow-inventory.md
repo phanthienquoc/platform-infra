@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-11 15:55 ICT (2026-11-11 08:55:27 UTC).
+Last reviewed: 2026-11-11 16:00 ICT (2026-11-11 09:00:35 UTC).
 
 This is the compact current workflow inventory. The previous append-only inventory is preserved at docs/archive/cross-repo-workflow-inventory-append-only-2026-11-10.md. Historical timestamped workflow checkpoints remain under docs/cross-repo-workflow-inventory-checkpoints/.
 
@@ -410,3 +410,12 @@ No workflow was added or removed in this checkpoint. Keep CI, tests, security, a
 - Exact-head checks: Platform drafts each `validate=success`; Auth #76 `validate=success`, Supabase Preview skipped. Keep all owner-decision drafts unmerged.
 - All five master branches report `protected=false` and no required status checks; all five repository metadata records allow squash, merge commits and rebase. Effective inherited rulesets remain unverified. Administrator action is required; no repository setting was changed.
 - No workflow was removed or added. No direct SSH/Compose deployment authority was introduced. TCE market-scan schedule and all existing cron expressions are unchanged.
+
+
+## Post-merge workflow inventory receipt — 2026-11-11 16:00 ICT
+
+- Platform master now `37a5624a325c570df0fc689b4f6ecde5f9bae89e` after docs-only PR #1627.
+- Exact-head validation #42991422461 PASS; post-merge `validate-manifests` #42991499455 PASS.
+- No reconcile/recovery push was triggered. Production apply authority remains Platform only; app repositories retain tests/builds/immutable GHCR publication ownership.
+- Last K3s snapshot #42981286761 is expired; last successful reconciliation #42986517013 is within its age budget but ran on older SHA `8f95ddd872...`. Neither authorizes a new rollout against current master.
+- Preserve CI/test/security, app publication, release, backup, integration, manual and scheduled jobs. No workflow removal/addition, no SSH/Compose authority, and no TCE market-scan schedule change.
