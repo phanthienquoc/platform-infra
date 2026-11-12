@@ -3165,3 +3165,17 @@ Stock scraper #42457182511 remains fail-closed before dependency installation be
 - Media owner: stop/disable/unregister runner and prove Listener absence, GitHub-side unregister, external backup/retention and authoritative DNS before decommission.
 
 Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
+
+
+## Post-merge receipt — 2026-11-12 23:59 ICT / 17:05:40Z
+
+- Platform PR #1699 (`docs/cross-repo-readiness-20261112-2359-ict`) was opened against master `8979b4829d4468cac779b9cee16447cf0a5088f2`.
+- Exact PR head `8ff5c0d69c4e0e4fa2c2abfc044e794c524284e1` passed `validate` in [#43265536725](https://github.com/phanthienquoc/platform-infra/actions/runs/43265536725); all 20 applicable steps passed. Changed-image validation was correctly skipped for documentation-only changes, and the failure-report job was correctly skipped.
+- PR #1699 was squash-merged with expected head SHA `8ff5c0d69c4e0e4fa2c2abfc044e794c524284e1` as `5ad78ef37c8b82f7f268d87b3d40c4a4401bd8e1`. Direct `refs/heads/master` verification matched this merge SHA; PR API confirms merged=true.
+- Post-merge `validate-manifests` [#43265741937](https://github.com/phanthienquoc/platform-infra/actions/runs/43265741937) completed SUCCESS on the exact merge SHA; all 20 applicable steps passed, changed-image validation was correctly skipped, and failure-report was correctly skipped.
+- PR #1699 changed only `docs/cross-repo-deployment-tracker.md`, `docs/cross-repo-workflow-inventory.md` and the two 23:59 ICT checkpoint files. No production manifest, workflow definition, image reference, credential, Actions variable, runtime setting, workload, DNS, database, storage or schedule changed.
+- Current Platform master is `5ad78ef37c8b82f7f268d87b3d40c4a4401bd8e1`. App masters remain TCE `34f6024f8ccec8fb3ab6688901b3557e058ddfd1`, Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`, Media `dcd698699c65ba6e73f6b43838975144777131c3`, Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
+- The fresh reconciliation #43257038616 and inspection #43257414853 remain within their respective freshness budgets at the 23:59 ICT reference. Native schedule cadence remains degraded; these dispatch receipts do not reset native schedule budgets.
+- No GHCR publication/promotion, production manifest apply, workload rollout, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup, host reboot or resource deletion occurred in PR #1699. The Auth runtime Secret provision/verification in reconciliation #43257038616 is separately recorded; shared `ghcr-pull` remained unchanged.
+
+Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
