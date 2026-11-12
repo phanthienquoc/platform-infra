@@ -3055,3 +3055,14 @@ Direct `GET /branches/master` reads returned `protected=false` for all five repo
 - No new GHCR publication/promotion, manifest apply, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot occurred in this checkpoint. The prior Auth runtime Secret provision/verification remains recorded; shared `ghcr-pull` was unchanged.
 
 **Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.**
+
+
+## Post-merge receipt — 2026-11-12 23:02 ICT / 16:02:35 UTC
+
+- Platform PR #1696 (`docs/cross-repo-readiness-20261112-2256-ict`) was opened against master `a58658292ac87e7c4fc72fc9dbb78fda4e73765c`.
+- Exact-head validate-manifests [#43254212165](https://github.com/phanthienquoc/platform-infra/actions/runs/43254212165) completed SUCCESS on `d65caa9a82697f579f9df63d1c6b8601d01a24a1`; validation job passed 21 steps and failure-report job was correctly SKIPPED.
+- PR #1696 was squash-merged with expected head SHA `d65caa9a82697f579f9df63d1c6b8601d01a24a1` at 16:02:35Z. Merge SHA: `fc0800db36738013298dee2b49fa2c7421916966`. Direct `refs/heads/master` read matched the merge SHA; PR API confirms merged=true.
+- Post-merge validate-manifests [#43254324762](https://github.com/phanthienquoc/platform-infra/actions/runs/43254324762) completed SUCCESS on the exact merge SHA; validation job passed 20 applicable steps and failure-report job was correctly SKIPPED.
+- PR #1696 changed only `docs/cross-repo-deployment-tracker.md`, `docs/cross-repo-workflow-inventory.md` and the two 22:56 ICT checkpoint files. Compare `a5865829...fc0800db` confirms exactly those four documentation files changed; no production manifest, workflow definition, image reference, credential, Actions variable, runtime setting, workload, DNS, database, storage or schedule changed.
+- Current Platform master is `fc0800db36738013298dee2b49fa2c7421916966`. App masters remain TCE `34f6024f8ccec8fb3ab6688901b3557e058ddfd1`, Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`, Media `dcd698699c65ba6e73f6b43838975144777131c3` and Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
+- No production mutation occurred. No workflow was removed, no duplicate direct SSH/Compose apply authority was introduced, and TCE market-scan schedule remains unchanged.
