@@ -1298,3 +1298,38 @@ Current schedule definitions were read from master and left unchanged:
 - The change is documentation-only. No production manifests, workflow definitions, images, credentials, Actions variables, schedules or runtime resources changed.
 - Current Platform open PRs remain #1314/#544/#541/#539 (owner-decision); Authentication #76 remains an owner-decision draft.
 - Platform Infra remains the sole production apply authority. Preserve all app-owned tests/builds/immutable publishers and all useful manual/release/backup/integration/scheduled workflows. TCE market-scan schedule unchanged.
+
+
+## Latest workflow inventory verification — 2026-11-12 15:59 ICT / 08:59:30 UTC
+
+| Repository | Master SHA | Open PRs | Latest relevant workflow evidence | Ownership / preservation |
+|---|---|---|---|---|
+| Platform Infra | `c6b71a37` | #1314/#544/#541/#539 drafts | Master validate-manifests #43180879007 PASS. Reconciliation #43176619995 SUCCESS via workflow_dispatch on parent `345f033a`, no drift/apply/rollout, but stale. Inspection #43173781408 SUCCESS on parent `826b9427`, but stale. Native reconcile/inspect/recovery/watchdog latest #43152960974/#43150245172/#43150505792/#43150601305. | Sole production manifests, shared GHCR pull credentials, digest promotion, GitOps plan/apply, rollout and runtime verification. Preserve reconcile, inspection, recovery, watchdog, backup, validation and guarded manual jobs. |
+| TCE Dashboard | `34f6024f` | none | WF-06 native schedule #43176560763 FAILURE at 07:36:52Z; four strict probes HTTP 503. WF-12 #43176586474 and WF-13 #43176586309 SUCCESS via workflow_run; WF-13 #43176605608 SKIPPED. Latest native WF-12 #43154415980 is stale. WF-01/02/05 build/test checks PASS. | Owns tests/builds, immutable GHCR publication, provenance and strict health checks. Preserve WF-06/WF-12/WF-13, manual release, backup, integration and market-scan workflows. No direct production apply. |
+| StockDividend | `b1b5e177` | none | CI #42610360402 PASS. Scraper #42457182511 FAIL CLOSED because `VNSTOCK_API_KEY` is missing. No new immutable publication/promotion. | Owns tests/builds and immutable ARM64 publication only if operation is authorized. Preserve fail-closed scraper and gated manual publisher. No Platform apply authority. |
+| Media Generation | `dcd69869` | none | CI #42539512417 PASS. No newer publication/promotion; last inspection showed backend/frontend 1/1 with RepoDigests but is stale. Dedicated runner Listener was present in last inspection. | Owns tests/builds/immutable publication. No Platform dispatch or production apply in current publisher contract. Preserve CI/release while runner retirement is gated. |
+| Authentication | `eab85fab` | #76 draft | CI #42654579277 PASS. No newer current-master release/promotion. Auth runtime Secret was provisioned/verified in the last successful Platform reconciliation; Auth/Keycloak were 0/0 maintenance in historical runtime evidence. | Owns Auth tests/builds/release provenance/SBOM/immutable publication. Platform owns runtime Secret and production reconciliation. |
+
+### Native schedule acceptance at 08:59:30Z
+
+| Lane | Latest native run | Age (s) | Inter-arrival gap (s) | Budget (s) | Result |
+|---|---:|---:|---:|---:|---|
+| Platform reconcile | #43152960974 | 17,382 | 16,665 | 2,700 | FAIL |
+| Platform inspection | #43150245172 | 18,876 | 17,233 | 4,500 | FAIL |
+| Platform recovery | #43150505792 | 18,735 | 17,135 | 2,700 | FAIL |
+| Platform watchdog | #43150601305 | 18,681 | 17,077 | 2,700 | FAIL |
+| TCE WF-06 | #43176560763 | 4,958 | 25,693 | 1,500 | FAIL |
+| TCE WF-12 | #43154415980 | 16,597 | 16,987 | 1,500 | FAIL |
+
+Only first-attempt `event=schedule` runs on `master` count. TCE WF-12 #43176586474 is a workflow_run heartbeat/verification and does not reset native WF-12 cadence. TCE WF-06 #43176560763 is a native schedule run, but it failed the four public health probes (HTTP 503). Platform watchdog #43150601305 recorded the inter-arrival gaps above and failed Platform native schedule acceptance. No authoritative scheduler enqueue/delivery telemetry was available; runner congestion is not established.
+
+### Runtime freshness and ownership
+
+- Reconciliation #43176619995: age 4,929s against 2,700s budget; expired. Five GHCR reads passed, Auth runtime Secret verified (values suppressed), shared `ghcr-pull` unchanged, TCE release pairing PASS, drift=false, apply/image replacement/rollout skipped. Run is on parent SHA `345f033a`, not current master.
+- K3s inspection #43173781408 / `debug/vps-latest.md`: generated 07:14:30Z, age 6,308s against 4,500s budget; expired. Last snapshot: ARM64 node Ready, disk 57%, ~20GiB free, ~19GiB RAM available, restart required, Media runner Listener present, debug PVC Bound (1Gi/RWO).
+- Last-known workload state: Media/MicroFE active; TCE/Auth/Keycloak 0/0 maintenance; Stock desired Admin/Backend ImagePullBackOff on `12d63b4`. Do not assert current health from this expired snapshot.
+- App repositories own tests/builds/immutable GHCR publication; Platform Infra alone owns production manifests, shared pull credentials, digest promotion, GitOps, rollout and health.
+- Preserve all useful CI/test/security/build/publisher/manual/release/backup/integration/scheduled workflows. No workflow is confirmed obsolete; none removed. No direct SSH/Compose production apply authority. No image publication/promotion, manifest apply, rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot occurred.
+- Repository metadata allows squash, merge commit and rebase; effective inherited organization rulesets/branch protection remain unverified. Open owner-decision PRs remain drafts and are not merged.
+
+**TCE market-scan schedule unchanged.**
