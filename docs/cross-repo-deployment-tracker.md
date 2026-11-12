@@ -2100,3 +2100,15 @@ Current cron definitions were read from master and left unchanged: Platform reco
 7. Platform operator: obtain separate approval before host package/kernel/containerd/Docker upgrades or restart.
 
 The GitHub connection used for this run is read-only for workflow dispatch and does not expose Actions variable/secret management. No fresh inspection/plan dispatch or maintenance-variable mutation was attempted from this run.
+
+
+## Post-merge receipt — 2026-11-12 12:02 ICT / 05:02:05 UTC
+
+- Platform PR #1670 (11:56 readiness/decommission evidence refresh) was squash-merged from exact head `145745ea3f00cadbed3b323ff92741ca0195cffc` to master `3dd57285c86502df58128c2b392fd4bf620396f4`.
+- Exact-head `validate-manifests` run [#43158559048](https://github.com/phanthienquoc/platform-infra/actions/runs/43158559048) completed SUCCESS on the exact PR head. Contract, manifest render, shell, secret, immutable image, Keycloak isolation and network checks passed; changed-image-reference validation was skipped because the PR is documentation-only.
+- Post-merge `validate-manifests` run [#43158638646](https://github.com/phanthienquoc/platform-infra/actions/runs/43158638646) completed SUCCESS on exact merge SHA `3dd57285c86502df58128c2b392fd4bf620396f4`.
+- Direct `refs/heads/master` verification matched the merge SHA. PR #1670 is merged.
+- PR #1670 changed only deployment tracker, workflow inventory, decommission runbook and two checkpoint documents. No production manifests, workflow definitions, image references, secrets, Actions variables, cron expressions or runtime resources changed.
+- Current Platform master is `3dd57285c86502df58128c2b392fd4bf620396f4`. Open Platform owner-decision drafts remain #1314/#544/#541/#539; Authentication owner-decision draft #76 remains open.
+- The 11:56 runtime snapshot remains historical evidence: current-master GitOps `mode=plan` and fresh K3s inspection still require an operator dispatch. Native schedule gaps, TCE HTTP 503, Stock ARM64 image-pull failure and Media runner/decommission gates are unchanged by this docs-only merge.
+- TCE market-scan schedule unchanged.
