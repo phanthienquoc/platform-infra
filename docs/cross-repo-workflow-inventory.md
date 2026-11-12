@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-12 08:09 ICT (2026-11-12 01:09:34 UTC).
+Last reviewed: 2026-11-12 08:11 ICT (2026-11-12 01:11:13 UTC).
 
 
 ## Latest workflow inventory verification — 2026-11-12 06:14 ICT / 2026-11-11 23:14:06 UTC
@@ -928,3 +928,23 @@ Direct branch API returned `protected=false` on all five master branches. Preser
 - TCE PR #1038 current exact head `e718d728d531ac1c492e34a337e3fe308980a767`. Prior WF-01P #43132263903 failed on old head `8a81933f` because of an incorrect validator grep literal; corrected on new head. New WF-01P #43132521680, WF-02 #43132521802, WF-05 #43132521704 and WF-08B #43132521695 are in progress; no merge authorization yet.
 - WF-08B on prior head ran only tests/payload checks; GHCR publication and production dispatch jobs were skipped on the pull_request event.
 - The TCE maintenance change remains observability-only: empty variable still follows non-maintenance read-only fallback; strict HTTP 200 probes and all schedules remain unchanged.
+
+## Latest workflow inventory verification — 2026-11-12 08:11 ICT / 2026-11-12 01:11:13 UTC
+
+| Repository | Master SHA | Open PRs | Latest relevant runs | Ownership |
+|---|---|---|---|---|
+| Platform Infra | `166363e7` | #1314/#544/#541/#539 | PR #1661 merged; exact-head validate-manifests #43132612104 PASS; post-merge #43132719192 in progress. Manual reconcile #43127613751 SUCCESS/no drift/no apply; recovery #43127821037 SUCCESS; inspection fallback #43127872524 SUCCESS. Native schedule lanes remain stale. | Sole production manifests, shared GHCR pull credentials, GitOps plan/apply, digest promotion, rollout and health verification. |
+| TCE Dashboard | `34f6024f` | none; PR #1038 merged | Exact-head WF-01P #43132521680, WF-02 #43132521802, WF-05 #43132521704 and WF-08B #43132521695 PASS. Post-merge WF-01 #43132696439, WF-02 #43132696403 and WF-05 #43132696349 in progress. Prior WF-06 #43127603475 four HTTP 503s; WF-13 #43127582309 empty variable. | Own tests/builds, immutable GHCR publication, provenance and strict HTTP-200 health. No direct production apply. |
+| StockDividend | `b1b5e177` | none | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED on missing `VNSTOCK_API_KEY`; desired tag `12d63b4` lacks compatible manifest/RepoDigest. | Own tests/builds and immutable ARM64 publication only if retirement is reversed. |
+| Media Generation | `dcd69869` | none | CI #42539512417 PASS; backend/frontend 1/1 with RepoDigests; runner service/Listener active. | Own tests/builds/immutable publication. Runner retirement requires unregister, backup/retention and DNS evidence. |
+| Authentication | `eab85fab` | #76 owner decision | CI #42654579277 PASS; Auth runtime Secret provisioned/verified by Platform; Auth/Keycloak 0/0 maintenance. | Own Auth tests/builds/release provenance; Platform owns runtime Secret and production reconciliation. |
+
+### Ownership and safety
+
+- App repositories own tests/builds and immutable GHCR publication. Platform Infra alone owns production manifests, shared GHCR pull credentials, GitOps promotion/reconciliation, rollout and health verification.
+- No new image publication, digest promotion, manifest apply, image replacement or workload rollout in this verification window. No workflow removal is justified. Preserve CI/test/security/manual/release/backup/integration/scheduled jobs.
+- TCE PR #1038 changes only unset-maintenance observability; empty remains non-maintenance, read-only fallback continues, strict health and cron remain unchanged. Variable was not modified.
+- All six monitored native schedule lanes fail age and inter-arrival budgets. TCE WF-07 backup is not a substitute for WF-06/WF-12. TCE market-scan schedule unchanged.
+- All five master branch APIs return `protected=false`; effective inherited org rulesets remain unverified. No branch policy changed.
+- Stock/Media decommission remains blocked by active Media runner/Listener, unverified GitHub-side unregister, external backup/retention, authoritative DNS and protected approval. Preserve the debug PVC.
+- Host restart remains required but was not performed.
