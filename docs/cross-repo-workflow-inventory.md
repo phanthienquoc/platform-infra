@@ -1345,3 +1345,36 @@ Only first-attempt `event=schedule` runs on `master` count. TCE WF-12 #431765864
 - Current Platform master is `470cf1f6be68d1f68e61611792a39787003c2a1b`. TCE `34f6024f8ccec8fb3ab6688901b3557e058ddfd1`, Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`, Media `dcd698699c65ba6e73f6b43838975144777131c3` and Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f` remain unchanged.
 - Open Platform owner-decision drafts remain #1314/#544/#541/#539; Authentication draft #76 remains open. No owner-decision PR was merged.
 - No new GHCR publication/promotion, production apply, image replacement, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot occurred. Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
+
+
+## Latest workflow inventory verification — 2026-11-12 17:04 ICT / 10:04:47 UTC
+
+| Repository | Master SHA | Open PRs | Latest relevant workflow evidence | Ownership / preservation |
+|---|---|---|---|---|
+| Platform Infra | `466b848d9743843b48062fa53b2c9bd070fe2b09` | #1314/#544/#541/#539 drafts | Master `validate-manifests` #43188500016 PASS. Native reconcile #43152960974, inspect #43150245172, recovery #43150505792 and watchdog #43150601305 are all beyond their age/inter-arrival budgets. Latest reconciliation #43176619995 is a successful workflow_dispatch on parent `345f033a`, expired; latest inspection #43173781408 is a successful workflow_dispatch on parent `826b9427`, expired. | Sole production manifests, shared GHCR pull credentials, digest promotion, GitOps plan/apply, rollout and runtime verification. Preserve reconcile, inspection, recovery, watchdog, backup, validation and guarded manual jobs. |
+| TCE Dashboard | `34f6024f8ccec8fb3ab6688901b3557e058ddfd1` | none | Native WF-06 #43176560763 FAILURE: four strict public probes HTTP 503. Native WF-12 #43154415980 FAILURE/stale. WF-12 #43176586474 and WF-13 #43176586309 SUCCESS via workflow_run only; they do not count as native schedule. WF-01/02/05 build/test checks PASS. | Owns tests/builds, immutable GHCR publication, provenance and strict HTTP-200 probes. Preserve WF-06/WF-12/WF-13, manual release, backup, integration and market-scan jobs. No direct production apply. |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS with seven successful check runs. Scraper #42457182511 FAIL CLOSED because protected `VNSTOCK_API_KEY` is absent; no newer publication/promotion evidence. | Owns tests/builds and immutable ARM64 publication only if operation is authorized. Preserve fail-closed scraper and gated manual publisher. No Platform apply authority. |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS. No newer current-master publication/promotion evidence. Last K3s snapshot showed backend/frontend 1/1 with registry RepoDigests but is expired; dedicated runner Listener was present. | Owns tests/builds/immutable publication. No Platform dispatch or production apply in current publisher contract. Preserve CI/release while runner retirement is gated. |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 draft | CI #42654579277 PASS; build and validate checks PASS, Supabase Preview SKIPPED. No newer current-master release/promotion evidence. | Owns Auth tests/builds/release provenance/SBOM/immutable publication. Platform owns runtime Secret and production reconciliation. |
+
+### Native schedule delivery — reference 10:04:47Z
+
+| Lane | Latest native run | Age (s) | Inter-arrival gap (s) | Budget (s) | Result |
+|---|---:|---:|---:|---:|---|
+| Platform reconcile | #43152960974 | 21,299 | 16,665 | 2,700 | FAIL |
+| Platform inspection | #43150245172 | 22,793 | 17,233 | 4,500 | FAIL |
+| Platform recovery | #43150505792 | 22,652 | 17,135 | 2,700 | FAIL |
+| Platform watchdog | #43150601305 | 22,598 | 17,077 | 2,700 | FAIL |
+| TCE WF-06 | #43176560763 | 8,875 | 25,693 | 1,500 | FAIL |
+| TCE WF-12 | #43154415980 | 20,514 | 16,987 | 1,500 | FAIL |
+
+Only first-attempt `event=schedule` runs on `master` count. TCE WF-12 #43176586474 and WF-13 #43176586309 are workflow_run events and do not satisfy native cadence. WF-06 #43176560763 is a native schedule event but failed all four HTTP-200 probes with HTTP 503. The available integration does not expose authoritative scheduler enqueue/delivery telemetry; runner congestion is not established. Preserve existing cron expressions and budgets; **TCE market-scan schedule unchanged**.
+
+### Current checks, runtime freshness and governance
+
+- Platform master #43188500016: `validate` SUCCESS; failure-report job SKIPPED. All five master branch APIs report `protected=false` and required status-check enforcement `off`; inherited organization rulesets remain unverified.
+- Latest successful Platform reconciliation #43176619995: workflow_dispatch on parent `345f033a`; five GHCR reads PASS, Auth runtime Secret verified with values suppressed, shared `ghcr-pull` unchanged, TCE release pairing PASS, drift=false, apply/image replacement/rollout skipped. Expired at this reference.
+- Latest K3s inspection #43173781408: workflow_dispatch on parent `826b9427`; generated 07:14:22Z and expired at this reference. Last snapshot recorded node Ready/ARM64, disk 57%, ~20GiB free, ~19GiB RAM available, restart required, Media/MicroFE active, TCE/Auth/Keycloak 0/0, Stock desired Admin/Backend ImagePullBackOff, Media runner Listener present, and debug PVC Bound (1Gi/RWO). Historical only.
+- App repositories retain tests/builds/immutable GHCR publication. Platform Infra alone owns production manifests, shared pull credentials, digest promotion, GitOps, rollout and health.
+- Preserve all useful CI/test/security/build/publisher/manual/release/backup/integration/scheduled workflows. No workflow is confirmed obsolete; none removed. No direct SSH/Compose production apply authority. No image publication/promotion, manifest apply, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot occurred.
+- Open owner-decision drafts remain unmerged. TCE market-scan schedule unchanged.
