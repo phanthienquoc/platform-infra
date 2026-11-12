@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-12 08:09 ICT (2026-11-12 01:09:34 UTC).
+Last reviewed: 2026-11-12 08:11 ICT (2026-11-12 01:11:13 UTC).
 
 
 ## Latest verification — 2026-11-11 23:14:06 UTC / 2026-11-12 06:14:06 ICT
@@ -1679,3 +1679,65 @@ All six current-age and all six inter-arrival budgets fail. TCE WF-07 backup #43
 - New exact-head PR runs are in progress: WF-01P #43132521680, WF-02 #43132521802, WF-05 #43132521704 and WF-08B #43132521695. Push runs WF-02 #43132514345 and WF-05 #43132514285 are also in progress. No check on the new head has completed at this follow-up.
 - WF-08B PR run #43132263833 on the prior head executed only WebSocket/Auth tests and payload validation; image publication and production dispatch jobs were skipped. The new-head WF-08B run remains in progress.
 - No variable, secret, cron, market-scan schedule, production release or deployment was changed.
+
+## Latest verification — 2026-11-12 08:11 ICT / 2026-11-12 01:11:13 UTC
+
+### Master refs and open PRs
+
+| Repository | Master SHA | Open PRs |
+|---|---|---|
+| Platform Infra | `166363e7c47450d62e002ef6c2950ed824421caa` | #1314/#544/#541/#539 (owner-decision drafts) |
+| TCE Dashboard | `34f6024f8ccec8fb3ab6688901b3557e058ddfd1` | none; PR #1038 merged |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 owner-decision draft |
+
+Platform PR #1661 was squash-merged from exact head `ea3728fa225f927c26f1448f6eefda492fcfa05f` to master `166363e7`. Exact-head validate-manifests #43132612104 PASS. Post-merge validate-manifests #43132719192 is still in progress; do not claim post-merge PASS yet.
+
+TCE PR #1038 was squash-merged from exact head `e718d728d531ac1c492e34a337e3fe308980a767` to master `34f6024f`. Exact-head checks all PASS: WF-01P #43132521680, WF-02 #43132521802, WF-05 #43132521704, WF-08B #43132521695. On the PR event, WF-08B test jobs passed while GHCR publication and production dispatch jobs were skipped. Post-merge master runs WF-01 #43132696439, WF-02 #43132696403 and WF-05 #43132696349 are still in progress. No production release or image publication was triggered.
+
+### Platform GitOps and runtime
+
+- Manual reconciliation #43127613751 completed SUCCESS at 00:31:00Z on parent SHA `331120b`, with `mode=apply`, `target_app=all`, `allow_image_changes=false`. GHCR read preflight passed five packages; Auth runtime Secret was provisioned/verified with values suppressed; shared `ghcr-pull` remained unchanged; TCE release pairing passed; no blocked pulls were found in MicroFE Auth/Shell/WS or TCE service/frontend. GitOps drift=false; manifest apply, image replacement and rollout were skipped. This is reconciliation/preflight evidence, not a new rollout.
+- At 01:11:13Z, reconciliation completion age was 2,413s against a 2,700s budget (287s remaining; expected expiry 01:16:00Z). It ran on parent `331120b`; subsequent Platform PRs #1660/#1661 changed only inspection/documentation files, not production manifests. No exact-current-master `mode=plan` is evidenced.
+- Recovery #43127821037 SUCCESS and read-only inspection fallback #43127872524 SUCCESS. Inspection snapshot generated 00:31:21Z; age 2,392s against a 4,500s budget (2,108s remaining; expected expiry 01:46:21Z). This is workflow_dispatch fallback, not native schedule acceptance.
+- Latest snapshot: K3s node Ready/ARM64, disk 56% (~20GiB free), ~19GiB RAM available, host `restart_required: yes`. Media backend/frontend and MicroFE Shell/WS/NATS 1/1 with RepoDigests. TCE/Auth/Keycloak 0/0 maintenance. Stock Admin two pods and desired Backend one pod ImagePullBackOff on `12d63b4`, no compatible manifest/RepoDigest. Cached legacy Stock `23b2878` tags have blank RepoDigest fields; local image IDs are not registry provenance.
+- Media runner service active/enabled and `Runner.Listener` present. Stock/Media namespace storage preflight had no PVC/PV claims or VolumeSnapshot references; preserve `k3s-debug/k3s-debug-logs` (1Gi, Bound, RWO). External backup/retention, authoritative DNS and GitHub-side runner unregister remain unverified. No decommission.
+
+### TCE maintenance and health
+
+- TCE PR #1038 adds a warning when `TCE_MAINTENANCE_MODE` is empty while retaining existing safe behavior: empty remains non-maintenance and the read-only WF-06 fallback continues; only explicit true suppresses that fallback. It does not make health green.
+- Last observed WF-13 #43127582309 logged an empty variable and dispatched fallback. WF-06 fallback #43127603475 returned HTTP 503 for TCE web, TCE API, Auth liveness and Auth readiness. The new warning code has merged, but the variable was not changed and no post-merge WF-13/health run is yet evidenced.
+- TCE WF-07 backup #43130553977 succeeded under `/home/ubuntu/tce/backups` with 7-day retention. This is TCE-only backup evidence, not Stock/Media backup evidence.
+
+### Native schedule freshness at 01:11:13Z
+
+Only first-attempt `event=schedule` runs on master count; manual/workflow_run/repository_dispatch/fallback events do not satisfy native delivery.
+
+| Lane | Latest native run | Age (s) | Gap (s) | Budget (s) |
+|---|---:|---:|---:|---:|
+| Platform reconcile | #43120544165 | 5,950 | 22,471 | 2,700 |
+| Platform inspection | #43116036275 | 8,012 | 24,826 | 4,500 |
+| Platform recovery | #43116568507 | 7,773 | 23,725 | 2,700 |
+| Platform watchdog | #43116818114 | 7,661 | 23,716 | 2,700 |
+| TCE WF-06 | #43127554403 | 2,554 | 23,393 | 1,500 |
+| TCE WF-12 | #43121528127 | 5,487 | 22,441 | 1,500 |
+
+All six current-age and all six inter-arrival budgets fail. TCE WF-07 backup #43130553977 succeeded but is not WF-06/WF-12 schedule evidence. No cron expression or TCE market-scan schedule changed.
+
+### Governance and safety
+
+- Direct master branch API continues to return `protected=false` for all five repositories. Effective inherited organization rulesets remain unverified. Administrator must enforce PR-only, required CI/deployment checks, force-push/deletion protection and squash-only.
+- No new GHCR publication/digest promotion, production manifest change, image replacement or workload rollout. Auth Secret provisioning and GHCR credential reconciliation occurred in #43127613751; shared `ghcr-pull` was unchanged.
+- No namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot. No workflow was removed. Platform Infra remains the sole production apply authority.
+- TCE market-scan schedule unchanged.
+
+### Exact next actions
+
+1. Platform operator: run a fresh current-master `reconcile-vps.yml` in `mode=plan` before the last reconciliation expires at approximately 01:16:00Z; review output before any apply.
+2. Platform operator: obtain fresh read-only K3s inspection before approximately 01:46:21Z; do not count workflow_dispatch fallback as native schedule success.
+3. TCE administrator: set `TCE_MAINTENANCE_MODE=true` only if zero-replica maintenance remains approved; otherwise set false and restore replicas. No Actions-variable write capability was available in this run.
+4. GitHub administrator: resolve native schedule delivery and enforce branch protection/squash-only.
+5. Media owner: stop/disable/unregister runner and prove local Listener absence plus GitHub-side unregister; supply external backup/retention and DNS evidence before deletion.
+6. Stock owner: do not promote `12d63b4` or cached legacy IDs; provide a platform-compatible immutable release with registry digest if retirement is reversed.
+7. Platform operator: obtain separate approval before host upgrades/restart.
