@@ -1,4 +1,17 @@
-Last reviewed: 2026-11-12 10:59 ICT / 2026-11-12 03:59:56 UTC.
+Last reviewed: 2026-11-12 11:04 ICT (2026-11-12 04:04:42 UTC).
+
+## Post-merge receipt — 2026-11-12 11:04 ICT / 2026-11-12 04:04:42 UTC
+
+Platform PR #1668 was squash-merged at `af37d170ea755f1bca4c3f413d6a04b8d2d7210f`. Exact-head validation #43152296355 completed SUCCESS on `2cbe16d1961313a24bc9147e1aba36c9bf7b0555`; post-merge validate-manifests #43152354741 completed SUCCESS on the exact merge SHA. All applicable manifest/contract validation steps passed. The PR changed only the deployment tracker, workflow inventory and two timestamped checkpoint files; no production manifest, workflow, secret, credential or runtime configuration changed.
+
+The 10:59 ICT receipt above remains an accurate timestamped snapshot taken at 03:59:56Z on Platform master `55cacb6d`. Current Platform master is now `af37d170`; TCE `34f6024f`, Stock `b1b5e177`, Media `dcd69869` and Authentication `eab85fab` remain unchanged. Open owner-decision PRs remain Platform #1314/#544/#541/#539 and Authentication #76; PR #1668 is merged.
+
+At 04:04:42Z, no new qualifying native schedule run superseded the 10:59 IDs. Current-age values increased by 286s to: reconcile 16,359s; inspection 1,188s; recovery 1,047s; watchdog 993s; TCE WF-06 12,963s; TCE WF-12 15,896s. Inter-arrival gaps remain 22,471s / 17,233s / 17,135s / 17,077s / 23,393s / 22,441s respectively. Thus 3/6 age budgets and 6/6 gap budgets still fail. Do not change cron or TCE market-scan schedule.
+
+Current-master reconciliation #43150525282 remains successful evidence on the parent manifest tree (age 1,036s vs 2,700s budget); it found no drift, verified five GHCR package reads, provisioned/verified Auth runtime Secret with values suppressed, left shared `ghcr-pull` unchanged, and skipped manifest apply/image replacement/rollout. K3s snapshot generated 03:45:02Z is 1,180s old vs 4,500s budget. Both remain within freshness budgets at this reference; no new runtime mutation occurred.
+
+All five master branches still report `protected=false`; effective inherited organization rulesets remain unverified. TCE/Auth zero-replica maintenance, Stock ImagePullBackOff, Media runner/Listener active, Stock/Media decommission evidence gaps and host restart approval remain unchanged. No workflow was removed and no production mutation occurred.
+
 
 ## Latest verification — 2026-11-12 10:59 ICT / 2026-11-12 03:59:56 UTC
 
