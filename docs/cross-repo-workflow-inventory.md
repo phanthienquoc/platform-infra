@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-12 06:14 ICT (2026-11-11 23:14:06 UTC).
+Last reviewed: 2026-11-12 08:07 ICT (2026-11-12 01:07:20 UTC).
 
 
 ## Latest workflow inventory verification — 2026-11-12 06:14 ICT / 2026-11-11 23:14:06 UTC
@@ -890,3 +890,34 @@ PR #1657 adds bounded retry/backoff for transient GitHub HTTP 5xx responses duri
 At 00:02:34Z, all six inter-arrival gaps failed. Current-age failures: Platform recovery, Platform watchdog and TCE WF-06. Latest native runs: Platform reconcile #43120544165, inspection #43116036275, recovery #43116568507, watchdog #43116818114; TCE WF-06 #43073311537 and WF-12 #43121528127. Do not count workflow_run/repository_dispatch/manual fallback or rerun attempt 2 as native schedule delivery. Keep all cron expressions and TCE market-scan schedule unchanged.
 
 Direct branch API returned `protected=false` on all five master branches. Preserve all useful CI, tests, security, builds, immutable publishers, release, backup, integration, manual and scheduled workflows. No workflow removal is justified. No direct SSH/Compose production authority. No new image publication/promotion, production manifest change, rollout, destructive cleanup, runner retirement, credential rotation, host reboot or DNS/database/storage mutation occurred in this checkpoint.
+
+
+## Latest workflow inventory verification — 2026-11-12 08:07 ICT / 2026-11-12 01:07:20 UTC
+
+| Repository | Master SHA | Open PRs | Latest relevant workflow evidence | Ownership |
+|---|---|---|---|---|
+| Platform Infra | `deadaa4f` | #1314/#544/#541/#539 owner decisions | Manual reconcile #43127613751 SUCCESS (no drift/app/rollout); recovery #43127821037 SUCCESS; inspection #43127872524 SUCCESS; exact-head manifest validation #43128079244 PASS. Latest native reconcile #43120544165, inspection #43116036275, recovery #43116568507 and watchdog #43116818114 are stale. | Sole production manifests, shared GHCR pull credentials, GitOps plan/apply, digest/provenance promotion, rollout and runtime verification. |
+| TCE Dashboard | `5b425bde` | #1038 (checks queued) | Native WF-06 #43127554403 FAIL (four HTTP 503); native WF-12 #43121528127 FAIL (stale WF-06); WF-13 #43127582309 SUCCESS but maintenance variable empty; fallback #43127603475 FAIL (four HTTP 503); WF-07 backup #43130553977 SUCCESS. | Owns app tests/builds, immutable GHCR publication, provenance and strict HTTP-200 health probes. No direct production apply. |
+| StockDividend | `b1b5e177` | none | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED on missing `VNSTOCK_API_KEY`. Desired Admin/Backend `12d63b4` has no compatible platform manifest or RepoDigest. Legacy cached tags `23b2878` have no RepoDigest in the latest CRI inventory. | Owns tests/builds and immutable ARM64 publication only if retirement is reversed. Preserve fail-closed scraper and gated publisher. |
+| Media Generation | `dcd69869` | none | CI #42539512417 PASS; backend/frontend 1/1 with RepoDigests. Dedicated runner service active and Listener present; GitHub unregister, backup/retention and DNS evidence outstanding. | Owns tests/builds/immutable publication. Preserve CI/release; runner retirement and namespace deletion remain gated. |
+| Authentication | `eab85fab` | #76 owner decision | CI #42654579277 PASS. Auth runtime Secret provisioned/verified by Platform; Auth/Keycloak 0/0 maintenance, no live workload health asserted. | Owns Auth tests/builds/release provenance/immutable publication. Platform owns runtime Secret and production reconciliation. |
+
+### Native schedule inventory
+
+- At 01:07:20Z all six monitored native schedule lanes exceed both current-age and inter-arrival budgets. Manual dispatch, workflow_run, repository_dispatch, fallback and rerun attempts are not native schedule delivery.
+- TCE WF-07 backup #43130553977 is a separate scheduled job and succeeded; it does not replace WF-06 or WF-12.
+- Preserve all existing cron expressions, especially the TCE market-scan schedule. No schedule was changed.
+
+### Cross-repo publication and deployment authority
+
+- TCE, Stock, Media and Auth remain app-owned for tests/builds and immutable GHCR publication. Platform remains the sole production apply authority for manifests, shared `ghcr-pull`, GitOps promotion/reconciliation, rollout and health.
+- Latest inspection shows Media and MicroFE running images with immutable registry RepoDigests. Stock desired tag `12d63b4` has no compatible manifest/RepoDigest; cached `23b2878` local image IDs are not registry provenance.
+- No new image was published or promoted. No production manifest apply, image replacement or workload rollout occurred in the current evidence window.
+- Preserve CI, tests, security, manual release, backup, integration and scheduled workflows. No workflow is proven redundant/obsolete; none removed. No direct SSH/Compose production authority.
+
+### Governance and blockers
+
+- Direct master branch GET returned `protected=false` across all five repositories. Effective inherited organization rulesets remain unverified. Admin action: PR-only, required checks, block force-push/deletion and squash-only.
+- TCE PR #1038 adds an explicit warning for an unset maintenance variable without weakening health checks or changing schedule behavior. Exact-head WF-01P/WF-02/WF-05 runs are queued/in progress; do not merge until they pass.
+- Stock/Media decommission remains blocked by active Media runner/Listener, unverified GitHub-side unregister, external backup/retention, authoritative DNS and protected production approval. Preserve `k3s-debug/k3s-debug-logs`.
+- Host reports restart required; no reboot or package upgrade without platform approval.
