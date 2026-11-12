@@ -1706,3 +1706,48 @@ Platform PR #1696 was squash-merged at `fc0800db36738013298dee2b49fa2c7421916966
 PR #1696 changed only the deployment tracker, workflow inventory and two 22:56 ICT checkpoint files. Compare `a5865829...fc0800db` confirms no production manifest or workflow file changed. Current Platform master is `fc0800db36738013298dee2b49fa2c7421916966`; TCE `34f6024f`, Stock `b1b5e177`, Media `dcd69869`, Authentication `eab85fab`.
 
 This receipt does not refresh runtime health: the last reconciliation and K3s inspection remain expired. No image publication/promotion, manifest apply, workload rollout, credential change, runner retirement, DNS/database/storage mutation, Docker cleanup or host restart occurred. **Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.**
+
+
+## Latest verified inventory — 2026-11-12 23:59 ICT / 16:59:26 UTC
+
+| Repository | Master SHA | Open PRs | Latest relevant evidence | Workflow ownership |
+|---|---|---|---|---|
+| Platform Infra | `8979b4829d4468cac779b9cee16447cf0a5088f2` | #1314/#544/#541/#539 (owner decisions) | Inspection #43257414853 workflow_dispatch SUCCESS; reconciliation #43257038616 workflow_dispatch SUCCESS; recovery #43257327411 workflow_dispatch SUCCESS; latest native watchdog #43214581449 FAILURE. Inspection PR #1698 merged as current master; changed only debug snapshot. | Sole production manifests, shared GHCR credentials, digest promotion, GitOps plan/apply, K3s rollout and health. |
+| TCE Dashboard | `34f6024f8ccec8fb3ab6688901b3557e058ddfd1` | none | Native WF-06 #43256916802 FAILURE (four HTTP 503 probes); WF-12 #43256963936 workflow_run SUCCESS; WF-13 #43256963860 workflow_run SUCCESS; manual WF-06 #43257006805 FAILURE. | App tests/builds, immutable GHCR publication/provenance; strict HTTP-200 checks; no production apply. |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 SUCCESS; scraper #42457182511 FAIL CLOSED (missing protected `VNSTOCK_API_KEY`); K3s desired tag `12d63b4` has no ARM64-compatible manifest. | App CI/builds/immutable ARM64 publication; Platform promotion and retirement. |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 SUCCESS; backend/frontend 1/1 with immutable RepoDigests in inspection #43257414853; Media runner Listener present. | App CI/builds/immutable publication; Platform production apply; Media owner runner retirement. |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (owner decision) | CI #42654579277 SUCCESS; Auth runtime Secret provisioned/verified in reconciliation #43257038616, values suppressed; live Auth remains zero-replica maintenance. | Auth tests/security/build/SBOM/provenance/immutable publication; Platform runtime Secret and production apply. |
+
+### Native schedules — 16:59:26 UTC
+
+| Lane | Latest native run | Age (s) | Gap (s) | Budget (s) | Result |
+|---|---:|---:|---:|---:|---|
+| Platform reconcile | #43222790763 | 14,477 | 31,701 | 2,700 | FAIL / FAIL |
+| Platform inspection | #43218736508 | 16,051 | 31,621 | 4,500 | FAIL / FAIL |
+| Platform recovery | #43213480231 | 18,164 | 29,367 | 2,700 | FAIL / FAIL |
+| Platform watchdog | #43214581449 | 17,708 | 29,769 | 2,700 | FAIL / FAIL |
+| TCE WF-06 | #43256916802 | 2,557 | 31,197 | 1,500 | FAIL / FAIL |
+| TCE WF-12 | #43224725401 | 13,751 | 31,642 | 1,500 | FAIL / FAIL |
+
+Only first-attempt `event=schedule` on master counts. workflow_run/workflow_dispatch/repository_dispatch/push are separate evidence. No authoritative scheduler enqueue/delivery telemetry is exposed; queue observations do not prove runner congestion. All cron definitions and budgets remain unchanged. **TCE market-scan schedule unchanged.**
+
+### Runtime receipt
+
+- Reconciliation #43257038616 SUCCESS at 16:17:28Z, event=workflow_dispatch, source SHA `e4e9a2c`, mode=apply, target=all, allow_image_changes=false. GHCR 5/5 package reads PASS; Auth runtime Secret provisioned/verified with values suppressed; shared `ghcr-pull` unchanged; TCE release pairing PASS; drift=false; manifest apply/image replacement/rollout skipped.
+- Health lanes: Auth maintenance (zero replicas; no live health asserted); MicroFE healthy (active scopes verified); TCE maintenance (zero replicas; no live health asserted); Keycloak skipped. Recovery #43257327411 SUCCESS.
+- Inspection #43257414853 SUCCESS; `debug/vps-latest.md` generated 16:19:43Z, fresh within 4,500s. Node Ready/ARM64, disk 57%, ~20GiB free, ~19GiB RAM available. Media and MicroFE active workloads Running; TCE/Auth/Keycloak maintenance; Stock Admin and desired Backend ImagePullBackOff; Media runner Listener present; debug PVC Bound 1Gi/RWO; OIDC probes HTTP 503.
+- Current master differs from reconciliation checkout only by `debug/vps-latest.md`; production manifest/workflow tree unchanged. No current-master mode=plan run or post-merge check-run was returned for inspection merge SHA.
+- No GHCR publication/promotion, manifest apply, workload rollout, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup, host reboot or namespace/PVC/PV deletion.
+
+### Preservation and next actions
+
+- Preserve Platform reconcile, read-only inspection, recovery, watchdog, validation, backup, guarded manual and decommission workflows.
+- Preserve TCE WF-06/WF-12/WF-13, WF-07, manual/release, backup, integration and market-scan workflows.
+- Preserve app CI/test/security/build/publisher workflows across Stock, Media and Authentication. No workflow confirmed obsolete; none removed. No duplicate direct SSH/Compose authority.
+- Platform operator: current-master `mode=plan` and fresh inspection before any separate apply.
+- GitHub administrator: authoritative scheduler delivery telemetry and branch protection.
+- TCE administrator: maintenance variable and replica intent.
+- Stock owner: ARM64 immutable digest/provenance and protected scraper secret only if reactivation is approved.
+- Media owner: runner retirement, Listener absence, GitHub unregister, backup/retention and DNS evidence.
+
+Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
