@@ -1465,3 +1465,12 @@ Do not count workflow_run/workflow_dispatch/repository_dispatch as native schedu
 - No GHCR publication/promotion, production apply, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot. Auth runtime Secret was provisioned/verified by reconciliation #43213499525 with values suppressed; shared `ghcr-pull` was unchanged.
 
 **TCE market-scan schedule unchanged.**
+
+
+## Post-merge receipt — 2026-11-12 19:09 ICT / 12:09:47 UTC
+
+- PR #1687 exact head `245811d308501ae95e6f13e5ba9553294b06ff5e` passed validate-manifests #43215253958; squash merge SHA is `f1985e354598ff074fed43267a06ac58ed8a4727`.
+- Post-merge validation #43215329716 completed SUCCESS on exact current master; direct master ref matched. Documentation/checkpoint-only change; no production workflow, manifest, image, credential or schedule changed.
+- Current master refs: Platform `f1985e354598ff074fed43267a06ac58ed8a4727`; TCE `34f6024f8ccec8fb3ab6688901b3557e058ddfd1`; Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media `dcd698699c65ba6e73f6b43838975144777131c3`; Auth `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
+- Native schedule gaps, TCE HTTP 503, Stock missing-secret fail-closed, Media runner retirement and branch governance remain unresolved. Runtime evidence from inspection #43213776807 and reconciliation #43213499525 is fresh at the 19:06 reference; this documentation merge does not refresh runtime evidence.
+- No workflow removed, no duplicate SSH/Compose production apply authority, and no production mutation. **TCE market-scan schedule unchanged.**
