@@ -343,3 +343,16 @@ Source: `debug/vps-latest.md` generated at `2026-11-09T07:10:37Z`, committed by 
 - GHCR digest coverage warning is limited to the legacy cached Stock Backend/User images. No local image ID is accepted as registry promotion evidence.
 
 No namespace, workload, PVC/PV, runner, DNS record, external database/storage, GHCR package or application repository was deleted. No manifest apply, image promotion, workload scaling, cleanup or host maintenance occurred.
+
+
+## Latest decommission inspection — 2026-11-12 08:07 ICT / 2026-11-12 01:07:20 UTC
+
+Source: Platform read-only inspection #43127872524; snapshot `debug/vps-latest.md` generated `2026-11-12T00:31:21Z`. The inspection was a workflow_dispatch fallback because native inspection schedule #43116036275 was stale; it does not satisfy native schedule freshness.
+
+- Stock/Media target namespaces passed the same-run storage preflight: no PVC/PV claims or VolumeSnapshot references. Preserve the separate `k3s-debug/k3s-debug-logs` PVC (1Gi, Bound, RWO).
+- Media backend/frontend were 1/1 Running with registry RepoDigests `sha256:93ddb944…` and `sha256:095c72ed…`. The dedicated Media runner service remains active/enabled and `/opt/media-actions-runner/bin/Runner.Listener` is present. GitHub-side runner unregister is not inferred by host inspection.
+- Stock Admin has two ImagePullBackOff pods and desired Backend one ImagePullBackOff pod on tag `12d63b4`; K3s reports `no match for platform in manifest`. No RepoDigest exists for those desired images.
+- Correction from the latest CRI inventory: cached legacy Stock tags `backend:23b2878` and `user:23b2878` have blank RepoDigest fields; local image IDs are not registry provenance and cannot authorize promotion.
+- External backup/retention and authoritative DNS ownership remain unverified. TCE WF-07 backup #43130553977 is a TCE host backup under `/home/ubuntu/tce/backups` with 7-day retention; it is not evidence for Stock/Media external backup.
+- Delete mode remains blocked until Media service is stopped/disabled, local Listener absence and GitHub-side unregister are both proven, external backup/retention and DNS evidence are supplied, a fresh same-run storage preflight passes, and protected production approval is recorded.
+- No namespace, workload, PVC/PV, runner, DNS, credential or host resource was changed. No reboot or Docker cleanup.
