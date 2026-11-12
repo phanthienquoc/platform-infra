@@ -1760,3 +1760,33 @@ Platform Infra remains the sole production apply authority. **TCE market-scan sc
 - Post-merge [validate-manifests #43265741937](https://github.com/phanthienquoc/platform-infra/actions/runs/43265741937) passed on the exact merge SHA; 20 applicable steps passed.
 - Changed files were tracker, workflow inventory and two 23:59 ICT checkpoint files only. No production manifest/workflow, image, secret, runtime, workload, DNS, database, storage or schedule changed.
 - Current Platform master: `5ad78ef37c8b82f7f268d87b3d40c4a4401bd8e1`; app master refs unchanged. No GHCR publication/promotion, manifest apply, workload rollout, runner retirement, credential rotation, host reboot or resource deletion. **TCE market-scan schedule unchanged.**
+
+
+## Latest verified inventory — 2026-11-13 00:57 ICT / 17:57:45 UTC
+
+| Repository | Master SHA | Open PRs | Latest relevant run evidence | Ownership |
+|---|---|---|---|---|
+| Platform Infra | `ce810a563091da4583cf10b0de4adf302699b5c4` | #1314/#544/#541/#539 (owner decisions) | Current-master `validate-manifests` #43266087926 SUCCESS. Native reconcile #43222790763, inspection #43218736508 and recovery #43213480231 SUCCESS but stale; watchdog #43214581449 FAILURE. Last dispatch inspection #43257414853 and reconciliation #43257038616 SUCCESS but expired. | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, K3s rollout and health. |
+| TCE Dashboard | `34f6024f8ccec8fb3ab6688901b3557e058ddfd1` | none | WF-06 native #43256916802 FAILURE; manual fallback #43257006805 FAILURE (four HTTP 503 probes); WF-12 #43256963936 and WF-13 #43256963860 SUCCESS via workflow_run; native WF-12 #43224725401 FAILURE. | App tests/builds, immutable GHCR publication/provenance; strict HTTP-200 checks; no direct production apply. |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 SUCCESS; scraper #42457182511 FAIL CLOSED (missing protected `VNSTOCK_API_KEY`). | App CI/builds and immutable ARM64 publication; Platform promotion/retirement. |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 SUCCESS; last K3s inspection shows backend/frontend 1/1 with RepoDigests, but inspection is expired; runner Listener was present. | App CI/builds/immutable publication; Platform production apply; Media owner runner retirement. |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (owner decision) | CI #42654579277 SUCCESS; Auth runtime Secret was provisioned/verified in historical reconciliation #43257038616, values suppressed; live Auth remained zero-replica maintenance. | Auth CI/security/tests/SBOM/provenance/immutable publication; Platform runtime Secret and production apply. |
+
+### Preserved workflow authorities and schedules
+
+- Platform `reconcile-vps.yml`: sole production GitOps apply authority; native schedule `7,22,37,52 * * * *`.
+- Platform `inspect-vps.yml`: read-only inspection; schedule `2,32 * * * *`.
+- Platform `recover-stale-ops.yml`: recovery controller; schedule `10,25,40,55 * * * *`; dispatches only existing validated workflows and is not a second apply authority.
+- Platform `reconcile-schedule-watchdog.yml`: read-only watchdog; schedule `12,27,42,57 * * * *`.
+- TCE WF-06: strict public HTTP-200 probes; schedule `*/15 * * * *`.
+- TCE WF-12: native schedule `7,22,37,52 * * * *`; verifies WF-06 native delivery and forwards authenticated heartbeat receipts.
+- TCE WF-13: workflow_run-only read-only fallback; not native schedule evidence.
+- Preserve TCE market-scan, manual/release, backup and integration workflows; preserve app CI/test/security/publisher workflows across all repositories.
+- All six native schedule lanes exceed both age and inter-arrival budgets at 17:57:45Z. Do not count workflow_run/workflow_dispatch/repository_dispatch/push as native schedule receipts. Authoritative scheduler enqueue/delivery telemetry remains unavailable.
+- Last reconciliation #43257038616 is 6,017s old vs 2,700s budget; last inspection #43257414853 is 5,891s old vs 4,500s budget. Historical no-drift/health details are not current runtime receipts.
+- TCE WF-06 and manual fallback each failed four independent HTTP-200 probes with HTTP 503. Stock scraper remains fail-closed because protected `VNSTOCK_API_KEY` is absent. Stock desired ARM64 digest/provenance is unresolved.
+- All five direct master branch reads returned `protected=false`; effective inherited organization rulesets remain unverified.
+- No workflow was confirmed redundant/obsolete; none removed. No duplicate direct SSH/Compose production apply authority.
+- **TCE market-scan schedule unchanged.**
+
+Last reviewed: 2026-11-13 00:57 ICT (2026-11-12 17:57:45 UTC).
