@@ -1,6 +1,6 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-12 08:07 ICT (2026-11-12 01:07:20 UTC).
+Last reviewed: 2026-11-12 08:09 ICT (2026-11-12 01:09:34 UTC).
 
 
 ## Latest workflow inventory verification — 2026-11-12 06:14 ICT / 2026-11-11 23:14:06 UTC
@@ -921,3 +921,10 @@ Direct branch API returned `protected=false` on all five master branches. Preser
 - TCE PR #1038 adds an explicit warning for an unset maintenance variable without weakening health checks or changing schedule behavior. Exact-head WF-01P/WF-02/WF-05 runs are queued/in progress; do not merge until they pass.
 - Stock/Media decommission remains blocked by active Media runner/Listener, unverified GitHub-side unregister, external backup/retention, authoritative DNS and protected production approval. Preserve `k3s-debug/k3s-debug-logs`.
 - Host reports restart required; no reboot or package upgrade without platform approval.
+
+## Follow-up — 2026-11-12 08:09 ICT / 2026-11-12 01:09:34 UTC
+
+- Platform PR #1661 exact head `9ed3b122aa0c45b91a8380ab7a503d40dd363435`: validate-manifests #43132479380 PASS; PR remains open pending review of exact-head state.
+- TCE PR #1038 current exact head `e718d728d531ac1c492e34a337e3fe308980a767`. Prior WF-01P #43132263903 failed on old head `8a81933f` because of an incorrect validator grep literal; corrected on new head. New WF-01P #43132521680, WF-02 #43132521802, WF-05 #43132521704 and WF-08B #43132521695 are in progress; no merge authorization yet.
+- WF-08B on prior head ran only tests/payload checks; GHCR publication and production dispatch jobs were skipped on the pull_request event.
+- The TCE maintenance change remains observability-only: empty variable still follows non-maintenance read-only fallback; strict HTTP 200 probes and all schedules remain unchanged.
