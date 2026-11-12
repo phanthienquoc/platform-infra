@@ -1529,3 +1529,68 @@ All six inter-arrival budgets fail. Four current-age budgets fail: Platform insp
 - Media decommission: Media runner service/Listener is active. Stop/disable/unregister, external backup/retention, authoritative DNS and protected production approval are still required before namespace deletion. Preserve k3s-debug/k3s-debug-logs.
 - Host maintenance: K3s host reports restart required with pending OS/kernel/containerd/Docker updates. No reboot or cleanup without platform approval.
 - Governance: branch-protection detail GET returned 403 for all five repositories; effective inherited organization rulesets remain unverified. GitHub administrator must enforce PR-only, required checks, force-push/deletion protection and squash-only.
+
+
+## Latest verification — 2026-11-12 07:02 ICT / 2026-11-12 00:02:34 UTC
+
+### Repository refs, open PRs and latest workflow runs
+
+Direct `master` refs at this checkpoint:
+
+- Platform Infra: `d0b79f0fb22aa4b6c1eae537785a5adf5f4cbb1e`.
+- TCE Dashboard: `5b425bdeab457e943bcecf1831836fc698e24394`.
+- StockDividend: `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`.
+- Media Generation: `dcd698699c65ba6e73f6b43838975144777131c3`.
+- Authentication: `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
+
+Open PRs: Platform #1314/#544/#541/#539 (owner-decision drafts); Authentication #76 (owner-decision draft); none in TCE, Stock or Media. No owner-decision PR was merged.
+
+Latest directly inspected workflow evidence:
+
+- Platform native scheduled reconciliation #43120544165: SUCCESS on current master `d0b79f0`, event=schedule, created 23:32:03Z. Native inspection #43116036275: SUCCESS on prior manifest-equivalent master `51729f13`, created 22:57:41Z; snapshot generated 22:57:49Z. Native recovery #43116568507: SUCCESS; native watchdog #43116818114: FAILURE on native inter-arrival gaps. Recovery receipt #43121541699: SUCCESS via repository_dispatch from TCE WF-12; it is not native schedule delivery.
+- TCE native WF-12 #43121528127: FAILURE at 23:39:46Z. WF-13 #43121552311: SUCCESS as workflow_run recovery, not a native schedule. Its log shows `TCE_MAINTENANCE_MODE` was empty in that run, mapped to `enabled=false`, and the read-only WF-06 fallback was dispatched. Fallback #43121575816: FAILURE; all four strict public endpoint probes returned HTTP 503. Latest native WF-06 schedule remains #43073311537 (FAILURE, 17:58:46Z); WF-12 reports its age as 341 minutes. The variable value after that run is not available from this read-only integration; do not claim it remains unchanged.
+- Stock CI #42610360402: SUCCESS; scraper #42457182511: FAILURE/FAIL-CLOSED due to missing `VNSTOCK_API_KEY`. Media CI #42539512417: SUCCESS. Authentication CI #42654579277: SUCCESS. These are latest visible runs from the current Actions run listings; no new immutable image publication is evidenced on app master refs.
+
+### Current-master GitOps reconciliation — #43120544165
+
+- Native scheduled run on current Platform master `d0b79f0`; inputs recorded in job log: `mode=apply`, `target_app=all`, `allow_image_changes=false`.
+- GHCR read preflight passed for five packages: Auth service, MicroFE Shell/WS and TCE service/web.
+- Auth runtime Secret was provisioned and verified; secret values were suppressed. Shared `ghcr-pull` was reconciled and reported unchanged. ServiceAccount/Deployment patches reported no change.
+- Blocked-image-pull checks found no failures for MicroFE Auth/Shell/WS and TCE service/frontend. TCE release pairing passed for `prod-v0.1.0-e75e338`.
+- GitOps drift was false. Production manifest apply, image replacement and rollout were skipped. This is a successful reconciliation/preflight, not evidence of a new production rollout or app image promotion.
+- The later recovery run #43121541699 used the merged retry-capable recovery controller on master and completed successfully. It considered the native inspection #43116036275 fresh (42 minutes old at 23:40Z) and did not dispatch a duplicate inspection. This proves the recovery path completed, not that a transient HTTP 5xx retry branch was exercised.
+
+### K3s snapshot — #43116036275 / debug/vps-latest.md
+
+- Snapshot generated `2026-11-11T22:57:49Z`; age at reference is 3,885s, within the 4,500s budget by 615s. Obtain a fresh read-only inspection before expiry.
+- Node `tce-k3s-01`: Ready, ARM64; Ubuntu 22.04.5 LTS; K3s v1.36.3+k3s1; containerd 2.3.2-k3s2; Docker 29.1.3. RAM ~19GiB available; root disk 45GiB total / 26GiB used / 20GiB free (56%). Host reports `restart_required: yes` with kernel, containerd, Docker and OS updates pending. No reboot or package upgrade.
+- Media backend/frontend and MicroFE Shell/WS/NATS were 1/1 Running with registry RepoDigests. TCE frontend/service, MicroFE Auth and Keycloak were 0/0; do not represent these maintenance workloads as live/healthy.
+- Stock Admin had two ImagePullBackOff pods and desired Backend one ImagePullBackOff pod. Desired tag `12d63b4` failed with `no match for platform in manifest` and had no RepoDigest. Legacy Backend/Frontend were 1/1 with old `23b2878` registry digests; these do not validate or replace the desired image.
+- Stock/Media storage preflight found no PVC/PV claims or VolumeSnapshot references in the target namespaces. Preserve separate PVC `k3s-debug/k3s-debug-logs` (1Gi, Bound, RWO).
+- Media runner service was active/enabled and `Runner.Listener` was present. GitHub-side runner unregister remains unverified. Docker inventory was 20 images / 9.195GB, 5.773GB reclaimable; no cleanup. External backup/retention and authoritative DNS evidence remain unverified.
+
+### Native schedule evidence at 00:02:34Z
+
+Only first-attempt `event=schedule` runs on `master` count. Current age uses latest native run `created_at`; gap uses latest minus previous qualifying native run. Budgets are current-age / inter-arrival.
+
+| Lane | Latest native run | Current age (s) | Inter-arrival gap (s) | Budget (s) | Result |
+|---|---:|---:|---:|---:|---|
+| Platform reconcile | #43120544165 | 1,831 | 22,471 | 2,700 / 2,700 | age PASS, gap FAIL |
+| Platform inspection | #43116036275 | 3,893 | 24,826 | 4,500 / 4,500 | age PASS, gap FAIL |
+| Platform recovery | #43116568507 | 3,654 | 23,725 | 2,700 / 2,700 | age FAIL, gap FAIL |
+| Platform watchdog | #43116818114 | 3,542 | 23,716 | 2,700 / 2,700 | age FAIL, gap FAIL |
+| TCE WF-06 | #43073311537 | 21,828 | 54,245 | 1,500 / 1,500 | age FAIL, gap FAIL |
+| TCE WF-12 | #43121528127 | 1,368 | 22,441 | 1,500 / 1,500 | age PASS, gap FAIL |
+
+All six inter-arrival budgets fail; three current-age budgets fail (Platform recovery, Platform watchdog and TCE WF-06). The latest WF-12 native run itself is within its 25-minute age threshold but fails because the latest native WF-06 schedule is stale. The WF-13 workflow_run and Platform repository_dispatch receipts do not substitute for native schedule delivery. The Platform watchdog queue diagnostic did not establish runner congestion; the observed failure is native schedule cadence. Preserve all cron expressions and the TCE market-scan schedule.
+
+### Governance and exact next actions
+
+- Direct GitHub branch API returned `protected=false` for all five `master` branches. Repository metadata still permits merge commits and rebase in addition to squash. Effective inherited organization rulesets are not established by these reads. GitHub administrator must enforce PR-only, required checks, force-push/deletion protection and squash-only.
+- TCE administrator: verify the Actions variable `TCE_MAINTENANCE_MODE`; the 23:40Z WF-13 log showed it empty. If zero-replica maintenance is still approved, explicitly set true; otherwise restore replicas and keep it false. Do not weaken strict HTTP-200 checks or schedule monitoring.
+- Platform operator: obtain a fresh read-only inspection before the 4,500s snapshot budget expires, then run current-master `reconcile-vps.yml` in `mode=plan` on `d0b79f0` and review the plan before any apply.
+- Stock owner: resolve ARM64-compatible immutable publication or confirm retirement; do not promote tag `12d63b4` without registry digest/provenance.
+- Media owner: stop/disable/unregister the runner and prove both local Listener absence and GitHub-side unregister; provide external backup/retention and authoritative DNS evidence before protected namespace deletion.
+- Platform operator: obtain maintenance approval before host package upgrades/restart. Preserve `k3s-debug/k3s-debug-logs`.
+
+No new GHCR publication/digest promotion, production manifest change, image replacement, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot occurred. Auth runtime Secret provisioning/verification and GHCR credential reconciliation did occur in #43120544165; shared `ghcr-pull` remained unchanged. No workflow is confirmed obsolete or removed. No duplicate direct SSH/Compose deployment authority. Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.
