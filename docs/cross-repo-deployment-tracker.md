@@ -3272,3 +3272,17 @@ Stock scraper [#42457182511](https://github.com/phanthienquoc/stockdividend/acti
 - No new GHCR publication/promotion, manifest apply, workload rollout, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup, host reboot or resource deletion occurred in this checkpoint. The historical Auth runtime Secret provision/verification is recorded above; shared `ghcr-pull` remained unchanged.
 
 **Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.**
+
+
+## Post-merge receipt — 2026-11-13 00:57 ICT / 18:05:04Z
+
+- Platform PR #1701 (`docs/cross-repo-readiness-20261113-0057-ict`) was opened against master `ce810a563091da4583cf10b0de4adf302699b5c4`.
+- Exact PR head `2ac7b0984f4c5f40709694061024b0db211f246f` passed `validate-manifests` [#43275887422](https://github.com/phanthienquoc/platform-infra/actions/runs/43275887422); the validation job completed SUCCESS and the failure-report job was correctly SKIPPED.
+- PR #1701 was squash-merged with expected head SHA `2ac7b0984f4c5f40709694061024b0db211f246f` as `aa77cb8386215a5e898415e111eb07b304dcde7e`. Direct `refs/heads/master` verification and PR API both confirmed the exact merge SHA and `merged=true`.
+- Post-merge `validate-manifests` [#43276121039](https://github.com/phanthienquoc/platform-infra/actions/runs/43276121039) completed SUCCESS on the exact merge SHA; validation job succeeded and failure-report was correctly SKIPPED.
+- PR #1701 changed only `docs/cross-repo-deployment-tracker.md`, `docs/cross-repo-workflow-inventory.md` and the two 00:57 ICT checkpoint files. No production manifest, workflow definition, image reference, credential, Actions variable, runtime setting, workload, DNS, database, storage or schedule changed.
+- Current Platform master is `aa77cb8386215a5e898415e111eb07b304dcde7e`. TCE remains `34f6024f8ccec8fb3ab6688901b3557e058ddfd1`; Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`; Media `dcd698699c65ba6e73f6b43838975144777131c3`; Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f`.
+- The schedule/runtime measurements in the 00:57 ICT snapshot remain a historical reference at 17:57:45Z; post-merge validation is a repository contract check, not a fresh K3s inspection or GitOps runtime receipt.
+- No GHCR publication/promotion, production manifest apply, workload rollout, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup, host reboot or resource deletion occurred. Historical Auth runtime Secret provision/verification in reconciliation #43257038616 remains separately recorded; shared `ghcr-pull` was unchanged.
+
+Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**

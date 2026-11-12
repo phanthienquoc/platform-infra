@@ -1790,3 +1790,15 @@ Platform Infra remains the sole production apply authority. **TCE market-scan sc
 - **TCE market-scan schedule unchanged.**
 
 Last reviewed: 2026-11-13 00:57 ICT (2026-11-12 17:57:45 UTC).
+
+
+## Post-merge receipt — 2026-11-13 00:57 ICT / 18:05:04Z
+
+- PR #1701 readiness snapshot exact head `2ac7b0984f4c5f40709694061024b0db211f246f` passed [validate-manifests #43275887422](https://github.com/phanthienquoc/platform-infra/actions/runs/43275887422); failure-report skipped.
+- PR #1701 squash merge: `aa77cb8386215a5e898415e111eb07b304dcde7e`; direct master ref and PR API confirmed the merge.
+- Post-merge [validate-manifests #43276121039](https://github.com/phanthienquoc/platform-infra/actions/runs/43276121039) passed on the exact merge SHA.
+- Changed files were tracker, workflow inventory and two 00:57 ICT checkpoint files only. No production manifest/workflow, image, secret, runtime, workload, DNS, database, storage or schedule changed.
+- This post-merge validation does not refresh K3s inspection or GitOps reconciliation freshness. The latest receipts remain expired as recorded in the 00:57 snapshot.
+- Current Platform master: `aa77cb8386215a5e898415e111eb07b304dcde7e`; app master refs unchanged. No GHCR publication/promotion, manifest apply, rollout, runner retirement, credential rotation, host restart or resource deletion occurred.
+
+Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
