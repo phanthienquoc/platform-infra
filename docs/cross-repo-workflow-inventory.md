@@ -1378,3 +1378,12 @@ Only first-attempt `event=schedule` runs on `master` count. TCE WF-12 #431765864
 - App repositories retain tests/builds/immutable GHCR publication. Platform Infra alone owns production manifests, shared pull credentials, digest promotion, GitOps, rollout and health.
 - Preserve all useful CI/test/security/build/publisher/manual/release/backup/integration/scheduled workflows. No workflow is confirmed obsolete; none removed. No direct SSH/Compose production apply authority. No image publication/promotion, manifest apply, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot occurred.
 - Open owner-decision drafts remain unmerged. TCE market-scan schedule unchanged.
+
+
+## Post-merge receipt — 2026-11-12 17:09 ICT
+
+- PR #1682 merged by squash: exact head `51b85670f38afc02e1271778a000d0e7bb41d7a2` -> master `ff914b1f352eeb571e669e997c93bd6bfe342800`.
+- Exact-head validation #43197648043 PASS (21 steps); post-merge validation #43197786121 PASS on the exact merge SHA.
+- Documentation/checkpoint-only change. No production manifests, workflow definitions, images, credentials, runtime configuration or schedules changed.
+- The 17:04 snapshot records repository/Actions evidence only. K3s inspection and GitOps reconciliation remain expired; native schedule delivery remains degraded.
+- App repositories continue to own tests/builds/immutable GHCR publication. Platform Infra remains sole production apply authority. No workflow removed and no duplicate SSH/Compose production apply introduced. **TCE market-scan schedule unchanged.**
