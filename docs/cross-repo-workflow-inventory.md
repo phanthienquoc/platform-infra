@@ -867,3 +867,26 @@ PR #1657 adds bounded retry/backoff for transient GitHub HTTP 5xx responses duri
 - Current Platform master is 9d84aa020c5aacd28c56ef68d5a81a0a9acccfe2; PR #1656 was docs-only and its post-merge validate-manifests run #43117100616 passed. Reconciliation #43116379969 ran on parent SHA c0f309; the production manifest tree was unchanged by PR #1656, but do not label that run exact-current-master evidence.
 - Watchdog #43116818114 (native schedule, 23:03:32Z) failed on native inter-arrival gaps. It verified 3 WF-06 and 4 WF-12 heartbeat receipts and reported no scheduled deployment lane exceeding the 15-minute queue budget. Recovery #43116883745 was a workflow_run success, not native schedule evidence.
 - PR #1657 fixes transient HTTP 5xx during both recovery dispatch-correlation GETs. Previous head b94f850 passed validate-manifests #43117701360 but failed validate-github-actions #43117701372 because the tracker lacked the required Current runtime blockers section; the section is restored on the current branch head and exact-head checks must rerun before squash merge.
+
+
+## Latest inventory verification — 2026-11-12 07:02 ICT / 00:02:34 UTC
+
+### Repository ownership and current workflow evidence
+
+- Platform Infra master `d0b79f0`; open owner-decision PRs #1314/#544/#541/#539. Sole production authority: shared GHCR pull credentials, production manifests, GitOps plan/apply, digest/provenance promotion, rollout and runtime verification.
+- TCE Dashboard master `5b425bde`; no open PR. App-owned tests/builds and immutable GHCR publishers remain in place. Latest native WF-12 #43121528127 failed because the latest native WF-06 schedule #43073311537 was 341 minutes old. WF-13 #43121552311 completed as workflow_run recovery, but its log shows `TCE_MAINTENANCE_MODE` empty and fallback suppression disabled; read-only WF-06 fallback #43121575816 then failed all four strict HTTP-200 probes with HTTP 503. Do not weaken probes or alter market-scan cron.
+- StockDividend master `b1b5e177`; no open PR. CI #42610360402 passed. Scheduled scraper #42457182511 remains fail-closed on missing `VNSTOCK_API_KEY`. Desired K3s tag `12d63b4` has no ARM64-compatible manifest/RepoDigest; no promotion.
+- Media Generation master `dcd69869`; no open PR. CI #42539512417 passed. K3s backend/frontend were 1/1 with immutable registry RepoDigests, but the Media self-hosted runner service and Listener remain active. No namespace deletion until runner unregister, backup/retention, DNS and protected approval gates pass.
+- Authentication master `eab85fab`; open owner-decision PR #76. CI #42654579277 passed. Auth runtime Secret was provisioned/verified by Platform reconciliation with values suppressed; MicroFE Auth/Keycloak remained 0/0 maintenance in the K3s snapshot.
+
+### Latest Platform authority evidence
+
+- Native scheduled reconciliation #43120544165 succeeded on current Platform master `d0b79f0`, mode=apply / target=all / allow_image_changes=false. GHCR read preflight passed five packages; Auth runtime Secret was provisioned/verified; shared `ghcr-pull` unchanged; TCE release pairing passed; drift=false; manifest apply, image replacement and rollout skipped.
+- Recovery repository_dispatch #43121541699 succeeded after the TCE WF-12 heartbeat and used the retry-capable recovery controller. It did not replace native schedule delivery and did not dispatch a new inspection because #43116036275 was still within the 75-minute inspection threshold at that time.
+- Latest K3s snapshot #43116036275 generated 22:57:49Z; age 3,885s at reference, within 4,500s budget by 615s. Media/MicroFE/NATS 1/1; TCE/Auth/Keycloak 0/0; Stock desired Admin/Backend ImagePullBackOff; host restart required; Media runner Listener present; preserve debug PVC.
+
+### Native schedule and governance
+
+At 00:02:34Z, all six inter-arrival gaps failed. Current-age failures: Platform recovery, Platform watchdog and TCE WF-06. Latest native runs: Platform reconcile #43120544165, inspection #43116036275, recovery #43116568507, watchdog #43116818114; TCE WF-06 #43073311537 and WF-12 #43121528127. Do not count workflow_run/repository_dispatch/manual fallback or rerun attempt 2 as native schedule delivery. Keep all cron expressions and TCE market-scan schedule unchanged.
+
+Direct branch API returned `protected=false` on all five master branches. Preserve all useful CI, tests, security, builds, immutable publishers, release, backup, integration, manual and scheduled workflows. No workflow removal is justified. No direct SSH/Compose production authority. No new image publication/promotion, production manifest change, rollout, destructive cleanup, runner retirement, credential rotation, host reboot or DNS/database/storage mutation occurred in this checkpoint.
