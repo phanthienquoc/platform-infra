@@ -1431,3 +1431,37 @@ Only first-attempt `event=schedule` runs on `master` count. Workflow_run, reposi
 - Current Platform master: `5608c452591e81aec0e1a09a71d9a8bb5a0627a1`. Other four application master refs remain unchanged. Owner-decision PRs remain open.
 - Native schedule gaps, TCE HTTP 503 probes, Stock scraper missing-secret fail-closed and expired K3s/reconciliation evidence remain unresolved. This receipt does not refresh runtime evidence.
 - No workflow removed; no duplicate SSH/Compose apply authority; no production mutation. **TCE market-scan schedule unchanged.**
+
+
+## Latest workflow inventory verification — 2026-11-12 19:06 ICT / 12:06:46 UTC
+
+| Repository | Master SHA | Open PRs | Latest run/check evidence | Workflow ownership and preservation |
+|---|---|---|---|---|
+| Platform Infra | `b6b6951f0a718bcee7fdf6f95e5d35858c0055f8` | #1314/#544/#541/#539 drafts | Native reconcile #43152960974 and inspection #43150245172 are stale; native recovery #43213480231 SUCCESS but gap 29,367s; native watchdog #43214581449 FAILURE with gap 29,769s. Fresh reconcile #43213499525 SUCCESS on parent `6f792622`; fresh inspection #43213776807 SUCCESS and PR #1686 merged after exact-head validation #43214035228. | Sole production manifests, shared GHCR pull credentials, digest promotion, GitOps, rollout and runtime verification. Preserve reconcile, inspection, recovery, watchdog, backup, validation, guarded manual and decommission workflows. |
+| TCE Dashboard | `34f6024f8ccec8fb3ab6688901b3557e058ddfd1` | none | WF-06 native #43176560763 FAIL; four probes HTTP 503. WF-12 native #43154415980 stale/FAIL. WF-12 #43176586474 and WF-13 #43176586309 are workflow_run SUCCESS only. WF-07 integration schedule #43173471263 SUCCESS. | Owns tests/builds, immutable GHCR publication, provenance and strict HTTP-200 probes. Preserve WF-06/WF-12/WF-13, manual release, backup, integration and market-scan workflows. No production apply. |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 SUCCESS. Scraper #42457182511 FAIL CLOSED on missing protected `VNSTOCK_API_KEY`; no new publication/promotion evidence. | Owns tests/builds and immutable ARM64 publication only if authorized. Preserve fail-closed scraper and gated manual publisher. No Platform apply. |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 SUCCESS. Fresh K3s inspection shows backend/frontend 1/1 with immutable registry RepoDigests; dedicated runner Listener still present. | Owns tests/builds/immutable publication. No Platform dispatch or production apply in current contract. Preserve CI/release while runner retirement is gated. |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 draft | CI #42654579277 SUCCESS; no new current-master release/promotion. Auth/Keycloak 0/0 maintenance in fresh K3s snapshot; public OIDC 503. | Owns Auth tests/builds/release provenance/SBOM/immutable publication. Platform owns runtime Secret and production reconciliation. |
+
+### Workflow schedule definitions re-read from current master
+
+| Workflow | Cron | Native acceptance budget |
+|---|---|---:|
+| Platform `reconcile-vps.yml` | `7,22,37,52 * * * *` | 2,700s |
+| Platform `inspect-vps.yml` | `2,32 * * * *` | 4,500s |
+| Platform `recover-stale-ops.yml` | `10,25,40,55 * * * *` | 2,700s |
+| Platform `reconcile-schedule-watchdog.yml` | `12,27,42,57 * * * *` | 2,700s |
+| TCE `wf-06-tce-healthcheck.yml` | `*/15 * * * *` | 1,500s |
+| TCE `wf-12-tce-healthcheck-schedule-watchdog.yml` | `7,22,37,52 * * * *` | 1,500s |
+
+Do not count workflow_run/workflow_dispatch/repository_dispatch as native schedule delivery. All six inter-arrival gaps exceed budget at the 12:06:46Z reference; only recovery and watchdog latest-run ages are currently within budget. Existing schedules are unchanged; **TCE market-scan schedule unchanged**.
+
+### Preservation and safety
+
+- TCE publisher, MicroFE publisher, Stock publisher, Media publisher and Auth release remain application-owned build/publication contracts; Platform receives only validated exact payloads/digests and owns production reconciliation.
+- Keep fail-closed Stock scraper credential preflight; do not bypass missing `VNSTOCK_API_KEY`. Keep TCE four strict HTTP-200 probes; do not convert HTTP 503 to success or infer health from zero replicas.
+- Preserve Media CI/release while its runner retirement is gated. Listener remains present; no GitHub-side unregister evidence. No workflow is confirmed redundant/obsolete; none removed.
+- All five direct master branch reads report `protected=false`; effective inherited organization rulesets remain unverified. Enforce PR-only, required checks, no force-push/deletion, squash-only through GitHub administrator.
+- No GHCR publication/promotion, production apply, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot. Auth runtime Secret was provisioned/verified by reconciliation #43213499525 with values suppressed; shared `ghcr-pull` was unchanged.
+
+**TCE market-scan schedule unchanged.**
