@@ -1,4 +1,50 @@
-Last reviewed: 2026-11-12 11:04 ICT (2026-11-12 04:04:42 UTC).
+Last reviewed: 2026-11-12 12:59 ICT (2026-11-12 05:59:07 UTC).
+
+
+## Current verified workflow inventory — 2026-11-12 12:59 ICT / 05:59:07 UTC
+
+### Repository refs, open PRs, latest runs and ownership
+
+| Repository | Master SHA | Open PRs | Latest relevant run evidence | Ownership |
+|---|---|---|---|---|
+| Platform Infra | `1e84b2e0` | #1314/#544/#541/#539 (owner decisions) | Current-master validate-manifests #43158871069 PASS. Native reconcile #43152960974 SUCCESS at 04:09:48Z; watchdog #43150601305 FAIL on stale age/inter-arrival; recovery #43150505792 SUCCESS as native schedule but stale. | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, K3s rollout and health. |
+| TCE Dashboard | `34f6024f` | none | WF-12 #43154415980 native schedule FAIL (WF-06 age 234m; queue 0m); WF-13 #43154436821 SUCCESS; fallback WF-06 #43154458775 FAIL on four HTTP 503s. WF-01/02/05 latest master runs PASS. | App tests/builds, security, immutable GHCR publication and provenance; no direct production apply. |
+| StockDividend | `b1b5e177` | none | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED (missing `VNSTOCK_API_KEY`). | App tests/builds and immutable GHCR publication/provenance; Platform owns production promotion/retirement. |
+| Media Generation | `dcd69869` | none | CI #42539512417 PASS; no new current-master publication evidenced. Last K3s snapshot shows backend/frontend RepoDigests, but snapshot is expired. | App tests/builds and immutable GHCR publication/provenance; Platform owns production apply; Media owner retires its runner. |
+| Authentication | `eab85fab` | #76 (owner decision) | CI #42654579277 PASS; no new current-master release evidenced. | App tests/builds, security, immutable GHCR, SBOM/provenance and exact Platform dispatch contract; Platform owns production apply. |
+
+### Platform production authority and current evidence
+
+- `reconcile-vps.yml` remains the sole production GitOps apply authority.
+- `inspect-vps.yml` and `reconcile-schedule-watchdog.yml` remain read-only.
+- `recover-stale-ops.yml` may dispatch only the existing validated reconciliation/inspection workflows after exact source and freshness checks; it does not apply manifests itself.
+- Reconciliation #43152960974 succeeded on parent SHA `9f969fc`: five GHCR package reads passed; Auth runtime Secret verified with values suppressed; shared `ghcr-pull` unchanged; TCE release pairing passed; drift=false; apply/image replacement/rollout skipped. It is stale at the current reference (6,559s vs 2,700s).
+- K3s inspection #43150245172 generated 03:45:02Z and is stale at the current reference (8,045s vs 4,500s). Its workload details remain historical only.
+
+### Native schedule acceptance — 05:59:07Z
+
+| Lane | Latest qualifying native run | Age (s) | Inter-arrival gap (s) | Budget (s) |
+|---|---:|---:|---:|---:|
+| Platform reconcile | #43152960974 | 6,559 | 16,665 | 2,700 |
+| Platform inspection | #43150245172 | 8,053 | 17,233 | 4,500 |
+| Platform recovery | #43150505792 | 7,912 | 17,135 | 2,700 |
+| Platform watchdog | #43150601305 | 7,858 | 17,077 | 2,700 |
+| TCE WF-06 | #43127554403 | 19,828 | 23,393 | 1,500 |
+| TCE WF-12 | #43154415980 | 5,774 | 16,987 | 1,500 |
+
+All six current-age and inter-arrival budgets fail. Platform queue-assignment checks passed in watchdog #43150601305; TCE WF-12 measured zero queue delay for the stale WF-06 source. Runner saturation is not established. Only original first-attempt `event=schedule` runs on `master` count. Workflow dispatch, workflow_run, repository_dispatch, push and reruns are transport/diagnostic evidence only.
+
+### Workflow preservation and unresolved gates
+
+- Preserve app CI/tests, security scans, immutable publishers, SBOM/provenance, backup/integration workflows, manual/release gates and all purposeful schedules.
+- No workflow was confirmed redundant or obsolete; none was removed.
+- Keep TCE WF-06 strict HTTP 200. WF-13 warns on unset maintenance mode and dispatches only read-only fallback; administrator must verify `TCE_MAINTENANCE_MODE`.
+- Stock desired image `12d63b4` lacks compatible ARM64 RepoDigest evidence; do not promote legacy local image IDs. Scraper remains fail-closed without its protected API secret.
+- Media runner and Listener were present in the expired K3s snapshot; do not decommission until owner supplies runner unregister, backup/retention, DNS and protected approval evidence.
+- All five default branches were previously observed as `protected=false`; effective inherited organization rulesets remain unverified. Administrator action remains open in issue #1575.
+- No duplicate direct SSH/Compose production deployment authority is introduced. Platform Infra remains the only production apply authority.
+- TCE market-scan schedule remains unchanged.
+
 
 ## Post-merge receipt — 2026-11-12 11:04 ICT / 2026-11-12 04:04:42 UTC
 
