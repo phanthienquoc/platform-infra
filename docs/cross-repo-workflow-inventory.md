@@ -1036,3 +1036,11 @@ All six current-age and inter-arrival budgets fail. TCE WF-07 backup #4313055397
 - Last reconciliation #43127613751 was a manual apply-mode no-drift check on parent SHA `331120b`; five GHCR reads PASS, Auth runtime Secret verified, shared `ghcr-pull` unchanged, no manifest/image apply or rollout. It is stale and not exact-current-master plan evidence.
 - Rulesets GET returned `[]` for Platform/TCE/Media/Auth and 403 for Stock; branch-protection detail GET returned 403 for all five. Inherited org rulesets and required-check enforcement remain unverified. Repository metadata allows squash, merge commit and rebase.
 - No new image publication/promotion, current-master GitOps plan/apply, production mutation, rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot. TCE market-scan schedule unchanged.
+
+
+## Post-merge receipt — 2026-11-12 10:10 ICT
+
+- Platform PR #1665 merged by squash: `26eaa72393f9578a8ca3742f669b74f9cf1060f3` -> `7db202b643e08b6c9fd8b643758731fabba17bca`.
+- Exact-head validation #43146309032 PASS; post-merge validation #43146400383 PASS on the exact master merge SHA.
+- The change is documentation-only; no production manifest, workflow, image, secret, schedule or runtime state changed.
+- Current Platform open PRs remain #1314/#544/#541/#539 (owner-decision drafts). Platform Infra remains the only production apply authority. TCE market-scan schedule unchanged.
