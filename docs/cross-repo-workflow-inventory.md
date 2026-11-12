@@ -1,6 +1,34 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-12 08:11 ICT (2026-11-12 01:11:13 UTC).
+Last reviewed: 2026-11-12 08:59 ICT (2026-11-12 01:59:28 UTC).
+
+
+
+## Latest workflow inventory verification — 2026-11-12 08:59 ICT / 2026-11-12 01:59:28 UTC
+
+| Repository | Master SHA | Open PRs | Latest workflow evidence | Ownership |
+|---|---|---|---|---|
+| Platform Infra | `85c0d1fe` | #1314/#544/#541/#539 owner decisions | Master validate-manifests #43132927187 SUCCESS. PR #1661/#1662 merged with exact-head and post-merge checks passing. | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, K3s rollout and health. |
+| TCE Dashboard | `34f6024f` | none | PR #1038 merged. WF-01 #43132696439, WF-02 #43132696403, WF-05 #43132696349 SUCCESS. Native WF-06 #43127554403 FAIL (four HTTP 503); native WF-12 #43121528127 FAIL. WF-13 #43127582309 logged empty maintenance variable before the warning fix merged. | App tests/builds, immutable GHCR publication and release evidence; no VPS SSH/Compose deployment. |
+| StockDividend | `b1b5e177` | none | CI #42610360402 SUCCESS. Scheduled scraper #42457182511 FAIL CLOSED due to missing `VNSTOCK_API_KEY`. Desired tag `12d63b4` lacks compatible ARM64 manifest/RepoDigest in last full inspection. | App tests/builds, immutable GHCR publication and provenance; production retirement/promotion remains Platform-owned. |
+| Media Generation | `dcd69869` | none | CI #42539512417 SUCCESS; no current-master publication/handoff evidenced. Last full inspection showed backend/frontend 1/1 with digest pins; dedicated runner active with Listener present. | App tests/builds, immutable GHCR publication and provenance; runner retirement is an owner/operator task; no direct production deploy authority. |
+| Authentication | `eab85fab` | #76 owner-decision draft | CI #42654579277 SUCCESS; no current-master release/handoff evidenced. | App tests/builds, immutable GHCR publication, SBOM/provenance and exact Platform dispatch payload; Platform owns production apply. |
+
+### Current ownership and runtime evidence
+
+- Platform reconciliation #43127613751 SUCCESS on parent SHA `331120b`: five GHCR package reads passed; Auth runtime Secret provisioned/verified with values suppressed; shared `ghcr-pull` unchanged; TCE release pairing passed; no drift, so apply/image replacement/rollout skipped. This run is expired and is not current-master authorization.
+- Full K3s inspection #43127872524 generated at 00:31:21Z is expired at the 01:59:28Z reference (5,287s vs 4,500s). Its workload/runner state is historical only. Preserve debug PVC `k3s-debug/k3s-debug-logs`.
+- Native schedule current-age and inter-arrival budgets fail for all six Platform/TCE lanes. Exact IDs, ages and gaps are recorded in the deployment tracker. Manual, workflow_run, repository_dispatch, push and rerun events do not count as native schedule delivery.
+- TCE maintenance flag value is not currently verified. The last WF-13 log showed it empty before PR #1038 added an explicit warning; the PR did not mutate repository variables.
+- Stock/Media GitOps ownership retirement is in force, but deletion remains blocked by external backup/retention, authoritative DNS, dedicated Media runner stop/disable/Listener absence/GitHub unregister and protected production approval. Storage-clean in-cluster evidence alone is insufficient.
+
+### Workflow preservation and validation policy
+
+App repositories own tests/builds, security workflows, immutable GHCR publication, source metadata, SBOM/provenance and release contracts. Platform Infra alone owns production manifests, shared pull credentials, image digest promotion, GitOps plan/apply, rollout and health verification. Preserve useful CI/test/security, backup, integration, manual, release and scheduled workflows. No workflow is confirmed redundant/obsolete. Do not add a competing SSH/Compose deployment authority.
+
+Only first-attempt `event=schedule` runs on master count toward native cadence. Preserve all cron expressions and the TCE market-scan schedule. Do not weaken strict HTTP-200 health checks to hide intentional zero-replica maintenance.
+
+Last reviewed: 2026-11-12 08:59 ICT (2026-11-12 01:59:28 UTC).
 
 
 ## Latest workflow inventory verification — 2026-11-12 06:14 ICT / 2026-11-11 23:14:06 UTC
