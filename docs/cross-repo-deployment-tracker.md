@@ -3286,3 +3286,60 @@ Stock scraper [#42457182511](https://github.com/phanthienquoc/stockdividend/acti
 - No GHCR publication/promotion, production manifest apply, workload rollout, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup, host reboot or resource deletion occurred. Historical Auth runtime Secret provision/verification in reconciliation #43257038616 remains separately recorded; shared `ghcr-pull` was unchanged.
 
 Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
+
+
+## Latest verified checkpoint — 2026-11-13 01:56 ICT / 18:56:35 UTC
+
+### Repository state and open pull requests
+
+| Repository | Master SHA | Open PRs | Latest observed workflow evidence |
+|---|---|---|---|
+| Platform Infra | `fbd34290fbe65f5038dafd268aeae3131590a6d1` | #1314, #544, #541, #539 (all draft/owner decisions) | Current-master `validate-manifests` #43276541752 SUCCESS on exact SHA. PR #1701/#1702 exact-head and post-merge validations passed; #1702 merge SHA is this master. |
+| TCE Dashboard | `34f6024f8ccec8fb3ab6688901b3557e058ddfd1` | none | WF-06 native #43256916802 FAILURE; manual fallback #43257006805 FAILURE; WF-12 #43256963936 and WF-13 #43256963860 SUCCESS via `workflow_run`; native WF-12 #43224725401 FAILURE. |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 SUCCESS; weekend scraper #42457182511 FAIL CLOSED because protected `VNSTOCK_API_KEY` is missing. |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 SUCCESS; no newer inspection or runner-retirement evidence. |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft/owner decision) | CI #42654579277 SUCCESS; no newer production release/promotion evidence. |
+
+Open PRs #1314/#544/#541/#539 and Authentication #76 remain owner decisions. No architecture, Keycloak, database, migration or mail/DNS decision was inferred or merged.
+
+### Native schedule acceptance — reference 18:56:35 UTC
+
+Only first-attempt `event=schedule` runs on `master` count. Push, `workflow_run`, `workflow_dispatch` and `repository_dispatch` do not reset native cadence.
+
+| Lane | Latest native run | Previous native run | Age (s) | Gap (s) | Budget (s) | Result |
+|---|---:|---:|---:|---:|---:|---|
+| Platform reconcile | #43222790763 | #43152960974 | 21,506 | 31,701 | 2,700 | FAIL / FAIL |
+| Platform inspection | #43218736508 | #43150245172 | 23,080 | 31,621 | 4,500 | FAIL / FAIL |
+| Platform recovery | #43213480231 | #43150505792 | 25,193 | 29,367 | 2,700 | FAIL / FAIL |
+| Platform watchdog | #43214581449 | #43150601305 | 24,737 | 29,769 | 2,700 | FAIL / FAIL |
+| TCE WF-06 | #43256916802 | #43176560763 | 9,586 | 31,197 | 1,500 | FAIL / FAIL |
+| TCE WF-12 | #43224725401 | #43154415980 | 20,780 | 31,642 | 1,500 | FAIL / FAIL |
+
+All six age and inter-arrival budgets fail. Platform recovery/reconciliation/inspection historical runs succeeded, while watchdog failed; TCE WF-06 failed its strict endpoint probes and native WF-12 failed schedule verification. The successful TCE WF-12 #43256963936 and WF-13 #43256963860 are downstream `workflow_run` receipts, not native schedule events.
+
+The integration does not expose authoritative GitHub scheduler enqueue/delivery telemetry. Queue wait observations do not prove runner congestion and cannot distinguish an event delayed before enqueue from one not enqueued. Preserve the current cron expressions and freshness budgets. **TCE market-scan schedule unchanged.**
+
+### Runtime receipts — expired at this reference
+
+- Reconciliation [#43257038616](https://github.com/phanthienquoc/platform-infra/actions/runs/43257038616) completed SUCCESS at 16:17:28Z, event=`workflow_dispatch`, source SHA `e4e9a2c001089f9b5417ce3787387371ff7b9d54`, mode=`apply`, target=`all`, `allow_image_changes=false`. Age 9,547s exceeds the 2,700s budget. Five GHCR package reads passed; Auth runtime Secret was provisioned/verified with values suppressed; shared `ghcr-pull` unchanged; TCE release pairing passed; drift=false; manifest apply, image replacement and rollout were skipped.
+- K3s inspection [#43257414853](https://github.com/phanthienquoc/platform-infra/actions/runs/43257414853) generated `debug/vps-latest.md` at 16:19:43Z. Age 9,412s exceeds the 4,500s budget. Last-known node Ready/ARM64; disk 57% (~20GiB free), RAM ~19GiB available; Media/MicroFE active; TCE/Auth/Keycloak 0/0 maintenance; Stock desired workloads ImagePullBackOff due missing ARM64-compatible manifest; Media runner Listener present; debug PVC Bound 1Gi/RWO; OIDC probes HTTP 503. These are historical facts, not current health.
+- No fresh current-master `mode=plan`, K3s inspection, rollout or health receipt is available at this reference.
+
+### Failure and ownership evidence
+
+- TCE WF-06 #43256916802 and manual fallback #43257006805 failed four independent strict probes: TCE web/API and Auth liveness/readiness each returned HTTP 503 instead of 200. Keep HTTP-200 acceptance strict; TCE administrator must verify `TCE_MAINTENANCE_MODE` and approved replica intent.
+- Stock scraper #42457182511 failed closed before dependency installation because protected `VNSTOCK_API_KEY` is absent. Do not bypass preflight or expose secrets. Desired Stock ARM64 immutable digest/provenance remains unverified.
+- App repositories own tests/builds, immutable GHCR publication, SBOM/provenance and exact dispatch payloads. Platform Infra alone owns production manifests, shared GHCR pull credentials, digest promotion, GitOps plan/apply, K3s rollout and health.
+- Preserve useful CI/test/security/build/publisher/manual/release/backup/integration/scheduled workflows. No workflow is confirmed redundant/obsolete; none removed. No duplicate direct SSH/Compose production apply authority.
+- Prior direct branch checks reported all five master branches `protected=false`; effective inherited organization rulesets remain unverified and require administrator confirmation.
+- No new GHCR publication/promotion, production manifest apply, workload rollout, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup, host restart or resource deletion occurred in this checkpoint. Historical Auth runtime Secret provisioning is recorded above; shared `ghcr-pull` remained unchanged.
+
+### Exact next actions
+
+1. Platform operator: fresh read-only K3s inspection and current-master `mode=plan` on `fbd34290fbe65f5038dafd268aeae3131590a6d1`; separate approval before apply or host restart.
+2. GitHub administrator: authoritative scheduled-event enqueue/delivery telemetry for all six workflow IDs; enforce PR-only, required checks, no force-push/deletion and squash-only; verify inherited rulesets.
+3. TCE administrator: verify `TCE_MAINTENANCE_MODE` and approved replica intent; retain strict HTTP-200 probes.
+4. Stock owner: provide ARM64-compatible immutable digest/provenance and configure protected `VNSTOCK_API_KEY` only if scraper reactivation is approved.
+5. Media owner: stop/disable/unregister runner and prove Listener absence, GitHub-side unregister, backup/retention and authoritative DNS before decommission.
+
+**Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.**
