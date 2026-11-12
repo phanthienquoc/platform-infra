@@ -1,3 +1,35 @@
+## Current verified workflow inventory — 2026-11-12 15:02 ICT / 08:02:05 UTC
+
+### Repositories, latest runs and ownership
+
+| Repository | Master SHA | Open PRs | Latest workflow evidence | Deployment ownership |
+|---|---|---|---|---|
+| Platform Infra | 345f033a37b2ab944614bd688a58bc5c60d01764 | #1314/#544/#541/#539 (owner decisions) | Inspection #43173781408 SUCCESS; PR #1676 exact-head validation #43173998401 PASS and merged; current-master reconciliation #43176619995 SUCCESS; recovery #43176810214 SUCCESS | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, K3s rollout and health |
+| TCE Dashboard | 34f6024f8ccec8fb3ab6688901b3557e058ddfd1 | none | Native WF-06 #43176560763 FAIL (four HTTP 503 probes); WF-12 #43176586474 workflow_run SUCCESS and heartbeat accepted; latest native WF-12 #43154415980 remains stale | App CI/tests/builds, immutable GHCR publication and provenance; no direct production apply |
+| StockDividend | b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61 | none | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED (missing protected VNSTOCK_API_KEY); desired tag 12d63b4 lacks ARM64-compatible registry digest evidence | App CI/builds and immutable GHCR publication; Platform owns promotion/retirement |
+| Media Generation | dcd698699c65ba6e73f6b43838975144777131c3 | none | CI #42539512417 PASS; K3s snapshot shows backend/frontend 1/1 with RepoDigests; runner still active | App CI/builds and immutable GHCR publication; Platform owns production apply; Media owner retires its runner |
+| Authentication | eab85fab32d7c9baef750c1fedbb93deb8c1333f | #76 (owner decision) | CI #42654579277 PASS; no newer current-master release/promotion evidenced | App CI/security/builds, immutable GHCR, SBOM/provenance and exact Platform dispatch; Platform owns production apply |
+
+### Platform authority and workflow roles
+
+- reconcile-vps.yml remains the sole production GitOps apply authority. Native schedule is 7,22,37,52 * * * *; scheduled events use apply mode and image changes remain disallowed unless exact provenance-verified promotion dispatch authorizes them.
+- inspect-vps.yml remains read-only, scheduled at 2,32 * * * *; it may create an inspection PR after exact-head validation and squash merge. PR #1676 is the latest verified example.
+- reconcile-schedule-watchdog.yml remains read-only, scheduled at 12,27,42,57 * * * *.
+- recover-stale-ops.yml remains a recovery controller, scheduled at 10,25,40,55 * * * *; it may dispatch only existing validated workflows after source/provenance/deduplication/correlation checks and is not a separate apply authority.
+- TCE WF-06 remains scheduled every 15 minutes and retains strict HTTP-200 probes. WF-12 runs at minutes 7/22/37/52, verifies WF-06 native delivery and forwards authenticated heartbeat receipts. WF-13 remains workflow_run-only and can dispatch only the read-only WF-06 fallback; fallback is not native schedule evidence.
+- TCE WF-03/WF-08B, Stock deploy.yml and Auth release.yml retain app-owned immutable publication responsibilities. Media retains app-owned build/publication; Platform alone promotes verified digests and applies production manifests.
+- TCE WF-06 #43176560763 and WF-12 heartbeat #43176586474 demonstrate exact source/attempt/SHA correlation. Platform recovery #43176601065 validated the payload and dispatched current-master reconciliation #43176619995; this proves the cross-repo dispatch path but does not repair native schedule cadence.
+- Current native schedule acceptance at 08:02:05Z: all six tracked Platform/TCE lanes exceed age and inter-arrival budgets. WF-06 had one native schedule event after a 25,693s gap and failed all four probes; WF-12's latest run is workflow_run, not schedule. Platform fallback dispatches are not native schedule receipts.
+- Current runtime: inspection #43173781408 snapshot age 2,855s vs 4,500s; current-master reconciliation #43176619995 age 1,484s vs 2,700s. Reconciliation no-drift, apply skipped, rollout skipped; Auth runtime Secret provisioned/verified, shared ghcr-pull unchanged; TCE release pairing passed.
+- Auth and TCE are explicitly intentional zero-replica maintenance scopes; no live workload health is asserted. Keycloak skipped. MicroFE active-scope health passed.
+- Stock desired tag 12d63b4 has no compatible ARM64 manifest/RepoDigest and remains ImagePullBackOff; no promotion. Stock scraper fails closed without protected VNSTOCK_API_KEY.
+- Media backend/frontend are 1/1 with RepoDigests, but Media runner and Listener remain active. External backup/retention, authoritative DNS and protected decommission approval are still required.
+- Preserve PVC k3s-debug/k3s-debug-logs (Bound, 1Gi, RWO). Stock/Media target namespaces had no PVC/PV/VolumeSnapshot references in the latest inspection; this does not replace external backup/DNS evidence.
+- No workflow was confirmed redundant/obsolete. Preserve CI/tests, security, backup, manual, release and scheduled workflows. No duplicate direct SSH/Compose production apply authority.
+- TCE market-scan schedule unchanged.
+
+Last reviewed: 2026-11-12 15:02 ICT (2026-11-12 08:02:05 UTC).
+
 ## Post-merge receipt — 2026-11-12 14:00 ICT / 07:00:17 UTC
 
 Platform PR #1674 squash-merged at `7ddaf5cd7f5735673c2fb052859fca61da786d0e`. Exact-head validation #43171924642 PASS; post-merge validate-manifests #43172008740 PASS on exact merge SHA (20 successful steps). The PR changed only tracker/inventory/checkpoint documentation; production manifests and workflows were unchanged.
