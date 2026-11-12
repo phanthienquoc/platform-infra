@@ -1,7 +1,28 @@
 # Cross-Repository Workflow Inventory
 
-Last reviewed: 2026-11-12 08:59 ICT (2026-11-12 01:59:28 UTC).
+Last reviewed: 2026-11-12 09:05 ICT (2026-11-12 02:05:00 UTC).
 
+
+
+
+## Post-merge workflow inventory receipt — 2026-11-12 09:05 ICT / 02:05:00 UTC
+
+Platform PR #1663 is merged at `c84b19b6`; exact-head validation #43138768416 and post-merge validation #43138836807 both PASS. The 08:59 checkpoint remains the pre-merge snapshot.
+
+| Repository | Master SHA | Open PRs | Latest relevant evidence | Ownership |
+|---|---|---|---|---|
+| Platform Infra | `c84b19b6` | #1314/#544/#541/#539 | Post-merge validate-manifests #43138836807 PASS. | Production manifests, shared GHCR pull credentials, digest promotion, GitOps, rollout and health. |
+| TCE Dashboard | `34f6024f` | none | WF-01 #43132696439, WF-02 #43132696403, WF-05 #43132696349 PASS; native WF-06 #43127554403 and WF-12 #43121528127 FAIL. | Tests/builds, immutable GHCR publication, release provenance. |
+| StockDividend | `b1b5e177` | none | CI #42610360402 PASS; scraper #42457182511 FAIL CLOSED (missing `VNSTOCK_API_KEY`). | Tests/builds and immutable GHCR publication. |
+| Media Generation | `dcd69869` | none | CI #42539512417 PASS; no current-master publication evidenced. | Tests/builds and immutable GHCR publication; dedicated runner retirement requires owner/operator. |
+| Authentication | `eab85fab` | #76 owner decision | CI #42654579277 PASS; no current-master release evidenced. | Tests/builds, immutable GHCR, SBOM/provenance and Platform dispatch contract. |
+
+All six Platform/TCE native schedule lanes remain outside both current-age and inter-arrival budgets at 02:05:00Z. Manual and fallback events do not satisfy schedule acceptance. Preserve every cron and the TCE market-scan schedule.
+
+Runtime freshness: reconciliation #43127613751 is 5,751s old vs 2,700s; full inspection #43127872524 is 5,619s old vs 4,500s. Both are historical only. No current-master plan/inspection or runtime mutation is evidenced.
+
+App repositories own CI/tests/builds, security and immutable publication/provenance. Platform Infra is the only production manifest, shared pull credential, promotion, GitOps, rollout and health authority. Preserve useful CI/test/security, backup, integration, manual, release and scheduled workflows. No workflow is confirmed obsolete; no duplicate SSH/Compose authority.
+Last reviewed: 2026-11-12 09:05 ICT (2026-11-12 02:05:00 UTC).
 
 
 ## Latest workflow inventory verification — 2026-11-12 08:59 ICT / 2026-11-12 01:59:28 UTC
