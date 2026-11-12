@@ -1697,3 +1697,12 @@ Only first-attempt event=schedule on master counts. Push, workflow_run, workflow
 5. Media owner: stop/disable/unregister runner; prove Listener absence, GitHub unregister, backup/retention and DNS before decommission.
 
 Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
+
+
+## Post-merge receipt — 2026-11-12 23:02 ICT / 16:02:35 UTC
+
+Platform PR #1696 was squash-merged at `fc0800db36738013298dee2b49fa2c7421916966`. Exact-head validate-manifests #43254212165 completed SUCCESS on `d65caa9a82697f579f9df63d1c6b8601d01a24a1` (21 steps); post-merge validate-manifests #43254324762 completed SUCCESS on the exact merge SHA (20 applicable steps). The failure-report job was correctly skipped in both runs.
+
+PR #1696 changed only the deployment tracker, workflow inventory and two 22:56 ICT checkpoint files. Compare `a5865829...fc0800db` confirms no production manifest or workflow file changed. Current Platform master is `fc0800db36738013298dee2b49fa2c7421916966`; TCE `34f6024f`, Stock `b1b5e177`, Media `dcd69869`, Authentication `eab85fab`.
+
+This receipt does not refresh runtime health: the last reconciliation and K3s inspection remain expired. No image publication/promotion, manifest apply, workload rollout, credential change, runner retirement, DNS/database/storage mutation, Docker cleanup or host restart occurred. **Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.**
