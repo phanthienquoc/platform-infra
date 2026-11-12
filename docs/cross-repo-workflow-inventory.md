@@ -2011,3 +2011,13 @@ The latest Platform reconcile and inspection conclusions were SUCCESS but receip
 5. Media owner: runner stop/disable/unregister, Listener absence, GitHub unregister, backup/retention and DNS evidence.
 
 Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
+
+
+## Post-merge receipt — 2026-11-13 04:58 ICT
+
+- Readiness PR #1711 exact-head validation [#43315883809](https://github.com/phanthienquoc/platform-infra/actions/runs/43315883809) SUCCESS on `beaefe06ffdb1c0d19e9f193ca96dc1880ecc7c2`; all 20 applicable steps passed; failure-report skipped.
+- PR #1711 squash merge SHA/current master: `189aa1fc95042b7420d56020faa74b2cd9c06cb3`; direct master ref and PR API confirm merged.
+- Post-merge [validate-manifests #43316024661](https://github.com/phanthienquoc/platform-infra/actions/runs/43316024661) SUCCESS on the exact merge SHA; changed-image validation and failure-report skipped as expected.
+- Changed files were documentation and timestamped checkpoints only. No production workflow/manifest, image, credential, runtime, DNS, database, storage, host, workload or schedule changed.
+- Issues #1497/#872/#1575 received comments #6837121972/#6837122560/#6837123272.
+- **TCE market-scan schedule unchanged. Platform Infra remains the sole production apply authority.**
