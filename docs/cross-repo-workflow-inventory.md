@@ -2071,3 +2071,14 @@ At 22:59:35Z all six age budgets and all six inter-arrival budgets fail. Latest 
 5. Media owner: runner stop/disable/unregister, Listener absence, GitHub unregister, backup/retention and DNS evidence.
 
 Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.
+
+
+## Post-merge receipt — 2026-11-13 05:59 ICT
+
+- PR #1714 exact-head validate-manifests #43325547985 SUCCESS on 3ff37b66c73cc9cb5f46e8fa3ae545b0106cbf8f. All applicable image-contract, Auth/TCE dispatch-payload, shell, cert-manager, manifest-render, Auth GitOps, YAML, secret, immutable-image, isolated-Keycloak and network-boundary checks passed; failure-report skipped.
+- Squash merge SHA/current Platform master: 9821840bd1ae3417eac848038f6a190c1cdab1b3. Direct master ref and PR API confirm merged.
+- Post-merge validate-manifests #43325627295 SUCCESS on the exact merge SHA. Changed-image validation skipped as expected for documentation-only changes.
+- PR #1714 changed only tracker, workflow inventory and two timestamped checkpoint files. No production workflow/manifest, image, credential, runtime, DNS, database, storage, host, workload or schedule changed.
+- Follow-up API read at 23:04:35Z found no TCE WF-06 native schedule run for the 23:00Z slot and no Platform inspection native schedule run for the 23:02Z slot. Native schedule cadence remains degraded; dispatch/workflow_run events are not native schedule evidence.
+- No new GHCR publication/promotion, production apply, rollout, credential mutation, runner retirement, Docker cleanup, host restart or resource deletion occurred.
+- Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.
