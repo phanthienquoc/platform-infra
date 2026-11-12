@@ -1931,3 +1931,15 @@ Current cron definitions were read from master and left unchanged: Platform reco
 5. Media owner: stop/disable/unregister the runner and prove local Listener absence plus GitHub-side unregister; provide external backup/retention and authoritative DNS evidence before protected namespace deletion.
 6. Stock owner: do not promote `12d63b4` or cached legacy image IDs; provide a platform-compatible immutable registry digest/provenance if retirement is reversed. Provide `VNSTOCK_API_KEY` through protected Actions secret storage only if scraper operation is authorized.
 7. Platform operator: obtain separate maintenance approval before host package upgrades or restart.
+
+
+## Post-merge synchronization — 2026-11-12 10:10 ICT / 03:10:32 UTC
+
+- Platform PR #1665 (docs-only readiness refresh) was squash-merged from exact head `26eaa72393f9578a8ca3742f669b74f9cf1060f3` to master `7db202b643e08b6c9fd8b643758731fabba17bca`.
+- Exact-head `validate-manifests` run #43146309032 completed SUCCESS with all 20 applicable validation steps passing.
+- Post-merge `validate-manifests` run #43146400383 completed SUCCESS on exact merge SHA `7db202b643e08b6c9fd8b643758731fabba17bca` (21/21 job steps completed; validation PASS).
+- Direct `refs/heads/master` verification matched the merge SHA. PR #1665 is merged.
+- Open Platform owner-decision drafts remain #1314/#544/#541/#539. No application or production workflow PR was added.
+- PR #1665 changed only the deployment tracker, workflow inventory and two documentation checkpoints. Production manifests, workflows, secrets, Actions variables, image references and schedules are unchanged. No production apply, image promotion or workload rollout occurred.
+- Current Platform master is now `7db202b643e08b6c9fd8b643758731fabba17bca`. The runtime and scheduler blockers recorded in the 10:02 checkpoint are unchanged; no fresh K3s inspection or current-master GitOps plan was available after the merge.
+- TCE market-scan schedule unchanged.
