@@ -3713,3 +3713,15 @@ Direct branch API reads show protected=false for master in all five repositories
 6. Platform operator: host restart requires a separate approved change window.
 
 Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.
+
+
+## Post-merge receipt — 2026-11-13 05:59 ICT
+
+- Readiness PR #1714 exact head 3ff37b66c73cc9cb5f46e8fa3ae545b0106cbf8f passed validate-manifests #43325547985 on the exact PR head. The immutable image-change self-test, Auth digest-promotion helper test, Auth/TCE exact dispatch-payload tests, changed-image reference validation, shell checks, cert-manager bootstrap validation, manifest rendering, Auth GitOps contract checks, YAML structure, secret policy, immutable-image policy, isolated Keycloak validation and network-boundary validation all completed successfully. Failure-report was correctly skipped.
+- PR #1714 was squash-merged using expected head SHA 3ff37b66c73cc9cb5f46e8fa3ae545b0106cbf8f. Merge SHA/current Platform master is 9821840bd1ae3417eac848038f6a190c1cdab1b3.
+- Direct refs/heads/master and PR API verification confirm current master equals the merge SHA and PR #1714 is closed/merged.
+- Post-merge validate-manifests #43325627295 completed SUCCESS on the exact merge SHA 9821840bd1ae3417eac848038f6a190c1cdab1b3. Changed-image validation was correctly skipped for this documentation-only merge; failure-report was correctly skipped.
+- PR #1714 changed only the deployment readiness tracker, workflow inventory and two 05:59 ICT checkpoint files. No production manifest/workflow, image, credential, runtime configuration, DNS, database, storage, host, namespace, PVC/PV, workload or schedule changed.
+- Follow-up Actions API read at 2026-11-12T23:04:35Z found no new native TCE WF-06 event for the 23:00Z slot and no new native Platform inspection event for the 23:02Z slot. The latest qualifying native runs therefore remain the records in the 05:59 snapshot. This does not establish whether GitHub dropped or delayed the scheduled events; authoritative enqueue/delivery telemetry remains unavailable.
+- No GHCR publication/promotion, production manifest apply, image replacement, workload rollout, runner retirement, credential rotation, Docker cleanup, host restart or resource deletion occurred in this documentation PR. The separate reconciliation #43319525218 verified the Auth runtime Secret with values suppressed; shared ghcr-pull remained unchanged.
+- Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.
