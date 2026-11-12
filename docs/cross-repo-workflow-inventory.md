@@ -1751,3 +1751,12 @@ Only first-attempt `event=schedule` on master counts. workflow_run/workflow_disp
 - Media owner: runner retirement, Listener absence, GitHub unregister, backup/retention and DNS evidence.
 
 Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
+
+
+## Post-merge receipt — 2026-11-12 23:59 ICT / 17:05:40Z
+
+- PR #1699 exact head `8ff5c0d69c4e0e4fa2c2abfc044e794c524284e1` passed [validate-manifests #43265536725](https://github.com/phanthienquoc/platform-infra/actions/runs/43265536725); 20 applicable steps passed, changed-image validation skipped for docs-only changes, failure-report skipped.
+- PR #1699 squash merge: `5ad78ef37c8b82f7f268d87b3d40c4a4401bd8e1`; direct master ref and PR API confirmed merged.
+- Post-merge [validate-manifests #43265741937](https://github.com/phanthienquoc/platform-infra/actions/runs/43265741937) passed on the exact merge SHA; 20 applicable steps passed.
+- Changed files were tracker, workflow inventory and two 23:59 ICT checkpoint files only. No production manifest/workflow, image, secret, runtime, workload, DNS, database, storage or schedule changed.
+- Current Platform master: `5ad78ef37c8b82f7f268d87b3d40c4a4401bd8e1`; app master refs unchanged. No GHCR publication/promotion, manifest apply, workload rollout, runner retirement, credential rotation, host reboot or resource deletion. **TCE market-scan schedule unchanged.**
