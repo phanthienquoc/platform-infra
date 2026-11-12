@@ -1,6 +1,31 @@
 # StockDividend and Media Generation decommission plan
 
-Status: GitOps ownership retirement and the guarded manual decommission workflow are merged. The approved K3s decommission scope remains in force; namespace/workload deletion and Media runner retirement have not been executed. The last full snapshot is now expired; deletion remains blocked pending fresh same-run evidence, external backup/retention and DNS proof, and verified runner retirement.
+Status: GitOps ownership retirement and the guarded manual decommission workflow are merged. Namespace/workload deletion and Media runner retirement have not been executed. The latest full K3s snapshot is expired; deletion remains blocked pending fresh same-run evidence, external backup/retention and DNS proof, and verified runner retirement.
+
+
+## Current gate status — 2026-11-12 08:59 ICT / 2026-11-12 01:59:28 UTC
+
+The latest committed full inspection is #43127872524, generated at 00:31:21Z on parent SHA `331120b33ed7b090620dec373b20aab463d78cc8`. At this reference its age is 5,287s, beyond the 4,500s budget by 787s. It is historical only; no fresh full inspection or protected decommission plan is evidenced in this pass.
+
+The last-known snapshot showed:
+- `media-prod` backend/frontend 1/1 with registry RepoDigests `sha256:93ddb944…` and `sha256:095c72ed…`.
+- Dedicated Media runner service active/enabled and `Runner.Listener` present. GitHub-side runner unregister is not established by host inspection.
+- `stock-prod` has two desired Admin pods and one desired Backend pod in ImagePullBackOff for tag `12d63b4`, error `no match for platform in manifest`. Legacy Stock Backend/Frontend were running but had no registry RepoDigest evidence; do not promote their local image IDs.
+- No PVC/PV claims or VolumeSnapshot references in Stock/Media namespaces in that snapshot. This does not prove external database/object-storage backup or retention.
+- Preserve `k3s-debug/k3s-debug-logs` (1Gi, Bound, RWO). Namespace deletion must not affect TCE/Auth/MicroFE/Keycloak or the shared Platform runner.
+
+Reconciliation #43127613751 completed SUCCESS at 00:29:09Z on the same parent SHA with `mode=apply`, target=all, image changes disabled. Five GHCR package reads passed; Auth runtime Secret was provisioned/verified with values suppressed; shared `ghcr-pull` was unchanged; TCE release pairing passed; drift=false and apply/image replacement/rollout were skipped. At the current reference this run is 5,419s old versus a 2,700s budget, so it is historical only and does not authorize deletion or rollout.
+
+Deletion remains blocked pending all of the following in the protected same-run workflow:
+1. Fresh same-run storage preflight.
+2. External backup/retention evidence and authoritative DNS/provider ownership review.
+3. Dedicated Media runner service stopped and disabled/masked or absent.
+4. Local `Runner.Listener` process absent.
+5. GitHub-side Media runner registration absent, verified with the read-only audit token.
+6. Exact operator attestations and protected production Environment approval.
+
+No runner stop/unregister, namespace deletion, PVC/PV deletion, DNS/database/storage mutation, Docker cleanup or host reboot occurred. The connector does not expose workflow dispatch, so no fresh plan/delete workflow was invoked. Do not infer that any gate has since been satisfied.
+
 
 ## Current gate status — 2026-11-12 04:02 ICT / 2026-11-11 21:02:52 UTC
 
