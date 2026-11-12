@@ -3611,3 +3611,14 @@ The integration does not expose authoritative GitHub scheduler enqueue/delivery 
 6. Platform operator: host restart requires a separate approved change window.
 
 **Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.**
+
+
+## Post-merge receipt — 2026-11-13 04:58 ICT
+
+- Readiness PR #1711 exact head `beaefe06ffdb1c0d19e9f193ca96dc1880ecc7c2` passed [validate-manifests #43315883809](https://github.com/phanthienquoc/platform-infra/actions/runs/43315883809) on the exact PR head. All 20 applicable validation steps completed successfully; failure-report was correctly skipped.
+- PR #1711 was squash-merged using expected head SHA `beaefe06ffdb1c0d19e9f193ca96dc1880ecc7c2`; merge SHA/current Platform master is `189aa1fc95042b7420d56020faa74b2cd9c06cb3`.
+- Direct `refs/heads/master` and PR API verification confirm current master equals the merge SHA and PR #1711 is closed/merged.
+- Post-merge [validate-manifests #43316024661](https://github.com/phanthienquoc/platform-infra/actions/runs/43316024661) completed SUCCESS on the exact merge SHA; all applicable steps passed. Changed-image validation and failure-report were correctly skipped for this docs-only merge.
+- PR #1711 changed only the deployment tracker, workflow inventory and two 04:58 ICT checkpoint files. No production manifest/workflow, image, credential, runtime, DNS, database, storage, host, namespace, PVC/PV or schedule changed.
+- Issues #1497, #872 and #1575 received refreshed evidence in comments #6837121972, #6837122560 and #6837123272 respectively.
+- No GHCR publication/promotion, production manifest apply, image replacement, workload rollout, runner retirement, credential rotation, Docker cleanup, host restart or resource deletion occurred. **Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.**
