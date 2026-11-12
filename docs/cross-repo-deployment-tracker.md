@@ -3447,3 +3447,16 @@ The integration does not expose authoritative GitHub scheduler enqueue/delivery 
 5. Media owner: stop/disable/unregister runner and prove Listener absence, GitHub-side unregister, backup/retention and DNS before decommission.
 
 **Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.**
+
+
+## Post-merge receipt — 2026-11-13 03:01 ICT / 20:01:21 UTC
+
+- PR #1706 readiness update exact head `b4d79540d4b21aa714f7c8ada852e74063d77102` passed [validate-manifests #43295950379](https://github.com/phanthienquoc/platform-infra/actions/runs/43295950379) on the exact PR head. All applicable contract, dispatch-payload, image-change, shell, manifest-rendering, YAML, secret, immutable-image, Keycloak-isolation and network checks passed; failure-report was correctly skipped.
+- PR #1706 was squash-merged with expected head SHA `b4d79540d4b21aa714f7c8ada852e74063d77102`; merge SHA is `207cb45a791118aabd80a0664afd93286c843f18`.
+- Direct `refs/heads/master` and PR API verification confirm current Platform master equals the merge SHA and PR #1706 is closed/merged.
+- Post-merge [validate-manifests #43296039604](https://github.com/phanthienquoc/platform-infra/actions/runs/43296039604) completed SUCCESS on the exact merge SHA; all applicable validation steps passed and the failure-report job was correctly skipped.
+- PR #1706 changed only `docs/cross-repo-deployment-tracker.md`, `docs/cross-repo-workflow-inventory.md`, and the two 02:56 ICT checkpoint files. No production manifest, workflow definition, image, secret, runtime setting, DNS, database, storage or schedule changed.
+- App repository master refs remain TCE `34f6024f8ccec8fb3ab6688901b3557e058ddfd1`, Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`, Media `dcd698699c65ba6e73f6b43838975144777131c3`, Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f`. Open Platform owner-decision PRs remain #1314/#544/#541/#539; Authentication PR #76 remains open.
+- The 02:56 runtime snapshot remains within its freshness budgets at 20:01:21Z: K3s inspection age 450s (budget 4,500s); reconciliation completion age 471s (budget 2,700s). This does not refresh the snapshot or create a current-master `mode=plan` receipt.
+- No GHCR publication/promotion, production manifest apply, image replacement, workload rollout, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup, host restart or resource deletion occurred in PR #1706. The earlier Auth runtime Secret provision/verify operation remains recorded in the 02:56 checkpoint; shared `ghcr-pull` was unchanged.
+- **Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.**

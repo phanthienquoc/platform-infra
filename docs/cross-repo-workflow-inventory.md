@@ -1886,3 +1886,13 @@ Last reviewed: 2026-11-13 01:56 ICT (2026-11-12 18:56:35 UTC).
 5. Media owner: runner stop/disable/unregister, Listener absence, GitHub unregister, backup/retention and DNS evidence.
 
 Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
+
+
+## Post-merge receipt — 2026-11-13 03:01 ICT
+
+- Platform PR #1706 exact-head [validate-manifests #43295950379](https://github.com/phanthienquoc/platform-infra/actions/runs/43295950379) completed SUCCESS on `b4d79540d4b21aa714f7c8ada852e74063d77102`; all applicable steps passed; failure-report skipped.
+- PR #1706 squash merge SHA: `207cb45a791118aabd80a0664afd93286c843f18`. Direct master-ref and PR API reads confirm exact merge and closed/merged state.
+- Post-merge [validate-manifests #43296039604](https://github.com/phanthienquoc/platform-infra/actions/runs/43296039604) completed SUCCESS on the exact merge SHA.
+- Changed files were the deployment tracker, workflow inventory and two 02:56 ICT checkpoint files only. No production manifest/workflow, image, secret, runtime, DNS, database, storage or schedule changed.
+- Fresh inspection #43294800951 and reconciliation #43294483085 remain within their freshness budgets at 20:01:21Z, but the reconciliation source SHA is the parent `23f8aef9`; current-master `mode=plan` remains unrun.
+- No GHCR publication/promotion, manifest apply, image replacement, workload rollout, runner retirement, credential rotation, host restart, cleanup or resource deletion occurred in PR #1706. **TCE market-scan schedule unchanged.**
