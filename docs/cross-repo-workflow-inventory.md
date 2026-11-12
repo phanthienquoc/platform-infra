@@ -1137,3 +1137,12 @@ Current schedule definitions were read from master and left unchanged:
 - K3s snapshot #43150245172 / `debug/vps-latest.md` generated 03:45:02Z; at 04:56:38Z age 4,296s against 4,500s budget. Node Ready/ARM64, disk 57%, ~20GiB free, ~19GiB RAM available, restart required. Media/MicroFE active; TCE/Auth/Keycloak 0/0; Stock desired Admin/Backend ImagePullBackOff; Media runner Listener present; preserve debug PVC.
 - All five master branch APIs report `protected=false` and required-check enforcement off. Rulesets GET is empty for Platform/TCE/Media/Auth and 403 for Stock. Effective inherited org rulesets remain unverified; all repositories still allow squash, merge commit and rebase.
 - No new image publication/promotion, manifest apply, image replacement, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot. No workflow removal. Platform Infra remains sole production apply authority.
+
+
+## Post-merge receipt — 2026-11-12 12:02 ICT
+
+- Platform PR #1670 merged by squash: exact head `145745ea3f00cadbed3b323ff92741ca0195cffc` -> master `3dd57285c86502df58128c2b392fd4bf620396f4`.
+- Exact-head validation #43158559048 PASS; post-merge validation #43158638646 PASS on exact merge SHA.
+- The change is documentation-only. No production manifests, workflow definitions, images, credentials, Actions variables, schedules or runtime resources changed.
+- Current Platform open PRs remain #1314/#544/#541/#539 (owner-decision); Authentication #76 remains an owner-decision draft.
+- Platform Infra remains the sole production apply authority. Preserve all app-owned tests/builds/immutable publishers and all useful manual/release/backup/integration/scheduled workflows. TCE market-scan schedule unchanged.
