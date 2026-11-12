@@ -3529,3 +3529,16 @@ The integration does not expose authoritative GitHub scheduler enqueue/delivery 
 6. Platform operator: host restart requires a separate approved change window.
 
 **Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.**
+
+
+## Post-merge receipt — 2026-11-13 03:56 ICT
+
+- PR #1709 exact head `70293163e934cbfce61296898ae02d3ecabe578c` passed [validate-manifests #43306053506](https://github.com/phanthienquoc/platform-infra/actions/runs/43306053506) on the exact PR head. All applicable contract, dispatch-payload, image-change, shell, manifest-rendering, YAML, secret, immutable-image, Keycloak-isolation and network checks passed; changed-image validation and failure-report were correctly skipped.
+- PR #1709 was squash-merged with expected head SHA `70293163e934cbfce61296898ae02d3ecabe578c`; merge SHA/current Platform master is `ac4769cf4e0cd7c27ede9d105af6932657bf80f9`.
+- Direct `refs/heads/master` and PR API verification confirm current Platform master equals the merge SHA and PR #1709 is closed/merged.
+- Post-merge [validate-manifests #43306172817](https://github.com/phanthienquoc/platform-infra/actions/runs/43306172817) completed SUCCESS on the exact merge SHA; all applicable steps passed and changed-image validation/failure-report were correctly skipped.
+- PR #1709 changed only `docs/cross-repo-deployment-tracker.md`, `docs/cross-repo-workflow-inventory.md` and the two 03:56 ICT checkpoint files. No production manifest, workflow definition, image, secret, runtime setting, DNS, database, storage, host or schedule changed.
+- Ruleset cross-check: `GET /repos/{repo}/rulesets?includes_parents=true` returned an empty list for Platform Infra, TCE Dashboard, Media Generation and Authentication. StockDividend returned HTTP 403 because GitHub says rulesets require GitHub Pro or a public repository for this private repository. Direct master branch objects still return `protected=false` for all five; do not treat Stock's 403 as an empty ruleset list. Issue #1575 received this evidence in comment #6835855631.
+- No GHCR publication/promotion, production manifest apply, image replacement, workload rollout, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup, host restart or resource deletion occurred in PR #1709. Auth runtime Secret provision/verification and unchanged shared `ghcr-pull` reconciliation occurred earlier in current-master reconciliation #43303625294 and remain separately recorded.
+
+**Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.**
