@@ -2545,3 +2545,15 @@ The available GitHub integration exposes workflow-run/job history but no authori
 7. Platform operator: obtain separate approval before host package/kernel/containerd/Docker upgrades or restart.
 
 The current GitHub integration supports repository/Actions reads, branch/PR creation and PR merge, but does not expose workflow dispatch or Actions variable/secret management. No fresh inspection/plan dispatch or maintenance-variable mutation was attempted. **TCE market-scan schedule unchanged.**
+
+
+## Post-merge receipt — 2026-11-12 17:09 ICT / 10:09:11Z
+
+- Platform PR #1682 was squash-merged from exact head `51b85670f38afc02e1271778a000d0e7bb41d7a2` to master `ff914b1f352eeb571e669e997c93bd6bfe342800`.
+- Exact-head validation #43197648043 completed SUCCESS on the exact PR head; all 21 validation steps passed, with the failure-report job correctly skipped.
+- Post-merge `validate-manifests` #43197786121 completed SUCCESS on the exact merge SHA `ff914b1f352eeb571e669e997c93bd6bfe342800`. Direct `refs/heads/master` verification matched the merge SHA. All applicable contract, shell, manifest-render, secret, immutable-image, Keycloak-isolation and network checks passed; changed-image-reference validation was skipped because the PR is documentation-only.
+- PR #1682 changed only the deployment readiness tracker, workflow inventory and two timestamped checkpoint documents. No production manifest, workflow definition, image reference, credential, Actions variable, runtime resource, DNS, database, storage or schedule changed.
+- The 17:04 ICT evidence snapshot remains historical and accurate for its reference time. Native schedule gaps remain unresolved; latest K3s inspection #43173781408 and reconciliation #43176619995 are expired and are not current-master runtime evidence. No fresh K3s inspection or current-master GitOps plan was available through this integration.
+- Current Platform master is `ff914b1f352eeb571e669e997c93bd6bfe342800`. TCE `34f6024f8ccec8fb3ab6688901b3557e058ddfd1`, Stock `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61`, Media `dcd698699c65ba6e73f6b43838975144777131c3` and Authentication `eab85fab32d7c9baef750c1fedbb93deb8c1333f` remain unchanged.
+- Open Platform owner-decision drafts remain #1314/#544/#541/#539; Authentication draft #76 remains open. No owner-decision PR was merged.
+- No GHCR publication/promotion, GitOps apply, image replacement, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot occurred. Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
