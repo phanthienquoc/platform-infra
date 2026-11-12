@@ -381,3 +381,18 @@ Source: Platform read-only inspection #43127872524; snapshot `debug/vps-latest.m
 - External backup/retention and authoritative DNS ownership remain unverified. TCE WF-07 backup #43130553977 is a TCE host backup under `/home/ubuntu/tce/backups` with 7-day retention; it is not evidence for Stock/Media external backup.
 - Delete mode remains blocked until Media service is stopped/disabled, local Listener absence and GitHub-side unregister are both proven, external backup/retention and DNS evidence are supplied, a fresh same-run storage preflight passes, and protected production approval is recorded.
 - No namespace, workload, PVC/PV, runner, DNS, credential or host resource was changed. No reboot or Docker cleanup.
+
+## Latest read-only K3s inspection — 2026-11-12 11:56 ICT / 04:56:38 UTC
+
+Source: Platform scheduled inspection [#43150245172](https://github.com/phanthienquoc/platform-infra/actions/runs/43150245172); `debug/vps-latest.md` generated at `2026-11-12T03:45:02Z`. At the 04:56:38Z reference the snapshot is 4,296s old, still within the 4,500s freshness budget by 204s. It expires at approximately 05:00:02Z unless refreshed.
+
+- Node `tce-k3s-01`: Ready/ARM64, K3s `v1.36.3+k3s1`, containerd `2.3.2-k3s2`; disk 57% (~20GiB free), available RAM ~19GiB, uptime ~194d13h, host reports `restart_required=yes`.
+- Media backend/frontend are 1/1 Running with registry RepoDigests `sha256:93ddb944…` and `sha256:095c72ed…`. MicroFE Shell/WS/NATS are 1/1 Running.
+- TCE frontend/service, Auth and Keycloak are 0/0. This is intentional zero-replica maintenance in the last snapshot; no live workload health is asserted. Public OIDC realm probes returned HTTP 503.
+- Stock Admin has two ImagePullBackOff pods and desired Backend one ImagePullBackOff pod on tag `12d63b4`; K3s reports `no match for platform in manifest`. Legacy Stock Backend/Frontend remain 1/1 on `23b2878`, but the snapshot does not supply registry-qualified RepoDigest evidence for those legacy tags; local image IDs are not promotion evidence.
+- Target `stock-prod` and `media-prod` namespaces passed same-run storage preflight: no PVC/PV claims or VolumeSnapshot references. Preserve the separate `k3s-debug/k3s-debug-logs` PVC (1Gi, Bound, RWO).
+- Dedicated Media runner service remains active/enabled and `/opt/media-actions-runner/bin/Runner.Listener` is present. Shared Platform runner is also active and must be preserved. GitHub-side Media runner registration is not inferred by host inspection and remains to be audited/unregistered by the Media owner.
+- Media Ingress exposes `media.mrcute.space`; DNS/provider ownership is not inferred from Kubernetes Ingress. External backup/retention and authoritative DNS evidence remain outstanding.
+- Docker inventory: 20 images / 9.195GB, 5.773GB reclaimable. No cleanup, runner stop, namespace deletion, PVC/PV deletion, host upgrade or reboot was performed.
+
+Delete mode remains blocked until Media runner service is stopped/disabled, local Listener absence and GitHub-side unregister are both proven, external backup/retention and authoritative DNS evidence are supplied, a fresh same-run storage preflight passes, and protected production approval is recorded. No namespace, workload, runner, DNS, credential, database, storage or host resource was changed.
