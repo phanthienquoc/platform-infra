@@ -1943,3 +1943,12 @@ Only first-attempt `event=schedule` on master counts. At 20:56:12Z, age budgets 
 5. Media owner: runner stop/disable/unregister, Listener absence, GitHub unregister, backup/retention and DNS evidence.
 
 Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
+
+
+## Post-merge receipt — 2026-11-13 03:56 ICT
+
+- Readiness PR #1709 exact-head validation [#43306053506](https://github.com/phanthienquoc/platform-infra/actions/runs/43306053506) SUCCESS; merge SHA/current master `ac4769cf4e0cd7c27ede9d105af6932657bf80f9`; direct master ref and PR API verified merged.
+- Post-merge [validate-manifests #43306172817](https://github.com/phanthienquoc/platform-infra/actions/runs/43306172817) SUCCESS on the exact merge SHA. Changed-image validation and failure-report skipped as expected for docs-only changes.
+- PR #1709 changed only tracker, workflow inventory and two 03:56 ICT checkpoint files; no workflow, manifest, image, credential, runtime, DNS, database, storage, host or schedule changed.
+- `rulesets?includes_parents=true` returned [] for Platform, TCE, Media and Auth. Stock returned 403 due private-repository plan limits; its inherited rulesets remain unverified. All five direct master branch objects report `protected=false`.
+- **TCE market-scan schedule unchanged. Platform Infra remains the sole production apply authority.**
