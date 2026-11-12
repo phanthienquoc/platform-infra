@@ -1509,3 +1509,12 @@ Only first-attempt `event=schedule` runs on master count. Workflow_run and workf
 - Preserve all useful CI/test/security/build/publisher/manual/release/backup/integration/scheduled workflows. No workflow is confirmed obsolete; none removed. No duplicate SSH/Compose production apply authority. No new image publication/promotion, manifest apply, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot occurred. Auth runtime Secret provision/verification is explicitly recorded; shared `ghcr-pull` was unchanged.
 
 **TCE market-scan schedule unchanged.**
+
+## Post-merge receipt — 2026-11-12 20:11 ICT
+
+- PR #1690 exact-head validation #43224655375 PASS (20 validation steps); squash merge SHA `ea90c0a786e2092be3963c0de0d0319a95faf4c9`.
+- Post-merge validation #43224865472 SUCCESS on exact merge SHA; direct master ref matched.
+- Documentation/checkpoint-only change; no workflow, manifest, image, credential, runtime setting or schedule changed.
+- Follow-up TCE native WF-12 #43224725401 FAIL: heartbeat succeeded but WF-06 schedule age was 333m against 25m; queue wait 0m. Platform recovery #43224740384 SUCCESS via repository_dispatch after validating the TCE payload and confirming recent reconciliation/fresh inspection. These recovery events do not reset native cadence.
+- Current Platform master `ea90c0a786e2092be3963c0de0d0319a95faf4c9`; TCE, Stock, Media and Auth master refs remain unchanged.
+- Native schedule gaps, TCE HTTP 503/maintenance, Stock ARM64 image/secret gate, Media runner retirement and branch protection remain unresolved. No workflow removed and no production mutation. **TCE market-scan schedule unchanged.**
