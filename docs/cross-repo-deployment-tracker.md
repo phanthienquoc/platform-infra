@@ -1,6 +1,6 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-12 08:07 ICT (2026-11-12 01:07:20 UTC).
+Last reviewed: 2026-11-12 08:09 ICT (2026-11-12 01:09:34 UTC).
 
 
 ## Latest verification — 2026-11-11 23:14:06 UTC / 2026-11-12 06:14:06 ICT
@@ -1612,7 +1612,7 @@ GitHub branch and Actions run collections were read directly for all five reposi
 
 Platform PR #1660 was merged from exact head `0bd88bcae019ed6d97c0305bdba5d75bce68e0b6` to `deadaa4f7b30a47a997550b491928027d5a15737`. Its inspection job #43127872524 completed SUCCESS; exact-head manifest validation #43128079244 completed SUCCESS. No separate post-merge validation run on merge SHA `deadaa4f` was observed in the current Actions listing.
 
-TCE PR #1038 is open on exact head `8a81933f6afee302ef84f844c4a5d204600182f9`. WF-01P #43132263903, WF-02 PR #43132264067 and WF-05 PR #43132263842 were queued at the reference time; WF-02 push #43132256683 and WF-05 push #43132256646 were in progress. Earlier intermediate-head runs were cancelled after the second commit. Do not merge until current exact-head applicable checks complete successfully.
+TCE PR #1038 is open on exact head `e718d728d531ac1c492e34a337e3fe308980a767`. WF-01P #43132521680, WF-02 PR #43132521802, WF-05 PR #43132521704 and WF-08B PR #43132521695 are in progress on the current exact head. Previous WF-01P #43132263903 failed on the prior head due to an incorrect grep literal; corrected on current head. Push WF-02 #43132514345 and WF-05 #43132514285 are also in progress. Earlier intermediate-head runs were cancelled after the second commit. Do not merge until current exact-head applicable checks complete successfully.
 
 ### Platform reconciliation and recovery evidence
 
@@ -1671,3 +1671,11 @@ All six current-age and all six inter-arrival budgets fail. TCE WF-07 backup #43
 6. Media owner: stop/disable/unregister the runner and prove local Listener absence plus GitHub-side unregister; provide external backup/retention and authoritative DNS evidence before protected namespace deletion.
 7. Stock owner: resolve retirement or supply a platform-compatible immutable release with registry digest/provenance; do not promote `12d63b4` or cached legacy image IDs.
 8. Platform operator: obtain separate maintenance approval before host package upgrades/restart.
+
+## Follow-up — 2026-11-12 08:09 ICT / 2026-11-12 01:09:34 UTC
+
+- Platform PR #1661 exact head `9ed3b122aa0c45b91a8380ab7a503d40dd363435` passed validate-manifests #43132479380; current PR metadata still reports open and mergeable. No production files changed.
+- TCE PR #1038 advanced from `8a81933f6afee302ef84f844c4a5d204600182f9` to exact head `e718d728d531ac1c492e34a337e3fe308980a767`. The previous WF-01P #43132263903 failed on the prior head because the static validator searched for the wrong literal spacing around the empty case; the assertion was corrected to match the exact `"")` case. Do not treat that prior failure as validation of the new head.
+- New exact-head PR runs are in progress: WF-01P #43132521680, WF-02 #43132521802, WF-05 #43132521704 and WF-08B #43132521695. Push runs WF-02 #43132514345 and WF-05 #43132514285 are also in progress. No check on the new head has completed at this follow-up.
+- WF-08B PR run #43132263833 on the prior head executed only WebSocket/Auth tests and payload validation; image publication and production dispatch jobs were skipped. The new-head WF-08B run remains in progress.
+- No variable, secret, cron, market-scan schedule, production release or deployment was changed.
