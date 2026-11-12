@@ -1896,3 +1896,50 @@ Platform Infra remains the sole production apply authority. **TCE market-scan sc
 - Changed files were the deployment tracker, workflow inventory and two 02:56 ICT checkpoint files only. No production manifest/workflow, image, secret, runtime, DNS, database, storage or schedule changed.
 - Fresh inspection #43294800951 and reconciliation #43294483085 remain within their freshness budgets at 20:01:21Z, but the reconciliation source SHA is the parent `23f8aef9`; current-master `mode=plan` remains unrun.
 - No GHCR publication/promotion, manifest apply, image replacement, workload rollout, runner retirement, credential rotation, host restart, cleanup or resource deletion occurred in PR #1706. **TCE market-scan schedule unchanged.**
+
+
+## Latest verified cross-repo workflow inventory — 2026-11-13 03:56 ICT / 20:56:12 UTC
+
+### Repository and workflow ownership
+
+| Repository | Master SHA | Open PRs | Workflow ownership | Latest evidence |
+|---|---|---:|---|---|
+| Platform Infra | `6c68099ce189eeb163308e3bcb5072b1d3b82bd8` | #1314/#544/#541/#539 (drafts) | Production manifests, shared GHCR pull credentials, digest promotion, GitOps reconciliation, K3s rollout/health; read-only inspection and recovery/watchdog | Reconcile #43303625294 schedule SUCCESS on current master; inspection #43299999915 schedule SUCCESS; recovery #43305089815 repository_dispatch SUCCESS; latest watchdog workflow_run #43305132077 SKIPPED. |
+| TCE Dashboard | `34f6024f8ccec8fb3ab6688901b3557e058ddfd1` | none | App CI/build/publisher; WF-06 strict public HTTP-200 checks; WF-12 native schedule watchdog/heartbeat; WF-13 workflow_run-only recovery; WF-07 integration/backup and market-scan jobs | WF-12 native #43305069474 FAILURE; WF-06 native #43256916802 FAILURE; WF-06 manual #43305131146 FAILURE (4×503); WF-13 #43305098095 workflow_run SUCCESS. |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | App CI/tests/build and immutable ARM64 GHCR publication; scheduled scraper remains fail-closed | CI #42610360402 SUCCESS; scraper #42457182511 FAILURE because protected `VNSTOCK_API_KEY` is absent; desired tag `12d63b4` lacks ARM64-compatible manifest. |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | App CI/tests/build, immutable GHCR publication, SBOM/provenance; runner retirement remains Platform/owner-gated | CI #42539512417 SUCCESS; inspection #43299999915 shows backend/frontend 1/1 with immutable RepoDigests; Media runner Listener present. |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft) | Auth tests/security/build/SBOM/provenance/immutable publication and exact release dispatch; Platform owns runtime Secret and production apply | CI #42654579277 SUCCESS; Auth runtime Secret provisioned/verified by #43303625294 with values suppressed; Auth remains zero-replica maintenance. |
+
+### Preserved workflow inventory and schedules
+
+- Platform `reconcile-vps.yml`: sole production GitOps apply authority; schedule `7,22,37,52 * * * *`. Latest native #43303625294 SUCCESS, current master, drift=false; apply skipped.
+- Platform `inspect-vps.yml`: read-only K3s inspection; schedule `2,32 * * * *`. Latest native #43299999915 SUCCESS; snapshot PR #1708 merged at current master `6c68099ce189eeb163308e3bcb5072b1d3b82bd8`.
+- Platform `recover-stale-ops.yml`: recovery controller; schedule `10,25,40,55 * * * *`; dispatches only existing validated workflows and avoids duplicates when current receipts are fresh. Latest native #43294456060 SUCCESS; TCE heartbeat repository_dispatch #43305089815 SUCCESS without duplicate dispatch.
+- Platform `reconcile-schedule-watchdog.yml`: read-only watchdog; schedule `12,27,42,57 * * * *`. Latest native #43294595071 FAILURE on stale schedule evidence; latest workflow_run #43305132077 SKIPPED.
+- Platform `validate-manifests.yml`: PR/master validation; retain exact image-change contract, Auth/TCE dispatch payload tests, retired Stock/Media manifest guard, YAML/secret/image/network and rendered manifest checks.
+- TCE WF-06: strict public HTTP-200 probes; schedule `*/15 * * * *`. Latest native #43256916802 FAILURE; latest manual fallback #43305131146 also fails four endpoints with HTTP 503.
+- TCE WF-12: native schedule `7,22,37,52 * * * *`; verifies WF-06 native delivery and sends authenticated heartbeat receipts. Latest native #43305069474 FAILURE due stale WF-06 age; heartbeat accepted by Platform.
+- TCE WF-13: workflow_run-only read-only recovery; latest #43305098095 SUCCESS; never counts as native schedule.
+- TCE WF-07 integration, backup, manual/release and market-scan jobs remain preserved.
+- Stock, Media and Authentication retain app CI/test/security/build/publisher/provenance workflows. Stock scraper remains protected-secret fail-closed. No workflow is confirmed obsolete; none removed.
+
+### Current native schedule measurements
+
+Only first-attempt `event=schedule` on master counts. At 20:56:12Z, age budgets pass for Platform reconcile (583s/2,700s), Platform inspection (1,903s/4,500s) and TCE WF-12 (50s/1,500s). Platform recovery (3,873s/2,700s), watchdog (3,823s/2,700s) and TCE WF-06 (16,763s/1,500s) fail age. All six inter-arrival gaps fail: 28,100s, 28,354s, 28,497s, 28,091s, 31,197s and 27,907s respectively. No authoritative scheduler enqueue/delivery telemetry is exposed. **TCE market-scan schedule unchanged.**
+
+### Runtime and safety ownership
+
+- Reconciliation #43303625294 on current master verified five GHCR package reads, Auth runtime Secret keys, unchanged shared `ghcr-pull`, TCE release pairing and drift=false. Manifest apply/image replacement/workload rollout were skipped. Auth/TCE zero-replica maintenance was verified; MicroFE active health passed; Keycloak remained skipped/maintenance.
+- K3s evidence: node Ready/ARM64; Media and MicroFE active pods Running; Stock desired Admin/Backend ImagePullBackOff because tag `12d63b4` lacks a compatible ARM64 manifest; legacy Stock pods remain but do not satisfy desired release. OIDC probes return 503. Platform and Media runner Listeners remain present; debug PVC Bound 1Gi/RWO.
+- All five direct master branch reads return `protected=false`; inherited organization rulesets remain unverified.
+- Platform Infra remains the sole production apply authority. App repos must not add direct SSH/Compose deployment authorities. No production mutation beyond Auth runtime Secret provision/verification and shared pull-secret reconciliation (reported unchanged) occurred in this checkpoint.
+
+### Current owners and next actions
+
+1. Platform operator: explicit current-master read-only `mode=plan`; separate approval for apply or host restart.
+2. GitHub administrator: authoritative schedule enqueue/delivery telemetry and branch protection/inherited ruleset verification.
+3. TCE administrator: maintenance variable and replica intent; strict HTTP-200 probes remain.
+4. Stock owner: ARM64 immutable digest/provenance and protected scraper secret only if reactivation is approved.
+5. Media owner: runner stop/disable/unregister, Listener absence, GitHub unregister, backup/retention and DNS evidence.
+
+Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
