@@ -1,4 +1,85 @@
-Last reviewed: 2026-11-12 11:04 ICT (2026-11-12 04:04:42 UTC).
+Last reviewed: 2026-11-12 12:59 ICT (2026-11-12 05:59:07 UTC).
+
+
+## Current verified snapshot — 2026-11-12 12:59 ICT / 05:59:07 UTC
+
+This refresh re-reads all five master refs, open PRs, first-page latest Actions runs, native schedule histories, the current tracker/inventory, the committed K3s inspection and selected failing job logs. Runtime evidence is explicitly age-gated; no current K3s state is inferred from an expired snapshot.
+
+### Repository refs, open PRs and latest workflow evidence
+
+| Repository | Verified master SHA | Open PRs | Latest relevant evidence |
+|---|---|---|---|
+| Platform Infra | `1e84b2e0919097c860dcb1e01ff98ea15a72b37b` | #1314/#544/#541/#539 (owner-decision drafts) | Current-master validate-manifests #43158871069 PASS. Latest native reconciliation #43152960974 SUCCESS at 04:09:48Z; no later native reconcile in the queried schedule history. |
+| TCE Dashboard | `34f6024f8ccec8fb3ab6688901b3557e058ddfd1` | none | WF-12 native #43154415980 FAIL at 04:22:53Z because WF-06 was 234 minutes old; WF-13 #43154436821 SUCCESS; read-only WF-06 fallback #43154458775 FAIL, all four endpoints HTTP 503. WF-01 #43132696439, WF-02 #43132696403 and WF-05 #43132696349 PASS. |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 PASS. Weekend scraper #42457182511 FAIL CLOSED because `VNSTOCK_API_KEY` is missing. |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 PASS. No current-master immutable publication or Platform promotion is evidenced by the latest run history. |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (owner-decision draft) | CI #42654579277 PASS. No current-master release/promotion is evidenced by the latest run history. |
+
+The five default branches are `master`. Platform PRs #1314/#544/#541/#539 and Authentication #76 remain owner-decision drafts; none was changed or merged in this run. TCE, Stock and Media have no open PRs.
+
+Platform master #1669 post-merge validation #43158871069 completed SUCCESS on exact current master `1e84b2e0`. The compare from parent `9f969fcfe0a8b31c5b612e218ea9f5a86e629059` to current master contains only documentation/checkpoint/decommission-runbook files; no production manifests, workflow definitions, secrets, credentials or runtime configuration changed.
+
+### Latest native schedule evidence — reference 05:59:07Z
+
+Only original first-attempt `event=schedule` runs on `master` count. Dispatch, workflow_run, push and rerun attempts do not reset native cadence.
+
+| Lane | Latest native run | Created (UTC) | Age (s) | Previous inter-arrival gap (s) | Budget (s) |
+|---|---:|---|---:|---:|---:|
+| Platform reconcile-vps.yml | #43152960974 | 04:09:48 | 6,559 | 16,665 | 2,700 |
+| Platform inspect-vps.yml | #43150245172 | 03:44:54 | 8,053 | 17,233 | 4,500 |
+| Platform recover-stale-ops.yml | #43150505792 | 03:47:15 | 7,912 | 17,135 | 2,700 |
+| Platform reconcile-schedule-watchdog.yml | #43150601305 | 03:48:09 | 7,858 | 17,077 | 2,700 |
+| TCE WF-06 | #43127554403 | 00:28:39 | 19,828 | 23,393 | 1,500 |
+| TCE WF-12 | #43154415980 | 04:22:53 | 5,774 | 16,987 | 1,500 |
+
+All six current-age budgets and all six inter-arrival budgets fail. The TCE WF-12 job log reports the latest native WF-06 run age as 14,054s (234m) at its own API timestamp and measured runner queue wait as 0m. Platform watchdog #43150601305 reports its queue-assignment checks succeeded while native inter-arrival checks failed. These observations do not establish runner congestion as the cause.
+
+TCE WF-12 #43154415980's authenticated Platform heartbeat job succeeded, but its separate schedule-verification job failed because WF-06 was stale. WF-13 #43154436821 then dispatched the existing read-only fallback #43154458775; all four strict public endpoints returned HTTP 503 (TCE web, TCE API, Auth liveness, Auth readiness). This fallback is not native schedule evidence and does not make service health green.
+
+WF-06 was confirmed `active` by the WF-12 workflow-enabled step; Platform `reconcile-vps.yml` was confirmed active by the Platform watchdog. Other workflow enabled states were not freshly verified in this run. No authoritative GitHub scheduler-delivery/support telemetry was available to distinguish delayed from dropped enqueue events.
+
+Preserve the checked-in cron expressions and existing freshness budgets. Do not alter TCE market-scan schedule, weaken HTTP-200 probes, add duplicate scheduled deployment authorities, or count fallback events as native delivery.
+
+### GitOps reconciliation and K3s freshness
+
+Reconciliation #43152960974 completed SUCCESS at 04:09:48Z on parent Platform SHA `9f969fcfe0a8b31c5b612e218ea9f5a86e629059`, with `mode=apply`, `target_app=all`, `allow_image_changes=false`. At 05:59:07Z its age is 6,559s, beyond the 2,700s freshness budget.
+
+- GHCR read preflight passed for all five managed packages (Auth service, MicroFE Shell/WS, TCE service/web).
+- Auth runtime Secret was provisioned/verified; secret values were suppressed.
+- Shared `ghcr-pull` remained unchanged.
+- TCE release pairing passed.
+- GitOps drift was false; manifest apply, image replacement and workload rollout were skipped.
+- TCE/Auth were reported in maintenance/zero-replica state, not live application availability. MicroFE active-scope health passed; Keycloak was skipped.
+- No new GHCR publication or digest promotion occurred.
+
+The only commits after that reconciliation's parent and before current master are documentation/checkpoint/decommission-runbook changes, verified by compare API. The old no-drift result therefore describes the same manifest tree, but is not a fresh current-time runtime receipt.
+
+Full inspection #43150245172 generated `debug/vps-latest.md` at 03:45:02Z. At 05:59:07Z it is 8,045s old, beyond the 4,500s inspection budget. Treat every workload detail below as historical only:
+
+- Node `tce-k3s-01`: Ready, ARM64; Ubuntu 22.04.5; K3s `v1.36.3+k3s1`; containerd `2.3.2-k3s2`.
+- Root disk 57% used, approximately 20GiB free; available RAM approximately 19GiB.
+- Host `restart_required=yes`; kernel, containerd, Docker and OS updates pending. No upgrade/reboot occurred.
+- Media backend/frontend and MicroFE Shell/WS/NATS: 1/1 Running. Media backend/frontend RepoDigests were recorded as `sha256:93ddb944…` and `sha256:095c72ed…`.
+- TCE frontend/service, MicroFE Auth and Keycloak: 0/0 maintenance; do not infer live availability.
+- Stock Admin: two Pods ImagePullBackOff on desired tag `12d63b4`; desired Backend: one Pod ImagePullBackOff. Legacy Backend/Frontend were Running but their imageIDs did not provide registry RepoDigest provenance. Do not promote local IDs or legacy tags.
+- Platform and Media runner services were active/enabled; Media `Runner.Listener` was present.
+- Preserve PVC `k3s-debug/k3s-debug-logs` (Bound, 1Gi/RWO).
+- Docker reported 20 images / 9.195GB, 5.773GB reclaimable. No cleanup occurred.
+
+Stock/Media decommission remains blocked by external backup/retention evidence, authoritative DNS ownership, Media runner stop/disable, Listener absence, GitHub-side runner unregister, fresh same-run storage preflight and protected production approval. In-cluster storage inventory is not external backup evidence.
+
+### Safety and next actions
+
+No production manifest apply, image publication/promotion, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/object-storage mutation, Docker cleanup, host reboot/upgrade or workflow removal occurred. Platform Infra remains the sole production apply authority.
+
+1. Platform operator: obtain fresh read-only `inspect-vps.yml` evidence and current-master `reconcile-vps.yml` `mode=plan` on `1e84b2e0`; do not use stale receipts as authorization.
+2. GitHub repository/org administrator: inspect Actions policy and obtain authoritative schedule enqueue/delivery telemetry for the affected repositories/time windows; escalate persistent gaps to GitHub Support. Do not change cron or freshness budgets.
+3. TCE administrator: verify `TCE_MAINTENANCE_MODE`; set true only for approved zero-replica maintenance, otherwise restore services under the approved rollback plan. Preserve strict HTTP-200 health checks.
+4. Stock owner: provide an ARM64-compatible immutable image digest/provenance if restoring Stock; configure `VNSTOCK_API_KEY` only through protected Actions settings if the scraper remains required.
+5. Media owner: stop/disable/unregister the dedicated runner and provide backup/retention and authoritative DNS evidence before protected decommission.
+6. GitHub administrator: verify effective inherited rulesets and enforce PR-only, required checks, force-push/deletion protection and squash-only on all five default branches.
+7. Platform operator: obtain explicit approval before host package/kernel/containerd/Docker upgrades or reboot.
+
 
 ## Post-merge receipt — 2026-11-12 11:04 ICT / 2026-11-12 04:04:42 UTC
 
