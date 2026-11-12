@@ -1,6 +1,71 @@
 # Cross-Repository Production Deployment Tracker
 
-Last reviewed: 2026-11-12 08:11 ICT (2026-11-12 01:11:13 UTC).
+Last reviewed: 2026-11-12 08:59 ICT (2026-11-12 01:59:28 UTC).
+
+
+
+## Latest verification — 2026-11-12 08:59 ICT / 2026-11-12 01:59:28 UTC
+
+This refresh uses direct GitHub REST reads of all five master refs, open PRs, the first page of Actions runs, selected job logs, the current tracker/inventory and the committed full K3s snapshot. Native cadence counts only first-attempt `event=schedule` runs on `master`; manual, push, pull_request, workflow_run, repository_dispatch and reruns are excluded.
+
+### Repository readiness
+
+| Repository | Verified master SHA | Open PRs | Latest relevant checks |
+|---|---|---|---|
+| phanthienquoc/platform-infra | `85c0d1fe1a61af3bdd4e1e2b1441e74cdb08d8c3` | #1314/#544/#541/#539 owner-decision drafts | Current-master validate-manifests #43132927187 SUCCESS. PR #1661/#1662 merged; exact-head and post-merge validations passed. |
+| phanthienquoc/TCE-dashboard | `34f6024f8ccec8fb3ab6688901b3557e058ddfd1` | none | TCE PR #1038 merged. Current-master WF-01 #43132696439, WF-02 #43132696403 and WF-05 #43132696349 SUCCESS. Latest native WF-06 #43127554403 FAIL (four HTTP 503); latest native WF-12 #43121528127 FAIL. |
+| phanthienquoc/stockdividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | Current-master CI #42610360402 SUCCESS. Scraper #42457182511 FAIL CLOSED because `VNSTOCK_API_KEY` is missing. Desired Admin/Backend tag `12d63b4` still has no compatible ARM64 manifest/RepoDigest in the last full inspection. |
+| phanthienquoc/media-generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | Current-master CI #42539512417 SUCCESS; no current-master immutable publication/handoff is evidenced. Last full inspection showed backend/frontend 1/1 with RepoDigests and dedicated runner active. |
+| phanthienquoc/phanthienquoc-authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 owner-decision draft | Current-master CI #42654579277 SUCCESS; no current-master release/handoff is evidenced. Auth remains 0/0 maintenance in the last full inspection. |
+
+### TCE maintenance warning change
+
+- TCE PR #1038 was squash-merged at `34f6024f8ccec8fb3ab6688901b3557e058ddfd1`. It makes an unset `TCE_MAINTENANCE_MODE` explicit with a warning while preserving read-only fallback behavior and strict WF-06 HTTP-200/WF-12 schedule checks.
+- Current-master WF-01/WF-02/WF-05 checks passed. The Actions variable itself was not changed by the PR.
+- WF-13 #43127582309 ran before the merge on TCE SHA `5b425bde`; its log showed an empty `TCE_MAINTENANCE_MODE` and dispatched read-only WF-06 fallback #43127603475. The current repository variable value has not been read or re-proven after the merge. TCE administrator must verify it and set `true` only for an approved zero-replica maintenance window; otherwise restore service replicas. Do not weaken HTTP-200 probes.
+
+### GitOps and runtime freshness
+
+- Reconciliation #43127613751 completed SUCCESS as `workflow_dispatch` on parent SHA `331120b33ed7b090620dec373b20aab463d78cc8` at 00:29:09Z. It used `mode=apply`, `target_app=all`, `allow_image_changes=false`. Five GHCR package read checks passed; Auth runtime Secret was provisioned/verified with values suppressed; shared `ghcr-pull` was unchanged; TCE release pairing passed. GitOps drift was false, so manifest apply, image replacement and workload rollout were skipped.
+- At the 01:59:28Z reference, that reconciliation is 5,419s old versus a 2,700s freshness budget (expired by 2,719s). It is historical evidence only and does not authorize current production action.
+- Compare `331120b` to current master `85c0d1fe` shows only the inspection snapshot and documentation/checkpoint changes; no production manifest path changed. This does not replace a current-master `mode=plan`.
+- Full inspection #43127872524 completed SUCCESS as `workflow_dispatch` on the same parent SHA and generated `debug/vps-latest.md` at 00:31:21Z. At 01:59:28Z its age is 5,287s against a 4,500s budget (expired by 787s). It is historical only; no fresh full inspection is evidenced.
+
+### Last-known K3s state — historical, not current
+
+- Node `tce-k3s-01`: Ready/ARM64; Ubuntu 22.04.5; K3s `v1.36.3+k3s1`; containerd `2.3.2-k3s2`; disk 56% with about 20GiB free; available RAM about 19GiB; host `restart_required=yes`.
+- Media backend/frontend: 1/1 Running with RepoDigests `sha256:93ddb944…` and `sha256:095c72ed…`. MicroFE Shell/WS and NATS: 1/1 with RepoDigest evidence.
+- TCE frontend/service, MicroFE Auth and Keycloak: 0/0 maintenance; public OIDC probes returned 503. Do not assert live service health.
+- Stock Admin has two ImagePullBackOff pods and desired Backend one ImagePullBackOff pod for tag `12d63b4`; K3s reported `no match for platform in manifest`. Legacy Stock Backend/Frontend were running but had no registry RepoDigest evidence. Do not promote local image IDs or legacy tags.
+- Dedicated Media runner service was active/enabled and `Runner.Listener` was present. GitHub-side runner unregister remains unverified. Target Stock/Media namespaces had no PVC/PV claims or VolumeSnapshot references in that snapshot; this does not prove external backup/retention or DNS ownership.
+- Preserve `k3s-debug/k3s-debug-logs` (1Gi, Bound, RWO). No Docker cleanup, host reboot, runner stop/unregister, namespace deletion or storage mutation occurred.
+
+### Native schedule freshness — reference 01:59:28Z
+
+Only first-attempt scheduled runs on master count. Latest run age and inter-arrival gaps were recalculated from GitHub run timestamps:
+
+| Lane | Latest qualifying native run | Current age (s) | Inter-arrival gap (s) | Budget (s) |
+|---|---:|---:|---:|---:|
+| Platform reconcile-vps.yml | #43120544165 | 8,845 | 22,471 | 2,700 |
+| Platform inspect-vps.yml | #43116036275 | 10,907 | 24,826 | 4,500 |
+| Platform recover-stale-ops.yml | #43116568507 | 10,668 | 23,725 | 2,700 |
+| Platform schedule watchdog | #43116818114 | 10,556 | 23,716 | 2,700 |
+| TCE WF-06 | #43127554403 | 5,449 | 23,393 | 1,500 |
+| TCE WF-12 | #43121528127 | 8,382 | 22,441 | 1,500 |
+
+All 6/6 current-age budgets and 6/6 inter-arrival budgets fail. WF-06 #43127554403 executed natively but failed all four strict public probes (TCE web/API and Auth liveness/readiness returned HTTP 503). WF-12 #43121528127 failed because the latest native WF-06 was 20,460s old at its 23:39:46Z reference; its log measured 0m queue wait for that source run, so runner congestion is not established. WF-13 workflow_run and read-only WF-06 fallback runs do not satisfy native schedule freshness. Preserve all cron expressions, especially the TCE market-scan schedule.
+
+### Governance and next actions
+
+- Direct branch metadata reads report `protected=false` for all five master branches. Effective inherited organization rulesets cannot be inferred from the available reads; GitHub administrator must verify/enforce PR-only, required checks, force-push/deletion protection and squash-only.
+- Platform operator: obtain fresh read-only `inspect-vps.yml` and current-master `reconcile-vps.yml` `mode=plan` on `85c0d1fe`. The connector has no workflow-dispatch action, so neither was run in this pass.
+- GitHub administrator: provide authoritative schedule enqueue/delivery telemetry and repair native delivery without changing cron or freshness budgets.
+- TCE administrator: verify `TCE_MAINTENANCE_MODE`; retain strict WF-06/WF-12 checks.
+- Stock owner: keep desired image promotion blocked until a compatible immutable ARM64 digest exists or approved retirement completes; scraper remains fail-closed until `VNSTOCK_API_KEY` is configured.
+- Media owner: stop/disable/unregister the dedicated runner and provide external backup/retention and authoritative DNS evidence before protected decommission.
+- Platform operator: obtain explicit maintenance approval before OS/kernel/containerd/Docker upgrades or reboot.
+
+No new GHCR publication, digest promotion, current-master GitOps plan/apply, manifest change, workload rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot occurred. No workflow was removed and no direct SSH/Compose deployment authority was added. TCE market-scan schedule unchanged.
 
 
 ## Latest verification — 2026-11-11 23:14:06 UTC / 2026-11-12 06:14:06 ICT
