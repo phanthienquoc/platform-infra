@@ -997,3 +997,42 @@ Direct branch API returned `protected=false` on all five master branches. Preser
 - All five master branch APIs return `protected=false`; effective inherited org rulesets remain unverified. No branch policy changed.
 - Stock/Media decommission remains blocked by active Media runner/Listener, unverified GitHub-side unregister, external backup/retention, authoritative DNS and protected approval. Preserve the debug PVC.
 - Host restart remains required but was not performed.
+
+## Latest workflow inventory verification — 2026-11-12 10:02 ICT / 03:02:38 UTC
+
+| Repository | Master SHA | Open PRs | Latest relevant workflows | Ownership / preservation |
+|---|---|---|---|---|
+| Platform Infra | `a2f7a49c` | #1314/#544/#541/#539 owner-decision | Master validation #43139122792 PASS. Native reconcile #43120544165 SUCCESS but stale; inspection #43116036275 SUCCESS but stale; recovery #43116568507 SUCCESS but stale; watchdog #43116818114 FAIL on freshness/inter-arrival. Manual reconcile #43127613751 SUCCESS/no drift/no apply but stale. | Sole production manifests, shared GHCR pull credentials, provenance/digest promotion, GitOps plan/apply, rollout and runtime verification. Preserve native schedules, manual plan/apply, read-only inspection, recovery, watchdog, backup, validation and guarded maintenance. |
+| TCE Dashboard | `34f6024f` | none; PR #1038 merged | Master WF-01 #43132696439, WF-02 #43132696403, WF-05 #43132696349 PASS. Native WF-06 #43127554403 FAIL: four HTTP 503. Native WF-12 #43121528127 FAIL: WF-06 source 341m old, queue 0m. WF-13 #43127582309 last observed maintenance variable empty; merged PR #1038 adds an unset warning. WF-07 backup #43130553977 SUCCESS, TCE-only. | Owns app tests/builds, immutable GHCR publication, release provenance and strict HTTP-200 health probes. WF-03 manual release publisher dispatches Platform; WF-07 backup SSH is backup-only. Preserve WF-06/WF-12/WF-13, backup, integration, release and market-scan jobs. |
+| StockDividend | `b1b5e177` | none | CI #42610360402 PASS. Scheduled scraper #42457182511 FAIL CLOSED at missing `VNSTOCK_API_KEY` before dependency install or scrape. Desired K3s tag `12d63b4` has no compatible ARM64 manifest/RepoDigest in last snapshot; cached legacy IDs are not registry provenance. | Owns tests/builds and immutable ARM64 publication if retirement is reversed. Preserve fail-closed scraper and gated manual publisher. No Platform apply authority. |
+| Media Generation | `dcd69869` | none | CI #42539512417 PASS. Last K3s snapshot showed backend/frontend 1/1 with registry RepoDigests; dedicated runner service and Listener active. | Owns tests/builds/immutable GHCR publication. WF-03 does not send Platform dispatch and does not apply workloads. Preserve CI/release; runner retirement requires remote unregister, backup/retention and DNS evidence. |
+| Authentication | `eab85fab` | #76 owner-decision | auth-service-ci #42654579277 PASS. Auth runtime Secret provisioned/verified in last successful Platform reconciliation; Auth/Keycloak were 0/0 maintenance, no live workload health asserted. | Owns Auth tests/builds/release provenance/SBOM/immutable publication and exact Platform dispatch request. Platform owns runtime Secret and production reconciliation. |
+
+### Native schedule acceptance at 03:02:38Z
+
+| Lane | Latest native run | Age (s) | Gap (s) | Budget (s) | Acceptance |
+|---|---:|---:|---:|---:|---|
+| Platform reconcile | #43120544165 | 12,635 | 22,471 | 2,700 | FAIL |
+| Platform inspection | #43116036275 | 14,697 | 24,826 | 4,500 | FAIL |
+| Platform recovery | #43116568507 | 14,458 | 23,725 | 2,700 | FAIL |
+| Platform watchdog | #43116818114 | 14,346 | 23,716 | 2,700 | FAIL |
+| TCE WF-06 | #43127554403 | 9,239 | 23,393 | 1,500 | FAIL |
+| TCE WF-12 | #43121528127 | 12,172 | 22,441 | 1,500 | FAIL |
+
+All six current-age and inter-arrival budgets fail. TCE WF-07 backup #43130553977 is a separate scheduled workflow and cannot satisfy WF-06/WF-12 delivery. Watchdog diagnostics did not establish runner queue congestion. Keep all cron expressions unchanged, especially the TCE market-scan schedule.
+
+### Cross-repo publisher / authority audit
+
+- TCE WF-03: manual-only release; immutable-tag absence check; ARM64 digest verification; exact release-request payload; Platform repository dispatch. No direct VPS/Compose apply.
+- Stock deploy.yml: manual immutable GHCR publisher with ARM64 digest verification; no Platform production apply. Scraper fail-closed credential preflight preserved.
+- Media WF-03: immutable ARM64 GHCR publisher; explicitly no Platform dispatch configured; no production apply.
+- Auth release.yml: manual master release with provenance/SBOM, immutable digest verification and exact Platform dispatch.
+- TCE WF-07 SSH is limited to TCE backup archive; not a second deployment authority.
+- Preserve all CI/test/security/build/publish/manual/release/backup/integration/scheduled workflows. No workflow is confirmed obsolete or removed. No duplicate direct SSH/Compose production apply authority.
+
+### Runtime and governance
+
+- Last K3s snapshot #43127872524 was generated 00:31:21Z and is stale at the current reference. It showed node Ready/ARM64, disk 56%, ~19GiB RAM available, restart required, Media/MicroFE 1/1, TCE/Auth/Keycloak 0/0, Stock desired Admin/Backend ImagePullBackOff, Media runner active/Listener present, and the debug PVC Bound (1Gi, RWO).
+- Last reconciliation #43127613751 was a manual apply-mode no-drift check on parent SHA `331120b`; five GHCR reads PASS, Auth runtime Secret verified, shared `ghcr-pull` unchanged, no manifest/image apply or rollout. It is stale and not exact-current-master plan evidence.
+- Rulesets GET returned `[]` for Platform/TCE/Media/Auth and 403 for Stock; branch-protection detail GET returned 403 for all five. Inherited org rulesets and required-check enforcement remain unverified. Repository metadata allows squash, merge commit and rebase.
+- No new image publication/promotion, current-master GitOps plan/apply, production mutation, rollout, namespace/PVC/PV deletion, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup or host reboot. TCE market-scan schedule unchanged.
