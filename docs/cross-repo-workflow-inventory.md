@@ -2199,3 +2199,10 @@ All six inter-arrival gaps fail. Four age budgets fail; recovery/watchdog ages p
 - No Stock promotion, TCE/Auth scale-up, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup, host restart or resource deletion occurred. Auth runtime Secret provisioning/verification is the only noted production secret operation; shared `ghcr-pull` stayed unchanged.
 
 Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
+
+
+## Post-merge receipt — 2026-11-13 08:03 ICT
+
+Platform PR #1719 was squash-merged at `7db9a56e32118d1a14796318887c6790224a9d14`. Exact-head `validate-manifests` #43342527213 completed SUCCESS on `0af449beee1de88edc26cbbc466e2ce5f4a74946`; post-merge `validate-manifests` #43342617468 completed SUCCESS on the exact merge SHA. The exact-head validation confirmed retired Stock/Media manifest references absent, Auth/TCE dispatch payload contracts, immutable image-change contract tests, zero changed TCE/MicroFE image references, VPS MCP read-only/GitOps contract, cert-manager bootstrap, Auth GitOps contract, 78 rendered Kubernetes objects, isolated Keycloak resources and network boundaries. Failure-report jobs were correctly skipped.
+
+PR #1719 changed only the readiness tracker, workflow inventory and two 08:03 checkpoint files. No production manifest/workflow, image, credential, runtime configuration, DNS, database, storage, host, namespace, PVC/PV, workload or schedule changed. Current Platform master is `7db9a56e32118d1a14796318887c6790224a9d14`; TCE `34f6024f`, Stock `b1b5e177`, Media `dcd69869`, Authentication `eab85fab` remain unchanged. No production apply, image promotion, rollout, runner retirement, credential rotation, Docker cleanup, host restart or resource deletion occurred in this documentation PR. Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
