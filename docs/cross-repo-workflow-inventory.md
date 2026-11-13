@@ -2206,3 +2206,50 @@ Platform Infra remains the sole production apply authority. **TCE market-scan sc
 Platform PR #1719 was squash-merged at `7db9a56e32118d1a14796318887c6790224a9d14`. Exact-head `validate-manifests` #43342527213 completed SUCCESS on `0af449beee1de88edc26cbbc466e2ce5f4a74946`; post-merge `validate-manifests` #43342617468 completed SUCCESS on the exact merge SHA. The exact-head validation confirmed retired Stock/Media manifest references absent, Auth/TCE dispatch payload contracts, immutable image-change contract tests, zero changed TCE/MicroFE image references, VPS MCP read-only/GitOps contract, cert-manager bootstrap, Auth GitOps contract, 78 rendered Kubernetes objects, isolated Keycloak resources and network boundaries. Failure-report jobs were correctly skipped.
 
 PR #1719 changed only the readiness tracker, workflow inventory and two 08:03 checkpoint files. No production manifest/workflow, image, credential, runtime configuration, DNS, database, storage, host, namespace, PVC/PV, workload or schedule changed. Current Platform master is `7db9a56e32118d1a14796318887c6790224a9d14`; TCE `34f6024f`, Stock `b1b5e177`, Media `dcd69869`, Authentication `eab85fab` remain unchanged. No production apply, image promotion, rollout, runner retirement, credential rotation, Docker cleanup, host restart or resource deletion occurred in this documentation PR. Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
+
+
+## Verified cross-repo state — 2026-11-13 09:05 ICT / 02:05 UTC
+
+| Repository | Master SHA | Open PRs | Latest relevant evidence |
+|---|---|---|---|
+| Platform Infra | `284ef95917d6395d1fe5cdf7bc83ab22b157be9c` | #1314/#544/#541/#539 drafts | Reconcile #43345606006 schedule SUCCESS; inspect #43344825587 schedule SUCCESS; recovery #43340133409 schedule SUCCESS; watchdog #43340414022 schedule FAILURE; TCE heartbeat recovery #43347304694 repository_dispatch SUCCESS. |
+| TCE Dashboard | `34f6024f8ccec8fb3ab6688901b3557e058ddfd1` | none | WF-06 native #43319440089 FAILURE; fallback #43347337950 FAILURE; WF-12 native #43347292747 FAILURE; WF-13 #43347313353 SUCCESS; WF-07 backup #43331215706 SUCCESS. |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 SUCCESS; scraper #42457182511 fail-closed (missing protected `VNSTOCK_API_KEY`). |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 SUCCESS. |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 draft | CI #42654579277 SUCCESS. |
+
+Platform inspection PR #1721 exact-head validation #43345047281 SUCCESS; squash-merged at current master #284ef959; one changed file (`debug/vps-latest.md`).
+
+### Native schedule measurements — reference 02:05:00Z
+
+Only first-attempt `event=schedule` runs on master count.
+
+| Lane | Latest | Previous | Age (s) | Gap (s) | Budget (s) |
+|---|---:|---:|---:|---:|---:|
+| Platform reconcile | #43345606006 | #43303625294 | 1,990 | 17,121 | 2,700 |
+| Platform inspection | #43344825587 | #43299999915 | 2,367 | 18,064 | 4,500 |
+| Platform recovery | #43340133409 | #43294456060 | 4,525 | 17,876 | 2,700 |
+| Platform watchdog | #43340414022 | #43294595071 | 4,398 | 17,953 | 2,700 |
+| TCE WF-06 | #43319440089 | #43256916802 | 13,291 | 22,000 | 1,500 |
+| TCE WF-12 | #43347292747 | #43305069474 | 1,152 | 17,426 | 1,500 |
+
+Age: 3/6 pass, 3/6 fail. Inter-arrival: 6/6 fail. Latest available native runs had 0s created-to-start wait; this does not measure missing schedule enqueue/delivery. Authoritative scheduler telemetry remains unavailable. No cron or freshness budget changed.
+
+### TCE recovery and backup
+
+- WF-12 #43347292747 failed because native WF-06 #43319440089 was 202m old (25m budget).
+- WF-13 #43347313353 succeeded and dispatched exact-master read-only fallback #43347337950; the fallback returned HTTP 503 for TCE web, TCE API, Auth liveness and readiness (all expect 200).
+- WF-13 logs explicitly show `TCE_MAINTENANCE_MODE` unset. K3s/reconciliation show TCE/Auth are 0/0 maintenance. TCE owner must confirm; set Actions variable `TCE_MAINTENANCE_MODE=true` only if maintenance is approved. Otherwise restore via Platform GitOps. Do not weaken WF-06/WF-12.
+- Platform recovery #43347304694 validated the authenticated TCE heartbeat against TCE Actions API metadata and succeeded; inspection #43344825587 was fresh, so no duplicate inspection dispatch.
+- WF-07 Backup #43331215706 succeeded. Cron `30 18 * * *`, run created at 23:43:18Z (5h13m18s after nominal slot). This is a timestamp discrepancy, not proof of enqueue delay; preserve backup/retention SSH workflow.
+
+### Platform reconciliation and K3s
+
+- Reconcile #43345606006 SUCCESS on current master `284ef959`, mode=apply, target=all, image changes disabled. Auth runtime Secret provisioned/verified (values suppressed), shared `ghcr-pull` unchanged, drift=false, manifest apply/image replacement/rollout skipped. Auth/TCE maintenance; MicroFE healthy; Keycloak skipped.
+- Inspection #43344825587 generated snapshot at 01:25:41Z. Node Ready/ARM64; disk 57% (~20GiB free); ~19GiB available RAM; host `restart_required=yes`. Media backend/frontend and MicroFE Shell/WS/NATS 1/1 Running. TCE/Auth/Keycloak 0/0. Stock Admin (2 pods) and desired Backend (1 pod) ImagePullBackOff because tag `12d63b4` lacks an ARM64 manifest/RepoDigest; legacy backend/frontend 1/1. OIDC discovery HTTP 503. Media/Platform runner Listeners present. Docker inventory 9.195GB, 5.773GB reclaimable; no cleanup/restart.
+
+### Ownership and controls
+
+App repos own CI/tests/builds, immutable GHCR publication, SBOM/provenance and exact digest dispatch. Platform Infra alone owns production manifests, shared GHCR pull credentials, digest promotion, GitOps reconciliation, rollout and health. No app master changed; previous publisher audit remains applicable. No workflow was confirmed redundant/obsolete; preserve CI, security, backup, manual, release and scheduled jobs. All five master branch objects report `protected=false`; administrator action remains required.
+
+No production apply, image promotion, rollout, TCE/Auth scale-up, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup, host restart or resource deletion occurred. **TCE market-scan schedule unchanged.**
