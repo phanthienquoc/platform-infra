@@ -2299,3 +2299,10 @@ Only first-attempt `event=schedule` runs on master count. At this reference 1/6 
 App repositories own CI/tests/builds, immutable GHCR publication, SBOM/provenance and exact digest dispatch. Platform Infra alone owns production manifests, shared GHCR pull credentials, digest promotion, GitOps reconciliation, rollout and health. No app master changed; previous publisher audit remains applicable. No workflow was confirmed redundant/obsolete. All five master branch objects report `protected=false`; administrator action remains required. No duplicate direct SSH/Compose production apply authority was introduced.
 
 No production manifest apply, image promotion, workload rollout, TCE/Auth scale-up, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup, host restart or resource deletion occurred. Auth runtime Secret provisioning/verification was the only noted production Secret operation; shared `ghcr-pull` remained unchanged.
+
+
+## Post-merge receipt — 2026-11-13 10:07 ICT
+
+Platform PR #1725 exact head `985cd714776f96c155b0ca5352251387b8eacf85` passed `validate-manifests` #43356729654. It was squash-merged with expected head SHA; merge/current Platform master is `f9c13123acf1df186f49c8df3e4693811e87979b`. Post-merge `validate-manifests` #43356817652 completed SUCCESS on that exact merge SHA. All applicable validations passed; changed-image validation and failure-report jobs were correctly skipped.
+
+PR #1725 changed only the deployment readiness tracker, workflow inventory and the two 10:01 checkpoint files. No production manifest/workflow, image, credential, runtime configuration, DNS, database, storage, workload, runner, Docker state, host or schedule changed. TCE `34f6024f`, Stock `b1b5e177`, Media `dcd69869` and Authentication `eab85fab` remain unchanged. No GHCR publication/promotion, production apply, rollout, scale-up, runner retirement, credential rotation, cleanup, restart or resource deletion occurred in this documentation PR. Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
