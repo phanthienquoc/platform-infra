@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-11-13T00:51:41+00:00
+Generated: 2026-11-13T01:25:41+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,14 +11,14 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.6Gi       1.2Gi        85Mi        18Gi        19Gi
+Mem:            23Gi       3.6Gi       1.2Gi        86Mi        18Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   26G   20G  57% /
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   26G   20G  57% /
 disk_pressure: normal (57%)
- 00:51:41 up 195 days, 10:42,  0 users,  load average: 0.19, 0.18, 0.18
+ 01:25:41 up 195 days, 11:16,  0 users,  load average: 0.24, 0.26, 0.17
 
 ### Top disk consumers (best-effort, runner-readable paths)
 4.0K	/var/lib/docker
@@ -44,7 +44,7 @@ disk_pressure: normal (57%)
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
 1057701 /opt/media-actions-runner/bin/Runner.Listener run --startuptype service
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-3824776 /opt/actions-runner/bin/Runner.Worker spawnclient 155 163
+3855092 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
   actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-media-generation.media-generation-k3s-01)
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service           loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
@@ -117,29 +117,29 @@ restart_required: yes
 Client Version: v1.36.3+k3s1
 Kustomize Version: v5.8.1
 NAME         STATUS   ROLES           AGE   VERSION        INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION              CONTAINER-RUNTIME
-tce-k3s-01   Ready    control-plane   82d   v1.36.3+k3s1   10.0.0.120    <none>        Ubuntu 22.04.5 LTS   6.8.0-1049-oracle (arm64)   containerd://2.3.2-k3s2
+tce-k3s-01   Ready    control-plane   83d   v1.36.3+k3s1   10.0.0.120    <none>        Ubuntu 22.04.5 LTS   6.8.0-1049-oracle (arm64)   containerd://2.3.2-k3s2
 NAME               STATUS   AGE
 cert-manager       Active   79d
-default            Active   82d
+default            Active   83d
 k3s-debug          Active   35d
-kube-node-lease    Active   82d
-kube-public        Active   82d
-kube-system        Active   82d
+kube-node-lease    Active   83d
+kube-public        Active   83d
+kube-system        Active   83d
 media-prod         Active   43d
 microfe-platform   Active   37d
 stock-prod         Active   54d
-tce-prod           Active   82d
+tce-prod           Active   83d
 NAMESPACE          NAME                                        READY   STATUS             RESTARTS      AGE   IP            NODE         NOMINATED NODE   READINESS GATES
 cert-manager       cert-manager-75b96c9588-lgn7d               1/1     Running            0             79d   10.42.0.98    tce-k3s-01   <none>           <none>
 cert-manager       cert-manager-cainjector-b644b66f7-l8jdq     1/1     Running            1 (79d ago)   79d   10.42.0.100   tce-k3s-01   <none>           <none>
 cert-manager       cert-manager-webhook-76d97df888-wwq49       1/1     Running            0             79d   10.42.0.99    tce-k3s-01   <none>           <none>
-kube-system        coredns-54996dc9b4-d68pf                    1/1     Running            0             82d   10.42.0.6     tce-k3s-01   <none>           <none>
-kube-system        helm-install-traefik-crd-mq7w8              0/1     Completed          0             82d   10.42.0.3     tce-k3s-01   <none>           <none>
-kube-system        helm-install-traefik-s2twj                  0/1     Completed          1 (82d ago)   82d   10.42.0.2     tce-k3s-01   <none>           <none>
-kube-system        local-path-provisioner-58d557dc48-jbhhp     1/1     Running            1 (82d ago)   82d   10.42.0.5     tce-k3s-01   <none>           <none>
-kube-system        metrics-server-6dc596dfb8-s2bzm             1/1     Running            0             82d   10.42.0.4     tce-k3s-01   <none>           <none>
-kube-system        svclb-traefik-859779c1-7bwx2                2/2     Running            0             82d   10.42.0.7     tce-k3s-01   <none>           <none>
-kube-system        traefik-59b7647586-gml84                    1/1     Running            0             82d   10.42.0.8     tce-k3s-01   <none>           <none>
+kube-system        coredns-54996dc9b4-d68pf                    1/1     Running            0             83d   10.42.0.6     tce-k3s-01   <none>           <none>
+kube-system        helm-install-traefik-crd-mq7w8              0/1     Completed          0             83d   10.42.0.3     tce-k3s-01   <none>           <none>
+kube-system        helm-install-traefik-s2twj                  0/1     Completed          1 (83d ago)   83d   10.42.0.2     tce-k3s-01   <none>           <none>
+kube-system        local-path-provisioner-58d557dc48-jbhhp     1/1     Running            1 (83d ago)   83d   10.42.0.5     tce-k3s-01   <none>           <none>
+kube-system        metrics-server-6dc596dfb8-s2bzm             1/1     Running            0             83d   10.42.0.4     tce-k3s-01   <none>           <none>
+kube-system        svclb-traefik-859779c1-7bwx2                2/2     Running            0             83d   10.42.0.7     tce-k3s-01   <none>           <none>
+kube-system        traefik-59b7647586-gml84                    1/1     Running            0             83d   10.42.0.8     tce-k3s-01   <none>           <none>
 media-prod         media-generation-665d86ff54-4664l           1/1     Running            0             11d   10.42.0.155   tce-k3s-01   <none>           <none>
 media-prod         media-generation-frontend-58d8bbc67-lwhhf   1/1     Running            0             11d   10.42.0.154   tce-k3s-01   <none>           <none>
 microfe-platform   microfe-shell-7b44b44dfb-ln4sw              1/1     Running            0             11d   10.42.0.153   tce-k3s-01   <none>           <none>
@@ -177,10 +177,10 @@ NAMESPACE          NAME                        READY   UP-TO-DATE   AVAILABLE   
 cert-manager       cert-manager                1/1     1            1           79d
 cert-manager       cert-manager-cainjector     1/1     1            1           79d
 cert-manager       cert-manager-webhook        1/1     1            1           79d
-kube-system        coredns                     1/1     1            1           82d
-kube-system        local-path-provisioner      1/1     1            1           82d
-kube-system        metrics-server              1/1     1            1           82d
-kube-system        traefik                     1/1     1            1           82d
+kube-system        coredns                     1/1     1            1           83d
+kube-system        local-path-provisioner      1/1     1            1           83d
+kube-system        metrics-server              1/1     1            1           83d
+kube-system        traefik                     1/1     1            1           83d
 media-prod         media-generation            1/1     1            1           43d
 media-prod         media-generation-frontend   1/1     1            1           43d
 microfe-platform   keycloak                    0/0     0            0           27d
@@ -276,20 +276,17 @@ endpoints/backend
 endpoints/stock-admin
 endpoints/stock-backend
 endpoints/stock-frontend
+event/stock-admin-5864bcb497-6b6hm.18e40e62bffa7a86
+event/stock-admin-5864bcb497-6b6hm.18e40e6335e46b97
 event/stock-admin-5864bcb497-6b6hm.18e40e634c019104
 event/stock-admin-5864bcb497-6b6hm.18e40e634c027664
-event/stock-admin-59cddb87b7-qgkjr.18e40d22b70f6afb
-event/stock-admin-59cddb87b7-qgkjr.18e40d23268315bb
 event/stock-admin-59cddb87b7-qgkjr.18e40d2349469ca6
 event/stock-admin-59cddb87b7-qgkjr.18e40d234947a25e
-event/stock-backend-6bc874575d-xcg2j.18e40e62dae92c45
-event/stock-backend-6bc874575d-xcg2j.18e40e63478749ee
 event/stock-backend-6bc874575d-xcg2j.18e40e634bfdef7a
 event/stock-backend-6bc874575d-xcg2j.18e40e634bff081b
-event/stock-frontend-74546898cb.18e771f537270477
-event/stock-frontend-74546898cb.18e772a6fed27d68
-event/stock-frontend-74546898cb.18e772de0cbbac30
 event/stock-frontend-74546898cb.18e773c6e1963985
+event/stock-frontend-74546898cb.18e774afb66fe777
+event/stock-frontend-74546898cb.18e775988c08ae88
 limitrange/stock-defaults
 pod/stock-admin-5864bcb497-6b6hm
 pod/stock-admin-59cddb87b7-qgkjr
@@ -772,20 +769,17 @@ endpointslice.discovery.k8s.io/backend-fvv26
 endpointslice.discovery.k8s.io/stock-admin-sf6kz
 endpointslice.discovery.k8s.io/stock-backend-jbwqp
 endpointslice.discovery.k8s.io/stock-frontend-b8rbs
+event.events.k8s.io/stock-admin-5864bcb497-6b6hm.18e40e62bffa7a86
+event.events.k8s.io/stock-admin-5864bcb497-6b6hm.18e40e6335e46b97
 event.events.k8s.io/stock-admin-5864bcb497-6b6hm.18e40e634c019104
 event.events.k8s.io/stock-admin-5864bcb497-6b6hm.18e40e634c027664
-event.events.k8s.io/stock-admin-59cddb87b7-qgkjr.18e40d22b70f6afb
-event.events.k8s.io/stock-admin-59cddb87b7-qgkjr.18e40d23268315bb
 event.events.k8s.io/stock-admin-59cddb87b7-qgkjr.18e40d2349469ca6
 event.events.k8s.io/stock-admin-59cddb87b7-qgkjr.18e40d234947a25e
-event.events.k8s.io/stock-backend-6bc874575d-xcg2j.18e40e62dae92c45
-event.events.k8s.io/stock-backend-6bc874575d-xcg2j.18e40e63478749ee
 event.events.k8s.io/stock-backend-6bc874575d-xcg2j.18e40e634bfdef7a
 event.events.k8s.io/stock-backend-6bc874575d-xcg2j.18e40e634bff081b
-event.events.k8s.io/stock-frontend-74546898cb.18e771f537270477
-event.events.k8s.io/stock-frontend-74546898cb.18e772a6fed27d68
-event.events.k8s.io/stock-frontend-74546898cb.18e772de0cbbac30
 event.events.k8s.io/stock-frontend-74546898cb.18e773c6e1963985
+event.events.k8s.io/stock-frontend-74546898cb.18e774afb66fe777
+event.events.k8s.io/stock-frontend-74546898cb.18e775988c08ae88
 podmetrics.metrics.k8s.io/stock-backend-57ccb8ff6-d25jq
 podmetrics.metrics.k8s.io/stock-frontend-79c57845df-z747s
 ingress.networking.k8s.io/stock
@@ -829,7 +823,7 @@ replicaset.apps/stock-admin-565b8b9c8       0         0         0       11d   ad
 replicaset.apps/stock-admin-566699c6ff      0         0         0       32d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=566699c6ff
 replicaset.apps/stock-admin-5677449bfd      0         0         0       34d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5677449bfd
 replicaset.apps/stock-admin-569b69c98d      0         0         0       14d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=569b69c98d
-replicaset.apps/stock-admin-569cf6c8b7      0         0         0       33d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=569cf6c8b7
+replicaset.apps/stock-admin-569cf6c8b7      0         0         0       34d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=569cf6c8b7
 replicaset.apps/stock-admin-574756b897      0         0         0       25d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=574756b897
 replicaset.apps/stock-admin-575cd8cc46      0         0         0       12d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=575cd8cc46
 replicaset.apps/stock-admin-576c4d59d6      0         0         0       11d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=576c4d59d6
@@ -945,7 +939,7 @@ replicaset.apps/stock-admin-76cccb67f6      0         0         0       22d   ad
 replicaset.apps/stock-admin-7744f896dc      0         0         0       12d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7744f896dc
 replicaset.apps/stock-admin-7754bb96bf      0         0         0       29d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7754bb96bf
 replicaset.apps/stock-admin-77bd44d57d      0         0         0       22d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=77bd44d57d
-replicaset.apps/stock-admin-7899977f66      0         0         0       21d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7899977f66
+replicaset.apps/stock-admin-7899977f66      0         0         0       22d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7899977f66
 replicaset.apps/stock-admin-78f96594cf      0         0         0       11d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=78f96594cf
 replicaset.apps/stock-admin-7967788c6c      0         0         0       13d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7967788c6c
 replicaset.apps/stock-admin-797544c7c8      0         0         0       18d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=797544c7c8
@@ -991,7 +985,7 @@ replicaset.apps/stock-admin-8566b6d7dd      0         0         0       16d   ad
 replicaset.apps/stock-admin-8585c48d94      0         0         0       26d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=8585c48d94
 replicaset.apps/stock-admin-859995d4bf      0         0         0       16d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=859995d4bf
 replicaset.apps/stock-admin-85c4d7cb4d      0         0         0       32d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=85c4d7cb4d
-replicaset.apps/stock-admin-85cc86b749      0         0         0       11d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=85cc86b749
+replicaset.apps/stock-admin-85cc86b749      0         0         0       12d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=85cc86b749
 replicaset.apps/stock-admin-85d8994cd4      0         0         0       22d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=85d8994cd4
 replicaset.apps/stock-admin-85dd58954c      0         0         0       33d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=85dd58954c
 replicaset.apps/stock-admin-864bb667ff      0         0         0       34d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=864bb667ff
@@ -1076,7 +1070,7 @@ replicaset.apps/stock-backend-594f7685d6    0         0         0       29d   ba
 replicaset.apps/stock-backend-5955f998d     0         0         0       13d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5955f998d
 replicaset.apps/stock-backend-5975fd7c67    0         0         0       25d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5975fd7c67
 replicaset.apps/stock-backend-5998b79d76    0         0         0       29d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5998b79d76
-replicaset.apps/stock-backend-59bd95c977    0         0         0       33d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=59bd95c977
+replicaset.apps/stock-backend-59bd95c977    0         0         0       34d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=59bd95c977
 replicaset.apps/stock-backend-59f5f98664    0         0         0       26d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=59f5f98664
 replicaset.apps/stock-backend-59f7ff6fc     0         0         0       34d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=59f7ff6fc
 replicaset.apps/stock-backend-59ffbbf6dc    0         0         0       29d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=59ffbbf6dc
@@ -1123,7 +1117,7 @@ replicaset.apps/stock-backend-689b896654    0         0         0       16d   ba
 replicaset.apps/stock-backend-689d78bd96    0         0         0       19d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=689d78bd96
 replicaset.apps/stock-backend-68f45cd6b8    0         0         0       22d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=68f45cd6b8
 replicaset.apps/stock-backend-694cfd6c85    0         0         0       12d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=694cfd6c85
-replicaset.apps/stock-backend-695977497f    0         0         0       11d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=695977497f
+replicaset.apps/stock-backend-695977497f    0         0         0       12d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=695977497f
 replicaset.apps/stock-backend-6975777c78    0         0         0       32d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6975777c78
 replicaset.apps/stock-backend-697db585db    0         0         0       22d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=697db585db
 replicaset.apps/stock-backend-69cbb67579    0         0         0       30d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=69cbb67579
@@ -1258,7 +1252,7 @@ replicaset.apps/stock-backend-cf8b475bd     0         0         0       22d   ba
 replicaset.apps/stock-backend-cf9f49f86     0         0         0       22d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=cf9f49f86
 replicaset.apps/stock-backend-d6b79877b     0         0         0       11d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=d6b79877b
 replicaset.apps/stock-backend-d6d7f7887     0         0         0       23d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=d6d7f7887
-replicaset.apps/stock-backend-d85844b4      0         0         0       21d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=d85844b4
+replicaset.apps/stock-backend-d85844b4      0         0         0       22d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=d85844b4
 replicaset.apps/stock-backend-d9946b74f     0         0         0       17d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=d9946b74f
 replicaset.apps/stock-backend-ddb854c99     0         0         0       21d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=ddb854c99
 replicaset.apps/stock-backend-f45cb8fbd     0         0         0       26d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=f45cb8fbd
@@ -1356,7 +1350,7 @@ replicaset.apps/media-generation-frontend-c44458c86    0         0         0    
 
 ### StorageClass inventory
 NAME                   PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
-local-path (default)   rancher.io/local-path   Delete          WaitForFirstConsumer   false                  82d
+local-path (default)   rancher.io/local-path   Delete          WaitForFirstConsumer   false                  83d
 Preflight passed: target namespaces have no PVCs, PV claims or VolumeSnapshot references.
 Read-only preflight complete. No Kubernetes resources were changed.
 decommission_preflight_status: storage-clean
@@ -1393,10 +1387,10 @@ NAMESPACE          NAME                        TYPE           CLUSTER-IP      EX
 cert-manager       cert-manager                ClusterIP      10.43.138.27    <none>        9402/TCP                     79d
 cert-manager       cert-manager-cainjector     ClusterIP      10.43.135.132   <none>        9402/TCP                     79d
 cert-manager       cert-manager-webhook        ClusterIP      10.43.52.112    <none>        443/TCP,9402/TCP             79d
-default            kubernetes                  ClusterIP      10.43.0.1       <none>        443/TCP                      82d
-kube-system        kube-dns                    ClusterIP      10.43.0.10      <none>        53/UDP,53/TCP,9153/TCP       82d
-kube-system        metrics-server              ClusterIP      10.43.120.41    <none>        443/TCP                      82d
-kube-system        traefik                     LoadBalancer   10.43.213.239   10.0.0.120    80:30225/TCP,443:30415/TCP   82d
+default            kubernetes                  ClusterIP      10.43.0.1       <none>        443/TCP                      83d
+kube-system        kube-dns                    ClusterIP      10.43.0.10      <none>        53/UDP,53/TCP,9153/TCP       83d
+kube-system        metrics-server              ClusterIP      10.43.120.41    <none>        443/TCP                      83d
+kube-system        traefik                     LoadBalancer   10.43.213.239   10.0.0.120    80:30225/TCP,443:30415/TCP   83d
 media-prod         media-generation            ClusterIP      10.43.252.95    <none>        3000/TCP                     43d
 media-prod         media-generation-frontend   ClusterIP      10.43.48.52     <none>        80/TCP                       43d
 microfe-platform   keycloak                    ClusterIP      10.43.142.95    <none>        80/TCP,9000/TCP              27d
@@ -1431,5 +1425,5 @@ keycloak   0/0     0            0           27d   keycloak     quay.io/keycloak/
 error: timed out waiting for the condition
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.113483s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049786s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.142123s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.050036s remote_ip=132.226.175.206
