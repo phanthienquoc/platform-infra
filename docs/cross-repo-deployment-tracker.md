@@ -4117,3 +4117,14 @@ All five master branch objects previously reported `protected=false`; this run d
 6. Platform operator: host restart requires a separate approved change window.
 
 No Stock promotion, TCE/Auth scale-up, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup, host restart, resource deletion or production manifest apply occurred in this refresh. The separate reconciliation #43354584279 provisioned/verified Auth runtime Secret (values suppressed); shared `ghcr-pull` remained unchanged. Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
+
+
+## Post-merge receipt — 2026-11-13 11:02 ICT
+
+- Readiness PR #1727 exact head `0a4c08e48ac6c8a1346ad7f4a2861780cf2dca24` passed `validate-manifests` [#43363175769](https://github.com/phanthienquoc/platform-infra/actions/runs/43363175769). All applicable validation steps passed; the failure-report job was correctly skipped.
+- PR #1727 was re-read immediately before merge; it remained open, non-draft, mergeable, and its head exactly matched the validated SHA. It was squash-merged with expected head SHA `0a4c08e48ac6c8a1346ad7f4a2861780cf2dca24`.
+- Merge SHA/current Platform master is `dbb2a29c4cc09fb1b303202274e04622e9b49895`; direct master ref and PR API confirmed merged.
+- Post-merge `validate-manifests` [#43363229247](https://github.com/phanthienquoc/platform-infra/actions/runs/43363229247) completed SUCCESS on the exact merge SHA. All applicable contract, manifest-render, YAML, secret-policy, immutable-image, Keycloak-isolation and network-boundary steps passed; changed-image validation was correctly skipped because the PR did not alter production image references.
+- Compare from parent `5e30bc2c3cfd4975a9b4cc7c5c468940a2469040` to merge SHA confirms exactly four documentation/checkpoint paths: deployment tracker, workflow inventory and the two 11:02 checkpoint files. No production manifest, workflow definition, image reference, credential, runtime configuration, DNS, database, storage, workload, runner, Docker state, host or schedule changed.
+- No GHCR publication/promotion, production manifest apply, image replacement, workload rollout, TCE/Auth scale-up, runner retirement, credential rotation, Docker cleanup, host restart or resource deletion occurred in PR #1727. The separate reconciliation #43354584279 had previously provisioned/verified the Auth runtime Secret (values suppressed); shared `ghcr-pull` remained unchanged.
+- Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
