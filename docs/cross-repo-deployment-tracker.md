@@ -3725,3 +3725,66 @@ Platform Infra remains the sole production apply authority. TCE market-scan sche
 - Follow-up Actions API read at 2026-11-12T23:04:35Z found no new native TCE WF-06 event for the 23:00Z slot and no new native Platform inspection event for the 23:02Z slot. The latest qualifying native runs therefore remain the records in the 05:59 snapshot. This does not establish whether GitHub dropped or delayed the scheduled events; authoritative enqueue/delivery telemetry remains unavailable.
 - No GHCR publication/promotion, production manifest apply, image replacement, workload rollout, runner retirement, credential rotation, Docker cleanup, host restart or resource deletion occurred in this documentation PR. The separate reconciliation #43319525218 verified the Auth runtime Secret with values suppressed; shared ghcr-pull remained unchanged.
 - Platform Infra remains the sole production apply authority. TCE market-scan schedule unchanged.
+
+
+## Latest verified cross-repo readiness — 2026-11-13 07:01 ICT / 00:01:01 UTC
+
+### Repository state, pull requests and latest checks
+
+| Repository | Verified master SHA | Open PRs | Latest observed workflow evidence |
+|---|---|---:|---|
+| Platform Infra | `f74e73d5271013aad3589377fb14c3dba64bbec0` | #1314, #544, #541, #539 (all drafts) | validate-manifests #43325901040 SUCCESS on master SHA f74e73d5 at 23:06:03Z |
+| TCE Dashboard | `34f6024f8ccec8fb3ab6688901b3557e058ddfd1` | none | WF-07 backup #43331215706 schedule SUCCESS at 23:43:18Z; WF-06 native #43319440089 FAILURE; WF-12 native #43305069474 FAILURE |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 SUCCESS (Nov 9); scraper #42457182511 FAILURE/CLOSED (Nov 8) |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 SUCCESS (Nov 9) |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft) | CI #42654579277 SUCCESS (Nov 9) |
+
+Open PRs #1314/#544/#541/#539 and Authentication #76 remain owner-decision drafts. Their latest available PR-triggered workflow runs are historical SUCCESS (#42161859747, #38575430454, #38567431761, #38548718033 and #41329425940 respectively); combined-status reads returned no status contexts. Do not treat these drafts as newly validated or merge them without owner decisions. No open PRs were found in TCE, Stock or Media.
+
+All five current master refs were read directly. All five direct master branch API objects report `protected=false`. Effective inherited rulesets were not re-read in this checkpoint; the last recorded rulesets result was empty for Platform/TCE/Media/Auth and HTTP 403 for private Stock due plan restrictions (403 is not an empty ruleset result).
+
+### Native schedule acceptance — reference 00:01:01 UTC
+
+Only first-attempt `event=schedule` runs on `master` count. Manual dispatch, workflow_run and repository_dispatch events do not reset native cadence.
+
+| Native lane | Latest qualifying run | Conclusion | Age (s) | Inter-arrival gap (s) | Age/gap budget (s) |
+|---|---:|---|---:|---:|---:|
+| Platform reconcile | #43303625294 | success | 11,672 | 28,100 | 2,700 |
+| Platform inspection | #43299999915 | success | 12,992 | 28,354 | 4,500 |
+| Platform recovery | #43294456060 | success | 14,962 | 28,497 | 2,700 |
+| Platform watchdog | #43294595071 | failure | 14,912 | 28,091 | 2,700 |
+| TCE WF-06 | #43319440089 | failure | 5,852 | 22,000 | 1,500 |
+| TCE WF-12 | #43305069474 | failure | 11,139 | 27,907 | 1,500 |
+
+All six age budgets and all six inter-arrival budgets fail at this reference. Latest qualifying run timestamps came from the Actions API; no newer native Platform reconcile/inspection/recovery/watchdog or TCE WF-06/WF-12 schedule run appeared in the queried recent histories.
+
+TCE WF-07 backup #43331215706 is a separate successful scheduled run (23:43:18Z). The current workflow file declares cron `30 18 * * *`, so its API created_at is 5h13m18s after the configured 18:30Z slot. Record this as an observed schedule-timing discrepancy only; enqueue time and cause are not available, so do not claim a proven GitHub scheduler delay.
+
+TCE WF-06 #43319440089 failed all four strict public probes: TCE web, TCE API, Auth liveness and Auth readiness each returned HTTP 503 where HTTP 200 is required. WF-12 native #43305069474 failed its native WF-06 freshness check; its heartbeat-notification job succeeded. WF-12 workflow_run #43319473892 and WF-13 workflow_run #43319473869 are not native schedule evidence. TCE backup #43331215706 completed successfully; its backup job had no failed steps.
+
+No authoritative scheduler enqueue/delivery telemetry is exposed. Do not infer runner congestion or whether an event was dropped versus delayed. Preserve all cron expressions and budgets. **TCE market-scan schedule unchanged.**
+
+### GitOps and K3s freshness
+
+- Last successful reconciliation: #43319525218, workflow_dispatch, source SHA `1610f1e6bf38008cf66b8ec9fdb9b13e52b23890`, created 22:24:01Z. At this reference its age is 5,820s, exceeding the 2,700s budget. It verified 5/5 GHCR package reads, Auth runtime Secret keys (values suppressed), unchanged shared `ghcr-pull`, TCE release pairing and drift=false. Manifest apply, image replacement and workload rollout were skipped.
+- Last successful inspection: #43319836081, workflow_dispatch, source SHA `1610f1e6bf38008cf66b8ec9fdb9b13e52b23890`; `debug/vps-latest.md` was generated at 22:26:06Z. At this reference snapshot age is 5,695s, exceeding the 4,500s inspection budget.
+- Compare API from reconciliation/inspection parent `1610f1e6` to current master `f74e73d5` reports three documentation/debug-only commits. Changed paths are `debug/vps-latest.md`, the 05:59 deployment checkpoint, tracker, 05:59 inventory checkpoint and workflow inventory. No production manifest or workflow definition changed in this range. This preserves the manifest-tree comparison but does not replace a fresh current-master `mode=plan` or live runtime inspection.
+- Last-known K3s snapshot: node Ready, ARM64, K3s v1.36.3+k3s1; disk 57% with ~20GiB free; available RAM ~19GiB; host restart required. Media backend/frontend and MicroFE Shell/WS/NATS were 1/1 Running. TCE/Auth/Keycloak were 0/0 intentional maintenance. Stock Admin (two pods) and desired Backend (one pod) were ImagePullBackOff because desired tag `12d63b4` had no compatible ARM64 manifest. Public OIDC discovery probes for both SSO realms returned HTTP 503. Media and Platform runner services/Listeners were active. Debug PVC `k3s-debug/k3s-debug-logs` remained Bound, 1Gi/RWO. These are stale last-known observations, not current health.
+- No fresh current-master `mode=plan`, K3s inspection, workload rollout or public health receipt exists in this checkpoint.
+
+### App and deployment ownership
+
+App repositories retain CI/tests/builds, immutable GHCR publication, SBOM/provenance and exact digest dispatch. Platform Infra remains sole owner of production manifests, shared GHCR pull credentials, digest promotion, GitOps plan/apply, K3s rollout and health. The previous publisher audit remains applicable because no app master SHA changed: no duplicate direct SSH/Compose production apply authority was found in the publisher workflows reviewed.
+
+Stock scraper remains fail-closed because protected `VNSTOCK_API_KEY` is missing; no credential bypass or source-code secret was introduced. Stock desired Admin/Backend tag `12d63b4` still lacks ARM64-compatible immutable RepoDigest evidence. TCE/Auth remain intentional maintenance scopes pending owner intent. Media/Platform runner retirement remains pending.
+
+### Exact next actions
+
+1. Platform operator: fresh read-only K3s inspection and explicit current-master `mode=plan` on `f74e73d5`; separate approval before production apply or host restart.
+2. GitHub administrator: obtain authoritative enqueue/delivery telemetry for all six native lanes; investigate the TCE backup schedule timestamp discrepancy; enforce PR-only, required checks, no force-push/deletion and squash-only rules.
+3. TCE administrator: verify `TCE_MAINTENANCE_MODE` and approved replica intent; retain strict HTTP-200 probes.
+4. Stock owner: provide ARM64-compatible immutable digest/provenance and protected `VNSTOCK_API_KEY` only if reactivation is approved.
+5. Media owner: stop/disable/unregister runner and prove Listener absence, GitHub unregister, backup/retention and authoritative DNS before decommission.
+6. Platform operator: host restart requires a separate approved change window.
+
+Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
