@@ -2146,3 +2146,56 @@ All six age and inter-arrival budgets fail. Only first-attempt `event=schedule` 
 - PR #1716 changed only the deployment tracker, workflow inventory and two timestamped checkpoint files. No production manifest/workflow, image, credential, runtime, DNS, database, storage, host, namespace, PVC/PV, workload or schedule changed.
 - No new GHCR publication/promotion, production apply, image replacement, workload rollout, runner retirement, credential rotation, Docker cleanup, host restart or resource deletion occurred.
 - Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
+
+
+## Current verified workflow inventory — 2026-11-13 08:03 ICT / 01:03:28 UTC
+
+### Repositories, current master refs, open PRs and latest Actions runs
+
+| Repository | Master SHA | Open PRs | Latest relevant runs | Authority |
+|---|---|---|---|---|
+| Platform Infra | `e2e72894b4a0b64aacf5de2e8b7817845b95ac1b` | #1314/#544/#541/#539 (draft owner decisions) | inspect #43340393342 dispatch SUCCESS; reconcile #43340151396 dispatch SUCCESS; recovery #43340133409 schedule SUCCESS; watchdog #43340414022 schedule FAILURE; PR #1718 validate #43340628114 SUCCESS | Sole production manifests, shared GHCR pull credentials, digest/provenance promotion, GitOps plan/apply, K3s rollout/health |
+| TCE Dashboard | `34f6024f8ccec8fb3ab6688901b3557e058ddfd1` | none | WF-07 #43331215706 schedule SUCCESS; WF-06 #43319440089 schedule FAILURE; WF-12 #43305069474 schedule FAILURE; WF-12 #43319473892 workflow_run SUCCESS | App CI/tests/builds, immutable GHCR and provenance; strict HTTP-200 probes; no production apply |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 SUCCESS; scraper #42457182511 FAILURE/CLOSED (missing protected `VNSTOCK_API_KEY`) | App CI/build and immutable ARM64 GHCR publication; no production apply |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 SUCCESS; current K3s inspection shows backend/frontend 1/1 with RepoDigests | App CI/build and immutable ARM64 GHCR/SBOM; Platform owns production apply; Media owner owns runner retirement |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft) | CI #42654579277 SUCCESS | App CI/security/tests, immutable GHCR, SBOM/provenance and exact digest dispatch; Platform owns runtime Secret and production apply |
+
+Combined commit-status reads returned no status contexts for the five current master SHAs. This is not a passing-check receipt. Platform PR #1718 is merged; its exact-head validation passed, but no post-merge validate-manifests run on merge SHA `e2e72894` appeared in the queried recent Actions list.
+
+### Preserved workflow authorities and cron contracts
+
+- Platform `reconcile-vps.yml` remains the sole production GitOps apply authority; cron `7,22,37,52 * * * *`. Latest qualifying native run #43303625294 is success but stale. Separate dispatch reconciliation #43340151396 succeeded with `drift=false`, so manifest apply/image replacement/rollout were skipped.
+- Platform `inspect-vps.yml` remains read-only; cron `2,32 * * * *`. Latest native run #43299999915 is stale; fresh dispatch inspection #43340393342 succeeded and updated only `debug/vps-latest.md` through PR #1718.
+- Platform `recover-stale-ops.yml` remains a recovery controller, cron `10,25,40,55 * * * *`; latest native #43340133409 succeeded. It may dispatch existing validated workflows after source/provenance/deduplication/correlation checks and is not a separate apply authority.
+- Platform `reconcile-schedule-watchdog.yml` remains read-only, cron `12,27,42,57 * * * *`; latest native #43340414022 failed only because all four Platform inter-arrival gaps exceeded configured budgets. TCE cadence checks were warning-only.
+- TCE WF-06 remains strict HTTP-200 health probes, cron `*/15 * * * *`; latest native #43319440089 failed four endpoints with HTTP 503.
+- TCE WF-12 remains native schedule watchdog, cron `7,22,37,52 * * * *`; latest native #43305069474 failed stale WF-06 freshness. Workflow_run #43319473892 is downstream evidence, not native cadence.
+- TCE WF-07 backup remains a purposeful SSH backup/retention workflow, cron `30 18 * * *`. Run #43331215706 succeeded at 23:43:18Z, 5h13m18s after the configured slot by `created_at`; this is an observed timestamp discrepancy, not proven enqueue delay. Preserve the backup job; it is not production deployment authority.
+- TCE market-scan schedule is unchanged. No cron or freshness budget was modified.
+- Stock deploy/publisher, Media publisher and Auth release workflows remain app-owned for immutable publication and provenance. No new GHCR publication/digest promotion occurred. No duplicate direct SSH/Compose production apply authority was introduced.
+- No workflow was confirmed redundant/obsolete. Preserve CI/tests, security, backup, manual, release and purposeful scheduled jobs.
+
+### Current native schedule measurements — 01:03:28Z
+
+| Lane | Latest native run | Conclusion | Age (s) | Gap (s) | Budget (s) |
+|---|---:|---|---:|---:|---:|
+| Platform reconcile | #43303625294 | success | 15,419 | 28,100 | 2,700 |
+| Platform inspection | #43299999915 | success | 16,739 | 28,354 | 4,500 |
+| Platform recovery | #43340133409 | success | 833 | 17,876 | 2,700 |
+| Platform watchdog | #43340414022 | failure | 706 | 17,953 | 2,700 |
+| TCE WF-06 | #43319440089 | failure | 9,599 | 22,000 | 1,500 |
+| TCE WF-12 | #43305069474 | failure | 14,886 | 27,907 | 1,500 |
+
+All six inter-arrival gaps fail. Four age budgets fail; recovery/watchdog ages pass. Only first-attempt schedule events on master count. Workflow_dispatch, workflow_run and repository_dispatch do not reset native cadence. No authoritative scheduler enqueue/delivery telemetry is available; do not infer runner congestion or dropped-vs-delayed cause.
+
+### Runtime, credentials and rollout safety
+
+- Reconciliation #43340151396 created 00:49:43Z and inspection #43340393342 generated snapshot 00:51:41Z. At 01:03:28Z ages are 825s and 707s respectively, within 2,700s and 4,500s budgets.
+- Reconciliation verified/provisioned Auth runtime Secret (values suppressed), unchanged shared `ghcr-pull`, TCE release pairing `prod-v0.1.0-e75e338`, drift=false and skipped manifest apply/image replacement/rollout. MicroFE active health passed; TCE/Auth were intentional zero-replica maintenance; Keycloak skipped.
+- Current Platform master `e2e72894` differs from reconciliation source `bf6c74b8` only in `debug/vps-latest.md`; no production manifest/workflow path changed. No explicit current-master `mode=plan` run was observed.
+- Last-known node Ready/ARM64, disk 57%, ~20GiB free, ~19GiB available RAM, restart_required=yes. Media backend/frontend and MicroFE Shell/WS/NATS were 1/1 Running. TCE/Auth/Keycloak 0/0 maintenance. Stock Admin (two pods) and desired Backend (one pod) were ImagePullBackOff because desired tag `12d63b4` has no compatible ARM64 manifest/RepoDigest; legacy Stock backend/frontend remained 1/1. Media and Platform runner services/Listeners were active. Debug PVC `k3s-debug/k3s-debug-logs` remained Bound, 1Gi/RWO. Docker inventory 9.195GB with 5.773GB reclaimable; no cleanup.
+- TCE four public endpoints returned HTTP 503; keep HTTP-200 acceptance strict. Stock scraper remains fail-closed without protected `VNSTOCK_API_KEY`. Media runner decommission requires Listener absence, GitHub unregister, external backup/retention, DNS and owner approval.
+- Last direct branch API read showed all five master branches `protected=false`; effective inherited rulesets still need administrator verification. Stock rulesets endpoint is restricted (403), not an empty result.
+- No Stock promotion, TCE/Auth scale-up, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup, host restart or resource deletion occurred. Auth runtime Secret provisioning/verification is the only noted production secret operation; shared `ghcr-pull` stayed unchanged.
+
+Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
