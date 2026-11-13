@@ -2260,3 +2260,42 @@ No production apply, image promotion, rollout, TCE/Auth scale-up, runner retirem
 Platform PR #1722 exact head `5bba7ee5c27da036c340c828d61be486771db2a4` passed `validate-manifests` #43350260518 (all 19 applicable steps). It was squash-merged with expected head SHA; merge/current Platform master is `bd99f6da6fec661e07af33623266014110e78bbe`. Post-merge `validate-manifests` #43350361416 completed SUCCESS on that exact merge SHA (all 19 applicable steps). Failure-report jobs were skipped.
 
 PR #1722 changed only the readiness tracker, workflow inventory and two 09:05 checkpoint files. No production manifest/workflow, image, credential, runtime configuration, DNS, database, storage, workload, runner, Docker state, host or schedule changed. TCE/Stock/Media/Auth master refs remain unchanged. No GHCR publication/promotion, production apply, rollout, scale-up, runner retirement, credential rotation, cleanup, restart or resource deletion occurred. Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
+
+
+## Verified cross-repo state — 2026-11-13 10:01 ICT / 03:01:37 UTC
+
+| Repository | Master SHA | Open PRs | Latest relevant evidence | Ownership |
+|---|---|---|---|---|
+| Platform Infra | `6566b90949f282a658b49593a3b1245332bb1a14` | #1314/#544/#541/#539 drafts | Reconciliation #43354584279 workflow_dispatch SUCCESS; inspection #43354800604 SUCCESS; PR #1724 exact-head validation #43354994825 SUCCESS and merged; recovery #43354753100 SUCCESS. | Sole production manifests, shared GHCR pull credentials, digest promotion, GitOps plan/apply, K3s rollout and health. |
+| TCE Dashboard | `34f6024f8ccec8fb3ab6688901b3557e058ddfd1` | none | Native WF-06 #43354527724 FAILURE; fallback #43354573806 FAILURE; WF-12 #43354554102 workflow_run SUCCESS; WF-13 #43354554119 SUCCESS; native WF-12 #43347292747 FAILURE; WF-07 Backup #43331215706 SUCCESS. | App CI/tests/builds, immutable GHCR publication and provenance; no direct production apply. |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 SUCCESS; scraper #42457182511 FAIL CLOSED (missing protected `VNSTOCK_API_KEY`); desired Admin/Backend tag `12d63b4` has no compatible ARM64 manifest/RepoDigest. | App CI/builds and immutable GHCR publication; Platform owns promotion/retirement. |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 SUCCESS; latest K3s snapshot backend/frontend 1/1 with RepoDigests; dedicated runner still active/Listener present. | App CI/builds and immutable GHCR publication; Platform owns production apply; Media owner retires its runner. |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft migration decision) | CI #42654579277 SUCCESS; Auth production scope 0/0 maintenance; no new release/promotion evidenced. | App CI/security/builds, immutable GHCR, SBOM/provenance and exact Platform dispatch; Platform owns production apply. |
+
+### Workflow inventory and schedule freshness — 03:01:37Z
+
+| Lane | Latest native run | Previous native run | Age (s) | Gap (s) | Budget (s) | Conclusion |
+|---|---:|---:|---:|---:|---:|---|
+| Platform reconcile | #43345606006 | #43303625294 | 5,387 | 17,121 | 2,700 | age/gap fail |
+| Platform inspection | #43344825587 | #43299999915 | 5,764 | 18,064 | 4,500 | age/gap fail |
+| Platform recovery | #43340133409 | #43294456060 | 7,922 | 17,876 | 2,700 | age/gap fail |
+| Platform watchdog | #43340414022 | #43294595071 | 7,795 | 17,953 | 2,700 | age/gap fail |
+| TCE WF-06 | #43354527724 | #43319440089 | 879 | 15,809 | 1,500 | age pass / gap fail |
+| TCE WF-12 | #43347292747 | #43305069474 | 4,549 | 17,426 | 1,500 | age/gap fail |
+
+Only first-attempt `event=schedule` runs on master count. At this reference 1/6 age budgets pass and 5/6 fail; 6/6 inter-arrival budgets fail. Manual, `workflow_run` and `repository_dispatch` are separate evidence. No authoritative scheduler enqueue/delivery telemetry is available. No cron or freshness budget changed; TCE market-scan schedule unchanged.
+
+### Runtime and maintenance state
+
+- Reconciliation #43354584279 SUCCESS on parent SHA `f2bdd09d`, mode=apply, target=all, image changes disabled. Auth runtime Secret provisioned/verified (values suppressed); shared `ghcr-pull` unchanged; TCE release pairing passed; drift=false; manifest apply, image replacement and workload rollout skipped.
+- Current master #6566b909 differs from reconciliation source only by PR #1724's `debug/vps-latest.md`; no production manifest/workflow path changed. This is not a dedicated current-master `mode=plan`.
+- Inspection #43354800604 SUCCESS, snapshot generated 02:49:36Z; at 03:01:37Z age 721s (within 4,500s budget). Node Ready/ARM64, disk 57% (~20GiB free), ~19GiB available RAM, `restart_required=yes`.
+- Media backend/frontend and MicroFE Shell/WS/NATS 1/1 Running. TCE/Auth/Keycloak 0/0 maintenance. Stock Admin (two pods) and desired Backend (one pod) ImagePullBackOff because desired tag `12d63b4` has no ARM64 manifest/RepoDigest; legacy backend/frontend remain 1/1 and are not promotion evidence. OIDC discovery returns HTTP 503. Media/Platform runner Listeners remain present. Debug PVC remains Bound, 1Gi/RWO; no Docker cleanup/restart.
+- TCE WF-06 #43354527724 and fallback #43354573806 returned HTTP 503 for all four public probes (expected 200). WF-13 logs show `TCE_MAINTENANCE_MODE` unset; it conservatively keeps read-only fallback enabled. TCE owner must confirm maintenance intent before the variable is set true.
+- Stock scraper remains fail-closed without protected `VNSTOCK_API_KEY`. Media runner retirement still requires Listener absence, GitHub unregister, external backup/retention, DNS and owner approval.
+
+### Ownership and controls
+
+App repositories own CI/tests/builds, immutable GHCR publication, SBOM/provenance and exact digest dispatch. Platform Infra alone owns production manifests, shared GHCR pull credentials, digest promotion, GitOps reconciliation, rollout and health. No app master changed; previous publisher audit remains applicable. No workflow was confirmed redundant/obsolete. All five master branch objects report `protected=false`; administrator action remains required. No duplicate direct SSH/Compose production apply authority was introduced.
+
+No production manifest apply, image promotion, workload rollout, TCE/Auth scale-up, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup, host restart or resource deletion occurred. Auth runtime Secret provisioning/verification was the only noted production Secret operation; shared `ghcr-pull` remained unchanged.
