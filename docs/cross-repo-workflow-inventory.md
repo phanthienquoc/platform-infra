@@ -2343,3 +2343,12 @@ All six monitored native lanes fail both age and inter-arrival budgets at the re
 - K3s inspection #43354800604 snapshot generated 02:49:36Z and was 4,375s old at reference (only 125s inside 4,500s budget). Node Ready/ARM64; disk 57%; ~19GiB available RAM; host restart required. Media/MicroFE active workloads 1/1; TCE/Auth/Keycloak 0/0 maintenance; Stock desired Admin/Backend ImagePullBackOff from missing ARM64 manifest; OIDC probes HTTP 503; Media/Platform runner Listeners present; debug PVC Bound.
 - Preserve CI, tests, security, backup, manual, release and purposeful scheduled jobs. No workflow was confirmed redundant/obsolete. No duplicate direct SSH/Compose production apply authority introduced.
 - No production manifest apply, image promotion, workload rollout, TCE/Auth scale-up, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup, host restart or resource deletion occurred. TCE market-scan schedule unchanged.
+
+
+## Post-merge workflow inventory receipt — 2026-11-13 11:02 ICT
+
+| PR | Exact-head validation | Merge SHA | Post-merge validation |
+|---|---|---|---|
+| #1727 | [#43363175769](https://github.com/phanthienquoc/platform-infra/actions/runs/43363175769) SUCCESS on `0a4c08e48ac6c8a1346ad7f4a2861780cf2dca24` | `dbb2a29c4cc09fb1b303202274e04622e9b49895` | [#43363229247](https://github.com/phanthienquoc/platform-infra/actions/runs/43363229247) SUCCESS on exact merge SHA |
+
+PR #1727 was documentation/checkpoint-only. All applicable validation steps passed; changed-image validation and failure-report were correctly skipped. App repos retain CI/build/immutable GHCR/SBOM/provenance ownership; Platform Infra retains sole production manifest, shared pull credential, digest promotion, GitOps apply, rollout and health authority. No cron, including TCE market-scan, changed.
