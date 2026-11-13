@@ -3957,3 +3957,14 @@ All five master branch objects report `protected=false`. Effective inherited rul
 6. Platform operator: host restart requires a separate approved change window.
 
 No Stock promotion, TCE/Auth scale-up, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup, host restart, resource deletion or production manifest apply occurred. Auth runtime Secret was provisioned/verified by #43345606006; shared `ghcr-pull` was unchanged. Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
+
+
+## Post-merge receipt — 2026-11-13 09:05 ICT
+
+- Readiness PR #1722 exact head `5bba7ee5c27da036c340c828d61be486771db2a4` passed `validate-manifests` [#43350260518](https://github.com/phanthienquoc/platform-infra/actions/runs/43350260518). All 19 applicable validation steps passed; failure-report job was skipped. Exact-head checks covered retired Stock/Media production manifest absence, immutable image-change policy, Auth digest promotion helper, exact Auth/TCE dispatch payload contracts, VPS MCP GitOps-only/read-only contract, shell scripts, cert-manager bootstrap, rendered Auth GitOps contract, 78 rendered Kubernetes objects, secret policy, isolated Keycloak manifests and network boundaries.
+- PR #1722 was re-read immediately before merge; it remained open, non-draft, mergeable, and its head exactly matched the validated SHA. It was squash-merged with expected head SHA `5bba7ee5c27da036c340c828d61be486771db2a4`.
+- Merge SHA/current Platform master is `bd99f6da6fec661e07af33623266014110e78bbe`; direct master ref and PR API confirmed merged.
+- Post-merge `validate-manifests` [#43350361416](https://github.com/phanthienquoc/platform-infra/actions/runs/43350361416) completed SUCCESS on the exact merge SHA `bd99f6da6fec661e07af33623266014110e78bbe`; all 19 applicable validation steps passed and failure-report was skipped.
+- Compare from parent `284ef95917d6395d1fe5cdf7bc83ab22b157be9c` to merge SHA confirms exactly four documentation paths: deployment tracker, workflow inventory and the two 09:05 checkpoint files. No production manifest, workflow definition, image reference, credential, runtime configuration, DNS, database, storage, workload, runner, Docker state, host or schedule changed.
+- TCE `34f6024f`, Stock `b1b5e177`, Media `dcd69869` and Authentication `eab85fab` remain unchanged. No GHCR publication/promotion, manifest apply, workload rollout, scale-up, runner retirement, credential rotation, Docker cleanup, host restart or resource deletion occurred in this documentation PR.
+- Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
