@@ -2253,3 +2253,10 @@ Age: 3/6 pass, 3/6 fail. Inter-arrival: 6/6 fail. Latest available native runs h
 App repos own CI/tests/builds, immutable GHCR publication, SBOM/provenance and exact digest dispatch. Platform Infra alone owns production manifests, shared GHCR pull credentials, digest promotion, GitOps reconciliation, rollout and health. No app master changed; previous publisher audit remains applicable. No workflow was confirmed redundant/obsolete; preserve CI, security, backup, manual, release and scheduled jobs. All five master branch objects report `protected=false`; administrator action remains required.
 
 No production apply, image promotion, rollout, TCE/Auth scale-up, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup, host restart or resource deletion occurred. **TCE market-scan schedule unchanged.**
+
+
+## Post-merge receipt — 2026-11-13 09:05 ICT
+
+Platform PR #1722 exact head `5bba7ee5c27da036c340c828d61be486771db2a4` passed `validate-manifests` #43350260518 (all 19 applicable steps). It was squash-merged with expected head SHA; merge/current Platform master is `bd99f6da6fec661e07af33623266014110e78bbe`. Post-merge `validate-manifests` #43350361416 completed SUCCESS on that exact merge SHA (all 19 applicable steps). Failure-report jobs were skipped.
+
+PR #1722 changed only the readiness tracker, workflow inventory and two 09:05 checkpoint files. No production manifest/workflow, image, credential, runtime configuration, DNS, database, storage, workload, runner, Docker state, host or schedule changed. TCE/Stock/Media/Auth master refs remain unchanged. No GHCR publication/promotion, production apply, rollout, scale-up, runner retirement, credential rotation, cleanup, restart or resource deletion occurred. Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
