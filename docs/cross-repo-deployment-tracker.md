@@ -3892,3 +3892,68 @@ No Stock promotion, TCE/Auth scale-up, runner retirement, credential rotation, D
 - PR #1719 changed only the deployment readiness tracker, workflow inventory and two 08:03 checkpoint files. No production manifest/workflow, image reference, credential, runtime configuration, DNS, database, storage, host, namespace, PVC/PV, workload or schedule changed.
 - No GHCR publication/promotion, production manifest apply, image replacement, workload rollout, runner retirement, credential rotation, Docker cleanup, host restart or resource deletion occurred in this documentation PR. The separate reconciliation #43340151396 provisioned/verified Auth runtime Secret (values suppressed); shared `ghcr-pull` remained unchanged.
 - Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
+
+
+## Current verified snapshot — 2026-11-13 09:05 ICT / 02:05 UTC
+
+This refresh re-read all five master refs, open PRs, latest Actions runs, this tracker and workflow inventory, native schedule histories, TCE recovery logs, Platform reconciliation and K3s inspection. Only first-attempt `event=schedule` runs on master count as native cadence; manual, push, `workflow_run` and `repository_dispatch` are separate evidence.
+
+### Repository refs and latest workflow evidence
+
+| Repository | Master SHA | Open PRs | Latest relevant evidence |
+|---|---|---|---|
+| Platform Infra | `284ef95917d6395d1fe5cdf7bc83ab22b157be9c` | #1314/#544/#541/#539 (draft owner decisions) | Reconcile #43345606006 schedule SUCCESS; inspect #43344825587 schedule SUCCESS; recovery #43340133409 schedule SUCCESS; watchdog #43340414022 schedule FAILURE; TCE heartbeat recovery #43347304694 repository_dispatch SUCCESS. |
+| TCE Dashboard | `34f6024f8ccec8fb3ab6688901b3557e058ddfd1` | none | WF-06 native #43319440089 FAILURE; manual fallback #43347337950 FAILURE; WF-12 native #43347292747 FAILURE; WF-13 #43347313353 SUCCESS; WF-07 backup #43331215706 SUCCESS. |
+| StockDividend | `b1b5e177c9983ecdbbec2f2ead2d54f63b90ca61` | none | CI #42610360402 SUCCESS; scraper #42457182511 fail-closed because protected `VNSTOCK_API_KEY` is missing. |
+| Media Generation | `dcd698699c65ba6e73f6b43838975144777131c3` | none | CI #42539512417 SUCCESS. |
+| Authentication | `eab85fab32d7c9baef750c1fedbb93deb8c1333f` | #76 (draft migration-drift plan) | CI #42654579277 SUCCESS. |
+
+Platform inspection PR #1721 exact-head validation #43345047281 completed SUCCESS; PR #1721 changed only `debug/vps-latest.md` and was squash-merged at current master `284ef95917d6395d1fe5cdf7bc83ab22b157be9c`. App repository master SHAs are unchanged.
+
+### Native schedule measurements — reference 02:05:00Z
+
+| Lane | Latest native | Previous native | Age (s) | Gap (s) | Age/gap budgets (s) | Result |
+|---|---:|---:|---:|---:|---:|---|
+| Platform reconcile | #43345606006 SUCCESS | #43303625294 | 1,990 | 17,121 | 2,700 / 2,700 | age pass / gap fail |
+| Platform inspection | #43344825587 SUCCESS | #43299999915 | 2,367 | 18,064 | 4,500 / 4,500 | age pass / gap fail |
+| Platform recovery | #43340133409 SUCCESS | #43294456060 | 4,525 | 17,876 | 2,700 / 2,700 | age fail / gap fail |
+| Platform watchdog | #43340414022 FAILURE | #43294595071 | 4,398 | 17,953 | 2,700 / 2,700 | age fail / gap fail |
+| TCE WF-06 | #43319440089 FAILURE | #43256916802 | 13,291 | 22,000 | 1,500 / 1,500 | age fail / gap fail |
+| TCE WF-12 | #43347292747 FAILURE | #43305069474 | 1,152 | 17,426 | 1,500 / 1,500 | age pass / gap fail |
+
+3/6 age budgets pass and 3/6 fail; all 6/6 inter-arrival budgets fail. The six latest available native runs had `created_at == run_started_at` (0s observed queue wait). This does not explain events that never created a run; authoritative scheduler enqueue/delivery telemetry remains unavailable. Do not infer runner congestion or dropped-versus-delayed cause. No cron or freshness budget changed.
+
+### TCE health, watchdog and maintenance configuration
+
+WF-12 native #43347292747 failed because its latest qualifying native WF-06 run #43319440089 was 202 minutes old, beyond the 25-minute freshness budget. WF-13 recovery #43347313353 succeeded and dispatched one read-only WF-06 fallback. Exact-ref correlation verified fallback #43347337950 on TCE master SHA `34f6024f`; it returned HTTP 503 for all four strict public probes: TCE web, TCE API, Auth liveness and Auth readiness (each expects 200). Manual fallback does not satisfy native schedule freshness.
+
+The WF-13 job log explicitly shows `TCE_MAINTENANCE_MODE` is unset. The workflow therefore conservatively treated the run as non-maintenance and kept the fallback enabled. Current K3s and Platform reconciliation evidence report TCE frontend/service and Auth service at 0/0 maintenance; Keycloak is also 0/0. This is an operational config mismatch, not proof that the maintenance variable may be changed without owner confirmation.
+
+Exact owner action: confirm whether zero-replica maintenance remains approved; if yes, set the TCE repository Actions variable `TCE_MAINTENANCE_MODE=true` through repository administration. If not, restore services only through approved Platform GitOps. This variable suppresses only redundant WF-06 fallback dispatch; keep WF-06 HTTP-200 probes and WF-12 native schedule monitoring strict. Maintenance is not healthy.
+
+TCE WF-12 heartbeat was authenticated and validated by Platform recovery #43347304694 against TCE Actions API metadata (repository, `event=schedule`, approved workflow path, run IDs, attempt numbers and full SHAs). Platform recovery succeeded and observed inspection #43344825587 fresh, so it avoided duplicate inspection dispatch. Downstream `workflow_run` jobs are not native schedule evidence.
+
+WF-07 Backup #43331215706 succeeded. Configured cron is `30 18 * * *`; run `created_at=23:43:18Z`, 5h13m18s after nominal slot. This is an observed timestamp discrepancy, not authoritative enqueue/delivery telemetry. Preserve backup/retention SSH; it is not a production deployment authority.
+
+### GitOps and K3s
+
+- Current-master scheduled reconciliation #43345606006 completed SUCCESS at 01:33:36Z on `284ef959`, event=schedule, mode=apply, target=all, `allow_image_changes=false`. Auth runtime Secret was provisioned and verified (values suppressed); shared `ghcr-pull` remained unchanged. GitOps drift was false; manifest apply and post-apply drift steps were correctly skipped. No image replacement or workload rollout occurred.
+- Deployment lane summary: Auth `maintenance`, TCE `maintenance`, MicroFE `healthy`, Keycloak `skipped`. No live health is asserted for zero-replica maintenance lanes.
+- Read-only K3s inspection #43344825587 generated `debug/vps-latest.md` at 01:25:41Z; age at reference was 2,359s, within the 4,500s budget. Node `tce-k3s-01` Ready, ARM64, Ubuntu 22.04.5, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2. Disk 57% (~20GiB free), available RAM ~19GiB, disk pressure normal. Host uptime ~195 days and `restart_required=yes` due pending OS/kernel/containerd/Docker updates; no restart occurred.
+- Media backend/frontend and MicroFE Shell/WS/NATS were 1/1 Running. TCE/Auth/Keycloak were 0/0 maintenance. Stock Admin had two ImagePullBackOff pods and desired Stock Backend one ImagePullBackOff pod; desired tag `12d63b4` failed with `no match for platform in manifest` and has no usable ARM64 RepoDigest. Legacy Stock backend/frontend remained 1/1; do not promote legacy tags or local image IDs.
+- OIDC discovery for both Keycloak realms returned HTTP 503. Media and Platform runner services were active/enabled and both Runner.Listener processes were present. Docker inventory was 9.195GB with 5.773GB reclaimable; no cleanup occurred.
+
+### Ownership, governance and exact next actions
+
+App repositories own tests/builds, immutable GHCR publication, SBOM/provenance and exact digest dispatch. Platform Infra remains sole owner of production manifests, shared GHCR pull credentials, digest promotion, GitOps plan/apply, K3s rollout and health. No app master changed, so the prior publisher-contract audit remains applicable. No workflow was proven redundant/obsolete; preserve CI, security, backup, manual, release and scheduled jobs.
+
+All five master branch objects report `protected=false`. Effective inherited rulesets remain unverified; Stock rulesets API 403 is a restriction, not an empty result. Administrator must enforce PR-only, required checks, no force-push/deletion and squash-only.
+
+1. TCE administrator: confirm approved zero-replica maintenance; set `TCE_MAINTENANCE_MODE=true` only if approved, otherwise coordinate Platform GitOps restoration. Keep HTTP-200 and WF-12 strict.
+2. GitHub administrator: obtain authoritative scheduler enqueue/delivery telemetry for six lanes and investigate WF-07 timestamp discrepancy. Preserve cron and budgets.
+3. Platform operator: continue fresh read-only inspection/reconciliation and obtain dedicated current-master `mode=plan` before any separate production apply approval.
+4. Stock owner: provide ARM64-compatible immutable digest/provenance and protected `VNSTOCK_API_KEY` only if reactivation is approved.
+5. Media owner: retire runner only after Listener absence, GitHub unregister, external backup/retention, authoritative DNS and owner approval.
+6. Platform operator: host restart requires a separate approved change window.
+
+No Stock promotion, TCE/Auth scale-up, runner retirement, credential rotation, DNS/database/storage mutation, Docker cleanup, host restart, resource deletion or production manifest apply occurred. Auth runtime Secret was provisioned/verified by #43345606006; shared `ghcr-pull` was unchanged. Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
