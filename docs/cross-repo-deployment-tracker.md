@@ -3788,3 +3788,13 @@ Stock scraper remains fail-closed because protected `VNSTOCK_API_KEY` is missing
 6. Platform operator: host restart requires a separate approved change window.
 
 Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
+
+
+## Post-merge receipt — 2026-11-13 07:01 ICT
+
+- Readiness PR #1716 exact head `89b44594c24432ea7cb8b258506caff63c0d7652` passed validate-manifests [#43334052262](https://github.com/phanthienquoc/platform-infra/actions/runs/43334052262). All applicable immutable-image, digest-promotion, Auth/TCE dispatch-payload, shell, cert-manager, manifest-render, Auth GitOps, YAML, secret, isolated-Keycloak and network-boundary checks passed; changed-image validation was skipped because no production image reference changed; failure-report was skipped.
+- PR #1716 was squash-merged with expected head SHA `89b44594c24432ea7cb8b258506caff63c0d7652`. Merge SHA/current master is `dca5b42b81bb157842bbc5e60506368438d17257`; direct master ref and PR API confirmed merged.
+- Post-merge validate-manifests [#43334121802](https://github.com/phanthienquoc/platform-infra/actions/runs/43334121802) completed SUCCESS on exact merge SHA `dca5b42b81bb157842bbc5e60506368438d17257`. All applicable validation steps passed; changed-image validation and failure-report were skipped as expected for a documentation-only merge.
+- PR #1716 changed only the deployment tracker, workflow inventory and two timestamped checkpoint files. No production manifest/workflow, image, credential, runtime, DNS, database, storage, host, namespace, PVC/PV, workload or schedule changed.
+- No new GHCR publication/promotion, production apply, image replacement, workload rollout, runner retirement, credential rotation, Docker cleanup, host restart or resource deletion occurred.
+- Platform Infra remains the sole production apply authority. **TCE market-scan schedule unchanged.**
