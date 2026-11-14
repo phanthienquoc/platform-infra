@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-11-14T16:56:20+00:00
+Generated: 2026-11-14T16:58:46+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -18,7 +18,7 @@ Filesystem      Size  Used Avail Use% Mounted on
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   26G   20G  57% /
 disk_pressure: normal (57%)
- 16:56:20 up 197 days,  2:46,  0 users,  load average: 0.19, 0.27, 0.27
+ 16:58:46 up 197 days,  2:49,  0 users,  load average: 0.55, 0.41, 0.32
 
 ### Top disk consumers (best-effort, runner-readable paths)
 4.0K	/var/lib/docker
@@ -38,13 +38,13 @@ disk_pressure: normal (57%)
 236M	/var/lib/rancher/k3s
 236M	/var/lib/rancher/k3s/data
 1.7G	/var/log/journal
-2.0G	/var/log
+2.1G	/var/log
 
 ## Runner
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
 1057701 /opt/media-actions-runner/bin/Runner.Listener run --startuptype service
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-1543653 /opt/actions-runner/bin/Runner.Worker spawnclient 154 161
+1551078 /opt/actions-runner/bin/Runner.Worker spawnclient 143 159
   actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-media-generation.media-generation-k3s-01)
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service           loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
@@ -142,8 +142,8 @@ media-prod         media-generation-frontend-58d8bbc67-lwhhf   1/1     Running  
 microfe-platform   microfe-shell-7b44b44dfb-ln4sw              1/1     Running            0             13d   10.42.0.153   tce-k3s-01   <none>           <none>
 microfe-platform   microfe-ws-5bc979dd77-txd28                 1/1     Running            0             13d   10.42.0.152   tce-k3s-01   <none>           <none>
 microfe-platform   nats-7bc8d9f768-q682m                       1/1     Running            0             36d   10.42.0.178   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-5864bcb497-6b6hm                0/1     ErrImagePull       0             12d   10.42.0.182   tce-k3s-01   <none>           <none>
-stock-prod         stock-admin-59cddb87b7-qgkjr                0/1     ImagePullBackOff   0             12d   10.42.0.180   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-5864bcb497-6b6hm                0/1     ImagePullBackOff   0             12d   10.42.0.182   tce-k3s-01   <none>           <none>
+stock-prod         stock-admin-59cddb87b7-qgkjr                0/1     ErrImagePull       0             12d   10.42.0.180   tce-k3s-01   <none>           <none>
 stock-prod         stock-backend-57ccb8ff6-d25jq               1/1     Running            0             56d   10.42.0.55    tce-k3s-01   <none>           <none>
 stock-prod         stock-backend-6bc874575d-xcg2j              0/1     ImagePullBackOff   0             12d   10.42.0.183   tce-k3s-01   <none>           <none>
 stock-prod         stock-frontend-79c57845df-z747s             1/1     Running            0             56d   10.42.0.56    tce-k3s-01   <none>           <none>
@@ -204,7 +204,7 @@ media-prod: none
 ### Pod failure evidence
 stock-prod	stock-admin-5864bcb497-6b6hm	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": no match for platform in manifest: not found
 stock-prod	stock-admin-59cddb87b7-qgkjr	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/admin:12d63b4": no match for platform in manifest: not found
-stock-prod	stock-backend-6bc874575d-xcg2j	ErrImagePull	rpc error: code = NotFound desc = failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/backend:12d63b4": no match for platform in manifest: not found
+stock-prod	stock-backend-6bc874575d-xcg2j	ImagePullBackOff	Back-off pulling image "ghcr.io/phanthienquoc/stockdividend/backend:12d63b4": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image "ghcr.io/phanthienquoc/stockdividend/backend:12d63b4": no match for platform in manifest: not found
 
 ### Recent failure events
 
@@ -224,11 +224,11 @@ docker.io/rancher/mirrored-pause:3.10.2	docker.io/rancher/mirrored-pause@sha256:
 ghcr.io/phanthienquoc/auth-service/auth:prod-v1.0.0-ceb2688	ghcr.io/phanthienquoc/auth-service/auth@sha256:15bd51d68155a3b0cbc732e3baa148fc123aafb11b4290e6f66aa252969cdfc7	sha256:b247ff3f816a52c88fed8ef366c5c5996a6cdaccb89ee223701328c88d4c1b8d	false	71649563
 ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-58f80a8	ghcr.io/phanthienquoc/media-generation/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d	sha256:9ab2f390fba17564cdffb00b1f300a093d6d615fedd4a53f027e8598cb20ed24	false	87947792
 ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-58f80a8	ghcr.io/phanthienquoc/media-generation/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a	sha256:03138627646b3a17cfafb2a7f01bf02aa5c22f78b63bf07d768db95f0b8c67f8	false	77140058
+ghcr.io/phanthienquoc/stockdividend/backend:23b2878		sha256:bcf5f7b1b660b5b93cd9d9f4f041db7e9166c89b084412fa4f66e8e4d9a43ad1	false	14420347
+	ghcr.io/phanthienquoc/microfe-shell@sha256:40715628ad7572654ce35dab0835aa8b875d1bf9a20e9a13d257a173feac17ec	sha256:e4577fe7033fba879827b7e4df656e13434d7a70757a3400a8909cab95e55206	false	25830438
 	ghcr.io/phanthienquoc/microfe-ws@sha256:416bc16ade0becf398b0554571f6813985c55dffaf742042a7edef10ca2ea16d	sha256:a26e88e61c4420c79b2f23d6ca68b0b67880a3423cb773c48094ac77fc72aa99	false	65079739
 	ghcr.io/phanthienquoc/microfe-ws@sha256:92e6799bed0dcbeedc1c05575b6416e6e16d27beeab627b21cf1cc34b70ee631	sha256:20bce89a7a7eb9d16ebca87519e5c3e914d89d513db6747a27a9096aa73ba8c2	false	64949303
-ghcr.io/phanthienquoc/stockdividend/backend:23b2878		sha256:bcf5f7b1b660b5b93cd9d9f4f041db7e9166c89b084412fa4f66e8e4d9a43ad1	false	14420347
 ghcr.io/phanthienquoc/stockdividend/user:23b2878		sha256:bca44dd31869a4874a795c6e6ace51f9362731770f3ac9ca1ee8f3e608d6bf99	false	66238963
-	ghcr.io/phanthienquoc/microfe-shell@sha256:40715628ad7572654ce35dab0835aa8b875d1bf9a20e9a13d257a173feac17ec	sha256:e4577fe7033fba879827b7e4df656e13434d7a70757a3400a8909cab95e55206	false	25830438
 	ghcr.io/phanthienquoc/microfe-shell@sha256:ae64acc032ce13d046ab78c9628b5b0b308f812b67ddfab7503d91e5a3ed8dcd	sha256:d6d34a138c9fb485abe5e70cf0b084e2d8cf482474be71ba0397819b2697f059	false	25830437
 ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-48e3842	ghcr.io/phanthienquoc/tce-dashboard/service@sha256:214aee66dadaeb5e5acd7ac03da6d7461f68571ed2ba8ef3ef73384f7f26300a	sha256:924df0921bfdb32ebd65d6d4b05823d3dc80357f9ab4289d9eea991a96778931	false	457622464
 ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-e75e338	ghcr.io/phanthienquoc/tce-dashboard/service@sha256:1dc9d8c2136598a748bbb0aafc615a71aeb3f2a5099c335859536212723f35f0	sha256:d16e4e0a92f04c63bd4777c1b3f967c70da62df6c2f50c796b8daef0cc2e7e09	false	457620530
@@ -1430,5 +1430,5 @@ keycloak   0/0     0            0           29d   keycloak     quay.io/keycloak/
 error: timed out waiting for the condition
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.085470s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.050042s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.051872s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049630s remote_ip=132.226.175.206
