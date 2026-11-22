@@ -641,7 +641,7 @@ if "assert_failure scripts/resolve-push-deployment-scope.sh" not in scope_resolv
     fail("Push-scope resolver-only changes must fail closed without selecting a production workload.")
 for required in (
     "apps/**/*.md|apps/**/docs/*",
-    "ops/*.md|ops/**/*.md|platform/microfe/*.md|platform/microfe/**/*.md",
+    "ops/*.md|platform/microfe/*.md",
     "assert_failure ops/README.md platform/microfe/README.md",
     "assert_scope microfe platform/microfe/kustomization.yaml ops/README.md platform/microfe/README.md",
     "apps/tce-vps-control-mcp/*",
@@ -1665,7 +1665,7 @@ for ignored_path_contract in (
     "scripts/validate-*.py",
     "scripts/tests/*",
     "docs/*",
-    "ops/*.md|ops/**/*.md|platform/microfe/*.md|platform/microfe/**/*.md",
+    "ops/*.md|platform/microfe/*.md",
     "platform/keycloak/*.md",
     "debug/vps-latest.md",
 ):
