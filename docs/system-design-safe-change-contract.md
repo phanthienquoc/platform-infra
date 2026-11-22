@@ -45,6 +45,17 @@ flowchart TB
   service --> db
 ```
 
+### Active public route map
+
+| Hostname / path | Owner |
+|---|---|
+| `sso.mrcute.space` | Keycloak |
+| `auth.mrcute.space` | Central Auth API |
+| `app.mrcute.space` | MicroFE shell |
+| `ws.mrcute.space` | WebSocket gateway |
+| `tce.mrcute.space/` | TCE frontend |
+| `tce.mrcute.space/api` | TCE service API |
+
 The diagram expresses intended ownership and declared dependencies, not proof of current pod readiness, public DNS, certificate validity, OIDC health or database connectivity.
 
 ## 3. Production deployment path

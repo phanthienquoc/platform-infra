@@ -1,8 +1,8 @@
 # VPS inspection
 
+Sanitized working-tree artifact: retired workload identifiers and retired hostnames are anonymized; observed counts, states, and image digests are retained. Active Platform/TCE hostnames are preserved. No runtime resource was changed.
 
-Sanitized working-tree artifact: retired workload identifiers are anonymized; observed counts, states, and image digests are retained. No runtime resource was changed.
-Generated: 2026-11-22T12:00:04+00:00
+Generated: 2026-11-22T15:02:29+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -20,7 +20,7 @@ Filesystem      Size  Used Avail Use% Mounted on
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   26G   20G  58% /
 disk_pressure: normal (58%)
- 12:00:04 up 204 days, 21:50,  0 users,  load average: 0.33, 0.25, 0.15
+ 15:02:29 up 205 days, 52 min,  0 users,  load average: 0.21, 0.33, 0.23
 
 ### Top disk consumers (best-effort, runner-readable paths)
 4.0K	/var/lib/docker
@@ -44,10 +44,10 @@ disk_pressure: normal (58%)
 
 ## Runner
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
-1057701 /opt/media-actions-runner/bin/Runner.Listener run --startuptype service
+1057701 /opt/retired-workload-runner/bin/Runner.Listener run --startuptype service
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-2047331 /opt/actions-runner/bin/Runner.Worker spawnclient 154 163
-  actions.runner.retired-workload-b.runner.service loaded    active   running GitHub Actions Runner (phanthienquoc-retired-workload-b.retired-workload-b-runner)
+2187165 /opt/actions-runner/bin/Runner.Worker spawnclient 155 163
+  actions.runner.retired-workload-b-repository.retired-workload-b-k3s-01.service loaded    active   running GitHub Actions Runner (retired-workload-b-repository.retired-workload-b-k3s-01)
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service           loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
 runner_service_enabled: enabled
@@ -187,7 +187,7 @@ k3s-debug   k3s-debug-logs   Bound    pvc-9aed95ca-8365-46a4-a06a-d8f26d600456  
 NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                      STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE   VOLUMEMODE
 pvc-9aed95ca-8365-46a4-a06a-d8f26d600456   1Gi        RWO            Delete           Bound    k3s-debug/k3s-debug-logs   local-path     <unset>                          45d   Filesystem
 
-### Retired workloads A/B VolumeSnapshot references (names only)
+### Retired workload VolumeSnapshot references (names only)
 retired-namespace-a: none
 retired-namespace-b: none
 
@@ -211,12 +211,12 @@ docker.io/rancher/mirrored-pause:3.10.2	docker.io/rancher/mirrored-pause@sha256:
 ghcr.io/phanthienquoc/auth-service/auth:prod-v1.0.0-ceb2688	ghcr.io/phanthienquoc/auth-service/auth@sha256:15bd51d68155a3b0cbc732e3baa148fc123aafb11b4290e6f66aa252969cdfc7	sha256:b247ff3f816a52c88fed8ef366c5c5996a6cdaccb89ee223701328c88d4c1b8d	false	71649563
 ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-58f80a8	ghcr.io/retired-workload-b-repository/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d	sha256:9ab2f390fba17564cdffb00b1f300a093d6d615fedd4a53f027e8598cb20ed24	false	87947792
 ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-58f80a8	ghcr.io/retired-workload-b-repository/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a	sha256:03138627646b3a17cfafb2a7f01bf02aa5c22f78b63bf07d768db95f0b8c67f8	false	77140058
-ghcr.io/retired-workload-a-repository/user:23b2878		sha256:bca44dd31869a4874a795c6e6ace51f9362731770f3ac9ca1ee8f3e608d6bf99	false	66238963
-	ghcr.io/phanthienquoc/microfe-shell@sha256:ae64acc032ce13d046ab78c9628b5b0b308f812b67ddfab7503d91e5a3ed8dcd	sha256:d6d34a138c9fb485abe5e70cf0b084e2d8cf482474be71ba0397819b2697f059	false	25830437
 	ghcr.io/phanthienquoc/microfe-ws@sha256:416bc16ade0becf398b0554571f6813985c55dffaf742042a7edef10ca2ea16d	sha256:a26e88e61c4420c79b2f23d6ca68b0b67880a3423cb773c48094ac77fc72aa99	false	65079739
 	ghcr.io/phanthienquoc/microfe-ws@sha256:92e6799bed0dcbeedc1c05575b6416e6e16d27beeab627b21cf1cc34b70ee631	sha256:20bce89a7a7eb9d16ebca87519e5c3e914d89d513db6747a27a9096aa73ba8c2	false	64949303
 ghcr.io/retired-workload-a-repository/backend:23b2878		sha256:bcf5f7b1b660b5b93cd9d9f4f041db7e9166c89b084412fa4f66e8e4d9a43ad1	false	14420347
+ghcr.io/retired-workload-a-repository/user:23b2878		sha256:bca44dd31869a4874a795c6e6ace51f9362731770f3ac9ca1ee8f3e608d6bf99	false	66238963
 	ghcr.io/phanthienquoc/microfe-shell@sha256:40715628ad7572654ce35dab0835aa8b875d1bf9a20e9a13d257a173feac17ec	sha256:e4577fe7033fba879827b7e4df656e13434d7a70757a3400a8909cab95e55206	false	25830438
+	ghcr.io/phanthienquoc/microfe-shell@sha256:ae64acc032ce13d046ab78c9628b5b0b308f812b67ddfab7503d91e5a3ed8dcd	sha256:d6d34a138c9fb485abe5e70cf0b084e2d8cf482474be71ba0397819b2697f059	false	25830437
 ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-48e3842	ghcr.io/phanthienquoc/tce-dashboard/service@sha256:214aee66dadaeb5e5acd7ac03da6d7461f68571ed2ba8ef3ef73384f7f26300a	sha256:924df0921bfdb32ebd65d6d4b05823d3dc80357f9ab4289d9eea991a96778931	false	457622464
 ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-e75e338	ghcr.io/phanthienquoc/tce-dashboard/service@sha256:1dc9d8c2136598a748bbb0aafc615a71aeb3f2a5099c335859536212723f35f0	sha256:d16e4e0a92f04c63bd4777c1b3f967c70da62df6c2f50c796b8daef0cc2e7e09	false	457620530
 ghcr.io/phanthienquoc/tce-dashboard/web:prod-v0.1.0-e75e338	ghcr.io/phanthienquoc/tce-dashboard/web@sha256:0416f01f3cce813ead623403ee354d7e5ff4160d1bfc24c020cfd9387da3ec27	sha256:3f6764e54b88e7d88ceca48e9386d4f5601332efad7b3777610453353edd5e6e	false	75833971
@@ -229,8 +229,8 @@ quay.io/keycloak/keycloak:26.8.1	quay.io/keycloak/keycloak@sha256:79c623a22abacf
 ### GHCR image digest coverage
 status: warning
 GHCR-tagged cached image(s) have no RepoDigest; local image IDs are not registry digests or promotion evidence:
-ghcr.io/retired-workload-a-repository/user:23b2878
 ghcr.io/retired-workload-a-repository/backend:23b2878
+ghcr.io/retired-workload-a-repository/user:23b2878
 Containers (container ID, name, image reference, state):
 921cf16447b287444777e30ab96c083bf9530fb91e3e220fe4ffb0aa336572d3	ws	sha256:a26e88e61c4420c79b2f23d6ca68b0b67880a3423cb773c48094ac77fc72aa99	CONTAINER_RUNNING
 534b404798d43154db54be31ecefbffc57b06f8379bc8e69a99004e87f9fd350	shell	sha256:d6d34a138c9fb485abe5e70cf0b084e2d8cf482474be71ba0397819b2697f059	CONTAINER_RUNNING
@@ -245,8 +245,8 @@ e94dd30d06fd80099e243616c4f90590695e72f103ad61068e7d9637a903a1b9	local-path-prov
 0e13b0ae3af00086b1c5e69ec22f484641c81559ed0fa04c0d82d88fa4bd8332	lb-tcp-80	sha256:1084dac5ea9871ffa6d01fe67150e175df9c28579073cd40d2186c08b37aba50	CONTAINER_RUNNING
 b5e1e29f04d3b0453f48436a80f45f6c1bb5f9e4bfda2f2b6e63ee3b231142f8	metrics-server	sha256:37ceda8805d2e3bca331bcdd659d9cf8d3b4075a68b288054c88e62232d52883	CONTAINER_RUNNING
 
-### Retired workloads A/B protected decommission preflight (read-only)
-Active production manifest tree contains no retired Retired workload A/Retired workload B namespace or image references.
+### Retired workload protected decommission preflight (read-only)
+Active production manifest tree contains no retired retired workload namespace or image references.
 ### Platform namespace preservation check
 Preserved namespace present: tce-prod
 Preserved namespace present: microfe-platform
@@ -257,13 +257,13 @@ endpoints/backend
 endpoints/retired-workload-a-admin
 endpoints/retired-workload-a-backend
 endpoints/retired-workload-a-frontend
-limitrange/stock-defaults
-resourcequota/stock-budget
-resourcequota/stock-quota
+limitrange/retired-workload-a-defaults
+resourcequota/retired-workload-a-budget
+resourcequota/retired-workload-a-quota
 secret/ghcr-pull
 secret/ghcr-secret
 secret/retired-workload-a-tls
-secret/stock-secrets
+secret/retired-workload-a-secrets
 serviceaccount/default
 service/backend
 service/retired-workload-a-admin
@@ -303,10 +303,10 @@ endpointslice.discovery.k8s.io/backend-fvv26
 endpointslice.discovery.k8s.io/retired-workload-a-admin-sf6kz
 endpointslice.discovery.k8s.io/retired-workload-a-backend-jbwqp
 endpointslice.discovery.k8s.io/retired-workload-a-frontend-b8rbs
-ingress.networking.k8s.io/stock
+ingress.networking.k8s.io/retired-workload-a
 ingress.networking.k8s.io/retired-workload-a-ingress
 ### Ingress hosts/TLS secret references and published addresses (names only): retired-namespace-a
-stock	retired-workload-a-admin.invalid,retired-workload-a-api.invalid,retired-workload-a.invalid,www.retired-workload-a.invalid	retired-workload-a-admin.invalid,retired-workload-a-api.invalid,retired-workload-a.invalid,www.retired-workload-a.invalid	retired-workload-a-tls	10.0.0.120
+retired-workload-a	retired-workload-a-admin.invalid,retired-workload-a-api.invalid,retired-workload-a.invalid,www.retired-workload-a.invalid	retired-workload-a-admin.invalid,retired-workload-a-api.invalid,retired-workload-a.invalid,www.retired-workload-a.invalid	retired-workload-a-tls	10.0.0.120
 retired-workload-a-ingress	retired-workload-a-admin.invalid,retired-workload-a-api.invalid,retired-workload-a.invalid,www.retired-workload-a.invalid	retired-workload-a-admin.invalid,retired-workload-a-api.invalid,retired-workload-a.invalid,www.retired-workload-a.invalid	retired-workload-a-tls	10.0.0.120
 DNS ownership is not inferred; reconcile these hostnames with authoritative DNS/provider records before deletion.
 ### Common workload status: retired-namespace-a
@@ -326,15 +326,15 @@ replicaset.apps/retired-workload-a-admin-565b8b9c8       0         0         0  
 replicaset.apps/retired-workload-a-admin-5864bcb497      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=5864bcb497
 replicaset.apps/retired-workload-a-admin-59cddb87b7      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=59cddb87b7
 replicaset.apps/retired-workload-a-admin-6c686779ff      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=6c686779ff
-replicaset.apps/retired-workload-a-admin-6fb68dc964      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=6fb68dc964
+replicaset.apps/retired-workload-a-admin-6fb68dc964      0         0         0       21d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=6fb68dc964
 replicaset.apps/retired-workload-a-admin-6fc4d4f77f      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=6fc4d4f77f
 replicaset.apps/retired-workload-a-admin-6fc8bf8546      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=6fc8bf8546
 replicaset.apps/retired-workload-a-admin-78f96594cf      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=78f96594cf
-replicaset.apps/retired-workload-a-admin-7f66f6f765      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=7f66f6f765
+replicaset.apps/retired-workload-a-admin-7f66f6f765      0         0         0       21d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=7f66f6f765
 replicaset.apps/retired-workload-a-admin-9c5d4c9df       0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=9c5d4c9df
 replicaset.apps/retired-workload-a-admin-cd9c555d7       0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=cd9c555d7
 replicaset.apps/retired-workload-a-backend-5bb8754458    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=5bb8754458
-replicaset.apps/retired-workload-a-backend-5cff6d5655    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=5cff6d5655
+replicaset.apps/retired-workload-a-backend-5cff6d5655    0         0         0       21d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=5cff6d5655
 replicaset.apps/retired-workload-a-backend-6647646874    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=6647646874
 replicaset.apps/retired-workload-a-backend-68458d6cdf    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=68458d6cdf
 replicaset.apps/retired-workload-a-backend-6bc874575d    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=6bc874575d
@@ -353,42 +353,42 @@ endpoints/retired-workload-b
 endpoints/retired-workload-b-frontend
 secret/ghcr-pull
 secret/retired-workload-b-secrets
-secret/media-mrcute-tls
+secret/retired-workload-b-tls
 serviceaccount/default
 service/retired-workload-b
 service/retired-workload-b-frontend
-order.acme.cert-manager.io/media-mrcute-tls-1-249384574
-deployment.retired application tree B
-deployment.retired application tree B-frontend
-replicaset.retired application tree B-557898ffc5
-replicaset.retired application tree B-5c9b76dfb9
-replicaset.retired application tree B-646c797f66
-replicaset.retired application tree B-665d86ff54
-replicaset.retired application tree B-6857cc5595
-replicaset.retired application tree B-6b6f875997
-replicaset.retired application tree B-6c68f86bf4
-replicaset.retired application tree B-6f66c4dc4d
-replicaset.retired application tree B-74bdb964d8
-replicaset.retired application tree B-86c45c6686
-replicaset.retired application tree B-8d887c6c9
-replicaset.retired application tree B-frontend-5445d66b98
-replicaset.retired application tree B-frontend-55447798b6
-replicaset.retired application tree B-frontend-58c8dd5969
-replicaset.retired application tree B-frontend-58d8bbc67
-replicaset.retired application tree B-frontend-597b779c9d
-replicaset.retired application tree B-frontend-5df46b89c
-replicaset.retired application tree B-frontend-64dfb87d84
-replicaset.retired application tree B-frontend-667fb49d95
-replicaset.retired application tree B-frontend-7d4cc58775
-replicaset.retired application tree B-frontend-867d5d8b77
-replicaset.retired application tree B-frontend-c44458c86
-certificaterequest.cert-manager.io/media-mrcute-tls-1
-certificate.cert-manager.io/media-mrcute-tls
+order.acme.cert-manager.io/retired-workload-b-tls-1-249384574
+deployment.apps/retired-workload-b
+deployment.apps/retired-workload-b-frontend
+replicaset.apps/retired-workload-b-557898ffc5
+replicaset.apps/retired-workload-b-5c9b76dfb9
+replicaset.apps/retired-workload-b-646c797f66
+replicaset.apps/retired-workload-b-665d86ff54
+replicaset.apps/retired-workload-b-6857cc5595
+replicaset.apps/retired-workload-b-6b6f875997
+replicaset.apps/retired-workload-b-6c68f86bf4
+replicaset.apps/retired-workload-b-6f66c4dc4d
+replicaset.apps/retired-workload-b-74bdb964d8
+replicaset.apps/retired-workload-b-86c45c6686
+replicaset.apps/retired-workload-b-8d887c6c9
+replicaset.apps/retired-workload-b-frontend-5445d66b98
+replicaset.apps/retired-workload-b-frontend-55447798b6
+replicaset.apps/retired-workload-b-frontend-58c8dd5969
+replicaset.apps/retired-workload-b-frontend-58d8bbc67
+replicaset.apps/retired-workload-b-frontend-597b779c9d
+replicaset.apps/retired-workload-b-frontend-5df46b89c
+replicaset.apps/retired-workload-b-frontend-64dfb87d84
+replicaset.apps/retired-workload-b-frontend-667fb49d95
+replicaset.apps/retired-workload-b-frontend-7d4cc58775
+replicaset.apps/retired-workload-b-frontend-867d5d8b77
+replicaset.apps/retired-workload-b-frontend-c44458c86
+certificaterequest.cert-manager.io/retired-workload-b-tls-1
+certificate.cert-manager.io/retired-workload-b-tls
 endpointslice.discovery.k8s.io/retired-workload-b-frontend-46jzx
 endpointslice.discovery.k8s.io/retired-workload-b-hqjkh
-ingress.networking.k8s.io/media
+ingress.networking.k8s.io/retired-workload-b
 ### Ingress hosts/TLS secret references and published addresses (names only): retired-namespace-b
-media	retired-workload-b.invalid	retired-workload-b.invalid	media-mrcute-tls	10.0.0.120
+retired-workload-b	retired-workload-b.invalid	retired-workload-b.invalid	retired-workload-b-tls	10.0.0.120
 DNS ownership is not inferred; reconcile these hostnames with authoritative DNS/provider records before deletion.
 ### Common workload status: retired-namespace-b
 NAME                                TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE   SELECTOR
@@ -396,32 +396,32 @@ service/retired-workload-b            ClusterIP   10.43.252.95   <none>        3
 service/retired-workload-b-frontend   ClusterIP   10.43.48.52    <none>        80/TCP     52d   app=retired-workload-b-frontend
 
 NAME                                        READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS                  IMAGES                                                                                                                    SELECTOR
-deployment.retired application tree B            0/0     0            0           53d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d    app=retired-workload-b
-deployment.retired application tree B-frontend   0/0     0            0           52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a   app=retired-workload-b-frontend
+deployment.apps/retired-workload-b            0/0     0            0           53d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d    app=retired-workload-b
+deployment.apps/retired-workload-b-frontend   0/0     0            0           52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a   app=retired-workload-b-frontend
 
 NAME                                                   DESIRED   CURRENT   READY   AGE   CONTAINERS                  IMAGES                                                                                                                    SELECTOR
-replicaset.retired application tree B-557898ffc5            0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-56179ff                                                        app=retired-workload-b,pod-template-hash=557898ffc5
-replicaset.retired application tree B-5c9b76dfb9            0         0         0       39d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-58f80a8                                                        app=retired-workload-b,pod-template-hash=5c9b76dfb9
-replicaset.retired application tree B-646c797f66            0         0         0       22d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-58f80a8                                                        app=retired-workload-b,pod-template-hash=646c797f66
-replicaset.retired application tree B-665d86ff54            0         0         0       21d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d    app=retired-workload-b,pod-template-hash=665d86ff54
-replicaset.retired application tree B-6857cc5595            0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository-backend:prod-v0.3.0-85a354f                                                        app=retired-workload-b,pod-template-hash=6857cc5595
-replicaset.retired application tree B-6b6f875997            0         0         0       51d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-a34d8ca                                                        app=retired-workload-b,pod-template-hash=6b6f875997
-replicaset.retired application tree B-6c68f86bf4            0         0         0       22d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-58f80a8                                                        app=retired-workload-b,pod-template-hash=6c68f86bf4
-replicaset.retired application tree B-6f66c4dc4d            0         0         0       47d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-362cb81                                                        app=retired-workload-b,pod-template-hash=6f66c4dc4d
-replicaset.retired application tree B-74bdb964d8            0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-5229584                                                        app=retired-workload-b,pod-template-hash=74bdb964d8
-replicaset.retired application tree B-86c45c6686            0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository-backend:prod-v0.3.0-cb5355d                                                        app=retired-workload-b,pod-template-hash=86c45c6686
-replicaset.retired application tree B-8d887c6c9             0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository-backend:prod-v0.3.0-bf6c55a                                                        app=retired-workload-b,pod-template-hash=8d887c6c9
-replicaset.retired application tree B-frontend-5445d66b98   0         0         0       22d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-58f80a8                                                       app=retired-workload-b-frontend,pod-template-hash=5445d66b98
-replicaset.retired application tree B-frontend-55447798b6   0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository-frontend:prod-v0.3.0-cc47a89                                                       app=retired-workload-b-frontend,pod-template-hash=55447798b6
-replicaset.retired application tree B-frontend-58c8dd5969   0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository-frontend:prod-v0.3.0-85a354f                                                       app=retired-workload-b-frontend,pod-template-hash=58c8dd5969
-replicaset.retired application tree B-frontend-58d8bbc67    0         0         0       21d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a   app=retired-workload-b-frontend,pod-template-hash=58d8bbc67
-replicaset.retired application tree B-frontend-597b779c9d   0         0         0       39d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-58f80a8                                                       app=retired-workload-b-frontend,pod-template-hash=597b779c9d
-replicaset.retired application tree B-frontend-5df46b89c    0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-56179ff                                                       app=retired-workload-b-frontend,pod-template-hash=5df46b89c
-replicaset.retired application tree B-frontend-64dfb87d84   0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-5229584                                                       app=retired-workload-b-frontend,pod-template-hash=64dfb87d84
-replicaset.retired application tree B-frontend-667fb49d95   0         0         0       47d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-362cb81                                                       app=retired-workload-b-frontend,pod-template-hash=667fb49d95
-replicaset.retired application tree B-frontend-7d4cc58775   0         0         0       51d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-a34d8ca                                                       app=retired-workload-b-frontend,pod-template-hash=7d4cc58775
-replicaset.retired application tree B-frontend-867d5d8b77   0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository-frontend:prod-v0.3.0-bf6c55a                                                       app=retired-workload-b-frontend,pod-template-hash=867d5d8b77
-replicaset.retired application tree B-frontend-c44458c86    0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository-frontend:prod-v0.3.0-cb5355d                                                       app=retired-workload-b-frontend,pod-template-hash=c44458c86
+replicaset.apps/retired-workload-b-557898ffc5            0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-56179ff                                                        app=retired-workload-b,pod-template-hash=557898ffc5
+replicaset.apps/retired-workload-b-5c9b76dfb9            0         0         0       39d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-58f80a8                                                        app=retired-workload-b,pod-template-hash=5c9b76dfb9
+replicaset.apps/retired-workload-b-646c797f66            0         0         0       23d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-58f80a8                                                        app=retired-workload-b,pod-template-hash=646c797f66
+replicaset.apps/retired-workload-b-665d86ff54            0         0         0       21d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d    app=retired-workload-b,pod-template-hash=665d86ff54
+replicaset.apps/retired-workload-b-6857cc5595            0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository-backend:prod-v0.3.0-85a354f                                                        app=retired-workload-b,pod-template-hash=6857cc5595
+replicaset.apps/retired-workload-b-6b6f875997            0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-a34d8ca                                                        app=retired-workload-b,pod-template-hash=6b6f875997
+replicaset.apps/retired-workload-b-6c68f86bf4            0         0         0       22d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-58f80a8                                                        app=retired-workload-b,pod-template-hash=6c68f86bf4
+replicaset.apps/retired-workload-b-6f66c4dc4d            0         0         0       47d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-362cb81                                                        app=retired-workload-b,pod-template-hash=6f66c4dc4d
+replicaset.apps/retired-workload-b-74bdb964d8            0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-5229584                                                        app=retired-workload-b,pod-template-hash=74bdb964d8
+replicaset.apps/retired-workload-b-86c45c6686            0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository-backend:prod-v0.3.0-cb5355d                                                        app=retired-workload-b,pod-template-hash=86c45c6686
+replicaset.apps/retired-workload-b-8d887c6c9             0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository-backend:prod-v0.3.0-bf6c55a                                                        app=retired-workload-b,pod-template-hash=8d887c6c9
+replicaset.apps/retired-workload-b-frontend-5445d66b98   0         0         0       22d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-58f80a8                                                       app=retired-workload-b-frontend,pod-template-hash=5445d66b98
+replicaset.apps/retired-workload-b-frontend-55447798b6   0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository-frontend:prod-v0.3.0-cc47a89                                                       app=retired-workload-b-frontend,pod-template-hash=55447798b6
+replicaset.apps/retired-workload-b-frontend-58c8dd5969   0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository-frontend:prod-v0.3.0-85a354f                                                       app=retired-workload-b-frontend,pod-template-hash=58c8dd5969
+replicaset.apps/retired-workload-b-frontend-58d8bbc67    0         0         0       21d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a   app=retired-workload-b-frontend,pod-template-hash=58d8bbc67
+replicaset.apps/retired-workload-b-frontend-597b779c9d   0         0         0       39d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-58f80a8                                                       app=retired-workload-b-frontend,pod-template-hash=597b779c9d
+replicaset.apps/retired-workload-b-frontend-5df46b89c    0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-56179ff                                                       app=retired-workload-b-frontend,pod-template-hash=5df46b89c
+replicaset.apps/retired-workload-b-frontend-64dfb87d84   0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-5229584                                                       app=retired-workload-b-frontend,pod-template-hash=64dfb87d84
+replicaset.apps/retired-workload-b-frontend-667fb49d95   0         0         0       47d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-362cb81                                                       app=retired-workload-b-frontend,pod-template-hash=667fb49d95
+replicaset.apps/retired-workload-b-frontend-7d4cc58775   0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-a34d8ca                                                       app=retired-workload-b-frontend,pod-template-hash=7d4cc58775
+replicaset.apps/retired-workload-b-frontend-867d5d8b77   0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository-frontend:prod-v0.3.0-bf6c55a                                                       app=retired-workload-b-frontend,pod-template-hash=867d5d8b77
+replicaset.apps/retired-workload-b-frontend-c44458c86    0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository-frontend:prod-v0.3.0-cb5355d                                                       app=retired-workload-b-frontend,pod-template-hash=c44458c86
 
 ### StorageClass inventory
 NAME                   PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
@@ -430,9 +430,9 @@ Preflight passed: target namespaces have no PVCs, PV claims or VolumeSnapshot re
 Read-only preflight complete. No Kubernetes resources were changed.
 decommission_preflight_status: storage-clean
 
-### Dedicated Retired workload B runner retirement evidence
-media_runner_service=active enabled=enabled listener=present
-GitHub runner registration is not inferred by this host inspection; verify it in the Retired workload B repository/organization settings.
+### Dedicated retired workload runner retirement evidence
+retired_workload_runner_service=active enabled=enabled listener=present
+GitHub runner registration is not inferred by this host inspection; verify it in the retired workload repository/organization settings.
 
 ### GitOps drift
 Prepared checksum-verified cert-manager v1.21.1 manifest.
@@ -480,13 +480,13 @@ retired-namespace-a         retired-workload-a-frontend              ClusterIP  
 tce-prod           tce-frontend                ClusterIP      10.43.99.130    <none>        80/TCP                       89d
 tce-prod           tce-service                 ClusterIP      10.43.189.227   <none>        8210/TCP                     89d
 NAMESPACE          NAME                               CLASS     HOSTS                                                          ADDRESS      PORTS     AGE
-retired-namespace-b         media                              traefik   retired-workload-b.invalid                                             10.0.0.120   80, 443   53d
-microfe-platform   keycloak-public                    traefik   sso.retired-workload-a.invalid                                               10.0.0.120   80, 443   37d
-microfe-platform   keycloak-registration-rate-limit   traefik   sso.retired-workload-a.invalid                                               10.0.0.120   80, 443   25d
-microfe-platform   microfe-public                     traefik   app.retired-workload-a.invalid,auth.retired-workload-a.invalid,ws.retired-workload-a.invalid             10.0.0.120   80, 443   47d
-retired-namespace-a         stock                              traefik   retired-workload-a.invalid,www.retired-workload-a.invalid,retired-workload-a-admin.invalid + 1 more...   10.0.0.120   80, 443   60d
+retired-namespace-b         retired-workload-b                              traefik   retired-workload-b.invalid                                             10.0.0.120   80, 443   53d
+microfe-platform   keycloak-public                    traefik   sso.mrcute.space                                               10.0.0.120   80, 443   37d
+microfe-platform   keycloak-registration-rate-limit   traefik   sso.mrcute.space                                               10.0.0.120   80, 443   25d
+microfe-platform   microfe-public                     traefik   app.mrcute.space,auth.mrcute.space,ws.mrcute.space             10.0.0.120   80, 443   47d
+retired-namespace-a         retired-workload-a                              traefik   retired-workload-a.invalid,www.retired-workload-a.invalid,retired-workload-a-admin.invalid + 1 more...   10.0.0.120   80, 443   60d
 retired-namespace-a         retired-workload-a-ingress                      traefik   retired-workload-a.invalid,www.retired-workload-a.invalid,retired-workload-a-admin.invalid + 1 more...   10.0.0.120   80, 443   64d
-tce-prod           tce                                traefik   tce.retired-workload-a.invalid                                               10.0.0.120   80, 443   89d
+tce-prod           tce                                traefik   tce.mrcute.space                                               10.0.0.120   80, 443   89d
 
 ## K3s service
 active
@@ -500,5 +500,5 @@ keycloak   0/0     0            0           37d   keycloak     quay.io/keycloak/
 error: timed out waiting for the condition
 
 ### Public OIDC probes (status and latency only)
-https://sso.retired-workload-a.invalid/realms/master/.well-known/openid-configuration http_code=503 time_total=0.110295s remote_ip=132.226.175.206
-https://sso.retired-workload-a.invalid/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.050621s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.137781s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049665s remote_ip=132.226.175.206

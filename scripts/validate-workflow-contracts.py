@@ -1651,8 +1651,8 @@ for path_contract in (
 ):
     if path_contract not in push_scope_contract:
         fail(f"Push deployment scope resolver is missing path mapping: {path_contract}")
-if "apps/stockdividend/*|apps/media-generation/*" not in push_scope_contract:
-    fail("Retired app manifest paths must trigger cluster-wide decommission reconciliation.")
+if "apps/*/base/kustomization.yaml|apps/*/overlays/prod/kustomization.yaml" not in push_scope_contract:
+    fail("Non-active app manifest paths must trigger cluster-wide GitOps reconciliation.")
 if "Unclassified production-trigger path" not in push_scope_contract:
     fail("Unknown push paths must fail closed instead of silently reconciling every application.")
 for ignored_path_contract in (

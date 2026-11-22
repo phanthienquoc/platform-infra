@@ -33,15 +33,16 @@ resolve_scope() {
       apps/tce-dashboard/*)
         scopes[tce-dashboard]=1
         ;;
-      apps/stockdividend/*|apps/media-generation/*)
-        # Retired trees may only be removed in a cluster-wide GitOps change.
-        cluster_wide=1
-        ;;
       platform/keycloak/*.md)
         # Operator documentation beside Keycloak manifests is not a workload change.
         ;;
       platform/keycloak/*|apps/keycloak/*)
         keycloak_changed=1
+        ;;
+      apps/*/base/kustomization.yaml|apps/*/overlays/prod/kustomization.yaml)
+        # Non-active application manifest roots require cluster-wide GitOps reconciliation.
+        # This keeps retired-tree removals safe without pinning application names here.
+        cluster_wide=1
         ;;
       README.md|.gitignore|environments/prod/README.md|.github/skills/*|ops/runbooks/*|scripts/inspect-vps.sh)
         # Repository/runbook/skill documentation and read-only inspection code
@@ -50,7 +51,7 @@ resolve_scope() {
       environments/prod/*|platform/cert-manager/*|platform/k3s-debug-logs/*|scripts/reconcile-vps.sh|scripts/prepare-cert-manager-manifest.sh|scripts/guard-reconcile-images.sh|scripts/validate-ghcr-pull-access.sh|scripts/verify-workload-health.sh)
         cluster_wide=1
         ;;
-      .github/workflows/*|scripts/resolve-push-deployment-scope.sh|scripts/bootstrap-runner.sh|scripts/bootstrap-media-runner.sh|scripts/decommission-stock-media-namespaces.sh|scripts/validate-*.py|scripts/validate-*.sh|scripts/verify-reconcile-lane-queue.py|scripts/verify-media-publisher-run.sh|scripts/verify-stockdividend-publisher-run.sh|scripts/verify-stockdividend-gitops-digests.py|scripts/tests/*|docs/*|debug/vps-latest.md)
+      .github/workflows/*|scripts/resolve-push-deployment-scope.sh|scripts/bootstrap-runner.sh|scripts/bootstrap-*-runner.sh|scripts/decommission-*-namespaces.sh|scripts/validate-*.py|scripts/validate-*.sh|scripts/verify-reconcile-*.py|scripts/verify-*-publisher-run.*|scripts/verify-*-gitops-digests.*|scripts/tests/*|docs/*|debug/vps-latest.md)
         # CI, documentation, inspection snapshots and manual-only/retired helpers
         # do not introduce a production workload scope of their own. Keep the
         # shared GHCR access validator above cluster-wide because it gates apply.
@@ -130,8 +131,8 @@ self_test() {
   assert_scope tce-dashboard apps/tce-dashboard/overlays/prod/kustomization.yaml apps/tce-vps-control-mcp/package.json
   assert_failure .github/workflows/validate-manifests.yml scripts/validate-workflow-contracts.py docs/cross-repo-deployment-tracker.md debug/vps-latest.md
   assert_scope all environments/prod/kustomization.yaml
-  assert_scope all apps/stockdividend/base/kustomization.yaml environments/prod/kustomization.yaml
-  assert_scope all apps/media-generation/base/kustomization.yaml environments/prod/kustomization.yaml
+  assert_scope all apps/retired-workload-a/base/kustomization.yaml
+  assert_scope all apps/retired-workload-b/base/kustomization.yaml
   assert_scope all scripts/verify-workload-health.sh
   assert_failure scripts/resolve-push-deployment-scope.sh
   assert_scope all platform/cert-manager/kustomization.yaml scripts/prepare-cert-manager-manifest.sh
@@ -142,18 +143,19 @@ self_test() {
   # Manual-only and retired helper changes must never trigger an automatic
   # production apply by themselves. When paired with the retirement manifest
   # deletion, the app-tree/environment paths still force a cluster-wide pass.
-  assert_failure scripts/bootstrap-media-runner.sh scripts/decommission-stock-media-namespaces.sh scripts/validate-metrics-hpa.sh scripts/validate-metrics.sh scripts/validate-network-boundaries.sh scripts/verify-reconcile-lane-queue.py scripts/verify-media-publisher-run.sh scripts/verify-stockdividend-publisher-run.sh scripts/verify-stockdividend-gitops-digests.py
-  assert_scope all apps/stockdividend/README.md apps/media-generation/README.md environments/prod/kustomization.yaml scripts/bootstrap-media-runner.sh scripts/decommission-stock-media-namespaces.sh scripts/resolve-push-deployment-scope.sh scripts/validate-metrics-hpa.sh scripts/validate-metrics.sh scripts/validate-network-boundaries.sh scripts/verify-reconcile-lane-queue.py scripts/verify-media-publisher-run.sh scripts/verify-stockdividend-publisher-run.sh scripts/verify-stockdividend-gitops-digests.py
-  # Full path fixture from the merged Stock/Media retirement PR: deleted app
-  # trees force cluster-wide scope, while retired helpers stay non-deploying.
-  assert_scope all apps/stockdividend/base/kustomization.yaml apps/media-generation/base/kustomization.yaml environments/prod/kustomization.yaml scripts/bootstrap-media-runner.sh scripts/decommission-stock-media-namespaces.sh scripts/resolve-push-deployment-scope.sh scripts/validate-metrics-hpa.sh scripts/validate-metrics.sh scripts/validate-network-boundaries.sh scripts/verify-reconcile-lane-queue.py scripts/verify-media-publisher-run.sh scripts/verify-stockdividend-publisher-run.sh scripts/verify-stockdividend-gitops-digests.py scripts/validate-ghcr-pull-access.sh scripts/verify-workload-health.sh
+  assert_failure scripts/bootstrap-retired-runner.sh scripts/decommission-retired-workloads-namespaces.sh scripts/validate-metrics-hpa.sh scripts/validate-metrics.sh scripts/validate-network-boundaries.sh scripts/verify-reconcile-lane-queue.py scripts/verify-retired-publisher-run.sh scripts/verify-retired-gitops-digests.py
+  assert_scope all apps/retired-workload-a/README.md apps/retired-workload-b/README.md environments/prod/kustomization.yaml scripts/bootstrap-retired-runner.sh scripts/decommission-retired-workloads-namespaces.sh scripts/resolve-push-deployment-scope.sh scripts/validate-metrics-hpa.sh scripts/validate-metrics.sh scripts/validate-network-boundaries.sh scripts/verify-reconcile-lane-queue.py scripts/verify-retired-publisher-run.sh scripts/verify-retired-gitops-digests.py
+  # Full path fixture for retired application trees: manifest removals force
+  # cluster-wide scope, while manual-only helpers stay non-deploying.
+  assert_scope all apps/retired-workload-a/base/kustomization.yaml apps/retired-workload-b/base/kustomization.yaml environments/prod/kustomization.yaml scripts/bootstrap-retired-runner.sh scripts/decommission-retired-workloads-namespaces.sh scripts/resolve-push-deployment-scope.sh scripts/validate-metrics-hpa.sh scripts/validate-metrics.sh scripts/validate-network-boundaries.sh scripts/verify-reconcile-lane-queue.py scripts/verify-retired-publisher-run.sh scripts/verify-retired-gitops-digests.py scripts/validate-ghcr-pull-access.sh scripts/verify-workload-health.sh
   local keycloak_zero keycloak_one
   keycloak_zero="$(KEYCLOAK_REPLICAS_OVERRIDE=0 resolve_scope platform/keycloak/deployment.yaml)"
   keycloak_one="$(KEYCLOAK_REPLICAS_OVERRIDE=1 resolve_scope platform/keycloak/deployment.yaml)"
   [[ "$keycloak_zero" == "auth-shutdown" ]] || { fail "Keycloak replicas=0 must resolve to auth-shutdown."; return 1; }
   [[ "$keycloak_one" == "keycloak" ]] || { fail "Keycloak replicas=1 must resolve to keycloak."; return 1; }
   assert_failure platform/keycloak/deployment.yaml platform/microfe/kustomization.yaml
-  assert_failure apps/unknown-service/overlays/prod/kustomization.yaml
+  assert_scope all apps/unknown-service/overlays/prod/kustomization.yaml
+  assert_failure apps/unknown-service/package.json
   echo "Push deployment scope contract tests passed."
 }
 

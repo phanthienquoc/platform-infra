@@ -158,10 +158,10 @@ Checked-in cron expressions remain:
 Platform watchdog #43150601305's queue-assignment checks passed while native schedule freshness/inter-arrival checks failed. TCE WF-12 #43154415980 measured 0m queue wait for its stale WF-06 source. This does not establish runner congestion. No authoritative GitHub scheduler enqueue/delivery/support telemetry was available to distinguish delayed from dropped events. Keep the existing cron expressions and freshness budgets; do not introduce a duplicate scheduler or change the TCE market-scan schedule.
 
 TCE WF-12's heartbeat dispatch to Platform succeeded, but its separate schedule-verification job failed because WF-06 was 234 minutes old at the watchdog's own API timestamp. WF-13 then dispatched read-only fallback #43154458775. Job logs confirm:
-- `https://tce.retired-workload-a.invalid/`: HTTP 503, expected 200.
-- `https://tce.retired-workload-a.invalid/api/health`: HTTP 503, expected 200.
-- `https://auth.retired-workload-a.invalid/api/health`: HTTP 503, expected 200.
-- `https://auth.retired-workload-a.invalid/api/ready`: HTTP 503, expected 200.
+- `https://tce.mrcute.space/`: HTTP 503, expected 200.
+- `https://tce.mrcute.space/api/health`: HTTP 503, expected 200.
+- `https://auth.mrcute.space/api/health`: HTTP 503, expected 200.
+- `https://auth.mrcute.space/api/ready`: HTTP 503, expected 200.
 
 WF-06 still has strict HTTP-200 checks. These failures indicate endpoint unavailability, not a schedule delivery pass. WF-13's explicit maintenance handling does not make health green.
 
@@ -742,7 +742,7 @@ All six current-age budgets and all six inter-arrival budgets fail at this refer
 - Last-known workload state: Retired workload B backend/frontend 1/1; MicroFE Shell/WS/NATS 1/1; TCE frontend/service, Auth and Keycloak 0/0 maintenance; Retired workload A admin (two pods) and desired Backend (one pod) ImagePullBackOff for `12d63b4`; legacy Retired workload A backend/Frontend 1/1.
 - Retired workload A desired image failure is `no match for platform in manifest`; desired pods have no RepoDigest. Legacy Retired workload A `23b2878` images have local image IDs but no registry RepoDigest, so they are not promotion evidence.
 - Retired workload B backend/frontend RepoDigests: `sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d` and `sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a`. MicroFE Shell/WS and NATS also have registry RepoDigests in the snapshot. Auth and TCE images are cached, but their deployments are zero replicas; cached digests do not mean live workloads.
-- Keycloak deployment is 0/0; both public OIDC discovery probes (`sso.retired-workload-a.invalid/realms/master` and `/realms/mrcute`) returned HTTP 503. Auth host TLS verification passed separately, but Auth remains 0/0 maintenance and no live Auth health is asserted.
+- Keycloak deployment is 0/0; both public OIDC discovery probes (`sso.mrcute.space/realms/master` and `/realms/mrcute`) returned HTTP 503. Auth host TLS verification passed separately, but Auth remains 0/0 maintenance and no live Auth health is asserted.
 - Residual cluster resources remain in `retired-namespace-a` and `retired-namespace-b` even though the active Platform production manifest tree has no retired Retired workloads A/B namespace/image references. Retired workload B pods are still 1/1 and the Retired workload B runner service/listener is active; Retired workload A desired pods still fail image pull. No namespace/PVC/PV or runner deletion was performed.
 - Read-only Retired workloads A/B decommission preflight reports no PVCs, PV claims or VolumeSnapshot references in `retired-namespace-a`/`retired-namespace-b`; this is storage evidence only and does not authorize namespace/workload deletion. Preserve PVC `k3s-debug/k3s-debug-logs` (1Gi, RWO, local-path). Docker image data 9.195GB with 5.773GB reclaimable; no cleanup. Retired workload B runner service/listener is active/enabled/present; host inspection cannot infer GitHub runner registration. External backup/retention, authoritative DNS and remote runner unregister remain unverified.
 - Reconciliation #43088879697 completed SUCCESS on parent SHA `9093831c`, mode=apply, target=all, image changes=false. GHCR read preflight passed five packages; Auth runtime Secret provisioned/verified with values suppressed; shared `ghcr-pull` unchanged; `restart-blocked-image-pulls` found no failures in MicroFE/TCE scopes; TCE release pairing passed; GitOps drift=false; manifest apply, image replacement and workload rollout skipped. Auth HTTPS/TLS passed but Auth was 0/0 maintenance; TCE was 0/0 maintenance; MicroFE active-scope health passed; Keycloak lane skipped.
@@ -1168,7 +1168,7 @@ All six current-age checks and all six inter-arrival gaps exceed their configure
 
 ### TCE health and Retired workload A credential evidence
 
-- TCE manual WF-06 #42949231253 has four independent failed jobs. Their decoded logs show: `https://tce.retired-workload-a.invalid/` returned HTTP 503 (expected 200); `https://tce.retired-workload-a.invalid/api/health` returned 503; `https://auth.retired-workload-a.invalid/api/health` returned 503; and `https://auth.retired-workload-a.invalid/api/ready` returned 503. The curl steps completed and reported the actual status; this is not a runner setup failure. The upstream response body was not surfaced in the job summary, so root cause is not established. Preserve strict HTTP 200 probes; no scale-up or release promotion without owner-approved immutable digest, rollback reference and recovery approval.
+- TCE manual WF-06 #42949231253 has four independent failed jobs. Their decoded logs show: `https://tce.mrcute.space/` returned HTTP 503 (expected 200); `https://tce.mrcute.space/api/health` returned 503; `https://auth.mrcute.space/api/health` returned 503; and `https://auth.mrcute.space/api/ready` returned 503. The curl steps completed and reported the actual status; this is not a runner setup failure. The upstream response body was not surfaced in the job summary, so root cause is not established. Preserve strict HTTP 200 probes; no scale-up or release promotion without owner-approved immutable digest, rollback reference and recovery approval.
 - Retired workload A scraper #42457182511 job #128658604760 failed at `Require VNStock API key before installing dependencies`: `VNSTOCK_API_KEY` was empty. Python setup, dependencies, entitlement verification and ingestion were all skipped. This is a fail-closed credential gate, not a deployment-contract defect. Retired workload A remains in the approved retirement scope; do not provision or publish a replacement merely to make this historical job green without an owner decision.
 
 ### K3s and GitOps — historical evidence only
@@ -2800,7 +2800,7 @@ Snapshot evidence:
 - Node `tce-k3s-01`: Ready, ARM64, Ubuntu 22.04.5, K3s `v1.36.3+k3s1`, containerd `2.3.2-k3s2`; RAM 23GiB total / about 19GiB available; root disk 45GiB total, 26GiB used, about 20GiB free (57%); `restart_required=yes`.
 - Docker 29.1.3: 20 images / 11 active, 9.195GB total, 5.773GB reclaimable; no cleanup performed.
 - Retired workload B backend/frontend and MicroFE Shell/WS/NATS are 1/1 Running. Retired workload B backend/frontend retain registry RepoDigests `sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d` and `sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a`.
-- TCE frontend/service and Auth/Keycloak are 0/0 intentional maintenance; no live application health is asserted. Both public OIDC discovery probes for `sso.retired-workload-a.invalid` returned HTTP 503; Keycloak diagnostics timed out.
+- TCE frontend/service and Auth/Keycloak are 0/0 intentional maintenance; no live application health is asserted. Both public OIDC discovery probes for `sso.mrcute.space` returned HTTP 503; Keycloak diagnostics timed out.
 - Retired workload A admin has two pods in ImagePullBackOff; desired Retired workload A backend has one ImagePullBackOff pod. The pull error for tag `12d63b4` is `no match for platform in manifest`; no ARM64-compatible RepoDigest is present. A legacy Retired workload A backend and frontend remain Running on older image references. The active Platform production manifest tree contains no retired Retired workload A/Retired workload B namespace or image references; do not promote local image IDs or legacy tags.
 - Retired workload B runner service is active/enabled and its `Runner.Listener` process is present. The Platform runner is also active. GitHub-side Retired workload B runner unregister is not established.
 - Debug PVC `k3s-debug/k3s-debug-logs` remains Bound (1Gi/RWO). Retired workloads A/B namespaces have no PVC/PV claims or VolumeSnapshot references in this snapshot; external backup/retention and authoritative DNS evidence remain outstanding.
@@ -2873,10 +2873,10 @@ No cron expression or freshness budget changed. **TCE market-scan schedule uncha
 ## TCE endpoint failure evidence
 
 WF-06 manual fallback [#43224789391](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/43224789391) completed FAILURE. Its four independent job logs recorded:
-- `https://tce.retired-workload-a.invalid/`: HTTP 503, expected 200.
-- `https://tce.retired-workload-a.invalid/api/health`: HTTP 503, expected 200.
-- `https://auth.retired-workload-a.invalid/api/health`: HTTP 503, expected 200.
-- `https://auth.retired-workload-a.invalid/api/ready`: HTTP 503, expected 200.
+- `https://tce.mrcute.space/`: HTTP 503, expected 200.
+- `https://tce.mrcute.space/api/health`: HTTP 503, expected 200.
+- `https://auth.mrcute.space/api/health`: HTTP 503, expected 200.
+- `https://auth.mrcute.space/api/ready`: HTTP 503, expected 200.
 
 WF-12 native schedule #43224725401 failed schedule verification because WF-06 native run #43176560763 was stale; heartbeat dispatch succeeded. WF-13 #43224758080 was a workflow_run recovery event, not native schedule evidence. Keep strict HTTP-200 probes; do not convert 503 to healthy. TCE administrator must verify `TCE_MAINTENANCE_MODE` and approved replica intent before any scale change.
 
@@ -3137,7 +3137,7 @@ Recovery controller #43257327411 also completed SUCCESS after reconciliation. Th
 - Auth service and Keycloak: 0/0 intentional maintenance; no live health asserted.
 - Retired workload A admin: two pods ImagePullBackOff. Retired workload A desired Backend: one pod ImagePullBackOff; one older backend pod remains Running. Retired workload A frontend has an older Running pod; desired ReplicaSet is not fully available.
 - Retired workload A desired image tag `12d63b4` fails with `no match for platform in manifest`; no compatible ARM64 manifest/RepoDigest is evidenced. Do not promote local image IDs or legacy tags.
-- Public OIDC probes for `sso.retired-workload-a.invalid` both return HTTP 503.
+- Public OIDC probes for `sso.mrcute.space` both return HTTP 503.
 - Retired workload B runner service is active/enabled and `Runner.Listener` is present. GitHub-side runner registration is not inferred from host inspection.
 - PVC `k3s-debug/k3s-debug-logs` remains Bound, 1Gi, RWO. No storage deletion or cleanup.
 
@@ -3245,7 +3245,7 @@ Last-known snapshot only:
 - Retired workload B backend/frontend and MicroFE Shell/WS/NATS were 1/1 Running.
 - TCE frontend/service, Auth service and Keycloak were 0/0 maintenance; no live health asserted.
 - Retired workload A admin and desired Backend had ImagePullBackOff. Desired tag `12d63b4` failed with `no match for platform in manifest`; no compatible ARM64 RepoDigest was evidenced.
-- Public OIDC probes for `sso.retired-workload-a.invalid` returned HTTP 503.
+- Public OIDC probes for `sso.mrcute.space` returned HTTP 503.
 - Retired workload B runner service was active/enabled and `Runner.Listener` was present.
 - PVC `k3s-debug/k3s-debug-logs` remained Bound, 1Gi/RWO.
 
@@ -3404,7 +3404,7 @@ Open Platform PRs remain drafts/owner decisions: #1314 managed mailboxes, #544 K
 - Retired workload B backend/frontend and MicroFE Shell/WS/NATS were 1/1 Running with immutable RepoDigests.
 - TCE frontend/service, Auth service and Keycloak were zero replicas in maintenance.
 - Retired workload A admin had two 0/1 ImagePullBackOff pods; desired Retired workload A backend had one 0/1 ImagePullBackOff pod. Kubelet reported `no match for platform in manifest` for desired tag `12d63b4`; no ARM64-compatible RepoDigest was evidenced. Legacy Retired workload A backend/frontend pods remained Running but do not satisfy the desired release.
-- Public OIDC discovery probes for both `sso.retired-workload-a.invalid` realms returned HTTP 503.
+- Public OIDC discovery probes for both `sso.mrcute.space` realms returned HTTP 503.
 - Retired workload B and Platform runner services were active/enabled; both Listener processes were present. Retired workload B runner retirement remains unfinished.
 - PVC `k3s-debug/k3s-debug-logs` remained Bound, 1Gi, RWO.
 - Docker reported 5.773GB reclaimable images and 154.4MB reclaimable build cache. No cleanup was performed.
@@ -3593,7 +3593,7 @@ The integration does not expose authoritative GitHub scheduler enqueue/delivery 
 
 ### Application health and publisher contract audit
 
-- TCE WF-06 manual [#43305131146](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/43305131146) failed all four independent strict probes: `https://tce.retired-workload-a.invalid/`, `https://tce.retired-workload-a.invalid/api/health`, `https://auth.retired-workload-a.invalid/api/health`, and `https://auth.retired-workload-a.invalid/api/ready` each returned HTTP 503 rather than 200. Native WF-12 [#43305069474](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/43305069474) successfully dispatched its authenticated Platform heartbeat but failed inspection of stale WF-06 native delivery. WF-13 [#43305098095](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/43305098095) succeeded only as `workflow_run`. Keep strict HTTP-200 acceptance; TCE administrator must verify `TCE_MAINTENANCE_MODE` and approved replica intent.
+- TCE WF-06 manual [#43305131146](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/43305131146) failed all four independent strict probes: `https://tce.mrcute.space/`, `https://tce.mrcute.space/api/health`, `https://auth.mrcute.space/api/health`, and `https://auth.mrcute.space/api/ready` each returned HTTP 503 rather than 200. Native WF-12 [#43305069474](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/43305069474) successfully dispatched its authenticated Platform heartbeat but failed inspection of stale WF-06 native delivery. WF-13 [#43305098095](https://github.com/phanthienquoc/TCE-dashboard/actions/runs/43305098095) succeeded only as `workflow_run`. Keep strict HTTP-200 acceptance; TCE administrator must verify `TCE_MAINTENANCE_MODE` and approved replica intent.
 - Retired workload A scraper #42457182511 (retired repository link omitted) remains fail-closed before dependency installation because protected `VNSTOCK_API_KEY` is absent. Do not bypass preflight or expose credentials. Desired Retired workload A ARM64 immutable digest/provenance is not verified; legacy pods do not satisfy the desired release.
 - Direct master workflow-file review verified the app publication boundaries: TCE WF-03 (blob `794ade12`) publishes immutable full-source-SHA releases, verifies ARM64 registry digests and validates exact TCE payload before Platform dispatch; MicroFE WF-08b (blob `941387e4`) publishes ARM64 SBOM-enabled images and validates digest-only promotion payloads; Retired workload A deploy.yml (blob `d61138d7`) publishes immutable full-SHA/version+SHA ARM64 images, refuses tag overwrite and explicitly disables manual production image publication/Platform handoff; Retired workload B WF-03 (blob `7e0e94b1`) publishes immutable ARM64 images and registry digests without Platform dispatch; Auth release.yml (blob `27f53c05`) publishes immutable ARM64 images with SBOM and exact digest payload to Platform. No direct SSH/Compose production apply command was found in these publisher workflow files.
 - TCE WF-06 workflow blob `4ff8b7a6` retains `*/15 * * * *`; WF-12 blob `d0eabbf0` retains `7,22,37,52 * * * *`. App CI latest master runs remain TCE WF-07 #43295047279 SUCCESS, Retired workload A CI #42610360402 SUCCESS, Retired workload B CI #42539512417 SUCCESS and Auth CI #42654579277 SUCCESS. No new GHCR publication, release dispatch or digest promotion was observed.
@@ -3690,7 +3690,7 @@ Read-only inspection #43319836081 completed SUCCESS. Snapshot debug/vps-latest.m
 - Retired workload B backend/frontend and MicroFE Shell/WS/NATS were 1/1 Running.
 - TCE frontend/service, Auth service and Keycloak were 0/0 intentional maintenance; no live workload health is asserted.
 - Retired workload A admin had two ImagePullBackOff pods on desired tag 12d63b4; desired Retired workload A backend had one ImagePullBackOff pod while a legacy backend remained 1/1 Running. Legacy Retired workload A frontend remained 1/1 Running. Desired admin/backend image tag 12d63b4 failed with “no match for platform in manifest”; no usable ARM64 RepoDigest was evidenced. Do not promote local image IDs or legacy tags.
-- Both public OIDC discovery probes for sso.retired-workload-a.invalid (master and mrcute realms) returned HTTP 503.
+- Both public OIDC discovery probes for sso.mrcute.space (master and mrcute realms) returned HTTP 503.
 - Retired workload B runner service was active/enabled and Runner.Listener was present. Platform runner service was also active/enabled with Runner.Listener present.
 - Preserve PVC k3s-debug/k3s-debug-logs (Bound, 1Gi, RWO). Inspection preflight reported no PVC/PV/VolumeSnapshot references in the Retired workloads A/B target namespaces; this does not replace external backup/DNS evidence.
 - Host package/kernel/containerd/Docker updates remain pending. No host restart, Docker cleanup or workload mutation occurred.
@@ -3863,7 +3863,7 @@ Last-known K3s snapshot:
 
 ### App health and publication blockers
 
-- TCE native WF-06 #43319440089 failed all four strict public probes: `https://tce.retired-workload-a.invalid/`, `https://tce.retired-workload-a.invalid/api/health`, `https://auth.retired-workload-a.invalid/api/health` and `https://auth.retired-workload-a.invalid/api/ready` each returned HTTP 503 (expected 200). Keep strict HTTP-200 acceptance; do not turn maintenance into a false green.
+- TCE native WF-06 #43319440089 failed all four strict public probes: `https://tce.mrcute.space/`, `https://tce.mrcute.space/api/health`, `https://auth.mrcute.space/api/health` and `https://auth.mrcute.space/api/ready` each returned HTTP 503 (expected 200). Keep strict HTTP-200 acceptance; do not turn maintenance into a false green.
 - TCE WF-12 native #43305069474 failed because the latest qualifying WF-06 schedule run was stale. Its downstream `workflow_run` receipt #43319473892 is not native schedule evidence.
 - Retired workload A scraper #42457182511 failed closed before dependency installation because `VNSTOCK_API_KEY` was empty. No secret bypass or source-code credential was introduced.
 - Retired workload A desired Admin/Backend ARM64-compatible immutable digest/provenance remains unresolved. App owner must publish a verified ARM64 image; Platform alone promotes its digest.
@@ -4025,7 +4025,7 @@ At this reference 1/6 age budgets pass and 5/6 fail; all 6/6 inter-arrival budge
 - Reconciliation source `f2bdd09d` differs from current master `6566b909` only by PR #1724's debug snapshot file; no production manifest or workflow path changed. This reconciliation remains evidence for the unchanged manifest/workflow tree, but it is not an explicit current-master `mode=plan`.
 - Read-only inspection [#43354800604](https://github.com/phanthienquoc/platform-infra/actions/runs/43354800604) generated `debug/vps-latest.md` at 02:49:36Z; age at this reference was 721s, within the 4,500s inspection budget. Node `tce-k3s-01` was Ready, ARM64, Ubuntu 22.04.5, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2. Root disk 57% used (~20GiB free), available RAM ~19GiB, disk pressure normal; host uptime ~195 days and `restart_required=yes` due pending OS/kernel/containerd/Docker updates.
 - Retired workload B backend/frontend and MicroFE Shell/WS/NATS were 1/1 Running with verified RepoDigests. TCE frontend/service, Auth service and Keycloak were 0/0 maintenance. Retired workload A admin had two failed pods and desired Retired workload A backend one ImagePullBackOff pod; desired tag `12d63b4` failed with `no match for platform in manifest` and no usable ARM64 RepoDigest. Legacy Retired workload A backend/frontend remained 1/1; local image IDs or cached legacy tags are not promotion evidence.
-- Both OIDC discovery probes for `sso.retired-workload-a.invalid` returned HTTP 503. Retired workload B and Platform runner services were active/enabled and their Listener processes were present. Debug PVC `k3s-debug/k3s-debug-logs` remained Bound, 1Gi/RWO. Retired workloads A/B storage preflight found no PVC/PV claims or VolumeSnapshot references. Docker inventory was 9.195GB with 5.773GB reclaimable; no cleanup or host restart occurred.
+- Both OIDC discovery probes for `sso.mrcute.space` returned HTTP 503. Retired workload B and Platform runner services were active/enabled and their Listener processes were present. Debug PVC `k3s-debug/k3s-debug-logs` remained Bound, 1Gi/RWO. Retired workloads A/B storage preflight found no PVC/PV claims or VolumeSnapshot references. Docker inventory was 9.195GB with 5.773GB reclaimable; no cleanup or host restart occurred.
 
 ### Publisher ownership, governance and exact next actions
 
@@ -4091,7 +4091,7 @@ At this reference all six age budgets and all six inter-arrival budgets fail. La
 
 ### TCE health, maintenance mismatch and recovery
 
-- Native WF-06 #43354527724 failed all four strict public probes. The TCE API job log confirms `https://tce.retired-workload-a.invalid/api/health` returned HTTP 503; expected status remains 200. The four failed endpoints are TCE Web, TCE API, Auth liveness and Auth readiness.
+- Native WF-06 #43354527724 failed all four strict public probes. The TCE API job log confirms `https://tce.mrcute.space/api/health` returned HTTP 503; expected status remains 200. The four failed endpoints are TCE Web, TCE API, Auth liveness and Auth readiness.
 - Read-only fallback #43354573806 also failed. WF-12 #43354554102 and WF-13 #43354554119 are downstream `workflow_run` receipts, not native scheduled delivery.
 - WF-13 job log explicitly records `TCE_MAINTENANCE_MODE` as unset and emits the existing warning: unset is treated as non-maintenance, so the read-only WF-06 fallback remains enabled. K3s/reconciliation evidence shows TCE frontend/service and Auth service at 0/0 maintenance; Keycloak is also 0/0.
 - This is an owner-intent/configuration mismatch, not permission to change the repository variable. If zero-replica maintenance remains approved, TCE administrator must set Actions variable `TCE_MAINTENANCE_MODE=true`; otherwise restore services only through approved Platform GitOps. Keep strict HTTP-200 probes and WF-12 cadence. Maintenance is not healthy.
@@ -4104,7 +4104,7 @@ At this reference all six age budgets and all six inter-arrival budgets fail. La
 - Compare from reconciliation source `f2bdd09d` to current master `5e30bc2c` shows only `debug/vps-latest.md` and documentation/checkpoint/tracker/inventory paths changed (7 files total). Production manifest/workflow tree is unchanged, but the reconciliation itself is stale and is not a fresh current-master plan.
 - Read-only inspection #43354800604 succeeded; snapshot generated at `2026-11-13T02:49:36Z`. At reference its age was 4,375s, only 125s inside the 4,500s budget. It is not safe to treat this as fresh after the reference time without another inspection.
 - Last-known node `tce-k3s-01` was Ready, ARM64, K3s v1.36.3+k3s1, containerd 2.3.2-k3s2; root disk 57% (~20GiB free), available RAM ~19GiB, host `restart_required=yes`. Retired workload B backend/frontend and MicroFE Shell/WS/NATS were 1/1 Running. TCE/Auth/Keycloak were 0/0 maintenance. Retired workload A admin had two ImagePullBackOff pods and desired Retired workload A backend one ImagePullBackOff pod; desired tag `12d63b4` failed with `no match for platform in manifest` and had no usable ARM64 RepoDigest. Legacy Retired workload A backend/frontend remained 1/1 but are not promotion evidence.
-- Both OIDC discovery probes for `sso.retired-workload-a.invalid` returned HTTP 503. Retired workload B and Platform runner services were active/enabled and their Listener processes were present. Debug PVC `k3s-debug/k3s-debug-logs` remained Bound, 1Gi/RWO. Retired workloads A/B storage preflight found no PVC/PV claims or VolumeSnapshot references. Docker inventory was 9.195GB with 5.773GB reclaimable; no cleanup or host restart occurred.
+- Both OIDC discovery probes for `sso.mrcute.space` returned HTTP 503. Retired workload B and Platform runner services were active/enabled and their Listener processes were present. Debug PVC `k3s-debug/k3s-debug-logs` remained Bound, 1Gi/RWO. Retired workloads A/B storage preflight found no PVC/PV claims or VolumeSnapshot references. Docker inventory was 9.195GB with 5.773GB reclaimable; no cleanup or host restart occurred.
 
 ### Ownership, governance and exact next actions
 

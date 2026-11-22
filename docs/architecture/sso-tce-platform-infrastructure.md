@@ -37,6 +37,17 @@ flowchart TB
     ts -->|TCE application data| supa
 ```
 
+### Active public routes
+
+| Hostname / path | Active service |
+|---|---|
+| `sso.mrcute.space` | Keycloak OIDC provider |
+| `auth.mrcute.space` | Central Auth API |
+| `app.mrcute.space` | MicroFE shell |
+| `ws.mrcute.space` | MicroFE WebSocket gateway |
+| `tce.mrcute.space/` | TCE Dashboard frontend |
+| `tce.mrcute.space/api` | TCE service API |
+
 - Solid arrows represent declared routes or dependencies in checked-in manifests/configuration.
 - A diagram is not proof of current pod, DNS, certificate, OIDC or database health.
 - Never place credentials or secret values in architecture documentation.
