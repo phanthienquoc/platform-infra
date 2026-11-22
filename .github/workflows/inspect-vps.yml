@@ -7,6 +7,7 @@ on:
     branches: [master]
     paths:
       - "scripts/inspect-vps.sh"
+      - "scripts/decommission-stock-media-namespaces.sh"
       - "scripts/prepare-cert-manager-manifest.sh"
       - ".github/workflows/inspect-vps.yml"
   schedule:
