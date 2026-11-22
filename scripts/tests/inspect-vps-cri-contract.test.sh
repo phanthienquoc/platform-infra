@@ -5,6 +5,11 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 inspect_script="$repo_root/scripts/inspect-vps.sh"
 inspect_workflow="$repo_root/.github/workflows/inspect-vps.yml"
 
+grep -Fq 'grep -q "^# VPS inspection$" debug/vps-latest.md' "$inspect_workflow"
+grep -Fq "sed -n '1,5p' debug/vps-latest.md" "$inspect_workflow"
+grep -Fq 'name: Restore generated inspection snapshot after failed run' "$inspect_workflow"
+grep -Fq 'git restore --source=HEAD --staged --worktree -- debug/vps-latest.md' "$inspect_workflow"
+
 bash -n "$inspect_script"
 # The self-hosted runner reuses its checkout. Force-update only the local
 # remote-tracking ref so a stale/divergent origin/master cannot block inspection.
