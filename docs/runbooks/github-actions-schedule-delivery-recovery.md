@@ -38,7 +38,6 @@ The values below are the checked-in contracts. Do not change cron expressions or
 |---|---|---|---:|---|
 | TCE Dashboard | `.github/workflows/wf-06-tce-healthcheck.yml` | `*/15 * * * *` | 25 minutes | Strict public HTTP 200 health contract |
 | TCE Dashboard | `.github/workflows/wf-12-tce-healthcheck-schedule-watchdog.yml` | `7,22,37,52 * * * *` | 25 minutes | Schedule-delivery watchdog and Platform heartbeat |
-| StockDividend | `.github/workflows/run_scraper.yml` | `0 1 * * 0,6` | Weekend event; observe delayed delivery window | App-owned data ingestion, not deployment |
 
 TCE cross-repo observations are advisory to Platform reconciliation. The watchdog reads successful Platform-owned heartbeat receipt runs and verifies the source TCE run by ID; it does not need a cross-repository Actions-read PAT. A receipt history needs two distinct source runs before an inter-arrival gap can be measured; legacy receipts without a path in the run-name are still accepted only after the source run-by-ID API confirms the exact workflow path. Keep the TCE market-scan schedule unchanged; it is outside this recovery procedure.
 
@@ -61,7 +60,7 @@ do
 done
 ```
 
-Repeat for the two TCE workflows and Stock scraper:
+Repeat for the two TCE workflows:
 
 ```bash
 REPO=phanthienquoc/TCE-dashboard
@@ -70,9 +69,6 @@ for workflow in wf-06-tce-healthcheck.yml wf-12-tce-healthcheck-schedule-watchdo
     --jq '[.id, .name, .path, .state] | @tsv'
 done
 
-REPO=phanthienquoc/stockdividend
-gh api "repos/$REPO/actions/workflows/run_scraper.yml" \
-  --jq '[.id, .name, .path, .state] | @tsv'
 ```
 
 Interpret `state` as follows:
@@ -156,7 +152,7 @@ Do not close the schedule-delivery incident until:
 5. Latest-run freshness and runner queue checks pass.
 6. A subsequent native watchdog run completes successfully against the recovered history.
 7. TCE WF-06/WF-12 observations are recorded separately; they do not replace Platform-native evidence.
-8. The next Stock weekend scraper run passes the `VNSTOCK_API_KEY` presence and authenticated non-guest entitlement checks. Do not manually dispatch the scraper merely to test the secret because it performs real ingestion/MongoDB/Telegram side effects.
+8. The next external weekend ingestion run passes the `VNSTOCK_API_KEY` presence and authenticated non-guest entitlement checks. Do not manually dispatch the ingestion job merely to test the secret because it performs real ingestion/MongoDB/Telegram side effects.
 
 ## 7. Production safety boundaries
 
