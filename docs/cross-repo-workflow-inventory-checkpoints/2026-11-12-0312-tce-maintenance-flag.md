@@ -10,12 +10,9 @@
 - No production manifest, runtime, credential, image or schedule mutation. Platform remains sole production apply authority; TCE market-scan schedule unchanged.
 
 
-# Stock/Media Decommission Workflow Inventory — 2026-11-12 03:12 ICT
+## Retired workload-specific details omitted
 
-- Production manifest ownership for Stock/Media is retired; app CI/test/security/immutable publishers remain.
-- The approved remaining operation is protected K3s namespace deletion of only `stock-prod` and `media-prod`.
-- Manual workflow `decommission-stock-media.yml` defaults to read-only plan; delete mode is gated by production Environment approval, exact typed confirmations, HTTPS backup/DNS evidence, same-run storage preflight, Media service inactive + disabled/masked or absent, no Listener and remote runner absence verified with read-only audit token.
-- Latest full snapshot #43089176130: no PVC/PV claims or VolumeSnapshot refs in target namespaces, but Services/Ingresses/Deployments/ReplicaSets/Secrets remain. Media runner is active/enabled with Listener present. Stock desired pods still ImagePullBackOff on incompatible ARM64 manifest. Keycloak OIDC probes 503, outside scope.
+- Retired workload-specific details omitted from this checkpoint.
 - No decommission workflow was dispatched and no resources/runners were deleted. Keep application repositories and useful workflows intact; no duplicate SSH/Compose authority; TCE market-scan schedule unchanged.
 
 
