@@ -14,6 +14,7 @@ cleanup() {
 }
 trap cleanup EXIT
 CRI=/usr/local/sbin/platform-crictl
+ACTIVE_NAMESPACES=(default kube-node-lease kube-public kube-system cert-manager microfe-platform tce-prod k3s-debug)
 {
   echo "# VPS inspection"; echo; echo "Generated: $(date -Is)"; echo
   echo "## Host"
@@ -32,8 +33,8 @@ CRI=/usr/local/sbin/platform-crictl
     if [ "$disk_usage_pct" -ge 90 ]; then echo "disk_pressure: critical (${disk_usage_pct}%)"; elif [ "$disk_usage_pct" -ge 80 ]; then echo "disk_pressure: warning (${disk_usage_pct}%)"; else echo "disk_pressure: normal (${disk_usage_pct}%)"; fi
   else echo "disk_pressure: unknown"; fi
   uptime; echo; echo "### Top disk consumers (best-effort, runner-readable paths)"; du -xhd1 /var/lib/rancher/k3s /var/lib/docker /var/log 2>/dev/null | sort -h | tail -n 30 || true
-  echo; echo "## Runner"; id github-runner 2>/dev/null || true; pgrep -af "Runner.Listener|Runner.Worker" | head -20 || true
-  systemctl list-units --type=service --all | grep -Ei "actions.runner|github" || true
+  pgrep -af '/opt/actions-runner/bin/Runner.Listener|/opt/actions-runner/bin/Runner.Worker' | head -20 || true
+  systemctl status actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service --no-pager --full 2>/dev/null | sed -n '1,12p' || true
   echo "runner_service: $(systemctl is-active actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service 2>/dev/null || true)"
   echo "runner_service_enabled: $(systemctl is-enabled actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service 2>/dev/null || true)"
   runner_policy="$(sudo "$KCTL" policy-version 2>&1 || true)"
@@ -44,50 +45,52 @@ CRI=/usr/local/sbin/platform-crictl
   fi
   echo; echo "## Docker"; docker --version 2>/dev/null || true; docker info --format "Server={{.ServerVersion}} RootDir={{.DockerRootDir}}" 2>/dev/null || true; docker system df 2>/dev/null || true
   echo; echo "## Updates"; apt list --upgradable 2>/dev/null | sed -n "1,80p" || true; echo "restart_required: $(test -f /var/run/reboot-required && echo yes || echo no)"
-  echo; echo "## K3s"; sudo "$KCTL" version || true; sudo "$KCTL" get nodes -o wide || true; sudo "$KCTL" get namespaces || true
-  sudo "$KCTL" get pods -A -o wide || true
-  echo; echo "### Pod imageID evidence"
-  sudo "$KCTL" get pods -A -o json | jq -r '
-    .items[] as $pod
-    | (
-        (($pod.status.containerStatuses // []) | map({kind: "container", status: .}))
-        + (($pod.status.initContainerStatuses // []) | map({kind: "init", status: .}))
-      )[]?
-    | [
-        $pod.metadata.namespace,
-        $pod.metadata.name,
-        .kind,
-        .status.name,
-        .status.image,
-        .status.imageID,
-        (.status.ready // false | tostring),
-        (.status.restartCount // 0 | tostring)
-      ] | @tsv
-  ' || true
-  sudo "$KCTL" get deployments -A || true
-  echo; echo "### Persistent storage inventory"
-  sudo "$KCTL" get pvc -A -o wide || true
-  sudo "$KCTL" get pv -o wide || true
-  echo; echo "### Stock/Media VolumeSnapshot references (names only)"
-  namespace_list="$(sudo "$KCTL" get namespaces)"
-  for namespace in stock-prod media-prod; do
-    if grep -Eq "^${namespace}[[:space:]]" <<< "$namespace_list"; then
-      namespace_inventory="$(sudo "$KCTL" inventory-namespace "$namespace")"
-      snapshot_refs="$(grep -E '^(volumesnapshot|volumesnapshotcontent)\.snapshot\.storage\.k8s\.io/' <<< "$namespace_inventory" || true)"
-      if [[ -n "$snapshot_refs" ]]; then
-        printf '%s\n' "$namespace:"
-        printf '%s\n' "$snapshot_refs"
-      else
-        echo "$namespace: none"
-      fi
-    else
-      echo "$namespace: namespace absent"
-    fi
+  echo; echo "## K3s"; sudo "$KCTL" version || true; sudo "$KCTL" get nodes -o wide || true
+  echo "Active platform namespaces:"
+  sudo "$KCTL" get namespaces | awk 'NR == 1 || $1 == "default" || $1 == "kube-node-lease" || $1 == "kube-public" || $1 == "kube-system" || $1 == "cert-manager" || $1 == "microfe-platform" || $1 == "tce-prod" || $1 == "k3s-debug"' || true
+  echo "Pods in active platform namespaces:"
+  for namespace in "${ACTIVE_NAMESPACES[@]}"; do
+    echo "-- namespace $namespace --"
+    sudo "$KCTL" get pods -n "$namespace" -o wide 2>/dev/null || true
   done
+  echo; echo "### Pod imageID evidence"
+  for namespace in "${ACTIVE_NAMESPACES[@]}"; do
+    sudo "$KCTL" get pods -n "$namespace" -o json 2>/dev/null | jq -r '
+      .items[] as $pod
+      | (
+          (($pod.status.containerStatuses // []) | map({kind: "container", status: .}))
+          + (($pod.status.initContainerStatuses // []) | map({kind: "init", status: .}))
+        )[]?
+      | [
+          $pod.metadata.namespace,
+          $pod.metadata.name,
+          .kind,
+          .status.name,
+          .status.image,
+          .status.imageID,
+          (.status.ready // false | tostring),
+          (.status.restartCount // 0 | tostring)
+        ] | @tsv
+    ' || true
+  done
+  echo; echo "### Deployments"
+  for namespace in "${ACTIVE_NAMESPACES[@]}"; do
+    sudo "$KCTL" get deployments -n "$namespace" 2>/dev/null || true
+  done
+  echo; echo "### Persistent storage inventory"
+  for namespace in "${ACTIVE_NAMESPACES[@]}"; do
+    sudo "$KCTL" get pvc -n "$namespace" -o wide 2>/dev/null || true
+  done
+  sudo "$KCTL" get pv -o wide 2>/dev/null | awk 'NR == 1 || /default|kube-node-lease|kube-public|kube-system|cert-manager|microfe-platform|tce-prod|k3s-debug/' || true
   echo; echo "### Pod failure evidence"
-  sudo "$KCTL" get pods -A -o jsonpath='{range .items[*]}{.metadata.namespace}{"\t"}{.metadata.name}{"\t"}{range .status.containerStatuses[*]}{.state.waiting.reason}{"\t"}{.state.waiting.message}{"\n"}{end}{end}' 2>/dev/null | grep -E $'\t(ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError|CreateContainerError|RunContainerError)\t' || true
+  for namespace in "${ACTIVE_NAMESPACES[@]}"; do
+    sudo "$KCTL" get pods -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.namespace}{"\\t"}{.metadata.name}{"\\t"}{range .status.containerStatuses[*]}{.state.waiting.reason}{"\\t"}{.state.waiting.message}{"\\n"}{end}{end}' 2>/dev/null | grep -E $'\\t(ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError|CreateContainerError|RunContainerError)\\t' || true
+  done
   echo; echo "### Recent failure events"
-  sudo "$KCTL" get events -A --sort-by='.lastTimestamp' 2>/dev/null | grep -Ei 'Failed|BackOff|Unhealthy|Pull|Probe|OOM|Forbidden|Unauthorized' | tail -n 120 || true
+  for namespace in "${ACTIVE_NAMESPACES[@]}"; do
+    sudo "$KCTL" get events -n "$namespace" --sort-by='.lastTimestamp' 2>/dev/null | grep -Ei 'Failed|BackOff|Unhealthy|Pull|Probe|OOM|Forbidden|Unauthorized' | tail -n 40 || true
+  done
+
   echo; echo "### TCE service diagnostics (last 2h; redacted)"
   if sudo "$KCTL" get deployment tce-service -n tce-prod >/dev/null 2>&1; then
     sudo "$KCTL" get pods -n tce-prod -l app=tce-service -o wide || true
@@ -109,13 +112,34 @@ CRI=/usr/local/sbin/platform-crictl
   containers_json="$(sudo "$CRI" ps)"
   jq -e '.images | type == "array"' <<< "$images_json" >/dev/null
   jq -e '.containers | type == "array"' <<< "$containers_json" >/dev/null
-  echo "Images (repo tags, repo digests, image ID, pinned, size bytes):"
-  jq -r '.images[:100][]? | [((.repoTags // []) | join(",")), ((.repoDigests // []) | join(",")), (.id // ""), (.pinned // false | tostring), (.size // 0 | tostring)] | @tsv' <<< "$images_json"
+  active_images_json="$(
+    for namespace in "${ACTIVE_NAMESPACES[@]}"; do
+      sudo "$KCTL" get pods -n "$namespace" -o json 2>/dev/null |
+        jq -r '.items[]? | (.spec.containers[]?.image, .spec.initContainers[]?.image)' || true
+    done | sort -u | jq -R . | jq -s .
+  )"
+  active_namespaces_json="$(printf '%s\\n' "${ACTIVE_NAMESPACES[@]}" | jq -R . | jq -s .)"
+  echo "Images used by active platform namespaces (repo tags, repo digests, image ID, pinned, size bytes):"
+  jq -r --argjson active_images "$active_images_json" '
+    .images[]?
+    | select(
+        any((.repoTags // [])[]?; . as $tag | ($active_images | index($tag)) != null)
+        or any((.repoDigests // [])[]?; . as $digest | ($active_images | index($digest)) != null)
+      )
+    | [((.repoTags // []) | join(",")), ((.repoDigests // []) | join(",")), (.id // ""), (.pinned // false | tostring), (.size // 0 | tostring)] | @tsv
+  ' <<< "$images_json"
   echo; echo "### GHCR image digest coverage"
   ghcr_without_repo_digest="$(
-    jq -r '
+    jq -r --argjson active_images "$active_images_json" '
       .images[]?
-      | select(any((.repoTags // [])[]?; startswith("ghcr.io/")))
+      | select(
+          any((.repoTags // [])[]?; startswith("ghcr.io/"))
+          or any((.repoDigests // [])[]?; startswith("ghcr.io/"))
+        )
+      | select(
+          any((.repoTags // [])[]?; . as $tag | ($active_images | index($tag)) != null)
+          or any((.repoDigests // [])[]?; . as $digest | ($active_images | index($digest)) != null)
+        )
       | select((.repoDigests // []) | length == 0)
       | (.repoTags // [] | map(select(startswith("ghcr.io/"))) | join(","))
     ' <<< "$images_json"
@@ -127,30 +151,13 @@ CRI=/usr/local/sbin/platform-crictl
   else
     echo "status: all cached GHCR-tagged images have RepoDigest"
   fi
-  echo "Containers (container ID, name, image reference, state):"
-  jq -r '.containers[:100][]? | [(.id // ""), (.metadata.name // ""), (.imageRef // ""), (.state // "")] | @tsv' <<< "$containers_json"
-  echo; echo "### Stock/Media protected decommission preflight (read-only)"
-  set +e
-  bash scripts/decommission-stock-media-namespaces.sh plan
-  decommission_rc=$?
-  set -e
-  case "$decommission_rc" in
-    0) echo "decommission_preflight_status: storage-clean" ;;
-    *) echo "decommission_preflight_status: blocked"; echo "decommission_preflight_exit_code: $decommission_rc" ;;
-  esac
-  echo
-  echo "### Dedicated Media runner retirement evidence"
-  media_runner_service="actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service"
-  media_runner_state="$(systemctl is-active "$media_runner_service" 2>/dev/null || true)"
-  media_runner_enabled="$(systemctl is-enabled "$media_runner_service" 2>/dev/null || true)"
-  if pgrep -f '[/]opt/media-actions-runner/bin/Runner.Listener' >/dev/null 2>&1; then
-    media_runner_listener=present
-  else
-    media_runner_listener=absent
-  fi
-  printf 'media_runner_service=%s enabled=%s listener=%s\n' \
-    "${media_runner_state:-unknown}" "${media_runner_enabled:-unknown}" "$media_runner_listener"
-  echo "GitHub runner registration is not inferred by this host inspection; verify it in the Media repository/organization settings."
+  echo "Containers in active platform namespaces (container ID, name, image reference, state):"
+  jq -r --argjson active_namespaces "$active_namespaces_json" '
+    .containers[]?
+    | select((.labels["io.kubernetes.pod.namespace"] // "") as $namespace | ($active_namespaces | index($namespace)) != null)
+    | [(.id // ""), (.metadata.name // ""), (.imageRef // ""), (.state // "")] | @tsv
+  ' <<< "$containers_json"
+
   echo; echo "### GitOps drift"
   if bash scripts/prepare-cert-manager-manifest.sh "$CERT_MANAGER_MANIFEST_FILE"; then
     CERT_MANAGER_MANIFEST_PREPARED=true
@@ -162,8 +169,13 @@ CRI=/usr/local/sbin/platform-crictl
     drift_rc=2
   fi
   case "$drift_rc" in 0) echo "status: clean";; 1) echo "status: drift-detected";; *) echo "status: diff-error"; echo "exit_code: $drift_rc";; esac
-  echo; echo "### Images"; sudo "$KCTL" get deployments -A -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,IMAGES:.spec.template.spec.containers[*].image' --no-headers 2>/dev/null || true
-  sudo "$KCTL" get services -A || true; sudo "$KCTL" get ingress -A || true
+  echo; echo "### Active platform workload images, services and ingress"
+  for namespace in "${ACTIVE_NAMESPACES[@]}"; do
+    echo "-- namespace $namespace --"
+    sudo "$KCTL" get deployments -n "$namespace" -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,IMAGES:.spec.template.spec.containers[*].image' --no-headers 2>/dev/null || true
+    sudo "$KCTL" get services -n "$namespace" 2>/dev/null || true
+    sudo "$KCTL" get ingress -n "$namespace" 2>/dev/null || true
+  done
   echo; echo "## K3s service"; systemctl is-active k3s || true; systemctl is-enabled k3s || true
   echo; echo "### K3s recent warnings (last 2h)"
   sudo journalctl -u k3s --since "2 hours ago" --no-pager -p warning 2>/dev/null | sed -E 's/((password|token|secret|authorization|client_secret)[=: ]+)[^ ,;"]+/\1[REDACTED]/Ig' | cut -c1-500 | tail -n 120 || true

@@ -1547,9 +1547,11 @@ for required in (
     if required not in decommission_wrapper:
         fail(f"Root-owned namespace decommission guard is missing: {required}")
 inspect_script = (ROOT / "scripts" / "inspect-vps.sh").read_text(encoding="utf-8")
-for required in ("Stock/Media VolumeSnapshot references (names only)", 'inventory-namespace "$namespace"', "volumesnapshot|volumesnapshotcontent"):
+for required in ('ACTIVE_NAMESPACES=(default kube-node-lease kube-public kube-system cert-manager microfe-platform tce-prod k3s-debug)', 'get pods -n "$namespace" -o wide', 'get events -n "$namespace"'):
     if required not in inspect_script:
-        fail(f"VPS inspection must expose decommission snapshot references: {required}")
+        fail(f"VPS inspection must restrict generated diagnostics to the active platform scope: {required}")
+if "decommission-" in inspect_script:
+    fail("Generic VPS inspection must not invoke the separate retirement workflow or helper.")
 decommission_test = (ROOT / "scripts" / "tests" / "decommission-stock-media-namespaces.test.sh").read_text(encoding="utf-8")
 for required in ("MOCK_SNAPSHOT", "MOCK_SNAPSHOT_CONTENT", "namespaced VolumeSnapshot", "cluster-scoped VolumeSnapshotContent", "DNS_OWNERSHIP_REVIEW", "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED", "RUNNER_RETIREMENT", "MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED", "missing Media runner retirement attestation", "invalid Media runner retirement attestation"):
     if required not in decommission_test:
