@@ -6,7 +6,7 @@
 
 - Auth app source of truth: [phanthienquoc-authentication](https://github.com/phanthienquoc/phanthienquoc-authentication)
 - GitOps source of truth: [platform-infra](https://github.com/phanthienquoc/platform-infra)
-- Consumer repos: [TCE-dashboard](https://github.com/phanthienquoc/TCE-dashboard), [media-generation](https://github.com/phanthienquoc/media-generation)
+- Consumer repo in this scope: [TCE-dashboard](https://github.com/phanthienquoc/TCE-dashboard)
 - Orchestrator issue: [platform-infra#528](https://github.com/phanthienquoc/platform-infra/issues/528)
 - Auth service integration issue already exists: [phanthienquoc-authentication#1](https://github.com/phanthienquoc/phanthienquoc-authentication/issues/1)
 
@@ -17,8 +17,6 @@
 | Host route | `auth.mrcute.space` in [Ingress manifest](https://github.com/phanthienquoc/platform-infra/blob/master/platform/microfe/ingress.yaml), host path `/` → Service `microfe-auth:80`, TLS secret reference `auth-mrcute-tls` |
 | Runtime | [Deployment](https://github.com/phanthienquoc/platform-infra/blob/master/platform/auth-service/deployment.yaml), container port 4010 and health/readiness probes |
 | Auth route prefix | [Central NestJS bootstrap](https://github.com/phanthienquoc/phanthienquoc-authentication/blob/master/src/main.ts) applies global `api` but excludes `auth/{*path}`; [controller](https://github.com/phanthienquoc/phanthienquoc-authentication/blob/master/src/auth/auth.controller.ts) uses `@Controller('auth')` |
-| Media login | [Media proxy](https://github.com/phanthienquoc/media-generation/blob/master/apps/frontend/app/api/auth/login/route.ts) POSTs to `/auth/login` and forwards `Set-Cookie` |
-| Media identity check | [Media middleware](https://github.com/phanthienquoc/media-generation/blob/master/apps/backend/src/microfe-session.ts) calls `/auth/me` and forwards Cookie only; central [Auth controller](https://github.com/phanthienquoc/phanthienquoc-authentication/blob/master/src/auth/auth.controller.ts) implements `GET /auth/me` using a Bearer Authorization header |
 | TCE route/cookie | [TCE Auth controller](https://github.com/phanthienquoc/TCE-dashboard/blob/master/apps/service/src/auth/auth.controller.ts) has `@Controller('auth')` and sets refresh cookie path `/api/auth`; [TCE bootstrap](https://github.com/phanthienquoc/TCE-dashboard/blob/master/apps/service/src/main.ts) sets global prefix `api`; [TCE docs](https://github.com/phanthienquoc/TCE-dashboard/blob/master/docs/fe-feats) describe `/api/auth/*` |
 | JWT issuance | [TCE JWT service](https://github.com/phanthienquoc/TCE-dashboard/blob/master/apps/service/src/auth/jwt.service.ts) signs HS256 with `sub`, `role`, `typ`, `iat`, `exp`, `jti`; inspected source does not emit `iss`/`aud`. [Central Auth JWT service](https://github.com/phanthienquoc/phanthienquoc-authentication/blob/master/src/auth/jwt.service.ts) emits and verifies `iss` and `aud`. This is a token-compatibility gate. |
 | Persistence owner | Auth repo README says persistence uses `@supabase/supabase-js` service-role client and RPCs for selected atomic operations. Runtime secret values are owned through protected platform-infra `production` environment / Kubernetes Secret; do not move or expose them. |
@@ -40,8 +38,6 @@ Evidence:
 - [TCE Auth controller](https://github.com/phanthienquoc/TCE-dashboard/blob/master/apps/service/src/auth/auth.controller.ts)
 - [TCE JWT service](https://github.com/phanthienquoc/TCE-dashboard/blob/master/apps/service/src/auth/jwt.service.ts)
 - [TCE platform-session middleware](https://github.com/phanthienquoc/TCE-dashboard/blob/master/apps/service/src/platform-session.middleware.ts)
-- [Media login proxy](https://github.com/phanthienquoc/media-generation/blob/master/apps/frontend/app/api/auth/login/route.ts)
-- [Media session middleware](https://github.com/phanthienquoc/media-generation/blob/master/apps/backend/src/microfe-session.ts)
 
 ## Existing work reconciliation (partial evidence)
 
@@ -65,7 +61,7 @@ Evidence:
 - [#531 — A-04 Supabase readiness](https://github.com/phanthienquoc/platform-infra/issues/531)
 - [#532 — A-07 branch/PR reconciliation](https://github.com/phanthienquoc/platform-infra/issues/532)
 - [#533 — A-02 hostname and route-prefix validation](https://github.com/phanthienquoc/platform-infra/issues/533)
-- [#534 — A-03 TCE/Media contract matrix](https://github.com/phanthienquoc/platform-infra/issues/534)
+- [#534 — A-03 TCE/shared-auth contract matrix](https://github.com/phanthienquoc/platform-infra/issues/534)
 - [#535 — A-05 ADR from evidence](https://github.com/phanthienquoc/platform-infra/issues/535)
 - [#536 — A-06 pilot and go/no-go recommendation](https://github.com/phanthienquoc/platform-infra/issues/536)
 

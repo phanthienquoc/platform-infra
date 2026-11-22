@@ -1,4 +1,4 @@
-# Keycloak SSO integration plan — TCE, Media and shared consumers
+# Keycloak SSO integration plan — TCE and shared platform consumers
 
 **Status:** source audit complete; staged implementation required. No application cutover or production credential/config changes are authorized by this plan.
 **Date:** 2026-10-26
@@ -17,8 +17,7 @@ Do not equate a running Keycloak pod or a successful discovery endpoint for the 
 | `phanthienquoc/platform-infra` | Keycloak manifests, TLS/ingress and dedicated deployment workflow exist. Docs contain conflicting historical rollout statements, so current live state and the `mrcute` realm must be re-verified. | Own topology, environment references and safe rollout; never commit secret values. |
 | `phanthienquoc/phanthienquoc-authentication` | `KeycloakTokenService` uses JWKS and validates issuer, audience, expiry and RS256; guarded `GET /api/oidc/me` extracts roles and persists minimal identity metadata. Legacy password/JWT/refresh/MFA/passkey flows remain. | Reuse this as a foundation; add/verify contract and integration tests before any consumer relies on it. |
 | `phanthienquoc/TCE-dashboard` | Login uses shared-auth email/password, MFA and passkey routes. TCE API converts the shared cookie session to an internal JWT. No verified Keycloak browser flow or Keycloak token bridge was found. | Add opt-in non-production OIDC BFF/client integration plus explicit identity mapping; keep legacy mode default. |
-| `phanthienquoc/media-generation` | Login proxy forwards to central Auth `/auth/login`; unauthenticated page redirects to the legacy Auth login URL. No verified Keycloak OIDC callback/client found. | Add a distinct Keycloak client and opt-in non-production integration after TCE contract passes. |
-| StockDividend / MicroFE shell / WebSocket | Shared-auth references/introspection exist, but this audit did not establish full OIDC compatibility. | Audit each consumer before including it in the SSO completion claim. |
+| MicroFE shell / WebSocket | Shared-auth references/introspection exist, but this audit did not establish full OIDC compatibility. | Audit each consumer before including it in the SSO completion claim. |
 
 ## Target contract
 
@@ -51,14 +50,9 @@ Do not equate a running Keycloak pod or a successful discovery endpoint for the 
 - [ ] Add state/nonce/PKCE, CSRF, role-denial, expiry, logout, outage and legacy-regression tests.
 - [ ] Keep current legacy login as default until acceptance tests pass.
 
-### Phase 3 — Media (second consumer, non-production)
-- [ ] Register a separate client with exact Media callback/logout URIs.
-- [ ] Implement the same session and identity contract; keep client secrets server-only.
-- [ ] Test SSO with TCE, access denial, logout and legacy mode.
-
-### Phase 4 — Other consumers and production cutover
-- [ ] Audit StockDividend, MicroFE shell, WebSocket and any other shared-auth consumers.
-- [ ] Verify one-login access to TCE and Media, role mapping, MFA, session expiry, logout and outage behavior.
+### Phase 3 — Shared platform consumers and production cutover
+- [ ] Audit MicroFE shell, WebSocket and any other shared-auth consumers.
+- [ ] Verify one-login access to TCE and shared platform surfaces, role mapping, MFA, session expiry, logout and outage behavior.
 - [ ] Exercise rollback and promote immutable images using the narrowest deployment lane.
 - [ ] Switch production only after explicit cutover approval; no bulk account/session migration or DB mutation as an incidental CI/deploy side effect.
 
