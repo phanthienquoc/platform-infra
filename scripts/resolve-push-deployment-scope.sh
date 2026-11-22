@@ -24,8 +24,7 @@ resolve_scope() {
         # App documentation is not a production workload change, even when a
         # manifest change in the same commit causes reconciliation to run.
         ;;
-      # shellcheck disable=SC2221,SC2222
-      ops/*.md|ops/**/*.md|platform/microfe/*.md|platform/microfe/**/*.md)
+      ops/*.md|platform/microfe/*.md)
         # Operations and MicroFE Markdown documentation is not a workload change.
         ;;
       platform/microfe/*|apps/microfe/*)
