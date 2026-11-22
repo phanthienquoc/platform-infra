@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-11-22T08:32:42+00:00
+Generated: 2026-11-22T08:46:43+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -18,7 +18,7 @@ Filesystem      Size  Used Avail Use% Mounted on
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   26G   20G  58% /
 disk_pressure: normal (58%)
- 08:32:42 up 204 days, 18:23,  0 users,  load average: 0.32, 0.22, 0.18
+ 08:46:43 up 204 days, 18:37,  0 users,  load average: 0.25, 0.23, 0.23
 
 ### Top disk consumers (best-effort, runner-readable paths)
 4.0K	/var/lib/docker
@@ -37,14 +37,14 @@ disk_pressure: normal (58%)
 16M	/var/log/oracle-cloud-agent
 236M	/var/lib/rancher/k3s
 236M	/var/lib/rancher/k3s/data
-2.2G	/var/log/journal
+2.3G	/var/log/journal
 2.5G	/var/log
 
 ## Runner
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
 1057701 /opt/media-actions-runner/bin/Runner.Listener run --startuptype service
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-1878912 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+1894752 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
   actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-media-generation.media-generation-k3s-01)
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service           loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
@@ -118,7 +118,7 @@ Kustomize Version: v5.8.1
 NAME         STATUS   ROLES           AGE   VERSION        INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION              CONTAINER-RUNTIME
 tce-k3s-01   Ready    control-plane   92d   v1.36.3+k3s1   10.0.0.120    <none>        Ubuntu 22.04.5 LTS   6.8.0-1049-oracle (arm64)   containerd://2.3.2-k3s2
 NAME               STATUS   AGE
-cert-manager       Active   88d
+cert-manager       Active   89d
 default            Active   92d
 k3s-debug          Active   45d
 kube-node-lease    Active   92d
@@ -129,9 +129,9 @@ microfe-platform   Active   47d
 stock-prod         Active   64d
 tce-prod           Active   92d
 NAMESPACE          NAME                                        READY   STATUS             RESTARTS      AGE   IP            NODE         NOMINATED NODE   READINESS GATES
-cert-manager       cert-manager-75b96c9588-lgn7d               1/1     Running            0             88d   10.42.0.98    tce-k3s-01   <none>           <none>
-cert-manager       cert-manager-cainjector-b644b66f7-l8jdq     1/1     Running            1 (88d ago)   88d   10.42.0.100   tce-k3s-01   <none>           <none>
-cert-manager       cert-manager-webhook-76d97df888-wwq49       1/1     Running            0             88d   10.42.0.99    tce-k3s-01   <none>           <none>
+cert-manager       cert-manager-75b96c9588-lgn7d               1/1     Running            0             89d   10.42.0.98    tce-k3s-01   <none>           <none>
+cert-manager       cert-manager-cainjector-b644b66f7-l8jdq     1/1     Running            1 (89d ago)   89d   10.42.0.100   tce-k3s-01   <none>           <none>
+cert-manager       cert-manager-webhook-76d97df888-wwq49       1/1     Running            0             89d   10.42.0.99    tce-k3s-01   <none>           <none>
 kube-system        coredns-54996dc9b4-d68pf                    1/1     Running            0             92d   10.42.0.6     tce-k3s-01   <none>           <none>
 kube-system        helm-install-traefik-crd-mq7w8              0/1     Completed          0             92d   10.42.0.3     tce-k3s-01   <none>           <none>
 kube-system        helm-install-traefik-s2twj                  0/1     Completed          1 (92d ago)   92d   10.42.0.2     tce-k3s-01   <none>           <none>
@@ -173,9 +173,9 @@ stock-prod	stock-backend-57ccb8ff6-d25jq	container	backend	ghcr.io/phanthienquoc
 stock-prod	stock-backend-6bc874575d-xcg2j	container	backend	ghcr.io/phanthienquoc/stockdividend/backend:12d63b4		false	0
 stock-prod	stock-frontend-79c57845df-z747s	container	frontend	ghcr.io/phanthienquoc/stockdividend/user:23b2878	sha256:bca44dd31869a4874a795c6e6ace51f9362731770f3ac9ca1ee8f3e608d6bf99	true	0
 NAMESPACE          NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
-cert-manager       cert-manager                1/1     1            1           88d
-cert-manager       cert-manager-cainjector     1/1     1            1           88d
-cert-manager       cert-manager-webhook        1/1     1            1           88d
+cert-manager       cert-manager                1/1     1            1           89d
+cert-manager       cert-manager-cainjector     1/1     1            1           89d
+cert-manager       cert-manager-webhook        1/1     1            1           89d
 kube-system        coredns                     1/1     1            1           92d
 kube-system        local-path-provisioner      1/1     1            1           92d
 kube-system        metrics-server              1/1     1            1           92d
@@ -226,12 +226,12 @@ docker.io/rancher/mirrored-pause:3.10.2	docker.io/rancher/mirrored-pause@sha256:
 ghcr.io/phanthienquoc/auth-service/auth:prod-v1.0.0-ceb2688	ghcr.io/phanthienquoc/auth-service/auth@sha256:15bd51d68155a3b0cbc732e3baa148fc123aafb11b4290e6f66aa252969cdfc7	sha256:b247ff3f816a52c88fed8ef366c5c5996a6cdaccb89ee223701328c88d4c1b8d	false	71649563
 ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-58f80a8	ghcr.io/phanthienquoc/media-generation/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d	sha256:9ab2f390fba17564cdffb00b1f300a093d6d615fedd4a53f027e8598cb20ed24	false	87947792
 ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-58f80a8	ghcr.io/phanthienquoc/media-generation/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a	sha256:03138627646b3a17cfafb2a7f01bf02aa5c22f78b63bf07d768db95f0b8c67f8	false	77140058
-ghcr.io/phanthienquoc/stockdividend/backend:23b2878		sha256:bcf5f7b1b660b5b93cd9d9f4f041db7e9166c89b084412fa4f66e8e4d9a43ad1	false	14420347
 ghcr.io/phanthienquoc/stockdividend/user:23b2878		sha256:bca44dd31869a4874a795c6e6ace51f9362731770f3ac9ca1ee8f3e608d6bf99	false	66238963
 	ghcr.io/phanthienquoc/microfe-shell@sha256:40715628ad7572654ce35dab0835aa8b875d1bf9a20e9a13d257a173feac17ec	sha256:e4577fe7033fba879827b7e4df656e13434d7a70757a3400a8909cab95e55206	false	25830438
 	ghcr.io/phanthienquoc/microfe-shell@sha256:ae64acc032ce13d046ab78c9628b5b0b308f812b67ddfab7503d91e5a3ed8dcd	sha256:d6d34a138c9fb485abe5e70cf0b084e2d8cf482474be71ba0397819b2697f059	false	25830437
 	ghcr.io/phanthienquoc/microfe-ws@sha256:416bc16ade0becf398b0554571f6813985c55dffaf742042a7edef10ca2ea16d	sha256:a26e88e61c4420c79b2f23d6ca68b0b67880a3423cb773c48094ac77fc72aa99	false	65079739
 	ghcr.io/phanthienquoc/microfe-ws@sha256:92e6799bed0dcbeedc1c05575b6416e6e16d27beeab627b21cf1cc34b70ee631	sha256:20bce89a7a7eb9d16ebca87519e5c3e914d89d513db6747a27a9096aa73ba8c2	false	64949303
+ghcr.io/phanthienquoc/stockdividend/backend:23b2878		sha256:bcf5f7b1b660b5b93cd9d9f4f041db7e9166c89b084412fa4f66e8e4d9a43ad1	false	14420347
 ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-48e3842	ghcr.io/phanthienquoc/tce-dashboard/service@sha256:214aee66dadaeb5e5acd7ac03da6d7461f68571ed2ba8ef3ef73384f7f26300a	sha256:924df0921bfdb32ebd65d6d4b05823d3dc80357f9ab4289d9eea991a96778931	false	457622464
 ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-e75e338	ghcr.io/phanthienquoc/tce-dashboard/service@sha256:1dc9d8c2136598a748bbb0aafc615a71aeb3f2a5099c335859536212723f35f0	sha256:d16e4e0a92f04c63bd4777c1b3f967c70da62df6c2f50c796b8daef0cc2e7e09	false	457620530
 ghcr.io/phanthienquoc/tce-dashboard/web:prod-v0.1.0-e75e338	ghcr.io/phanthienquoc/tce-dashboard/web@sha256:0416f01f3cce813ead623403ee354d7e5ff4160d1bfc24c020cfd9387da3ec27	sha256:3f6764e54b88e7d88ceca48e9386d4f5601332efad7b3777610453353edd5e6e	false	75833971
@@ -244,8 +244,8 @@ quay.io/keycloak/keycloak:26.8.1	quay.io/keycloak/keycloak@sha256:79c623a22abacf
 ### GHCR image digest coverage
 status: warning
 GHCR-tagged cached image(s) have no RepoDigest; local image IDs are not registry digests or promotion evidence:
-ghcr.io/phanthienquoc/stockdividend/backend:23b2878
 ghcr.io/phanthienquoc/stockdividend/user:23b2878
+ghcr.io/phanthienquoc/stockdividend/backend:23b2878
 Containers (container ID, name, image reference, state):
 206263dd20f559aac6a11c4ab7a838eafca36856566c058a47c6df3fe4bdf363	media-generation	sha256:9ab2f390fba17564cdffb00b1f300a093d6d615fedd4a53f027e8598cb20ed24	CONTAINER_RUNNING
 d6f260529444ac3a2053434eab8d3461c2754b385a81554a790376756bb31570	media-generation-frontend	sha256:03138627646b3a17cfafb2a7f01bf02aa5c22f78b63bf07d768db95f0b8c67f8	CONTAINER_RUNNING
@@ -282,7 +282,6 @@ event/stock-admin-59cddb87b7-qgkjr.18e40d2349469ca6
 event/stock-admin-59cddb87b7-qgkjr.18e40d234947a25e
 event/stock-backend-6bc874575d-xcg2j.18e40e634bfdef7a
 event/stock-backend-6bc874575d-xcg2j.18e40e634bff081b
-event/stock-frontend-74546898cb.18ea4e1b5523a281
 event/stock-frontend-74546898cb.18ea4f042a03828a
 event/stock-frontend-74546898cb.18ea4fecfedc9ab8
 event/stock-frontend-74546898cb.18ea50d5d46e66ea
@@ -774,7 +773,6 @@ event.events.k8s.io/stock-admin-59cddb87b7-qgkjr.18e40d2349469ca6
 event.events.k8s.io/stock-admin-59cddb87b7-qgkjr.18e40d234947a25e
 event.events.k8s.io/stock-backend-6bc874575d-xcg2j.18e40e634bfdef7a
 event.events.k8s.io/stock-backend-6bc874575d-xcg2j.18e40e634bff081b
-event.events.k8s.io/stock-frontend-74546898cb.18ea4e1b5523a281
 event.events.k8s.io/stock-frontend-74546898cb.18ea4f042a03828a
 event.events.k8s.io/stock-frontend-74546898cb.18ea4fecfedc9ab8
 event.events.k8s.io/stock-frontend-74546898cb.18ea50d5d46e66ea
@@ -920,7 +918,7 @@ replicaset.apps/stock-admin-6fc4d4f77f      0         0         0       20d   ad
 replicaset.apps/stock-admin-6fc8bf8546      0         0         0       20d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6fc8bf8546
 replicaset.apps/stock-admin-6ff7846b85      0         0         0       41d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6ff7846b85
 replicaset.apps/stock-admin-7474c88f7c      0         0         0       27d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7474c88f7c
-replicaset.apps/stock-admin-74855cf68f      0         0         0       23d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=74855cf68f
+replicaset.apps/stock-admin-74855cf68f      0         0         0       24d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=74855cf68f
 replicaset.apps/stock-admin-749748ccbf      0         0         0       32d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=749748ccbf
 replicaset.apps/stock-admin-749bd84796      0         0         0       41d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=749bd84796
 replicaset.apps/stock-admin-74c8df6bc9      0         0         0       32d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=74c8df6bc9
@@ -1011,7 +1009,7 @@ replicaset.apps/stock-admin-bb95d4b7f       0         0         0       36d   ad
 replicaset.apps/stock-admin-bc9995574       0         0         0       27d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=bc9995574
 replicaset.apps/stock-admin-bdcbbf8d5       0         0         0       41d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=bdcbbf8d5
 replicaset.apps/stock-admin-c5c5cf85d       0         0         0       44d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=c5c5cf85d
-replicaset.apps/stock-admin-c647b74f5       0         0         0       22d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=c647b74f5
+replicaset.apps/stock-admin-c647b74f5       0         0         0       23d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=c647b74f5
 replicaset.apps/stock-admin-c8cd6d8f9       0         0         0       36d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=c8cd6d8f9
 replicaset.apps/stock-admin-cd564655b       0         0         0       37d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=cd564655b
 replicaset.apps/stock-admin-cd9c555d7       0         0         0       20d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=cd9c555d7
@@ -1037,7 +1035,7 @@ replicaset.apps/stock-backend-5486b78445    0         0         0       39d   ba
 replicaset.apps/stock-backend-5489c5b485    0         0         0       42d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5489c5b485
 replicaset.apps/stock-backend-54975d9c57    0         0         0       32d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=54975d9c57
 replicaset.apps/stock-backend-549796df58    0         0         0       37d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=549796df58
-replicaset.apps/stock-backend-54cfdb7f4f    0         0         0       22d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=54cfdb7f4f
+replicaset.apps/stock-backend-54cfdb7f4f    0         0         0       23d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=54cfdb7f4f
 replicaset.apps/stock-backend-54fbc4cf78    0         0         0       24d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=54fbc4cf78
 replicaset.apps/stock-backend-5548bcd87f    0         0         0       32d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5548bcd87f
 replicaset.apps/stock-backend-5548c86b4c    0         0         0       41d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5548c86b4c
@@ -1103,7 +1101,7 @@ replicaset.apps/stock-backend-6547946847    0         0         0       23d   ba
 replicaset.apps/stock-backend-65dcbc59f9    0         0         0       30d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=65dcbc59f9
 replicaset.apps/stock-backend-6647646874    0         0         0       20d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6647646874
 replicaset.apps/stock-backend-66b579b978    0         0         0       32d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=66b579b978
-replicaset.apps/stock-backend-675c44854c    0         0         0       23d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=675c44854c
+replicaset.apps/stock-backend-675c44854c    0         0         0       24d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=675c44854c
 replicaset.apps/stock-backend-676bbb7dd7    0         0         0       44d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=676bbb7dd7
 replicaset.apps/stock-backend-67c5f86579    0         0         0       32d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=67c5f86579
 replicaset.apps/stock-backend-67c9fdc489    0         0         0       36d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=67c9fdc489
@@ -1384,9 +1382,9 @@ stock-prod         stock-frontend              ghcr.io/phanthienquoc/stockdivide
 tce-prod           tce-frontend                ghcr.io/phanthienquoc/tce-dashboard/web:prod-v0.1.0-e75e338
 tce-prod           tce-service                 ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-e75e338
 NAMESPACE          NAME                        TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
-cert-manager       cert-manager                ClusterIP      10.43.138.27    <none>        9402/TCP                     88d
-cert-manager       cert-manager-cainjector     ClusterIP      10.43.135.132   <none>        9402/TCP                     88d
-cert-manager       cert-manager-webhook        ClusterIP      10.43.52.112    <none>        443/TCP,9402/TCP             88d
+cert-manager       cert-manager                ClusterIP      10.43.138.27    <none>        9402/TCP                     89d
+cert-manager       cert-manager-cainjector     ClusterIP      10.43.135.132   <none>        9402/TCP                     89d
+cert-manager       cert-manager-webhook        ClusterIP      10.43.52.112    <none>        443/TCP,9402/TCP             89d
 default            kubernetes                  ClusterIP      10.43.0.1       <none>        443/TCP                      92d
 kube-system        kube-dns                    ClusterIP      10.43.0.10      <none>        53/UDP,53/TCP,9153/TCP       92d
 kube-system        metrics-server              ClusterIP      10.43.120.41    <none>        443/TCP                      92d
@@ -1425,5 +1423,5 @@ keycloak   0/0     0            0           36d   keycloak     quay.io/keycloak/
 error: timed out waiting for the condition
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.134284s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049926s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.050207s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049050s remote_ip=132.226.175.206
