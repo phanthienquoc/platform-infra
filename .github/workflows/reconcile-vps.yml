@@ -42,6 +42,8 @@ run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target
       - platform/cert-manager/**
       - platform/k3s-debug-logs/**
       - platform/microfe/**
+      - '!platform/microfe/*.md'
+      - '!platform/microfe/**/*.md'
       - platform/keycloak/**
       - '!platform/keycloak/**/*.md'
       - scripts/reconcile-vps.sh

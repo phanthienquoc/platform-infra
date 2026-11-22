@@ -634,11 +634,16 @@ if "- scripts/resolve-push-deployment-scope.sh" in reconcile_push_paths:
     fail("Changing the push-scope resolver alone must not trigger a production apply.")
 if "- '!platform/keycloak/**/*.md'" not in reconcile_push_paths:
     fail("Production reconciliation push paths must exclude Keycloak operator Markdown.")
+if "- '!platform/microfe/*.md'" not in reconcile_push_paths or "- '!platform/microfe/**/*.md'" not in reconcile_push_paths:
+    fail("Production reconciliation push paths must exclude MicroFE Markdown documentation.")
 scope_resolver = (ROOT / "scripts" / "resolve-push-deployment-scope.sh").read_text(encoding="utf-8")
 if "assert_failure scripts/resolve-push-deployment-scope.sh" not in scope_resolver:
     fail("Push-scope resolver-only changes must fail closed without selecting a production workload.")
 for required in (
     "apps/**/*.md|apps/**/docs/*",
+    "ops/*.md|platform/microfe/*.md",
+    "assert_failure ops/README.md platform/microfe/README.md",
+    "assert_scope microfe platform/microfe/kustomization.yaml ops/README.md platform/microfe/README.md",
     "apps/tce-vps-control-mcp/*",
     "assert_failure apps/tce-vps-control-mcp/package.json",
     "assert_failure platform/keycloak/README.md",
@@ -1660,6 +1665,7 @@ for ignored_path_contract in (
     "scripts/validate-*.py",
     "scripts/tests/*",
     "docs/*",
+    "ops/*.md|platform/microfe/*.md",
     "platform/keycloak/*.md",
     "debug/vps-latest.md",
 ):

@@ -24,6 +24,9 @@ resolve_scope() {
         # App documentation is not a production workload change, even when a
         # manifest change in the same commit causes reconciliation to run.
         ;;
+      ops/*.md|platform/microfe/*.md)
+        # Operations and MicroFE Markdown documentation is not a workload change.
+        ;;
       platform/microfe/*|apps/microfe/*)
         scopes[microfe]=1
         ;;
@@ -138,6 +141,9 @@ self_test() {
   assert_scope all platform/cert-manager/kustomization.yaml scripts/prepare-cert-manager-manifest.sh
   assert_failure README.md .gitignore environments/prod/README.md .github/skills/manifest-validation/SKILL.md ops/runbooks/maintenance.md scripts/inspect-vps.sh
   assert_failure platform/keycloak/README.md
+  assert_failure ops/README.md platform/microfe/README.md
+  assert_failure ops/runbooks/maintenance.md platform/microfe/docs/architecture.md
+  assert_scope microfe platform/microfe/kustomization.yaml ops/README.md platform/microfe/README.md
   assert_scope all scripts/verify-workload-health.sh scripts/bootstrap-runner.sh scripts/validate-recovery-readiness.sh
   assert_failure scripts/bootstrap-runner.sh scripts/validate-recovery-readiness.sh
   # Manual-only and retired helper changes must never trigger an automatic

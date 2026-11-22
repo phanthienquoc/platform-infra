@@ -65,6 +65,8 @@ jobs:
         run: |
           set -euo pipefail
           test -s debug/vps-latest.md
+          grep -q "^# VPS inspection$" debug/vps-latest.md
+          grep -Eq "^Generated: [0-9]{4}-[0-9]{2}-[0-9]{2}T" debug/vps-latest.md
           grep -q "^### Pod failure evidence$" debug/vps-latest.md
           grep -q "^### Persistent storage inventory$" debug/vps-latest.md
           grep -q "^### Recent failure events$" debug/vps-latest.md
@@ -73,8 +75,8 @@ jobs:
           grep -q "^Images (repo tags, repo digests, image ID, pinned, size bytes):$" debug/vps-latest.md
           grep -q "^### GHCR image digest coverage$" debug/vps-latest.md
           grep -q "^Containers (container ID, name, image reference, state):$" debug/vps-latest.md
-          if grep -q "^echo  echo" debug/vps-latest.md; then
-            echo "Malformed duplicate echo marker found in inspection output." >&2
+          if sed -n '1,5p' debug/vps-latest.md | grep -q "^echo  echo"; then
+            echo "Malformed duplicate echo marker found in the generated inspection header." >&2
             exit 1
           fi
           echo "Inspection output structure validated."
@@ -320,4 +322,14 @@ jobs:
             echo "Inspection PR squash merge was not confirmed; leaving it open." >&2
             exit 1
           }
+
+      - name: Restore generated inspection snapshot after failed run
+        if: failure()
+        run: |
+          set -euo pipefail
+          git restore --source=HEAD --staged --worktree -- debug/vps-latest.md
+          if [[ -n "$(git status --porcelain -- debug/vps-latest.md)" ]]; then
+            echo "::error::Failed inspection left a dirty tracked debug snapshot." >&2
+            exit 1
+          fi
 # yamllint enable rule:line-length
