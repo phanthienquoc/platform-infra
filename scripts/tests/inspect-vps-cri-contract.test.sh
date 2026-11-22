@@ -37,3 +37,17 @@ if grep -Fq 'sudo du -xhd1' "$inspect_script"; then
 fi
 
 echo "VPS inspection CRI wrapper contract tests passed."
+
+grep -Fq 'ACTIVE_NAMESPACES=(default kube-node-lease kube-public kube-system cert-manager microfe-platform tce-prod k3s-debug)' "$inspect_script"
+# shellcheck disable=SC2016
+grep -Fq 'get pods -n "$namespace" -o wide' "$inspect_script"
+# shellcheck disable=SC2016
+grep -Fq 'get events -n "$namespace"' "$inspect_script"
+if grep -Eq 'get (pods|deployments|services|ingress|events|pvc) -A' "$inspect_script"; then
+  echo "Inspection must restrict namespace-scoped output to the active platform allowlist." >&2
+  exit 1
+fi
+if grep -Fq 'decommission-' "$inspect_script"; then
+  echo "Generic VPS inspection must not invoke retirement helpers." >&2
+  exit 1
+fi

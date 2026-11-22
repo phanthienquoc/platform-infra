@@ -96,9 +96,9 @@ def validate() -> None:
     require_token_step(recovery_workflow, "Validate recovery readiness", ".github/workflows/validate-recovery-readiness.yml")
 
     require(
-        '"scripts/decommission-stock-media-namespaces.sh"' in inspection_workflow
+        '"scripts/inspect-vps.sh"' in inspection_workflow
         and '"scripts/prepare-cert-manager-manifest.sh"' in inspection_workflow,
-        "read-only inspection must run after changes to the decommission preflight or pinned release helper",
+        "read-only inspection must run after changes to the inspection or pinned release helper",
     )
 
     workflow_permissions = workflow.split("jobs:", 1)[0]
@@ -169,9 +169,8 @@ def validate() -> None:
         "staging dry-run must prepare and clean the generated asset",
     )
     require(
-        "bash scripts/decommission-stock-media-namespaces.sh plan" in inspection
-        and "bash scripts/decommission-stock-media-namespaces.sh delete" not in inspection,
-        "routine inspection may run only the read-only Stock/Media decommission preflight",
+        "decommission-" not in inspection,
+        "routine VPS inspection must remain read-only and must not invoke decommission controls",
     )
     require(
         'bash scripts/prepare-cert-manager-manifest.sh "$CERT_MANAGER_MANIFEST_FILE"' in recovery

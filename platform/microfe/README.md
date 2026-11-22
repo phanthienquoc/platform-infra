@@ -6,7 +6,6 @@ This layer owns the platform shell and shared WebSocket gateway. The canonical A
 - app.mrcute.space -> microfe-shell
 - auth.mrcute.space -> microfe-auth
 
-Only the active TCE Dashboard shell/realtime integration is managed by this Platform footprint. StockDividend and Media Generation are not Platform K3s workloads.
 
 ## Immutable image promotion
 

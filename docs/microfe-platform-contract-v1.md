@@ -3,7 +3,7 @@
 ## Public boundaries
 - Shell: app.mrcute.space
 - Auth: auth.mrcute.space
-- API: api.mrcute.space
+- API: tce.mrcute.space/api
 - WebSocket: ws.mrcute.space
 
 ## Auth
@@ -28,7 +28,7 @@
 
 ## MicroFE boundary
 - TCE Dashboard keeps domain state and business logic in its application repository.
-- StockDividend and Media Generation are outside this Platform Kubernetes deployment contract.
+- Only workloads declared in the active production composition are covered by this Platform Kubernetes deployment contract.
 - Shared browser surface is limited to platform authentication and realtime contracts.
 - Supabase remains data-plane only; Supabase Realtime is not used.
 

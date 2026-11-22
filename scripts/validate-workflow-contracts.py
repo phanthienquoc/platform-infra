@@ -691,7 +691,8 @@ for required in ("### Pod imageID evidence", "containerStatuses", "initContainer
 # registry-resolved digest. A local image ID is never promotion evidence.
 for required in (
     'echo; echo "### GHCR image digest coverage"',
-    'select(any((.repoTags // [])[]?; startswith("ghcr.io/")))',
+    'any((.repoTags // [])[]?; startswith("ghcr.io/"))',
+    'or any((.repoDigests // [])[]?; startswith("ghcr.io/"))',
     'select((.repoDigests // []) | length == 0)',
     "local image IDs are not registry digests or promotion evidence",
 ):
@@ -719,7 +720,7 @@ for digest_reference in (
     if digest_reference not in manifest_validation:
         fail(f"Manifest validation must accept verified immutable MicroFE digests: {digest_reference}")
 
-# Remaining Platform image validators must cover TCE, Auth and MicroFE without retired Stock/Media image lanes.
+# Remaining Platform image validators must cover TCE, Auth and MicroFE without retired workload image lanes.
 for required in (
     "tce-dashboard/(web|service)",
     "auth-service/auth",
@@ -1165,14 +1166,16 @@ if "sed 's/\\r$//'" not in ghcr_probe:
 if "contains embedded whitespace or quotes" not in ghcr_probe:
     fail("GHCR preflight must reject embedded whitespace/quotes instead of passing malformed credentials to curl.")
 
-# Read-only inspection must expose PVC/PV reclaim-policy and claim-binding evidence before namespace retirement.
+# Read-only inspection must expose PVC/PV reclaim-policy and claim-binding evidence
+# for the explicitly allowlisted platform namespaces before namespace retirement.
 for required in (
     'echo; echo "### Persistent storage inventory"',
-    'sudo "$KCTL" get pvc -A -o wide',
+    'for namespace in "${ACTIVE_NAMESPACES[@]}"; do',
+    'sudo "$KCTL" get pvc -n "$namespace" -o wide',
     'sudo "$KCTL" get pv -o wide',
 ):
     if required not in inspection_script:
-        fail(f"VPS inspection is missing persistent storage evidence: {required}")
+        fail(f"VPS inspection is missing allowlisted persistent storage evidence: {required}")
 bootstrap_allowlist = (ROOT / "scripts" / "bootstrap-runner.sh").read_text(encoding="utf-8")
 if "pv|pvc" not in bootstrap_allowlist or "storageclasses" not in bootstrap_allowlist or "all|nodes" not in bootstrap_allowlist:
     fail("The read-only platform-kubectl allowlist must permit all/PVC/PV/StorageClass inventory queries.")
@@ -1278,12 +1281,15 @@ readiness_section = tracker.split("## Repository readiness", 1)[1].split("\n## "
 for repository in (
     "phanthienquoc/platform-infra",
     "phanthienquoc/TCE-dashboard",
-    "phanthienquoc/stockdividend",
-    "phanthienquoc/media-generation",
     "phanthienquoc/phanthienquoc-authentication",
 ):
     if repository not in readiness_section:
         fail(f"Cross-repo deployment readiness table is missing repository: {repository}")
+if "Retired workloads A/B" not in readiness_section:
+    fail("Cross-repo deployment readiness must explicitly classify retired workloads outside the active repository set.")
+for retired_repository in ("phanthienquoc/stockdividend", "phanthienquoc/media-generation"):
+    if retired_repository in readiness_section:
+        fail(f"Retired repository remains in active deployment readiness: {retired_repository}")
 
 
 # Auth shutdown must be an isolated, allowlisted maintenance operation.
@@ -1547,9 +1553,11 @@ for required in (
     if required not in decommission_wrapper:
         fail(f"Root-owned namespace decommission guard is missing: {required}")
 inspect_script = (ROOT / "scripts" / "inspect-vps.sh").read_text(encoding="utf-8")
-for required in ("Stock/Media VolumeSnapshot references (names only)", 'inventory-namespace "$namespace"', "volumesnapshot|volumesnapshotcontent"):
+for required in ('ACTIVE_NAMESPACES=(default kube-node-lease kube-public kube-system cert-manager microfe-platform tce-prod k3s-debug)', 'get pods -n "$namespace" -o wide', 'get events -n "$namespace"'):
     if required not in inspect_script:
-        fail(f"VPS inspection must expose decommission snapshot references: {required}")
+        fail(f"VPS inspection must restrict generated diagnostics to the active platform scope: {required}")
+if "decommission-" in inspect_script:
+    fail("Generic VPS inspection must not invoke the separate retirement workflow or helper.")
 decommission_test = (ROOT / "scripts" / "tests" / "decommission-stock-media-namespaces.test.sh").read_text(encoding="utf-8")
 for required in ("MOCK_SNAPSHOT", "MOCK_SNAPSHOT_CONTENT", "namespaced VolumeSnapshot", "cluster-scoped VolumeSnapshotContent", "DNS_OWNERSHIP_REVIEW", "AUTHORITATIVE-DNS-OWNERSHIP-REVIEWED", "RUNNER_RETIREMENT", "MEDIA-RUNNER-DISABLED-STOPPED-AND-UNREGISTERED", "missing Media runner retirement attestation", "invalid Media runner retirement attestation"):
     if required not in decommission_test:
@@ -1643,8 +1651,8 @@ for path_contract in (
 ):
     if path_contract not in push_scope_contract:
         fail(f"Push deployment scope resolver is missing path mapping: {path_contract}")
-if "apps/stockdividend/*|apps/media-generation/*" not in push_scope_contract:
-    fail("Retired app manifest paths must trigger cluster-wide decommission reconciliation.")
+if "apps/*/base/kustomization.yaml|apps/*/overlays/prod/kustomization.yaml" not in push_scope_contract:
+    fail("Non-active app manifest paths must trigger cluster-wide GitOps reconciliation.")
 if "Unclassified production-trigger path" not in push_scope_contract:
     fail("Unknown push paths must fail closed instead of silently reconciling every application.")
 for ignored_path_contract in (
