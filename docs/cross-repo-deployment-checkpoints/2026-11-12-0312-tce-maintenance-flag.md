@@ -31,7 +31,6 @@ All six current-age and all six inter-arrival budgets fail. WF-07 #43088811861 i
 
 - Latest successful reconciliation #43088879697 (19:37:08Z) ran `mode=apply`, target=all, image changes=false on parent SHA `9093831c`. At 20:11:03Z age=2,035s, with 665s remaining in the 2,700s budget. It verified five GHCR packages, provisioned/verified Auth runtime Secret with values suppressed, left shared `ghcr-pull` unchanged, found no blocked image pulls in MicroFE/TCE scopes, confirmed TCE release pairing, and reported drift=false; manifest apply/image replacement/rollout skipped.
 - Full inspection #43089176130 snapshot generated 19:39:15Z. At 20:11:03Z age=1,908s, with 2,592s remaining in the 4,500s budget.
-- K3s last-known: node Ready/ARM64; Media backend/frontend 1/1; MicroFE Shell/WS/NATS 1/1; TCE/Auth/Keycloak 0/0 maintenance; Stock Admin two pods and desired Backend one pod ImagePullBackOff for `12d63b4`; Keycloak OIDC probes 503; preserve the separate `k3s-debug` PVC. Host restart required; no reboot.
 - Current master advanced to `99509adb` via docs-only PR #1652; no production manifest changes.
 
 ## Exact next actions
@@ -39,29 +38,5 @@ All six current-age and all six inter-arrival budgets fail. WF-07 #43088811861 i
 1. Platform operator: current-master `reconcile-vps.yml` `mode=plan` on `99509adb` before the last reconciliation freshness expires at 20:22:08Z; obtain fresh inspection before 20:54:15Z.
 2. TCE administrator: verify the current repository variable setting and set it to true only if the maintenance window is approved; otherwise restore service replicas. Do not relax strict health probes.
 3. GitHub administrator: scheduler enqueue/delivery telemetry and master protection/squash-only remediation.
-4. Stock owner: retirement/restoration decision; if restored, publish a compatible ARM64 immutable digest.
-5. Media owner: backup/retention, DNS and remote runner unregister evidence.
 
 No current-master workflow dispatch, new image publication/promotion, manifest apply, rollout, deletion, credential rotation, DNS/database/storage mutation, cleanup or reboot occurred. Platform Infra remains the only production apply authority. TCE market-scan schedule unchanged.
-
-
-# Approved Stock/Media Decommission Checkpoint — 2026-11-12 03:12 ICT
-
-## Scope and status
-
-The existing decommission plan is approved: remove StockDividend and Media Generation from active Platform GitOps ownership and delete only K3s namespaces `stock-prod` and `media-prod`. GitOps ownership retirement is already merged; app repositories and their CI/test/security/immutable-publisher workflows remain intact. K3s namespace/workload deletion and Media runner retirement are not complete.
-
-## Fresh evidence
-
-- Full inspection #43089176130 generated `debug/vps-latest.md` at 19:39:15Z. At 20:11:03Z it is 1,908s old within the 4,500s budget (2,592s remaining).
-- Media backend/frontend remain 1/1 with registry RepoDigests. Dedicated Media runner service is active/enabled and Listener present; remote GitHub registration is not inferred.
-- Stock has two desired Admin pods and one desired Backend pod in ImagePullBackOff on `12d63b4`, exact error `no match for platform in manifest: not found`. Legacy Backend/Frontend remain 1/1 but have no RepoDigest evidence.
-- Read-only preflight reports no PVC/PV claims or VolumeSnapshot references in target namespaces. Preserve separate `k3s-debug/k3s-debug-logs` PVC (1Gi, Bound, RWO). Target namespaces still contain Deployments, ReplicaSets, Services, Ingresses and namespaced Secrets.
-- Ingress snapshot lists `media.mrcute.space` and Stock host entries `mrcute.space`, `www.mrcute.space`, `admin.mrcute.space` plus one additional host. The existing plan lists `api.mrcute.space`; the same-run plan must print the exact host/TLS list and be reconciled with authoritative DNS/provider records.
-- Keycloak is 0/0 and both public OIDC probes returned HTTP 503; TCE/Auth/MicroFE/Keycloak are outside decommission and must remain unchanged.
-
-## Protected workflow gates
-
-`.github/workflows/decommission-stock-media.yml` is manual-only and defaults to read-only `mode=plan`. Delete mode requires production Environment approval, four exact confirmations, stable HTTPS backup/DNS evidence refs, fresh same-run storage preflight, Media service inactive and disabled/masked or absent, no Listener, and remote GitHub runner absence verified by read-only `MEDIA_RUNNER_AUDIT_TOKEN`. The current snapshot shows the local Media runner gate fails (active/enabled, Listener present); backup/retention, DNS ownership, remote registration/audit token and environment approval remain outstanding. No plan/delete run was invoked because the connector lacks workflow dispatch.
-
-No namespace, workload, PVC/PV, runner, DNS, external database/storage, GHCR package or app repository was deleted. No runner was stopped/unregistered. No host reboot, Docker cleanup, credential rotation or TCE schedule change. Platform remains sole production apply authority.
