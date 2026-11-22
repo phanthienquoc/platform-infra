@@ -691,7 +691,8 @@ for required in ("### Pod imageID evidence", "containerStatuses", "initContainer
 # registry-resolved digest. A local image ID is never promotion evidence.
 for required in (
     'echo; echo "### GHCR image digest coverage"',
-    'select(any((.repoTags // [])[]?; startswith("ghcr.io/")))',
+    'any((.repoTags // [])[]?; startswith("ghcr.io/"))',
+    'or any((.repoDigests // [])[]?; startswith("ghcr.io/"))',
     'select((.repoDigests // []) | length == 0)',
     "local image IDs are not registry digests or promotion evidence",
 ):
@@ -719,7 +720,7 @@ for digest_reference in (
     if digest_reference not in manifest_validation:
         fail(f"Manifest validation must accept verified immutable MicroFE digests: {digest_reference}")
 
-# Remaining Platform image validators must cover TCE, Auth and MicroFE without retired Stock/Media image lanes.
+# Remaining Platform image validators must cover TCE, Auth and MicroFE without retired workload image lanes.
 for required in (
     "tce-dashboard/(web|service)",
     "auth-service/auth",

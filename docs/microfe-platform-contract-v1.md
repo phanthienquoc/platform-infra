@@ -3,7 +3,7 @@
 ## Public boundaries
 - Shell: app.mrcute.space
 - Auth: auth.mrcute.space
-- API: api.mrcute.space
+- API: tce.mrcute.space/api
 - WebSocket: ws.mrcute.space
 
 ## Auth

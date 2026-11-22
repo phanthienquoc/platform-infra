@@ -42,7 +42,6 @@ disk_pressure: normal (58%)
 
 ## Runner
 uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
-1057701 /opt/media-actions-runner/bin/Runner.Listener run --startuptype service
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
 1894752 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service           loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
@@ -227,46 +226,7 @@ e94dd30d06fd80099e243616c4f90590695e72f103ad61068e7d9637a903a1b9	local-path-prov
 0e13b0ae3af00086b1c5e69ec22f484641c81559ed0fa04c0d82d88fa4bd8332	lb-tcp-80	sha256:1084dac5ea9871ffa6d01fe67150e175df9c28579073cd40d2186c08b37aba50	CONTAINER_RUNNING
 b5e1e29f04d3b0453f48436a80f45f6c1bb5f9e4bfda2f2b6e63ee3b231142f8	metrics-server	sha256:37ceda8805d2e3bca331bcdd659d9cf8d3b4075a68b288054c88e62232d52883	CONTAINER_RUNNING
 
-### Platform namespace preservation check
-Preserved namespace present: tce-prod
-Preserved namespace present: microfe-platform
 
-stock	admin.mrcute.space,api.mrcute.space,mrcute.space,www.mrcute.space	admin.mrcute.space,api.mrcute.space,mrcute.space,www.mrcute.space	stock-mrcute-tls	10.0.0.120
-stock-ingress	admin.mrcute.space,api.mrcute.space,mrcute.space,www.mrcute.space	admin.mrcute.space,api.mrcute.space,mrcute.space,www.mrcute.space	stock-mrcute-tls	10.0.0.120
-DNS ownership is not inferred; reconcile these hostnames with authoritative DNS/provider records before deletion.
-NAME                                  READY   STATUS             RESTARTS   AGE   IP            NODE         NOMINATED NODE   READINESS GATES
-pod/stock-frontend-79c57845df-z747s   1/1     Running            0          64d   10.42.0.56    tce-k3s-01   <none>           <none>
-
-NAME                     TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE   SELECTOR
-service/stock-frontend   ClusterIP   10.43.53.102    <none>        3000/TCP   64d   app=stock-frontend
-
-NAME                             READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                                SELECTOR
-
-NAME                                        DESIRED   CURRENT   READY   AGE   CONTAINERS   IMAGES                                                SELECTOR
-
-configmap/kube-root-ca.crt
-secret/ghcr-pull
-secret/media-mrcute-tls
-serviceaccount/default
-order.acme.cert-manager.io/media-mrcute-tls-1-249384574
-certificaterequest.cert-manager.io/media-mrcute-tls-1
-certificate.cert-manager.io/media-mrcute-tls
-ingress.networking.k8s.io/media
-DNS ownership is not inferred; reconcile these hostnames with authoritative DNS/provider records before deletion.
-NAME                                            READY   STATUS    RESTARTS   AGE   IP            NODE         NOMINATED NODE   READINESS GATES
-
-NAME                                TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE   SELECTOR
-
-NAME                                        READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS                  IMAGES                                                                                                                    SELECTOR
-
-NAME                                                   DESIRED   CURRENT   READY   AGE   CONTAINERS                  IMAGES                                                                                                                    SELECTOR
-
-### StorageClass inventory
-NAME                   PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
-local-path (default)   rancher.io/local-path   Delete          WaitForFirstConsumer   false                  92d
-Preflight passed: target namespaces have no PVCs, PV claims or VolumeSnapshot references.
-Read-only preflight complete. No Kubernetes resources were changed.
-decommission_preflight_status: storage-clean
 
 ### GitOps drift
 Prepared checksum-verified cert-manager v1.21.1 manifest.
