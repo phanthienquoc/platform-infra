@@ -1,5 +1,7 @@
 # VPS inspection
 
+
+Sanitized working-tree artifact: retired workload identifiers are anonymized; observed counts, states, and image digests are retained. No runtime resource was changed.
 Generated: 2026-11-22T12:00:04+00:00
 
 ## Host
@@ -45,7 +47,7 @@ uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(d
 1057701 /opt/media-actions-runner/bin/Runner.Listener run --startuptype service
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
 2047331 /opt/actions-runner/bin/Runner.Worker spawnclient 154 163
-  actions.runner.phanthienquoc-media-generation.media-generation-k3s-01.service loaded    active   running GitHub Actions Runner (phanthienquoc-media-generation.media-generation-k3s-01)
+  actions.runner.retired-workload-b.runner.service loaded    active   running GitHub Actions Runner (phanthienquoc-retired-workload-b.retired-workload-b-runner)
   actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service           loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
 runner_service: active
 runner_service_enabled: enabled
@@ -124,9 +126,9 @@ k3s-debug          Active   45d
 kube-node-lease    Active   92d
 kube-public        Active   92d
 kube-system        Active   92d
-media-prod         Active   53d
+retired-namespace-b         Active   53d
 microfe-platform   Active   47d
-stock-prod         Active   64d
+retired-namespace-a         Active   64d
 tce-prod           Active   92d
 NAMESPACE          NAME                                      READY   STATUS      RESTARTS      AGE   IP            NODE         NOMINATED NODE   READINESS GATES
 cert-manager       cert-manager-75b96c9588-lgn7d             1/1     Running     0             89d   10.42.0.98    tce-k3s-01   <none>           <none>
@@ -166,16 +168,16 @@ kube-system        coredns                     1/1     1            1           
 kube-system        local-path-provisioner      1/1     1            1           92d
 kube-system        metrics-server              1/1     1            1           92d
 kube-system        traefik                     1/1     1            1           92d
-media-prod         media-generation            0/0     0            0           53d
-media-prod         media-generation-frontend   0/0     0            0           52d
+retired-namespace-b         retired-workload-b            0/0     0            0           53d
+retired-namespace-b         retired-workload-b-frontend   0/0     0            0           52d
 microfe-platform   keycloak                    0/0     0            0           37d
 microfe-platform   microfe-auth                0/0     0            0           47d
 microfe-platform   microfe-shell               1/1     1            1           47d
 microfe-platform   microfe-ws                  1/1     1            1           47d
 microfe-platform   nats                        1/1     1            1           44d
-stock-prod         stock-admin                 0/0     0            0           60d
-stock-prod         stock-backend               0/0     0            0           64d
-stock-prod         stock-frontend              0/0     0            0           64d
+retired-namespace-a         retired-workload-a-admin                 0/0     0            0           60d
+retired-namespace-a         retired-workload-a-backend               0/0     0            0           64d
+retired-namespace-a         retired-workload-a-frontend              0/0     0            0           64d
 tce-prod           tce-frontend                0/0     0            0           89d
 tce-prod           tce-service                 0/0     0            0           89d
 
@@ -185,9 +187,9 @@ k3s-debug   k3s-debug-logs   Bound    pvc-9aed95ca-8365-46a4-a06a-d8f26d600456  
 NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                      STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE   VOLUMEMODE
 pvc-9aed95ca-8365-46a4-a06a-d8f26d600456   1Gi        RWO            Delete           Bound    k3s-debug/k3s-debug-logs   local-path     <unset>                          45d   Filesystem
 
-### Stock/Media VolumeSnapshot references (names only)
-stock-prod: none
-media-prod: none
+### Retired workloads A/B VolumeSnapshot references (names only)
+retired-namespace-a: none
+retired-namespace-b: none
 
 ### Pod failure evidence
 
@@ -207,13 +209,13 @@ docker.io/rancher/mirrored-library-traefik:3.7.8	docker.io/rancher/mirrored-libr
 docker.io/rancher/mirrored-metrics-server:v0.9.0	docker.io/rancher/mirrored-metrics-server@sha256:d9862115e7c7881280d3d75ca26bda8ffc0fc213315979575bf23ce9826205c0	sha256:37ceda8805d2e3bca331bcdd659d9cf8d3b4075a68b288054c88e62232d52883	false	20915021
 docker.io/rancher/mirrored-pause:3.10.2	docker.io/rancher/mirrored-pause@sha256:f548e0e8e3dc1896ca956272154dde3314e8cc4fde0a57577ee9fa1c63f5baf4	sha256:3884a337192318652b28de0de1aeb07f446a14f220feb5066f03e93f23ea3b60	false	268296
 ghcr.io/phanthienquoc/auth-service/auth:prod-v1.0.0-ceb2688	ghcr.io/phanthienquoc/auth-service/auth@sha256:15bd51d68155a3b0cbc732e3baa148fc123aafb11b4290e6f66aa252969cdfc7	sha256:b247ff3f816a52c88fed8ef366c5c5996a6cdaccb89ee223701328c88d4c1b8d	false	71649563
-ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-58f80a8	ghcr.io/phanthienquoc/media-generation/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d	sha256:9ab2f390fba17564cdffb00b1f300a093d6d615fedd4a53f027e8598cb20ed24	false	87947792
-ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-58f80a8	ghcr.io/phanthienquoc/media-generation/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a	sha256:03138627646b3a17cfafb2a7f01bf02aa5c22f78b63bf07d768db95f0b8c67f8	false	77140058
-ghcr.io/phanthienquoc/stockdividend/user:23b2878		sha256:bca44dd31869a4874a795c6e6ace51f9362731770f3ac9ca1ee8f3e608d6bf99	false	66238963
+ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-58f80a8	ghcr.io/retired-workload-b-repository/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d	sha256:9ab2f390fba17564cdffb00b1f300a093d6d615fedd4a53f027e8598cb20ed24	false	87947792
+ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-58f80a8	ghcr.io/retired-workload-b-repository/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a	sha256:03138627646b3a17cfafb2a7f01bf02aa5c22f78b63bf07d768db95f0b8c67f8	false	77140058
+ghcr.io/retired-workload-a-repository/user:23b2878		sha256:bca44dd31869a4874a795c6e6ace51f9362731770f3ac9ca1ee8f3e608d6bf99	false	66238963
 	ghcr.io/phanthienquoc/microfe-shell@sha256:ae64acc032ce13d046ab78c9628b5b0b308f812b67ddfab7503d91e5a3ed8dcd	sha256:d6d34a138c9fb485abe5e70cf0b084e2d8cf482474be71ba0397819b2697f059	false	25830437
 	ghcr.io/phanthienquoc/microfe-ws@sha256:416bc16ade0becf398b0554571f6813985c55dffaf742042a7edef10ca2ea16d	sha256:a26e88e61c4420c79b2f23d6ca68b0b67880a3423cb773c48094ac77fc72aa99	false	65079739
 	ghcr.io/phanthienquoc/microfe-ws@sha256:92e6799bed0dcbeedc1c05575b6416e6e16d27beeab627b21cf1cc34b70ee631	sha256:20bce89a7a7eb9d16ebca87519e5c3e914d89d513db6747a27a9096aa73ba8c2	false	64949303
-ghcr.io/phanthienquoc/stockdividend/backend:23b2878		sha256:bcf5f7b1b660b5b93cd9d9f4f041db7e9166c89b084412fa4f66e8e4d9a43ad1	false	14420347
+ghcr.io/retired-workload-a-repository/backend:23b2878		sha256:bcf5f7b1b660b5b93cd9d9f4f041db7e9166c89b084412fa4f66e8e4d9a43ad1	false	14420347
 	ghcr.io/phanthienquoc/microfe-shell@sha256:40715628ad7572654ce35dab0835aa8b875d1bf9a20e9a13d257a173feac17ec	sha256:e4577fe7033fba879827b7e4df656e13434d7a70757a3400a8909cab95e55206	false	25830438
 ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-48e3842	ghcr.io/phanthienquoc/tce-dashboard/service@sha256:214aee66dadaeb5e5acd7ac03da6d7461f68571ed2ba8ef3ef73384f7f26300a	sha256:924df0921bfdb32ebd65d6d4b05823d3dc80357f9ab4289d9eea991a96778931	false	457622464
 ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-e75e338	ghcr.io/phanthienquoc/tce-dashboard/service@sha256:1dc9d8c2136598a748bbb0aafc615a71aeb3f2a5099c335859536212723f35f0	sha256:d16e4e0a92f04c63bd4777c1b3f967c70da62df6c2f50c796b8daef0cc2e7e09	false	457620530
@@ -227,8 +229,8 @@ quay.io/keycloak/keycloak:26.8.1	quay.io/keycloak/keycloak@sha256:79c623a22abacf
 ### GHCR image digest coverage
 status: warning
 GHCR-tagged cached image(s) have no RepoDigest; local image IDs are not registry digests or promotion evidence:
-ghcr.io/phanthienquoc/stockdividend/user:23b2878
-ghcr.io/phanthienquoc/stockdividend/backend:23b2878
+ghcr.io/retired-workload-a-repository/user:23b2878
+ghcr.io/retired-workload-a-repository/backend:23b2878
 Containers (container ID, name, image reference, state):
 921cf16447b287444777e30ab96c083bf9530fb91e3e220fe4ffb0aa336572d3	ws	sha256:a26e88e61c4420c79b2f23d6ca68b0b67880a3423cb773c48094ac77fc72aa99	CONTAINER_RUNNING
 534b404798d43154db54be31ecefbffc57b06f8379bc8e69a99004e87f9fd350	shell	sha256:d6d34a138c9fb485abe5e70cf0b084e2d8cf482474be71ba0397819b2697f059	CONTAINER_RUNNING
@@ -243,183 +245,183 @@ e94dd30d06fd80099e243616c4f90590695e72f103ad61068e7d9637a903a1b9	local-path-prov
 0e13b0ae3af00086b1c5e69ec22f484641c81559ed0fa04c0d82d88fa4bd8332	lb-tcp-80	sha256:1084dac5ea9871ffa6d01fe67150e175df9c28579073cd40d2186c08b37aba50	CONTAINER_RUNNING
 b5e1e29f04d3b0453f48436a80f45f6c1bb5f9e4bfda2f2b6e63ee3b231142f8	metrics-server	sha256:37ceda8805d2e3bca331bcdd659d9cf8d3b4075a68b288054c88e62232d52883	CONTAINER_RUNNING
 
-### Stock/Media protected decommission preflight (read-only)
-Active production manifest tree contains no retired StockDividend/Media namespace or image references.
+### Retired workloads A/B protected decommission preflight (read-only)
+Active production manifest tree contains no retired Retired workload A/Retired workload B namespace or image references.
 ### Platform namespace preservation check
 Preserved namespace present: tce-prod
 Preserved namespace present: microfe-platform
 
-### Namespaced objects and storage snapshot references in stock-prod (names only; no Secret/ConfigMap values)
+### Namespaced objects and storage snapshot references in retired-namespace-a (names only; no Secret/ConfigMap values)
 configmap/kube-root-ca.crt
 endpoints/backend
-endpoints/stock-admin
-endpoints/stock-backend
-endpoints/stock-frontend
+endpoints/retired-workload-a-admin
+endpoints/retired-workload-a-backend
+endpoints/retired-workload-a-frontend
 limitrange/stock-defaults
 resourcequota/stock-budget
 resourcequota/stock-quota
 secret/ghcr-pull
 secret/ghcr-secret
-secret/stock-mrcute-tls
+secret/retired-workload-a-tls
 secret/stock-secrets
 serviceaccount/default
 service/backend
-service/stock-admin
-service/stock-backend
-service/stock-frontend
-order.acme.cert-manager.io/stock-mrcute-tls-2-3161958604
-deployment.apps/stock-admin
-deployment.apps/stock-backend
-deployment.apps/stock-frontend
-replicaset.apps/stock-admin-565b8b9c8
-replicaset.apps/stock-admin-5864bcb497
-replicaset.apps/stock-admin-59cddb87b7
-replicaset.apps/stock-admin-6c686779ff
-replicaset.apps/stock-admin-6fb68dc964
-replicaset.apps/stock-admin-6fc4d4f77f
-replicaset.apps/stock-admin-6fc8bf8546
-replicaset.apps/stock-admin-78f96594cf
-replicaset.apps/stock-admin-7f66f6f765
-replicaset.apps/stock-admin-9c5d4c9df
-replicaset.apps/stock-admin-cd9c555d7
-replicaset.apps/stock-backend-5bb8754458
-replicaset.apps/stock-backend-5cff6d5655
-replicaset.apps/stock-backend-6647646874
-replicaset.apps/stock-backend-68458d6cdf
-replicaset.apps/stock-backend-6bc874575d
-replicaset.apps/stock-backend-6df8fcc47d
-replicaset.apps/stock-backend-74d958c7b
-replicaset.apps/stock-backend-7dc87ccfc9
-replicaset.apps/stock-backend-84cd8cc96b
-replicaset.apps/stock-backend-b95fd5f7b
-replicaset.apps/stock-backend-fb9c5dbd5
-replicaset.apps/stock-frontend-74546898cb
-replicaset.apps/stock-frontend-79c57845df
-certificaterequest.cert-manager.io/stock-mrcute-tls-2
-certificate.cert-manager.io/stock-mrcute-tls
+service/retired-workload-a-admin
+service/retired-workload-a-backend
+service/retired-workload-a-frontend
+order.acme.cert-manager.io/retired-workload-a-tls-2-3161958604
+deployment.apps/retired-workload-a-admin
+deployment.apps/retired-workload-a-backend
+deployment.apps/retired-workload-a-frontend
+replicaset.apps/retired-workload-a-admin-565b8b9c8
+replicaset.apps/retired-workload-a-admin-5864bcb497
+replicaset.apps/retired-workload-a-admin-59cddb87b7
+replicaset.apps/retired-workload-a-admin-6c686779ff
+replicaset.apps/retired-workload-a-admin-6fb68dc964
+replicaset.apps/retired-workload-a-admin-6fc4d4f77f
+replicaset.apps/retired-workload-a-admin-6fc8bf8546
+replicaset.apps/retired-workload-a-admin-78f96594cf
+replicaset.apps/retired-workload-a-admin-7f66f6f765
+replicaset.apps/retired-workload-a-admin-9c5d4c9df
+replicaset.apps/retired-workload-a-admin-cd9c555d7
+replicaset.apps/retired-workload-a-backend-5bb8754458
+replicaset.apps/retired-workload-a-backend-5cff6d5655
+replicaset.apps/retired-workload-a-backend-6647646874
+replicaset.apps/retired-workload-a-backend-68458d6cdf
+replicaset.apps/retired-workload-a-backend-6bc874575d
+replicaset.apps/retired-workload-a-backend-6df8fcc47d
+replicaset.apps/retired-workload-a-backend-74d958c7b
+replicaset.apps/retired-workload-a-backend-7dc87ccfc9
+replicaset.apps/retired-workload-a-backend-84cd8cc96b
+replicaset.apps/retired-workload-a-backend-b95fd5f7b
+replicaset.apps/retired-workload-a-backend-fb9c5dbd5
+replicaset.apps/retired-workload-a-frontend-74546898cb
+replicaset.apps/retired-workload-a-frontend-79c57845df
+certificaterequest.cert-manager.io/retired-workload-a-tls-2
+certificate.cert-manager.io/retired-workload-a-tls
 endpointslice.discovery.k8s.io/backend-fvv26
-endpointslice.discovery.k8s.io/stock-admin-sf6kz
-endpointslice.discovery.k8s.io/stock-backend-jbwqp
-endpointslice.discovery.k8s.io/stock-frontend-b8rbs
+endpointslice.discovery.k8s.io/retired-workload-a-admin-sf6kz
+endpointslice.discovery.k8s.io/retired-workload-a-backend-jbwqp
+endpointslice.discovery.k8s.io/retired-workload-a-frontend-b8rbs
 ingress.networking.k8s.io/stock
-ingress.networking.k8s.io/stock-ingress
-### Ingress hosts/TLS secret references and published addresses (names only): stock-prod
-stock	admin.mrcute.space,api.mrcute.space,mrcute.space,www.mrcute.space	admin.mrcute.space,api.mrcute.space,mrcute.space,www.mrcute.space	stock-mrcute-tls	10.0.0.120
-stock-ingress	admin.mrcute.space,api.mrcute.space,mrcute.space,www.mrcute.space	admin.mrcute.space,api.mrcute.space,mrcute.space,www.mrcute.space	stock-mrcute-tls	10.0.0.120
+ingress.networking.k8s.io/retired-workload-a-ingress
+### Ingress hosts/TLS secret references and published addresses (names only): retired-namespace-a
+stock	retired-workload-a-admin.invalid,retired-workload-a-api.invalid,retired-workload-a.invalid,www.retired-workload-a.invalid	retired-workload-a-admin.invalid,retired-workload-a-api.invalid,retired-workload-a.invalid,www.retired-workload-a.invalid	retired-workload-a-tls	10.0.0.120
+retired-workload-a-ingress	retired-workload-a-admin.invalid,retired-workload-a-api.invalid,retired-workload-a.invalid,www.retired-workload-a.invalid	retired-workload-a-admin.invalid,retired-workload-a-api.invalid,retired-workload-a.invalid,www.retired-workload-a.invalid	retired-workload-a-tls	10.0.0.120
 DNS ownership is not inferred; reconcile these hostnames with authoritative DNS/provider records before deletion.
-### Common workload status: stock-prod
+### Common workload status: retired-namespace-a
 NAME                     TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE   SELECTOR
-service/backend          ClusterIP   10.43.46.139    <none>        8080/TCP   64d   app=stock-backend
-service/stock-admin      ClusterIP   10.43.97.150    <none>        3000/TCP   60d   app=stock-admin
-service/stock-backend    ClusterIP   10.43.247.219   <none>        8080/TCP   64d   app=stock-backend
-service/stock-frontend   ClusterIP   10.43.53.102    <none>        3000/TCP   64d   app=stock-frontend
+service/backend          ClusterIP   10.43.46.139    <none>        8080/TCP   64d   app=retired-workload-a-backend
+service/retired-workload-a-admin      ClusterIP   10.43.97.150    <none>        3000/TCP   60d   app=retired-workload-a-admin
+service/retired-workload-a-backend    ClusterIP   10.43.247.219   <none>        8080/TCP   64d   app=retired-workload-a-backend
+service/retired-workload-a-frontend   ClusterIP   10.43.53.102    <none>        3000/TCP   64d   app=retired-workload-a-frontend
 
 NAME                             READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                                SELECTOR
-deployment.apps/stock-admin      0/0     0            0           60d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin
-deployment.apps/stock-backend    0/0     0            0           64d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend
-deployment.apps/stock-frontend   0/0     0            0           64d   frontend     ghcr.io/phanthienquoc/stockdividend/user:23b2878      app=stock-frontend
+deployment.apps/retired-workload-a-admin      0/0     0            0           60d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin
+deployment.apps/retired-workload-a-backend    0/0     0            0           64d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend
+deployment.apps/retired-workload-a-frontend   0/0     0            0           64d   frontend     ghcr.io/retired-workload-a-repository/user:23b2878      app=retired-workload-a-frontend
 
 NAME                                        DESIRED   CURRENT   READY   AGE   CONTAINERS   IMAGES                                                SELECTOR
-replicaset.apps/stock-admin-565b8b9c8       0         0         0       20d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=565b8b9c8
-replicaset.apps/stock-admin-5864bcb497      0         0         0       20d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=5864bcb497
-replicaset.apps/stock-admin-59cddb87b7      0         0         0       20d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=59cddb87b7
-replicaset.apps/stock-admin-6c686779ff      0         0         0       20d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6c686779ff
-replicaset.apps/stock-admin-6fb68dc964      0         0         0       20d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6fb68dc964
-replicaset.apps/stock-admin-6fc4d4f77f      0         0         0       20d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6fc4d4f77f
-replicaset.apps/stock-admin-6fc8bf8546      0         0         0       20d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=6fc8bf8546
-replicaset.apps/stock-admin-78f96594cf      0         0         0       20d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=78f96594cf
-replicaset.apps/stock-admin-7f66f6f765      0         0         0       20d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=7f66f6f765
-replicaset.apps/stock-admin-9c5d4c9df       0         0         0       20d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=9c5d4c9df
-replicaset.apps/stock-admin-cd9c555d7       0         0         0       20d   admin        ghcr.io/phanthienquoc/stockdividend/admin:12d63b4     app=stock-admin,pod-template-hash=cd9c555d7
-replicaset.apps/stock-backend-5bb8754458    0         0         0       20d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5bb8754458
-replicaset.apps/stock-backend-5cff6d5655    0         0         0       20d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=5cff6d5655
-replicaset.apps/stock-backend-6647646874    0         0         0       20d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6647646874
-replicaset.apps/stock-backend-68458d6cdf    0         0         0       20d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=68458d6cdf
-replicaset.apps/stock-backend-6bc874575d    0         0         0       20d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6bc874575d
-replicaset.apps/stock-backend-6df8fcc47d    0         0         0       20d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=6df8fcc47d
-replicaset.apps/stock-backend-74d958c7b     0         0         0       20d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=74d958c7b
-replicaset.apps/stock-backend-7dc87ccfc9    0         0         0       20d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=7dc87ccfc9
-replicaset.apps/stock-backend-84cd8cc96b    0         0         0       20d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=84cd8cc96b
-replicaset.apps/stock-backend-b95fd5f7b     0         0         0       20d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=b95fd5f7b
-replicaset.apps/stock-backend-fb9c5dbd5     0         0         0       20d   backend      ghcr.io/phanthienquoc/stockdividend/backend:12d63b4   app=stock-backend,pod-template-hash=fb9c5dbd5
-replicaset.apps/stock-frontend-74546898cb   0         0         0       22d   frontend     ghcr.io/phanthienquoc/stockdividend/user:23b2878      app=stock-frontend,pod-template-hash=74546898cb
-replicaset.apps/stock-frontend-79c57845df   0         0         0       64d   frontend     ghcr.io/phanthienquoc/stockdividend/user:23b2878      app=stock-frontend,pod-template-hash=79c57845df
+replicaset.apps/retired-workload-a-admin-565b8b9c8       0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=565b8b9c8
+replicaset.apps/retired-workload-a-admin-5864bcb497      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=5864bcb497
+replicaset.apps/retired-workload-a-admin-59cddb87b7      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=59cddb87b7
+replicaset.apps/retired-workload-a-admin-6c686779ff      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=6c686779ff
+replicaset.apps/retired-workload-a-admin-6fb68dc964      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=6fb68dc964
+replicaset.apps/retired-workload-a-admin-6fc4d4f77f      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=6fc4d4f77f
+replicaset.apps/retired-workload-a-admin-6fc8bf8546      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=6fc8bf8546
+replicaset.apps/retired-workload-a-admin-78f96594cf      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=78f96594cf
+replicaset.apps/retired-workload-a-admin-7f66f6f765      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=7f66f6f765
+replicaset.apps/retired-workload-a-admin-9c5d4c9df       0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=9c5d4c9df
+replicaset.apps/retired-workload-a-admin-cd9c555d7       0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=cd9c555d7
+replicaset.apps/retired-workload-a-backend-5bb8754458    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=5bb8754458
+replicaset.apps/retired-workload-a-backend-5cff6d5655    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=5cff6d5655
+replicaset.apps/retired-workload-a-backend-6647646874    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=6647646874
+replicaset.apps/retired-workload-a-backend-68458d6cdf    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=68458d6cdf
+replicaset.apps/retired-workload-a-backend-6bc874575d    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=6bc874575d
+replicaset.apps/retired-workload-a-backend-6df8fcc47d    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=6df8fcc47d
+replicaset.apps/retired-workload-a-backend-74d958c7b     0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=74d958c7b
+replicaset.apps/retired-workload-a-backend-7dc87ccfc9    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=7dc87ccfc9
+replicaset.apps/retired-workload-a-backend-84cd8cc96b    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=84cd8cc96b
+replicaset.apps/retired-workload-a-backend-b95fd5f7b     0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=b95fd5f7b
+replicaset.apps/retired-workload-a-backend-fb9c5dbd5     0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=fb9c5dbd5
+replicaset.apps/retired-workload-a-frontend-74546898cb   0         0         0       22d   frontend     ghcr.io/retired-workload-a-repository/user:23b2878      app=retired-workload-a-frontend,pod-template-hash=74546898cb
+replicaset.apps/retired-workload-a-frontend-79c57845df   0         0         0       64d   frontend     ghcr.io/retired-workload-a-repository/user:23b2878      app=retired-workload-a-frontend,pod-template-hash=79c57845df
 
-### Namespaced objects and storage snapshot references in media-prod (names only; no Secret/ConfigMap values)
+### Namespaced objects and storage snapshot references in retired-namespace-b (names only; no Secret/ConfigMap values)
 configmap/kube-root-ca.crt
-endpoints/media-generation
-endpoints/media-generation-frontend
+endpoints/retired-workload-b
+endpoints/retired-workload-b-frontend
 secret/ghcr-pull
-secret/media-generation-secrets
+secret/retired-workload-b-secrets
 secret/media-mrcute-tls
 serviceaccount/default
-service/media-generation
-service/media-generation-frontend
+service/retired-workload-b
+service/retired-workload-b-frontend
 order.acme.cert-manager.io/media-mrcute-tls-1-249384574
-deployment.apps/media-generation
-deployment.apps/media-generation-frontend
-replicaset.apps/media-generation-557898ffc5
-replicaset.apps/media-generation-5c9b76dfb9
-replicaset.apps/media-generation-646c797f66
-replicaset.apps/media-generation-665d86ff54
-replicaset.apps/media-generation-6857cc5595
-replicaset.apps/media-generation-6b6f875997
-replicaset.apps/media-generation-6c68f86bf4
-replicaset.apps/media-generation-6f66c4dc4d
-replicaset.apps/media-generation-74bdb964d8
-replicaset.apps/media-generation-86c45c6686
-replicaset.apps/media-generation-8d887c6c9
-replicaset.apps/media-generation-frontend-5445d66b98
-replicaset.apps/media-generation-frontend-55447798b6
-replicaset.apps/media-generation-frontend-58c8dd5969
-replicaset.apps/media-generation-frontend-58d8bbc67
-replicaset.apps/media-generation-frontend-597b779c9d
-replicaset.apps/media-generation-frontend-5df46b89c
-replicaset.apps/media-generation-frontend-64dfb87d84
-replicaset.apps/media-generation-frontend-667fb49d95
-replicaset.apps/media-generation-frontend-7d4cc58775
-replicaset.apps/media-generation-frontend-867d5d8b77
-replicaset.apps/media-generation-frontend-c44458c86
+deployment.retired application tree B
+deployment.retired application tree B-frontend
+replicaset.retired application tree B-557898ffc5
+replicaset.retired application tree B-5c9b76dfb9
+replicaset.retired application tree B-646c797f66
+replicaset.retired application tree B-665d86ff54
+replicaset.retired application tree B-6857cc5595
+replicaset.retired application tree B-6b6f875997
+replicaset.retired application tree B-6c68f86bf4
+replicaset.retired application tree B-6f66c4dc4d
+replicaset.retired application tree B-74bdb964d8
+replicaset.retired application tree B-86c45c6686
+replicaset.retired application tree B-8d887c6c9
+replicaset.retired application tree B-frontend-5445d66b98
+replicaset.retired application tree B-frontend-55447798b6
+replicaset.retired application tree B-frontend-58c8dd5969
+replicaset.retired application tree B-frontend-58d8bbc67
+replicaset.retired application tree B-frontend-597b779c9d
+replicaset.retired application tree B-frontend-5df46b89c
+replicaset.retired application tree B-frontend-64dfb87d84
+replicaset.retired application tree B-frontend-667fb49d95
+replicaset.retired application tree B-frontend-7d4cc58775
+replicaset.retired application tree B-frontend-867d5d8b77
+replicaset.retired application tree B-frontend-c44458c86
 certificaterequest.cert-manager.io/media-mrcute-tls-1
 certificate.cert-manager.io/media-mrcute-tls
-endpointslice.discovery.k8s.io/media-generation-frontend-46jzx
-endpointslice.discovery.k8s.io/media-generation-hqjkh
+endpointslice.discovery.k8s.io/retired-workload-b-frontend-46jzx
+endpointslice.discovery.k8s.io/retired-workload-b-hqjkh
 ingress.networking.k8s.io/media
-### Ingress hosts/TLS secret references and published addresses (names only): media-prod
-media	media.mrcute.space	media.mrcute.space	media-mrcute-tls	10.0.0.120
+### Ingress hosts/TLS secret references and published addresses (names only): retired-namespace-b
+media	retired-workload-b.invalid	retired-workload-b.invalid	media-mrcute-tls	10.0.0.120
 DNS ownership is not inferred; reconcile these hostnames with authoritative DNS/provider records before deletion.
-### Common workload status: media-prod
+### Common workload status: retired-namespace-b
 NAME                                TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE   SELECTOR
-service/media-generation            ClusterIP   10.43.252.95   <none>        3000/TCP   53d   app=media-generation
-service/media-generation-frontend   ClusterIP   10.43.48.52    <none>        80/TCP     52d   app=media-generation-frontend
+service/retired-workload-b            ClusterIP   10.43.252.95   <none>        3000/TCP   53d   app=retired-workload-b
+service/retired-workload-b-frontend   ClusterIP   10.43.48.52    <none>        80/TCP     52d   app=retired-workload-b-frontend
 
 NAME                                        READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS                  IMAGES                                                                                                                    SELECTOR
-deployment.apps/media-generation            0/0     0            0           53d   media-generation            ghcr.io/phanthienquoc/media-generation/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d    app=media-generation
-deployment.apps/media-generation-frontend   0/0     0            0           52d   media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a   app=media-generation-frontend
+deployment.retired application tree B            0/0     0            0           53d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d    app=retired-workload-b
+deployment.retired application tree B-frontend   0/0     0            0           52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a   app=retired-workload-b-frontend
 
 NAME                                                   DESIRED   CURRENT   READY   AGE   CONTAINERS                  IMAGES                                                                                                                    SELECTOR
-replicaset.apps/media-generation-557898ffc5            0         0         0       52d   media-generation            ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-56179ff                                                        app=media-generation,pod-template-hash=557898ffc5
-replicaset.apps/media-generation-5c9b76dfb9            0         0         0       39d   media-generation            ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-58f80a8                                                        app=media-generation,pod-template-hash=5c9b76dfb9
-replicaset.apps/media-generation-646c797f66            0         0         0       22d   media-generation            ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-58f80a8                                                        app=media-generation,pod-template-hash=646c797f66
-replicaset.apps/media-generation-665d86ff54            0         0         0       21d   media-generation            ghcr.io/phanthienquoc/media-generation/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d    app=media-generation,pod-template-hash=665d86ff54
-replicaset.apps/media-generation-6857cc5595            0         0         0       52d   media-generation            ghcr.io/phanthienquoc/media-generation-backend:prod-v0.3.0-85a354f                                                        app=media-generation,pod-template-hash=6857cc5595
-replicaset.apps/media-generation-6b6f875997            0         0         0       51d   media-generation            ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-a34d8ca                                                        app=media-generation,pod-template-hash=6b6f875997
-replicaset.apps/media-generation-6c68f86bf4            0         0         0       22d   media-generation            ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-58f80a8                                                        app=media-generation,pod-template-hash=6c68f86bf4
-replicaset.apps/media-generation-6f66c4dc4d            0         0         0       47d   media-generation            ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-362cb81                                                        app=media-generation,pod-template-hash=6f66c4dc4d
-replicaset.apps/media-generation-74bdb964d8            0         0         0       52d   media-generation            ghcr.io/phanthienquoc/media-generation/backend:prod-v0.3.0-5229584                                                        app=media-generation,pod-template-hash=74bdb964d8
-replicaset.apps/media-generation-86c45c6686            0         0         0       52d   media-generation            ghcr.io/phanthienquoc/media-generation-backend:prod-v0.3.0-cb5355d                                                        app=media-generation,pod-template-hash=86c45c6686
-replicaset.apps/media-generation-8d887c6c9             0         0         0       52d   media-generation            ghcr.io/phanthienquoc/media-generation-backend:prod-v0.3.0-bf6c55a                                                        app=media-generation,pod-template-hash=8d887c6c9
-replicaset.apps/media-generation-frontend-5445d66b98   0         0         0       22d   media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-58f80a8                                                       app=media-generation-frontend,pod-template-hash=5445d66b98
-replicaset.apps/media-generation-frontend-55447798b6   0         0         0       52d   media-generation-frontend   ghcr.io/phanthienquoc/media-generation-frontend:prod-v0.3.0-cc47a89                                                       app=media-generation-frontend,pod-template-hash=55447798b6
-replicaset.apps/media-generation-frontend-58c8dd5969   0         0         0       52d   media-generation-frontend   ghcr.io/phanthienquoc/media-generation-frontend:prod-v0.3.0-85a354f                                                       app=media-generation-frontend,pod-template-hash=58c8dd5969
-replicaset.apps/media-generation-frontend-58d8bbc67    0         0         0       21d   media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a   app=media-generation-frontend,pod-template-hash=58d8bbc67
-replicaset.apps/media-generation-frontend-597b779c9d   0         0         0       39d   media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-58f80a8                                                       app=media-generation-frontend,pod-template-hash=597b779c9d
-replicaset.apps/media-generation-frontend-5df46b89c    0         0         0       52d   media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-56179ff                                                       app=media-generation-frontend,pod-template-hash=5df46b89c
-replicaset.apps/media-generation-frontend-64dfb87d84   0         0         0       52d   media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-5229584                                                       app=media-generation-frontend,pod-template-hash=64dfb87d84
-replicaset.apps/media-generation-frontend-667fb49d95   0         0         0       47d   media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-362cb81                                                       app=media-generation-frontend,pod-template-hash=667fb49d95
-replicaset.apps/media-generation-frontend-7d4cc58775   0         0         0       51d   media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend:prod-v0.3.0-a34d8ca                                                       app=media-generation-frontend,pod-template-hash=7d4cc58775
-replicaset.apps/media-generation-frontend-867d5d8b77   0         0         0       52d   media-generation-frontend   ghcr.io/phanthienquoc/media-generation-frontend:prod-v0.3.0-bf6c55a                                                       app=media-generation-frontend,pod-template-hash=867d5d8b77
-replicaset.apps/media-generation-frontend-c44458c86    0         0         0       52d   media-generation-frontend   ghcr.io/phanthienquoc/media-generation-frontend:prod-v0.3.0-cb5355d                                                       app=media-generation-frontend,pod-template-hash=c44458c86
+replicaset.retired application tree B-557898ffc5            0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-56179ff                                                        app=retired-workload-b,pod-template-hash=557898ffc5
+replicaset.retired application tree B-5c9b76dfb9            0         0         0       39d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-58f80a8                                                        app=retired-workload-b,pod-template-hash=5c9b76dfb9
+replicaset.retired application tree B-646c797f66            0         0         0       22d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-58f80a8                                                        app=retired-workload-b,pod-template-hash=646c797f66
+replicaset.retired application tree B-665d86ff54            0         0         0       21d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d    app=retired-workload-b,pod-template-hash=665d86ff54
+replicaset.retired application tree B-6857cc5595            0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository-backend:prod-v0.3.0-85a354f                                                        app=retired-workload-b,pod-template-hash=6857cc5595
+replicaset.retired application tree B-6b6f875997            0         0         0       51d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-a34d8ca                                                        app=retired-workload-b,pod-template-hash=6b6f875997
+replicaset.retired application tree B-6c68f86bf4            0         0         0       22d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-58f80a8                                                        app=retired-workload-b,pod-template-hash=6c68f86bf4
+replicaset.retired application tree B-6f66c4dc4d            0         0         0       47d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-362cb81                                                        app=retired-workload-b,pod-template-hash=6f66c4dc4d
+replicaset.retired application tree B-74bdb964d8            0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-5229584                                                        app=retired-workload-b,pod-template-hash=74bdb964d8
+replicaset.retired application tree B-86c45c6686            0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository-backend:prod-v0.3.0-cb5355d                                                        app=retired-workload-b,pod-template-hash=86c45c6686
+replicaset.retired application tree B-8d887c6c9             0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository-backend:prod-v0.3.0-bf6c55a                                                        app=retired-workload-b,pod-template-hash=8d887c6c9
+replicaset.retired application tree B-frontend-5445d66b98   0         0         0       22d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-58f80a8                                                       app=retired-workload-b-frontend,pod-template-hash=5445d66b98
+replicaset.retired application tree B-frontend-55447798b6   0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository-frontend:prod-v0.3.0-cc47a89                                                       app=retired-workload-b-frontend,pod-template-hash=55447798b6
+replicaset.retired application tree B-frontend-58c8dd5969   0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository-frontend:prod-v0.3.0-85a354f                                                       app=retired-workload-b-frontend,pod-template-hash=58c8dd5969
+replicaset.retired application tree B-frontend-58d8bbc67    0         0         0       21d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a   app=retired-workload-b-frontend,pod-template-hash=58d8bbc67
+replicaset.retired application tree B-frontend-597b779c9d   0         0         0       39d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-58f80a8                                                       app=retired-workload-b-frontend,pod-template-hash=597b779c9d
+replicaset.retired application tree B-frontend-5df46b89c    0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-56179ff                                                       app=retired-workload-b-frontend,pod-template-hash=5df46b89c
+replicaset.retired application tree B-frontend-64dfb87d84   0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-5229584                                                       app=retired-workload-b-frontend,pod-template-hash=64dfb87d84
+replicaset.retired application tree B-frontend-667fb49d95   0         0         0       47d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-362cb81                                                       app=retired-workload-b-frontend,pod-template-hash=667fb49d95
+replicaset.retired application tree B-frontend-7d4cc58775   0         0         0       51d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-a34d8ca                                                       app=retired-workload-b-frontend,pod-template-hash=7d4cc58775
+replicaset.retired application tree B-frontend-867d5d8b77   0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository-frontend:prod-v0.3.0-bf6c55a                                                       app=retired-workload-b-frontend,pod-template-hash=867d5d8b77
+replicaset.retired application tree B-frontend-c44458c86    0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository-frontend:prod-v0.3.0-cb5355d                                                       app=retired-workload-b-frontend,pod-template-hash=c44458c86
 
 ### StorageClass inventory
 NAME                   PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
@@ -428,9 +430,9 @@ Preflight passed: target namespaces have no PVCs, PV claims or VolumeSnapshot re
 Read-only preflight complete. No Kubernetes resources were changed.
 decommission_preflight_status: storage-clean
 
-### Dedicated Media runner retirement evidence
+### Dedicated Retired workload B runner retirement evidence
 media_runner_service=active enabled=enabled listener=present
-GitHub runner registration is not inferred by this host inspection; verify it in the Media repository/organization settings.
+GitHub runner registration is not inferred by this host inspection; verify it in the Retired workload B repository/organization settings.
 
 ### GitOps drift
 Prepared checksum-verified cert-manager v1.21.1 manifest.
@@ -444,16 +446,16 @@ kube-system        coredns                     rancher/mirrored-coredns-coredns:
 kube-system        local-path-provisioner      rancher/local-path-provisioner:v0.0.36
 kube-system        metrics-server              rancher/mirrored-metrics-server:v0.9.0
 kube-system        traefik                     rancher/mirrored-library-traefik:3.7.8
-media-prod         media-generation            ghcr.io/phanthienquoc/media-generation/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d
-media-prod         media-generation-frontend   ghcr.io/phanthienquoc/media-generation/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a
+retired-namespace-b         retired-workload-b            ghcr.io/retired-workload-b-repository/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d
+retired-namespace-b         retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a
 microfe-platform   keycloak                    quay.io/keycloak/keycloak:26.8.1
 microfe-platform   microfe-auth                ghcr.io/phanthienquoc/auth-service/auth:prod-v1.0.0-ceb2688
 microfe-platform   microfe-shell               ghcr.io/phanthienquoc/microfe-shell@sha256:ae64acc032ce13d046ab78c9628b5b0b308f812b67ddfab7503d91e5a3ed8dcd
 microfe-platform   microfe-ws                  ghcr.io/phanthienquoc/microfe-ws@sha256:416bc16ade0becf398b0554571f6813985c55dffaf742042a7edef10ca2ea16d
 microfe-platform   nats                        nats:2.12-alpine
-stock-prod         stock-admin                 ghcr.io/phanthienquoc/stockdividend/admin:12d63b4
-stock-prod         stock-backend               ghcr.io/phanthienquoc/stockdividend/backend:12d63b4
-stock-prod         stock-frontend              ghcr.io/phanthienquoc/stockdividend/user:23b2878
+retired-namespace-a         retired-workload-a-admin                 ghcr.io/retired-workload-a-repository/admin:12d63b4
+retired-namespace-a         retired-workload-a-backend               ghcr.io/retired-workload-a-repository/backend:12d63b4
+retired-namespace-a         retired-workload-a-frontend              ghcr.io/retired-workload-a-repository/user:23b2878
 tce-prod           tce-frontend                ghcr.io/phanthienquoc/tce-dashboard/web:prod-v0.1.0-e75e338
 tce-prod           tce-service                 ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-e75e338
 NAMESPACE          NAME                        TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
@@ -464,27 +466,27 @@ default            kubernetes                  ClusterIP      10.43.0.1       <n
 kube-system        kube-dns                    ClusterIP      10.43.0.10      <none>        53/UDP,53/TCP,9153/TCP       92d
 kube-system        metrics-server              ClusterIP      10.43.120.41    <none>        443/TCP                      92d
 kube-system        traefik                     LoadBalancer   10.43.213.239   10.0.0.120    80:30225/TCP,443:30415/TCP   92d
-media-prod         media-generation            ClusterIP      10.43.252.95    <none>        3000/TCP                     53d
-media-prod         media-generation-frontend   ClusterIP      10.43.48.52     <none>        80/TCP                       52d
+retired-namespace-b         retired-workload-b            ClusterIP      10.43.252.95    <none>        3000/TCP                     53d
+retired-namespace-b         retired-workload-b-frontend   ClusterIP      10.43.48.52     <none>        80/TCP                       52d
 microfe-platform   keycloak                    ClusterIP      10.43.142.95    <none>        80/TCP,9000/TCP              37d
 microfe-platform   microfe-auth                ClusterIP      10.43.83.168    <none>        80/TCP                       47d
 microfe-platform   microfe-shell               ClusterIP      10.43.6.23      <none>        80/TCP                       47d
 microfe-platform   microfe-ws                  ClusterIP      10.43.86.34     <none>        8080/TCP                     47d
 microfe-platform   nats                        ClusterIP      10.43.147.69    <none>        4222/TCP,8222/TCP            44d
-stock-prod         backend                     ClusterIP      10.43.46.139    <none>        8080/TCP                     64d
-stock-prod         stock-admin                 ClusterIP      10.43.97.150    <none>        3000/TCP                     60d
-stock-prod         stock-backend               ClusterIP      10.43.247.219   <none>        8080/TCP                     64d
-stock-prod         stock-frontend              ClusterIP      10.43.53.102    <none>        3000/TCP                     64d
+retired-namespace-a         backend                     ClusterIP      10.43.46.139    <none>        8080/TCP                     64d
+retired-namespace-a         retired-workload-a-admin                 ClusterIP      10.43.97.150    <none>        3000/TCP                     60d
+retired-namespace-a         retired-workload-a-backend               ClusterIP      10.43.247.219   <none>        8080/TCP                     64d
+retired-namespace-a         retired-workload-a-frontend              ClusterIP      10.43.53.102    <none>        3000/TCP                     64d
 tce-prod           tce-frontend                ClusterIP      10.43.99.130    <none>        80/TCP                       89d
 tce-prod           tce-service                 ClusterIP      10.43.189.227   <none>        8210/TCP                     89d
 NAMESPACE          NAME                               CLASS     HOSTS                                                          ADDRESS      PORTS     AGE
-media-prod         media                              traefik   media.mrcute.space                                             10.0.0.120   80, 443   53d
-microfe-platform   keycloak-public                    traefik   sso.mrcute.space                                               10.0.0.120   80, 443   37d
-microfe-platform   keycloak-registration-rate-limit   traefik   sso.mrcute.space                                               10.0.0.120   80, 443   25d
-microfe-platform   microfe-public                     traefik   app.mrcute.space,auth.mrcute.space,ws.mrcute.space             10.0.0.120   80, 443   47d
-stock-prod         stock                              traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   60d
-stock-prod         stock-ingress                      traefik   mrcute.space,www.mrcute.space,admin.mrcute.space + 1 more...   10.0.0.120   80, 443   64d
-tce-prod           tce                                traefik   tce.mrcute.space                                               10.0.0.120   80, 443   89d
+retired-namespace-b         media                              traefik   retired-workload-b.invalid                                             10.0.0.120   80, 443   53d
+microfe-platform   keycloak-public                    traefik   sso.retired-workload-a.invalid                                               10.0.0.120   80, 443   37d
+microfe-platform   keycloak-registration-rate-limit   traefik   sso.retired-workload-a.invalid                                               10.0.0.120   80, 443   25d
+microfe-platform   microfe-public                     traefik   app.retired-workload-a.invalid,auth.retired-workload-a.invalid,ws.retired-workload-a.invalid             10.0.0.120   80, 443   47d
+retired-namespace-a         stock                              traefik   retired-workload-a.invalid,www.retired-workload-a.invalid,retired-workload-a-admin.invalid + 1 more...   10.0.0.120   80, 443   60d
+retired-namespace-a         retired-workload-a-ingress                      traefik   retired-workload-a.invalid,www.retired-workload-a.invalid,retired-workload-a-admin.invalid + 1 more...   10.0.0.120   80, 443   64d
+tce-prod           tce                                traefik   tce.retired-workload-a.invalid                                               10.0.0.120   80, 443   89d
 
 ## K3s service
 active
@@ -498,5 +500,5 @@ keycloak   0/0     0            0           37d   keycloak     quay.io/keycloak/
 error: timed out waiting for the condition
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.110295s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.050621s remote_ip=132.226.175.206
+https://sso.retired-workload-a.invalid/realms/master/.well-known/openid-configuration http_code=503 time_total=0.110295s remote_ip=132.226.175.206
+https://sso.retired-workload-a.invalid/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.050621s remote_ip=132.226.175.206

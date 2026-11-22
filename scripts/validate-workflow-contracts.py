@@ -1281,12 +1281,15 @@ readiness_section = tracker.split("## Repository readiness", 1)[1].split("\n## "
 for repository in (
     "phanthienquoc/platform-infra",
     "phanthienquoc/TCE-dashboard",
-    "phanthienquoc/stockdividend",
-    "phanthienquoc/media-generation",
     "phanthienquoc/phanthienquoc-authentication",
 ):
     if repository not in readiness_section:
         fail(f"Cross-repo deployment readiness table is missing repository: {repository}")
+if "Retired workloads A/B" not in readiness_section:
+    fail("Cross-repo deployment readiness must explicitly classify retired workloads outside the active repository set.")
+for retired_repository in ("phanthienquoc/stockdividend", "phanthienquoc/media-generation"):
+    if retired_repository in readiness_section:
+        fail(f"Retired repository remains in active deployment readiness: {retired_repository}")
 
 
 # Auth shutdown must be an isolated, allowlisted maintenance operation.
