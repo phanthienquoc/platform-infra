@@ -200,7 +200,7 @@ case "${1:-}" in
     done
     "${KUBECTL[@]}" get namespace tce-prod >/dev/null
     "${KUBECTL[@]}" get namespace microfe-platform >/dev/null
-    echo "StockDividend and Media namespaces are absent; TCE and MicroFE namespaces remain."
+    echo "Retired workload namespaces are absent; active TCE and MicroFE namespaces remain."
     exit 0
     ;;
   provision-auth-secret)
