@@ -1,7 +1,7 @@
 # Generic Production Release Pattern (WF-03)
 
 > Reusable production release pattern for application repositories.
-> Reference implementations: TCE and Media Generation.
+> Reference implementations: active application release pipelines.
 
 ## 1. Architecture
 
