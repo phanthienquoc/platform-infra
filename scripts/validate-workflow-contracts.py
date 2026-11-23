@@ -134,10 +134,10 @@ for step_name in (
     "Bootstrap GHCR pull credentials",
     "Provision Keycloak runtime Secret",
 ):
-    marker = f"      - name: {step_name}\\n"
+    marker = f"      - name: {step_name}\n"
     if marker not in reconcile:
         fail(f"Missing credential provisioning step: {step_name}")
-    block = reconcile.split(marker, 1)[1].split("\\n      - name:", 1)[0]
+    block = reconcile.split(marker, 1)[1].split("\n      - name:", 1)[0]
     if "env.PROVISION_CREDENTIALS == 'true'" not in block:
         fail(f"{step_name} must require explicit credential-provisioning approval.")
 if "gh workflow run reconcile-vps.yml" not in recovery or "-f provision_credentials=false" not in recovery:
