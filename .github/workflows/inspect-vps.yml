@@ -72,9 +72,9 @@ jobs:
           grep -q "^### Recent failure events$" debug/vps-latest.md
           grep -q "^### GitOps drift$" debug/vps-latest.md
           grep -q "^runner_policy:" debug/vps-latest.md
-          grep -q "^Images (repo tags, repo digests, image ID, pinned, size bytes):$" debug/vps-latest.md
+          grep -q "^Images used by active platform namespaces (repo tags, repo digests, image ID, pinned, size bytes):$" debug/vps-latest.md
           grep -q "^### GHCR image digest coverage$" debug/vps-latest.md
-          grep -q "^Containers (container ID, name, image reference, state):$" debug/vps-latest.md
+          grep -q "^Containers in active platform namespaces (container ID, name, image reference, state):$" debug/vps-latest.md
           if sed -n '1,5p' debug/vps-latest.md | grep -q "^echo  echo"; then
             echo "Malformed duplicate echo marker found in the generated inspection header." >&2
             exit 1

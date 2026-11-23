@@ -9,6 +9,10 @@ grep -Fq 'grep -q "^# VPS inspection$" debug/vps-latest.md' "$inspect_workflow"
 grep -Fq "sed -n '1,5p' debug/vps-latest.md" "$inspect_workflow"
 grep -Fq 'name: Restore generated inspection snapshot after failed run' "$inspect_workflow"
 grep -Fq 'git restore --source=HEAD --staged --worktree -- debug/vps-latest.md' "$inspect_workflow"
+grep -Fq 'echo "Images used by active platform namespaces (repo tags, repo digests, image ID, pinned, size bytes):"' "$inspect_script"
+grep -Fq 'echo "Containers in active platform namespaces (container ID, name, image reference, state):"' "$inspect_script"
+grep -Fq 'grep -q "^Images used by active platform namespaces (repo tags, repo digests, image ID, pinned, size bytes):$" debug/vps-latest.md' "$inspect_workflow"
+grep -Fq 'grep -q "^Containers in active platform namespaces (container ID, name, image reference, state):$" debug/vps-latest.md' "$inspect_workflow"
 
 bash -n "$inspect_script"
 # The self-hosted runner reuses its checkout. Force-update only the local
