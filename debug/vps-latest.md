@@ -1,8 +1,6 @@
 # VPS inspection
 
-Sanitized working-tree artifact: retired workload identifiers and retired hostnames are anonymized; observed counts, states, and image digests are retained. Active Platform/TCE hostnames are preserved. No runtime resource was changed.
-
-Generated: 2026-11-22T15:02:29+00:00
+Generated: 2026-11-23T00:12:27+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -13,14 +11,14 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.4Gi       1.9Gi        85Mi        18Gi        19Gi
+Mem:            23Gi       3.4Gi       1.9Gi        84Mi        18Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/sda1        45G   26G   20G  58% /
+/dev/sda1        45G   26G   19G  58% /
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/sda1        45G   26G   20G  58% /
+/dev/sda1        45G   26G   19G  58% /
 disk_pressure: normal (58%)
- 15:02:29 up 205 days, 52 min,  0 users,  load average: 0.21, 0.33, 0.23
+ 00:12:27 up 205 days, 10:02,  0 users,  load average: 0.16, 0.13, 0.12
 
 ### Top disk consumers (best-effort, runner-readable paths)
 4.0K	/var/lib/docker
@@ -36,19 +34,25 @@ disk_pressure: normal (58%)
 60K	/var/log/containers
 72K	/var/log/unified-monitoring-agent
 176K	/var/log/apt
-16M	/var/log/oracle-cloud-agent
+17M	/var/log/oracle-cloud-agent
 236M	/var/lib/rancher/k3s
 236M	/var/lib/rancher/k3s/data
 2.3G	/var/log/journal
 2.5G	/var/log
-
-## Runner
-uid=1002(github-runner) gid=1002(github-runner) groups=1002(github-runner),999(docker)
-1057701 /opt/retired-workload-runner/bin/Runner.Listener run --startuptype service
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-2187165 /opt/actions-runner/bin/Runner.Worker spawnclient 155 163
-  actions.runner.retired-workload-b-repository.retired-workload-b-k3s-01.service loaded    active   running GitHub Actions Runner (retired-workload-b-repository.retired-workload-b-k3s-01)
-  actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service           loaded    active   running GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
+2635765 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+● actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service - GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
+     Loaded: loaded (/etc/systemd/system/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service; enabled; vendor preset: enabled)
+     Active: active (running) since Tue 2026-09-22 14:59:15 UTC; 2 months 0 days ago
+   Main PID: 1309484 (runsvc.sh)
+      Tasks: 47 (limit: 28686)
+     Memory: 1.4G
+        CPU: 14h 44min 55.686s
+     CGroup: /system.slice/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service
+             ├─1309484 /bin/bash /opt/actions-runner/runsvc.sh
+             ├─1309492 ./externals/node20/bin/node ./bin/RunnerService.js
+             ├─1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
+             ├─2635765 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
 runner_service: active
 runner_service_enabled: enabled
 runner_policy: platform-kubectl policy: rollout-status-v15-core-workloads
@@ -119,6 +123,7 @@ Client Version: v1.36.3+k3s1
 Kustomize Version: v5.8.1
 NAME         STATUS   ROLES           AGE   VERSION        INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION              CONTAINER-RUNTIME
 tce-k3s-01   Ready    control-plane   92d   v1.36.3+k3s1   10.0.0.120    <none>        Ubuntu 22.04.5 LTS   6.8.0-1049-oracle (arm64)   containerd://2.3.2-k3s2
+Active platform namespaces:
 NAME               STATUS   AGE
 cert-manager       Active   89d
 default            Active   92d
@@ -126,29 +131,35 @@ k3s-debug          Active   45d
 kube-node-lease    Active   92d
 kube-public        Active   92d
 kube-system        Active   92d
-retired-namespace-b         Active   53d
 microfe-platform   Active   47d
-retired-namespace-a         Active   64d
 tce-prod           Active   92d
-NAMESPACE          NAME                                      READY   STATUS      RESTARTS      AGE   IP            NODE         NOMINATED NODE   READINESS GATES
-cert-manager       cert-manager-75b96c9588-lgn7d             1/1     Running     0             89d   10.42.0.98    tce-k3s-01   <none>           <none>
-cert-manager       cert-manager-cainjector-b644b66f7-l8jdq   1/1     Running     1 (89d ago)   89d   10.42.0.100   tce-k3s-01   <none>           <none>
-cert-manager       cert-manager-webhook-76d97df888-wwq49     1/1     Running     0             89d   10.42.0.99    tce-k3s-01   <none>           <none>
-kube-system        coredns-54996dc9b4-d68pf                  1/1     Running     0             92d   10.42.0.6     tce-k3s-01   <none>           <none>
-kube-system        helm-install-traefik-crd-mq7w8            0/1     Completed   0             92d   10.42.0.3     tce-k3s-01   <none>           <none>
-kube-system        helm-install-traefik-s2twj                0/1     Completed   1 (92d ago)   92d   10.42.0.2     tce-k3s-01   <none>           <none>
-kube-system        local-path-provisioner-58d557dc48-jbhhp   1/1     Running     1 (92d ago)   92d   10.42.0.5     tce-k3s-01   <none>           <none>
-kube-system        metrics-server-6dc596dfb8-s2bzm           1/1     Running     0             92d   10.42.0.4     tce-k3s-01   <none>           <none>
-kube-system        svclb-traefik-859779c1-7bwx2              2/2     Running     0             92d   10.42.0.7     tce-k3s-01   <none>           <none>
-kube-system        traefik-59b7647586-gml84                  1/1     Running     0             92d   10.42.0.8     tce-k3s-01   <none>           <none>
-microfe-platform   microfe-shell-7b44b44dfb-ln4sw            1/1     Running     0             21d   10.42.0.153   tce-k3s-01   <none>           <none>
-microfe-platform   microfe-ws-5bc979dd77-txd28               1/1     Running     0             21d   10.42.0.152   tce-k3s-01   <none>           <none>
-microfe-platform   nats-7bc8d9f768-q682m                     1/1     Running     0             44d   10.42.0.178   tce-k3s-01   <none>           <none>
+Pods in active platform namespaces:
+-- namespace default --
+-- namespace kube-node-lease --
+-- namespace kube-public --
+-- namespace kube-system --
+NAME                                      READY   STATUS      RESTARTS      AGE   IP          NODE         NOMINATED NODE   READINESS GATES
+coredns-54996dc9b4-d68pf                  1/1     Running     0             92d   10.42.0.6   tce-k3s-01   <none>           <none>
+helm-install-traefik-crd-mq7w8            0/1     Completed   0             92d   10.42.0.3   tce-k3s-01   <none>           <none>
+helm-install-traefik-s2twj                0/1     Completed   1 (92d ago)   92d   10.42.0.2   tce-k3s-01   <none>           <none>
+local-path-provisioner-58d557dc48-jbhhp   1/1     Running     1 (92d ago)   92d   10.42.0.5   tce-k3s-01   <none>           <none>
+metrics-server-6dc596dfb8-s2bzm           1/1     Running     0             92d   10.42.0.4   tce-k3s-01   <none>           <none>
+svclb-traefik-859779c1-7bwx2              2/2     Running     0             92d   10.42.0.7   tce-k3s-01   <none>           <none>
+traefik-59b7647586-gml84                  1/1     Running     0             92d   10.42.0.8   tce-k3s-01   <none>           <none>
+-- namespace cert-manager --
+NAME                                      READY   STATUS    RESTARTS      AGE   IP            NODE         NOMINATED NODE   READINESS GATES
+cert-manager-75b96c9588-lgn7d             1/1     Running   0             89d   10.42.0.98    tce-k3s-01   <none>           <none>
+cert-manager-cainjector-b644b66f7-l8jdq   1/1     Running   1 (89d ago)   89d   10.42.0.100   tce-k3s-01   <none>           <none>
+cert-manager-webhook-76d97df888-wwq49     1/1     Running   0             89d   10.42.0.99    tce-k3s-01   <none>           <none>
+-- namespace microfe-platform --
+NAME                             READY   STATUS    RESTARTS   AGE   IP            NODE         NOMINATED NODE   READINESS GATES
+microfe-shell-7b44b44dfb-ln4sw   1/1     Running   0          21d   10.42.0.153   tce-k3s-01   <none>           <none>
+microfe-ws-5bc979dd77-txd28      1/1     Running   0          21d   10.42.0.152   tce-k3s-01   <none>           <none>
+nats-7bc8d9f768-q682m            1/1     Running   0          44d   10.42.0.178   tce-k3s-01   <none>           <none>
+-- namespace tce-prod --
+-- namespace k3s-debug --
 
 ### Pod imageID evidence
-cert-manager	cert-manager-75b96c9588-lgn7d	container	cert-manager-controller	quay.io/jetstack/cert-manager-controller:v1.21.1	quay.io/jetstack/cert-manager-controller@sha256:416a2d76870d996460e62bd7f521bf14fa017be9e3e904aab92163a331fcb61a	true	0
-cert-manager	cert-manager-cainjector-b644b66f7-l8jdq	container	cert-manager-cainjector	quay.io/jetstack/cert-manager-cainjector:v1.21.1	quay.io/jetstack/cert-manager-cainjector@sha256:ccf6b919ec0500745a47a910118f834f9636d0aac1ff221245cd2557ed8c7c98	true	1
-cert-manager	cert-manager-webhook-76d97df888-wwq49	container	cert-manager-webhook	quay.io/jetstack/cert-manager-webhook:v1.21.1	quay.io/jetstack/cert-manager-webhook@sha256:d8b3961b51c8c7320633f8208dc46bf88aa13804d0f7cbe48a096b2c523cee42	true	0
 kube-system	coredns-54996dc9b4-d68pf	container	coredns	docker.io/rancher/mirrored-coredns-coredns:1.14.6	docker.io/rancher/mirrored-coredns-coredns@sha256:900f9c109f7a33545d3c811516e8376df9019147b750f5ce3e254468769176ea	true	0
 kube-system	helm-install-traefik-crd-mq7w8	container	helm	docker.io/rancher/klipper-helm:v0.13.3-build20260727	docker.io/rancher/klipper-helm@sha256:5425a2b4613d2458dbdff99218e8d487ebb59c20e7a941f061c0777070f0aac1	false	0
 kube-system	helm-install-traefik-s2twj	container	helm	docker.io/rancher/klipper-helm:v0.13.3-build20260727	docker.io/rancher/klipper-helm@sha256:5425a2b4613d2458dbdff99218e8d487ebb59c20e7a941f061c0777070f0aac1	false	1
@@ -157,39 +168,38 @@ kube-system	metrics-server-6dc596dfb8-s2bzm	container	metrics-server	docker.io/r
 kube-system	svclb-traefik-859779c1-7bwx2	container	lb-tcp-443	docker.io/rancher/klipper-lb:v0.4.17	docker.io/rancher/klipper-lb@sha256:910944bb0bd94f060a82a56ca1ea1c577d3e49b3473a093a47a985f32e92d94a	true	0
 kube-system	svclb-traefik-859779c1-7bwx2	container	lb-tcp-80	docker.io/rancher/klipper-lb:v0.4.17	docker.io/rancher/klipper-lb@sha256:910944bb0bd94f060a82a56ca1ea1c577d3e49b3473a093a47a985f32e92d94a	true	0
 kube-system	traefik-59b7647586-gml84	container	traefik	docker.io/rancher/mirrored-library-traefik:3.7.8	docker.io/rancher/mirrored-library-traefik@sha256:4299bbed850421258fc5448c2e0e6ad350981d4d335a68de11b92448aedbefe5	true	0
+cert-manager	cert-manager-75b96c9588-lgn7d	container	cert-manager-controller	quay.io/jetstack/cert-manager-controller:v1.21.1	quay.io/jetstack/cert-manager-controller@sha256:416a2d76870d996460e62bd7f521bf14fa017be9e3e904aab92163a331fcb61a	true	0
+cert-manager	cert-manager-cainjector-b644b66f7-l8jdq	container	cert-manager-cainjector	quay.io/jetstack/cert-manager-cainjector:v1.21.1	quay.io/jetstack/cert-manager-cainjector@sha256:ccf6b919ec0500745a47a910118f834f9636d0aac1ff221245cd2557ed8c7c98	true	1
+cert-manager	cert-manager-webhook-76d97df888-wwq49	container	cert-manager-webhook	quay.io/jetstack/cert-manager-webhook:v1.21.1	quay.io/jetstack/cert-manager-webhook@sha256:d8b3961b51c8c7320633f8208dc46bf88aa13804d0f7cbe48a096b2c523cee42	true	0
 microfe-platform	microfe-shell-7b44b44dfb-ln4sw	container	shell	sha256:d6d34a138c9fb485abe5e70cf0b084e2d8cf482474be71ba0397819b2697f059	ghcr.io/phanthienquoc/microfe-shell@sha256:ae64acc032ce13d046ab78c9628b5b0b308f812b67ddfab7503d91e5a3ed8dcd	true	0
 microfe-platform	microfe-ws-5bc979dd77-txd28	container	ws	sha256:a26e88e61c4420c79b2f23d6ca68b0b67880a3423cb773c48094ac77fc72aa99	ghcr.io/phanthienquoc/microfe-ws@sha256:416bc16ade0becf398b0554571f6813985c55dffaf742042a7edef10ca2ea16d	true	0
 microfe-platform	nats-7bc8d9f768-q682m	container	nats	docker.io/library/nats:2.12-alpine	docker.io/library/nats@sha256:b270f5e2428354c0335612694d7dd2fb588148e567a5757fdff325ef9c9332e6	true	0
-NAMESPACE          NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
-cert-manager       cert-manager                1/1     1            1           89d
-cert-manager       cert-manager-cainjector     1/1     1            1           89d
-cert-manager       cert-manager-webhook        1/1     1            1           89d
-kube-system        coredns                     1/1     1            1           92d
-kube-system        local-path-provisioner      1/1     1            1           92d
-kube-system        metrics-server              1/1     1            1           92d
-kube-system        traefik                     1/1     1            1           92d
-retired-namespace-b         retired-workload-b            0/0     0            0           53d
-retired-namespace-b         retired-workload-b-frontend   0/0     0            0           52d
-microfe-platform   keycloak                    0/0     0            0           37d
-microfe-platform   microfe-auth                0/0     0            0           47d
-microfe-platform   microfe-shell               1/1     1            1           47d
-microfe-platform   microfe-ws                  1/1     1            1           47d
-microfe-platform   nats                        1/1     1            1           44d
-retired-namespace-a         retired-workload-a-admin                 0/0     0            0           60d
-retired-namespace-a         retired-workload-a-backend               0/0     0            0           64d
-retired-namespace-a         retired-workload-a-frontend              0/0     0            0           64d
-tce-prod           tce-frontend                0/0     0            0           89d
-tce-prod           tce-service                 0/0     0            0           89d
+
+### Deployments
+NAME                     READY   UP-TO-DATE   AVAILABLE   AGE
+coredns                  1/1     1            1           92d
+local-path-provisioner   1/1     1            1           92d
+metrics-server           1/1     1            1           92d
+traefik                  1/1     1            1           92d
+NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
+cert-manager              1/1     1            1           89d
+cert-manager-cainjector   1/1     1            1           89d
+cert-manager-webhook      1/1     1            1           89d
+NAME            READY   UP-TO-DATE   AVAILABLE   AGE
+keycloak        0/0     0            0           37d
+microfe-auth    0/0     0            0           47d
+microfe-shell   1/1     1            1           47d
+microfe-ws      1/1     1            1           47d
+nats            1/1     1            1           44d
+NAME           READY   UP-TO-DATE   AVAILABLE   AGE
+tce-frontend   0/0     0            0           89d
+tce-service    0/0     0            0           89d
 
 ### Persistent storage inventory
-NAMESPACE   NAME             STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE
-k3s-debug   k3s-debug-logs   Bound    pvc-9aed95ca-8365-46a4-a06a-d8f26d600456   1Gi        RWO            local-path     <unset>                 45d   Filesystem
+NAME             STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE
+k3s-debug-logs   Bound    pvc-9aed95ca-8365-46a4-a06a-d8f26d600456   1Gi        RWO            local-path     <unset>                 45d   Filesystem
 NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                      STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE   VOLUMEMODE
 pvc-9aed95ca-8365-46a4-a06a-d8f26d600456   1Gi        RWO            Delete           Bound    k3s-debug/k3s-debug-logs   local-path     <unset>                          45d   Filesystem
-
-### Retired workload VolumeSnapshot references (names only)
-retired-namespace-a: none
-retired-namespace-b: none
 
 ### Pod failure evidence
 
@@ -198,295 +208,69 @@ retired-namespace-b: none
 ### TCE service diagnostics (last 2h; redacted)
 
 ### CRI image inventory
-Images (repo tags, repo digests, image ID, pinned, size bytes):
-docker.io/library/busybox:1.36	docker.io/library/busybox@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662	sha256:b7c873bd97bdc9046fc894e0b216c8aef31e0db4c5b761fb53022e40577ab6c0	false	1906887
-docker.io/library/nats:2.12-alpine	docker.io/library/nats@sha256:b270f5e2428354c0335612694d7dd2fb588148e567a5757fdff325ef9c9332e6	sha256:3050faf8121e66a65fda010f7fa3d3d280a81c5c9e5e01fa2da4d2fa87ff7b6f	false	10627368
-docker.io/rancher/klipper-lb:v0.4.17	docker.io/rancher/klipper-lb@sha256:910944bb0bd94f060a82a56ca1ea1c577d3e49b3473a093a47a985f32e92d94a	sha256:1084dac5ea9871ffa6d01fe67150e175df9c28579073cd40d2186c08b37aba50	false	5793195
-docker.io/rancher/kubectl:v1.36.2	docker.io/rancher/kubectl@sha256:06c7a7a9772737494ae1e0c3af90f1b5385630c147e47c1c7cea92f4bed55fbe	sha256:db8edbebc7acc62dcdc839954b25da68044e942a600cc947d9ec0640d99289b2	false	16188528
-docker.io/rancher/local-path-provisioner:v0.0.36	docker.io/rancher/local-path-provisioner@sha256:1eba82e9c386038b4af6d69cca7519fac738c28c42735ed48ce70c882ad0d80f	sha256:58d078c5467bf37b5bf5230f2a85dcfe40fc7042062ab8823757ec7822aaeb22	false	84943328
-docker.io/rancher/mirrored-coredns-coredns:1.14.6	docker.io/rancher/mirrored-coredns-coredns@sha256:900f9c109f7a33545d3c811516e8376df9019147b750f5ce3e254468769176ea	sha256:fbccbf70a429fb9ce1cdb13a40ed96b16272ef763dafe050b2c0d121dd29811b	false	21239459
-docker.io/rancher/mirrored-library-traefik:3.7.8	docker.io/rancher/mirrored-library-traefik@sha256:4299bbed850421258fc5448c2e0e6ad350981d4d335a68de11b92448aedbefe5	sha256:2eb085ca3ba80498cf1a2858ec007927bb21c81a6c6dc722a3cffe68bd78dc07	false	49364865
-docker.io/rancher/mirrored-metrics-server:v0.9.0	docker.io/rancher/mirrored-metrics-server@sha256:d9862115e7c7881280d3d75ca26bda8ffc0fc213315979575bf23ce9826205c0	sha256:37ceda8805d2e3bca331bcdd659d9cf8d3b4075a68b288054c88e62232d52883	false	20915021
-docker.io/rancher/mirrored-pause:3.10.2	docker.io/rancher/mirrored-pause@sha256:f548e0e8e3dc1896ca956272154dde3314e8cc4fde0a57577ee9fa1c63f5baf4	sha256:3884a337192318652b28de0de1aeb07f446a14f220feb5066f03e93f23ea3b60	false	268296
-ghcr.io/phanthienquoc/auth-service/auth:prod-v1.0.0-ceb2688	ghcr.io/phanthienquoc/auth-service/auth@sha256:15bd51d68155a3b0cbc732e3baa148fc123aafb11b4290e6f66aa252969cdfc7	sha256:b247ff3f816a52c88fed8ef366c5c5996a6cdaccb89ee223701328c88d4c1b8d	false	71649563
-ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-58f80a8	ghcr.io/retired-workload-b-repository/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d	sha256:9ab2f390fba17564cdffb00b1f300a093d6d615fedd4a53f027e8598cb20ed24	false	87947792
-ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-58f80a8	ghcr.io/retired-workload-b-repository/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a	sha256:03138627646b3a17cfafb2a7f01bf02aa5c22f78b63bf07d768db95f0b8c67f8	false	77140058
+Images used by active platform namespaces (repo tags, repo digests, image ID, pinned, size bytes):
 	ghcr.io/phanthienquoc/microfe-ws@sha256:416bc16ade0becf398b0554571f6813985c55dffaf742042a7edef10ca2ea16d	sha256:a26e88e61c4420c79b2f23d6ca68b0b67880a3423cb773c48094ac77fc72aa99	false	65079739
-	ghcr.io/phanthienquoc/microfe-ws@sha256:92e6799bed0dcbeedc1c05575b6416e6e16d27beeab627b21cf1cc34b70ee631	sha256:20bce89a7a7eb9d16ebca87519e5c3e914d89d513db6747a27a9096aa73ba8c2	false	64949303
-ghcr.io/retired-workload-a-repository/backend:23b2878		sha256:bcf5f7b1b660b5b93cd9d9f4f041db7e9166c89b084412fa4f66e8e4d9a43ad1	false	14420347
-ghcr.io/retired-workload-a-repository/user:23b2878		sha256:bca44dd31869a4874a795c6e6ace51f9362731770f3ac9ca1ee8f3e608d6bf99	false	66238963
-	ghcr.io/phanthienquoc/microfe-shell@sha256:40715628ad7572654ce35dab0835aa8b875d1bf9a20e9a13d257a173feac17ec	sha256:e4577fe7033fba879827b7e4df656e13434d7a70757a3400a8909cab95e55206	false	25830438
 	ghcr.io/phanthienquoc/microfe-shell@sha256:ae64acc032ce13d046ab78c9628b5b0b308f812b67ddfab7503d91e5a3ed8dcd	sha256:d6d34a138c9fb485abe5e70cf0b084e2d8cf482474be71ba0397819b2697f059	false	25830437
-ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-48e3842	ghcr.io/phanthienquoc/tce-dashboard/service@sha256:214aee66dadaeb5e5acd7ac03da6d7461f68571ed2ba8ef3ef73384f7f26300a	sha256:924df0921bfdb32ebd65d6d4b05823d3dc80357f9ab4289d9eea991a96778931	false	457622464
-ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-e75e338	ghcr.io/phanthienquoc/tce-dashboard/service@sha256:1dc9d8c2136598a748bbb0aafc615a71aeb3f2a5099c335859536212723f35f0	sha256:d16e4e0a92f04c63bd4777c1b3f967c70da62df6c2f50c796b8daef0cc2e7e09	false	457620530
-ghcr.io/phanthienquoc/tce-dashboard/web:prod-v0.1.0-e75e338	ghcr.io/phanthienquoc/tce-dashboard/web@sha256:0416f01f3cce813ead623403ee354d7e5ff4160d1bfc24c020cfd9387da3ec27	sha256:3f6764e54b88e7d88ceca48e9386d4f5601332efad7b3777610453353edd5e6e	false	75833971
-quay.io/jetstack/cert-manager-acmesolver:v1.21.1	quay.io/jetstack/cert-manager-acmesolver@sha256:dbc7cc1354f603918e7c5af7f55a0a620537394452c93a565bde75c6f48e8837	sha256:2a02bd5c2be362289b40e0f10227507a55d9e96f35659e1d40895f3d84efca31	false	5958629
 quay.io/jetstack/cert-manager-cainjector:v1.21.1	quay.io/jetstack/cert-manager-cainjector@sha256:ccf6b919ec0500745a47a910118f834f9636d0aac1ff221245cd2557ed8c7c98	sha256:187d7de7d1d04dd40dbc62236b0e75eea4a0ae336b0de824c6e27e28fb102381	false	11030656
 quay.io/jetstack/cert-manager-controller:v1.21.1	quay.io/jetstack/cert-manager-controller@sha256:416a2d76870d996460e62bd7f521bf14fa017be9e3e904aab92163a331fcb61a	sha256:5283ffc3ebd6cf46ecf84f5e56730734b3de8d3de456c3a909f0077b5337c55d	false	22296047
 quay.io/jetstack/cert-manager-webhook:v1.21.1	quay.io/jetstack/cert-manager-webhook@sha256:d8b3961b51c8c7320633f8208dc46bf88aa13804d0f7cbe48a096b2c523cee42	sha256:4694bc08f6c866b0820ff7e82d673029b6d48ba0aaf79af528987ca114f426ec	false	17710712
-quay.io/keycloak/keycloak:26.8.1	quay.io/keycloak/keycloak@sha256:79c623a22abacf3fe6c00a5fb30f5b7843d717b234033b80995891c06116d244	sha256:4e8f716cccbf94c5461d9e6cb1f600bc74ac4d9bcfdf572511bbbc7d783d0ae5	false	264143474
 
 ### GHCR image digest coverage
-status: warning
-GHCR-tagged cached image(s) have no RepoDigest; local image IDs are not registry digests or promotion evidence:
-ghcr.io/retired-workload-a-repository/backend:23b2878
-ghcr.io/retired-workload-a-repository/user:23b2878
-Containers (container ID, name, image reference, state):
-921cf16447b287444777e30ab96c083bf9530fb91e3e220fe4ffb0aa336572d3	ws	sha256:a26e88e61c4420c79b2f23d6ca68b0b67880a3423cb773c48094ac77fc72aa99	CONTAINER_RUNNING
-534b404798d43154db54be31ecefbffc57b06f8379bc8e69a99004e87f9fd350	shell	sha256:d6d34a138c9fb485abe5e70cf0b084e2d8cf482474be71ba0397819b2697f059	CONTAINER_RUNNING
-aed9bf4ba2d9611e57509e00c383cf4d40f0133529fdbc0f1be5df46f9ad219a	nats	sha256:3050faf8121e66a65fda010f7fa3d3d280a81c5c9e5e01fa2da4d2fa87ff7b6f	CONTAINER_RUNNING
-c690bb61109ed926f14d0c08c50d099700b8af4a10f570a9305f7fbf48c016b6	cert-manager-cainjector	sha256:187d7de7d1d04dd40dbc62236b0e75eea4a0ae336b0de824c6e27e28fb102381	CONTAINER_RUNNING
-c693f83138bbdb3627e9fee2ad4d4355aa4e85add01d7611a5ab344f5a3b6df1	cert-manager-controller	sha256:5283ffc3ebd6cf46ecf84f5e56730734b3de8d3de456c3a909f0077b5337c55d	CONTAINER_RUNNING
-6fcabf226510cd39847563b8a8edd6f5385480ab295fb8cf90a9a9dce485f572	cert-manager-webhook	sha256:4694bc08f6c866b0820ff7e82d673029b6d48ba0aaf79af528987ca114f426ec	CONTAINER_RUNNING
-e94dd30d06fd80099e243616c4f90590695e72f103ad61068e7d9637a903a1b9	local-path-provisioner	sha256:58d078c5467bf37b5bf5230f2a85dcfe40fc7042062ab8823757ec7822aaeb22	CONTAINER_RUNNING
-2006e739e84557d548b6be08e08b04a7e0efd9c11915f1d9070c0771f9e82a42	traefik	sha256:2eb085ca3ba80498cf1a2858ec007927bb21c81a6c6dc722a3cffe68bd78dc07	CONTAINER_RUNNING
-0c3e3929c0d70a8b3c4a36812d9c2a8e21724390e61b7a5c7fb9dc45b034acd7	lb-tcp-443	sha256:1084dac5ea9871ffa6d01fe67150e175df9c28579073cd40d2186c08b37aba50	CONTAINER_RUNNING
-3fccbabfd90898bc736f3a606018acae11f8e4de560965cf18d6b7c0a8a7e6fd	coredns	sha256:fbccbf70a429fb9ce1cdb13a40ed96b16272ef763dafe050b2c0d121dd29811b	CONTAINER_RUNNING
-0e13b0ae3af00086b1c5e69ec22f484641c81559ed0fa04c0d82d88fa4bd8332	lb-tcp-80	sha256:1084dac5ea9871ffa6d01fe67150e175df9c28579073cd40d2186c08b37aba50	CONTAINER_RUNNING
-b5e1e29f04d3b0453f48436a80f45f6c1bb5f9e4bfda2f2b6e63ee3b231142f8	metrics-server	sha256:37ceda8805d2e3bca331bcdd659d9cf8d3b4075a68b288054c88e62232d52883	CONTAINER_RUNNING
-
-### Retired workload protected decommission preflight (read-only)
-Active production manifest tree contains no retired retired workload namespace or image references.
-### Platform namespace preservation check
-Preserved namespace present: tce-prod
-Preserved namespace present: microfe-platform
-
-### Namespaced objects and storage snapshot references in retired-namespace-a (names only; no Secret/ConfigMap values)
-configmap/kube-root-ca.crt
-endpoints/backend
-endpoints/retired-workload-a-admin
-endpoints/retired-workload-a-backend
-endpoints/retired-workload-a-frontend
-limitrange/retired-workload-a-defaults
-resourcequota/retired-workload-a-budget
-resourcequota/retired-workload-a-quota
-secret/ghcr-pull
-secret/ghcr-secret
-secret/retired-workload-a-tls
-secret/retired-workload-a-secrets
-serviceaccount/default
-service/backend
-service/retired-workload-a-admin
-service/retired-workload-a-backend
-service/retired-workload-a-frontend
-order.acme.cert-manager.io/retired-workload-a-tls-2-3161958604
-deployment.apps/retired-workload-a-admin
-deployment.apps/retired-workload-a-backend
-deployment.apps/retired-workload-a-frontend
-replicaset.apps/retired-workload-a-admin-565b8b9c8
-replicaset.apps/retired-workload-a-admin-5864bcb497
-replicaset.apps/retired-workload-a-admin-59cddb87b7
-replicaset.apps/retired-workload-a-admin-6c686779ff
-replicaset.apps/retired-workload-a-admin-6fb68dc964
-replicaset.apps/retired-workload-a-admin-6fc4d4f77f
-replicaset.apps/retired-workload-a-admin-6fc8bf8546
-replicaset.apps/retired-workload-a-admin-78f96594cf
-replicaset.apps/retired-workload-a-admin-7f66f6f765
-replicaset.apps/retired-workload-a-admin-9c5d4c9df
-replicaset.apps/retired-workload-a-admin-cd9c555d7
-replicaset.apps/retired-workload-a-backend-5bb8754458
-replicaset.apps/retired-workload-a-backend-5cff6d5655
-replicaset.apps/retired-workload-a-backend-6647646874
-replicaset.apps/retired-workload-a-backend-68458d6cdf
-replicaset.apps/retired-workload-a-backend-6bc874575d
-replicaset.apps/retired-workload-a-backend-6df8fcc47d
-replicaset.apps/retired-workload-a-backend-74d958c7b
-replicaset.apps/retired-workload-a-backend-7dc87ccfc9
-replicaset.apps/retired-workload-a-backend-84cd8cc96b
-replicaset.apps/retired-workload-a-backend-b95fd5f7b
-replicaset.apps/retired-workload-a-backend-fb9c5dbd5
-replicaset.apps/retired-workload-a-frontend-74546898cb
-replicaset.apps/retired-workload-a-frontend-79c57845df
-certificaterequest.cert-manager.io/retired-workload-a-tls-2
-certificate.cert-manager.io/retired-workload-a-tls
-endpointslice.discovery.k8s.io/backend-fvv26
-endpointslice.discovery.k8s.io/retired-workload-a-admin-sf6kz
-endpointslice.discovery.k8s.io/retired-workload-a-backend-jbwqp
-endpointslice.discovery.k8s.io/retired-workload-a-frontend-b8rbs
-ingress.networking.k8s.io/retired-workload-a
-ingress.networking.k8s.io/retired-workload-a-ingress
-### Ingress hosts/TLS secret references and published addresses (names only): retired-namespace-a
-retired-workload-a	retired-workload-a-admin.invalid,retired-workload-a-api.invalid,retired-workload-a.invalid,www.retired-workload-a.invalid	retired-workload-a-admin.invalid,retired-workload-a-api.invalid,retired-workload-a.invalid,www.retired-workload-a.invalid	retired-workload-a-tls	10.0.0.120
-retired-workload-a-ingress	retired-workload-a-admin.invalid,retired-workload-a-api.invalid,retired-workload-a.invalid,www.retired-workload-a.invalid	retired-workload-a-admin.invalid,retired-workload-a-api.invalid,retired-workload-a.invalid,www.retired-workload-a.invalid	retired-workload-a-tls	10.0.0.120
-DNS ownership is not inferred; reconcile these hostnames with authoritative DNS/provider records before deletion.
-### Common workload status: retired-namespace-a
-NAME                     TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE   SELECTOR
-service/backend          ClusterIP   10.43.46.139    <none>        8080/TCP   64d   app=retired-workload-a-backend
-service/retired-workload-a-admin      ClusterIP   10.43.97.150    <none>        3000/TCP   60d   app=retired-workload-a-admin
-service/retired-workload-a-backend    ClusterIP   10.43.247.219   <none>        8080/TCP   64d   app=retired-workload-a-backend
-service/retired-workload-a-frontend   ClusterIP   10.43.53.102    <none>        3000/TCP   64d   app=retired-workload-a-frontend
-
-NAME                             READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                                SELECTOR
-deployment.apps/retired-workload-a-admin      0/0     0            0           60d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin
-deployment.apps/retired-workload-a-backend    0/0     0            0           64d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend
-deployment.apps/retired-workload-a-frontend   0/0     0            0           64d   frontend     ghcr.io/retired-workload-a-repository/user:23b2878      app=retired-workload-a-frontend
-
-NAME                                        DESIRED   CURRENT   READY   AGE   CONTAINERS   IMAGES                                                SELECTOR
-replicaset.apps/retired-workload-a-admin-565b8b9c8       0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=565b8b9c8
-replicaset.apps/retired-workload-a-admin-5864bcb497      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=5864bcb497
-replicaset.apps/retired-workload-a-admin-59cddb87b7      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=59cddb87b7
-replicaset.apps/retired-workload-a-admin-6c686779ff      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=6c686779ff
-replicaset.apps/retired-workload-a-admin-6fb68dc964      0         0         0       21d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=6fb68dc964
-replicaset.apps/retired-workload-a-admin-6fc4d4f77f      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=6fc4d4f77f
-replicaset.apps/retired-workload-a-admin-6fc8bf8546      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=6fc8bf8546
-replicaset.apps/retired-workload-a-admin-78f96594cf      0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=78f96594cf
-replicaset.apps/retired-workload-a-admin-7f66f6f765      0         0         0       21d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=7f66f6f765
-replicaset.apps/retired-workload-a-admin-9c5d4c9df       0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=9c5d4c9df
-replicaset.apps/retired-workload-a-admin-cd9c555d7       0         0         0       20d   admin        ghcr.io/retired-workload-a-repository/admin:12d63b4     app=retired-workload-a-admin,pod-template-hash=cd9c555d7
-replicaset.apps/retired-workload-a-backend-5bb8754458    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=5bb8754458
-replicaset.apps/retired-workload-a-backend-5cff6d5655    0         0         0       21d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=5cff6d5655
-replicaset.apps/retired-workload-a-backend-6647646874    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=6647646874
-replicaset.apps/retired-workload-a-backend-68458d6cdf    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=68458d6cdf
-replicaset.apps/retired-workload-a-backend-6bc874575d    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=6bc874575d
-replicaset.apps/retired-workload-a-backend-6df8fcc47d    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=6df8fcc47d
-replicaset.apps/retired-workload-a-backend-74d958c7b     0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=74d958c7b
-replicaset.apps/retired-workload-a-backend-7dc87ccfc9    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=7dc87ccfc9
-replicaset.apps/retired-workload-a-backend-84cd8cc96b    0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=84cd8cc96b
-replicaset.apps/retired-workload-a-backend-b95fd5f7b     0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=b95fd5f7b
-replicaset.apps/retired-workload-a-backend-fb9c5dbd5     0         0         0       20d   backend      ghcr.io/retired-workload-a-repository/backend:12d63b4   app=retired-workload-a-backend,pod-template-hash=fb9c5dbd5
-replicaset.apps/retired-workload-a-frontend-74546898cb   0         0         0       22d   frontend     ghcr.io/retired-workload-a-repository/user:23b2878      app=retired-workload-a-frontend,pod-template-hash=74546898cb
-replicaset.apps/retired-workload-a-frontend-79c57845df   0         0         0       64d   frontend     ghcr.io/retired-workload-a-repository/user:23b2878      app=retired-workload-a-frontend,pod-template-hash=79c57845df
-
-### Namespaced objects and storage snapshot references in retired-namespace-b (names only; no Secret/ConfigMap values)
-configmap/kube-root-ca.crt
-endpoints/retired-workload-b
-endpoints/retired-workload-b-frontend
-secret/ghcr-pull
-secret/retired-workload-b-secrets
-secret/retired-workload-b-tls
-serviceaccount/default
-service/retired-workload-b
-service/retired-workload-b-frontend
-order.acme.cert-manager.io/retired-workload-b-tls-1-249384574
-deployment.apps/retired-workload-b
-deployment.apps/retired-workload-b-frontend
-replicaset.apps/retired-workload-b-557898ffc5
-replicaset.apps/retired-workload-b-5c9b76dfb9
-replicaset.apps/retired-workload-b-646c797f66
-replicaset.apps/retired-workload-b-665d86ff54
-replicaset.apps/retired-workload-b-6857cc5595
-replicaset.apps/retired-workload-b-6b6f875997
-replicaset.apps/retired-workload-b-6c68f86bf4
-replicaset.apps/retired-workload-b-6f66c4dc4d
-replicaset.apps/retired-workload-b-74bdb964d8
-replicaset.apps/retired-workload-b-86c45c6686
-replicaset.apps/retired-workload-b-8d887c6c9
-replicaset.apps/retired-workload-b-frontend-5445d66b98
-replicaset.apps/retired-workload-b-frontend-55447798b6
-replicaset.apps/retired-workload-b-frontend-58c8dd5969
-replicaset.apps/retired-workload-b-frontend-58d8bbc67
-replicaset.apps/retired-workload-b-frontend-597b779c9d
-replicaset.apps/retired-workload-b-frontend-5df46b89c
-replicaset.apps/retired-workload-b-frontend-64dfb87d84
-replicaset.apps/retired-workload-b-frontend-667fb49d95
-replicaset.apps/retired-workload-b-frontend-7d4cc58775
-replicaset.apps/retired-workload-b-frontend-867d5d8b77
-replicaset.apps/retired-workload-b-frontend-c44458c86
-certificaterequest.cert-manager.io/retired-workload-b-tls-1
-certificate.cert-manager.io/retired-workload-b-tls
-endpointslice.discovery.k8s.io/retired-workload-b-frontend-46jzx
-endpointslice.discovery.k8s.io/retired-workload-b-hqjkh
-ingress.networking.k8s.io/retired-workload-b
-### Ingress hosts/TLS secret references and published addresses (names only): retired-namespace-b
-retired-workload-b	retired-workload-b.invalid	retired-workload-b.invalid	retired-workload-b-tls	10.0.0.120
-DNS ownership is not inferred; reconcile these hostnames with authoritative DNS/provider records before deletion.
-### Common workload status: retired-namespace-b
-NAME                                TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE   SELECTOR
-service/retired-workload-b            ClusterIP   10.43.252.95   <none>        3000/TCP   53d   app=retired-workload-b
-service/retired-workload-b-frontend   ClusterIP   10.43.48.52    <none>        80/TCP     52d   app=retired-workload-b-frontend
-
-NAME                                        READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS                  IMAGES                                                                                                                    SELECTOR
-deployment.apps/retired-workload-b            0/0     0            0           53d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d    app=retired-workload-b
-deployment.apps/retired-workload-b-frontend   0/0     0            0           52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a   app=retired-workload-b-frontend
-
-NAME                                                   DESIRED   CURRENT   READY   AGE   CONTAINERS                  IMAGES                                                                                                                    SELECTOR
-replicaset.apps/retired-workload-b-557898ffc5            0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-56179ff                                                        app=retired-workload-b,pod-template-hash=557898ffc5
-replicaset.apps/retired-workload-b-5c9b76dfb9            0         0         0       39d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-58f80a8                                                        app=retired-workload-b,pod-template-hash=5c9b76dfb9
-replicaset.apps/retired-workload-b-646c797f66            0         0         0       23d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-58f80a8                                                        app=retired-workload-b,pod-template-hash=646c797f66
-replicaset.apps/retired-workload-b-665d86ff54            0         0         0       21d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d    app=retired-workload-b,pod-template-hash=665d86ff54
-replicaset.apps/retired-workload-b-6857cc5595            0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository-backend:prod-v0.3.0-85a354f                                                        app=retired-workload-b,pod-template-hash=6857cc5595
-replicaset.apps/retired-workload-b-6b6f875997            0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-a34d8ca                                                        app=retired-workload-b,pod-template-hash=6b6f875997
-replicaset.apps/retired-workload-b-6c68f86bf4            0         0         0       22d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-58f80a8                                                        app=retired-workload-b,pod-template-hash=6c68f86bf4
-replicaset.apps/retired-workload-b-6f66c4dc4d            0         0         0       47d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-362cb81                                                        app=retired-workload-b,pod-template-hash=6f66c4dc4d
-replicaset.apps/retired-workload-b-74bdb964d8            0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository/backend:prod-v0.3.0-5229584                                                        app=retired-workload-b,pod-template-hash=74bdb964d8
-replicaset.apps/retired-workload-b-86c45c6686            0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository-backend:prod-v0.3.0-cb5355d                                                        app=retired-workload-b,pod-template-hash=86c45c6686
-replicaset.apps/retired-workload-b-8d887c6c9             0         0         0       52d   retired-workload-b            ghcr.io/retired-workload-b-repository-backend:prod-v0.3.0-bf6c55a                                                        app=retired-workload-b,pod-template-hash=8d887c6c9
-replicaset.apps/retired-workload-b-frontend-5445d66b98   0         0         0       22d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-58f80a8                                                       app=retired-workload-b-frontend,pod-template-hash=5445d66b98
-replicaset.apps/retired-workload-b-frontend-55447798b6   0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository-frontend:prod-v0.3.0-cc47a89                                                       app=retired-workload-b-frontend,pod-template-hash=55447798b6
-replicaset.apps/retired-workload-b-frontend-58c8dd5969   0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository-frontend:prod-v0.3.0-85a354f                                                       app=retired-workload-b-frontend,pod-template-hash=58c8dd5969
-replicaset.apps/retired-workload-b-frontend-58d8bbc67    0         0         0       21d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a   app=retired-workload-b-frontend,pod-template-hash=58d8bbc67
-replicaset.apps/retired-workload-b-frontend-597b779c9d   0         0         0       39d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-58f80a8                                                       app=retired-workload-b-frontend,pod-template-hash=597b779c9d
-replicaset.apps/retired-workload-b-frontend-5df46b89c    0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-56179ff                                                       app=retired-workload-b-frontend,pod-template-hash=5df46b89c
-replicaset.apps/retired-workload-b-frontend-64dfb87d84   0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-5229584                                                       app=retired-workload-b-frontend,pod-template-hash=64dfb87d84
-replicaset.apps/retired-workload-b-frontend-667fb49d95   0         0         0       47d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-362cb81                                                       app=retired-workload-b-frontend,pod-template-hash=667fb49d95
-replicaset.apps/retired-workload-b-frontend-7d4cc58775   0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend:prod-v0.3.0-a34d8ca                                                       app=retired-workload-b-frontend,pod-template-hash=7d4cc58775
-replicaset.apps/retired-workload-b-frontend-867d5d8b77   0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository-frontend:prod-v0.3.0-bf6c55a                                                       app=retired-workload-b-frontend,pod-template-hash=867d5d8b77
-replicaset.apps/retired-workload-b-frontend-c44458c86    0         0         0       52d   retired-workload-b-frontend   ghcr.io/retired-workload-b-repository-frontend:prod-v0.3.0-cb5355d                                                       app=retired-workload-b-frontend,pod-template-hash=c44458c86
-
-### StorageClass inventory
-NAME                   PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
-local-path (default)   rancher.io/local-path   Delete          WaitForFirstConsumer   false                  92d
-Preflight passed: target namespaces have no PVCs, PV claims or VolumeSnapshot references.
-Read-only preflight complete. No Kubernetes resources were changed.
-decommission_preflight_status: storage-clean
-
-### Dedicated retired workload runner retirement evidence
-retired_workload_runner_service=active enabled=enabled listener=present
-GitHub runner registration is not inferred by this host inspection; verify it in the retired workload repository/organization settings.
+status: all cached GHCR-tagged images have RepoDigest
+Containers in active platform namespaces (container ID, name, image reference, state):
 
 ### GitOps drift
 Prepared checksum-verified cert-manager v1.21.1 manifest.
 status: clean
 
-### Images
-cert-manager       cert-manager                quay.io/jetstack/cert-manager-controller:v1.21.1
-cert-manager       cert-manager-cainjector     quay.io/jetstack/cert-manager-cainjector:v1.21.1
-cert-manager       cert-manager-webhook        quay.io/jetstack/cert-manager-webhook:v1.21.1
-kube-system        coredns                     rancher/mirrored-coredns-coredns:1.14.6
-kube-system        local-path-provisioner      rancher/local-path-provisioner:v0.0.36
-kube-system        metrics-server              rancher/mirrored-metrics-server:v0.9.0
-kube-system        traefik                     rancher/mirrored-library-traefik:3.7.8
-retired-namespace-b         retired-workload-b            ghcr.io/retired-workload-b-repository/backend@sha256:93ddb9448250082d6300d8fdf65074d8ab3a3234b0e8371f716b54a98a4f179d
-retired-namespace-b         retired-workload-b-frontend   ghcr.io/retired-workload-b-repository/frontend@sha256:095c72ed8f53f19ee4213435d2ffe93c6a49964e92dc93c8e684ef22b4edcd9a
-microfe-platform   keycloak                    quay.io/keycloak/keycloak:26.8.1
-microfe-platform   microfe-auth                ghcr.io/phanthienquoc/auth-service/auth:prod-v1.0.0-ceb2688
-microfe-platform   microfe-shell               ghcr.io/phanthienquoc/microfe-shell@sha256:ae64acc032ce13d046ab78c9628b5b0b308f812b67ddfab7503d91e5a3ed8dcd
-microfe-platform   microfe-ws                  ghcr.io/phanthienquoc/microfe-ws@sha256:416bc16ade0becf398b0554571f6813985c55dffaf742042a7edef10ca2ea16d
-microfe-platform   nats                        nats:2.12-alpine
-retired-namespace-a         retired-workload-a-admin                 ghcr.io/retired-workload-a-repository/admin:12d63b4
-retired-namespace-a         retired-workload-a-backend               ghcr.io/retired-workload-a-repository/backend:12d63b4
-retired-namespace-a         retired-workload-a-frontend              ghcr.io/retired-workload-a-repository/user:23b2878
-tce-prod           tce-frontend                ghcr.io/phanthienquoc/tce-dashboard/web:prod-v0.1.0-e75e338
-tce-prod           tce-service                 ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-e75e338
-NAMESPACE          NAME                        TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
-cert-manager       cert-manager                ClusterIP      10.43.138.27    <none>        9402/TCP                     89d
-cert-manager       cert-manager-cainjector     ClusterIP      10.43.135.132   <none>        9402/TCP                     89d
-cert-manager       cert-manager-webhook        ClusterIP      10.43.52.112    <none>        443/TCP,9402/TCP             89d
-default            kubernetes                  ClusterIP      10.43.0.1       <none>        443/TCP                      92d
-kube-system        kube-dns                    ClusterIP      10.43.0.10      <none>        53/UDP,53/TCP,9153/TCP       92d
-kube-system        metrics-server              ClusterIP      10.43.120.41    <none>        443/TCP                      92d
-kube-system        traefik                     LoadBalancer   10.43.213.239   10.0.0.120    80:30225/TCP,443:30415/TCP   92d
-retired-namespace-b         retired-workload-b            ClusterIP      10.43.252.95    <none>        3000/TCP                     53d
-retired-namespace-b         retired-workload-b-frontend   ClusterIP      10.43.48.52     <none>        80/TCP                       52d
-microfe-platform   keycloak                    ClusterIP      10.43.142.95    <none>        80/TCP,9000/TCP              37d
-microfe-platform   microfe-auth                ClusterIP      10.43.83.168    <none>        80/TCP                       47d
-microfe-platform   microfe-shell               ClusterIP      10.43.6.23      <none>        80/TCP                       47d
-microfe-platform   microfe-ws                  ClusterIP      10.43.86.34     <none>        8080/TCP                     47d
-microfe-platform   nats                        ClusterIP      10.43.147.69    <none>        4222/TCP,8222/TCP            44d
-retired-namespace-a         backend                     ClusterIP      10.43.46.139    <none>        8080/TCP                     64d
-retired-namespace-a         retired-workload-a-admin                 ClusterIP      10.43.97.150    <none>        3000/TCP                     60d
-retired-namespace-a         retired-workload-a-backend               ClusterIP      10.43.247.219   <none>        8080/TCP                     64d
-retired-namespace-a         retired-workload-a-frontend              ClusterIP      10.43.53.102    <none>        3000/TCP                     64d
-tce-prod           tce-frontend                ClusterIP      10.43.99.130    <none>        80/TCP                       89d
-tce-prod           tce-service                 ClusterIP      10.43.189.227   <none>        8210/TCP                     89d
-NAMESPACE          NAME                               CLASS     HOSTS                                                          ADDRESS      PORTS     AGE
-retired-namespace-b         retired-workload-b                              traefik   retired-workload-b.invalid                                             10.0.0.120   80, 443   53d
-microfe-platform   keycloak-public                    traefik   sso.mrcute.space                                               10.0.0.120   80, 443   37d
-microfe-platform   keycloak-registration-rate-limit   traefik   sso.mrcute.space                                               10.0.0.120   80, 443   25d
-microfe-platform   microfe-public                     traefik   app.mrcute.space,auth.mrcute.space,ws.mrcute.space             10.0.0.120   80, 443   47d
-retired-namespace-a         retired-workload-a                              traefik   retired-workload-a.invalid,www.retired-workload-a.invalid,retired-workload-a-admin.invalid + 1 more...   10.0.0.120   80, 443   60d
-retired-namespace-a         retired-workload-a-ingress                      traefik   retired-workload-a.invalid,www.retired-workload-a.invalid,retired-workload-a-admin.invalid + 1 more...   10.0.0.120   80, 443   64d
-tce-prod           tce                                traefik   tce.mrcute.space                                               10.0.0.120   80, 443   89d
+### Active platform workload images, services and ingress
+-- namespace default --
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.43.0.1    <none>        443/TCP   92d
+-- namespace kube-node-lease --
+-- namespace kube-public --
+-- namespace kube-system --
+kube-system   coredns                  rancher/mirrored-coredns-coredns:1.14.6
+kube-system   local-path-provisioner   rancher/local-path-provisioner:v0.0.36
+kube-system   metrics-server           rancher/mirrored-metrics-server:v0.9.0
+kube-system   traefik                  rancher/mirrored-library-traefik:3.7.8
+NAME             TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
+kube-dns         ClusterIP      10.43.0.10      <none>        53/UDP,53/TCP,9153/TCP       92d
+metrics-server   ClusterIP      10.43.120.41    <none>        443/TCP                      92d
+traefik          LoadBalancer   10.43.213.239   10.0.0.120    80:30225/TCP,443:30415/TCP   92d
+-- namespace cert-manager --
+cert-manager   cert-manager              quay.io/jetstack/cert-manager-controller:v1.21.1
+cert-manager   cert-manager-cainjector   quay.io/jetstack/cert-manager-cainjector:v1.21.1
+cert-manager   cert-manager-webhook      quay.io/jetstack/cert-manager-webhook:v1.21.1
+NAME                      TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)            AGE
+cert-manager              ClusterIP   10.43.138.27    <none>        9402/TCP           89d
+cert-manager-cainjector   ClusterIP   10.43.135.132   <none>        9402/TCP           89d
+cert-manager-webhook      ClusterIP   10.43.52.112    <none>        443/TCP,9402/TCP   89d
+-- namespace microfe-platform --
+microfe-platform   keycloak        quay.io/keycloak/keycloak:26.8.1
+microfe-platform   microfe-auth    ghcr.io/phanthienquoc/auth-service/auth:prod-v1.0.0-ceb2688
+microfe-platform   microfe-shell   ghcr.io/phanthienquoc/microfe-shell@sha256:ae64acc032ce13d046ab78c9628b5b0b308f812b67ddfab7503d91e5a3ed8dcd
+microfe-platform   microfe-ws      ghcr.io/phanthienquoc/microfe-ws@sha256:416bc16ade0becf398b0554571f6813985c55dffaf742042a7edef10ca2ea16d
+microfe-platform   nats            nats:2.12-alpine
+NAME            TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)             AGE
+keycloak        ClusterIP   10.43.142.95   <none>        80/TCP,9000/TCP     37d
+microfe-auth    ClusterIP   10.43.83.168   <none>        80/TCP              47d
+microfe-shell   ClusterIP   10.43.6.23     <none>        80/TCP              47d
+microfe-ws      ClusterIP   10.43.86.34    <none>        8080/TCP            47d
+nats            ClusterIP   10.43.147.69   <none>        4222/TCP,8222/TCP   44d
+NAME                               CLASS     HOSTS                                                ADDRESS      PORTS     AGE
+keycloak-public                    traefik   sso.mrcute.space                                     10.0.0.120   80, 443   37d
+keycloak-registration-rate-limit   traefik   sso.mrcute.space                                     10.0.0.120   80, 443   25d
+microfe-public                     traefik   app.mrcute.space,auth.mrcute.space,ws.mrcute.space   10.0.0.120   80, 443   47d
+-- namespace tce-prod --
+tce-prod   tce-frontend   ghcr.io/phanthienquoc/tce-dashboard/web:prod-v0.1.0-e75e338
+tce-prod   tce-service    ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-e75e338
+NAME           TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+tce-frontend   ClusterIP   10.43.99.130    <none>        80/TCP     89d
+tce-service    ClusterIP   10.43.189.227   <none>        8210/TCP   89d
+NAME   CLASS     HOSTS              ADDRESS      PORTS     AGE
+tce    traefik   tce.mrcute.space   10.0.0.120   80, 443   89d
+-- namespace k3s-debug --
 
 ## K3s service
 active
@@ -500,5 +284,5 @@ keycloak   0/0     0            0           37d   keycloak     quay.io/keycloak/
 error: timed out waiting for the condition
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.137781s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049665s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.111914s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049687s remote_ip=132.226.175.206
