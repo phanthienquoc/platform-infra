@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-11-23T03:40:27+00:00
+Generated: 2026-11-23T07:42:29+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,14 +11,14 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.3Gi       1.9Gi        85Mi        18Gi        19Gi
+Mem:            23Gi       3.3Gi       1.9Gi        84Mi        18Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   26G   19G  58% /
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   26G   19G  58% /
 disk_pressure: normal (58%)
- 03:40:27 up 205 days, 13:30,  0 users,  load average: 0.40, 0.23, 0.20
+ 07:42:29 up 205 days, 17:32,  0 users,  load average: 0.46, 0.48, 0.34
 
 ### Top disk consumers (best-effort, runner-readable paths)
 4.0K	/var/lib/docker
@@ -40,19 +40,19 @@ disk_pressure: normal (58%)
 2.3G	/var/log/journal
 2.5G	/var/log
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-2803735 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+2985347 /opt/actions-runner/bin/Runner.Worker spawnclient 154 163
 ● actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service - GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
      Loaded: loaded (/etc/systemd/system/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service; enabled; vendor preset: enabled)
      Active: active (running) since Tue 2026-09-22 14:59:15 UTC; 2 months 0 days ago
    Main PID: 1309484 (runsvc.sh)
-      Tasks: 50 (limit: 28686)
+      Tasks: 48 (limit: 28686)
      Memory: 1.4G
-        CPU: 14h 49min 22.834s
+        CPU: 14h 51min 8.087s
      CGroup: /system.slice/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service
              ├─1309484 /bin/bash /opt/actions-runner/runsvc.sh
              ├─1309492 ./externals/node20/bin/node ./bin/RunnerService.js
              ├─1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-             ├─2803735 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+             ├─2985347 /opt/actions-runner/bin/Runner.Worker spawnclient 154 163
 runner_service: active
 runner_service_enabled: enabled
 runner_policy: platform-kubectl policy: rollout-status-v15-core-workloads
@@ -127,7 +127,7 @@ Active platform namespaces:
 NAME               STATUS   AGE
 cert-manager       Active   89d
 default            Active   93d
-k3s-debug          Active   45d
+k3s-debug          Active   46d
 kube-node-lease    Active   93d
 kube-public        Active   93d
 kube-system        Active   93d
@@ -155,7 +155,7 @@ cert-manager-webhook-76d97df888-wwq49     1/1     Running   0             89d   
 NAME                             READY   STATUS    RESTARTS   AGE   IP            NODE         NOMINATED NODE   READINESS GATES
 microfe-shell-7b44b44dfb-ln4sw   1/1     Running   0          22d   10.42.0.153   tce-k3s-01   <none>           <none>
 microfe-ws-5bc979dd77-txd28      1/1     Running   0          22d   10.42.0.152   tce-k3s-01   <none>           <none>
-nats-7bc8d9f768-q682m            1/1     Running   0          44d   10.42.0.178   tce-k3s-01   <none>           <none>
+nats-7bc8d9f768-q682m            1/1     Running   0          45d   10.42.0.178   tce-k3s-01   <none>           <none>
 -- namespace tce-prod --
 -- namespace k3s-debug --
 
@@ -190,7 +190,7 @@ keycloak        0/0     0            0           37d
 microfe-auth    0/0     0            0           48d
 microfe-shell   1/1     1            1           48d
 microfe-ws      1/1     1            1           48d
-nats            1/1     1            1           44d
+nats            1/1     1            1           45d
 NAME           READY   UP-TO-DATE   AVAILABLE   AGE
 tce-frontend   0/0     0            0           89d
 tce-service    0/0     0            0           89d
@@ -209,8 +209,8 @@ pvc-9aed95ca-8365-46a4-a06a-d8f26d600456   1Gi        RWO            Delete     
 
 ### CRI image inventory
 Images used by active platform namespaces (repo tags, repo digests, image ID, pinned, size bytes):
-	ghcr.io/phanthienquoc/microfe-ws@sha256:416bc16ade0becf398b0554571f6813985c55dffaf742042a7edef10ca2ea16d	sha256:a26e88e61c4420c79b2f23d6ca68b0b67880a3423cb773c48094ac77fc72aa99	false	65079739
 	ghcr.io/phanthienquoc/microfe-shell@sha256:ae64acc032ce13d046ab78c9628b5b0b308f812b67ddfab7503d91e5a3ed8dcd	sha256:d6d34a138c9fb485abe5e70cf0b084e2d8cf482474be71ba0397819b2697f059	false	25830437
+	ghcr.io/phanthienquoc/microfe-ws@sha256:416bc16ade0becf398b0554571f6813985c55dffaf742042a7edef10ca2ea16d	sha256:a26e88e61c4420c79b2f23d6ca68b0b67880a3423cb773c48094ac77fc72aa99	false	65079739
 quay.io/jetstack/cert-manager-cainjector:v1.21.1	quay.io/jetstack/cert-manager-cainjector@sha256:ccf6b919ec0500745a47a910118f834f9636d0aac1ff221245cd2557ed8c7c98	sha256:187d7de7d1d04dd40dbc62236b0e75eea4a0ae336b0de824c6e27e28fb102381	false	11030656
 quay.io/jetstack/cert-manager-controller:v1.21.1	quay.io/jetstack/cert-manager-controller@sha256:416a2d76870d996460e62bd7f521bf14fa017be9e3e904aab92163a331fcb61a	sha256:5283ffc3ebd6cf46ecf84f5e56730734b3de8d3de456c3a909f0077b5337c55d	false	22296047
 quay.io/jetstack/cert-manager-webhook:v1.21.1	quay.io/jetstack/cert-manager-webhook@sha256:d8b3961b51c8c7320633f8208dc46bf88aa13804d0f7cbe48a096b2c523cee42	sha256:4694bc08f6c866b0820ff7e82d673029b6d48ba0aaf79af528987ca114f426ec	false	17710712
@@ -257,10 +257,10 @@ keycloak        ClusterIP   10.43.142.95   <none>        80/TCP,9000/TCP     37d
 microfe-auth    ClusterIP   10.43.83.168   <none>        80/TCP              48d
 microfe-shell   ClusterIP   10.43.6.23     <none>        80/TCP              48d
 microfe-ws      ClusterIP   10.43.86.34    <none>        8080/TCP            48d
-nats            ClusterIP   10.43.147.69   <none>        4222/TCP,8222/TCP   44d
+nats            ClusterIP   10.43.147.69   <none>        4222/TCP,8222/TCP   45d
 NAME                               CLASS     HOSTS                                                ADDRESS      PORTS     AGE
 keycloak-public                    traefik   sso.mrcute.space                                     10.0.0.120   80, 443   37d
-keycloak-registration-rate-limit   traefik   sso.mrcute.space                                     10.0.0.120   80, 443   25d
+keycloak-registration-rate-limit   traefik   sso.mrcute.space                                     10.0.0.120   80, 443   26d
 microfe-public                     traefik   app.mrcute.space,auth.mrcute.space,ws.mrcute.space   10.0.0.120   80, 443   48d
 -- namespace tce-prod --
 tce-prod   tce-frontend   ghcr.io/phanthienquoc/tce-dashboard/web:prod-v0.1.0-e75e338
@@ -284,5 +284,5 @@ keycloak   0/0     0            0           37d   keycloak     quay.io/keycloak/
 error: timed out waiting for the condition
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.088350s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.051673s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.110627s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049968s remote_ip=132.226.175.206
