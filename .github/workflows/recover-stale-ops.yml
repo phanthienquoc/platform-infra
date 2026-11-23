@@ -404,12 +404,13 @@ jobs:
             exit 1
           }
           echo "::warning::No recent master reconciliation run; dispatching the existing GitOps authority in its scheduled apply mode."
-          echo "Dispatch payload: ref=master sha=$dispatch_sha mode=apply target_app=all"
+          echo "Dispatch payload: ref=master sha=$dispatch_sha mode=apply target_app=all provision_credentials=false"
           gh workflow run reconcile-vps.yml \
             --repo "$GITHUB_REPOSITORY" \
             --ref master \
             -f mode=apply \
-            -f target_app=all
+            -f target_app=all \
+            -f provision_credentials=false
 
           dispatched_run=""
           for attempt in $(seq 1 6); do
