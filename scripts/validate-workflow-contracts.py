@@ -117,6 +117,37 @@ expected_manual_mode = """      mode:
 """
 if expected_manual_mode not in manual_dispatch:
     fail("Manual reconcile-vps dispatch must default to read-only plan; apply must be an explicit operator choice.")
+
+# Runtime credential writes require an explicit operator-selected workflow_dispatch input.
+expected_provision_input = """      provision_credentials:
+        description: "Allow runtime credential provisioning; requires explicit operator approval."
+        required: false
+        default: false
+        type: boolean
+"""
+if expected_provision_input not in manual_dispatch:
+    fail("Runtime credential provisioning must default to false on manual reconciliation.")
+if "PROVISION_CREDENTIALS: ${{ github.event_name == 'workflow_dispatch' && inputs.provision_credentials == true }}" not in reconcile:
+    fail("Credential provisioning must be authorized only by the explicit manual input.")
+for step_name in (
+    "Provision Auth runtime Secret from platform-infra Environment",
+    "Bootstrap GHCR pull credentials",
+    "Provision Keycloak runtime Secret",
+):
+    marker = f"      - name: {step_name}\n"
+    if marker not in reconcile:
+        fail(f"Missing credential provisioning step: {step_name}")
+    block = reconcile.split(marker, 1)[1].split("\n      - name:", 1)[0]
+    if "env.PROVISION_CREDENTIALS == 'true'" not in block:
+        fail(f"{step_name} must require explicit credential-provisioning approval.")
+if "gh workflow run reconcile-vps.yml" not in recovery:
+    fail("Stale-ops recovery must retain the existing reconciliation entry point.")
+recovery_dispatch = recovery.split("gh workflow run reconcile-vps.yml", 1)[1].split("dispatched_run=", 1)[0]
+if "-f mode=plan" not in recovery_dispatch or "-f mode=apply" in recovery_dispatch:
+    fail("Stale-ops fallback must be read-only; production apply requires an explicit operator action.")
+if "-f provision_credentials=false" not in recovery_dispatch:
+    fail("Stale-ops recovery must explicitly disable credential provisioning on fallback.")
+
 if "github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'repository_dispatch') && 'apply'" not in reconcile:
     fail("Scheduled, push and authenticated GitOps reconciliation must retain their existing automatic apply mode.")
 
@@ -1722,9 +1753,10 @@ if "actions: write" not in recovery or "contents: read" not in recovery:
     fail("Scheduled ops recovery must use only Actions write and Contents read permissions.")
 for required in (
     "gh workflow run reconcile-vps.yml",
-    "-f mode=apply",
+    "-f mode=plan",
     "-f target_app=all",
-    "Dispatch payload: ref=master sha=$dispatch_sha mode=apply target_app=all",
+    "-f provision_credentials=false",
+    "Dispatch payload: ref=master sha=$dispatch_sha mode=plan target_app=all provision_credentials=false",
     "gh workflow run inspect-vps.yml",
     ".updated_at // .run_started_at // .created_at",
     ".run_started_at // .created_at",
