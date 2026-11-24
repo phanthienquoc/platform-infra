@@ -403,7 +403,8 @@ jobs:
             echo "::error::Unable to resolve the exact master SHA for reconciliation dispatch."
             exit 1
           }
-          echo "::warning::No recent master reconciliation run; dispatching a read-only plan. Production apply remains reserved for the native GitOps authority or an explicit operator action."
+          echo "::warning::No recent master reconciliation run; dispatching a read-only plan."
+          echo "::notice::Production apply remains reserved for the native GitOps authority or an explicit operator action."
           echo "Dispatch payload: ref=master sha=$dispatch_sha mode=plan target_app=all provision_credentials=false"
           gh workflow run reconcile-vps.yml \
             --repo "$GITHUB_REPOSITORY" \
