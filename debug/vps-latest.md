@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-11-24T12:21:25+00:00
+Generated: 2026-11-24T15:36:23+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,14 +11,14 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.4Gi       1.8Gi        85Mi        18Gi        19Gi
+Mem:            23Gi       3.3Gi       1.8Gi        85Mi        18Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   26G   19G  58% /
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   26G   19G  58% /
 disk_pressure: normal (58%)
- 12:21:25 up 206 days, 22:11,  0 users,  load average: 0.33, 0.18, 0.15
+ 15:36:23 up 207 days,  1:26,  0 users,  load average: 0.41, 0.44, 0.25
 
 ### Top disk consumers (best-effort, runner-readable paths)
 4.0K	/var/lib/docker
@@ -39,20 +39,20 @@ disk_pressure: normal (58%)
 236M	/var/lib/rancher/k3s/data
 2.3G	/var/log/journal
 2.5G	/var/log
-95855 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+243775 /opt/actions-runner/bin/Runner.Worker spawnclient 154 160
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
 ● actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service - GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
      Loaded: loaded (/etc/systemd/system/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service; enabled; vendor preset: enabled)
      Active: active (running) since Tue 2026-09-22 14:59:15 UTC; 2 months 2 days ago
    Main PID: 1309484 (runsvc.sh)
-      Tasks: 48 (limit: 28686)
+      Tasks: 49 (limit: 28686)
      Memory: 1.4G
-        CPU: 15h 5min 58.808s
+        CPU: 15h 7min 42.563s
      CGroup: /system.slice/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service
-             ├─  95855 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
-             ├─  96190 /usr/bin/bash -e /opt/actions-runner/_work/_temp/9df02952-e32e-4b80-abd0-a595e10c04e6.sh
-             ├─  96192 bash scripts/inspect-vps.sh debug/vps-latest.md
-             ├─  96213 systemctl status actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service --no-pager --full
+             ├─ 243775 /opt/actions-runner/bin/Runner.Worker spawnclient 154 160
+             ├─ 244078 /usr/bin/bash -e /opt/actions-runner/_work/_temp/6fde7f5e-8345-4de2-b0d9-5523be4524fe.sh
+             ├─ 244080 bash scripts/inspect-vps.sh debug/vps-latest.md
+             ├─ 244101 systemctl status actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service --no-pager --full
 runner_service: active
 runner_service_enabled: enabled
 runner_policy: platform-kubectl policy: rollout-status-v15-core-workloads
@@ -284,5 +284,5 @@ keycloak   0/0     0            0           39d   keycloak     quay.io/keycloak/
 error: timed out waiting for the condition
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.148087s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049248s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.115898s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.050426s remote_ip=132.226.175.206
