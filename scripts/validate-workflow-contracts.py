@@ -140,8 +140,13 @@ for step_name in (
     block = reconcile.split(marker, 1)[1].split("\n      - name:", 1)[0]
     if "env.PROVISION_CREDENTIALS == 'true'" not in block:
         fail(f"{step_name} must require explicit credential-provisioning approval.")
-if "gh workflow run reconcile-vps.yml" not in recovery or "-f provision_credentials=false" not in recovery:
-    fail("Stale-ops recovery must explicitly disable credential provisioning on fallback apply.")
+if "gh workflow run reconcile-vps.yml" not in recovery:
+    fail("Stale-ops recovery must retain the existing reconciliation entry point.")
+recovery_dispatch = recovery.split("gh workflow run reconcile-vps.yml", 1)[1].split("dispatched_run=", 1)[0]
+if "-f mode=plan" not in recovery_dispatch or "-f mode=apply" in recovery_dispatch:
+    fail("Stale-ops fallback must be read-only; production apply requires an explicit operator action.")
+if "-f provision_credentials=false" not in recovery_dispatch:
+    fail("Stale-ops recovery must explicitly disable credential provisioning on fallback.")
 
 if "github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'repository_dispatch') && 'apply'" not in reconcile:
     fail("Scheduled, push and authenticated GitOps reconciliation must retain their existing automatic apply mode.")
