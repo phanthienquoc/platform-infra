@@ -1753,9 +1753,10 @@ if "actions: write" not in recovery or "contents: read" not in recovery:
     fail("Scheduled ops recovery must use only Actions write and Contents read permissions.")
 for required in (
     "gh workflow run reconcile-vps.yml",
-    "-f mode=apply",
+    "-f mode=plan",
     "-f target_app=all",
-    "Dispatch payload: ref=master sha=$dispatch_sha mode=apply target_app=all",
+    "-f provision_credentials=false",
+    "Dispatch payload: ref=master sha=$dispatch_sha mode=plan target_app=all provision_credentials=false",
     "gh workflow run inspect-vps.yml",
     ".updated_at // .run_started_at // .created_at",
     ".run_started_at // .created_at",
