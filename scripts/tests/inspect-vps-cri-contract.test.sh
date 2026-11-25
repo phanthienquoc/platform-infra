@@ -13,6 +13,14 @@ grep -Fq 'git restore --source=HEAD --staged --worktree -- debug/vps-latest.md' 
 grep -Fq '"!scripts/tests/**"' "$recovery_workflow"
 grep -Fq 'echo "Images used by active platform namespaces (repo tags, repo digests, image ID, pinned, size bytes):"' "$inspect_script"
 grep -Fq 'echo "Containers in active platform namespaces (container ID, name, image reference, state):"' "$inspect_script"
+# shellcheck disable=SC2016
+grep -Fq 'keycloak_ready="$(awk' "$inspect_script"
+# shellcheck disable=SC2016
+grep -Fq 'if [[ "$keycloak_ready" =~ ^[0-9]+/([0-9]+)$ ]]' "$inspect_script"
+# shellcheck disable=SC2016
+grep -Fq 'keycloak_desired_replicas="${BASH_REMATCH[1]}"' "$inspect_script"
+grep -Fq 'Keycloak logs skipped: deployment is intentionally scaled to zero.' "$inspect_script"
+grep -Fq 'Keycloak logs skipped: desired replica count unavailable; refusing a pod-waiting logs request.' "$inspect_script"
 grep -Fq 'grep -q "^Images used by active platform namespaces (repo tags, repo digests, image ID, pinned, size bytes):$" debug/vps-latest.md' "$inspect_workflow"
 grep -Fq 'grep -q "^Containers in active platform namespaces (container ID, name, image reference, state):$" debug/vps-latest.md' "$inspect_workflow"
 

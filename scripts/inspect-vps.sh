@@ -180,12 +180,21 @@ ACTIVE_NAMESPACES=(default kube-node-lease kube-public kube-system cert-manager 
   echo; echo "### K3s recent warnings (last 2h)"
   sudo journalctl -u k3s --since "2 hours ago" --no-pager -p warning 2>/dev/null | sed -E 's/((password|token|secret|authorization|client_secret)[=: ]+)[^ ,;"]+/\1[REDACTED]/Ig' | cut -c1-500 | tail -n 120 || true
   echo; echo "## Keycloak diagnostics"
-  sudo "$KCTL" get deployment keycloak -n microfe-platform -o wide 2>&1 || true
-  if sudo "$KCTL" get deployment keycloak -n microfe-platform >/dev/null 2>&1; then
-    sudo "$KCTL" logs deployment/keycloak -n microfe-platform --since=2h --tail=200 2>&1 |
-      grep -Ei 'error|exception|timeout|timed out|database|jdbc|liquibase|admin.?api|unauthorized|forbidden|realm|connection refused|connection reset|readiness|liveness' |
-      sed -E 's/((password|token|secret|authorization|client_secret)[=: ]+)[^ ,;"]+/\1[REDACTED]/Ig; s/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/[EMAIL]/g; s#(postgres(ql)?://)[^/@ ]+:[^/@ ]+@#\1[REDACTED]@#Ig' | cut -c1-500 | tail -n 80 || true
-  else echo "Keycloak deployment not found."; fi
+  keycloak_deployment="$(sudo "$KCTL" get deployment keycloak -n microfe-platform -o wide 2>&1 || true)"
+  printf '%s\n' "$keycloak_deployment"
+  keycloak_ready="$(awk '$1 == "keycloak" { print $2; exit }' <<< "$keycloak_deployment")"
+  if [[ "$keycloak_ready" =~ ^[0-9]+/([0-9]+)$ ]]; then
+    keycloak_desired_replicas="${BASH_REMATCH[1]}"
+    if (( keycloak_desired_replicas > 0 )); then
+      sudo "$KCTL" logs deployment/keycloak -n microfe-platform --since=2h --tail=200 2>&1 |
+        grep -Ei 'error|exception|timeout|timed out|database|jdbc|liquibase|admin.?api|unauthorized|forbidden|realm|connection refused|connection reset|readiness|liveness' |
+        sed -E 's/((password|token|secret|authorization|client_secret)[=: ]+)[^ ,;"]+/\1[REDACTED]/Ig; s/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/[EMAIL]/g; s#(postgres(ql)?://)[^/@ ]+:[^/@ ]+@#\1[REDACTED]@#Ig' | cut -c1-500 | tail -n 80 || true
+    else
+      echo "Keycloak logs skipped: deployment is intentionally scaled to zero."
+    fi
+  else
+    echo "Keycloak logs skipped: desired replica count unavailable; refusing a pod-waiting logs request."
+  fi
   echo; echo "### Public OIDC probes (status and latency only)"
   for endpoint in "https://sso.mrcute.space/realms/master/.well-known/openid-configuration" "https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration"; do
     printf '%s ' "$endpoint"; curl --silent --show-error --output /dev/null --connect-timeout 5 --max-time 10 --write-out 'http_code=%{http_code} time_total=%{time_total}s remote_ip=%{remote_ip}\n' "$endpoint" 2>&1 || true
