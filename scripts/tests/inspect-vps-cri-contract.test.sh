@@ -15,6 +15,7 @@ grep -Fq 'echo "Images used by active platform namespaces (repo tags, repo diges
 grep -Fq 'echo "Containers in active platform namespaces (container ID, name, image reference, state):"' "$inspect_script"
 grep -Fq 'keycloak_ready="$(awk' "$inspect_script"
 grep -Fq 'if [[ "$keycloak_ready" =~ ^[0-9]+/([0-9]+)$ ]]' "$inspect_script"
+grep -Fq 'keycloak_desired_replicas="${BASH_REMATCH[1]}"' "$inspect_script"
 grep -Fq 'Keycloak logs skipped: deployment is intentionally scaled to zero.' "$inspect_script"
 grep -Fq 'Keycloak logs skipped: desired replica count unavailable; refusing a pod-waiting logs request.' "$inspect_script"
 grep -Fq 'grep -q "^Images used by active platform namespaces (repo tags, repo digests, image ID, pinned, size bytes):$" debug/vps-latest.md' "$inspect_workflow"
