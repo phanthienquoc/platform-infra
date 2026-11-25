@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-11-25T00:08:29+00:00
+Generated: 2026-11-25T02:50:13+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,14 +11,14 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.3Gi       1.8Gi        85Mi        18Gi        19Gi
+Mem:            23Gi       3.3Gi       1.8Gi        84Mi        18Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   26G   19G  58% /
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   26G   19G  58% /
 disk_pressure: normal (58%)
- 00:08:29 up 207 days,  9:58,  0 users,  load average: 0.44, 0.29, 0.27
+ 02:50:13 up 207 days, 12:40,  0 users,  load average: 0.44, 0.34, 0.28
 
 ### Top disk consumers (best-effort, runner-readable paths)
 4.0K	/var/lib/docker
@@ -39,20 +39,20 @@ disk_pressure: normal (58%)
 236M	/var/lib/rancher/k3s/data
 2.3G	/var/log/journal
 2.5G	/var/log
-639166 /opt/actions-runner/bin/Runner.Worker spawnclient 155 162
+763095 /opt/actions-runner/bin/Runner.Worker spawnclient 154 163
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
 ● actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service - GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
      Loaded: loaded (/etc/systemd/system/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service; enabled; vendor preset: enabled)
      Active: active (running) since Tue 2026-09-22 14:59:15 UTC; 2 months 2 days ago
    Main PID: 1309484 (runsvc.sh)
-      Tasks: 49 (limit: 28686)
+      Tasks: 45 (limit: 28686)
      Memory: 1.4G
-        CPU: 15h 13min 54.844s
+        CPU: 15h 15min 38.594s
      CGroup: /system.slice/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service
-             ├─ 639166 /opt/actions-runner/bin/Runner.Worker spawnclient 155 162
-             ├─ 639472 /usr/bin/bash -e /opt/actions-runner/_work/_temp/75138a21-c291-4922-92c5-6b5ac119c1df.sh
-             ├─ 639474 bash scripts/inspect-vps.sh debug/vps-latest.md
-             ├─ 639495 systemctl status actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service --no-pager --full
+             ├─ 763095 /opt/actions-runner/bin/Runner.Worker spawnclient 154 163
+             ├─ 763397 /usr/bin/bash -e /opt/actions-runner/_work/_temp/463b1548-8984-4927-be4c-cbe0023ce2ef.sh
+             ├─ 763399 bash scripts/inspect-vps.sh debug/vps-latest.md
+             ├─ 763420 systemctl status actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service --no-pager --full
 runner_service: active
 runner_service_enabled: enabled
 runner_policy: platform-kubectl policy: rollout-status-v15-core-workloads
@@ -122,30 +122,30 @@ restart_required: yes
 Client Version: v1.36.3+k3s1
 Kustomize Version: v5.8.1
 NAME         STATUS   ROLES           AGE   VERSION        INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION              CONTAINER-RUNTIME
-tce-k3s-01   Ready    control-plane   94d   v1.36.3+k3s1   10.0.0.120    <none>        Ubuntu 22.04.5 LTS   6.8.0-1049-oracle (arm64)   containerd://2.3.2-k3s2
+tce-k3s-01   Ready    control-plane   95d   v1.36.3+k3s1   10.0.0.120    <none>        Ubuntu 22.04.5 LTS   6.8.0-1049-oracle (arm64)   containerd://2.3.2-k3s2
 Active platform namespaces:
 NAME               STATUS   AGE
 cert-manager       Active   91d
-default            Active   94d
+default            Active   95d
 k3s-debug          Active   47d
-kube-node-lease    Active   94d
-kube-public        Active   94d
-kube-system        Active   94d
-microfe-platform   Active   49d
-tce-prod           Active   94d
+kube-node-lease    Active   95d
+kube-public        Active   95d
+kube-system        Active   95d
+microfe-platform   Active   50d
+tce-prod           Active   95d
 Pods in active platform namespaces:
 -- namespace default --
 -- namespace kube-node-lease --
 -- namespace kube-public --
 -- namespace kube-system --
 NAME                                      READY   STATUS      RESTARTS      AGE   IP          NODE         NOMINATED NODE   READINESS GATES
-coredns-54996dc9b4-d68pf                  1/1     Running     0             94d   10.42.0.6   tce-k3s-01   <none>           <none>
-helm-install-traefik-crd-mq7w8            0/1     Completed   0             94d   10.42.0.3   tce-k3s-01   <none>           <none>
-helm-install-traefik-s2twj                0/1     Completed   1 (94d ago)   94d   10.42.0.2   tce-k3s-01   <none>           <none>
-local-path-provisioner-58d557dc48-jbhhp   1/1     Running     1 (94d ago)   94d   10.42.0.5   tce-k3s-01   <none>           <none>
-metrics-server-6dc596dfb8-s2bzm           1/1     Running     0             94d   10.42.0.4   tce-k3s-01   <none>           <none>
-svclb-traefik-859779c1-7bwx2              2/2     Running     0             94d   10.42.0.7   tce-k3s-01   <none>           <none>
-traefik-59b7647586-gml84                  1/1     Running     0             94d   10.42.0.8   tce-k3s-01   <none>           <none>
+coredns-54996dc9b4-d68pf                  1/1     Running     0             95d   10.42.0.6   tce-k3s-01   <none>           <none>
+helm-install-traefik-crd-mq7w8            0/1     Completed   0             95d   10.42.0.3   tce-k3s-01   <none>           <none>
+helm-install-traefik-s2twj                0/1     Completed   1 (95d ago)   95d   10.42.0.2   tce-k3s-01   <none>           <none>
+local-path-provisioner-58d557dc48-jbhhp   1/1     Running     1 (95d ago)   95d   10.42.0.5   tce-k3s-01   <none>           <none>
+metrics-server-6dc596dfb8-s2bzm           1/1     Running     0             95d   10.42.0.4   tce-k3s-01   <none>           <none>
+svclb-traefik-859779c1-7bwx2              2/2     Running     0             95d   10.42.0.7   tce-k3s-01   <none>           <none>
+traefik-59b7647586-gml84                  1/1     Running     0             95d   10.42.0.8   tce-k3s-01   <none>           <none>
 -- namespace cert-manager --
 NAME                                      READY   STATUS    RESTARTS      AGE   IP            NODE         NOMINATED NODE   READINESS GATES
 cert-manager-75b96c9588-lgn7d             1/1     Running   0             91d   10.42.0.98    tce-k3s-01   <none>           <none>
@@ -153,8 +153,8 @@ cert-manager-cainjector-b644b66f7-l8jdq   1/1     Running   1 (91d ago)   91d   
 cert-manager-webhook-76d97df888-wwq49     1/1     Running   0             91d   10.42.0.99    tce-k3s-01   <none>           <none>
 -- namespace microfe-platform --
 NAME                             READY   STATUS    RESTARTS   AGE   IP            NODE         NOMINATED NODE   READINESS GATES
-microfe-shell-7b44b44dfb-ln4sw   1/1     Running   0          23d   10.42.0.153   tce-k3s-01   <none>           <none>
-microfe-ws-5bc979dd77-txd28      1/1     Running   0          23d   10.42.0.152   tce-k3s-01   <none>           <none>
+microfe-shell-7b44b44dfb-ln4sw   1/1     Running   0          24d   10.42.0.153   tce-k3s-01   <none>           <none>
+microfe-ws-5bc979dd77-txd28      1/1     Running   0          24d   10.42.0.152   tce-k3s-01   <none>           <none>
 nats-7bc8d9f768-q682m            1/1     Running   0          46d   10.42.0.178   tce-k3s-01   <none>           <none>
 -- namespace tce-prod --
 -- namespace k3s-debug --
@@ -177,19 +177,19 @@ microfe-platform	nats-7bc8d9f768-q682m	container	nats	docker.io/library/nats:2.1
 
 ### Deployments
 NAME                     READY   UP-TO-DATE   AVAILABLE   AGE
-coredns                  1/1     1            1           94d
-local-path-provisioner   1/1     1            1           94d
-metrics-server           1/1     1            1           94d
-traefik                  1/1     1            1           94d
+coredns                  1/1     1            1           95d
+local-path-provisioner   1/1     1            1           95d
+metrics-server           1/1     1            1           95d
+traefik                  1/1     1            1           95d
 NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
 cert-manager              1/1     1            1           91d
 cert-manager-cainjector   1/1     1            1           91d
 cert-manager-webhook      1/1     1            1           91d
 NAME            READY   UP-TO-DATE   AVAILABLE   AGE
 keycloak        0/0     0            0           39d
-microfe-auth    0/0     0            0           49d
-microfe-shell   1/1     1            1           49d
-microfe-ws      1/1     1            1           49d
+microfe-auth    0/0     0            0           50d
+microfe-shell   1/1     1            1           50d
+microfe-ws      1/1     1            1           50d
 nats            1/1     1            1           46d
 NAME           READY   UP-TO-DATE   AVAILABLE   AGE
 tce-frontend   0/0     0            0           91d
@@ -226,7 +226,7 @@ status: clean
 ### Active platform workload images, services and ingress
 -- namespace default --
 NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
-kubernetes   ClusterIP   10.43.0.1    <none>        443/TCP   94d
+kubernetes   ClusterIP   10.43.0.1    <none>        443/TCP   95d
 -- namespace kube-node-lease --
 -- namespace kube-public --
 -- namespace kube-system --
@@ -235,9 +235,9 @@ kube-system   local-path-provisioner   rancher/local-path-provisioner:v0.0.36
 kube-system   metrics-server           rancher/mirrored-metrics-server:v0.9.0
 kube-system   traefik                  rancher/mirrored-library-traefik:3.7.8
 NAME             TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
-kube-dns         ClusterIP      10.43.0.10      <none>        53/UDP,53/TCP,9153/TCP       94d
-metrics-server   ClusterIP      10.43.120.41    <none>        443/TCP                      94d
-traefik          LoadBalancer   10.43.213.239   10.0.0.120    80:30225/TCP,443:30415/TCP   94d
+kube-dns         ClusterIP      10.43.0.10      <none>        53/UDP,53/TCP,9153/TCP       95d
+metrics-server   ClusterIP      10.43.120.41    <none>        443/TCP                      95d
+traefik          LoadBalancer   10.43.213.239   10.0.0.120    80:30225/TCP,443:30415/TCP   95d
 -- namespace cert-manager --
 cert-manager   cert-manager              quay.io/jetstack/cert-manager-controller:v1.21.1
 cert-manager   cert-manager-cainjector   quay.io/jetstack/cert-manager-cainjector:v1.21.1
@@ -254,9 +254,9 @@ microfe-platform   microfe-ws      ghcr.io/phanthienquoc/microfe-ws@sha256:416bc
 microfe-platform   nats            nats:2.12-alpine
 NAME            TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)             AGE
 keycloak        ClusterIP   10.43.142.95   <none>        80/TCP,9000/TCP     39d
-microfe-auth    ClusterIP   10.43.83.168   <none>        80/TCP              49d
-microfe-shell   ClusterIP   10.43.6.23     <none>        80/TCP              49d
-microfe-ws      ClusterIP   10.43.86.34    <none>        8080/TCP            49d
+microfe-auth    ClusterIP   10.43.83.168   <none>        80/TCP              50d
+microfe-shell   ClusterIP   10.43.6.23     <none>        80/TCP              50d
+microfe-ws      ClusterIP   10.43.86.34    <none>        8080/TCP            50d
 nats            ClusterIP   10.43.147.69   <none>        4222/TCP,8222/TCP   46d
 NAME                               CLASS     HOSTS                                                ADDRESS      PORTS     AGE
 keycloak-public                    traefik   sso.mrcute.space                                     10.0.0.120   80, 443   39d
@@ -284,5 +284,5 @@ keycloak   0/0     0            0           39d   keycloak     quay.io/keycloak/
 error: timed out waiting for the condition
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.135183s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.050150s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.114533s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.050353s remote_ip=132.226.175.206
