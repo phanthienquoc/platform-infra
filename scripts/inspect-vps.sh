@@ -184,7 +184,7 @@ ACTIVE_NAMESPACES=(default kube-node-lease kube-public kube-system cert-manager 
   printf '%s\n' "$keycloak_deployment"
   keycloak_ready="$(awk '$1 == "keycloak" { print $2; exit }' <<< "$keycloak_deployment")"
   if [[ "$keycloak_ready" =~ ^[0-9]+/([0-9]+)$ ]]; then
-    keycloak_desired_replicas="\${BASH_REMATCH[1]}"
+    keycloak_desired_replicas="${BASH_REMATCH[1]}"
     if (( keycloak_desired_replicas > 0 )); then
       sudo "$KCTL" logs deployment/keycloak -n microfe-platform --since=2h --tail=200 2>&1 |
         grep -Ei 'error|exception|timeout|timed out|database|jdbc|liquibase|admin.?api|unauthorized|forbidden|realm|connection refused|connection reset|readiness|liveness' |
