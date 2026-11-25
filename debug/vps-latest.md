@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-11-25T02:50:13+00:00
+Generated: 2026-11-25T05:22:22+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,14 +11,14 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.3Gi       1.8Gi        84Mi        18Gi        19Gi
+Mem:            23Gi       3.3Gi       1.8Gi        85Mi        18Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   26G   19G  58% /
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   26G   19G  58% /
 disk_pressure: normal (58%)
- 02:50:13 up 207 days, 12:40,  0 users,  load average: 0.44, 0.34, 0.28
+ 05:22:22 up 207 days, 15:12,  0 users,  load average: 0.29, 0.13, 0.10
 
 ### Top disk consumers (best-effort, runner-readable paths)
 4.0K	/var/lib/docker
@@ -39,20 +39,20 @@ disk_pressure: normal (58%)
 236M	/var/lib/rancher/k3s/data
 2.3G	/var/log/journal
 2.5G	/var/log
-763095 /opt/actions-runner/bin/Runner.Worker spawnclient 154 163
+877607 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
 ● actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service - GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
      Loaded: loaded (/etc/systemd/system/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service; enabled; vendor preset: enabled)
      Active: active (running) since Tue 2026-09-22 14:59:15 UTC; 2 months 2 days ago
    Main PID: 1309484 (runsvc.sh)
-      Tasks: 45 (limit: 28686)
+      Tasks: 48 (limit: 28686)
      Memory: 1.4G
-        CPU: 15h 15min 38.594s
+        CPU: 15h 16min 47.144s
      CGroup: /system.slice/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service
-             ├─ 763095 /opt/actions-runner/bin/Runner.Worker spawnclient 154 163
-             ├─ 763397 /usr/bin/bash -e /opt/actions-runner/_work/_temp/463b1548-8984-4927-be4c-cbe0023ce2ef.sh
-             ├─ 763399 bash scripts/inspect-vps.sh debug/vps-latest.md
-             ├─ 763420 systemctl status actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service --no-pager --full
+             ├─ 877607 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+             ├─ 877949 /usr/bin/bash -e /opt/actions-runner/_work/_temp/10be3e87-522c-47fd-ab36-fa55b2e4a62b.sh
+             ├─ 877951 bash scripts/inspect-vps.sh debug/vps-latest.md
+             ├─ 877972 systemctl status actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service --no-pager --full
 runner_service: active
 runner_service_enabled: enabled
 runner_policy: platform-kubectl policy: rollout-status-v15-core-workloads
@@ -127,7 +127,7 @@ Active platform namespaces:
 NAME               STATUS   AGE
 cert-manager       Active   91d
 default            Active   95d
-k3s-debug          Active   47d
+k3s-debug          Active   48d
 kube-node-lease    Active   95d
 kube-public        Active   95d
 kube-system        Active   95d
@@ -260,8 +260,8 @@ microfe-ws      ClusterIP   10.43.86.34    <none>        8080/TCP            50d
 nats            ClusterIP   10.43.147.69   <none>        4222/TCP,8222/TCP   46d
 NAME                               CLASS     HOSTS                                                ADDRESS      PORTS     AGE
 keycloak-public                    traefik   sso.mrcute.space                                     10.0.0.120   80, 443   39d
-keycloak-registration-rate-limit   traefik   sso.mrcute.space                                     10.0.0.120   80, 443   27d
-microfe-public                     traefik   app.mrcute.space,auth.mrcute.space,ws.mrcute.space   10.0.0.120   80, 443   49d
+keycloak-registration-rate-limit   traefik   sso.mrcute.space                                     10.0.0.120   80, 443   28d
+microfe-public                     traefik   app.mrcute.space,auth.mrcute.space,ws.mrcute.space   10.0.0.120   80, 443   50d
 -- namespace tce-prod --
 tce-prod   tce-frontend   ghcr.io/phanthienquoc/tce-dashboard/web:prod-v0.1.0-e75e338
 tce-prod   tce-service    ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-e75e338
@@ -284,5 +284,5 @@ keycloak   0/0     0            0           39d   keycloak     quay.io/keycloak/
 error: timed out waiting for the condition
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.114533s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.050353s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.114735s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.048829s remote_ip=132.226.175.206
