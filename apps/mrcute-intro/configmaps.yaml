@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mrcute-intro-html
+  namespace: microfe-platform
+data:
+  index.html: |
+    <!doctype html>
+    <html lang="vi">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="theme-color" content="#0b1020">
+      <meta name="description" content="mrcute.space — đang được nâng cấp">
+      <title>mrcute.space</title>
+      <style>
+        *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 0%,#24345d 0%,#0b1020 55%);color:#f5f7ff;font:16px/1.6 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+        main{width:min(100%,680px);padding:clamp(28px,7vw,56px);border:1px solid #ffffff20;border-radius:28px;background:#ffffff0b;box-shadow:0 24px 80px #0006;text-align:center}
+        .mark{display:inline-grid;place-items:center;width:58px;height:58px;border-radius:18px;background:#8b9cff20;color:#aebaff;font-size:27px;font-weight:800}
+        h1{margin:24px 0 8px;font-size:clamp(32px,7vw,52px);letter-spacing:-.04em}p{margin:0;color:#b8c2df;font-size:17px}.status{display:inline-flex;align-items:center;gap:9px;margin-top:30px;padding:9px 14px;border:1px solid #ffffff20;border-radius:999px;color:#d9e0f5;font-size:13px}.dot{width:8px;height:8px;border-radius:50%;background:#7ee0ad;box-shadow:0 0 12px #7ee0ad}
+        footer{margin-top:38px;color:#8792b2;font-size:13px}
+      </style>
+    </head>
+    <body><main>
+      <div class="mark">m</div>
+      <h1>mrcute.space</h1>
+      <p>Chúng tôi đang nâng cấp hệ thống.<br>Trang web sẽ sớm trở lại với diện mạo mới.</p>
+      <div class="status"><span class="dot"></span> Hệ thống đang được khởi tạo</div>
+      <footer>© mrcute.space</footer>
+    </main></body>
+    </html>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mrcute-intro-nginx
+  namespace: microfe-platform
+data:
+  default.conf: |
+    server {
+      listen 8080;
+      server_name _;
+      root /usr/share/nginx/html;
+      index index.html;
+      location = /healthz { access_log off; default_type text/plain; return 200 "ok"; }
+      location / { try_files $uri $uri/ =404; }
+    }
