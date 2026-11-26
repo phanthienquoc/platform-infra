@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-11-26T18:56:49+00:00
+Generated: 2026-11-26T23:18:39+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,14 +11,14 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.4Gi       1.8Gi        85Mi        18Gi        19Gi
+Mem:            23Gi       3.3Gi       1.8Gi        85Mi        18Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   27G   19G  58% /
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   27G   19G  58% /
 disk_pressure: normal (58%)
- 18:56:49 up 209 days,  4:47,  0 users,  load average: 0.83, 0.35, 0.26
+ 23:18:39 up 209 days,  9:09,  0 users,  load average: 0.38, 0.27, 0.20
 
 ### Top disk consumers (best-effort, runner-readable paths)
 4.0K	/var/lib/docker
@@ -40,19 +40,19 @@ disk_pressure: normal (58%)
 2.3G	/var/log/journal
 2.6G	/var/log
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-2588568 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+2784681 /opt/actions-runner/bin/Runner.Worker spawnclient 154 163
 ● actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service - GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
      Loaded: loaded (/etc/systemd/system/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service; enabled; vendor preset: enabled)
      Active: active (running) since Tue 2026-09-22 14:59:15 UTC; 2 months 4 days ago
    Main PID: 1309484 (runsvc.sh)
-      Tasks: 48 (limit: 28686)
+      Tasks: 47 (limit: 28686)
      Memory: 1.4G
-        CPU: 15h 34min 19.760s
+        CPU: 15h 36min 22.338s
      CGroup: /system.slice/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service
              ├─1309484 /bin/bash /opt/actions-runner/runsvc.sh
              ├─1309492 ./externals/node20/bin/node ./bin/RunnerService.js
              ├─1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-             ├─2588568 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+             ├─2784681 /opt/actions-runner/bin/Runner.Worker spawnclient 154 163
 runner_service: active
 runner_service_enabled: enabled
 runner_policy: platform-kubectl policy: rollout-status-v15-core-workloads
@@ -280,5 +280,5 @@ keycloak   0/0     0            0           41d   keycloak     quay.io/keycloak/
 Keycloak logs skipped: deployment is intentionally scaled to zero.
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.110723s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049363s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.110195s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.048948s remote_ip=132.226.175.206
