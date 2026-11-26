@@ -6,4 +6,5 @@ resources:
 - ../../platform/auth-service
 - ../../platform/microfe
 - ../../apps/tce-dashboard/overlays/prod
+- ../../apps/mrcute-intro
 # reconcile trigger: current TCE production release - image guard fixed

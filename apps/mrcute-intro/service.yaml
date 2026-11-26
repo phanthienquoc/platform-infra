@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mrcute-intro
+  namespace: microfe-platform
+  labels:
+    app.kubernetes.io/name: mrcute-intro
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: mrcute-intro
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP

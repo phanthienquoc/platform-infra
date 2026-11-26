@@ -24,8 +24,8 @@ if grep -nE '^  type: (LoadBalancer|NodePort)$' "$output"; then
 fi
 
 ingress_count="$(grep -c '^kind: Ingress$' "$output" || true)"
-if [ "$ingress_count" -ne 2 ]; then
-  echo "Expected exactly 2 production Ingress resources after Stock/Media retirement, found $ingress_count."
+if [ "$ingress_count" -ne 3 ]; then
+  echo "Expected exactly 3 production Ingress resources after adding the mrcute root intro, found $ingress_count."
   exit 1
 fi
 
