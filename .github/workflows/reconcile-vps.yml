@@ -25,6 +25,11 @@ run-name: Reconcile VPS — ${{ github.event.client_payload.app || inputs.target
           - microfe
           - keycloak
           - auth-shutdown
+      provision_credentials:
+        description: "Allow runtime credential provisioning; requires explicit operator approval."
+        required: false
+        default: false
+        type: boolean
   repository_dispatch:
     types:
       - gitops-promoted-ready
@@ -63,6 +68,7 @@ env:
   RECONCILE_MODE: ${{ (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'repository_dispatch') && 'apply' || github.event.inputs.mode }}
   TARGET_APP: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.app || github.event.inputs.target_app || 'all' }}
   RELEASE_TAG: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.release || '' }}
+  PROVISION_CREDENTIALS: ${{ github.event_name == 'workflow_dispatch' && inputs.provision_credentials == true }}
   # Only the provenance-verified GitOps-ready dispatch may authorize image replacement.
   ALLOW_IMAGE_CHANGES: ${{ github.event_name == 'repository_dispatch' && github.event.action == 'gitops-promoted-ready' }}
   TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
@@ -235,7 +241,7 @@ jobs:
             GHCR_USERNAME="$GHCR_USERNAME" GHCR_TOKEN="$GHCR_TOKEN" GHCR_IMAGE_REFERENCE="$image@$digest" bash scripts/validate-ghcr-image-reference.sh
           done
       - name: Provision Auth runtime Secret from platform-infra Environment
-        if: ${{ env.RECONCILE_MODE == 'apply' && (steps.scope.outputs.target_app == 'auth-service' || steps.scope.outputs.target_app == 'all') }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && env.PROVISION_CREDENTIALS == 'true' && (steps.scope.outputs.target_app == 'auth-service' || steps.scope.outputs.target_app == 'all') }}
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -261,7 +267,7 @@ jobs:
           sudo /usr/local/sbin/platform-kubectl verify-auth-secret
 
       - name: Bootstrap GHCR pull credentials
-        if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app != 'keycloak' && steps.scope.outputs.target_app != 'auth-shutdown' }}
+        if: ${{ env.RECONCILE_MODE == 'apply' && env.PROVISION_CREDENTIALS == 'true' && steps.scope.outputs.target_app != 'keycloak' && steps.scope.outputs.target_app != 'auth-shutdown' }}
         env:
           GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}
           GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
@@ -614,6 +620,7 @@ jobs:
             exit 1
           fi
       - name: Provision Keycloak runtime Secret
+        if: ${{ env.PROVISION_CREDENTIALS == 'true' }}
         env:
           KEYCLOAK_DB_URL: ${{ secrets.KEYCLOAK_DB_URL }}
           KEYCLOAK_DB_USERNAME: ${{ secrets.KEYCLOAK_DB_USERNAME }}
