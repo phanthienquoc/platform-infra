@@ -1403,9 +1403,9 @@ production_root = (ROOT / "environments" / "prod" / "kustomization.yaml").read_t
 certificates = (ROOT / "platform" / "cert-manager" / "certificates.yaml").read_text(encoding="utf-8")
 auth_service_config = (ROOT / "platform" / "auth-service" / "configmap.yaml").read_text(encoding="utf-8")
 network_boundaries = (ROOT / "scripts" / "validate-network-boundaries.sh").read_text(encoding="utf-8")
-if "Expected exactly 2 production Ingress resources" not in network_boundaries:
-    fail("Network-boundary validation must expect only the remaining TCE and MicroFE Ingress resources.")
-for retired_host in ("mrcute.space", "www.mrcute.space", "admin.mrcute.space", "api.mrcute.space", "media.mrcute.space"):
+if "Expected exactly 3 production Ingress resources" not in network_boundaries:
+    fail("Network-boundary validation must expect TCE, MicroFE, and the mrcute root intro Ingress resources.")
+for retired_host in ("www.mrcute.space", "admin.mrcute.space", "api.mrcute.space", "media.mrcute.space"):
     if f"\n{retired_host}\n" in network_boundaries:
         fail(f"Retired Stock/Media hostname remains allowed in production network validation: {retired_host}")
 for retired_reference in ("stock-prod", "media-prod", "stockdividend", "media-generation"):
