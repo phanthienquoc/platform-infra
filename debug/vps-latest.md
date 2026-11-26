@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-11-26T04:38:59+00:00
+Generated: 2026-11-26T08:49:43+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,14 +11,14 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.3Gi       1.7Gi        85Mi        18Gi        19Gi
+Mem:            23Gi       3.3Gi       1.9Gi        85Mi        18Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   27G   19G  58% /
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   27G   19G  58% /
 disk_pressure: normal (58%)
- 04:38:59 up 208 days, 14:29,  0 users,  load average: 0.53, 0.33, 0.18
+ 08:49:43 up 208 days, 18:40,  0 users,  load average: 0.58, 0.22, 0.13
 
 ### Top disk consumers (best-effort, runner-readable paths)
 4.0K	/var/lib/docker
@@ -33,26 +33,26 @@ disk_pressure: normal (58%)
 12K	/var/log/pods
 60K	/var/log/containers
 72K	/var/log/unified-monitoring-agent
-180K	/var/log/apt
+200K	/var/log/apt
 22M	/var/log/oracle-cloud-agent
 236M	/var/lib/rancher/k3s
 236M	/var/lib/rancher/k3s/data
 2.3G	/var/log/journal
 2.6G	/var/log
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-1947328 /opt/actions-runner/bin/Runner.Worker spawnclient 154 161
+2140101 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
 ● actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service - GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
      Loaded: loaded (/etc/systemd/system/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service; enabled; vendor preset: enabled)
      Active: active (running) since Tue 2026-09-22 14:59:15 UTC; 2 months 3 days ago
    Main PID: 1309484 (runsvc.sh)
-      Tasks: 47 (limit: 28686)
+      Tasks: 45 (limit: 28686)
      Memory: 1.4G
-        CPU: 15h 31min 1.158s
+        CPU: 15h 31min 44.080s
      CGroup: /system.slice/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service
              ├─1309484 /bin/bash /opt/actions-runner/runsvc.sh
              ├─1309492 ./externals/node20/bin/node ./bin/RunnerService.js
              ├─1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-             ├─1947328 /opt/actions-runner/bin/Runner.Worker spawnclient 154 161
+             ├─2140101 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
 runner_service: active
 runner_service_enabled: enabled
 runner_policy: platform-kubectl policy: rollout-status-v15-core-workloads
@@ -83,27 +83,16 @@ landscape-common/jammy-updates 23.02-0ubuntu1~22.04.7 arm64 [upgradable from: 23
 libapparmor1/jammy-updates 3.0.4-2ubuntu2.5 arm64 [upgradable from: 3.0.4-2ubuntu2.4]
 libaudit-common/jammy-updates 1:3.0.7-1ubuntu0.1 all [upgradable from: 1:3.0.7-1build1]
 libaudit1/jammy-updates 1:3.0.7-1ubuntu0.1 arm64 [upgradable from: 1:3.0.7-1build1]
-libdw1/jammy-security 0.186-1ubuntu0.2 arm64 [upgradable from: 0.186-1ubuntu0.1]
-libelf1/jammy-security 0.186-1ubuntu0.2 arm64 [upgradable from: 0.186-1ubuntu0.1]
-libexpat1/jammy-updates,jammy-security 2.4.7-1ubuntu0.10 arm64 [upgradable from: 2.4.7-1ubuntu0.9]
 libglib2.0-0/jammy-updates 2.72.4-0ubuntu2.11 arm64 [upgradable from: 2.72.4-0ubuntu2.10]
 libglib2.0-bin/jammy-updates 2.72.4-0ubuntu2.11 arm64 [upgradable from: 2.72.4-0ubuntu2.10]
 libglib2.0-data/jammy-updates 2.72.4-0ubuntu2.11 all [upgradable from: 2.72.4-0ubuntu2.10]
-libgssapi-krb5-2/jammy-security 1.19.2-2ubuntu0.12 arm64 [upgradable from: 1.19.2-2ubuntu0.10]
 libjcat1/jammy-updates 0.2.3-1~ubuntu0.22.04.1 arm64 [upgradable from: 0.1.9-1]
-libk5crypto3/jammy-security 1.19.2-2ubuntu0.12 arm64 [upgradable from: 1.19.2-2ubuntu0.8]
-libkrb5-3/jammy-security 1.19.2-2ubuntu0.12 arm64 [upgradable from: 1.19.2-2ubuntu0.10]
-libkrb5support0/jammy-security 1.19.2-2ubuntu0.12 arm64 [upgradable from: 1.19.2-2ubuntu0.10]
 libldap-2.5-0/jammy-updates 2.5.20+dfsg-0ubuntu0.22.04.1 arm64 [upgradable from: 2.5.19+dfsg-0ubuntu0.22.04.1]
 libldap-common/jammy-updates 2.5.20+dfsg-0ubuntu0.22.04.1 all [upgradable from: 2.5.19+dfsg-0ubuntu0.22.04.1]
 libnetplan0/jammy-updates 0.107.1-3ubuntu0.22.04.5 arm64 [upgradable from: 0.106.1-7ubuntu0.22.04.4]
 libnftables1/jammy-updates 1.0.2-1ubuntu3.1 arm64 [upgradable from: 1.0.2-1ubuntu3]
 libopeniscsiusr/jammy-updates 2.1.5-1ubuntu1.3 arm64 [upgradable from: 2.1.5-1ubuntu1.1]
-libpcap0.8/jammy-security 1.10.1-4ubuntu1.22.04.3 arm64 [upgradable from: 1.10.1-4ubuntu1.22.04.2]
 libxmlb2/jammy-updates 0.3.24-1~ubuntu0.22.04.1 arm64 [upgradable from: 0.3.6-2build1]
-linux-headers-oracle/jammy-updates,jammy-security 6.8.0-1068.72~22.04.1 arm64 [upgradable from: 6.8.0-1067.71~22.04.1]
-linux-image-oracle/jammy-updates,jammy-security 6.8.0-1068.72~22.04.1 arm64 [upgradable from: 6.8.0-1067.71~22.04.1]
-linux-oracle/jammy-updates,jammy-security 6.8.0-1068.72~22.04.1 arm64 [upgradable from: 6.8.0-1067.71~22.04.1]
 lshw/jammy-updates 02.19.git.2021.06.19.996aaad9c7-2ubuntu0.22.04.1 arm64 [upgradable from: 02.19.git.2021.06.19.996aaad9c7-2build1]
 nano/jammy-updates 6.2-1ubuntu0.3 arm64 [upgradable from: 6.2-1ubuntu0.2]
 netplan.io/jammy-updates 0.107.1-3ubuntu0.22.04.5 arm64 [upgradable from: 0.106.1-7ubuntu0.22.04.4]
@@ -132,9 +121,9 @@ NAME         STATUS   ROLES           AGE   VERSION        INTERNAL-IP   EXTERNA
 tce-k3s-01   Ready    control-plane   96d   v1.36.3+k3s1   10.0.0.120    <none>        Ubuntu 22.04.5 LTS   6.8.0-1049-oracle (arm64)   containerd://2.3.2-k3s2
 Active platform namespaces:
 NAME               STATUS   AGE
-cert-manager       Active   92d
+cert-manager       Active   93d
 default            Active   96d
-k3s-debug          Active   48d
+k3s-debug          Active   49d
 kube-node-lease    Active   96d
 kube-public        Active   96d
 kube-system        Active   96d
@@ -155,14 +144,14 @@ svclb-traefik-859779c1-7bwx2              2/2     Running     0             96d 
 traefik-59b7647586-gml84                  1/1     Running     0             96d   10.42.0.8   tce-k3s-01   <none>           <none>
 -- namespace cert-manager --
 NAME                                      READY   STATUS    RESTARTS      AGE   IP            NODE         NOMINATED NODE   READINESS GATES
-cert-manager-75b96c9588-lgn7d             1/1     Running   0             92d   10.42.0.98    tce-k3s-01   <none>           <none>
-cert-manager-cainjector-b644b66f7-l8jdq   1/1     Running   1 (92d ago)   92d   10.42.0.100   tce-k3s-01   <none>           <none>
-cert-manager-webhook-76d97df888-wwq49     1/1     Running   0             92d   10.42.0.99    tce-k3s-01   <none>           <none>
+cert-manager-75b96c9588-lgn7d             1/1     Running   0             93d   10.42.0.98    tce-k3s-01   <none>           <none>
+cert-manager-cainjector-b644b66f7-l8jdq   1/1     Running   1 (93d ago)   93d   10.42.0.100   tce-k3s-01   <none>           <none>
+cert-manager-webhook-76d97df888-wwq49     1/1     Running   0             93d   10.42.0.99    tce-k3s-01   <none>           <none>
 -- namespace microfe-platform --
 NAME                             READY   STATUS    RESTARTS   AGE   IP            NODE         NOMINATED NODE   READINESS GATES
 microfe-shell-7b44b44dfb-ln4sw   1/1     Running   0          25d   10.42.0.153   tce-k3s-01   <none>           <none>
 microfe-ws-5bc979dd77-txd28      1/1     Running   0          25d   10.42.0.152   tce-k3s-01   <none>           <none>
-nats-7bc8d9f768-q682m            1/1     Running   0          47d   10.42.0.178   tce-k3s-01   <none>           <none>
+nats-7bc8d9f768-q682m            1/1     Running   0          48d   10.42.0.178   tce-k3s-01   <none>           <none>
 -- namespace tce-prod --
 -- namespace k3s-debug --
 
@@ -189,24 +178,24 @@ local-path-provisioner   1/1     1            1           96d
 metrics-server           1/1     1            1           96d
 traefik                  1/1     1            1           96d
 NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
-cert-manager              1/1     1            1           92d
-cert-manager-cainjector   1/1     1            1           92d
-cert-manager-webhook      1/1     1            1           92d
+cert-manager              1/1     1            1           93d
+cert-manager-cainjector   1/1     1            1           93d
+cert-manager-webhook      1/1     1            1           93d
 NAME            READY   UP-TO-DATE   AVAILABLE   AGE
 keycloak        0/0     0            0           40d
 microfe-auth    0/0     0            0           51d
 microfe-shell   1/1     1            1           51d
 microfe-ws      1/1     1            1           51d
-nats            1/1     1            1           47d
+nats            1/1     1            1           48d
 NAME           READY   UP-TO-DATE   AVAILABLE   AGE
 tce-frontend   0/0     0            0           92d
 tce-service    0/0     0            0           92d
 
 ### Persistent storage inventory
 NAME             STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE
-k3s-debug-logs   Bound    pvc-9aed95ca-8365-46a4-a06a-d8f26d600456   1Gi        RWO            local-path     <unset>                 48d   Filesystem
+k3s-debug-logs   Bound    pvc-9aed95ca-8365-46a4-a06a-d8f26d600456   1Gi        RWO            local-path     <unset>                 49d   Filesystem
 NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                      STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE   VOLUMEMODE
-pvc-9aed95ca-8365-46a4-a06a-d8f26d600456   1Gi        RWO            Delete           Bound    k3s-debug/k3s-debug-logs   local-path     <unset>                          48d   Filesystem
+pvc-9aed95ca-8365-46a4-a06a-d8f26d600456   1Gi        RWO            Delete           Bound    k3s-debug/k3s-debug-logs   local-path     <unset>                          49d   Filesystem
 
 ### Pod failure evidence
 
@@ -216,8 +205,8 @@ pvc-9aed95ca-8365-46a4-a06a-d8f26d600456   1Gi        RWO            Delete     
 
 ### CRI image inventory
 Images used by active platform namespaces (repo tags, repo digests, image ID, pinned, size bytes):
-	ghcr.io/phanthienquoc/microfe-ws@sha256:416bc16ade0becf398b0554571f6813985c55dffaf742042a7edef10ca2ea16d	sha256:a26e88e61c4420c79b2f23d6ca68b0b67880a3423cb773c48094ac77fc72aa99	false	65079739
 	ghcr.io/phanthienquoc/microfe-shell@sha256:ae64acc032ce13d046ab78c9628b5b0b308f812b67ddfab7503d91e5a3ed8dcd	sha256:d6d34a138c9fb485abe5e70cf0b084e2d8cf482474be71ba0397819b2697f059	false	25830437
+	ghcr.io/phanthienquoc/microfe-ws@sha256:416bc16ade0becf398b0554571f6813985c55dffaf742042a7edef10ca2ea16d	sha256:a26e88e61c4420c79b2f23d6ca68b0b67880a3423cb773c48094ac77fc72aa99	false	65079739
 quay.io/jetstack/cert-manager-cainjector:v1.21.1	quay.io/jetstack/cert-manager-cainjector@sha256:ccf6b919ec0500745a47a910118f834f9636d0aac1ff221245cd2557ed8c7c98	sha256:187d7de7d1d04dd40dbc62236b0e75eea4a0ae336b0de824c6e27e28fb102381	false	11030656
 quay.io/jetstack/cert-manager-controller:v1.21.1	quay.io/jetstack/cert-manager-controller@sha256:416a2d76870d996460e62bd7f521bf14fa017be9e3e904aab92163a331fcb61a	sha256:5283ffc3ebd6cf46ecf84f5e56730734b3de8d3de456c3a909f0077b5337c55d	false	22296047
 quay.io/jetstack/cert-manager-webhook:v1.21.1	quay.io/jetstack/cert-manager-webhook@sha256:d8b3961b51c8c7320633f8208dc46bf88aa13804d0f7cbe48a096b2c523cee42	sha256:4694bc08f6c866b0820ff7e82d673029b6d48ba0aaf79af528987ca114f426ec	false	17710712
@@ -250,9 +239,9 @@ cert-manager   cert-manager              quay.io/jetstack/cert-manager-controlle
 cert-manager   cert-manager-cainjector   quay.io/jetstack/cert-manager-cainjector:v1.21.1
 cert-manager   cert-manager-webhook      quay.io/jetstack/cert-manager-webhook:v1.21.1
 NAME                      TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)            AGE
-cert-manager              ClusterIP   10.43.138.27    <none>        9402/TCP           92d
-cert-manager-cainjector   ClusterIP   10.43.135.132   <none>        9402/TCP           92d
-cert-manager-webhook      ClusterIP   10.43.52.112    <none>        443/TCP,9402/TCP   92d
+cert-manager              ClusterIP   10.43.138.27    <none>        9402/TCP           93d
+cert-manager-cainjector   ClusterIP   10.43.135.132   <none>        9402/TCP           93d
+cert-manager-webhook      ClusterIP   10.43.52.112    <none>        443/TCP,9402/TCP   93d
 -- namespace microfe-platform --
 microfe-platform   keycloak        quay.io/keycloak/keycloak:26.8.1
 microfe-platform   microfe-auth    ghcr.io/phanthienquoc/auth-service/auth:prod-v1.0.0-ceb2688
@@ -264,7 +253,7 @@ keycloak        ClusterIP   10.43.142.95   <none>        80/TCP,9000/TCP     40d
 microfe-auth    ClusterIP   10.43.83.168   <none>        80/TCP              51d
 microfe-shell   ClusterIP   10.43.6.23     <none>        80/TCP              51d
 microfe-ws      ClusterIP   10.43.86.34    <none>        8080/TCP            51d
-nats            ClusterIP   10.43.147.69   <none>        4222/TCP,8222/TCP   47d
+nats            ClusterIP   10.43.147.69   <none>        4222/TCP,8222/TCP   48d
 NAME                               CLASS     HOSTS                                                ADDRESS      PORTS     AGE
 keycloak-public                    traefik   sso.mrcute.space                                     10.0.0.120   80, 443   40d
 keycloak-registration-rate-limit   traefik   sso.mrcute.space                                     10.0.0.120   80, 443   29d
@@ -291,5 +280,5 @@ keycloak   0/0     0            0           40d   keycloak     quay.io/keycloak/
 Keycloak logs skipped: deployment is intentionally scaled to zero.
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.112927s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.050725s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.146253s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049731s remote_ip=132.226.175.206
