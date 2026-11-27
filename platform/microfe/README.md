@@ -4,7 +4,7 @@ This layer owns the platform shell and shared WebSocket gateway. The canonical A
 
 ## Public hosts
 - app.mrcute.space -> microfe-shell
-- auth.mrcute.space -> microfe-auth
+- auth.mrcute.space -> Supabase-backed MicroFE Auth API (NestJS), with no Keycloak/OIDC dependency
 
 
 ## Immutable image promotion
