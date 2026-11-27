@@ -42,6 +42,11 @@ resolve_scope() {
       platform/keycloak/*|apps/keycloak/*)
         keycloak_changed=1
         ;;
+      apps/mrcute-intro/*)
+        # The standalone apex intro is included directly by environments/prod and
+        # has no dedicated deployment lane; reconcile the production Kustomize root.
+        cluster_wide=1
+        ;;
       apps/*/base/kustomization.yaml|apps/*/overlays/prod/kustomization.yaml)
         # Non-active application manifest roots require cluster-wide GitOps reconciliation.
         # This keeps retired-tree removals safe without pinning application names here.
@@ -134,6 +139,7 @@ self_test() {
   assert_scope tce-dashboard apps/tce-dashboard/overlays/prod/kustomization.yaml apps/tce-vps-control-mcp/package.json
   assert_failure .github/workflows/validate-manifests.yml scripts/validate-workflow-contracts.py docs/cross-repo-deployment-tracker.md debug/vps-latest.md
   assert_scope all environments/prod/kustomization.yaml
+  assert_scope all apps/mrcute-intro/kustomization.yaml apps/mrcute-intro/configmaps.yaml apps/mrcute-intro/deployment.yaml apps/mrcute-intro/service.yaml apps/mrcute-intro/ingress.yaml
   assert_scope all apps/retired-workload-a/base/kustomization.yaml
   assert_scope all apps/retired-workload-b/base/kustomization.yaml
   assert_scope all scripts/verify-workload-health.sh
