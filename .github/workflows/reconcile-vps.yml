@@ -422,6 +422,16 @@ jobs:
           set -euo pipefail
           sudo /usr/local/sbin/platform-kubectl get nodes -o wide
           sudo /usr/local/sbin/platform-kubectl get pods -A -o wide
+
+      - name: Inspect mrcute root routing after push reconciliation
+        if: ${{ github.event_name == 'push' && env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app == 'all' }}
+        run: |
+          set -euo pipefail
+          sudo /usr/local/sbin/platform-kubectl get ingress mrcute-root -n microfe-platform -o yaml
+          sudo /usr/local/sbin/platform-kubectl get certificate mrcute-root-tls -n microfe-platform -o yaml
+          sudo /usr/local/sbin/platform-kubectl get service mrcute-intro -n microfe-platform -o yaml
+          sudo /usr/local/sbin/platform-kubectl get endpoints mrcute-intro -n microfe-platform -o yaml
+          sudo /usr/local/sbin/platform-kubectl get pods -n microfe-platform -l app.kubernetes.io/name=mrcute-intro -o wide
       - name: Verify runner worktree remains clean
         shell: bash
         run: |
