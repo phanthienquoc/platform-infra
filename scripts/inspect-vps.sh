@@ -176,6 +176,16 @@ ACTIVE_NAMESPACES=(default kube-node-lease kube-public kube-system cert-manager 
     sudo "$KCTL" get services -n "$namespace" 2>/dev/null || true
     sudo "$KCTL" get ingress -n "$namespace" 2>/dev/null || true
   done
+  if [[ "${INSPECT_MRCUTE_ROOT:-false}" == "true" ]]; then
+    echo; echo "### Targeted mrcute root routing diagnostics"
+    sudo "$KCTL" get ingress mrcute-root -n microfe-platform -o yaml 2>&1 || true
+    sudo "$KCTL" get certificate mrcute-root-tls -n microfe-platform -o yaml 2>&1 || true
+    sudo "$KCTL" get service mrcute-intro -n microfe-platform -o yaml 2>&1 || true
+    sudo "$KCTL" get endpoints mrcute-intro -n microfe-platform -o yaml 2>&1 || true
+    sudo "$KCTL" get pods -n microfe-platform -l app.kubernetes.io/name=mrcute-intro -o wide 2>&1 || true
+    sudo "$KCTL" get events -n microfe-platform --field-selector involvedObject.name=mrcute-root --sort-by=.lastTimestamp 2>&1 | tail -n 30 || true
+    sudo "$KCTL" get events -n microfe-platform --field-selector involvedObject.name=mrcute-root-tls --sort-by=.lastTimestamp 2>&1 | tail -n 30 || true
+  fi
   echo; echo "## K3s service"; systemctl is-active k3s || true; systemctl is-enabled k3s || true
   echo; echo "### K3s recent warnings (last 2h)"
   sudo journalctl -u k3s --since "2 hours ago" --no-pager -p warning 2>/dev/null | sed -E 's/((password|token|secret|authorization|client_secret)[=: ]+)[^ ,;"]+/\1[REDACTED]/Ig' | cut -c1-500 | tail -n 120 || true
