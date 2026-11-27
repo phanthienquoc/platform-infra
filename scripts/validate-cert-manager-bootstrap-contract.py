@@ -92,6 +92,18 @@ def validate() -> None:
     require_token_step(reconcile_workflow, "Preflight diff", ".github/workflows/reconcile-vps.yml")
     require_token_step(reconcile_workflow, "Guard workload image changes", ".github/workflows/reconcile-vps.yml")
     require_token_step(reconcile_workflow, "Apply production manifests", ".github/workflows/reconcile-vps.yml")
+
+    verify_drift_step = reconcile_workflow.split(
+        "      - name: Verify drift cleared", 1
+    )[1].split("      - name: Fail if shared reconciliation failed", 1)[0]
+    require(
+        "GH_TOKEN: ${{ github.token }}" in verify_drift_step
+        and 'bash scripts/prepare-cert-manager-manifest.sh "$manifest"' in verify_drift_step
+        and "trap cleanup EXIT" in verify_drift_step
+        and 'rm -f "$manifest"' in verify_drift_step
+        and "platform-kubectl diff -k environments/prod" in verify_drift_step,
+        "post-reconcile drift verification must prepare and clean the pinned cert-manager asset before Kustomize diff",
+    )
     require_token_step(inspection_workflow, "Inspect VPS", ".github/workflows/inspect-vps.yml")
     require_token_step(recovery_workflow, "Validate recovery readiness", ".github/workflows/validate-recovery-readiness.yml")
 
