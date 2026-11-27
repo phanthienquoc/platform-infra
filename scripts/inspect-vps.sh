@@ -53,6 +53,16 @@ ACTIVE_NAMESPACES=(default kube-node-lease kube-public kube-system cert-manager 
     echo "-- namespace $namespace --"
     sudo "$KCTL" get pods -n "$namespace" -o wide 2>/dev/null || true
   done
+  if [[ "${INSPECT_MRCUTE_ROOT:-false}" == "true" ]]; then
+    echo; echo "### Targeted mrcute root routing diagnostics"
+    sudo "$KCTL" get ingress mrcute-root -n microfe-platform -o yaml 2>&1 || true
+    sudo "$KCTL" get certificate mrcute-root-tls -n microfe-platform -o yaml 2>&1 || true
+    sudo "$KCTL" get service mrcute-intro -n microfe-platform -o yaml 2>&1 || true
+    sudo "$KCTL" get endpoints mrcute-intro -n microfe-platform -o yaml 2>&1 || true
+    sudo "$KCTL" get pods -n microfe-platform -l app.kubernetes.io/name=mrcute-intro -o wide 2>&1 || true
+    sudo "$KCTL" get events -n microfe-platform --field-selector involvedObject.name=mrcute-root --sort-by=.lastTimestamp 2>&1 | tail -n 30 || true
+    sudo "$KCTL" get events -n microfe-platform --field-selector involvedObject.name=mrcute-root-tls --sort-by=.lastTimestamp 2>&1 | tail -n 30 || true
+  fi
   echo; echo "### Pod imageID evidence"
   for namespace in "${ACTIVE_NAMESPACES[@]}"; do
     sudo "$KCTL" get pods -n "$namespace" -o json 2>/dev/null | jq -r '
