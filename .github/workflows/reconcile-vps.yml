@@ -437,10 +437,22 @@ jobs:
         id: verify_drift
         if: ${{ env.RECONCILE_MODE == 'apply' && steps.preflight.outputs.drift == 'true' }}
         continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          manifest="$GITHUB_WORKSPACE/platform/cert-manager/cert-manager.yaml"
           diff_stderr="$(mktemp)"
-          trap 'rm -f "$diff_stderr"' EXIT
+          prepared=false
+          cleanup() {
+            rm -f "$diff_stderr"
+            if [[ "$prepared" == true ]]; then
+              rm -f "$manifest"
+            fi
+          }
+          trap cleanup EXIT
+          bash scripts/prepare-cert-manager-manifest.sh "$manifest"
+          prepared=true
           set +e
           sudo /usr/local/sbin/platform-kubectl diff -k environments/prod 2>"$diff_stderr"
           rc=$?
