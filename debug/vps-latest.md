@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-11-26T23:18:39+00:00
+Generated: 2026-11-27T00:23:12+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,14 +11,14 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.3Gi       1.8Gi        85Mi        18Gi        19Gi
+Mem:            23Gi       3.3Gi       1.7Gi        85Mi        18Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/sda1        45G   27G   19G  58% /
+/dev/sda1        45G   27G   19G  59% /
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/sda1        45G   27G   19G  58% /
-disk_pressure: normal (58%)
- 23:18:39 up 209 days,  9:09,  0 users,  load average: 0.38, 0.27, 0.20
+/dev/sda1        45G   27G   19G  59% /
+disk_pressure: normal (59%)
+ 00:23:12 up 209 days, 10:13,  0 users,  load average: 0.01, 0.08, 0.11
 
 ### Top disk consumers (best-effort, runner-readable paths)
 4.0K	/var/lib/docker
@@ -31,7 +31,7 @@ disk_pressure: normal (58%)
 4.0K	/var/log/private
 4.0K	/var/log/unattended-upgrades
 12K	/var/log/pods
-60K	/var/log/containers
+64K	/var/log/containers
 72K	/var/log/unified-monitoring-agent
 200K	/var/log/apt
 23M	/var/log/oracle-cloud-agent
@@ -40,19 +40,19 @@ disk_pressure: normal (58%)
 2.3G	/var/log/journal
 2.6G	/var/log
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-2784681 /opt/actions-runner/bin/Runner.Worker spawnclient 154 163
+2835501 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
 ● actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service - GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
      Loaded: loaded (/etc/systemd/system/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service; enabled; vendor preset: enabled)
      Active: active (running) since Tue 2026-09-22 14:59:15 UTC; 2 months 4 days ago
    Main PID: 1309484 (runsvc.sh)
-      Tasks: 47 (limit: 28686)
+      Tasks: 48 (limit: 28686)
      Memory: 1.4G
-        CPU: 15h 36min 22.338s
+        CPU: 15h 37min 29.754s
      CGroup: /system.slice/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service
              ├─1309484 /bin/bash /opt/actions-runner/runsvc.sh
              ├─1309492 ./externals/node20/bin/node ./bin/RunnerService.js
              ├─1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-             ├─2784681 /opt/actions-runner/bin/Runner.Worker spawnclient 154 163
+             ├─2835501 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
 runner_service: active
 runner_service_enabled: enabled
 runner_policy: platform-kubectl policy: rollout-status-v15-core-workloads
@@ -151,9 +151,53 @@ cert-manager-webhook-76d97df888-wwq49     1/1     Running   0             93d   
 NAME                             READY   STATUS    RESTARTS   AGE   IP            NODE         NOMINATED NODE   READINESS GATES
 microfe-shell-7b44b44dfb-ln4sw   1/1     Running   0          25d   10.42.0.153   tce-k3s-01   <none>           <none>
 microfe-ws-5bc979dd77-txd28      1/1     Running   0          25d   10.42.0.152   tce-k3s-01   <none>           <none>
+mrcute-intro-6fd77b5495-tf6xj    1/1     Running   0          14m   10.42.0.213   tce-k3s-01   <none>           <none>
 nats-7bc8d9f768-q682m            1/1     Running   0          48d   10.42.0.178   tce-k3s-01   <none>           <none>
 -- namespace tce-prod --
 -- namespace k3s-debug --
+
+### Targeted mrcute root routing diagnostics
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"networking.k8s.io/v1","kind":"Ingress","metadata":{"annotations":{"cert-manager.io/cluster-issuer":"letsencrypt-prod"},"name":"mrcute-root","namespace":"microfe-platform"},"spec":{"ingressClassName":"traefik","rules":[{"host":"mrcute.space","http":{"paths":[{"backend":{"service":{"name":"mrcute-intro","port":{"number":80}}},"path":"/","pathType":"Prefix"}]}}],"tls":[{"hosts":["mrcute.space"],"secretName":"mrcute-root-tls"}]}}
+  creationTimestamp: "2026-11-27T00:09:14Z"
+  generation: 1
+  name: mrcute-root
+  namespace: microfe-platform
+  resourceVersion: "5239233"
+  uid: d1e8f55b-2087-4b78-8d9c-4cf00ce58a12
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: mrcute.space
+    http:
+      paths:
+      - backend:
+          service:
+            name: mrcute-intro
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - mrcute.space
+    secretName: mrcute-root-tls
+status:
+  loadBalancer:
+    ingress:
+    - ip: 10.0.0.120
+platform-kubectl: command is not allowlisted
+platform-kubectl: command is not allowlisted
+platform-kubectl: command is not allowlisted
+NAME                            READY   STATUS    RESTARTS   AGE   IP            NODE         NOMINATED NODE   READINESS GATES
+mrcute-intro-6fd77b5495-tf6xj   1/1     Running   0          14m   10.42.0.213   tce-k3s-01   <none>           <none>
+platform-kubectl: command is not allowlisted
+platform-kubectl: command is not allowlisted
 
 ### Pod imageID evidence
 kube-system	coredns-54996dc9b4-d68pf	container	coredns	docker.io/rancher/mirrored-coredns-coredns:1.14.6	docker.io/rancher/mirrored-coredns-coredns@sha256:900f9c109f7a33545d3c811516e8376df9019147b750f5ce3e254468769176ea	true	0
@@ -169,6 +213,7 @@ cert-manager	cert-manager-cainjector-b644b66f7-l8jdq	container	cert-manager-cain
 cert-manager	cert-manager-webhook-76d97df888-wwq49	container	cert-manager-webhook	quay.io/jetstack/cert-manager-webhook:v1.21.1	quay.io/jetstack/cert-manager-webhook@sha256:d8b3961b51c8c7320633f8208dc46bf88aa13804d0f7cbe48a096b2c523cee42	true	0
 microfe-platform	microfe-shell-7b44b44dfb-ln4sw	container	shell	sha256:d6d34a138c9fb485abe5e70cf0b084e2d8cf482474be71ba0397819b2697f059	ghcr.io/phanthienquoc/microfe-shell@sha256:ae64acc032ce13d046ab78c9628b5b0b308f812b67ddfab7503d91e5a3ed8dcd	true	0
 microfe-platform	microfe-ws-5bc979dd77-txd28	container	ws	sha256:a26e88e61c4420c79b2f23d6ca68b0b67880a3423cb773c48094ac77fc72aa99	ghcr.io/phanthienquoc/microfe-ws@sha256:416bc16ade0becf398b0554571f6813985c55dffaf742042a7edef10ca2ea16d	true	0
+microfe-platform	mrcute-intro-6fd77b5495-tf6xj	container	nginx	docker.io/nginxinc/nginx-unprivileged:1.27-alpine	docker.io/nginxinc/nginx-unprivileged@sha256:65e3e85dbaed8ba248841d9d58a899b6197106c23cb0ff1a132b7bfe0547e4c0	true	0
 microfe-platform	nats-7bc8d9f768-q682m	container	nats	docker.io/library/nats:2.12-alpine	docker.io/library/nats@sha256:b270f5e2428354c0335612694d7dd2fb588148e567a5757fdff325ef9c9332e6	true	0
 
 ### Deployments
@@ -186,6 +231,7 @@ keycloak        0/0     0            0           41d
 microfe-auth    0/0     0            0           51d
 microfe-shell   1/1     1            1           51d
 microfe-ws      1/1     1            1           51d
+mrcute-intro    1/1     1            1           14m
 nats            1/1     1            1           48d
 NAME           READY   UP-TO-DATE   AVAILABLE   AGE
 tce-frontend   0/0     0            0           93d
@@ -247,17 +293,20 @@ microfe-platform   keycloak        quay.io/keycloak/keycloak:26.8.1
 microfe-platform   microfe-auth    ghcr.io/phanthienquoc/auth-service/auth:prod-v1.0.0-ceb2688
 microfe-platform   microfe-shell   ghcr.io/phanthienquoc/microfe-shell@sha256:ae64acc032ce13d046ab78c9628b5b0b308f812b67ddfab7503d91e5a3ed8dcd
 microfe-platform   microfe-ws      ghcr.io/phanthienquoc/microfe-ws@sha256:416bc16ade0becf398b0554571f6813985c55dffaf742042a7edef10ca2ea16d
+microfe-platform   mrcute-intro    nginxinc/nginx-unprivileged:1.27-alpine
 microfe-platform   nats            nats:2.12-alpine
 NAME            TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)             AGE
 keycloak        ClusterIP   10.43.142.95   <none>        80/TCP,9000/TCP     41d
 microfe-auth    ClusterIP   10.43.83.168   <none>        80/TCP              51d
 microfe-shell   ClusterIP   10.43.6.23     <none>        80/TCP              51d
 microfe-ws      ClusterIP   10.43.86.34    <none>        8080/TCP            51d
+mrcute-intro    ClusterIP   10.43.38.34    <none>        80/TCP              14m
 nats            ClusterIP   10.43.147.69   <none>        4222/TCP,8222/TCP   48d
 NAME                               CLASS     HOSTS                                                ADDRESS      PORTS     AGE
 keycloak-public                    traefik   sso.mrcute.space                                     10.0.0.120   80, 443   41d
 keycloak-registration-rate-limit   traefik   sso.mrcute.space                                     10.0.0.120   80, 443   29d
 microfe-public                     traefik   app.mrcute.space,auth.mrcute.space,ws.mrcute.space   10.0.0.120   80, 443   51d
+mrcute-root                        traefik   mrcute.space                                         10.0.0.120   80, 443   14m
 -- namespace tce-prod --
 tce-prod   tce-frontend   ghcr.io/phanthienquoc/tce-dashboard/web:prod-v0.1.0-e75e338
 tce-prod   tce-service    ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-e75e338
@@ -280,5 +329,5 @@ keycloak   0/0     0            0           41d   keycloak     quay.io/keycloak/
 Keycloak logs skipped: deployment is intentionally scaled to zero.
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.110195s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.048948s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.115950s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.050235s remote_ip=132.226.175.206
