@@ -539,6 +539,7 @@ for required in (
     "TCE heartbeat SHAs must be full commit IDs",
     "fetch_tce_run()",
     "--retry 4 --retry-delay 2 --retry-max-time 45 --max-time 15 --retry-connrefused",
+    '--header "Authorization: Bearer ${GH_TOKEN}"',
     "api.github.com/repos/$SOURCE_REPOSITORY/actions/runs/$1",
     "source_run_path",
     "source_run_event",
