@@ -1403,8 +1403,16 @@ production_root = (ROOT / "environments" / "prod" / "kustomization.yaml").read_t
 certificates = (ROOT / "platform" / "cert-manager" / "certificates.yaml").read_text(encoding="utf-8")
 auth_service_config = (ROOT / "platform" / "auth-service" / "configmap.yaml").read_text(encoding="utf-8")
 network_boundaries = (ROOT / "scripts" / "validate-network-boundaries.sh").read_text(encoding="utf-8")
+keycloak_ci = read("keycloak-ci.yml")
+cert_manager_fetch = (ROOT / "scripts" / "prepare-cert-manager-manifest.sh").read_text(encoding="utf-8")
 if "Expected exactly 3 production Ingress resources" not in network_boundaries:
     fail("Network-boundary validation must expect TCE, MicroFE, and the mrcute root intro Ingress resources.")
+if "GH_TOKEN: ${{ github.token }}" not in keycloak_ci:
+    fail("Keycloak CI must provide the read-only GitHub token for the pinned cert-manager release asset.")
+if 'curl_args+=(--header "Authorization: Bearer ${GH_TOKEN}")' in cert_manager_fetch:
+    fail("The cert-manager release token must not be passed in curl process arguments.")
+if 'curl "${curl_args[@]}" --config - "$CERT_MANAGER_MANIFEST_URL" --output "$tmp_file"' not in cert_manager_fetch:
+    fail("The cert-manager release token must be sent through curl stdin config, not process arguments.")
 if "sso.mrcute.space" in network_boundaries:
     fail("Production network allowlist must not expose the isolated Keycloak SSO hostname.")
 for retired_host in ("www.mrcute.space", "admin.mrcute.space", "api.mrcute.space", "media.mrcute.space"):
