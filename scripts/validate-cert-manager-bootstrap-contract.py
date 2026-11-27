@@ -130,6 +130,14 @@ def validate() -> None:
         "post-reconcile drift verification must prepare and clean the pinned cert-manager asset before Kustomize diff",
     )
     require_token_step(inspection_workflow, "Inspect VPS", ".github/workflows/inspect-vps.yml")
+    require(
+        "INSPECT_MRCUTE_ROOT: ${{ github.event_name == 'push' }}" in inspection_workflow
+        and 'if [[ "${INSPECT_MRCUTE_ROOT:-false}" == "true" ]]' in inspection
+        and "get certificate mrcute-root-tls" in inspection
+        and "get endpoints mrcute-intro" in inspection
+        and "get events -n microfe-platform" in inspection,
+        "mrcute routing diagnostics must be read-only and run only on a push-triggered inspection",
+    )
     require_token_step(recovery_workflow, "Validate recovery readiness", ".github/workflows/validate-recovery-readiness.yml")
 
     require(
