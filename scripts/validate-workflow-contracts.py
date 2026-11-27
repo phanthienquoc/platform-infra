@@ -1405,6 +1405,8 @@ auth_service_config = (ROOT / "platform" / "auth-service" / "configmap.yaml").re
 network_boundaries = (ROOT / "scripts" / "validate-network-boundaries.sh").read_text(encoding="utf-8")
 if "Expected exactly 3 production Ingress resources" not in network_boundaries:
     fail("Network-boundary validation must expect TCE, MicroFE, and the mrcute root intro Ingress resources.")
+if "sso.mrcute.space" in network_boundaries:
+    fail("Production network allowlist must not expose the isolated Keycloak SSO hostname.")
 for retired_host in ("www.mrcute.space", "admin.mrcute.space", "api.mrcute.space", "media.mrcute.space"):
     if f"\n{retired_host}\n" in network_boundaries:
         fail(f"Retired Stock/Media hostname remains allowed in production network validation: {retired_host}")
@@ -1706,15 +1708,28 @@ if "assert_failure .github/workflows/validate-manifests.yml" not in push_scope_c
     fail("Ignored metadata-only changes must not silently select a production deployment scope.")
 if "KEYCLOAK_REPLICAS_OVERRIDE" not in push_scope_contract or "auth-shutdown" not in push_scope_contract:
     fail("Keycloak-only pushes must retain the isolated replica-aware Auth shutdown/Keycloak rollout contract.")
-if "name: Verify Auth and Keycloak shutdown state" not in reconcile:
-    fail("Auth shutdown must verify desired/ready/updated replicas are zero and no matching pods remain.")
-if 'if [ "$TARGET_APP" = "auth-shutdown" ]; then' not in reconcile:
-    fail("Auth shutdown must bypass shared GitOps apply and remain scoped to the two Auth workloads.")
-shutdown_block = reconcile.split("name: Apply Auth and Keycloak shutdown only", 1)[1].split("name: Preflight diff", 1)[0]
-if 'sudo /usr/local/sbin/platform-kubectl apply -k platform/keycloak' not in shutdown_block:
-    fail("Auth shutdown must reconcile only the dedicated Keycloak resource set before scaling workloads.")
-if 'scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform' not in shutdown_block:
-    fail("Auth shutdown target is missing its exact allowlisted scale command.")
+if "name: Stop Keycloak only; preserve Supabase-backed Auth" not in reconcile:
+    fail("Auth shutdown must stop only Keycloak and preserve the Supabase-backed Auth API.")
+if "name: Verify Keycloak shutdown state" not in reconcile:
+    fail("Auth shutdown must verify desired/ready/updated Keycloak replicas are zero and no matching Keycloak pods remain.")
+preflight_block = reconcile.split("name: Preflight diff", 1)[1].split("name: Guard workload image changes", 1)[0]
+if 'if [ "$TARGET_APP" = "auth-shutdown" ]; then' not in preflight_block or "no shared GitOps apply is permitted" not in preflight_block:
+    fail("Auth shutdown must bypass shared GitOps apply.")
+shutdown_block = reconcile.split("name: Stop Keycloak only; preserve Supabase-backed Auth", 1)[1].split("name: Verify Keycloak shutdown state", 1)[0]
+if 'scale deployment/keycloak --replicas=0 -n microfe-platform' not in shutdown_block:
+    fail("Auth shutdown must scale only Keycloak to zero.")
+if 'scale deployment/microfe-auth' in shutdown_block:
+    fail("Auth shutdown must not scale down the Supabase-backed Auth API.")
+verify_block = reconcile.split("name: Verify Keycloak shutdown state", 1)[1].split("name: Preflight diff", 1)[0]
+if 'get deployment keycloak' not in verify_block or 'app.kubernetes.io/name=keycloak' not in verify_block:
+    fail("Auth shutdown must verify Keycloak deployment and pods.")
+if 'get deployment microfe-auth' in verify_block or 'app=microfe-auth' in verify_block:
+    fail("Auth shutdown verification must not require the Supabase-backed Auth API to be stopped.")
+if "KEYCLOAK_URL" in auth_service_config or "KEYCLOAK_ISSUER" in auth_service_config:
+    fail("Supabase-backed Auth ConfigMap must not retain Keycloak token-validation settings.")
+auth_deployment = (ROOT / "platform" / "auth-service" / "deployment.yaml").read_text(encoding="utf-8")
+if not re.search(r"(?m)^  replicas: 1$", auth_deployment):
+    fail("Supabase-backed MicroFE Auth API must remain at one desired replica.")
 for step_name in (
     "Validate GHCR pull access before mutating cluster credentials",
     "Bootstrap GHCR pull credentials",
