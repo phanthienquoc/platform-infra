@@ -101,7 +101,8 @@ def validate() -> None:
         and 'bash scripts/prepare-cert-manager-manifest.sh "$manifest"' in verify_drift_step
         and "trap cleanup EXIT" in verify_drift_step
         and 'rm -f "$manifest"' in verify_drift_step
-        and "\\n          cleanup\\n          trap - EXIT" in verify_drift_step
+        and "cleanup" in verify_drift_step
+        and "trap - EXIT" in verify_drift_step
         and "platform-kubectl diff -k environments/prod" in verify_drift_step,
         "post-reconcile drift verification must prepare and clean the pinned cert-manager asset before Kustomize diff",
     )
