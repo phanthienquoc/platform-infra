@@ -475,6 +475,8 @@ jobs:
               sed -n '1,120p' "$diff_stderr" >&2 || true
               ;;
           esac
+          cleanup
+          trap - EXIT
           exit "$rc"
 
       - name: Fail if shared reconciliation failed
