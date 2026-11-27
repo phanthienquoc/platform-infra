@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-11-27T20:14:56+00:00
+Generated: 2026-11-27T23:38:59+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,14 +11,14 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.4Gi       1.2Gi        85Mi        18Gi        19Gi
+Mem:            23Gi       3.4Gi       1.2Gi        84Mi        18Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   27G   19G  60% /
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        45G   27G   19G  60% /
 disk_pressure: normal (60%)
- 20:14:56 up 210 days,  6:05,  1 user,  load average: 0.06, 0.17, 0.17
+ 23:38:59 up 210 days,  9:29,  1 user,  load average: 0.44, 0.23, 0.13
 
 ### Top disk consumers (best-effort, runner-readable paths)
 4.0K	/var/lib/docker
@@ -34,25 +34,25 @@ disk_pressure: normal (60%)
 64K	/var/log/containers
 72K	/var/log/unified-monitoring-agent
 204K	/var/log/apt
-24M	/var/log/oracle-cloud-agent
+25M	/var/log/oracle-cloud-agent
 236M	/var/lib/rancher/k3s
 236M	/var/lib/rancher/k3s/data
 2.3G	/var/log/journal
 2.6G	/var/log
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-3728879 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+3883076 /opt/actions-runner/bin/Runner.Worker spawnclient 154 163
 ● actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service - GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
      Loaded: loaded (/etc/systemd/system/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service; enabled; vendor preset: enabled)
      Active: active (running) since Tue 2026-09-22 14:59:15 UTC; 2 months 5 days ago
    Main PID: 1309484 (runsvc.sh)
-      Tasks: 48 (limit: 28686)
+      Tasks: 47 (limit: 28686)
      Memory: 1.4G
-        CPU: 15h 43min 4.702s
+        CPU: 15h 44min 58.392s
      CGroup: /system.slice/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service
              ├─1309484 /bin/bash /opt/actions-runner/runsvc.sh
              ├─1309492 ./externals/node20/bin/node ./bin/RunnerService.js
              ├─1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-             ├─3728879 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+             ├─3883076 /opt/actions-runner/bin/Runner.Worker spawnclient 154 163
 runner_service: active
 runner_service_enabled: enabled
 runner_policy: platform-kubectl policy: rollout-status-v15-core-workloads
@@ -151,7 +151,7 @@ cert-manager-webhook-76d97df888-wwq49     1/1     Running   0             94d   
 NAME                             READY   STATUS    RESTARTS   AGE   IP            NODE         NOMINATED NODE   READINESS GATES
 microfe-shell-7b44b44dfb-ln4sw   1/1     Running   0          26d   10.42.0.153   tce-k3s-01   <none>           <none>
 microfe-ws-5bc979dd77-txd28      1/1     Running   0          26d   10.42.0.152   tce-k3s-01   <none>           <none>
-mrcute-intro-6fd77b5495-tf6xj    1/1     Running   0          20h   10.42.0.213   tce-k3s-01   <none>           <none>
+mrcute-intro-6fd77b5495-tf6xj    1/1     Running   0          23h   10.42.0.213   tce-k3s-01   <none>           <none>
 nats-7bc8d9f768-q682m            1/1     Running   0          49d   10.42.0.178   tce-k3s-01   <none>           <none>
 -- namespace tce-prod --
 -- namespace k3s-debug --
@@ -188,7 +188,7 @@ keycloak        0/0     0            0           42d
 microfe-auth    0/0     0            0           52d
 microfe-shell   1/1     1            1           52d
 microfe-ws      1/1     1            1           52d
-mrcute-intro    1/1     1            1           20h
+mrcute-intro    1/1     1            1           23h
 nats            1/1     1            1           49d
 NAME           READY   UP-TO-DATE   AVAILABLE   AGE
 tce-frontend   0/0     0            0           94d
@@ -257,13 +257,13 @@ keycloak        ClusterIP   10.43.142.95   <none>        80/TCP,9000/TCP     42d
 microfe-auth    ClusterIP   10.43.83.168   <none>        80/TCP              52d
 microfe-shell   ClusterIP   10.43.6.23     <none>        80/TCP              52d
 microfe-ws      ClusterIP   10.43.86.34    <none>        8080/TCP            52d
-mrcute-intro    ClusterIP   10.43.38.34    <none>        80/TCP              20h
+mrcute-intro    ClusterIP   10.43.38.34    <none>        80/TCP              23h
 nats            ClusterIP   10.43.147.69   <none>        4222/TCP,8222/TCP   49d
 NAME                               CLASS     HOSTS                                                ADDRESS      PORTS     AGE
 keycloak-public                    traefik   sso.mrcute.space                                     10.0.0.120   80, 443   42d
 keycloak-registration-rate-limit   traefik   sso.mrcute.space                                     10.0.0.120   80, 443   30d
 microfe-public                     traefik   app.mrcute.space,auth.mrcute.space,ws.mrcute.space   10.0.0.120   80, 443   52d
-mrcute-root                        traefik   mrcute.space                                         10.0.0.120   80, 443   20h
+mrcute-root                        traefik   mrcute.space                                         10.0.0.120   80, 443   23h
 -- namespace tce-prod --
 tce-prod   tce-frontend   ghcr.io/phanthienquoc/tce-dashboard/web:prod-v0.1.0-e75e338
 tce-prod   tce-service    ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-e75e338
@@ -286,5 +286,5 @@ keycloak   0/0     0            0           42d   keycloak     quay.io/keycloak/
 Keycloak logs skipped: deployment is intentionally scaled to zero.
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.113903s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.050789s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.134431s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.049384s remote_ip=132.226.175.206
