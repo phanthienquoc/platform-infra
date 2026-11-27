@@ -101,6 +101,14 @@ def validate() -> None:
         "read-only inspection must run after changes to the inspection or pinned release helper",
     )
 
+    require(
+        'INSPECT_MRCUTE_ROOT: ${{ github.event_name == \'push\' }}' in inspection_workflow
+        and 'if [[ "${INSPECT_MRCUTE_ROOT:-false}" == "true" ]]' in inspection
+        and "get certificate mrcute-root-tls" in inspection
+        and "get endpoints mrcute-intro" in inspection,
+        "mrcute routing diagnostics must be read-only and run only on a push-triggered inspection",
+    )
+
     workflow_permissions = workflow.split("jobs:", 1)[0]
     report_job = workflow.split("  report-validation-failure:", 1)[1]
     require(
