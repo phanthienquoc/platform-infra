@@ -73,7 +73,8 @@ def validate() -> None:
     require(
         "GH_TOKEN=test-token" in auth_test
         and "Authorization: Bearer test-token" in auth_test
-        and "never logged" in auth_test,
+        and "never logged" in auth_test
+        and "process arguments" in auth_test,
         "cert-manager release auth regression test must cover token use and log redaction",
     )
 
