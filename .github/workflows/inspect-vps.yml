@@ -35,6 +35,7 @@ jobs:
       - name: Inspect VPS
         env:
           GH_TOKEN: ${{ github.token }}
+          INSPECT_MRCUTE_ROOT: ${{ github.event_name == 'push' }}
         run: |
           set -euo pipefail
           chmod +x scripts/inspect-vps.sh
