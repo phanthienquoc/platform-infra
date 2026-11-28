@@ -33,7 +33,6 @@ mapfile -t hosts < <(grep -Eo '[A-Za-z0-9.-]+\.mrcute\.space' "$output" | sort -
 allowed='
 tce.mrcute.space
 auth.mrcute.space
-sso.mrcute.space
 app.mrcute.space
 ws.mrcute.space
 '

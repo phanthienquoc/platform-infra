@@ -63,14 +63,18 @@ def validate() -> None:
     )
     require(
         'if [[ -n "${GH_TOKEN:-}" ]]' in prepare
-        and 'curl_args+=(--header "Authorization: Bearer ${GH_TOKEN}")' in prepare
-        and 'curl "${curl_args[@]}" "$CERT_MANAGER_MANIFEST_URL" --output "$tmp_file"' in prepare,
-        "release asset download must use an optional token to avoid anonymous API rate limits",
+        and 'auth_token="$GH_TOKEN"' in prepare
+        and "unset GH_TOKEN" in prepare
+        and "unset auth_token" in prepare
+        and 'curl_args+=(--header "Authorization: Bearer ${GH_TOKEN}")' not in prepare
+        and "--config -" in prepare,
+        "release asset download must use an optional token through curl stdin config without exposing it in process arguments",
     )
     require(
         "GH_TOKEN=test-token" in auth_test
         and "Authorization: Bearer test-token" in auth_test
-        and "never logged" in auth_test,
+        and "never logged" in auth_test
+        and "process arguments" in auth_test,
         "cert-manager release auth regression test must cover token use and log redaction",
     )
 

@@ -4,9 +4,8 @@ metadata:
   name: microfe-auth
   namespace: microfe-platform
 spec:
-  # TEMPORARY OPERATOR REQUEST: stop Auth API and Keycloak to halt Auth-related traffic.
-  # Restore replicas to 1 only after the Supabase/Keycloak connection issue is resolved.
-  replicas: 0
+  # Central NestJS Auth uses Supabase service-role access for existing users, MFA and passkeys.
+  replicas: 1
   selector:
     matchLabels:
       app: microfe-auth

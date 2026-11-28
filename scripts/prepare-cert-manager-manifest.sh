@@ -37,10 +37,14 @@ curl_args=(
   --connect-timeout 10 --max-time 120
 )
 if [[ -n "${GH_TOKEN:-}" ]]; then
-  curl_args+=(--header "Authorization: Bearer ${GH_TOKEN}")
+  auth_token="$GH_TOKEN"
+  unset GH_TOKEN
+  printf 'header = "Authorization: Bearer %s"\n' "$auth_token" | \
+    curl "${curl_args[@]}" --config - "$CERT_MANAGER_MANIFEST_URL" --output "$tmp_file"
+  unset auth_token
+else
+  curl "${curl_args[@]}" "$CERT_MANAGER_MANIFEST_URL" --output "$tmp_file"
 fi
-
-curl "${curl_args[@]}" "$CERT_MANAGER_MANIFEST_URL" --output "$tmp_file"
 
 if ! printf '%s  %s\n' "$CERT_MANAGER_MANIFEST_SHA256" "$tmp_file" | sha256sum --check --status; then
   echo "::error::Downloaded cert-manager ${CERT_MANAGER_VERSION} manifest failed its pinned SHA-256 check." >&2

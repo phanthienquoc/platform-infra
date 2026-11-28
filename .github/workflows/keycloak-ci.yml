@@ -106,6 +106,6 @@ jobs:
           echo "Realm/client provisioning, OIDC verification, registration rate limiting and policy contract passed."
 
       - name: Validate network boundaries
-        run: |
-          chmod +x scripts/validate-network-boundaries.sh
-          ./scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/validate-network-boundaries.sh /tmp/platform-infra-network.yaml

@@ -291,40 +291,33 @@ jobs:
           set -euo pipefail
           bash scripts/verify-tce-gitops-release.sh
 
-      - name: Apply Auth and Keycloak shutdown only
+      - name: Stop Keycloak only; preserve Supabase-backed Auth
         if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app == 'auth-shutdown' }}
         run: |
           set -euo pipefail
-          # Apply only the dedicated Keycloak resource set, then stop Auth and Keycloak.
-          sudo /usr/local/sbin/platform-kubectl apply -k platform/keycloak
-          sudo /usr/local/sbin/platform-kubectl scale deployment/microfe-auth deployment/keycloak --replicas=0 -n microfe-platform
+          # Keep the central Supabase-backed Auth API running.
+          sudo /usr/local/sbin/platform-kubectl scale deployment/keycloak --replicas=0 -n microfe-platform
 
-      - name: Verify Auth and Keycloak shutdown state
+      - name: Verify Keycloak shutdown state
         if: ${{ env.RECONCILE_MODE == 'apply' && steps.scope.outputs.target_app == 'auth-shutdown' }}
         run: |
           set -euo pipefail
           for attempt in $(seq 1 24); do
-            all_zero=true
-            for deployment in microfe-auth keycloak; do
-              state="$(sudo /usr/local/sbin/platform-kubectl get deployment "$deployment" -n microfe-platform -o 'jsonpath={.spec.replicas} {.status.readyReplicas} {.status.updatedReplicas}')"
-              read -r desired ready updated <<< "$state"
-              if [[ "$desired" != "0" || "${ready:-0}" != "0" || "${updated:-0}" != "0" ]]; then
-                all_zero=false
-                echo "$deployment has not converged to desired/ready/updated=0: $state"
-              fi
-            done
-            auth_pods="$(sudo /usr/local/sbin/platform-kubectl get pods -n microfe-platform -l app=microfe-auth -o name)"
+            state="$(sudo /usr/local/sbin/platform-kubectl get deployment keycloak -n microfe-platform -o 'jsonpath={.spec.replicas} {.status.readyReplicas} {.status.updatedReplicas}')"
+            read -r desired ready updated <<< "$state"
+            [[ -n "$ready" ]] || ready=0
+            [[ -n "$updated" ]] || updated=0
             keycloak_pods="$(sudo /usr/local/sbin/platform-kubectl get pods -n microfe-platform -l app.kubernetes.io/name=keycloak -o name)"
-            if [[ "$all_zero" == true && -z "$auth_pods" && -z "$keycloak_pods" ]]; then
-              echo "Auth and Keycloak are scaled to zero with no matching pods remaining."
+            if [[ "$desired" == "0" && "$ready" == "0" && "$updated" == "0" && -z "$keycloak_pods" ]]; then
+              echo "Keycloak is scaled to zero; MicroFE Auth remains available."
               exit 0
             fi
-            [[ -z "$auth_pods" ]] || printf 'Remaining Auth pods:\n%s\n' "$auth_pods"
+            echo "Keycloak shutdown has not converged to zero replicas/no pods: $state"
             [[ -z "$keycloak_pods" ]] || printf 'Remaining Keycloak pods:\n%s\n' "$keycloak_pods"
-            echo "Waiting for Auth/Keycloak shutdown convergence (attempt $attempt/24)..."
+            echo "Waiting for Keycloak shutdown convergence (attempt $attempt/24)..."
             sleep 5
           done
-          echo "::error::Auth/Keycloak shutdown did not converge to zero replicas and no matching pods within 120 seconds."
+          echo "::error::Keycloak shutdown did not converge to zero replicas and no matching pods within 120 seconds."
           exit 1
 
       - name: Preflight diff

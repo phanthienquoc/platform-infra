@@ -14,30 +14,36 @@ cat > "$tmp/bin/curl" <<'MOCK'
 #!/usr/bin/env bash
 set -euo pipefail
 printf '%s\n' "$@" > "$CURL_ARGS_LOG"
+cat > "$CURL_CONFIG_LOG"
 exit 22
 MOCK
 chmod +x "$tmp/bin/curl"
 
 set +e
-env GH_TOKEN=test-token PATH="$tmp/bin:$PATH" GITHUB_WORKSPACE="$workspace" CURL_ARGS_LOG="$curl_log" \
+env GH_TOKEN=test-token PATH="$tmp/bin:$PATH" GITHUB_WORKSPACE="$workspace" CURL_ARGS_LOG="$curl_log" CURL_CONFIG_LOG="$tmp/curl-config.log" \
   bash "$SCRIPT" "$workspace/platform/cert-manager/cert-manager.yaml" > "$output" 2>&1
 token_rc=$?
 set -e
 [[ "$token_rc" -ne 0 ]] || { echo "FAIL: mock download unexpectedly succeeded" >&2; exit 1; }
-grep -Fxq "Authorization: Bearer test-token" "$curl_log"
+grep -Fq "Authorization: Bearer test-token" "$tmp/curl-config.log"
+if grep -Fq "test-token" "$curl_log"; then
+  echo "FAIL: release token was passed in curl process arguments" >&2
+  exit 1
+fi
 if grep -Fq "test-token" "$output"; then
   echo "FAIL: release token was printed to command output" >&2
   exit 1
 fi
 
 : > "$curl_log"
+: > "$tmp/curl-config.log"
 set +e
-env -u GH_TOKEN PATH="$tmp/bin:$PATH" GITHUB_WORKSPACE="$workspace" CURL_ARGS_LOG="$curl_log" \
+env -u GH_TOKEN PATH="$tmp/bin:$PATH" GITHUB_WORKSPACE="$workspace" CURL_ARGS_LOG="$curl_log" CURL_CONFIG_LOG="$tmp/curl-config.log" \
   bash "$SCRIPT" "$workspace/platform/cert-manager/cert-manager.yaml" > "$output" 2>&1
 anonymous_rc=$?
 set -e
 [[ "$anonymous_rc" -ne 0 ]] || { echo "FAIL: mock anonymous download unexpectedly succeeded" >&2; exit 1; }
-if grep -Fq "Authorization: Bearer" "$curl_log"; then
+if grep -Fq "Authorization: Bearer" "$curl_log" || grep -Fq "Authorization: Bearer" "$tmp/curl-config.log"; then
   echo "FAIL: anonymous/local invocation unexpectedly supplied an Authorization header" >&2
   exit 1
 fi
