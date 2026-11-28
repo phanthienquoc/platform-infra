@@ -1,6 +1,6 @@
 # VPS inspection
 
-Generated: 2026-11-28T02:55:51+00:00
+Generated: 2026-11-28T05:03:25+00:00
 
 ## Host
 Linux chat-20260107-1525 6.8.0-1049-oracle #50~22.04.1-Ubuntu SMP Mon Apr  6 05:34:28 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
@@ -11,14 +11,14 @@ hostname: chat-20260107-1525
 ## Resources
 4
                total        used        free      shared  buff/cache   available
-Mem:            23Gi       3.4Gi       1.2Gi        85Mi        18Gi        19Gi
+Mem:            23Gi       3.4Gi       1.1Gi        85Mi        18Gi        19Gi
 Swap:             0B          0B          0B
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/sda1        45G   27G   19G  60% /
+/dev/sda1        45G   27G   19G  59% /
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/sda1        45G   27G   19G  60% /
-disk_pressure: normal (60%)
- 02:55:51 up 210 days, 12:46,  1 user,  load average: 0.95, 0.50, 0.24
+/dev/sda1        45G   27G   19G  59% /
+disk_pressure: normal (59%)
+ 05:03:25 up 210 days, 14:53,  1 user,  load average: 0.26, 0.20, 0.14
 
 ### Top disk consumers (best-effort, runner-readable paths)
 4.0K	/var/lib/docker
@@ -40,19 +40,19 @@ disk_pressure: normal (60%)
 2.4G	/var/log/journal
 2.6G	/var/log
 1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-4030076 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+4128589 /opt/actions-runner/bin/Runner.Worker spawnclient 154 163
 ● actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service - GitHub Actions Runner (phanthienquoc-platform-infra.platform-k3s-01)
      Loaded: loaded (/etc/systemd/system/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service; enabled; vendor preset: enabled)
      Active: active (running) since Tue 2026-09-22 14:59:15 UTC; 2 months 5 days ago
    Main PID: 1309484 (runsvc.sh)
-      Tasks: 48 (limit: 28686)
+      Tasks: 47 (limit: 28686)
      Memory: 1.4G
-        CPU: 15h 45min 41.421s
+        CPU: 15h 47min 21.170s
      CGroup: /system.slice/actions.runner.phanthienquoc-platform-infra.platform-k3s-01.service
              ├─1309484 /bin/bash /opt/actions-runner/runsvc.sh
              ├─1309492 ./externals/node20/bin/node ./bin/RunnerService.js
              ├─1309509 /opt/actions-runner/bin/Runner.Listener run --startuptype service
-             ├─4030076 /opt/actions-runner/bin/Runner.Worker spawnclient 154 159
+             ├─4128589 /opt/actions-runner/bin/Runner.Worker spawnclient 154 163
 runner_service: active
 runner_service_enabled: enabled
 runner_policy: platform-kubectl policy: rollout-status-v15-core-workloads
@@ -76,7 +76,7 @@ docker-buildx-plugin/jammy 0.39.1-1~ubuntu.22.04~jammy arm64 [upgradable from: 0
 docker-ce-cli/jammy 5:29.10.1-1~ubuntu.22.04~jammy arm64 [upgradable from: 5:29.1.3-1~ubuntu.22.04~jammy]
 docker-ce-rootless-extras/jammy 5:29.10.1-1~ubuntu.22.04~jammy arm64 [upgradable from: 5:29.1.3-1~ubuntu.22.04~jammy]
 docker-ce/jammy 5:29.10.1-1~ubuntu.22.04~jammy arm64 [upgradable from: 5:29.1.3-1~ubuntu.22.04~jammy]
-docker-compose-plugin/jammy 5.8.0-1~ubuntu.22.04~jammy arm64 [upgradable from: 5.0.1-1~ubuntu.22.04~jammy]
+docker-compose-plugin/jammy 5.8.1-1~ubuntu.22.04~jammy arm64 [upgradable from: 5.0.1-1~ubuntu.22.04~jammy]
 fwupd/jammy-updates 2.0.20-1ubuntu2~22.04.2 arm64 [upgradable from: 1.7.9-1~22.04.3]
 iproute2/jammy-updates 5.15.0-1ubuntu2.2 arm64 [upgradable from: 5.15.0-1ubuntu2]
 landscape-common/jammy-updates 23.02-0ubuntu1~22.04.7 arm64 [upgradable from: 23.02-0ubuntu1~22.04.6]
@@ -123,7 +123,7 @@ Active platform namespaces:
 NAME               STATUS   AGE
 cert-manager       Active   94d
 default            Active   98d
-k3s-debug          Active   50d
+k3s-debug          Active   51d
 kube-node-lease    Active   98d
 kube-public        Active   98d
 kube-system        Active   98d
@@ -151,7 +151,7 @@ cert-manager-webhook-76d97df888-wwq49     1/1     Running   0             94d   
 NAME                             READY   STATUS    RESTARTS   AGE   IP            NODE         NOMINATED NODE   READINESS GATES
 microfe-shell-7b44b44dfb-ln4sw   1/1     Running   0          27d   10.42.0.153   tce-k3s-01   <none>           <none>
 microfe-ws-5bc979dd77-txd28      1/1     Running   0          27d   10.42.0.152   tce-k3s-01   <none>           <none>
-mrcute-intro-6fd77b5495-tf6xj    1/1     Running   0          26h   10.42.0.213   tce-k3s-01   <none>           <none>
+mrcute-intro-6fd77b5495-tf6xj    1/1     Running   0          28h   10.42.0.213   tce-k3s-01   <none>           <none>
 nats-7bc8d9f768-q682m            1/1     Running   0          49d   10.42.0.178   tce-k3s-01   <none>           <none>
 -- namespace tce-prod --
 -- namespace k3s-debug --
@@ -188,7 +188,7 @@ keycloak        0/0     0            0           42d
 microfe-auth    0/0     0            0           53d
 microfe-shell   1/1     1            1           53d
 microfe-ws      1/1     1            1           53d
-mrcute-intro    1/1     1            1           26h
+mrcute-intro    1/1     1            1           28h
 nats            1/1     1            1           49d
 NAME           READY   UP-TO-DATE   AVAILABLE   AGE
 tce-frontend   0/0     0            0           94d
@@ -257,13 +257,13 @@ keycloak        ClusterIP   10.43.142.95   <none>        80/TCP,9000/TCP     42d
 microfe-auth    ClusterIP   10.43.83.168   <none>        80/TCP              53d
 microfe-shell   ClusterIP   10.43.6.23     <none>        80/TCP              53d
 microfe-ws      ClusterIP   10.43.86.34    <none>        8080/TCP            53d
-mrcute-intro    ClusterIP   10.43.38.34    <none>        80/TCP              26h
+mrcute-intro    ClusterIP   10.43.38.34    <none>        80/TCP              28h
 nats            ClusterIP   10.43.147.69   <none>        4222/TCP,8222/TCP   49d
 NAME                               CLASS     HOSTS                                                ADDRESS      PORTS     AGE
 keycloak-public                    traefik   sso.mrcute.space                                     10.0.0.120   80, 443   42d
-keycloak-registration-rate-limit   traefik   sso.mrcute.space                                     10.0.0.120   80, 443   30d
-microfe-public                     traefik   app.mrcute.space,auth.mrcute.space,ws.mrcute.space   10.0.0.120   80, 443   52d
-mrcute-root                        traefik   mrcute.space                                         10.0.0.120   80, 443   26h
+keycloak-registration-rate-limit   traefik   sso.mrcute.space                                     10.0.0.120   80, 443   31d
+microfe-public                     traefik   app.mrcute.space,auth.mrcute.space,ws.mrcute.space   10.0.0.120   80, 443   53d
+mrcute-root                        traefik   mrcute.space                                         10.0.0.120   80, 443   28h
 -- namespace tce-prod --
 tce-prod   tce-frontend   ghcr.io/phanthienquoc/tce-dashboard/web:prod-v0.1.0-e75e338
 tce-prod   tce-service    ghcr.io/phanthienquoc/tce-dashboard/service:prod-v0.1.0-e75e338
@@ -286,5 +286,5 @@ keycloak   0/0     0            0           42d   keycloak     quay.io/keycloak/
 Keycloak logs skipped: deployment is intentionally scaled to zero.
 
 ### Public OIDC probes (status and latency only)
-https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.112066s remote_ip=132.226.175.206
-https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.050311s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/master/.well-known/openid-configuration http_code=503 time_total=0.113674s remote_ip=132.226.175.206
+https://sso.mrcute.space/realms/mrcute/.well-known/openid-configuration http_code=503 time_total=0.048929s remote_ip=132.226.175.206
